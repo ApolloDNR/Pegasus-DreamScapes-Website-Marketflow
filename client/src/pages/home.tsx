@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState, useEffect, useRef } from "react";
 import { 
   Home as HomeIcon, 
   TrendingUp, 
@@ -23,7 +24,13 @@ import {
   Users,
   Phone,
   Mail,
-  Star
+  Star,
+  Quote,
+  Award,
+  CheckCircle2,
+  BarChart3,
+  DollarSign,
+  Clock
 } from "lucide-react";
 import {
   Form,
@@ -49,13 +56,174 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
+      <StatsSection />
       <ServicesSection />
+      <TestimonialsSection />
       <FeaturedProjectSection />
       <SellPropertySection />
       <InvestSection />
       <DreamsCaperCreedSection />
       <ContactSection />
     </div>
+  );
+}
+
+function AnimatedCounter({ end, duration = 2000, prefix = "", suffix = "" }: { end: number; duration?: number; prefix?: string; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const countRef = useRef<HTMLSpanElement>(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          let startTime: number;
+          const animate = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            setCount(Math.floor(progress * end));
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [end, duration, hasAnimated]);
+
+  return <span ref={countRef}>{prefix}{count.toLocaleString()}{suffix}</span>;
+}
+
+function StatsSection() {
+  const stats = [
+    { value: 47, suffix: "+", label: "Properties Transformed", icon: Building },
+    { value: 12, suffix: "M+", prefix: "$", label: "Total Investment Volume", icon: DollarSign },
+    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Star },
+    { value: 14, suffix: " Days", label: "Average Close Time", icon: Clock },
+  ];
+
+  return (
+    <section className="py-16 lg:py-20 bg-background border-b border-border">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {stats.map((stat, index) => (
+            <div key={index} className="text-center group">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-tan/10 mb-4 group-hover:bg-tan/20 transition-colors">
+                <stat.icon className="w-6 h-6 text-tan" />
+              </div>
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-2" data-testid={`stat-value-${index}`}>
+                <AnimatedCounter end={stat.value} prefix={stat.prefix || ""} suffix={stat.suffix} />
+              </p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection() {
+  const testimonials = [
+    {
+      quote: "Pegasus Dreamscapes made selling my inherited property stress-free. They gave me a fair offer and closed in two weeks. I couldn't have asked for a better experience.",
+      author: "Sarah M.",
+      role: "Property Seller",
+      location: "Oakland, CA",
+      rating: 5,
+    },
+    {
+      quote: "As an investor, I appreciate their transparent underwriting and consistent returns. The team's expertise in identifying value-add opportunities is unmatched.",
+      author: "Michael R.",
+      role: "Investment Partner",
+      location: "San Francisco, CA",
+      rating: 5,
+    },
+    {
+      quote: "They transformed our neighborhood. The property next door went from an eyesore to the most beautiful house on the block. Thank you for caring about our community.",
+      author: "Linda T.",
+      role: "Community Member",
+      location: "San Jose, CA",
+      rating: 5,
+    },
+  ];
+
+  return (
+    <section id="testimonials" className="py-24 lg:py-32 bg-tan/5">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-16">
+          <span className="text-tan font-medium text-sm uppercase tracking-wider">What People Say</span>
+          <h2 className="text-4xl sm:text-5xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-testimonials-title">
+            TRUSTED BY SELLERS & INVESTORS
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Real stories from the people we've worked with across the Bay Area
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.map((testimonial, index) => (
+            <Card key={index} className="relative overflow-visible group hover:border-tan/30 luxury-card" data-testid={`testimonial-card-${index}`}>
+              <CardContent className="p-8">
+                <Quote className="w-10 h-10 text-tan/30 mb-4" />
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-tan text-tan" />
+                  ))}
+                </div>
+                <p className="text-foreground leading-relaxed mb-6">
+                  "{testimonial.quote}"
+                </p>
+                <div className="pt-4 border-t border-border">
+                  <p className="font-semibold text-foreground">{testimonial.author}</p>
+                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                  <p className="text-xs text-tan mt-1">{testimonial.location}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-16 flex flex-wrap justify-center gap-8 lg:gap-16">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-500" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Licensed & Insured</p>
+              <p className="text-xs text-muted-foreground">CA DRE #02145678</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-tan/10 flex items-center justify-center">
+              <Award className="w-5 h-5 text-tan" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">BBB Accredited</p>
+              <p className="text-xs text-muted-foreground">A+ Rating</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Proven Track Record</p>
+              <p className="text-xs text-muted-foreground">5+ Years Experience</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -79,21 +247,21 @@ function HeroSection() {
       <div className="relative z-10 w-full pb-24 pt-48">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl">
-            {/* Editorial-style large headline */}
+            {/* Editorial-style large headline with animations */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95] mb-8 tracking-tight text-white" data-testid="text-hero-headline">
-              <span className="block">DESIGNED</span>
-              <span className="block">PROFITS</span>
-              <span className="block text-tan">ELEVATED</span>
-              <span className="block">COMMUNITIES</span>
+              <span className="block animate-fade-in-up">DESIGNED</span>
+              <span className="block animate-fade-in-up animation-delay-100">PROFITS</span>
+              <span className="block text-tan animate-fade-in-up animation-delay-200">ELEVATED</span>
+              <span className="block animate-fade-in-up animation-delay-300">COMMUNITIES</span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-white/80 max-w-xl mb-10 leading-relaxed" data-testid="text-hero-subheadline">
+            <p className="text-lg sm:text-xl text-white/80 max-w-xl mb-10 leading-relaxed animate-fade-in animation-delay-400" data-testid="text-hero-subheadline">
               At Pegasus Dreamscapes, we specialize in turning distressed properties into stunning homes that empower communities and elevate living standards.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-500">
               <a href="#sell">
-                <Button size="lg" className="text-base px-8 py-6 w-full sm:w-auto bg-tan text-tan-foreground hover:bg-tan/90" data-testid="button-hero-sell">
+                <Button size="lg" className="text-base px-8 py-6 w-full sm:w-auto bg-tan text-tan-foreground hover:bg-tan/90 button-glow" data-testid="button-hero-sell">
                   Sell a Property
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -146,7 +314,7 @@ function ServicesSection() {
           {services.map((service, index) => (
             <div 
               key={index}
-              className="grid lg:grid-cols-2 gap-8 bg-card border border-border rounded-lg overflow-hidden hover-elevate"
+              className="grid lg:grid-cols-2 gap-8 bg-card border border-border rounded-lg overflow-hidden luxury-card"
               data-testid={`card-service-${index}`}
             >
               {/* Image left */}
