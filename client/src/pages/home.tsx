@@ -42,6 +42,8 @@ import {
 } from "@/components/ui/select";
 import logoImage from "@assets/image_1764616120774.png";
 import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import serviceImage1 from "@assets/generated_images/real_estate_investor_consultation.png";
+import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
 
 export default function Home() {
   return (
@@ -116,67 +118,95 @@ function HeroSection() {
 function ServicesSection() {
   const services = [
     {
-      icon: HomeIcon,
-      title: "Fix & Flip Acquisitions",
-      description: "Transform distressed homes into high-performing assets through intentional design and calculated renovation.",
-      highlight: false,
+      image: serviceImage1,
+      title: "Property Investment Consultation",
+      description: "Strategic guidance for real estate investments. We analyze opportunities, evaluate risks, and provide expert consultation to help you make informed decisions.",
+      cta: "Book Now",
+      ctaLink: "#contact",
     },
     {
-      icon: TrendingUp,
-      title: "Buy & Hold / Rental Investments",
-      description: "Value-add rental strategies designed for long-term stability, equity growth, and predictable performance.",
-      highlight: false,
-    },
-    {
-      icon: Palette,
-      title: "Design & Renovation Management",
-      description: "Interior design, finish selection, layout optimization, and project oversight that raise ARV and rent potential.",
-      highlight: false,
-    },
-    {
-      icon: Building,
-      title: "New Construction",
-      description: "Coming soon: Ground-up builds crafted through purposeful design, modern planning, and community-focused development.",
-      highlight: true,
-      comingSoon: true,
+      image: serviceImage2,
+      title: "Home Valuation",
+      description: "Get an accurate assessment of your property's value. Our comprehensive valuation considers market conditions, comparable sales, and property condition.",
+      cta: "Get Valuation",
+      ctaLink: "#sell",
     },
   ];
 
   return (
-    <section id="services" className="py-24 lg:py-32 bg-card/30">
+    <section id="services" className="py-24 lg:py-32 bg-tan/10">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4" data-testid="text-services-title">
-            What We Do
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Comprehensive real estate investment services designed to create win-win outcomes for sellers, investors, and communities.
-          </p>
-        </div>
+        {/* Section header */}
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-16 tracking-tight" data-testid="text-services-title">
+          SERVICES
+        </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Two-column service cards */}
+        <div className="space-y-8">
           {services.map((service, index) => (
-            <Card 
-              key={index} 
-              className={`p-6 hover-elevate transition-all duration-300 ${service.comingSoon ? 'border-primary/30' : ''}`}
+            <div 
+              key={index}
+              className="grid lg:grid-cols-2 gap-8 bg-card border border-border rounded-lg overflow-hidden hover-elevate"
               data-testid={`card-service-${index}`}
             >
-              <CardContent className="p-0">
-                <div className={`w-14 h-14 rounded-lg flex items-center justify-center mb-5 ${service.comingSoon ? 'bg-primary/20' : 'bg-primary/10'}`}>
-                  <service.icon className={`w-7 h-7 ${service.comingSoon ? 'text-primary' : 'text-primary'}`} />
+              {/* Image left */}
+              <div className="aspect-[4/3] lg:aspect-auto">
+                <img 
+                  src={service.image} 
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* Content right */}
+              <div className="p-8 lg:p-12 flex flex-col justify-center">
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-4">{service.title}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-8">{service.description}</p>
+                <div>
+                  <a href={service.ctaLink}>
+                    <Button variant="outline" size="lg" className="px-8">
+                      {service.cta}
+                    </Button>
+                  </a>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-xl font-semibold">{service.title}</h3>
-                  {service.comingSoon && (
-                    <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
-                      Coming Soon
-                    </span>
-                  )}
-                </div>
-                <p className="text-muted-foreground leading-relaxed">{service.description}</p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
+        </div>
+
+        {/* Additional services grid */}
+        <div className="mt-16 pt-16 border-t border-border">
+          <h3 className="text-xl font-semibold mb-8 text-muted-foreground">Additional Services</h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties" },
+              { icon: TrendingUp, title: "Buy & Hold", desc: "Long-term rental strategies" },
+              { icon: Palette, title: "Design & Reno", desc: "Full renovation management" },
+              { icon: Building, title: "New Construction", desc: "Coming Soon", comingSoon: true },
+            ].map((item, index) => (
+              <Card 
+                key={index}
+                className={`p-6 hover-elevate ${item.comingSoon ? 'border-tan/30' : ''}`}
+              >
+                <CardContent className="p-0 flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${item.comingSoon ? 'bg-tan/20' : 'bg-primary/10'}`}>
+                    <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-tan' : 'text-primary'}`} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold">{item.title}</h4>
+                      {item.comingSoon && (
+                        <span className="text-xs bg-tan/20 text-tan px-2 py-0.5 rounded-full font-medium">
+                          Soon
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -185,18 +215,18 @@ function ServicesSection() {
 
 function FeaturedProjectSection() {
   return (
-    <section id="projects" className="py-24 lg:py-32">
+    <section id="projects" className="py-24 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative">
-            <div className="aspect-[4/3] rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-border overflow-hidden">
-              <div className="text-center p-8">
-                <HomeIcon className="w-20 h-20 text-primary/40 mx-auto mb-4" />
-                <p className="text-lg text-muted-foreground font-medium">Featured Project</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">Nelson Dr, Richmond, CA</p>
-              </div>
+            <div className="aspect-[4/3] rounded-xl overflow-hidden">
+              <img 
+                src={serviceImage2} 
+                alt="Featured Project - Nelson Dr"
+                className="w-full h-full object-cover"
+              />
             </div>
-            <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-semibold text-sm shadow-lg">
+            <div className="absolute -bottom-4 -right-4 bg-tan text-tan-foreground px-5 py-2.5 rounded-lg font-semibold text-sm shadow-lg">
               <Star className="w-4 h-4 inline mr-1.5" />
               Featured Flip
             </div>
@@ -204,7 +234,7 @@ function FeaturedProjectSection() {
 
           <div className="space-y-6">
             <div>
-              <span className="text-primary font-medium text-sm uppercase tracking-wide">Case Study</span>
+              <span className="text-tan font-medium text-sm uppercase tracking-wide">Case Study</span>
               <h2 className="text-3xl sm:text-4xl font-semibold mt-2" data-testid="text-featured-title">
                 Nelson Dr, Richmond, CA
               </h2>
@@ -215,10 +245,10 @@ function FeaturedProjectSection() {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <span className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium">Kitchen Remodel</span>
-              <span className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium">Bath Updates</span>
-              <span className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium">New Flooring</span>
-              <span className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium">Exterior Refresh</span>
+              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">Kitchen Remodel</span>
+              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">Bath Updates</span>
+              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">New Flooring</span>
+              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">Exterior Refresh</span>
             </div>
 
             <div className="grid grid-cols-3 gap-6 py-6 border-t border-border">
@@ -232,12 +262,12 @@ function FeaturedProjectSection() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-lg font-semibold text-primary">Completed</p>
+                <p className="text-lg font-semibold text-tan">Completed</p>
               </div>
             </div>
 
             <Link href="/projects">
-              <Button variant="outline" data-testid="button-view-projects">
+              <Button variant="outline" className="border-tan/30 hover:bg-tan/10" data-testid="button-view-projects">
                 View All Projects
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -306,12 +336,12 @@ function SellPropertySection() {
   };
 
   return (
-    <section id="sell" className="py-24 lg:py-32 bg-card/30">
+    <section id="sell" className="py-24 lg:py-32 bg-tan/5">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           <div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6" data-testid="text-sell-title">
-              Sell a Property
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight" data-testid="text-sell-title">
+              SELL A PROPERTY
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
               Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees.
@@ -319,8 +349,8 @@ function SellPropertySection() {
             
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Shield className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Shield className="w-4 h-4 text-tan" />
                 </div>
                 <div>
                   <h4 className="font-medium">Fair Cash Offers</h4>
@@ -328,8 +358,8 @@ function SellPropertySection() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Sparkles className="w-4 h-4 text-tan" />
                 </div>
                 <div>
                   <h4 className="font-medium">Sell As-Is</h4>
@@ -337,8 +367,8 @@ function SellPropertySection() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <ArrowRight className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <ArrowRight className="w-4 h-4 text-tan" />
                 </div>
                 <div>
                   <h4 className="font-medium">Flexible Timeline</h4>
@@ -348,7 +378,7 @@ function SellPropertySection() {
             </div>
           </div>
 
-          <Card className="p-8">
+          <Card className="p-8 border-tan/20">
             <CardContent className="p-0">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -527,10 +557,10 @@ function InvestSection() {
   };
 
   return (
-    <section id="invest" className="py-24 lg:py-32">
+    <section id="invest" className="py-24 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
-          <Card className="p-8 lg:order-2">
+          <Card className="p-8 lg:order-2 border-primary/20">
             <CardContent className="p-0">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -636,8 +666,8 @@ function InvestSection() {
           </Card>
 
           <div className="lg:order-1">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6" data-testid="text-invest-title">
-              Invest With Pegasus
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight" data-testid="text-invest-title">
+              INVEST WITH PEGASUS
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
               Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real.
@@ -689,12 +719,12 @@ function DreamsCaperCreedSection() {
   ];
 
   return (
-    <section id="creed" className="py-24 lg:py-32 bg-card/30">
+    <section id="creed" className="py-24 lg:py-32 bg-tan/5">
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center mb-16">
-          <span className="text-primary font-medium text-sm uppercase tracking-wider">Our Identity</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mt-4 mb-6" data-testid="text-creed-title">
-            The Dreamscaper Creed
+          <span className="text-tan font-medium text-sm uppercase tracking-wider">Our Identity</span>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-creed-title">
+            THE DREAMSCAPER CREED
           </h2>
         </div>
 
@@ -705,24 +735,24 @@ function DreamsCaperCreedSection() {
               className="flex items-center gap-4 text-xl sm:text-2xl font-medium text-foreground"
               data-testid={`creed-line-${index}`}
             >
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <line.icon className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0">
+                <line.icon className="w-5 h-5 text-tan" />
               </div>
-              <p className={index === 0 ? "text-primary" : ""}>{line.text}</p>
+              <p className={index === 0 ? "text-tan" : ""}>{line.text}</p>
             </div>
           ))}
         </div>
 
-        <Card className="p-8">
+        <Card className="p-8 border-tan/20">
           <CardContent className="p-0">
             <p className="text-lg text-muted-foreground leading-relaxed">
-              <span className="text-foreground font-medium">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
+              <span className="text-tan font-medium">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
             </p>
           </CardContent>
         </Card>
 
-        <div className="mt-12 p-8 border border-border rounded-xl bg-background/50">
-          <h3 className="text-xl font-semibold mb-4">Our Mission</h3>
+        <div className="mt-12 p-8 border border-tan/20 rounded-xl bg-card/50">
+          <h3 className="text-xl font-semibold mb-4 text-tan">Our Mission</h3>
           <p className="text-muted-foreground leading-relaxed">
             "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
           </p>
@@ -782,12 +812,12 @@ function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-24 lg:py-32">
+    <section id="contact" className="py-24 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           <div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6" data-testid="text-contact-title">
-              Contact Us
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight" data-testid="text-contact-title">
+              CONTACT US
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
               Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you.
@@ -795,8 +825,8 @@ function ContactSection() {
             
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-tan/20 flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-tan" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
@@ -804,8 +834,8 @@ function ContactSection() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-tan/20 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-tan" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
@@ -813,8 +843,8 @@ function ContactSection() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-tan/20 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-tan" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Location</p>
