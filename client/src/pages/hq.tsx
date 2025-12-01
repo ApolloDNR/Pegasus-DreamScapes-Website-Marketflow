@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   Home, 
@@ -15,12 +16,38 @@ import {
   LogOut,
   Loader2,
   DollarSign,
-  Clock
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  MessageSquare,
+  ArrowRight,
+  RefreshCw
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SellerLead, InvestorLead, Contact } from "@shared/schema";
+
+const LEAD_STATUSES = ["new", "contacted", "qualified", "closed", "lost"] as const;
+type LeadStatus = typeof LEAD_STATUSES[number];
+
+const STATUS_COLORS: Record<LeadStatus, string> = {
+  new: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  contacted: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  qualified: "bg-green-500/20 text-green-400 border-green-500/30",
+  closed: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  lost: "bg-red-500/20 text-red-400 border-red-500/30",
+};
+
+const STATUS_ICONS: Record<LeadStatus, typeof CheckCircle2> = {
+  new: AlertCircle,
+  contacted: MessageSquare,
+  qualified: TrendingUp,
+  closed: CheckCircle2,
+  lost: XCircle,
+};
 
 export default function HQ() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -55,6 +82,7 @@ export default function HQ() {
     <div className="min-h-screen pt-16">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <DashboardHeader user={user} />
+        <QuickActions />
         <StatsCards />
         <LeadsTabs />
       </div>
@@ -79,7 +107,7 @@ function DashboardHeader({ user }: { user: any }) {
     <div className="flex items-center justify-between mb-8">
       <div>
         <h1 className="text-3xl font-bold" data-testid="text-hq-title">Pegasus HQ</h1>
-        <p className="text-muted-foreground">Welcome back, {displayName}</p>
+        <p className="text-muted-foreground">Command Center - Welcome back, {displayName}</p>
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
@@ -101,100 +129,277 @@ function DashboardHeader({ user }: { user: any }) {
   );
 }
 
-function StatsCards() {
+function QuickActions() {
   const { data: sellerLeads } = useQuery<SellerLead[]>({
     queryKey: ["/api/hq/seller-leads"],
   });
   const { data: investorLeads } = useQuery<InvestorLead[]>({
     queryKey: ["/api/hq/investor-leads"],
   });
-  const { data: contacts } = useQuery<Contact[]>({
+
+  const newSellerLeads = sellerLeads?.filter(l => l.status === "new").length || 0;
+  const newInvestorLeads = investorLeads?.filter(l => l.status === "new").length || 0;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <Card className="hover-elevate cursor-pointer" data-testid="action-new-sellers">
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="p-3 rounded-lg bg-blue-500/20">
+            <Home className="w-5 h-5 text-blue-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">New Seller Leads</p>
+            <p className="text-2xl font-bold">{newSellerLeads}</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground" />
+        </CardContent>
+      </Card>
+
+      <Card className="hover-elevate cursor-pointer" data-testid="action-new-investors">
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="p-3 rounded-lg bg-green-500/20">
+            <TrendingUp className="w-5 h-5 text-green-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">New Investor Leads</p>
+            <p className="text-2xl font-bold">{newInvestorLeads}</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground" />
+        </CardContent>
+      </Card>
+
+      <Card className="hover-elevate cursor-pointer" data-testid="action-pipeline">
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="p-3 rounded-lg bg-purple-500/20">
+            <Building className="w-5 h-5 text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">Active Deals</p>
+            <p className="text-2xl font-bold">
+              {(sellerLeads?.filter(l => l.status === "qualified").length || 0) + 
+               (investorLeads?.filter(l => l.status === "qualified").length || 0)}
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground" />
+        </CardContent>
+      </Card>
+
+      <Card className="hover-elevate cursor-pointer" data-testid="action-closed">
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="p-3 rounded-lg bg-emerald-500/20">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">Closed This Month</p>
+            <p className="text-2xl font-bold">
+              {(sellerLeads?.filter(l => l.status === "closed").length || 0) + 
+               (investorLeads?.filter(l => l.status === "closed").length || 0)}
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function StatsCards() {
+  const { data: sellerLeads, isLoading: loadingSellers, refetch: refetchSellers } = useQuery<SellerLead[]>({
+    queryKey: ["/api/hq/seller-leads"],
+  });
+  const { data: investorLeads, isLoading: loadingInvestors, refetch: refetchInvestors } = useQuery<InvestorLead[]>({
+    queryKey: ["/api/hq/investor-leads"],
+  });
+  const { data: contacts, isLoading: loadingContacts, refetch: refetchContacts } = useQuery<Contact[]>({
     queryKey: ["/api/hq/contacts"],
   });
+
+  const handleRefresh = () => {
+    refetchSellers();
+    refetchInvestors();
+    refetchContacts();
+  };
+
+  const isLoading = loadingSellers || loadingInvestors || loadingContacts;
 
   const stats = [
     {
       title: "Seller Leads",
       value: sellerLeads?.length || 0,
-      newCount: sellerLeads?.filter(l => l.status === "new").length || 0,
+      breakdown: {
+        new: sellerLeads?.filter(l => l.status === "new").length || 0,
+        contacted: sellerLeads?.filter(l => l.status === "contacted").length || 0,
+        qualified: sellerLeads?.filter(l => l.status === "qualified").length || 0,
+      },
       icon: Home,
-      color: "text-blue-500",
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/20",
     },
     {
       title: "Investor Leads",
       value: investorLeads?.length || 0,
-      newCount: investorLeads?.filter(l => l.status === "new").length || 0,
+      breakdown: {
+        new: investorLeads?.filter(l => l.status === "new").length || 0,
+        contacted: investorLeads?.filter(l => l.status === "contacted").length || 0,
+        qualified: investorLeads?.filter(l => l.status === "qualified").length || 0,
+      },
       icon: TrendingUp,
-      color: "text-green-500",
+      color: "text-green-400",
+      bgColor: "bg-green-500/20",
     },
     {
       title: "Contact Messages",
       value: contacts?.length || 0,
-      newCount: contacts?.filter(c => c.status === "new").length || 0,
+      breakdown: {
+        new: contacts?.filter(c => c.status === "new").length || 0,
+        contacted: contacts?.filter(c => c.status === "replied").length || 0,
+        qualified: contacts?.filter(c => c.status === "resolved").length || 0,
+      },
       icon: Mail,
-      color: "text-purple-500",
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/20",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      {stats.map((stat, index) => (
-        <Card key={index} data-testid={`card-stat-${index}`}>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className={`w-5 h-5 ${stat.color}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stat.value}</div>
-            {stat.newCount > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                <Badge variant="secondary" className="mr-1">{stat.newCount}</Badge>
-                new
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Pipeline Overview</h2>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleRefresh}
+          disabled={isLoading}
+          data-testid="button-refresh"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, index) => (
+          <Card key={index} data-testid={`card-stat-${index}`}>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
+              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold mb-3">{stat.value}</div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-400">
+                  {stat.breakdown.new} new
+                </Badge>
+                <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-400">
+                  {stat.breakdown.contacted} in progress
+                </Badge>
+                <Badge variant="outline" className="text-xs bg-green-500/10 border-green-500/30 text-green-400">
+                  {stat.breakdown.qualified} qualified
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
 
 function LeadsTabs() {
-  return (
-    <Tabs defaultValue="seller-leads" className="w-full">
-      <TabsList className="mb-6">
-        <TabsTrigger value="seller-leads" data-testid="tab-seller-leads">
-          <Home className="w-4 h-4 mr-2" />
-          Seller Leads
-        </TabsTrigger>
-        <TabsTrigger value="investor-leads" data-testid="tab-investor-leads">
-          <TrendingUp className="w-4 h-4 mr-2" />
-          Investor Leads
-        </TabsTrigger>
-        <TabsTrigger value="contacts" data-testid="tab-contacts">
-          <Mail className="w-4 h-4 mr-2" />
-          Contacts
-        </TabsTrigger>
-      </TabsList>
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
 
-      <TabsContent value="seller-leads">
-        <SellerLeadsTable />
-      </TabsContent>
-      <TabsContent value="investor-leads">
-        <InvestorLeadsTable />
-      </TabsContent>
-      <TabsContent value="contacts">
-        <ContactsTable />
-      </TabsContent>
-    </Tabs>
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Lead Management</h2>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeadStatus | "all")}>
+          <SelectTrigger className="w-40" data-testid="select-status-filter">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {LEAD_STATUSES.map(status => (
+              <SelectItem key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Tabs defaultValue="seller-leads" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="seller-leads" data-testid="tab-seller-leads">
+            <Home className="w-4 h-4 mr-2" />
+            Seller Leads
+          </TabsTrigger>
+          <TabsTrigger value="investor-leads" data-testid="tab-investor-leads">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Investor Leads
+          </TabsTrigger>
+          <TabsTrigger value="contacts" data-testid="tab-contacts">
+            <Mail className="w-4 h-4 mr-2" />
+            Contacts
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="seller-leads">
+          <SellerLeadsTable statusFilter={statusFilter} />
+        </TabsContent>
+        <TabsContent value="investor-leads">
+          <InvestorLeadsTable statusFilter={statusFilter} />
+        </TabsContent>
+        <TabsContent value="contacts">
+          <ContactsTable statusFilter={statusFilter} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 
-function SellerLeadsTable() {
+function StatusBadge({ status }: { status: string }) {
+  const validStatus = LEAD_STATUSES.includes(status as LeadStatus) ? status as LeadStatus : "new";
+  const Icon = STATUS_ICONS[validStatus];
+  
+  return (
+    <Badge 
+      variant="outline" 
+      className={`${STATUS_COLORS[validStatus]} border`}
+    >
+      <Icon className="w-3 h-3 mr-1" />
+      {status}
+    </Badge>
+  );
+}
+
+function SellerLeadsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }) {
+  const { toast } = useToast();
   const { data: leads, isLoading } = useQuery<SellerLead[]>({
     queryKey: ["/api/hq/seller-leads"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const res = await apiRequest("PATCH", `/api/hq/seller-leads/${id}/status`, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/seller-leads"] });
+      toast({
+        title: "Status Updated",
+        description: "Seller lead status has been updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update status.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -205,11 +410,17 @@ function SellerLeadsTable() {
     );
   }
 
-  if (!leads || leads.length === 0) {
+  const filteredLeads = leads?.filter(lead => 
+    statusFilter === "all" || lead.status === statusFilter
+  ) || [];
+
+  if (filteredLeads.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
-          No seller leads yet. They will appear here when someone submits the seller form.
+          {statusFilter === "all" 
+            ? "No seller leads yet. They will appear here when someone submits the seller form."
+            : `No seller leads with status "${statusFilter}".`}
         </CardContent>
       </Card>
     );
@@ -225,10 +436,10 @@ function SellerLeadsTable() {
 
   return (
     <div className="space-y-4">
-      {leads.map((lead, index) => (
+      {filteredLeads.map((lead, index) => (
         <Card key={lead.id} data-testid={`card-seller-lead-${index}`}>
           <CardHeader className="pb-2">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
                 <CardTitle className="text-lg">{lead.name}</CardTitle>
                 <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
@@ -242,10 +453,23 @@ function SellerLeadsTable() {
                   </span>
                 </CardDescription>
               </div>
-              <div className="flex flex-col items-end gap-2">
-                <Badge variant={lead.status === "new" ? "default" : "secondary"}>
-                  {lead.status}
-                </Badge>
+              <div className="flex flex-wrap items-center gap-3">
+                <Select
+                  value={lead.status}
+                  onValueChange={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  <SelectTrigger className="w-36" data-testid={`select-status-${lead.id}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEAD_STATUSES.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {formatDate(lead.createdAt)}
@@ -291,9 +515,31 @@ function SellerLeadsTable() {
   );
 }
 
-function InvestorLeadsTable() {
+function InvestorLeadsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }) {
+  const { toast } = useToast();
   const { data: leads, isLoading } = useQuery<InvestorLead[]>({
     queryKey: ["/api/hq/investor-leads"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const res = await apiRequest("PATCH", `/api/hq/investor-leads/${id}/status`, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/investor-leads"] });
+      toast({
+        title: "Status Updated",
+        description: "Investor lead status has been updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update status.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -304,11 +550,17 @@ function InvestorLeadsTable() {
     );
   }
 
-  if (!leads || leads.length === 0) {
+  const filteredLeads = leads?.filter(lead => 
+    statusFilter === "all" || lead.status === statusFilter
+  ) || [];
+
+  if (filteredLeads.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
-          No investor leads yet. They will appear here when someone submits the investor form.
+          {statusFilter === "all" 
+            ? "No investor leads yet. They will appear here when someone submits the investor form."
+            : `No investor leads with status "${statusFilter}".`}
         </CardContent>
       </Card>
     );
@@ -324,10 +576,10 @@ function InvestorLeadsTable() {
 
   return (
     <div className="space-y-4">
-      {leads.map((lead, index) => (
+      {filteredLeads.map((lead, index) => (
         <Card key={lead.id} data-testid={`card-investor-lead-${index}`}>
           <CardHeader className="pb-2">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
                 <CardTitle className="text-lg">{lead.name}</CardTitle>
                 <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
@@ -341,10 +593,23 @@ function InvestorLeadsTable() {
                   </span>
                 </CardDescription>
               </div>
-              <div className="flex flex-col items-end gap-2">
-                <Badge variant={lead.status === "new" ? "default" : "secondary"}>
-                  {lead.status}
-                </Badge>
+              <div className="flex flex-wrap items-center gap-3">
+                <Select
+                  value={lead.status}
+                  onValueChange={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  <SelectTrigger className="w-36" data-testid={`select-status-${lead.id}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEAD_STATUSES.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {formatDate(lead.createdAt)}
@@ -390,9 +655,31 @@ function InvestorLeadsTable() {
   );
 }
 
-function ContactsTable() {
+function ContactsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }) {
+  const { toast } = useToast();
   const { data: contacts, isLoading } = useQuery<Contact[]>({
     queryKey: ["/api/hq/contacts"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const res = await apiRequest("PATCH", `/api/hq/contacts/${id}/status`, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/contacts"] });
+      toast({
+        title: "Status Updated",
+        description: "Contact status has been updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update status.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -403,11 +690,17 @@ function ContactsTable() {
     );
   }
 
-  if (!contacts || contacts.length === 0) {
+  const filteredContacts = contacts?.filter(contact => 
+    statusFilter === "all" || contact.status === statusFilter
+  ) || [];
+
+  if (filteredContacts.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
-          No contact messages yet. They will appear here when someone submits the contact form.
+          {statusFilter === "all" 
+            ? "No contact messages yet. They will appear here when someone submits the contact form."
+            : `No contacts with status "${statusFilter}".`}
         </CardContent>
       </Card>
     );
@@ -423,10 +716,10 @@ function ContactsTable() {
 
   return (
     <div className="space-y-4">
-      {contacts.map((contact, index) => (
+      {filteredContacts.map((contact, index) => (
         <Card key={contact.id} data-testid={`card-contact-${index}`}>
           <CardHeader className="pb-2">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
                 <CardTitle className="text-lg">{contact.name}</CardTitle>
                 <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
@@ -442,10 +735,21 @@ function ContactsTable() {
                   )}
                 </CardDescription>
               </div>
-              <div className="flex flex-col items-end gap-2">
-                <Badge variant={contact.status === "new" ? "default" : "secondary"}>
-                  {contact.status}
-                </Badge>
+              <div className="flex flex-wrap items-center gap-3">
+                <Select
+                  value={contact.status}
+                  onValueChange={(status) => updateStatusMutation.mutate({ id: contact.id, status })}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  <SelectTrigger className="w-36" data-testid={`select-contact-status-${contact.id}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="replied">Replied</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                  </SelectContent>
+                </Select>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {formatDate(contact.createdAt)}
