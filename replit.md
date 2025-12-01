@@ -2,13 +2,20 @@
 
 ## Overview
 
-Pegasus Dreamscapes Corp is a dual-funnel real estate investment platform designed to connect motivated property sellers with investment opportunities. The application serves two primary user flows: sellers looking to quickly sell distressed or underperforming properties, and investors seeking to partner on fix-and-flip or rental property ventures.
+Pegasus Dreamscapes Corp is a real estate investment platform designed to connect motivated property sellers with investment opportunities. The application serves two primary user flows: sellers looking to quickly sell distressed or underperforming properties, and investors seeking to partner on fix-and-flip or rental property ventures.
 
-The platform features an elegant light luxury design inspired by premium real estate brands like Sotheby's and Ritz-Carlton, emphasizing trust, sophistication, and professional presentation of real estate investment opportunities. The site includes informational pages about the company's services, past projects, and design studio capabilities, along with lead capture forms for both seller and investor prospects.
+**Brand Tagline**: "Where Designed Profits Are Crafted."
+
+**Mission**: "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
+
+The platform features a **dark cinematic theme** with bronze/blood-orange accents, emphasizing premium credibility, design-forward aesthetics, and community elevation. The homepage is a single-page experience with smooth scrolling, while additional pages (Projects, Resources, Calculators, About) provide deeper content.
 
 ## Recent Updates
 
-- **Light Luxury Design Transformation**: Migrated from dark theme to elegant light luxury aesthetic with cream/beige backgrounds, navy primary colors, and brass accents
+- **Dark Cinematic Theme Transformation**: Redesigned to dark charcoal background (HSL 220, 15%, 8%) with bronze/blood-orange accents (HSL 25, 75%, 55%) and warm cream text
+- **Single-Page Homepage**: Converted homepage to smooth-scrolling single-page layout with sections for Services, Sell, Invest, Dreamscaper Creed, and Contact
+- **Dreamscaper Identity Section**: Added brand identity section featuring the Dreamscaper Creed and mission statement
+- **Four-Service Grid**: Updated services to include Fix & Flip, Buy & Hold, Design & Renovation, and New Construction (Coming Soon)
 - **Work Queue Feature**: Added queue tab in Pegasus HQ showing overdue, today's, and upcoming follow-ups with priority groupings
 - **Serif Typography**: Added Playfair Display for headlines (H1-H3) with Inter for body text
 - **Pegasus HQ Dashboard**: Added authenticated dashboard at `/hq` with lead management, protected by Replit Auth
@@ -48,12 +55,12 @@ Preferred communication style: Simple, everyday language.
 **UI Component Library**: Radix UI primitives wrapped with custom styled components following the shadcn/ui pattern. Components are stored in `client/src/components/ui/` and use Tailwind CSS for styling with a centralized design system defined in CSS variables.
 
 **Design System**: 
-- Light luxury theme with elegant cream/beige backgrounds
-- Custom color palette using HSL color space: Primary navy (HSL 220, 45%, 25%), Secondary brass (HSL 40, 45%, 55%)
+- Dark cinematic theme with charcoal/black backgrounds
+- Custom color palette using HSL color space: Background (HSL 220, 15%, 8%), Primary bronze/blood-orange (HSL 25, 75%, 55%), Foreground cream (HSL 35, 15%, 92%)
 - Typography: Playfair Display serif for headlines (H1-H3), Inter for body text
 - Standardized spacing using Tailwind's spacing scale (4, 8, 12, 16, 20, 24)
 - Component variants using class-variance-authority for type-safe style variations
-- Professional luxury real estate aesthetic inspired by Sotheby's and Ritz-Carlton
+- Premium design-forward aesthetic emphasizing community elevation
 
 **Form Handling**: React Hook Form with Zod schema validation for type-safe form inputs. Forms are validated client-side before submission.
 

@@ -4,19 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import logoImage from "@assets/image_1764616120774.png";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "Welcome" },
-  { href: "/services", label: "Service List" },
-  { href: "/resources", label: "Blog Feed" },
-  { href: "/projects", label: "Projects" },
+const homeLinks = [
+  { href: "#services", label: "Services" },
+  { href: "#sell", label: "Sell" },
+  { href: "#invest", label: "Invest" },
+  { href: "#creed", label: "Dreamscaper" },
+  { href: "#contact", label: "Contact" },
 ];
 
-const moreLinks = [
+const pageLinks = [
+  { href: "/projects", label: "Projects" },
+  { href: "/resources", label: "Resources" },
   { href: "/calculators", label: "Calculators" },
-  { href: "/sell", label: "Sell" },
-  { href: "/invest", label: "Invest" },
-  { href: "/contact", label: "Contact" },
+  { href: "/about", label: "About" },
 ];
 
 export function Navigation() {
@@ -24,8 +24,21 @@ export function Navigation() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [location] = useLocation();
 
+  const isHomePage = location === "/";
+
+  const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("#") && isHomePage) {
+      e.preventDefault();
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+      setIsOpen(false);
+    }
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-3" data-testid="link-logo">
           <img 
@@ -36,18 +49,32 @@ export function Navigation() {
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location === link.href ? "text-primary" : "text-foreground"
-              }`}
-              data-testid={`link-nav-${link.label.toLowerCase().replace(' ', '-')}`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {isHomePage ? (
+            <>
+              {homeLinks.map((link) => (
+                <a 
+                  key={link.href} 
+                  href={link.href}
+                  onClick={(e) => handleScrollClick(e, link.href)}
+                  className="text-sm font-medium transition-colors hover:text-primary text-foreground cursor-pointer"
+                  data-testid={`link-nav-${link.label.toLowerCase()}`}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </>
+          ) : (
+            <>
+              <Link 
+                href="/"
+                className="text-sm font-medium transition-colors hover:text-primary text-foreground"
+                data-testid="link-nav-home"
+              >
+                Home
+              </Link>
+            </>
+          )}
+          
           <div 
             className="relative"
             onMouseLeave={() => setMoreOpen(false)}
@@ -68,12 +95,12 @@ export function Navigation() {
             {moreOpen && (
               <div 
                 id="more-menu"
-                className="absolute top-full right-0 mt-2 py-2 bg-card rounded-md shadow-lg border border-border min-w-[140px]"
+                className="absolute top-full right-0 mt-2 py-2 bg-card rounded-md shadow-lg border border-border min-w-[160px]"
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') setMoreOpen(false);
                 }}
               >
-                {moreLinks.map((link, index) => (
+                {pageLinks.map((link, index) => (
                   <Link 
                     key={link.href} 
                     href={link.href}
@@ -81,7 +108,7 @@ export function Navigation() {
                     data-testid={`link-nav-${link.label.toLowerCase()}`}
                     onClick={() => setMoreOpen(false)}
                     onBlur={(e) => {
-                      if (index === moreLinks.length - 1 && !e.relatedTarget?.closest('#more-menu')) {
+                      if (index === pageLinks.length - 1 && !e.relatedTarget?.closest('#more-menu')) {
                         setMoreOpen(false);
                       }
                     }}
@@ -102,6 +129,13 @@ export function Navigation() {
           >
             Dashboard
           </Link>
+          {isHomePage && (
+            <a href="#sell" onClick={(e) => handleScrollClick(e, "#sell")}>
+              <Button size="sm" className="hidden sm:flex" data-testid="button-nav-cta">
+                Get Started
+              </Button>
+            </a>
+          )}
           <button
             className="lg:hidden p-2 hover-elevate rounded-md"
             onClick={() => setIsOpen(!isOpen)}
@@ -118,19 +152,45 @@ export function Navigation() {
       {isOpen && (
         <div id="mobile-menu" className="lg:hidden bg-card border-b border-border">
           <div className="px-6 py-4 space-y-2">
-            {[...navLinks, ...moreLinks].map((link) => (
+            {isHomePage ? (
+              <>
+                {homeLinks.map((link) => (
+                  <a 
+                    key={link.href} 
+                    href={link.href}
+                    onClick={(e) => handleScrollClick(e, link.href)}
+                    className="block py-3 px-4 rounded-md text-sm font-medium transition-colors text-foreground hover:bg-secondary cursor-pointer"
+                    data-testid={`link-mobile-${link.label.toLowerCase()}`}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </>
+            ) : (
               <Link 
-                key={link.href} 
-                href={link.href}
-                className={`block py-3 px-4 rounded-md text-sm font-medium transition-colors ${
-                  location === link.href ? "text-primary bg-secondary" : "text-foreground hover:bg-secondary"
-                }`}
+                href="/"
+                className="block py-3 px-4 rounded-md text-sm font-medium transition-colors text-foreground hover:bg-secondary"
                 onClick={() => setIsOpen(false)}
-                data-testid={`link-mobile-${link.label.toLowerCase().replace(' ', '-')}`}
+                data-testid="link-mobile-home"
               >
-                {link.label}
+                Home
               </Link>
-            ))}
+            )}
+            <div className="pt-2 border-t border-border space-y-2">
+              {pageLinks.map((link) => (
+                <Link 
+                  key={link.href} 
+                  href={link.href}
+                  className={`block py-3 px-4 rounded-md text-sm font-medium transition-colors ${
+                    location === link.href ? "text-primary bg-secondary" : "text-foreground hover:bg-secondary"
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                  data-testid={`link-mobile-${link.label.toLowerCase()}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
             <div className="pt-4 border-t border-border">
               <Link 
                 href="/hq"

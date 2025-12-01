@@ -4,8 +4,92 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - Warm Beige Theme (matching logo) */
+/* DARK MODE - Charcoal/Black Theme with Bronze/Blood-Orange Accents */
 :root {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+  --background: 220 15% 8%;
+  --foreground: 35 15% 92%;
+  --border: 220 12% 18%;
+  --card: 220 15% 12%;
+  --card-foreground: 35 15% 92%;
+  --card-border: 220 12% 20%;
+  --sidebar: 220 15% 10%;
+  --sidebar-foreground: 35 15% 92%;
+  --sidebar-border: 220 12% 18%;
+  --sidebar-primary: 25 75% 55%;
+  --sidebar-primary-foreground: 220 15% 8%;
+  --sidebar-accent: 220 12% 18%;
+  --sidebar-accent-foreground: 35 15% 88%;
+  --sidebar-ring: 25 75% 55%;
+  --popover: 220 15% 12%;
+  --popover-foreground: 35 15% 92%;
+  --popover-border: 220 12% 20%;
+  --primary: 25 75% 55%;
+  --primary-foreground: 220 15% 8%;
+  --secondary: 220 12% 18%;
+  --secondary-foreground: 35 15% 88%;
+  --muted: 220 12% 16%;
+  --muted-foreground: 35 12% 60%;
+  --accent: 25 75% 55%;
+  --accent-foreground: 220 15% 8%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 220 12% 22%;
+  --ring: 25 75% 55%;
+  --chart-1: 25 75% 60%;
+  --chart-2: 220 45% 55%;
+  --chart-3: 35 40% 55%;
+  --chart-4: 220 35% 50%;
+  --chart-5: 25 65% 50%;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: .5rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.15);
+  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.20);
+  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.25);
+  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.30);
+  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+/* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.light {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
@@ -45,10 +129,6 @@
   --chart-3: 35 30% 45%;
   --chart-4: 220 35% 45%;
   --chart-5: 38 45% 40%;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: .5rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
@@ -56,86 +136,6 @@
   --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.10);
   --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.12);
   --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.15);
-  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-
-/* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-}
-
-.dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-  --background: 220 25% 10%;
-  --foreground: 35 15% 95%;
-  --border: 220 15% 20%;
-  --card: 220 20% 12%;
-  --card-foreground: 35 15% 95%;
-  --card-border: 220 15% 18%;
-  --sidebar: 220 20% 12%;
-  --sidebar-foreground: 35 15% 95%;
-  --sidebar-border: 220 15% 18%;
-  --sidebar-primary: 38 55% 55%;
-  --sidebar-primary-foreground: 220 25% 10%;
-  --sidebar-accent: 220 15% 18%;
-  --sidebar-accent-foreground: 35 15% 92%;
-  --sidebar-ring: 38 55% 55%;
-  --popover: 220 20% 14%;
-  --popover-foreground: 35 15% 95%;
-  --popover-border: 220 15% 20%;
-  --primary: 38 55% 55%;
-  --primary-foreground: 220 25% 10%;
-  --secondary: 220 15% 20%;
-  --secondary-foreground: 35 15% 92%;
-  --muted: 220 15% 18%;
-  --muted-foreground: 35 15% 65%;
-  --accent: 38 55% 55%;
-  --accent-foreground: 220 25% 10%;
-  --destructive: 0 72% 50%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 220 15% 25%;
-  --ring: 38 55% 55%;
-  --chart-1: 38 55% 60%;
-  --chart-2: 220 45% 55%;
-  --chart-3: 35 40% 55%;
-  --chart-4: 220 35% 50%;
-  --chart-5: 38 45% 50%;
-  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.15);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.20);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.25);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.30);
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
 
 /* Fallback for older browsers */
@@ -183,6 +183,11 @@
 
 .font-serif {
   font-family: var(--font-serif);
+}
+
+/* Smooth scrolling for single-page navigation */
+html {
+  scroll-behavior: smooth;
 }
 
 /**
