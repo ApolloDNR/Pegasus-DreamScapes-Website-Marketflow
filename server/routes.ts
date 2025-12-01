@@ -216,6 +216,31 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/hq/activities/:id/complete", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.markActivityCompleted(id);
+      if (!updated) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error marking activity as completed:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Queue Routes (for work queue/task management)
+  app.get("/api/hq/queue", isAuthenticated, async (req, res) => {
+    try {
+      const queueItems = await storage.getQueueItems();
+      return res.json(queueItems);
+    } catch (error) {
+      console.error("Error fetching queue:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Projects Routes (public)
   app.get("/api/projects", async (req, res) => {
     try {

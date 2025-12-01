@@ -4,10 +4,13 @@
 
 Pegasus Dreamscapes Corp is a dual-funnel real estate investment platform designed to connect motivated property sellers with investment opportunities. The application serves two primary user flows: sellers looking to quickly sell distressed or underperforming properties, and investors seeking to partner on fix-and-flip or rental property ventures.
 
-The platform features a sophisticated dark-themed design inspired by modern SaaS applications, emphasizing trust, transparency, and professional presentation of real estate investment opportunities. The site includes informational pages about the company's services, past projects, and design studio capabilities, along with lead capture forms for both seller and investor prospects.
+The platform features an elegant light luxury design inspired by premium real estate brands like Sotheby's and Ritz-Carlton, emphasizing trust, sophistication, and professional presentation of real estate investment opportunities. The site includes informational pages about the company's services, past projects, and design studio capabilities, along with lead capture forms for both seller and investor prospects.
 
 ## Recent Updates
 
+- **Light Luxury Design Transformation**: Migrated from dark theme to elegant light luxury aesthetic with cream/beige backgrounds, navy primary colors, and brass accents
+- **Work Queue Feature**: Added queue tab in Pegasus HQ showing overdue, today's, and upcoming follow-ups with priority groupings
+- **Serif Typography**: Added Playfair Display for headlines (H1-H3) with Inter for body text
 - **Pegasus HQ Dashboard**: Added authenticated dashboard at `/hq` with lead management, protected by Replit Auth
 - **Resources/Blog Section**: Added `/resources` page with real estate investment articles and individual article detail pages
 - **Deal Calculators**: Added `/calculators` page with ARV Calculator for sellers and ROI Calculator for investors
@@ -45,12 +48,12 @@ Preferred communication style: Simple, everyday language.
 **UI Component Library**: Radix UI primitives wrapped with custom styled components following the shadcn/ui pattern. Components are stored in `client/src/components/ui/` and use Tailwind CSS for styling with a centralized design system defined in CSS variables.
 
 **Design System**: 
-- Dark theme by default with sophisticated use of opacity and gradients
-- Custom color palette using HSL color space for better control
-- Bronze/blood-orange accent colors (HSL 22, 85%, 48%)
-- Typography system based on Inter font family
+- Light luxury theme with elegant cream/beige backgrounds
+- Custom color palette using HSL color space: Primary navy (HSL 220, 45%, 25%), Secondary brass (HSL 40, 45%, 55%)
+- Typography: Playfair Display serif for headlines (H1-H3), Inter for body text
 - Standardized spacing using Tailwind's spacing scale (4, 8, 12, 16, 20, 24)
 - Component variants using class-variance-authority for type-safe style variations
+- Professional luxury real estate aesthetic inspired by Sotheby's and Ritz-Carlton
 
 **Form Handling**: React Hook Form with Zod schema validation for type-safe form inputs. Forms are validated client-side before submission.
 

@@ -38,6 +38,20 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SellerLead, InvestorLead, Contact, LeadActivity } from "@shared/schema";
 
+interface QueueItem {
+  id: string;
+  type: 'follow_up' | 'new_lead';
+  priority: 'overdue' | 'today' | 'upcoming' | 'new';
+  leadType: 'seller' | 'investor' | 'contact';
+  leadId: number;
+  leadName: string;
+  leadEmail: string;
+  description: string;
+  dueDate?: string;
+  activityId?: number;
+  createdAt: string;
+}
+
 const LEAD_STATUSES = ["new", "contacted", "qualified", "closed", "lost"] as const;
 type LeadStatus = typeof LEAD_STATUSES[number];
 
@@ -324,30 +338,338 @@ function StatsCards() {
   );
 }
 
+function QueuePanel() {
+  const { toast } = useToast();
+  const [activityDialogOpen, setActivityDialogOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<{ type: string; id: number; name: string } | null>(null);
+
+  const { data: queueItems, isLoading } = useQuery<QueueItem[]>({
+    queryKey: ["/api/hq/queue"],
+  });
+
+  const completeActivityMutation = useMutation({
+    mutationFn: async (activityId: number) => {
+      const res = await apiRequest("PATCH", `/api/hq/activities/${activityId}/complete`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/queue"] });
+      toast({
+        title: "Task Completed",
+        description: "The follow-up has been marked as done.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to complete the task.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateLeadStatusMutation = useMutation({
+    mutationFn: async ({ leadType, leadId, status }: { leadType: string; leadId: number; status: string }) => {
+      const endpoint = leadType === 'contact' 
+        ? `/api/hq/contacts/${leadId}/status`
+        : `/api/hq/${leadType}-leads/${leadId}/status`;
+      const res = await apiRequest("PATCH", endpoint, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/seller-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/investor-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/contacts"] });
+      toast({
+        title: "Lead Updated",
+        description: "The lead status has been changed to contacted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update lead status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMarkContacted = (item: QueueItem) => {
+    updateLeadStatusMutation.mutate({ leadType: item.leadType, leadId: item.leadId, status: "contacted" });
+  };
+
+  const handleOpenActivity = (item: QueueItem) => {
+    setSelectedLead({ type: item.leadType, id: item.leadId, name: item.leadName });
+    setActivityDialogOpen(true);
+  };
+
+  const formatDueDate = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    
+    if (date < today) {
+      const daysAgo = Math.ceil((today.getTime() - date.getTime()) / (24 * 60 * 60 * 1000));
+      return `${daysAgo} day${daysAgo > 1 ? 's' : ''} overdue`;
+    } else if (date < tomorrow) {
+      return 'Today';
+    } else {
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    }
+  };
+
+  const getPriorityStyles = (priority: QueueItem['priority']) => {
+    switch (priority) {
+      case 'overdue':
+        return { badge: 'bg-red-500/20 text-red-400 border-red-500/30', icon: AlertCircle, color: 'text-red-400' };
+      case 'today':
+        return { badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: Clock, color: 'text-amber-400' };
+      case 'upcoming':
+        return { badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CalendarClock, color: 'text-blue-400' };
+      case 'new':
+        return { badge: 'bg-green-500/20 text-green-400 border-green-500/30', icon: Plus, color: 'text-green-400' };
+    }
+  };
+
+  const getLeadTypeStyles = (leadType: QueueItem['leadType']) => {
+    switch (leadType) {
+      case 'seller':
+        return { icon: Home, color: 'text-primary' };
+      case 'investor':
+        return { icon: TrendingUp, color: 'text-emerald-400' };
+      case 'contact':
+        return { icon: Mail, color: 'text-blue-400' };
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const overdueItems = queueItems?.filter(i => i.priority === 'overdue') || [];
+  const todayItems = queueItems?.filter(i => i.priority === 'today') || [];
+  const upcomingItems = queueItems?.filter(i => i.priority === 'upcoming') || [];
+  const newLeadItems = queueItems?.filter(i => i.priority === 'new') || [];
+
+  const renderQueueItem = (item: QueueItem) => {
+    const priorityStyles = getPriorityStyles(item.priority);
+    const leadTypeStyles = getLeadTypeStyles(item.leadType);
+    const LeadIcon = leadTypeStyles.icon;
+    const PriorityIcon = priorityStyles.icon;
+
+    return (
+      <Card key={item.id} className="hover-elevate" data-testid={`queue-item-${item.id}`}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div className={`p-2 rounded-lg bg-card ${leadTypeStyles.color}`}>
+                <LeadIcon className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium truncate" data-testid={`queue-item-name-${item.id}`}>
+                    {item.leadName}
+                  </span>
+                  <Badge variant="outline" className={`text-xs ${priorityStyles.badge}`}>
+                    <PriorityIcon className="w-3 h-3 mr-1" />
+                    {item.priority === 'new' ? 'New Lead' : item.dueDate ? formatDueDate(item.dueDate) : item.priority}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {item.leadType}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2" data-testid={`queue-item-desc-${item.id}`}>
+                  {item.description}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {item.leadEmail}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {item.type === 'follow_up' && item.activityId && (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => completeActivityMutation.mutate(item.activityId!)}
+                  disabled={completeActivityMutation.isPending}
+                  data-testid={`button-complete-${item.id}`}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                  Done
+                </Button>
+              )}
+              {item.type === 'new_lead' && (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleMarkContacted(item)}
+                  disabled={updateLeadStatusMutation.isPending}
+                  data-testid={`button-contacted-${item.id}`}
+                >
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  Contacted
+                </Button>
+              )}
+              <Button 
+                size="sm" 
+                variant="ghost"
+                onClick={() => handleOpenActivity(item)}
+                data-testid={`button-activity-queue-${item.id}`}
+              >
+                <History className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const totalItems = queueItems?.length || 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-sm">
+            {totalItems} item{totalItems !== 1 ? 's' : ''} in queue
+          </Badge>
+          {overdueItems.length > 0 && (
+            <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+              {overdueItems.length} overdue
+            </Badge>
+          )}
+          {todayItems.length > 0 && (
+            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+              {todayItems.length} due today
+            </Badge>
+          )}
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/hq/queue"] })}
+          data-testid="button-refresh-queue"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+
+      {totalItems === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <CheckCircle2 className="w-12 h-12 text-green-400 mb-4" />
+            <h3 className="text-lg font-medium mb-2">All caught up!</h3>
+            <p className="text-muted-foreground max-w-sm">
+              No pending follow-ups or new leads to action. Great job staying on top of your queue!
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {overdueItems.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-red-400 mb-3 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Overdue ({overdueItems.length})
+              </h3>
+              <div className="space-y-3">
+                {overdueItems.map(renderQueueItem)}
+              </div>
+            </div>
+          )}
+
+          {todayItems.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-amber-400 mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Due Today ({todayItems.length})
+              </h3>
+              <div className="space-y-3">
+                {todayItems.map(renderQueueItem)}
+              </div>
+            </div>
+          )}
+
+          {upcomingItems.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-blue-400 mb-3 flex items-center gap-2">
+                <CalendarClock className="w-4 h-4" />
+                Upcoming ({upcomingItems.length})
+              </h3>
+              <div className="space-y-3">
+                {upcomingItems.map(renderQueueItem)}
+              </div>
+            </div>
+          )}
+
+          {newLeadItems.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-green-400 mb-3 flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                New Leads ({newLeadItems.length})
+              </h3>
+              <div className="space-y-3">
+                {newLeadItems.map(renderQueueItem)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedLead && (
+        <ActivityDialog 
+          open={activityDialogOpen} 
+          onOpenChange={setActivityDialogOpen}
+          leadType={selectedLead.type}
+          leadId={selectedLead.id}
+          leadName={selectedLead.name}
+        />
+      )}
+    </div>
+  );
+}
+
 function LeadsTabs() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [activeTab, setActiveTab] = useState("queue");
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Lead Management</h2>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeadStatus | "all")}>
-          <SelectTrigger className="w-40" data-testid="select-status-filter">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {LEAD_STATUSES.map(status => (
-              <SelectItem key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {activeTab !== "queue" && (
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeadStatus | "all")}>
+            <SelectTrigger className="w-40" data-testid="select-status-filter">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {LEAD_STATUSES.map(status => (
+                <SelectItem key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
-      <Tabs defaultValue="seller-leads" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6">
+          <TabsTrigger value="queue" data-testid="tab-queue">
+            <Clock className="w-4 h-4 mr-2" />
+            Work Queue
+          </TabsTrigger>
           <TabsTrigger value="seller-leads" data-testid="tab-seller-leads">
             <Home className="w-4 h-4 mr-2" />
             Seller Leads
@@ -362,6 +684,9 @@ function LeadsTabs() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="queue">
+          <QueuePanel />
+        </TabsContent>
         <TabsContent value="seller-leads">
           <SellerLeadsTable statusFilter={statusFilter} />
         </TabsContent>

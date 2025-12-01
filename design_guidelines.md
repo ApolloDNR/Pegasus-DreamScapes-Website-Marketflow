@@ -1,190 +1,183 @@
-# Pegasus Dreamscapes Corp - Design Guidelines
+# Pegasus Dreamscapes Corp - Design Guidelines (Luxury Light Edition)
 
-## Design Approach: Reference-Based (Real Estate + Modern SaaS Hybrid)
-
-Drawing inspiration from **Compass Real Estate** (trust/professionalism) + **Webflow** (dark theme execution) + **Linear** (clean typography and spacing), creating a sophisticated real estate investment platform that balances credibility with modern design execution.
+## Design Approach: Reference-Based (Luxury Real Estate)
+Drawing inspiration from **Sotheby's International Realty** (timeless luxury) + **Ritz-Carlton** (refined elegance) + **Stripe** (clean execution), creating a sophisticated platform that exudes premium credibility.
 
 ---
 
 ## Core Design Principles
-
-1. **Dual-Funnel Clarity**: Every page must clearly direct users toward "Sell" or "Invest" pathways
-2. **Data-Driven Trust**: Showcase numbers, metrics, and transparency throughout
-3. **Professional Sophistication**: Dark theme executed with restraint, not drama
-4. **Form-First Design**: Lead capture is primary—forms must feel premium, not generic
+1. **Dual-Funnel Clarity**: Clear "Sell" and "Invest" pathways throughout
+2. **Elevated Trust**: Showcase metrics and transparency with premium presentation
+3. **Timeless Luxury**: Light, warm aesthetic with sophisticated restraint
+4. **Premium Form Experience**: Lead capture forms as luxury touchpoints
 
 ---
 
 ## Typography System
 
-**Primary Font**: Inter (via Google Fonts)
-- Headings: 600-700 weight
-- Body: 400-500 weight
-- Small text/labels: 500 weight
+**Headline Font**: Playfair Display (Google Fonts)
+- Weights: 500-700
+- Usage: All H1, H2, H3 elements
+
+**Body Font**: Inter (Google Fonts)
+- Weights: 400-500
+- Usage: Body text, labels, navigation
 
 **Hierarchy**:
-- Hero H1: text-5xl to text-7xl, font-bold, leading-tight
-- Section H2: text-4xl to text-5xl, font-semibold
-- Card/Component H3: text-2xl to text-3xl, font-semibold
-- Body text: text-base to text-lg, leading-relaxed
-- Small text: text-sm, tracking-wide for labels/metadata
+- Hero H1: text-6xl to text-7xl, font-bold (Playfair), leading-tight
+- Section H2: text-4xl to text-5xl, font-semibold (Playfair)
+- Card H3: text-2xl to text-3xl, font-medium (Playfair)
+- Body text: text-base to text-lg, leading-relaxed (Inter)
+- Labels: text-sm, font-medium, tracking-wide (Inter)
 
 ---
 
 ## Layout & Spacing System
 
-**Tailwind Spacing Units**: Standardize on **4, 8, 12, 16, 20, 24** (p-4, py-8, gap-12, etc.)
+**Tailwind Units**: 4, 8, 12, 16, 20, 24
 
 **Section Padding**:
-- Desktop: py-20 to py-32
-- Mobile: py-12 to py-16
+- Desktop: py-24 to py-32
+- Mobile: py-16 to py-20
 
-**Container Widths**:
-- Full-width sections: w-full with inner max-w-7xl mx-auto px-6
-- Content sections: max-w-6xl mx-auto
-- Form containers: max-w-2xl mx-auto
-- Text content: max-w-3xl mx-auto
+**Containers**:
+- Full-width: w-full, inner max-w-7xl mx-auto px-6
+- Content: max-w-6xl mx-auto
+- Forms: max-w-2xl mx-auto
+- Text: max-w-3xl mx-auto
 
-**Grid Patterns**:
-- 3-column cards (What We Do, Values, etc.): grid-cols-1 md:grid-cols-3 gap-8
-- 2-column splits (Sell/Invest paths): grid-cols-1 lg:grid-cols-2 gap-12
-- Project cards: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8
+**Grids**:
+- 3-column features: grid-cols-1 md:grid-cols-3 gap-8
+- 2-column splits: grid-cols-1 lg:grid-cols-2 gap-16
+- Project cards: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12
 
 ---
 
 ## Component Library
 
-### Navigation Header
-- Sticky top navigation, backdrop-blur effect on scroll
-- Logo left (icon + text)
-- Center links: horizontal list with hover underline effect
-- Right side: "Sell a Property" CTA button (bronze accent)
-- Mobile: Hamburger menu, full-screen overlay navigation
+### Navigation
+- Sticky header with subtle shadow on scroll
+- Logo left (refined mark + serif logotype)
+- Center: horizontal navigation links with underline-on-hover
+- Right: Navy CTA button + contact number
+- Mobile: Elegant drawer menu
 
 ### Buttons
-**Primary CTA** (bronze/blood-orange):
-- Substantial padding: px-8 py-4
-- Bold text: font-semibold text-base
-- Rounded: rounded-lg
-- Blurred background when on images: backdrop-blur-md bg-opacity-90
+**Primary (Navy)**:
+- Padding: px-8 py-4
+- Text: font-semibold text-base (Inter)
+- Rounded: rounded-md
+- On images: backdrop-blur-md with navy bg-opacity-95
 
-**Secondary/Outline**:
-- Border style with hover fill transition
-- Same sizing as primary
+**Secondary (Brass outline)**:
+- Border with subtle brass tint
+- Hover: fill transition
 
 ### Cards
-**Feature/Service Cards**:
-- Light border on dark background (subtle)
-- Generous padding: p-8
-- Icon at top (48x48px minimum)
-- Title + description + optional link
-- Hover: subtle lift effect (transform translate)
+**Feature Cards**:
+- Light background with subtle shadow (shadow-md)
+- Border: 1px solid warm neutral
+- Padding: p-8
+- Brass accent icon at top
+- Hover: shadow-lg transition
 
 **Project Cards**:
-- Image thumbnail top (16:9 aspect ratio)
-- Content padding: p-6
-- Metadata row (location, type) in smaller text
-- Metrics badges: small rounded pills showing key numbers
+- 16:9 image top, subtle rounded corners (rounded-lg)
+- Content: p-6
+- Metadata in small caps
+- Brass accent metrics badges
 
 ### Forms
-**Lead Capture Forms**:
-- Generous spacing between fields: space-y-6
-- Label above input: text-sm font-medium mb-2
-- Input fields: 
-  - Full-width inputs
-  - Substantial height: h-12 to h-14
-  - Padding: px-4
-  - Border with focus state (bronze accent)
-  - Rounded: rounded-lg
-- Textarea: min h-32
-- Submit button: full-width on mobile, auto-width on desktop, positioned right
-- Form sections: max-w-2xl with clear visual grouping
+**Lead Capture**:
+- Field spacing: space-y-6
+- Labels: text-sm font-medium mb-2, navy tint
+- Inputs: h-14, px-4, rounded-md, light background, navy border on focus
+- Textarea: min-h-32
+- Submit: Full-width mobile, right-aligned desktop
+- Container: max-w-2xl, generous surrounding whitespace
 
 ### Footer
-- Multi-column layout (4 columns on desktop, stacked mobile)
-- Columns: Quick Links, Services, Contact, Company Info
-- Subtle separator line at top
-- Copyright and disclosure at bottom
-- Minimal padding: py-12
+- 4-column desktop layout (stacked mobile)
+- Sections: Links, Services, Contact, Legal
+- Subtle top border (warm neutral)
+- Small serif headings for column titles
+- Copyright + disclosures
+- Padding: py-16
 
 ---
 
-## Page-Specific Layouts
+## Page Structures
 
 ### Home Page
-1. **Hero**: Full-viewport height (min-h-screen), center-aligned content, large background image with dark overlay, headline + subheadline + dual CTAs side-by-side
-2. **Trust Bar**: Single row, 4 stat cards, minimal design
-3. **What We Do**: 3-column card grid, icons + titles + descriptions
-4. **Featured Project**: 2-column split (image left, content right on desktop), metrics row
-5. **Dual Path Section**: 2-column cards with clear visual separation, prominent CTAs
-6. **Why Pegasus**: Bullet list with check icons, max-w-3xl centered
-7. **Contact Teaser**: Centered text + CTA
+1. **Hero**: Full viewport (min-h-screen), luxury property image with 20% cream overlay, center-aligned headline + dual CTAs, subtle parallax
+2. **Trust Metrics**: 4-stat row, minimal cards with serif numbers
+3. **What We Do**: 3-column feature cards, brass icons
+4. **Featured Project**: 2-column asymmetric split (60/40), large image left, content + metrics right
+5. **Dual Pathways**: 2 premium cards, distinct visual treatment, prominent navy CTAs
+6. **Why Pegasus**: Icon checklist, centered max-w-3xl, brass check marks
+7. **Contact CTA**: Centered section with phone + email + form CTA
 
 ### Sell/Invest Pages
-- Hero: 60-70vh, clear headline, single CTA
-- "How It Works": 3-step timeline/process visualization, horizontal on desktop
-- Benefits: Icon list or card grid
-- **Form Section**: Dedicated, visually separated, generous whitespace around form, form itself max-w-2xl
-- FAQ: Accordion pattern, max-w-3xl
+- Hero: 70vh, luxury property image, serif headline, single navy CTA
+- Process: 3-step horizontal timeline with brass connector lines
+- Benefits: 2-column grid with icons
+- **Premium Form Section**: Isolated, cream background card, generous padding, max-w-2xl form
+- FAQ: Accordion, max-w-3xl, serif questions
 
 ### Projects Page
-- Grid layout of project cards
-- Filter/category options at top (if multiple projects)
-- Each card links to detail view
-- Detail pages: Large image carousel, metrics dashboard, timeline, before/after section
+- Grid of project cards with hover effects
+- Category filters at top (pill-style buttons)
+- Detail pages: Image gallery carousel, metrics dashboard, timeline visualization, transformation showcase
 
 ### About Page
-- Story section: Single column, max-w-3xl, generous line-height
-- Mission/Values: Card grid or icon list
-- Approach: 3-step visual diagram
-- Team: Photo grid with name + role overlays
+- Story: Single column, max-w-3xl, generous line-height, drop cap first letter
+- Values: 3-column icon cards
+- Approach: Numbered steps with visual dividers
+- Team: Grid with elegant photo frames, names in serif
 
 ---
 
 ## Images
 
-**Hero Images Required**:
-- **Home Page**: Wide-angle modern property exterior or interior design shot, dark overlay (40-50% opacity) for text legibility
-- **Sell Page**: Residential property exterior, warm/inviting
-- **Invest Page**: Modern building/cityscape, professional tone
-- **Projects Page**: Featured project image
-- **About Page**: Team photo or workspace/site visit photo
+**Required Hero Images**:
+- **Home**: Modern luxury property exterior, golden hour lighting, wide angle
+- **Sell**: Inviting residential property with warm natural light
+- **Invest**: Upscale urban development or modern architectural design
+- **Projects**: Featured transformation showcase
+- **About**: Professional team in elegant setting
 
 **Project Images**:
-- Before/After comparison shots for Nelson Dr project
-- Interior design showcase images
-- 16:9 aspect ratio for consistency
-
-**Design Studio Page**:
-- Interior styling examples (4-6 images in gallery grid)
-- Mood board style presentation
+- Before/after split-screen comparisons
+- Interior luxury design shots
+- Consistent 16:9 aspect ratio
+- Subtle rounded corners (rounded-lg)
 
 **Image Treatment**:
-- Subtle rounded corners: rounded-lg to rounded-xl
-- All hero images: dark overlay for text contrast
-- Project thumbnails: hover scale effect (subtle)
+- Light cream overlay (10-20% opacity) on heroes for text contrast
+- Hover: subtle brightness increase on thumbnails
+- All images: shadow-sm to shadow-md
 
 ---
 
-## Animations & Interactions
+## Interactions
 
-**Minimal Animation Strategy**:
-- Smooth scroll behavior
-- Fade-in on scroll for cards (subtle, delay stagger)
-- Hover states: subtle scale/lift on cards and buttons
-- Form focus states: border color transition
-- **No**: Complex parallax, excessive motion, distracting hero animations
-
----
-
-## Accessibility & Quality Standards
-
-- All forms: Clear labels, proper input types, error states
-- Focus indicators: Visible keyboard navigation
-- Color contrast: Ensure text legibility on dark backgrounds
-- Alt text: All images properly described
-- Semantic HTML: Proper heading hierarchy
+**Minimal Animations**:
+- Smooth scroll
+- Staggered fade-in on card grids
+- Button hover: subtle scale (1.02)
+- Card hover: shadow elevation
+- Form focus: border color smooth transition
+- NO complex parallax or distracting motion
 
 ---
 
-**Design Philosophy**: Professional credibility with modern execution. Every element should reinforce trust while maintaining visual sophistication. Forms are conversion points—treat them as premium experiences.
+## Accessibility
+- Clear labels on all form inputs
+- Visible focus indicators (navy ring)
+- Navy/cream contrast ratio ≥4.5:1
+- Alt text for all images
+- Semantic heading hierarchy maintained
+
+---
+
+**Design Philosophy**: Timeless luxury through restraint. Every element radiates premium quality while maintaining approachability. Forms are investment moments—design them as such.

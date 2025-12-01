@@ -12,13 +12,13 @@ import {
   CheckCircle,
   ArrowRight
 } from "lucide-react";
+import heroImage from "@assets/stock_images/modern_luxury_home_e_426b2a6d.jpg";
 
 export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <TrustBar />
-      <WhatWeDoSection />
+      <ServicesSection />
       <FeaturedProjectSection />
       <DualPathSection />
       <WhyPegasusSection />
@@ -29,56 +29,96 @@ export default function Home() {
 
 function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-16">
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+    <section className="relative min-h-[90vh] flex items-center pt-16">
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent" />
       
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 text-center">
-        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6" data-testid="text-hero-headline">
-          We Design & Flip Dream Spaces
-          <span className="block text-primary">That Perform Like Investments.</span>
-        </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed" data-testid="text-hero-subheadline">
-          Pegasus Dreamscapes transforms distressed and underperforming properties into beautiful, high-performing assets for homeowners and investors.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
+        <div className="max-w-2xl">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6 text-white tracking-tight" data-testid="text-hero-headline">
+            INNOVATE WITH US
+          </h1>
+          <p className="text-lg text-white/90 max-w-xl mb-10 leading-relaxed" data-testid="text-hero-subheadline">
+            At Pegasus Dreamscapes, we specialize in turning distressed properties into stunning homes that empower communities and elevate living standards.
+          </p>
           <Link href="/sell">
-            <Button size="lg" className="text-base px-8 py-6" data-testid="button-hero-sell">
-              Sell a Property
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
-          <Link href="/invest">
-            <Button size="lg" variant="outline" className="text-base px-8 py-6" data-testid="button-hero-invest">
-              Invest With Pegasus
+            <Button size="lg" className="text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground" data-testid="button-hero-cta">
+              Get Started
             </Button>
           </Link>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent" />
     </section>
   );
 }
 
-function TrustBar() {
-  const stats = [
-    { icon: Shield, label: "Backed by GC & Designer Team" },
-    { icon: TrendingUp, label: "Experience in Fix & Flip + Rentals" },
-    { icon: BarChart3, label: "Data-Driven Deal & Rehab Analysis" },
-    { icon: MapPin, label: "Serving California & Beyond" },
+function ServicesSection() {
+  const services = [
+    {
+      icon: HomeIcon,
+      title: "Property Investment Consultation",
+      description: "Expert guidance on identifying and evaluating investment opportunities that align with your financial goals.",
+      image: heroImage,
+    },
+    {
+      icon: TrendingUp,
+      title: "Fix & Flip Projects",
+      description: "We acquire distressed properties and transform them into profitable investments with strategic renovations.",
+      image: heroImage,
+    },
+    {
+      icon: Palette,
+      title: "Design & Renovation",
+      description: "From concept to completion, we manage renovations that maximize property value and appeal.",
+      image: heroImage,
+    },
   ];
 
   return (
-    <section className="py-16 border-y border-border bg-card/50">
+    <section className="py-24 lg:py-32 bg-secondary/30">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <div key={index} className="flex items-center gap-4 p-4" data-testid={`stat-${index}`}>
-              <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <stat.icon className="w-6 h-6 text-primary" />
+        <div className="mb-16">
+          <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight text-primary" data-testid="text-services-title">
+            SERVICES
+          </h2>
+          <div className="w-24 h-1 bg-accent mt-4" />
+        </div>
+
+        <div className="space-y-16">
+          {services.map((service, index) => (
+            <div 
+              key={index} 
+              className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}
+              data-testid={`card-service-${index}`}
+            >
+              <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+                <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                  <img 
+                    src={service.image} 
+                    alt={service.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
-              <span className="text-sm font-medium text-foreground">{stat.label}</span>
+              <div className={`${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-4 text-foreground">
+                  {service.title}
+                </h3>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  {service.description}
+                </p>
+                <Link href="/services">
+                  <Button variant="outline" className="group">
+                    Learn More
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </div>
             </div>
           ))}
         </div>
@@ -120,7 +160,7 @@ function WhatWeDoSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {services.map((service, index) => (
-            <Card key={index} className="hover-elevate transition-all duration-300" data-testid={`card-service-${index}`}>
+            <Card key={index} className="hover-elevate transition-all duration-300" data-testid={`card-service-old-${index}`}>
               <CardHeader>
                 <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <service.icon className="w-7 h-7 text-primary" />

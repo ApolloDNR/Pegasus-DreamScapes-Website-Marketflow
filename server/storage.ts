@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, lte, isNotNull, asc } from "drizzle-orm";
 import { 
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
   type User, type UpsertUser,
@@ -10,6 +10,20 @@ import {
   type Article, type InsertArticle,
   type LeadActivity, type InsertLeadActivity
 } from "@shared/schema";
+
+export interface QueueItem {
+  id: string;
+  type: 'follow_up' | 'new_lead';
+  priority: 'overdue' | 'today' | 'upcoming' | 'new';
+  leadType: 'seller' | 'investor' | 'contact';
+  leadId: number;
+  leadName: string;
+  leadEmail: string;
+  description: string;
+  dueDate?: Date;
+  activityId?: number;
+  createdAt: Date;
+}
 
 export interface IStorage {
   // Users - Replit Auth
@@ -49,6 +63,10 @@ export interface IStorage {
   // Lead Activities
   createLeadActivity(activity: InsertLeadActivity): Promise<LeadActivity>;
   getLeadActivities(leadType: string, leadId: number): Promise<LeadActivity[]>;
+  markActivityCompleted(activityId: number): Promise<LeadActivity | undefined>;
+
+  // Queue
+  getQueueItems(): Promise<QueueItem[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -182,6 +200,153 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(leadActivities)
       .where(and(eq(leadActivities.leadType, leadType), eq(leadActivities.leadId, leadId)))
       .orderBy(desc(leadActivities.createdAt));
+  }
+
+  async markActivityCompleted(activityId: number): Promise<LeadActivity | undefined> {
+    const [updated] = await db.update(leadActivities)
+      .set({ followUpDate: null })
+      .where(eq(leadActivities.id, activityId))
+      .returning();
+    return updated;
+  }
+
+  // Queue - get all pending follow-ups and new leads
+  async getQueueItems(): Promise<QueueItem[]> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    const queueItems: QueueItem[] = [];
+
+    // Get all follow-up activities with due dates
+    const followUpActivities = await db.select().from(leadActivities)
+      .where(and(
+        isNotNull(leadActivities.followUpDate),
+        lte(leadActivities.followUpDate, nextWeek)
+      ))
+      .orderBy(asc(leadActivities.followUpDate));
+
+    // Get lead details for each activity
+    for (const activity of followUpActivities) {
+      let leadName = "";
+      let leadEmail = "";
+      
+      if (activity.leadType === "seller") {
+        const lead = await this.getSellerLead(activity.leadId);
+        if (lead) {
+          leadName = lead.name;
+          leadEmail = lead.email;
+        }
+      } else if (activity.leadType === "investor") {
+        const lead = await this.getInvestorLead(activity.leadId);
+        if (lead) {
+          leadName = lead.name;
+          leadEmail = lead.email;
+        }
+      } else if (activity.leadType === "contact") {
+        const contact = await this.getContact(activity.leadId);
+        if (contact) {
+          leadName = contact.name;
+          leadEmail = contact.email;
+        }
+      }
+
+      if (!leadName) continue;
+
+      const dueDate = activity.followUpDate!;
+      let priority: QueueItem['priority'] = 'upcoming';
+      
+      if (dueDate < today) {
+        priority = 'overdue';
+      } else if (dueDate < tomorrow) {
+        priority = 'today';
+      }
+
+      queueItems.push({
+        id: `followup-${activity.id}`,
+        type: 'follow_up',
+        priority,
+        leadType: activity.leadType as 'seller' | 'investor' | 'contact',
+        leadId: activity.leadId,
+        leadName,
+        leadEmail,
+        description: activity.notes || 'Follow-up scheduled',
+        dueDate,
+        activityId: activity.id,
+        createdAt: activity.createdAt,
+      });
+    }
+
+    // Get new leads that haven't been contacted
+    const newSellerLeads = await db.select().from(sellerLeads)
+      .where(eq(sellerLeads.status, 'new'))
+      .orderBy(asc(sellerLeads.createdAt));
+
+    for (const lead of newSellerLeads) {
+      queueItems.push({
+        id: `newlead-seller-${lead.id}`,
+        type: 'new_lead',
+        priority: 'new',
+        leadType: 'seller',
+        leadId: lead.id,
+        leadName: lead.name,
+        leadEmail: lead.email,
+        description: `New seller lead: ${lead.propertyAddress}`,
+        createdAt: lead.createdAt,
+      });
+    }
+
+    const newInvestorLeads = await db.select().from(investorLeads)
+      .where(eq(investorLeads.status, 'new'))
+      .orderBy(asc(investorLeads.createdAt));
+
+    for (const lead of newInvestorLeads) {
+      queueItems.push({
+        id: `newlead-investor-${lead.id}`,
+        type: 'new_lead',
+        priority: 'new',
+        leadType: 'investor',
+        leadId: lead.id,
+        leadName: lead.name,
+        leadEmail: lead.email,
+        description: `New investor lead: ${lead.capitalRange || 'TBD'} budget`,
+        createdAt: lead.createdAt,
+      });
+    }
+
+    const newContacts = await db.select().from(contacts)
+      .where(eq(contacts.status, 'new'))
+      .orderBy(asc(contacts.createdAt));
+
+    for (const contact of newContacts) {
+      queueItems.push({
+        id: `newlead-contact-${contact.id}`,
+        type: 'new_lead',
+        priority: 'new',
+        leadType: 'contact',
+        leadId: contact.id,
+        leadName: contact.name,
+        leadEmail: contact.email,
+        description: `New contact: ${contact.subject}`,
+        createdAt: contact.createdAt,
+      });
+    }
+
+    // Sort: overdue first, then today, then upcoming, then new leads
+    const priorityOrder = { overdue: 0, today: 1, upcoming: 2, new: 3 };
+    queueItems.sort((a, b) => {
+      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      // Within same priority, sort by date
+      if (a.dueDate && b.dueDate) {
+        return a.dueDate.getTime() - b.dueDate.getTime();
+      }
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    });
+
+    return queueItems;
   }
 }
 
