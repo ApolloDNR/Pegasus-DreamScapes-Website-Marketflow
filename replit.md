@@ -12,17 +12,24 @@ The platform features a **dark cinematic theme** with bronze/blood-orange accent
 
 ## Recent Updates
 
-- **Dark Cinematic Theme Transformation**: Redesigned to dark charcoal background (HSL 220, 15%, 8%) with bronze/blood-orange accents (HSL 25, 75%, 55%) and warm cream text
-- **Single-Page Homepage**: Converted homepage to smooth-scrolling single-page layout with sections for Services, Sell, Invest, Dreamscaper Creed, and Contact
-- **Dreamscaper Identity Section**: Added brand identity section featuring the Dreamscaper Creed and mission statement
-- **Four-Service Grid**: Updated services to include Fix & Flip, Buy & Hold, Design & Renovation, and New Construction (Coming Soon)
-- **Work Queue Feature**: Added queue tab in Pegasus HQ showing overdue, today's, and upcoming follow-ups with priority groupings
-- **Serif Typography**: Added Playfair Display for headlines (H1-H3) with Inter for body text
-- **Pegasus HQ Dashboard**: Added authenticated dashboard at `/hq` with lead management, protected by Replit Auth
-- **Resources/Blog Section**: Added `/resources` page with real estate investment articles and individual article detail pages
-- **Deal Calculators**: Added `/calculators` page with ARV Calculator for sellers and ROI Calculator for investors
-- **Project Detail Pages**: Individual project pages at `/projects/:slug` with before/after galleries and investment metrics
-- **Database Migration**: Migrated from in-memory storage to PostgreSQL with Drizzle ORM
+- **Luxury Editorial Cinematic Design (Latest)**: Complete homepage transformation inspired by high-end real estate photography with:
+  - Full-bleed hero image (luxury home at dusk with warm interior lighting)
+  - Editorial-style serif typography with uppercase headings
+  - Tan/beige accent color (HSL 38, 35%, 75%) alongside bronze/orange primary
+  - Two-column editorial service cards (image left, content right)
+  - Alternating dark/light section backgrounds for visual rhythm
+  - Minimal navigation with tan accent bar
+- **Dark Cinematic Theme**: Dark charcoal background (HSL 220, 15%, 8%) with bronze/blood-orange accents (HSL 25, 75%, 55%) and warm cream text
+- **Single-Page Homepage**: Smooth-scrolling layout with sections for Services, Sell, Invest, Dreamscaper Creed, and Contact
+- **Dreamscaper Identity Section**: Brand identity section featuring the Dreamscaper Creed and mission statement
+- **Four-Service Grid**: Fix & Flip, Buy & Hold, Design & Renovation, and New Construction (Coming Soon)
+- **Work Queue Feature**: Queue tab in Pegasus HQ showing overdue, today's, and upcoming follow-ups
+- **Serif Typography**: Playfair Display for headlines (H1-H3) with Inter for body text
+- **Pegasus HQ Dashboard**: Authenticated dashboard at `/hq` with lead management, protected by Replit Auth
+- **Resources/Blog Section**: `/resources` page with real estate investment articles
+- **Deal Calculators**: `/calculators` page with ARV Calculator and ROI Calculator
+- **Project Detail Pages**: Individual project pages at `/projects/:slug` with before/after galleries
+- **Database Migration**: PostgreSQL with Drizzle ORM
 
 ## User Preferences
 
@@ -55,10 +62,15 @@ Preferred communication style: Simple, everyday language.
 **UI Component Library**: Radix UI primitives wrapped with custom styled components following the shadcn/ui pattern. Components are stored in `client/src/components/ui/` and use Tailwind CSS for styling with a centralized design system defined in CSS variables.
 
 **Design System**: 
-- Dark cinematic theme with charcoal/black backgrounds
-- Custom color palette using HSL color space: Background (HSL 220, 15%, 8%), Primary bronze/blood-orange (HSL 25, 75%, 55%), Foreground cream (HSL 35, 15%, 92%)
-- Typography: Playfair Display serif for headlines (H1-H3), Inter for body text
-- Standardized spacing using Tailwind's spacing scale (4, 8, 12, 16, 20, 24)
+- Dark cinematic theme with charcoal/black backgrounds alternating with light tan sections
+- Custom color palette using HSL color space:
+  - Background (HSL 220, 15%, 8%) - Dark charcoal
+  - Primary bronze/blood-orange (HSL 25, 75%, 55%)
+  - Secondary tan/beige (HSL 38, 35%, 75%) - Editorial accent color
+  - Foreground cream (HSL 35, 15%, 92%)
+- Typography: Playfair Display serif for headlines (H1-H3) with uppercase styling, Inter for body text
+- Section rhythm: Alternating dark/light backgrounds for visual interest
+- Two-column editorial layouts for key content areas
 - Component variants using class-variance-authority for type-safe style variations
 - Premium design-forward aesthetic emphasizing community elevation
 
