@@ -98,7 +98,7 @@ export default function HQ() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -109,7 +109,7 @@ export default function HQ() {
   }
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <DashboardHeader user={user} />
         <QuickActions />

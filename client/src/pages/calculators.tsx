@@ -17,7 +17,7 @@ import { Link } from "wouter";
 
 export default function Calculators() {
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <HeroSection />
       <CalculatorTabs />
     </div>

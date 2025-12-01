@@ -12,7 +12,7 @@ import {
 
 export default function Services() {
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <HeroSection />
       <ServicesGrid />
       <CTASection />

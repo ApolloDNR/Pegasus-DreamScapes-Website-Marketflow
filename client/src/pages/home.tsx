@@ -29,7 +29,7 @@ export default function Home() {
 
 function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-16">
+    <section className="relative min-h-[90vh] flex items-center pt-20">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroImage})` }}

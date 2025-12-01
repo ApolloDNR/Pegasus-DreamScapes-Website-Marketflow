@@ -22,7 +22,7 @@ export default function ArticleDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -30,7 +30,7 @@ export default function ArticleDetail() {
 
   if (error || !article) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center">
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-semibold mb-4">Article Not Found</h2>
@@ -134,7 +134,7 @@ export default function ArticleDetail() {
   };
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <article className="max-w-4xl mx-auto px-6 py-8">
         <Link href="/resources">
           <Button variant="ghost" className="mb-6" data-testid="button-back-resources">

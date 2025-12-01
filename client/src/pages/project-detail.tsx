@@ -29,7 +29,7 @@ export default function ProjectDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -37,7 +37,7 @@ export default function ProjectDetail() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center">
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-semibold mb-4">Project Not Found</h2>
@@ -81,7 +81,7 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Link href="/projects">
           <Button variant="ghost" className="mb-6" data-testid="button-back-projects">

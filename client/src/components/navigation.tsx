@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
+import logoImage from "@assets/image_1764616120774.png";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -25,9 +26,13 @@ export function Navigation() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
-      <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2" data-testid="link-logo">
-          <span className="font-serif text-xl font-medium text-foreground tracking-tight">Pegasus Dreamscapes</span>
+      <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
+        <Link href="/" className="flex items-center gap-3" data-testid="link-logo">
+          <img 
+            src={logoImage} 
+            alt="Pegasus Dreamscapes" 
+            className="h-14 w-auto"
+          />
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">

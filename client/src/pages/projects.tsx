@@ -15,7 +15,7 @@ import type { Project } from "@shared/schema";
 
 export default function Projects() {
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <HeroSection />
       <ProjectsGrid />
       <CTASection />

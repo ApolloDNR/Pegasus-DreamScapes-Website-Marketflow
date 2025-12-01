@@ -14,7 +14,7 @@ import type { Article } from "@shared/schema";
 
 export default function Resources() {
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <HeroSection />
       <ArticlesGrid />
       <CTASection />

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Mail, Phone, MapPin } from "lucide-react";
+import logoImage from "@assets/image_1764616120774.png";
 
 const quickLinks = [
   { href: "/", label: "Home" },
@@ -7,7 +8,7 @@ const quickLinks = [
   { href: "/invest", label: "Invest With Pegasus" },
   { href: "/projects", label: "Projects" },
   { href: "/contact", label: "Contact" },
-  { href: "/login", label: "Login to Pegasus HQ" },
+  { href: "/hq", label: "Dashboard" },
 ];
 
 const services = [
@@ -23,10 +24,14 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <PegasusLogo />
-              <span className="font-semibold text-lg">Pegasus Dreamscapes</span>
-            </div>
+            <Link href="/" className="block">
+              <img 
+                src={logoImage} 
+                alt="Pegasus Dreamscapes" 
+                className="h-20 w-auto"
+                data-testid="img-footer-logo"
+              />
+            </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We design and flip dream spaces that perform like investments. Transforming distressed properties into beautiful, high-performing assets.
             </p>
@@ -102,40 +107,3 @@ export function Footer() {
   );
 }
 
-function PegasusLogo() {
-  return (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="text-primary"
-    >
-      <path
-        d="M16 2L4 8v8c0 7.732 5.268 12 12 14 6.732-2 12-6.268 12-14V8L16 2z"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
-      />
-      <path
-        d="M12 12c0-2 1.5-4 4-4s4 2 4 4c0 3-2 4-4 6-2-2-4-3-4-6z"
-        fill="currentColor"
-      />
-      <path
-        d="M8 18c2-1 3 0 4 2s2 4 4 4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M24 18c-2-1-3 0-4 2s-2 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}

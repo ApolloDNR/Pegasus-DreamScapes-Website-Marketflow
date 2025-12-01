@@ -40,7 +40,7 @@ import {
 
 export default function Invest() {
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <HeroSection />
       <WhatInvestorsGainSection />
       <ProjectSnapshotSection />
