@@ -8,18 +8,22 @@ Pegasus Dreamscapes Corp is a real estate investment platform designed to connec
 
 **Mission**: "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
 
-The platform features a **dark cinematic theme** with bronze/blood-orange accents, emphasizing premium credibility, design-forward aesthetics, and community elevation. The homepage is a single-page experience with smooth scrolling, while additional pages (Projects, Resources, Calculators, About) provide deeper content.
+The platform features a **light editorial theme** with bronze/blood-orange accents, emphasizing premium credibility, design-forward aesthetics, and community elevation. The homepage is a single-page experience with smooth scrolling, while additional pages (Projects, Resources, Calculators, About) provide deeper content.
 
 ## Recent Updates
 
-- **Luxury Editorial Cinematic Design (Latest)**: Complete homepage transformation inspired by high-end real estate photography with:
+- **Light Theme Migration (Latest)**: Switched from dark cinematic to clean light editorial aesthetic:
+  - Light cream/white backgrounds (HSL 40, 20%, 98%) with dark navy text (HSL 220, 20%, 15%)
+  - White cards with tan-tinted borders for clean professional look
+  - Bronze/blood-orange accents maintained for brand consistency
+  - Hero section retains dramatic dark image overlay for visual impact
+- **Luxury Editorial Design**: Complete homepage transformation inspired by high-end real estate photography with:
   - Full-bleed hero image (luxury home at dusk with warm interior lighting)
   - Editorial-style serif typography with uppercase headings
   - Tan/beige accent color (HSL 38, 35%, 75%) alongside bronze/orange primary
   - Two-column editorial service cards (image left, content right)
-  - Alternating dark/light section backgrounds for visual rhythm
   - Minimal navigation with tan accent bar
-- **Dark Cinematic Theme**: Dark charcoal background (HSL 220, 15%, 8%) with bronze/blood-orange accents (HSL 25, 75%, 55%) and warm cream text
+- **Premium Animations**: Fade-in-up effects on hero text, luxury card hover transitions, button glow effects
 - **Single-Page Homepage**: Smooth-scrolling layout with sections for Services, Sell, Invest, Dreamscaper Creed, and Contact
 - **Dreamscaper Identity Section**: Brand identity section featuring the Dreamscaper Creed and mission statement
 - **Four-Service Grid**: Fix & Flip, Buy & Hold, Design & Renovation, and New Construction (Coming Soon)
@@ -62,14 +66,14 @@ Preferred communication style: Simple, everyday language.
 **UI Component Library**: Radix UI primitives wrapped with custom styled components following the shadcn/ui pattern. Components are stored in `client/src/components/ui/` and use Tailwind CSS for styling with a centralized design system defined in CSS variables.
 
 **Design System**: 
-- Dark cinematic theme with charcoal/black backgrounds alternating with light tan sections
+- Light editorial theme with cream/white backgrounds and dark text
 - Custom color palette using HSL color space:
-  - Background (HSL 220, 15%, 8%) - Dark charcoal
-  - Primary bronze/blood-orange (HSL 25, 75%, 55%)
+  - Background (HSL 40, 20%, 98%) - Warm cream/white
+  - Primary bronze/blood-orange (HSL 25, 75%, 50%)
   - Secondary tan/beige (HSL 38, 35%, 75%) - Editorial accent color
-  - Foreground cream (HSL 35, 15%, 92%)
+  - Foreground dark navy (HSL 220, 20%, 15%)
+  - Cards: Pure white with tan-tinted borders
 - Typography: Playfair Display serif for headlines (H1-H3) with uppercase styling, Inter for body text
-- Section rhythm: Alternating dark/light backgrounds for visual interest
 - Two-column editorial layouts for key content areas
 - Component variants using class-variance-authority for type-safe style variations
 - Premium design-forward aesthetic emphasizing community elevation
