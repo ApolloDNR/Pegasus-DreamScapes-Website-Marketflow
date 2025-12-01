@@ -12,9 +12,20 @@ The platform features a **light editorial theme** with bronze/blood-orange accen
 
 ## Recent Updates
 
-- **Light Theme Migration (Latest)**: Switched from dark cinematic to clean light editorial aesthetic:
-  - Light cream/white backgrounds (HSL 40, 20%, 98%) with dark navy text (HSL 220, 20%, 15%)
-  - White cards with tan-tinted borders for clean professional look
+- **Luxury Design Refinement (Latest)**: Enhanced sleek, professional aesthetic with:
+  - Porcelain white backgrounds (HSL 0 0% 99%) for clean, premium feel
+  - Warm stone sections (HSL 35 10% 96%) for visual rhythm
+  - Champagne accent color (HSL 38 45% 65%) for sophisticated highlights
+  - Sleek borderless cards with inset shadows (.sleek-card utility)
+  - Refined luxury cards with accent line hover effects (.luxury-card utility)
+  - Uppercase tracked labels (tracking-[0.2em]) for section kickers
+  - Larger section padding (py-32/py-40) for spacious feel
+  - Centered hero layout with elegant dual CTAs
+  - Circular icon containers with primary/10 backgrounds
+  - Refined navigation with transparent-to-solid transition on homepage
+- **Light Theme Migration**: Switched from dark cinematic to clean light editorial aesthetic:
+  - Light cream/white backgrounds with dark navy text (HSL 220 25% 20%)
+  - White cards with subtle borders for clean professional look
   - Bronze/blood-orange accents maintained for brand consistency
   - Hero section retains dramatic dark image overlay for visual impact
 - **Luxury Editorial Design**: Complete homepage transformation inspired by high-end real estate photography with:

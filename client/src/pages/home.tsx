@@ -112,18 +112,15 @@ function StatsSection() {
   ];
 
   return (
-    <section className="py-16 lg:py-20 bg-background border-b border-border">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+    <section className="py-20 lg:py-24 bg-card">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center group">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-tan/10 mb-4 group-hover:bg-tan/20 transition-colors">
-                <stat.icon className="w-6 h-6 text-tan" />
-              </div>
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-2" data-testid={`stat-value-${index}`}>
+            <div key={index} className="text-center">
+              <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3 tracking-tight" data-testid={`stat-value-${index}`}>
                 <AnimatedCounter end={stat.value} prefix={stat.prefix || ""} suffix={stat.suffix} />
               </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -158,67 +155,63 @@ function TestimonialsSection() {
   ];
 
   return (
-    <section id="testimonials" className="py-24 lg:py-32 bg-tan/5">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">What People Say</span>
-          <h2 className="text-4xl sm:text-5xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-testimonials-title">
-            TRUSTED BY SELLERS & INVESTORS
+    <section id="testimonials" className="py-32 lg:py-40 bg-background">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="text-center mb-20">
+          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Client Experiences</p>
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
+            Trusted by Sellers & Investors
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Real stories from the people we've worked with across the Bay Area
-          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="relative overflow-visible group hover:border-tan/30 luxury-card" data-testid={`testimonial-card-${index}`}>
-              <CardContent className="p-8">
-                <Quote className="w-10 h-10 text-tan/30 mb-4" />
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-tan text-tan" />
-                  ))}
-                </div>
-                <p className="text-foreground leading-relaxed mb-6">
-                  "{testimonial.quote}"
-                </p>
-                <div className="pt-4 border-t border-border">
-                  <p className="font-semibold text-foreground">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  <p className="text-xs text-tan mt-1">{testimonial.location}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div key={index} className="p-10 sleek-card rounded-lg" data-testid={`testimonial-card-${index}`}>
+              <div className="flex gap-1 mb-6">
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                ))}
+              </div>
+              <p className="text-foreground leading-relaxed mb-8 text-base">
+                "{testimonial.quote}"
+              </p>
+              <div className="pt-6 border-t border-border/50">
+                <p className="font-semibold text-foreground">{testimonial.author}</p>
+                <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="mt-16 flex flex-wrap justify-center gap-8 lg:gap-16">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
+        {/* Trust badges - refined styling */}
+        <div className="mt-20 pt-16 border-t border-border/30">
+          <div className="flex flex-wrap justify-center gap-12 lg:gap-20">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Licensed & Insured</p>
+                <p className="text-xs text-muted-foreground">CA DRE #02145678</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-sm">Licensed & Insured</p>
-              <p className="text-xs text-muted-foreground">CA DRE #02145678</p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Award className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">BBB Accredited</p>
+                <p className="text-xs text-muted-foreground">A+ Rating</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-tan/10 flex items-center justify-center">
-              <Award className="w-5 h-5 text-tan" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">BBB Accredited</p>
-              <p className="text-xs text-muted-foreground">A+ Rating</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Proven Track Record</p>
-              <p className="text-xs text-muted-foreground">5+ Years Experience</p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-tan/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-tan" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Proven Track Record</p>
+                <p className="text-xs text-muted-foreground">5+ Years Experience</p>
+              </div>
             </div>
           </div>
         </div>
@@ -229,47 +222,50 @@ function TestimonialsSection() {
 
 function HeroSection() {
   return (
-    <section id="hero" className="relative min-h-screen flex items-end">
+    <section id="hero" className="relative min-h-screen flex items-center">
       {/* Full-bleed background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       
-      {/* Cinematic dark overlay with warm glow */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+      {/* Refined cinematic overlay - deeper, more luxurious */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
       
-      {/* Warm golden glow accent overlay */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/20 via-transparent to-transparent" />
-      
-      {/* Content */}
-      <div className="relative z-10 w-full pb-24 pt-48">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl">
-            {/* Editorial-style large headline with animations */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95] mb-8 tracking-tight text-white" data-testid="text-hero-headline">
-              <span className="block animate-fade-in-up">DESIGNED</span>
-              <span className="block animate-fade-in-up animation-delay-100">PROFITS</span>
-              <span className="block text-tan animate-fade-in-up animation-delay-200">ELEVATED</span>
-              <span className="block animate-fade-in-up animation-delay-300">COMMUNITIES</span>
-            </h1>
-            
-            <p className="text-lg sm:text-xl text-white/80 max-w-xl mb-10 leading-relaxed animate-fade-in animation-delay-400" data-testid="text-hero-subheadline">
-              At Pegasus Dreamscapes, we specialize in turning distressed properties into stunning homes that empower communities and elevate living standards.
+      {/* Content - centered for more impact */}
+      <div className="relative z-10 w-full py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="max-w-4xl">
+            {/* Luxury kicker text */}
+            <p className="text-sm uppercase tracking-[0.3em] text-white/60 mb-6 animate-fade-in font-medium" data-testid="text-hero-kicker">
+              Real Estate Investment & Design
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-500">
+            {/* Refined headline - tighter tracking, elegant spacing */}
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-bold leading-[0.9] mb-8 tracking-[-0.02em] text-white" data-testid="text-hero-headline">
+              <span className="block animate-fade-in-up">Designed Profits.</span>
+              <span className="block animate-fade-in-up animation-delay-100">Elevated</span>
+              <span className="block text-champagne animate-fade-in-up animation-delay-200">Communities.</span>
+            </h1>
+            
+            {/* Refined subheadline */}
+            <p className="text-lg sm:text-xl text-white/70 max-w-2xl mb-12 leading-relaxed animate-fade-in animation-delay-300 font-light" data-testid="text-hero-subheadline">
+              We transform distressed properties into high-performing assets through intentional design, disciplined execution, and community-focused restoration.
+            </p>
+            
+            {/* Refined CTAs with elegant styling */}
+            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-400">
               <a href="#sell">
-                <Button size="lg" className="text-base px-8 py-6 w-full sm:w-auto bg-tan text-tan-foreground hover:bg-tan/90 button-glow" data-testid="button-hero-sell">
-                  Sell a Property
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                <Button size="lg" className="text-sm uppercase tracking-widest px-10 py-6 w-full sm:w-auto bg-white text-foreground hover:bg-white/90 font-medium button-glow" data-testid="button-hero-sell">
+                  Sell Your Property
+                  <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
               <a href="#invest">
-                <Button size="lg" variant="outline" className="text-base px-8 py-6 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-sm" data-testid="button-hero-invest">
-                  Invest With Pegasus
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                <Button size="lg" variant="outline" className="text-sm uppercase tracking-widest px-10 py-6 w-full sm:w-auto border-white/40 text-white hover:bg-white/10 backdrop-blur-sm font-medium" data-testid="button-hero-invest">
+                  Partner With Us
+                  <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
             </div>
@@ -277,8 +273,8 @@ function HeroSection() {
         </div>
       </div>
 
-      {/* Tan accent bar at bottom - inspired by reference */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-tan" />
+      {/* Refined accent line at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-tan to-champagne" />
     </section>
   );
 }
@@ -289,36 +285,39 @@ function ServicesSection() {
       image: serviceImage1,
       title: "Property Investment Consultation",
       description: "Strategic guidance for real estate investments. We analyze opportunities, evaluate risks, and provide expert consultation to help you make informed decisions.",
-      cta: "Book Now",
+      cta: "Book Consultation",
       ctaLink: "#contact",
     },
     {
       image: serviceImage2,
       title: "Home Valuation",
       description: "Get an accurate assessment of your property's value. Our comprehensive valuation considers market conditions, comparable sales, and property condition.",
-      cta: "Get Valuation",
+      cta: "Request Valuation",
       ctaLink: "#sell",
     },
   ];
 
   return (
-    <section id="services" className="py-24 lg:py-32 bg-tan/10">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Section header */}
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-16 tracking-tight" data-testid="text-services-title">
-          SERVICES
-        </h2>
+    <section id="services" className="py-32 lg:py-40 bg-stone">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        {/* Section header - refined typography */}
+        <div className="mb-20">
+          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">What We Offer</p>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
+            Our Services
+          </h2>
+        </div>
 
-        {/* Two-column service cards */}
-        <div className="space-y-8">
+        {/* Two-column service cards - refined styling */}
+        <div className="space-y-12">
           {services.map((service, index) => (
             <div 
               key={index}
-              className="grid lg:grid-cols-2 gap-8 bg-card border border-border rounded-lg overflow-hidden luxury-card"
+              className="grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden luxury-card"
               data-testid={`card-service-${index}`}
             >
-              {/* Image left */}
-              <div className="aspect-[4/3] lg:aspect-auto">
+              {/* Image left - refined with overlay gradient */}
+              <div className="aspect-[4/3] lg:aspect-auto relative overflow-hidden">
                 <img 
                   src={service.image} 
                   alt={service.title}
@@ -326,14 +325,15 @@ function ServicesSection() {
                 />
               </div>
               
-              {/* Content right */}
-              <div className="p-8 lg:p-12 flex flex-col justify-center">
-                <h3 className="text-2xl sm:text-3xl font-semibold mb-4">{service.title}</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed mb-8">{service.description}</p>
+              {/* Content right - refined padding and typography */}
+              <div className="p-10 lg:p-16 flex flex-col justify-center">
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">{service.title}</h3>
+                <p className="text-muted-foreground text-base leading-relaxed mb-10">{service.description}</p>
                 <div>
                   <a href={service.ctaLink}>
-                    <Button variant="outline" size="lg" className="px-8">
+                    <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium">
                       {service.cta}
+                      <ArrowRight className="ml-3 w-4 h-4" />
                     </Button>
                   </a>
                 </div>
@@ -342,37 +342,33 @@ function ServicesSection() {
           ))}
         </div>
 
-        {/* Additional services grid */}
-        <div className="mt-16 pt-16 border-t border-border">
-          <h3 className="text-xl font-semibold mb-8 text-muted-foreground">Additional Services</h3>
+        {/* Additional services grid - refined sleek cards */}
+        <div className="mt-24">
+          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-8 font-medium">Investment Strategies</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties" },
-              { icon: TrendingUp, title: "Buy & Hold", desc: "Long-term rental strategies" },
-              { icon: Palette, title: "Design & Reno", desc: "Full renovation management" },
-              { icon: Building, title: "New Construction", desc: "Coming Soon", comingSoon: true },
+              { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties into profitable assets" },
+              { icon: TrendingUp, title: "Buy & Hold", desc: "Build wealth through strategic rental investments" },
+              { icon: Palette, title: "Design & Reno", desc: "Full-service renovation and design management" },
+              { icon: Building, title: "New Construction", desc: "Ground-up development coming soon", comingSoon: true },
             ].map((item, index) => (
-              <Card 
+              <div 
                 key={index}
-                className={`p-6 hover-elevate ${item.comingSoon ? 'border-tan/30' : ''}`}
+                className={`p-8 sleek-card rounded-lg ${item.comingSoon ? 'opacity-75' : ''}`}
               >
-                <CardContent className="p-0 flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${item.comingSoon ? 'bg-tan/20' : 'bg-primary/10'}`}>
-                    <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-tan' : 'text-primary'}`} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold">{item.title}</h4>
-                      {item.comingSoon && (
-                        <span className="text-xs bg-tan/20 text-tan px-2 py-0.5 rounded-full font-medium">
-                          Soon
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-primary/10'}`}>
+                  <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
+                </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <h4 className="font-semibold text-lg">{item.title}</h4>
+                  {item.comingSoon && (
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">
+                      Soon
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -383,61 +379,66 @@ function ServicesSection() {
 
 function FeaturedProjectSection() {
   return (
-    <section id="projects" className="py-24 lg:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+    <section id="projects" className="py-32 lg:py-40 bg-stone">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        {/* Section header */}
+        <div className="mb-16">
+          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Case Study</p>
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-title">
+            Featured Project
+          </h2>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="relative">
-            <div className="aspect-[4/3] rounded-xl overflow-hidden">
+            <div className="aspect-[4/3] rounded-lg overflow-hidden">
               <img 
                 src={serviceImage2} 
                 alt="Featured Project - Nelson Dr"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-4 -right-4 bg-tan text-tan-foreground px-5 py-2.5 rounded-lg font-semibold text-sm shadow-lg">
-              <Star className="w-4 h-4 inline mr-1.5" />
+            <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium text-sm shadow-lg">
               Featured Flip
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <span className="text-tan font-medium text-sm uppercase tracking-wide">Case Study</span>
-              <h2 className="text-3xl sm:text-4xl font-semibold mt-2" data-testid="text-featured-title">
+              <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
                 Nelson Dr, Richmond, CA
-              </h2>
+              </h3>
             </div>
             
-            <p className="text-muted-foreground text-lg leading-relaxed" data-testid="text-featured-description">
+            <p className="text-muted-foreground text-base leading-relaxed" data-testid="text-featured-description">
               Full cosmetic renovation and repositioning. Complete transformation including kitchen remodel, bathroom updates, new flooring, fresh paint, exterior refresh, and landscaping — all designed to maximize value and elevate the neighborhood.
             </p>
 
-            <div className="flex flex-wrap gap-3">
-              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">Kitchen Remodel</span>
-              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">Bath Updates</span>
-              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">New Flooring</span>
-              <span className="px-4 py-2 bg-tan/10 text-tan border border-tan/20 rounded-lg text-sm font-medium">Exterior Refresh</span>
+            <div className="flex flex-wrap gap-2">
+              {["Kitchen Remodel", "Bath Updates", "New Flooring", "Exterior Refresh"].map((tag, i) => (
+                <span key={i} className="px-4 py-2 bg-background text-foreground border border-border/50 rounded-md text-sm font-medium">{tag}</span>
+              ))}
             </div>
 
-            <div className="grid grid-cols-3 gap-6 py-6 border-t border-border">
+            <div className="grid grid-cols-3 gap-8 py-8 border-t border-border/30">
               <div>
-                <p className="text-sm text-muted-foreground">Property Type</p>
-                <p className="text-lg font-semibold">Single Family</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Property Type</p>
+                <p className="font-semibold">Single Family</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Strategy</p>
-                <p className="text-lg font-semibold">Fix & Flip</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Strategy</p>
+                <p className="font-semibold">Fix & Flip</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-lg font-semibold text-tan">Completed</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Status</p>
+                <p className="font-semibold text-primary">Completed</p>
               </div>
             </div>
 
             <Link href="/projects">
-              <Button variant="outline" className="border-tan/30 hover:bg-tan/10" data-testid="button-view-projects">
+              <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium" data-testid="button-view-projects">
                 View All Projects
-                <ArrowRight className="ml-2 w-4 h-4" />
+                <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
           </div>
@@ -504,50 +505,50 @@ function SellPropertySection() {
   };
 
   return (
-    <section id="sell" className="py-24 lg:py-32 bg-tan/5">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+    <section id="sell" className="py-32 lg:py-40 bg-background">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-2 gap-20 items-start">
           <div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight" data-testid="text-sell-title">
-              SELL A PROPERTY
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">For Sellers</p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-sell-title">
+              Sell Your Property
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+            <p className="text-base text-muted-foreground leading-relaxed mb-10">
               Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees.
             </p>
             
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Shield className="w-4 h-4 text-tan" />
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Fair Cash Offers</h4>
+                  <h4 className="font-semibold mb-1">Fair Cash Offers</h4>
                   <p className="text-sm text-muted-foreground">Transparent pricing based on real market data</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Sparkles className="w-4 h-4 text-tan" />
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Sell As-Is</h4>
+                  <h4 className="font-semibold mb-1">Sell As-Is</h4>
                   <p className="text-sm text-muted-foreground">No repairs, cleaning, or staging required</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <ArrowRight className="w-4 h-4 text-tan" />
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Flexible Timeline</h4>
-                  <p className="text-sm text-muted-foreground">Close on your schedule - as fast as 7 days</p>
+                  <h4 className="font-semibold mb-1">Flexible Timeline</h4>
+                  <p className="text-sm text-muted-foreground">Close on your schedule — as fast as 7 days</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <Card className="p-8 border-tan/20">
-            <CardContent className="p-0">
+          <div className="p-10 sleek-card rounded-lg">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
@@ -658,13 +659,12 @@ function SellPropertySection() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" size="lg" disabled={mutation.isPending} data-testid="button-sell-submit">
+                  <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-sell-submit">
                     {mutation.isPending ? "Submitting..." : "Get My Cash Offer"}
                   </Button>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
+          </div>
         </div>
       </div>
     </section>
@@ -725,11 +725,10 @@ function InvestSection() {
   };
 
   return (
-    <section id="invest" className="py-24 lg:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
-          <Card className="p-8 lg:order-2 border-primary/20">
-            <CardContent className="p-0">
+    <section id="invest" className="py-32 lg:py-40 bg-stone">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-2 gap-20 items-start">
+          <div className="p-10 sleek-card rounded-lg lg:order-2">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
@@ -825,47 +824,47 @@ function InvestSection() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" size="lg" disabled={mutation.isPending} data-testid="button-invest-submit">
+                  <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-invest-submit">
                     {mutation.isPending ? "Submitting..." : "Start Investing"}
                   </Button>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
+          </div>
 
           <div className="lg:order-1">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight" data-testid="text-invest-title">
-              INVEST WITH PEGASUS
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">For Investors</p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-invest-title">
+              Partner With Pegasus
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+            <p className="text-base text-muted-foreground leading-relaxed mb-10">
               Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real.
             </p>
             
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <TrendingUp className="w-4 h-4 text-primary" />
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Designed Profits</h4>
+                  <h4 className="font-semibold mb-1">Designed Profits</h4>
                   <p className="text-sm text-muted-foreground">Strategic analysis on every deal opportunity</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Shield className="w-4 h-4 text-primary" />
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Transparent Underwriting</h4>
+                  <h4 className="font-semibold mb-1">Transparent Underwriting</h4>
                   <p className="text-sm text-muted-foreground">Full visibility into deal structure and returns</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Users className="w-4 h-4 text-primary" />
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Partner-First Approach</h4>
+                  <h4 className="font-semibold mb-1">Partner-First Approach</h4>
                   <p className="text-sm text-muted-foreground">We succeed when our partners succeed</p>
                 </div>
               </div>
@@ -887,41 +886,39 @@ function DreamsCaperCreedSection() {
   ];
 
   return (
-    <section id="creed" className="py-24 lg:py-32 bg-tan/5">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Our Identity</span>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-creed-title">
-            THE DREAMSCAPER CREED
+    <section id="creed" className="py-32 lg:py-40 bg-background">
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <div className="text-center mb-20">
+          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Our Identity</p>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-creed-title">
+            The Dreamscaper Creed
           </h2>
         </div>
 
-        <div className="space-y-6 mb-12">
+        <div className="space-y-6 mb-16">
           {creedLines.map((line, index) => (
             <div 
               key={index} 
-              className="flex items-center gap-4 text-xl sm:text-2xl font-medium text-foreground"
+              className="flex items-center gap-5 text-xl sm:text-2xl font-medium text-foreground"
               data-testid={`creed-line-${index}`}
             >
-              <div className="w-10 h-10 rounded-full bg-tan/20 flex items-center justify-center flex-shrink-0">
-                <line.icon className="w-5 h-5 text-tan" />
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <line.icon className="w-5 h-5 text-primary" />
               </div>
-              <p className={index === 0 ? "text-tan" : ""}>{line.text}</p>
+              <p className={index === 0 ? "text-primary" : ""}>{line.text}</p>
             </div>
           ))}
         </div>
 
-        <Card className="p-8 border-tan/20">
-          <CardContent className="p-0">
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              <span className="text-tan font-medium">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="p-10 sleek-card rounded-lg mb-8">
+          <p className="text-base text-muted-foreground leading-relaxed">
+            <span className="text-primary font-semibold">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
+          </p>
+        </div>
 
-        <div className="mt-12 p-8 border border-tan/20 rounded-xl bg-card/50">
-          <h3 className="text-xl font-semibold mb-4 text-tan">Our Mission</h3>
-          <p className="text-muted-foreground leading-relaxed">
+        <div className="p-10 sleek-card rounded-lg">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4 font-medium">Our Mission</p>
+          <p className="text-base text-foreground leading-relaxed italic">
             "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
           </p>
         </div>
@@ -980,50 +977,50 @@ function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-24 lg:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+    <section id="contact" className="py-32 lg:py-40 bg-stone">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-2 gap-20 items-start">
           <div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight" data-testid="text-contact-title">
-              CONTACT US
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Get In Touch</p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-contact-title">
+              Contact Us
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+            <p className="text-base text-muted-foreground leading-relaxed mb-10">
               Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you.
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-tan/20 flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-tan" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">(555) 123-4567</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Phone</p>
+                  <p className="font-semibold">(555) 123-4567</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-tan/20 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-tan" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">hello@pegasusdreamscapes.com</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Email</p>
+                  <p className="font-semibold">hello@pegasusdreamscapes.com</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-tan/20 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-tan" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">Bay Area, California</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Location</p>
+                  <p className="font-semibold">Bay Area, California</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <Card className="p-8">
-            <CardContent className="p-0">
+          <div className="p-10 sleek-card rounded-lg">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
@@ -1088,13 +1085,12 @@ function ContactSection() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" size="lg" disabled={mutation.isPending} data-testid="button-contact-submit">
+                  <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-contact-submit">
                     {mutation.isPending ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
+          </div>
         </div>
       </div>
     </section>

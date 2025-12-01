@@ -89,17 +89,17 @@ export function Navigation() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
-      <nav className={`transition-all duration-300 ${scrolled ? 'bg-background/95 backdrop-blur-lg shadow-lg' : 'bg-background/80 backdrop-blur-md'}`}>
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
+      <nav className={`transition-all duration-500 ${scrolled || !isHomePage ? 'bg-background/98 backdrop-blur-lg shadow-sm border-b border-border/30' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-20 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 group" data-testid="link-logo">
             <img 
               src={logoImage} 
               alt="Pegasus Dreamscapes" 
-              className="h-14 w-auto transition-transform duration-300 group-hover:scale-105"
+              className="h-12 w-auto transition-transform duration-300 group-hover:scale-105"
             />
           </Link>
 
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-10">
             {isHomePage ? (
               <>
                 {homeLinks.map((link) => (
@@ -107,18 +107,18 @@ export function Navigation() {
                     key={link.href} 
                     href={link.href}
                     onClick={(e) => handleScrollClick(e, link.href)}
-                    className="text-sm font-medium transition-colors hover:text-primary text-foreground cursor-pointer relative group"
+                    className={`text-sm font-medium tracking-wide transition-colors cursor-pointer relative group ${scrolled ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'}`}
                     data-testid={`link-nav-${link.label.toLowerCase()}`}
                   >
                     {link.label}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${scrolled ? 'bg-primary' : 'bg-white'}`} />
                   </a>
                 ))}
               </>
             ) : (
               <Link 
                 href="/"
-                className="text-sm font-medium transition-colors hover:text-primary text-foreground relative group"
+                className="text-sm font-medium tracking-wide transition-colors hover:text-primary text-foreground relative group"
                 data-testid="link-nav-home"
               >
                 Home
@@ -132,7 +132,7 @@ export function Navigation() {
               onMouseLeave={() => setMegaMenuOpen(false)}
             >
               <button 
-                className="flex items-center gap-1 text-sm font-medium text-foreground cursor-pointer hover:text-primary transition-colors" 
+                className={`flex items-center gap-1 text-sm font-medium tracking-wide cursor-pointer transition-colors ${(scrolled || !isHomePage) ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'}`}
                 data-testid="button-nav-explore"
                 aria-expanded={megaMenuOpen}
               >
@@ -192,24 +192,23 @@ export function Navigation() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link 
               href="/hq" 
-              className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              className={`hidden sm:block text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
               data-testid="link-nav-dashboard"
             >
               Dashboard
             </Link>
             {isHomePage && (
               <a href="#sell" onClick={(e) => handleScrollClick(e, "#sell")}>
-                <Button size="sm" className="hidden sm:flex gap-2" data-testid="button-nav-cta">
-                  <Sparkles className="w-4 h-4" />
+                <Button size="sm" className={`hidden sm:flex text-xs uppercase tracking-widest font-medium ${scrolled ? '' : 'bg-white text-foreground hover:bg-white/90'}`} data-testid="button-nav-cta">
                   Get Started
                 </Button>
               </a>
             )}
             <button
-              className="lg:hidden p-2 hover-elevate rounded-md"
+              className={`lg:hidden p-2 hover-elevate rounded-md ${(scrolled || !isHomePage) ? 'text-foreground' : 'text-white'}`}
               onClick={() => setIsOpen(!isOpen)}
               data-testid="button-mobile-menu"
               aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
