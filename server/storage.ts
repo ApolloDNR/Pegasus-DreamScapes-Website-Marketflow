@@ -1,37 +1,99 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { 
+  type SellerLead, 
+  type InsertSellerLead,
+  type InvestorLead,
+  type InsertInvestorLead,
+  type Contact,
+  type InsertContact
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 
-// modify the interface with any CRUD methods
-// you might need
-
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Seller Leads
+  createSellerLead(lead: InsertSellerLead): Promise<SellerLead>;
+  getSellerLeads(): Promise<SellerLead[]>;
+  getSellerLead(id: string): Promise<SellerLead | undefined>;
+
+  // Investor Leads
+  createInvestorLead(lead: InsertInvestorLead): Promise<InvestorLead>;
+  getInvestorLeads(): Promise<InvestorLead[]>;
+  getInvestorLead(id: string): Promise<InvestorLead | undefined>;
+
+  // Contacts
+  createContact(contact: InsertContact): Promise<Contact>;
+  getContacts(): Promise<Contact[]>;
+  getContact(id: string): Promise<Contact | undefined>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private sellerLeads: Map<string, SellerLead>;
+  private investorLeads: Map<string, InvestorLead>;
+  private contacts: Map<string, Contact>;
 
   constructor() {
-    this.users = new Map();
+    this.sellerLeads = new Map();
+    this.investorLeads = new Map();
+    this.contacts = new Map();
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+  // Seller Leads
+  async createSellerLead(insertLead: InsertSellerLead): Promise<SellerLead> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const lead: SellerLead = { 
+      ...insertLead, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.sellerLeads.set(id, lead);
+    return lead;
+  }
+
+  async getSellerLeads(): Promise<SellerLead[]> {
+    return Array.from(this.sellerLeads.values());
+  }
+
+  async getSellerLead(id: string): Promise<SellerLead | undefined> {
+    return this.sellerLeads.get(id);
+  }
+
+  // Investor Leads
+  async createInvestorLead(insertLead: InsertInvestorLead): Promise<InvestorLead> {
+    const id = randomUUID();
+    const lead: InvestorLead = { 
+      ...insertLead, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.investorLeads.set(id, lead);
+    return lead;
+  }
+
+  async getInvestorLeads(): Promise<InvestorLead[]> {
+    return Array.from(this.investorLeads.values());
+  }
+
+  async getInvestorLead(id: string): Promise<InvestorLead | undefined> {
+    return this.investorLeads.get(id);
+  }
+
+  // Contacts
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const id = randomUUID();
+    const contact: Contact = { 
+      ...insertContact, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.contacts.set(id, contact);
+    return contact;
+  }
+
+  async getContacts(): Promise<Contact[]> {
+    return Array.from(this.contacts.values());
+  }
+
+  async getContact(id: string): Promise<Contact | undefined> {
+    return this.contacts.get(id);
   }
 }
 

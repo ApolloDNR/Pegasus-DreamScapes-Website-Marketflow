@@ -43,7 +43,7 @@
   --chart-3: 15 65% 35%;
   --chart-4: 10 60% 32%;
   --chart-5: 5 55% 30%;
-  --font-sans: Open Sans, sans-serif;
+  --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
