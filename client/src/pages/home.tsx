@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import logoImage from "@assets/image_1764616120774.png";
+import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
 
 export default function Home() {
   return (
@@ -58,45 +59,56 @@ export default function Home() {
 
 function HeroSection() {
   return (
-    <section id="hero" className="relative min-h-screen flex items-center bg-background">
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-card/50 to-primary/10" />
+    <section id="hero" className="relative min-h-screen flex items-end">
+      {/* Full-bleed background image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      />
       
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-32">
-        <div className="max-w-4xl">
-          <div className="flex items-center gap-3 mb-8">
-            <img src={logoImage} alt="Pegasus Dreamscapes" className="h-12" />
-            <span className="text-sm text-primary font-medium tracking-wide uppercase">
-              Where Designed Profits Are Crafted.
-            </span>
-          </div>
-          
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-8 tracking-tight" data-testid="text-hero-headline">
-            Where Designed Profits Are Crafted, and Communities Are{" "}
-            <span className="text-primary">Elevated.</span>
-          </h1>
-          
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mb-12 leading-relaxed" data-testid="text-hero-subheadline">
-            Pegasus Dreamscapes transforms distressed properties into high-performing assets through intentional design, disciplined execution, and community-focused restoration.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <a href="#sell">
-              <Button size="lg" className="text-base px-8 py-6 w-full sm:w-auto" data-testid="button-hero-sell">
-                Sell a Property
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </a>
-            <a href="#invest">
-              <Button size="lg" variant="outline" className="text-base px-8 py-6 w-full sm:w-auto" data-testid="button-hero-invest">
-                Invest With Pegasus
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </a>
+      {/* Cinematic dark overlay with warm glow */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+      
+      {/* Warm golden glow accent overlay */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/20 via-transparent to-transparent" />
+      
+      {/* Content */}
+      <div className="relative z-10 w-full pb-24 pt-48">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-3xl">
+            {/* Editorial-style large headline */}
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95] mb-8 tracking-tight text-white" data-testid="text-hero-headline">
+              <span className="block">DESIGNED</span>
+              <span className="block">PROFITS</span>
+              <span className="block text-tan">ELEVATED</span>
+              <span className="block">COMMUNITIES</span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-white/80 max-w-xl mb-10 leading-relaxed" data-testid="text-hero-subheadline">
+              At Pegasus Dreamscapes, we specialize in turning distressed properties into stunning homes that empower communities and elevate living standards.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a href="#sell">
+                <Button size="lg" className="text-base px-8 py-6 w-full sm:w-auto bg-tan text-tan-foreground hover:bg-tan/90" data-testid="button-hero-sell">
+                  Sell a Property
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </a>
+              <a href="#invest">
+                <Button size="lg" variant="outline" className="text-base px-8 py-6 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-sm" data-testid="button-hero-invest">
+                  Invest With Pegasus
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/50 to-transparent" />
+      {/* Tan accent bar at bottom - inspired by reference */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-tan" />
     </section>
   );
 }

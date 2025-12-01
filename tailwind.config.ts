@@ -51,6 +51,11 @@ export default {
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
           border: "var(--destructive-border)",
         },
+        tan: {
+          DEFAULT: "hsl(var(--tan) / <alpha-value>)",
+          foreground: "hsl(var(--tan-foreground) / <alpha-value>)",
+        },
+        "warm-glow": "hsl(var(--warm-glow) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
         chart: {
           "1": "hsl(var(--chart-1) / <alpha-value>)",

@@ -38,8 +38,10 @@ export function Navigation() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-      <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Main nav - transparent on hero, solid on scroll */}
+      <nav className="bg-background/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-3" data-testid="link-logo">
           <img 
             src={logoImage} 
@@ -147,7 +149,10 @@ export function Navigation() {
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
+        </div>
       </nav>
+      {/* Tan accent bar */}
+      <div className="h-1 bg-tan" />
 
       {isOpen && (
         <div id="mobile-menu" className="lg:hidden bg-card border-b border-border">

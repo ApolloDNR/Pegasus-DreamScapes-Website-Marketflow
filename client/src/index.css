@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DARK MODE - Charcoal/Black Theme with Bronze/Blood-Orange Accents */
+/* DARK MODE - Charcoal/Black Theme with Bronze/Blood-Orange Accents + Tan Highlights */
 :root {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
@@ -17,6 +17,9 @@
   --card: 220 15% 12%;
   --card-foreground: 35 15% 92%;
   --card-border: 220 12% 20%;
+  --tan: 38 35% 75%;
+  --tan-foreground: 220 15% 8%;
+  --warm-glow: 38 85% 55%;
   --sidebar: 220 15% 10%;
   --sidebar-foreground: 35 15% 92%;
   --sidebar-border: 220 12% 18%;
