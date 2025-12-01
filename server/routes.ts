@@ -71,6 +71,30 @@ export async function registerRoutes(
     }
   });
 
+  // Articles/Resources Routes (public)
+  app.get("/api/articles", async (req, res) => {
+    try {
+      const articlesList = await storage.getPublishedArticles();
+      return res.json(articlesList);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/articles/:slug", async (req, res) => {
+    try {
+      const article = await storage.getArticleBySlug(req.params.slug);
+      if (!article || !article.published) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+      return res.json(article);
+    } catch (error) {
+      console.error("Error fetching article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Projects Routes (public)
   app.get("/api/projects", async (req, res) => {
     try {
