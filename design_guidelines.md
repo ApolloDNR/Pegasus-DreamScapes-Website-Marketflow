@@ -1,7 +1,9 @@
-# Pegasus Dreamscapes Corp - Design Guidelines (Luxury Light Edition)
+# Pegasus Dreamscapes - Design Guidelines (Warm Beige Edition)
 
 ## Design Approach: Reference-Based (Luxury Real Estate)
 Drawing inspiration from **Sotheby's International Realty** (timeless luxury) + **Ritz-Carlton** (refined elegance) + **Stripe** (clean execution), creating a sophisticated platform that exudes premium credibility.
+
+**Color Palette matches brand logo**: Warm beige background (#E8E0D5 / HSL 40, 25%, 91%) with navy primary (#243654 / HSL 210, 50%, 25%) and terracotta/copper accent (#CC6B3A / HSL 25, 65%, 50%).
 
 ---
 

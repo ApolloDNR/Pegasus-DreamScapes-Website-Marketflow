@@ -136,7 +136,7 @@ function DashboardHeader({ user }: { user: any }) {
   return (
     <div className="flex items-center justify-between mb-8">
       <div>
-        <h1 className="text-3xl font-bold" data-testid="text-hq-title">Pegasus HQ</h1>
+        <h1 className="text-3xl font-bold" data-testid="text-hq-title">Pegasus Dreamscapes</h1>
         <p className="text-muted-foreground">Command Center - Welcome back, {displayName}</p>
       </div>
       <div className="flex items-center gap-4">

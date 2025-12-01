@@ -93,9 +93,9 @@ export function Navigation() {
           <Link 
             href="/hq" 
             className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            data-testid="link-nav-hq"
+            data-testid="link-nav-dashboard"
           >
-            Pegasus HQ
+            Dashboard
           </Link>
           <button
             className="lg:hidden p-2 hover-elevate rounded-md"
@@ -131,9 +131,9 @@ export function Navigation() {
                 href="/hq"
                 className="block py-3 px-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                 onClick={() => setIsOpen(false)} 
-                data-testid="link-mobile-hq"
+                data-testid="link-mobile-dashboard"
               >
-                Pegasus HQ Dashboard
+                Dashboard
               </Link>
             </div>
           </div>
