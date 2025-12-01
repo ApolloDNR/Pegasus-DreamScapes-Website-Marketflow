@@ -17,7 +17,7 @@ import Resources from "@/pages/resources";
 import ArticleDetail from "@/pages/article-detail";
 import Dreamspace from "@/pages/dreamspace";
 import Contact from "@/pages/contact";
-import Login from "@/pages/login";
+import HQ from "@/pages/hq";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -35,7 +35,7 @@ function Router() {
       <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
-      <Route path="/login" component={Login} />
+      <Route path="/hq" component={HQ} />
       <Route component={NotFound} />
     </Switch>
   );

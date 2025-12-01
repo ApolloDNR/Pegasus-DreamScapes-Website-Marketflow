@@ -6,6 +6,14 @@ Pegasus Dreamscapes Corp is a dual-funnel real estate investment platform design
 
 The platform features a sophisticated dark-themed design inspired by modern SaaS applications, emphasizing trust, transparency, and professional presentation of real estate investment opportunities. The site includes informational pages about the company's services, past projects, and design studio capabilities, along with lead capture forms for both seller and investor prospects.
 
+## Recent Updates
+
+- **Pegasus HQ Dashboard**: Added authenticated dashboard at `/hq` with lead management, protected by Replit Auth
+- **Resources/Blog Section**: Added `/resources` page with real estate investment articles and individual article detail pages
+- **Deal Calculators**: Added `/calculators` page with ARV Calculator for sellers and ROI Calculator for investors
+- **Project Detail Pages**: Individual project pages at `/projects/:slug` with before/after galleries and investment metrics
+- **Database Migration**: Migrated from in-memory storage to PostgreSQL with Drizzle ORM
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -18,6 +26,20 @@ Preferred communication style: Simple, everyday language.
 
 **Routing**: Client-side routing implemented using Wouter, a lightweight alternative to React Router. All pages are client-side rendered with a SPA (Single Page Application) architecture.
 
+**Key Pages**:
+- `/` - Home page with hero section, dual funnels, and featured projects
+- `/about` - Company information and team
+- `/services` - Services offered for sellers and investors
+- `/projects` - Portfolio of completed projects
+- `/projects/:slug` - Individual project detail pages with before/after images
+- `/calculators` - ARV and ROI calculators for deal analysis
+- `/resources` - Blog/articles section with real estate investment content
+- `/resources/:slug` - Individual article detail pages
+- `/sell` - Seller lead capture form
+- `/invest` - Investor lead capture form
+- `/contact` - General contact form
+- `/hq` - Protected dashboard for lead management (requires authentication)
+
 **State Management**: TanStack Query (React Query) handles server state management, API calls, and caching. No global state management library is used - component state and React Query suffice for the application's needs.
 
 **UI Component Library**: Radix UI primitives wrapped with custom styled components following the shadcn/ui pattern. Components are stored in `client/src/components/ui/` and use Tailwind CSS for styling with a centralized design system defined in CSS variables.
@@ -25,41 +47,69 @@ Preferred communication style: Simple, everyday language.
 **Design System**: 
 - Dark theme by default with sophisticated use of opacity and gradients
 - Custom color palette using HSL color space for better control
+- Bronze/blood-orange accent colors (HSL 22, 85%, 48%)
 - Typography system based on Inter font family
 - Standardized spacing using Tailwind's spacing scale (4, 8, 12, 16, 20, 24)
 - Component variants using class-variance-authority for type-safe style variations
 
 **Form Handling**: React Hook Form with Zod schema validation for type-safe form inputs. Forms are validated client-side before submission.
 
+**Authentication**: Replit Auth integration via `useAuth` hook in `client/src/hooks/useAuth.ts`. Protected pages redirect to `/api/login` if user is not authenticated.
+
 ### Backend Architecture
 
 **Server Framework**: Express.js running on Node.js with TypeScript. The server handles API routes and serves the built static frontend in production.
 
 **API Design**: RESTful API endpoints under `/api` prefix:
-- `/api/seller-leads` - POST and GET for seller lead submissions
-- `/api/investor-leads` - POST and GET for investor lead submissions  
-- `/api/contacts` - POST and GET for general contact form submissions
+
+Public Routes:
+- `POST /api/seller-leads` - Submit seller lead
+- `POST /api/investor-leads` - Submit investor lead
+- `POST /api/contacts` - Submit contact form
+- `GET /api/projects` - Get all projects
+- `GET /api/projects/:slug` - Get single project by slug
+- `GET /api/articles` - Get all published articles
+- `GET /api/articles/:slug` - Get single article by slug
+
+Authentication Routes:
+- `GET /api/login` - Initiate Replit Auth login flow
+- `GET /api/callback` - OAuth callback handler
+- `GET /api/logout` - Logout and redirect to home
+- `GET /api/auth/user` - Get current authenticated user (protected)
+
+Protected HQ Routes (require authentication):
+- `GET /api/hq/seller-leads` - Get all seller leads
+- `GET /api/hq/investor-leads` - Get all investor leads
+- `GET /api/hq/contacts` - Get all contact messages
+- `PATCH /api/hq/seller-leads/:id/status` - Update seller lead status
+- `PATCH /api/hq/investor-leads/:id/status` - Update investor lead status
+- `PATCH /api/hq/contacts/:id/status` - Update contact status
 
 **Request Handling**: Express middleware stack includes JSON body parsing with raw body preservation for webhook compatibility, URL-encoded form data parsing, and custom logging middleware.
 
 **Validation**: Zod schemas shared between frontend and backend (defined in `shared/schema.ts`) ensure consistent validation rules across the stack.
 
+**Authentication**: Replit Auth via OpenID Connect using `openid-client` and Passport.js. Session storage uses PostgreSQL via `connect-pg-simple`.
+
 **Development Server**: Vite middleware integration in development mode provides HMR (Hot Module Replacement) and serves the frontend directly from source files.
 
 ### Data Storage
 
-**Current Implementation**: In-memory storage using Map data structures (`MemStorage` class). Data persists only during server runtime and is lost on restart.
+**Current Implementation**: PostgreSQL database with Drizzle ORM for type-safe database operations.
 
-**Storage Interface**: Abstract `IStorage` interface defined to allow easy swapping between storage implementations. The interface defines methods for creating and retrieving seller leads, investor leads, and contact submissions.
+**Storage Interface**: `DatabaseStorage` class implements `IStorage` interface with methods for all CRUD operations. Located in `server/storage.ts`.
 
-**Database Ready**: Configuration includes Drizzle ORM setup with PostgreSQL dialect (`drizzle.config.ts`), indicating planned migration to persistent database storage. The application is structured to work with Neon Database based on the `@neondatabase/serverless` dependency.
+**Database Tables** (defined in `shared/schema.ts`):
+- `sessions` - Session storage for Replit Auth
+- `users` - User accounts (linked to Replit Auth)
+- `seller_leads` - Property seller lead submissions
+- `investor_leads` - Investor lead submissions
+- `contacts` - General contact form submissions
+- `projects` - Portfolio projects with investment metrics
+- `articles` - Blog/resource articles
+- `lead_activities` - Activity tracking for leads (CRM feature)
 
-**Schema Design**: Zod schemas in `shared/schema.ts` define three main data models:
-- Seller Leads: Property information, contact details, timeline, condition
-- Investor Leads: Investment preferences, capital range, experience level
-- Contact Forms: General inquiry submissions
-
-All records include auto-generated IDs and timestamps.
+**Schema Migrations**: Use `npm run db:push` to sync schema changes to the database.
 
 ### Build and Deployment
 
@@ -87,11 +137,18 @@ All records include auto-generated IDs and timestamps.
 - **Zod**: Runtime type validation and schema definition
 - **TanStack Query**: Asynchronous state management and data fetching
 
-### Database (Planned)
+### Database
 
 - **Drizzle ORM**: Type-safe SQL query builder configured for PostgreSQL
-- **Neon Database**: Serverless PostgreSQL database service
+- **Neon Database**: Serverless PostgreSQL database service (via `@neondatabase/serverless`)
 - **drizzle-zod**: Integration between Drizzle schemas and Zod validation
+
+### Authentication
+
+- **openid-client**: OpenID Connect client for Replit Auth
+- **passport**: Authentication middleware for Express
+- **express-session**: Session management
+- **connect-pg-simple**: PostgreSQL session store
 
 ### Development Tools
 

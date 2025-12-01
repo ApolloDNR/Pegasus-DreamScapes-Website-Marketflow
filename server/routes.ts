@@ -8,11 +8,27 @@ import {
   insertProjectSchema
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Setup Replit Auth
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
   
   // Seller Lead Routes
   app.post("/api/seller-leads", async (req, res) => {
@@ -91,6 +107,82 @@ export async function registerRoutes(
       return res.json(article);
     } catch (error) {
       console.error("Error fetching article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Protected HQ Routes (require authentication)
+  app.get("/api/hq/seller-leads", isAuthenticated, async (req, res) => {
+    try {
+      const leads = await storage.getSellerLeads();
+      return res.json(leads);
+    } catch (error) {
+      console.error("Error fetching seller leads:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/investor-leads", isAuthenticated, async (req, res) => {
+    try {
+      const leads = await storage.getInvestorLeads();
+      return res.json(leads);
+    } catch (error) {
+      console.error("Error fetching investor leads:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/contacts", isAuthenticated, async (req, res) => {
+    try {
+      const contactsList = await storage.getContacts();
+      return res.json(contactsList);
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/seller-leads/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateSellerLeadStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating seller lead status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/investor-leads/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateInvestorLeadStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating investor lead status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/contacts/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateContactStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating contact status:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
