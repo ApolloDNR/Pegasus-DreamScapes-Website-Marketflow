@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { 
   Users, 
   Home, 
@@ -22,13 +26,17 @@ import {
   AlertCircle,
   MessageSquare,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Plus,
+  FileText,
+  CalendarClock,
+  History
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { SellerLead, InvestorLead, Contact } from "@shared/schema";
+import type { SellerLead, InvestorLead, Contact, LeadActivity } from "@shared/schema";
 
 const LEAD_STATUSES = ["new", "contacted", "qualified", "closed", "lost"] as const;
 type LeadStatus = typeof LEAD_STATUSES[number];
@@ -48,6 +56,14 @@ const STATUS_ICONS: Record<LeadStatus, typeof CheckCircle2> = {
   closed: CheckCircle2,
   lost: XCircle,
 };
+
+const ACTIVITY_TYPES = [
+  { value: "note", label: "Note", icon: FileText },
+  { value: "call", label: "Phone Call", icon: Phone },
+  { value: "email", label: "Email Sent", icon: Mail },
+  { value: "meeting", label: "Meeting", icon: Users },
+  { value: "follow_up", label: "Follow-up Scheduled", icon: CalendarClock },
+];
 
 export default function HQ() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -360,23 +376,223 @@ function LeadsTabs() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const validStatus = LEAD_STATUSES.includes(status as LeadStatus) ? status as LeadStatus : "new";
-  const Icon = STATUS_ICONS[validStatus];
-  
+function ActivityDialog({ 
+  open, 
+  onOpenChange, 
+  leadType, 
+  leadId,
+  leadName 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+  leadType: string;
+  leadId: number;
+  leadName: string;
+}) {
+  const { toast } = useToast();
+  const [activityType, setActivityType] = useState("note");
+  const [notes, setNotes] = useState("");
+  const [followUpDate, setFollowUpDate] = useState("");
+
+  const { data: activities, isLoading: loadingActivities } = useQuery<LeadActivity[]>({
+    queryKey: ["/api/hq/activities", leadType, leadId],
+    enabled: open,
+  });
+
+  const addActivityMutation = useMutation({
+    mutationFn: async (data: { leadType: string; leadId: number; activityType: string; notes: string; followUpDate?: string }) => {
+      const res = await apiRequest("POST", "/api/hq/activities", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/activities", leadType, leadId] });
+      toast({
+        title: "Activity Added",
+        description: "The activity has been logged successfully.",
+      });
+      setNotes("");
+      setFollowUpDate("");
+      setActivityType("note");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add activity.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!notes.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter notes for this activity.",
+        variant: "destructive",
+      });
+      return;
+    }
+    addActivityMutation.mutate({
+      leadType,
+      leadId,
+      activityType,
+      notes,
+      followUpDate: followUpDate || undefined,
+    });
+  };
+
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const getActivityIcon = (type: string) => {
+    const activityDef = ACTIVITY_TYPES.find(a => a.value === type);
+    return activityDef?.icon || FileText;
+  };
+
   return (
-    <Badge 
-      variant="outline" 
-      className={`${STATUS_COLORS[validStatus]} border`}
-    >
-      <Icon className="w-3 h-3 mr-1" />
-      {status}
-    </Badge>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Lead Activity - {leadName}</DialogTitle>
+          <DialogDescription>
+            Add notes, schedule follow-ups, and view activity history
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          <div className="space-y-4 p-4 border rounded-lg">
+            <h3 className="font-medium flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add New Activity
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="activity-type">Activity Type</Label>
+                <Select value={activityType} onValueChange={setActivityType}>
+                  <SelectTrigger id="activity-type" data-testid="select-activity-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_TYPES.map(type => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="follow-up-date">Follow-up Date (Optional)</Label>
+                <Input
+                  id="follow-up-date"
+                  type="datetime-local"
+                  value={followUpDate}
+                  onChange={(e) => setFollowUpDate(e.target.value)}
+                  data-testid="input-follow-up-date"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add notes about this activity..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                data-testid="input-activity-notes"
+              />
+            </div>
+
+            <Button 
+              onClick={handleSubmit} 
+              disabled={addActivityMutation.isPending}
+              data-testid="button-add-activity"
+            >
+              {addActivityMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4 mr-2" />
+              )}
+              Add Activity
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium flex items-center gap-2">
+              <History className="w-4 h-4" />
+              Activity History
+            </h3>
+
+            {loadingActivities ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : activities && activities.length > 0 ? (
+              <div className="space-y-3">
+                {activities.map((activity) => {
+                  const ActivityIcon = getActivityIcon(activity.activityType);
+                  return (
+                    <div 
+                      key={activity.id} 
+                      className="flex gap-3 p-3 bg-muted/50 rounded-lg"
+                      data-testid={`activity-${activity.id}`}
+                    >
+                      <div className="p-2 rounded-lg bg-primary/20 h-fit">
+                        <ActivityIcon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {ACTIVITY_TYPES.find(t => t.value === activity.activityType)?.label || activity.activityType}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(activity.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-sm">{activity.notes}</p>
+                        {activity.followUpDate && (
+                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                            <CalendarClock className="w-3 h-3" />
+                            Follow-up: {formatDate(activity.followUpDate)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No activity history yet. Add your first note above.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function SellerLeadsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }) {
   const { toast } = useToast();
+  const [selectedLead, setSelectedLead] = useState<SellerLead | null>(null);
   const { data: leads, isLoading } = useQuery<SellerLead[]>({
     queryKey: ["/api/hq/seller-leads"],
   });
@@ -435,88 +651,110 @@ function SellerLeadsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }
   };
 
   return (
-    <div className="space-y-4">
-      {filteredLeads.map((lead, index) => (
-        <Card key={lead.id} data-testid={`card-seller-lead-${index}`}>
-          <CardHeader className="pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg">{lead.name}</CardTitle>
-                <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
-                  <span className="flex items-center gap-1">
-                    <Mail className="w-3 h-3" />
-                    {lead.email}
+    <>
+      <div className="space-y-4">
+        {filteredLeads.map((lead, index) => (
+          <Card key={lead.id} data-testid={`card-seller-lead-${index}`}>
+            <CardHeader className="pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg">{lead.name}</CardTitle>
+                  <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      {lead.email}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {lead.phone}
+                    </span>
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedLead(lead)}
+                    data-testid={`button-activity-${lead.id}`}
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    Activity
+                  </Button>
+                  <Select
+                    value={lead.status}
+                    onValueChange={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
+                    disabled={updateStatusMutation.isPending}
+                  >
+                    <SelectTrigger className="w-36" data-testid={`select-status-${lead.id}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_STATUSES.map(status => (
+                        <SelectItem key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {formatDate(lead.createdAt)}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    {lead.phone}
-                  </span>
-                </CardDescription>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Select
-                  value={lead.status}
-                  onValueChange={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  <SelectTrigger className="w-36" data-testid={`select-status-${lead.id}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAD_STATUSES.map(status => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {formatDate(lead.createdAt)}
-                </span>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Property</span>
+                  <p className="font-medium flex items-center gap-1">
+                    <Building className="w-4 h-4" />
+                    {lead.propertyType}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Condition</span>
+                  <p className="font-medium">{lead.condition}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Timeline</span>
+                  <p className="font-medium flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {lead.timeline}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Address</span>
+                  <p className="font-medium truncate">{lead.propertyAddress}</p>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Property</span>
-                <p className="font-medium flex items-center gap-1">
-                  <Building className="w-4 h-4" />
-                  {lead.propertyType}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Condition</span>
-                <p className="font-medium">{lead.condition}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Timeline</span>
-                <p className="font-medium flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {lead.timeline}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Address</span>
-                <p className="font-medium truncate">{lead.propertyAddress}</p>
-              </div>
-            </div>
-            {lead.notes && (
-              <div className="mt-4 p-3 bg-muted/50 rounded-md">
-                <span className="text-muted-foreground text-sm">Notes:</span>
-                <p className="text-sm mt-1">{lead.notes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+              {lead.notes && (
+                <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                  <span className="text-muted-foreground text-sm">Notes:</span>
+                  <p className="text-sm mt-1">{lead.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {selectedLead && (
+        <ActivityDialog
+          open={!!selectedLead}
+          onOpenChange={(open) => !open && setSelectedLead(null)}
+          leadType="seller"
+          leadId={selectedLead.id}
+          leadName={selectedLead.name}
+        />
+      )}
+    </>
   );
 }
 
 function InvestorLeadsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }) {
   const { toast } = useToast();
+  const [selectedLead, setSelectedLead] = useState<InvestorLead | null>(null);
   const { data: leads, isLoading } = useQuery<InvestorLead[]>({
     queryKey: ["/api/hq/investor-leads"],
   });
@@ -575,83 +813,104 @@ function InvestorLeadsTable({ statusFilter }: { statusFilter: LeadStatus | "all"
   };
 
   return (
-    <div className="space-y-4">
-      {filteredLeads.map((lead, index) => (
-        <Card key={lead.id} data-testid={`card-investor-lead-${index}`}>
-          <CardHeader className="pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg">{lead.name}</CardTitle>
-                <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
-                  <span className="flex items-center gap-1">
-                    <Mail className="w-3 h-3" />
-                    {lead.email}
+    <>
+      <div className="space-y-4">
+        {filteredLeads.map((lead, index) => (
+          <Card key={lead.id} data-testid={`card-investor-lead-${index}`}>
+            <CardHeader className="pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg">{lead.name}</CardTitle>
+                  <CardDescription className="flex flex-wrap items-center gap-4 mt-1">
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      {lead.email}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {lead.phone}
+                    </span>
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedLead(lead)}
+                    data-testid={`button-activity-${lead.id}`}
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    Activity
+                  </Button>
+                  <Select
+                    value={lead.status}
+                    onValueChange={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
+                    disabled={updateStatusMutation.isPending}
+                  >
+                    <SelectTrigger className="w-36" data-testid={`select-status-${lead.id}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_STATUSES.map(status => (
+                        <SelectItem key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {formatDate(lead.createdAt)}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    {lead.phone}
-                  </span>
-                </CardDescription>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Select
-                  value={lead.status}
-                  onValueChange={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  <SelectTrigger className="w-36" data-testid={`select-status-${lead.id}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAD_STATUSES.map(status => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {formatDate(lead.createdAt)}
-                </span>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Location</span>
+                  <p className="font-medium flex items-center gap-1">
+                    <Building className="w-4 h-4" />
+                    {lead.cityState}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Capital Range</span>
+                  <p className="font-medium flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" />
+                    {lead.capitalRange}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Investment Type</span>
+                  <p className="font-medium">{lead.investmentPreference}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Experience</span>
+                  <p className="font-medium">{lead.experienceLevel}</p>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Location</span>
-                <p className="font-medium flex items-center gap-1">
-                  <Building className="w-4 h-4" />
-                  {lead.cityState}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Capital Range</span>
-                <p className="font-medium flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
-                  {lead.capitalRange}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Investment Type</span>
-                <p className="font-medium">{lead.investmentPreference}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Experience</span>
-                <p className="font-medium">{lead.experienceLevel}</p>
-              </div>
-            </div>
-            {lead.notes && (
-              <div className="mt-4 p-3 bg-muted/50 rounded-md">
-                <span className="text-muted-foreground text-sm">Notes:</span>
-                <p className="text-sm mt-1">{lead.notes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+              {lead.notes && (
+                <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                  <span className="text-muted-foreground text-sm">Notes:</span>
+                  <p className="text-sm mt-1">{lead.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {selectedLead && (
+        <ActivityDialog
+          open={!!selectedLead}
+          onOpenChange={(open) => !open && setSelectedLead(null)}
+          leadType="investor"
+          leadId={selectedLead.id}
+          leadName={selectedLead.name}
+        />
+      )}
+    </>
   );
 }
 

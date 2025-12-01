@@ -187,6 +187,35 @@ export async function registerRoutes(
     }
   });
 
+  // Lead Activities Routes (for CRM)
+  app.get("/api/hq/activities/:leadType/:leadId", isAuthenticated, async (req, res) => {
+    try {
+      const { leadType, leadId } = req.params;
+      const activities = await storage.getLeadActivities(leadType, parseInt(leadId));
+      return res.json(activities);
+    } catch (error) {
+      console.error("Error fetching lead activities:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/hq/activities", isAuthenticated, async (req, res) => {
+    try {
+      const { leadType, leadId, activityType, notes, followUpDate } = req.body;
+      const activity = await storage.createLeadActivity({
+        leadType,
+        leadId: parseInt(leadId),
+        activityType,
+        notes,
+        followUpDate: followUpDate ? new Date(followUpDate) : undefined,
+      });
+      return res.status(201).json(activity);
+    } catch (error) {
+      console.error("Error creating lead activity:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Projects Routes (public)
   app.get("/api/projects", async (req, res) => {
     try {
