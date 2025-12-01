@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { 
   insertSellerLeadSchema, 
   insertInvestorLeadSchema, 
-  insertContactSchema 
+  insertContactSchema,
+  insertProjectSchema
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
@@ -66,6 +67,30 @@ export async function registerRoutes(
       return res.status(201).json(contact);
     } catch (error) {
       console.error("Error creating contact:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Projects Routes (public)
+  app.get("/api/projects", async (req, res) => {
+    try {
+      const projectsList = await storage.getProjects();
+      return res.json(projectsList);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/projects/:slug", async (req, res) => {
+    try {
+      const project = await storage.getProjectBySlug(req.params.slug);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      return res.json(project);
+    } catch (error) {
+      console.error("Error fetching project:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

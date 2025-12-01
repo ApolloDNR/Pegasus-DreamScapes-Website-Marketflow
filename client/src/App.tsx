@@ -11,6 +11,7 @@ import Services from "@/pages/services";
 import Sell from "@/pages/sell";
 import Invest from "@/pages/invest";
 import Projects from "@/pages/projects";
+import ProjectDetail from "@/pages/project-detail";
 import Dreamspace from "@/pages/dreamspace";
 import Contact from "@/pages/contact";
 import Login from "@/pages/login";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/sell" component={Sell} />
       <Route path="/invest" component={Invest} />
       <Route path="/projects" component={Projects} />
+      <Route path="/projects/:slug" component={ProjectDetail} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
       <Route path="/login" component={Login} />

@@ -6,10 +6,12 @@ import {
   MapPin, 
   Calendar,
   TrendingUp,
-  CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import type { Project } from "@shared/schema";
 
 export default function Projects() {
   return (
@@ -38,108 +40,138 @@ function HeroSection() {
 }
 
 function ProjectsGrid() {
-  const projects = [
-    {
-      id: 1,
-      name: "Nelson Dr",
-      location: "Richmond, CA",
-      strategy: "Fix & Flip",
-      type: "Single Family",
-      beds: 3,
-      baths: 2,
-      status: "Completed",
-      upgrades: ["Kitchen Remodel", "Bath Updates", "New Flooring", "Exterior Refresh", "Landscaping"],
-      timeline: "3 Months",
-      description: "Full cosmetic renovation and repositioning. Complete transformation with modern finishes and curb appeal improvements.",
-    },
-    {
-      id: 2,
-      name: "Maple Street",
-      location: "Oakland, CA",
-      strategy: "Fix & Flip",
-      type: "Single Family",
-      beds: 4,
-      baths: 2,
-      status: "In Progress",
-      upgrades: ["Full Kitchen", "Master Bath", "ADU Conversion", "Roof Replacement"],
-      timeline: "4 Months",
-      description: "Major renovation including ADU conversion for additional rental income potential.",
-    },
-    {
-      id: 3,
-      name: "Bay View Duplex",
-      location: "San Francisco, CA",
-      strategy: "Buy & Hold",
-      type: "Multi-Family",
-      beds: 4,
-      baths: 4,
-      status: "Completed",
-      upgrades: ["Unit Separation", "Kitchen Updates", "Flooring", "Paint"],
-      timeline: "2 Months",
-      description: "Strategic renovation of a duplex to maximize rental income with modern unit updates.",
-    },
-  ];
+  const { data: projects, isLoading, error } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-20 lg:py-32 border-t border-border">
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (error || !projects) {
+    return (
+      <section className="py-20 lg:py-32 border-t border-border">
+        <div className="text-center text-muted-foreground">
+          Unable to load projects. Please try again later.
+        </div>
+      </section>
+    );
+  }
+
+  const getStrategyLabel = (strategy: string) => {
+    switch (strategy) {
+      case "fix-flip": return "Fix & Flip";
+      case "buy-hold": return "Buy & Hold";
+      default: return strategy;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return "Completed";
+      case "active": return "In Progress";
+      default: return status;
+    }
+  };
 
   return (
     <section className="py-20 lg:py-32 border-t border-border">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {projects.map((project, index) => (
-            <Card key={project.id} className="overflow-hidden hover-elevate transition-all duration-300" data-testid={`card-project-${index}`}>
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-b border-border relative">
-                <div className="text-center p-4">
-                  <Home className="w-12 h-12 text-primary/50 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">Project Image</p>
+            <Link key={project.id} href={`/projects/${project.slug}`}>
+              <Card className="overflow-hidden hover-elevate transition-all duration-300 cursor-pointer h-full" data-testid={`card-project-${index}`}>
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
+                  {project.afterImages && project.afterImages.length > 0 ? (
+                    <img 
+                      src={project.afterImages[0]} 
+                      alt={project.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center p-4">
+                        <Home className="w-12 h-12 text-primary/50 mx-auto mb-2" />
+                        <p className="text-muted-foreground text-sm">Project Image</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                  <div className="absolute top-4 left-4 flex gap-2">
+                    <Badge variant={project.status === "completed" ? "default" : "secondary"}>
+                      {getStatusLabel(project.status)}
+                    </Badge>
+                    <Badge variant="outline" className="bg-background/50 backdrop-blur-sm">
+                      {getStrategyLabel(project.strategy)}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <Badge variant={project.status === "Completed" ? "default" : "secondary"}>
-                    {project.status}
-                  </Badge>
-                  <Badge variant="outline">
-                    {project.strategy}
-                  </Badge>
-                </div>
-              </div>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl mb-1">{project.name}</CardTitle>
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                      <MapPin className="w-4 h-4" />
-                      <span>{project.location}</span>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-2xl mb-1">{project.name}</CardTitle>
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <MapPin className="w-4 h-4" />
+                        <span>{project.city}, {project.state}</span>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm">
+                      {project.bedrooms && project.bathrooms && (
+                        <>
+                          <p className="text-muted-foreground">Single Family</p>
+                          <p className="font-medium">{project.bedrooms} Bed · {project.bathrooms} Bath</p>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right text-sm">
-                    <p className="text-muted-foreground">{project.type}</p>
-                    <p className="font-medium">{project.beds} Bed · {project.baths} Bath</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground leading-relaxed">{project.description}</p>
-                
-                <div className="flex flex-wrap gap-2">
-                  {project.upgrades.map((upgrade, i) => (
-                    <span key={i} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md text-sm">
-                      {upgrade}
-                    </span>
-                  ))}
-                </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground leading-relaxed line-clamp-2">{project.description}</p>
+                  
+                  {project.highlights && project.highlights.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {project.highlights.slice(0, 4).map((highlight, i) => (
+                        <span key={i} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md text-sm">
+                          {highlight}
+                        </span>
+                      ))}
+                      {project.highlights.length > 4 && (
+                        <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md text-sm">
+                          +{project.highlights.length - 4} more
+                        </span>
+                      )}
+                    </div>
+                  )}
 
-                <div className="flex items-center gap-6 pt-4 border-t border-border">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">Timeline: </span>
-                    <span className="font-medium">{project.timeline}</span>
+                  <div className="flex items-center gap-6 pt-4 border-t border-border">
+                    {project.holdTime && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground">Timeline: </span>
+                        <span className="font-medium">{project.holdTime}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground">Strategy: </span>
+                      <span className="font-medium">{getStrategyLabel(project.strategy)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">Strategy: </span>
-                    <span className="font-medium">{project.strategy}</span>
+
+                  <div className="pt-2">
+                    <span className="text-primary font-medium text-sm inline-flex items-center gap-1">
+                      View Project Details <ArrowRight className="w-4 h-4" />
+                    </span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
