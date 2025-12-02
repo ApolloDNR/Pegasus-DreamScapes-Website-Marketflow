@@ -670,6 +670,8 @@ export const announcements = pgTable("announcements", {
   audience: varchar("audience", { length: 50 }).notNull().default("ALL"),
   isPinned: boolean("is_pinned").default(false),
   isActive: boolean("is_active").default(true),
+  ctaText: varchar("cta_text", { length: 100 }),
+  ctaLink: varchar("cta_link", { length: 255 }),
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -692,6 +694,7 @@ export const notifications = pgTable("notifications", {
   // Link to related entity
   relatedType: varchar("related_type", { length: 50 }), // project, deal, offer, message
   relatedId: integer("related_id"),
+  link: varchar("link", { length: 255 }),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

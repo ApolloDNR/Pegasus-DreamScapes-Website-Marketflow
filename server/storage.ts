@@ -195,6 +195,7 @@ export interface IStorage {
   // Capital Projects
   createCapitalProject(project: InsertCapitalProject): Promise<CapitalProject>;
   getCapitalProjects(): Promise<CapitalProject[]>;
+  getActiveCapitalProjects(): Promise<CapitalProject[]>;
   getOpenCapitalProjects(): Promise<CapitalProject[]>;
   getCapitalProject(id: number): Promise<CapitalProject | undefined>;
   updateCapitalProject(id: number, data: Partial<InsertCapitalProject>): Promise<CapitalProject | undefined>;
@@ -205,6 +206,7 @@ export interface IStorage {
   createProjectMilestone(milestone: InsertProjectMilestone): Promise<ProjectMilestone>;
   getProjectMilestones(projectId: number): Promise<ProjectMilestone[]>;
   updateMilestoneCompletion(id: number, isComplete: boolean): Promise<ProjectMilestone | undefined>;
+  updateProjectMilestone(id: number, data: Partial<InsertProjectMilestone>): Promise<ProjectMilestone | undefined>;
 
   // Investment Offers
   createInvestmentOffer(offer: InsertInvestmentOffer): Promise<InvestmentOffer>;
@@ -212,6 +214,7 @@ export interface IStorage {
   getInvestmentOffersByInvestor(investorId: string): Promise<InvestmentOffer[]>;
   getInvestmentOffer(id: number): Promise<InvestmentOffer | undefined>;
   updateInvestmentOfferStatus(id: number, status: string): Promise<InvestmentOffer | undefined>;
+  respondToInvestmentOffer(id: number, status: string, counterTerms?: string, notes?: string, respondedBy?: string): Promise<InvestmentOffer | undefined>;
   counterInvestmentOffer(id: number, counterData: { counterAmount?: number; counterEquityPercent?: string; counterInterestRate?: string; counterNotes?: string }): Promise<InvestmentOffer | undefined>;
   addNegotiationEntry(id: number, entry: { by: string; action: string; details: string; timestamp: Date }): Promise<InvestmentOffer | undefined>;
 
@@ -1018,6 +1021,16 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(capitalProjects).orderBy(desc(capitalProjects.createdAt));
   }
 
+  async getActiveCapitalProjects(): Promise<CapitalProject[]> {
+    return db.select().from(capitalProjects)
+      .where(or(
+        eq(capitalProjects.status, "OPEN_FOR_INVESTMENT"),
+        eq(capitalProjects.status, "FUNDED"),
+        eq(capitalProjects.status, "IN_PROGRESS")
+      ))
+      .orderBy(desc(capitalProjects.createdAt));
+  }
+
   async getOpenCapitalProjects(): Promise<CapitalProject[]> {
     return db.select().from(capitalProjects)
       .where(eq(capitalProjects.status, "OPEN_FOR_INVESTMENT"))
@@ -1076,6 +1089,14 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async updateProjectMilestone(id: number, data: Partial<InsertProjectMilestone>): Promise<ProjectMilestone | undefined> {
+    const [updated] = await db.update(projectMilestones)
+      .set(data)
+      .where(eq(projectMilestones.id, id))
+      .returning();
+    return updated;
+  }
+
   // Investment Offers
   async createInvestmentOffer(offer: InsertInvestmentOffer): Promise<InvestmentOffer> {
     const [created] = await db.insert(investmentOffers).values(offer).returning();
@@ -1102,6 +1123,46 @@ export class DatabaseStorage implements IStorage {
   async updateInvestmentOfferStatus(id: number, status: string): Promise<InvestmentOffer | undefined> {
     const [updated] = await db.update(investmentOffers)
       .set({ status, updatedAt: new Date() })
+      .where(eq(investmentOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async respondToInvestmentOffer(
+    id: number, 
+    status: string, 
+    counterTerms?: string, 
+    notes?: string, 
+    respondedBy?: string
+  ): Promise<InvestmentOffer | undefined> {
+    const offer = await this.getInvestmentOffer(id);
+    if (!offer) return undefined;
+    
+    const updateData: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    if (counterTerms) {
+      updateData.counterNotes = counterTerms;
+    }
+    if (notes) {
+      updateData.counterNotes = notes;
+    }
+    
+    const history = Array.isArray(offer.negotiationHistory) ? offer.negotiationHistory : [];
+    updateData.negotiationHistory = [
+      ...history,
+      {
+        by: respondedBy || "staff",
+        action: status,
+        details: notes || counterTerms || "",
+        timestamp: new Date().toISOString()
+      }
+    ];
+    
+    const [updated] = await db.update(investmentOffers)
+      .set(updateData)
       .where(eq(investmentOffers.id, id))
       .returning();
     return updated;

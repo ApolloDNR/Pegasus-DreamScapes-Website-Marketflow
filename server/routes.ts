@@ -16,7 +16,7 @@ import {
   insertSavedPropertySchema,
   insertBuyerOfferSchema,
   insertCapitalProjectSchema,
-  insertMilestoneSchema,
+  insertProjectMilestoneSchema,
   insertInvestmentOfferSchema,
   insertCommittedInvestmentSchema,
   insertDealMatchSchema,
@@ -1251,7 +1251,7 @@ export async function registerRoutes(
   app.get("/api/capital-projects/:projectId/milestones", async (req, res) => {
     try {
       const projectId = Number(req.params.projectId);
-      const milestones = await storage.getMilestones(projectId);
+      const milestones = await storage.getProjectMilestones(projectId);
       return res.json(milestones);
     } catch (error) {
       console.error("Error fetching milestones:", error);
@@ -1263,11 +1263,11 @@ export async function registerRoutes(
   app.post("/api/hq/capital-projects/:projectId/milestones", isAuthenticated, requireStaffRole, async (req: any, res) => {
     try {
       const projectId = Number(req.params.projectId);
-      const result = insertMilestoneSchema.safeParse({ ...req.body, projectId });
+      const result = insertProjectMilestoneSchema.safeParse({ ...req.body, projectId });
       if (!result.success) {
         return res.status(400).json({ message: fromError(result.error).toString() });
       }
-      const milestone = await storage.createMilestone(result.data);
+      const milestone = await storage.createProjectMilestone(result.data);
       return res.status(201).json(milestone);
     } catch (error) {
       console.error("Error creating milestone:", error);
@@ -1279,7 +1279,7 @@ export async function registerRoutes(
   app.patch("/api/hq/milestones/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
     try {
       const id = Number(req.params.id);
-      const milestone = await storage.updateMilestone(id, req.body);
+      const milestone = await storage.updateProjectMilestone(id, req.body);
       if (!milestone) {
         return res.status(404).json({ message: "Milestone not found" });
       }
@@ -1364,9 +1364,11 @@ export async function registerRoutes(
         await storage.createCommittedInvestment({
           projectId: offer.projectId,
           investorId: offer.investorId,
-          amount: offer.proposedAmount,
-          structure: offer.proposedStructure,
-          terms: offer.proposedTerms || "",
+          committedAmount: offer.amountOffered,
+          role: offer.requestedRole,
+          equityPercent: offer.proposedEquityPercent,
+          interestRate: offer.proposedInterestRate,
+          notes: offer.notes || "",
           offerId: offer.id
         });
       }
