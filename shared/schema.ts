@@ -463,13 +463,25 @@ export const communityCategories = pgTable("community_categories", {
 
 export type CommunityCategory = typeof communityCategories.$inferSelect;
 
-// Community Posts/Threads
+// Community Posts/Threads - Social media style with rich content
 export const communityPosts = pgTable("community_posts", {
   id: serial("id").primaryKey(),
   categoryId: integer("category_id").notNull(),
   userId: varchar("user_id", { length: 255 }).notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }),
   content: text("content").notNull(),
+  // Social media style fields
+  postType: varchar("post_type", { length: 50 }).default("text"), // text, image, project, deal, poll
+  images: text("images").array(), // Array of image URLs
+  linkedProjectId: integer("linked_project_id"), // Link to capital project for showcasing
+  linkedDealId: integer("linked_deal_id"), // Link to wholesale deal
+  tags: text("tags").array(), // Hashtags for discovery
+  mentions: text("mentions").array(), // User mentions
+  // Engagement metrics
+  likeCount: integer("like_count").default(0),
+  shareCount: integer("share_count").default(0),
+  bookmarkCount: integer("bookmark_count").default(0),
+  // Original fields
   isPinned: boolean("is_pinned").default(false),
   isLocked: boolean("is_locked").default(false),
   viewCount: integer("view_count").default(0),
@@ -486,11 +498,38 @@ export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit
   updatedAt: true, 
   viewCount: true,
   replyCount: true,
+  likeCount: true,
+  shareCount: true,
+  bookmarkCount: true,
   lastReplyAt: true,
   lastReplyBy: true
 });
 export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
 export type CommunityPost = typeof communityPosts.$inferSelect;
+
+// Post Likes - Track who liked what
+export const postLikes = pgTable("post_likes", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPostLikeSchema = createInsertSchema(postLikes).omit({ id: true, createdAt: true });
+export type InsertPostLike = z.infer<typeof insertPostLikeSchema>;
+export type PostLike = typeof postLikes.$inferSelect;
+
+// Post Bookmarks - Track saved posts
+export const postBookmarks = pgTable("post_bookmarks", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPostBookmarkSchema = createInsertSchema(postBookmarks).omit({ id: true, createdAt: true });
+export type InsertPostBookmark = z.infer<typeof insertPostBookmarkSchema>;
+export type PostBookmark = typeof postBookmarks.$inferSelect;
 
 // Community Replies
 export const communityReplies = pgTable("community_replies", {

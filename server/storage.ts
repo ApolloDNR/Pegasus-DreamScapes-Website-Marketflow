@@ -4,7 +4,8 @@ import {
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
   wholesaleDeals, wholesaleRequests, userRoles, staffProfiles, investorProfiles, 
   wholesalerProfiles, buyerProfiles, savedProperties, buyerOffers, retailListings, buyerInquiries,
-  communityCategories, communityPosts, communityReplies, directMessages, STAFF_ROLES,
+  communityCategories, communityPosts, communityReplies, postLikes, postBookmarks,
+  directMessages, STAFF_ROLES,
   capitalProjects, projectMilestones, investmentOffers, committedInvestments, dealMatches,
   announcements, notifications,
   type User, type UpsertUser,
@@ -28,6 +29,8 @@ import {
   type CommunityCategory,
   type CommunityPost, type InsertCommunityPost,
   type CommunityReply, type InsertCommunityReply,
+  type PostLike, type InsertPostLike,
+  type PostBookmark, type InsertPostBookmark,
   type DirectMessage, type InsertDirectMessage,
   type CapitalProject, type InsertCapitalProject,
   type ProjectMilestone, type InsertProjectMilestone,
@@ -968,6 +971,81 @@ export class DatabaseStorage implements IStorage {
       .where(eq(communityReplies.id, id))
       .returning();
     return updated;
+  }
+
+  // Post Likes
+  async togglePostLike(postId: number, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+    const existingLike = await db.select().from(postLikes)
+      .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
+    
+    if (existingLike.length > 0) {
+      await db.delete(postLikes).where(eq(postLikes.id, existingLike[0].id));
+      await db.update(communityPosts)
+        .set({ likeCount: sql`GREATEST(0, ${communityPosts.likeCount} - 1)` })
+        .where(eq(communityPosts.id, postId));
+      const [post] = await db.select({ likeCount: communityPosts.likeCount }).from(communityPosts).where(eq(communityPosts.id, postId));
+      return { liked: false, likeCount: post?.likeCount || 0 };
+    } else {
+      await db.insert(postLikes).values({ postId, userId });
+      await db.update(communityPosts)
+        .set({ likeCount: sql`${communityPosts.likeCount} + 1` })
+        .where(eq(communityPosts.id, postId));
+      const [post] = await db.select({ likeCount: communityPosts.likeCount }).from(communityPosts).where(eq(communityPosts.id, postId));
+      return { liked: true, likeCount: post?.likeCount || 0 };
+    }
+  }
+
+  async isPostLiked(postId: number, userId: string): Promise<boolean> {
+    const result = await db.select().from(postLikes)
+      .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
+    return result.length > 0;
+  }
+
+  async getPostLikes(postId: number): Promise<PostLike[]> {
+    return db.select().from(postLikes).where(eq(postLikes.postId, postId));
+  }
+
+  // Post Bookmarks
+  async togglePostBookmark(postId: number, userId: string): Promise<{ bookmarked: boolean; bookmarkCount: number }> {
+    const existingBookmark = await db.select().from(postBookmarks)
+      .where(and(eq(postBookmarks.postId, postId), eq(postBookmarks.userId, userId)));
+    
+    if (existingBookmark.length > 0) {
+      await db.delete(postBookmarks).where(eq(postBookmarks.id, existingBookmark[0].id));
+      await db.update(communityPosts)
+        .set({ bookmarkCount: sql`GREATEST(0, ${communityPosts.bookmarkCount} - 1)` })
+        .where(eq(communityPosts.id, postId));
+      const [post] = await db.select({ bookmarkCount: communityPosts.bookmarkCount }).from(communityPosts).where(eq(communityPosts.id, postId));
+      return { bookmarked: false, bookmarkCount: post?.bookmarkCount || 0 };
+    } else {
+      await db.insert(postBookmarks).values({ postId, userId });
+      await db.update(communityPosts)
+        .set({ bookmarkCount: sql`${communityPosts.bookmarkCount} + 1` })
+        .where(eq(communityPosts.id, postId));
+      const [post] = await db.select({ bookmarkCount: communityPosts.bookmarkCount }).from(communityPosts).where(eq(communityPosts.id, postId));
+      return { bookmarked: true, bookmarkCount: post?.bookmarkCount || 0 };
+    }
+  }
+
+  async isPostBookmarked(postId: number, userId: string): Promise<boolean> {
+    const result = await db.select().from(postBookmarks)
+      .where(and(eq(postBookmarks.postId, postId), eq(postBookmarks.userId, userId)));
+    return result.length > 0;
+  }
+
+  async getUserBookmarks(userId: string): Promise<CommunityPost[]> {
+    const bookmarks = await db.select({ postId: postBookmarks.postId })
+      .from(postBookmarks).where(eq(postBookmarks.userId, userId));
+    if (bookmarks.length === 0) return [];
+    const postIds = bookmarks.map(b => b.postId);
+    return db.select().from(communityPosts).where(inArray(communityPosts.id, postIds));
+  }
+
+  // Get social feed posts (all posts ordered by recent, with user engagement info)
+  async getSocialFeedPosts(limit: number = 50): Promise<CommunityPost[]> {
+    return db.select().from(communityPosts)
+      .orderBy(desc(communityPosts.isPinned), desc(communityPosts.createdAt))
+      .limit(limit);
   }
 
   // Direct Messages

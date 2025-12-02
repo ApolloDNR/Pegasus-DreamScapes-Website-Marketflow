@@ -1100,6 +1100,82 @@ export async function registerRoutes(
     }
   });
 
+  // Social Feed - get all posts across categories
+  app.get("/api/community/feed", async (req, res) => {
+    try {
+      const limit = Number(req.query.limit) || 50;
+      const posts = await storage.getSocialFeedPosts(limit);
+      return res.json(posts);
+    } catch (error) {
+      console.error("Error fetching social feed:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Toggle like on a post
+  app.post("/api/community/posts/:id/like", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = Number(req.params.id);
+      const result = await storage.togglePostLike(postId, userId);
+      return res.json(result);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Check if user has liked a post
+  app.get("/api/community/posts/:id/liked", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = Number(req.params.id);
+      const liked = await storage.isPostLiked(postId, userId);
+      return res.json({ liked });
+    } catch (error) {
+      console.error("Error checking like:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Toggle bookmark on a post
+  app.post("/api/community/posts/:id/bookmark", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = Number(req.params.id);
+      const result = await storage.togglePostBookmark(postId, userId);
+      return res.json(result);
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Check if user has bookmarked a post
+  app.get("/api/community/posts/:id/bookmarked", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = Number(req.params.id);
+      const bookmarked = await storage.isPostBookmarked(postId, userId);
+      return res.json({ bookmarked });
+    } catch (error) {
+      console.error("Error checking bookmark:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user's bookmarked posts
+  app.get("/api/community/bookmarks", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const posts = await storage.getUserBookmarks(userId);
+      return res.json(posts);
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // =====================================================
   // Direct Messaging Routes
   // =====================================================
