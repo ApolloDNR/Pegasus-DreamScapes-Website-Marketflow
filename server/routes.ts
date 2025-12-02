@@ -547,6 +547,17 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/wholesale-deals-active", async (req, res) => {
+    try {
+      const deals = await storage.getAvailableWholesaleDeals();
+      const activeDeals = deals.filter(d => d.status === "available" || d.status === "ACTIVE");
+      return res.json(activeDeals);
+    } catch (error) {
+      console.error("Error fetching active wholesale deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/wholesale-deals/:id", async (req, res) => {
     try {
       const deal = await storage.getWholesaleDeal(parseInt(req.params.id));

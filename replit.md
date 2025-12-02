@@ -20,7 +20,7 @@ Preferred communication style: Simple, everyday language.
 
 **Framework**: React 18 with TypeScript on Vite.
 **Routing**: Wouter for client-side SPA.
-**Key Pages**: Homepage, About, Services, Projects (individual detail pages), Calculators, Resources (blog/articles), Wholesale Deals Marketplace, Seller/Investor lead forms, Contact, and a protected HQ Dashboard for staff.
+**Key Pages**: Homepage, About, Services, Projects (individual detail pages), Calculators, Resources (blog/articles), Wholesale Deals Marketplace, Seller/Investor lead forms, Contact, protected HQ Dashboard for staff, and **Dealflow** - a unified marketplace and matching system at /dealflow with My Office dashboard, Marketplace (Deals), Community forums, and Messages.
 **State Management**: TanStack Query for server state, API calls, and caching.
 **UI Component Library**: Radix UI primitives wrapped with custom styled components (shadcn/ui pattern) using Tailwind CSS.
 **Design System**: Light editorial theme with cream/white backgrounds, dark text, bronze/blood-orange accents, and a custom HSL color palette. Typography uses Playfair Display (serif) for headlines and Inter for body text. Features two-column editorial layouts and component variants with `class-variance-authority`.

@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -26,6 +26,11 @@ import WholesalerPortal from "@/pages/wholesaler-portal";
 import BuyerPortal from "@/pages/buyer-portal";
 import Community from "@/pages/community";
 import CapitalRaising from "@/pages/capital-raising";
+import DealflowOffice from "@/pages/dealflow-office";
+import DealflowDeals from "@/pages/dealflow-deals";
+import DealflowProject from "@/pages/dealflow-project";
+import DealflowCommunity from "@/pages/dealflow-community";
+import DealflowMessages from "@/pages/dealflow-messages";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -52,6 +57,12 @@ function Router() {
       <Route path="/portal/buyer" component={BuyerPortal} />
       <Route path="/capital-raising" component={CapitalRaising} />
       <Route path="/community" component={Community} />
+      <Route path="/dealflow">{() => <Redirect to="/dealflow/office" />}</Route>
+      <Route path="/dealflow/office" component={DealflowOffice} />
+      <Route path="/dealflow/deals" component={DealflowDeals} />
+      <Route path="/dealflow/project/:id" component={DealflowProject} />
+      <Route path="/dealflow/community" component={DealflowCommunity} />
+      <Route path="/dealflow/messages" component={DealflowMessages} />
       <Route component={NotFound} />
     </Switch>
   );

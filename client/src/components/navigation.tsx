@@ -242,14 +242,24 @@ export function Navigation() {
 
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
-              <Link 
-                href={user?.isStaff ? "/hq" : "/portal"} 
-                className={`hidden sm:flex items-center gap-2 text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
-                data-testid="link-nav-portal"
-              >
-                <User className="w-4 h-4" />
-                {user?.isStaff ? "HQ" : "Portal"}
-              </Link>
+              <>
+                <Link 
+                  href="/dealflow"
+                  className={`hidden sm:flex items-center gap-2 text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
+                  data-testid="link-nav-dealflow"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Dealflow
+                </Link>
+                <Link 
+                  href={user?.isStaff ? "/hq" : "/portal"} 
+                  className={`hidden sm:flex items-center gap-2 text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
+                  data-testid="link-nav-portal"
+                >
+                  <User className="w-4 h-4" />
+                  {user?.isStaff ? "HQ" : "Portal"}
+                </Link>
+              </>
             ) : (
               <a 
                 href="/api/login"
@@ -345,15 +355,26 @@ export function Navigation() {
             
             <div className="pt-4 border-t border-border space-y-2">
               {isAuthenticated ? (
-                <Link 
-                  href={user?.isStaff ? "/hq" : "/portal"}
-                  className="flex items-center gap-2 py-3 px-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)} 
-                  data-testid="link-mobile-portal"
-                >
-                  <User className="w-4 h-4" />
-                  {user?.isStaff ? "HQ Dashboard" : "My Portal"}
-                </Link>
+                <>
+                  <Link 
+                    href="/dealflow"
+                    className="flex items-center gap-2 py-3 px-4 text-sm font-medium text-primary transition-colors"
+                    onClick={() => setIsOpen(false)} 
+                    data-testid="link-mobile-dealflow"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Dealflow
+                  </Link>
+                  <Link 
+                    href={user?.isStaff ? "/hq" : "/portal"}
+                    className="flex items-center gap-2 py-3 px-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)} 
+                    data-testid="link-mobile-portal"
+                  >
+                    <User className="w-4 h-4" />
+                    {user?.isStaff ? "HQ Dashboard" : "My Portal"}
+                  </Link>
+                </>
               ) : (
                 <a 
                   href="/api/login"
