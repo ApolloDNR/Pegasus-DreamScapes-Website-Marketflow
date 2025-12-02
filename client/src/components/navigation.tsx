@@ -111,6 +111,14 @@ export function Navigation() {
               alt="Pegasus Dreamscapes" 
               className="h-12 w-auto transition-transform duration-300 group-hover:scale-105"
             />
+            <div className="hidden sm:block">
+              <h1 className={`font-serif text-xl font-semibold tracking-tight transition-colors ${scrolled || !isHomePage ? 'text-foreground' : 'text-white'}`}>
+                Pegasus Dreamscapes
+              </h1>
+              <p className={`text-[10px] uppercase tracking-[0.2em] transition-colors ${scrolled || !isHomePage ? 'text-muted-foreground' : 'text-white/70'}`}>
+                Corp
+              </p>
+            </div>
           </Link>
 
           <div className="hidden lg:flex items-center gap-10">
