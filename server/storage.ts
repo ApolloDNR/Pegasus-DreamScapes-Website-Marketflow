@@ -1,14 +1,17 @@
 import { db } from "./db";
-import { eq, and, desc, lte, isNotNull, asc } from "drizzle-orm";
+import { eq, and, desc, lte, isNotNull, asc, or, inArray } from "drizzle-orm";
 import { 
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
+  wholesaleDeals, wholesaleRequests,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
   type Contact, type InsertContact,
   type Project, type InsertProject,
   type Article, type InsertArticle,
-  type LeadActivity, type InsertLeadActivity
+  type LeadActivity, type InsertLeadActivity,
+  type WholesaleDeal, type InsertWholesaleDeal,
+  type WholesaleRequest, type InsertWholesaleRequest
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -67,6 +70,20 @@ export interface IStorage {
 
   // Queue
   getQueueItems(): Promise<QueueItem[]>;
+
+  // Wholesale Deals
+  createWholesaleDeal(deal: InsertWholesaleDeal): Promise<WholesaleDeal>;
+  getWholesaleDeals(): Promise<WholesaleDeal[]>;
+  getAvailableWholesaleDeals(): Promise<WholesaleDeal[]>;
+  getWholesaleDeal(id: number): Promise<WholesaleDeal | undefined>;
+  updateWholesaleDealStatus(id: number, status: string, notes?: string): Promise<WholesaleDeal | undefined>;
+  updateWholesaleDeal(id: number, data: Partial<InsertWholesaleDeal>): Promise<WholesaleDeal | undefined>;
+
+  // Wholesale Requests
+  createWholesaleRequest(request: InsertWholesaleRequest): Promise<WholesaleRequest>;
+  getWholesaleRequests(): Promise<WholesaleRequest[]>;
+  getWholesaleRequestsByDeal(dealId: number): Promise<WholesaleRequest[]>;
+  updateWholesaleRequestStatus(id: number, status: string): Promise<WholesaleRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -347,6 +364,75 @@ export class DatabaseStorage implements IStorage {
     });
 
     return queueItems;
+  }
+
+  // Wholesale Deals
+  async createWholesaleDeal(deal: InsertWholesaleDeal): Promise<WholesaleDeal> {
+    const [created] = await db.insert(wholesaleDeals).values(deal).returning();
+    return created;
+  }
+
+  async getWholesaleDeals(): Promise<WholesaleDeal[]> {
+    return db.select().from(wholesaleDeals).orderBy(desc(wholesaleDeals.createdAt));
+  }
+
+  async getAvailableWholesaleDeals(): Promise<WholesaleDeal[]> {
+    return db.select().from(wholesaleDeals)
+      .where(eq(wholesaleDeals.status, "available"))
+      .orderBy(desc(wholesaleDeals.createdAt));
+  }
+
+  async getWholesaleDeal(id: number): Promise<WholesaleDeal | undefined> {
+    const [deal] = await db.select().from(wholesaleDeals).where(eq(wholesaleDeals.id, id));
+    return deal;
+  }
+
+  async updateWholesaleDealStatus(id: number, status: string, notes?: string): Promise<WholesaleDeal | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (notes !== undefined) {
+      if (status === "accepted" || status === "rejected") {
+        updateData.developmentNotes = notes;
+      } else {
+        updateData.acquisitionsNotes = notes;
+      }
+    }
+    const [updated] = await db.update(wholesaleDeals)
+      .set(updateData)
+      .where(eq(wholesaleDeals.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateWholesaleDeal(id: number, data: Partial<InsertWholesaleDeal>): Promise<WholesaleDeal | undefined> {
+    const [updated] = await db.update(wholesaleDeals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(wholesaleDeals.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Wholesale Requests
+  async createWholesaleRequest(request: InsertWholesaleRequest): Promise<WholesaleRequest> {
+    const [created] = await db.insert(wholesaleRequests).values(request).returning();
+    return created;
+  }
+
+  async getWholesaleRequests(): Promise<WholesaleRequest[]> {
+    return db.select().from(wholesaleRequests).orderBy(desc(wholesaleRequests.createdAt));
+  }
+
+  async getWholesaleRequestsByDeal(dealId: number): Promise<WholesaleRequest[]> {
+    return db.select().from(wholesaleRequests)
+      .where(eq(wholesaleRequests.dealId, dealId))
+      .orderBy(desc(wholesaleRequests.createdAt));
+  }
+
+  async updateWholesaleRequestStatus(id: number, status: string): Promise<WholesaleRequest | undefined> {
+    const [updated] = await db.update(wholesaleRequests)
+      .set({ status })
+      .where(eq(wholesaleRequests.id, id))
+      .returning();
+    return updated;
   }
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { 
@@ -30,23 +30,22 @@ const homeLinks = [
 ];
 
 const megaMenuSections = {
-  tools: {
-    title: "Investment Tools",
-    icon: Calculator,
+  opportunities: {
+    title: "Opportunities",
+    icon: DollarSign,
     items: [
-      { href: "/calculators", label: "ARV Calculator", description: "Estimate after-repair value", icon: Home },
-      { href: "/calculators", label: "ROI Calculator", description: "Cash-on-cash returns", icon: TrendingUp },
-      { href: "/calculators", label: "BRRRR Calculator", description: "Buy, rehab, rent, refi, repeat", icon: BarChart3 },
-      { href: "/calculators", label: "Cash Flow Analyzer", description: "Monthly income projections", icon: DollarSign },
+      { href: "/wholesale", label: "Wholesale Deals", description: "Off-market properties available", icon: Home },
+      { href: "/sell", label: "Sell Your Property", description: "Get a cash offer", icon: DollarSign },
+      { href: "/invest", label: "Invest With Us", description: "Partner on projects", icon: TrendingUp },
     ]
   },
-  resources: {
-    title: "Resources",
-    icon: BookOpen,
+  tools: {
+    title: "Tools & Resources",
+    icon: Calculator,
     items: [
+      { href: "/calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator },
       { href: "/resources", label: "Investment Guides", description: "Learn the fundamentals", icon: FileText },
       { href: "/projects", label: "Case Studies", description: "Real project examples", icon: Target },
-      { href: "/resources", label: "Market Insights", description: "Trends and analysis", icon: BarChart3 },
     ]
   },
   company: {
@@ -54,8 +53,8 @@ const megaMenuSections = {
     icon: Building2,
     items: [
       { href: "/about", label: "About Us", description: "Our story and mission", icon: Users },
-      { href: "/about", label: "Team", description: "Meet the Dreamscapers", icon: Award },
       { href: "/projects", label: "Portfolio", description: "Completed projects", icon: Briefcase },
+      { href: "/contact", label: "Contact", description: "Get in touch", icon: Award },
     ]
   }
 };
@@ -65,6 +64,7 @@ export function Navigation() {
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isHomePage = location === "/";
 
@@ -75,6 +75,20 @@ export function Navigation() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleMenuEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setMegaMenuOpen(true);
+  };
+
+  const handleMenuLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setMegaMenuOpen(false);
+    }, 150);
+  };
 
   const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith("#") && isHomePage) {
@@ -128,17 +142,23 @@ export function Navigation() {
             
             <div 
               className="relative"
-              onMouseEnter={() => setMegaMenuOpen(true)}
-              onMouseLeave={() => setMegaMenuOpen(false)}
+              onMouseEnter={handleMenuEnter}
+              onMouseLeave={handleMenuLeave}
             >
               <button 
                 className={`flex items-center gap-1 text-sm font-medium tracking-wide cursor-pointer transition-colors ${(scrolled || !isHomePage) ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'}`}
                 data-testid="button-nav-explore"
                 aria-expanded={megaMenuOpen}
+                onClick={() => setMegaMenuOpen(!megaMenuOpen)}
               >
                 Explore
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${megaMenuOpen ? 'rotate-180' : ''}`} />
               </button>
+              
+              {/* Invisible bridge to prevent menu from closing when moving to dropdown */}
+              {megaMenuOpen && (
+                <div className="absolute top-full left-0 right-0 h-5 bg-transparent" />
+              )}
               
               {megaMenuOpen && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-[700px] bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">

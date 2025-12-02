@@ -36,7 +36,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { SellerLead, InvestorLead, Contact, LeadActivity } from "@shared/schema";
+import type { SellerLead, InvestorLead, Contact, LeadActivity, WholesaleDeal, WholesaleRequest } from "@shared/schema";
 
 interface QueueItem {
   id: string;
@@ -665,10 +665,14 @@ function LeadsTabs() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="queue" data-testid="tab-queue">
             <Clock className="w-4 h-4 mr-2" />
             Work Queue
+          </TabsTrigger>
+          <TabsTrigger value="wholesale" data-testid="tab-wholesale">
+            <DollarSign className="w-4 h-4 mr-2" />
+            Wholesale
           </TabsTrigger>
           <TabsTrigger value="seller-leads" data-testid="tab-seller-leads">
             <Home className="w-4 h-4 mr-2" />
@@ -686,6 +690,9 @@ function LeadsTabs() {
 
         <TabsContent value="queue">
           <QueuePanel />
+        </TabsContent>
+        <TabsContent value="wholesale">
+          <WholesaleDealsPanel />
         </TabsContent>
         <TabsContent value="seller-leads">
           <SellerLeadsTable statusFilter={statusFilter} />
@@ -1354,5 +1361,493 @@ function ContactsTable({ statusFilter }: { statusFilter: LeadStatus | "all" }) {
         </Card>
       ))}
     </div>
+  );
+}
+
+const WHOLESALE_STATUSES = ["under_review", "accepted", "rejected", "available", "assigned"] as const;
+type WholesaleStatus = typeof WHOLESALE_STATUSES[number];
+
+const WHOLESALE_STATUS_LABELS: Record<WholesaleStatus, string> = {
+  under_review: "Under Review",
+  accepted: "Accepted (Internal)",
+  rejected: "Rejected",
+  available: "Available (Public)",
+  assigned: "Assigned",
+};
+
+const WHOLESALE_STATUS_COLORS: Record<WholesaleStatus, string> = {
+  under_review: "bg-amber-500/20 text-amber-500 border-amber-500/30",
+  accepted: "bg-blue-500/20 text-blue-500 border-blue-500/30",
+  rejected: "bg-red-500/20 text-red-500 border-red-500/30",
+  available: "bg-green-500/20 text-green-500 border-green-500/30",
+  assigned: "bg-purple-500/20 text-purple-500 border-purple-500/30",
+};
+
+function WholesaleDealsPanel() {
+  const { toast } = useToast();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewRequestsId, setViewRequestsId] = useState<number | null>(null);
+
+  const { data: deals, isLoading } = useQuery<WholesaleDeal[]>({
+    queryKey: ["/api/hq/wholesale-deals"],
+  });
+
+  const { data: allRequests } = useQuery<WholesaleRequest[]>({
+    queryKey: ["/api/hq/wholesale-requests"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status, notes }: { id: number; status: string; notes?: string }) => {
+      const res = await apiRequest("PATCH", `/api/hq/wholesale-deals/${id}/status`, { status, notes });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/wholesale-deals"] });
+      toast({
+        title: "Status Updated",
+        description: "The deal status has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update deal status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createDealMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/hq/wholesale-deals", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/wholesale-deals"] });
+      toast({
+        title: "Deal Created",
+        description: "The wholesale deal has been added successfully.",
+      });
+      setCreateDialogOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create deal.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const dealsByStatus = {
+    under_review: deals?.filter(d => d.status === "under_review") || [],
+    accepted: deals?.filter(d => d.status === "accepted") || [],
+    rejected: deals?.filter(d => d.status === "rejected") || [],
+    available: deals?.filter(d => d.status === "available") || [],
+    assigned: deals?.filter(d => d.status === "assigned") || [],
+  };
+
+  const getRequestsForDeal = (dealId: number) => {
+    return allRequests?.filter(r => r.dealId === dealId) || [];
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="text-sm">
+            {deals?.length || 0} total deals
+          </Badge>
+          <Badge className={WHOLESALE_STATUS_COLORS.under_review}>
+            {dealsByStatus.under_review.length} under review
+          </Badge>
+          <Badge className={WHOLESALE_STATUS_COLORS.available}>
+            {dealsByStatus.available.length} available
+          </Badge>
+        </div>
+        <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-add-deal">
+          <Plus className="w-4 h-4 mr-2" />
+          Add New Deal
+        </Button>
+      </div>
+
+      {(!deals || deals.length === 0) ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No wholesale deals yet. Click "Add New Deal" to create one.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {deals.map((deal) => {
+            const requests = getRequestsForDeal(deal.id);
+            return (
+              <Card key={deal.id} data-testid={`card-wholesale-deal-${deal.id}`}>
+                <CardHeader className="pb-2">
+                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Home className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg">{deal.propertyAddress}</CardTitle>
+                          <CardDescription className="flex flex-wrap items-center gap-3 mt-1">
+                            <span>{deal.city}, {deal.state} {deal.zipCode}</span>
+                            <span>{deal.propertyType}</span>
+                            {deal.bedrooms && deal.bathrooms && (
+                              <span>{deal.bedrooms}bd/{deal.bathrooms}ba</span>
+                            )}
+                            {deal.sqft && <span>{deal.sqft.toLocaleString()} sqft</span>}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Select
+                        value={deal.status}
+                        onValueChange={(status) => updateStatusMutation.mutate({ id: deal.id, status })}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <SelectTrigger className="w-44" data-testid={`select-deal-status-${deal.id}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {WHOLESALE_STATUSES.map(status => (
+                            <SelectItem key={status} value={status}>
+                              {WHOLESALE_STATUS_LABELS[status]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {requests.length > 0 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setViewRequestsId(viewRequestsId === deal.id ? null : deal.id)}
+                          data-testid={`button-view-requests-${deal.id}`}
+                        >
+                          <Users className="w-4 h-4 mr-1" />
+                          {requests.length} Request{requests.length > 1 ? 's' : ''}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground uppercase">Contract Price</p>
+                      <p className="font-bold">{formatCurrency(deal.contractPrice)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground uppercase">Assignment Fee</p>
+                      <p className="font-bold text-primary">{formatCurrency(deal.assignmentFee)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground uppercase">ARV</p>
+                      <p className="font-bold">{formatCurrency(deal.arv)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground uppercase">Est. Repairs</p>
+                      <p className="font-bold">{formatCurrency(deal.estimatedRepairs)}</p>
+                    </div>
+                  </div>
+
+                  {deal.description && (
+                    <p className="text-sm text-muted-foreground mb-4">{deal.description}</p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                    <span>Strategy: <strong className="text-foreground">{deal.strategy}</strong></span>
+                    <span>Added: <strong className="text-foreground">{formatDate(deal.createdAt)}</strong></span>
+                    {deal.contractExpiration && (
+                      <span className="text-amber-500">Contract Expires: <strong>{formatDate(deal.contractExpiration)}</strong></span>
+                    )}
+                  </div>
+
+                  {viewRequestsId === deal.id && requests.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <h4 className="text-sm font-medium mb-3">Assignment Requests</h4>
+                      <div className="space-y-3">
+                        {requests.map((request) => (
+                          <div key={request.id} className="p-3 rounded-lg bg-muted/30 text-sm">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="font-medium">{request.name}</p>
+                                <p className="text-muted-foreground">{request.email} | {request.phone}</p>
+                                {request.company && <p className="text-muted-foreground">Company: {request.company}</p>}
+                                <p className="mt-1">Experience: {request.experience} | Funding: {request.fundingSource}</p>
+                                {request.message && <p className="mt-2 text-muted-foreground italic">"{request.message}"</p>}
+                              </div>
+                              <Badge variant="outline" className="capitalize">{request.status}</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Wholesale Deal</DialogTitle>
+            <DialogDescription>
+              Enter the property details for a new wholesale deal under contract.
+            </DialogDescription>
+          </DialogHeader>
+          <CreateDealForm onSubmit={(data) => createDealMutation.mutate(data)} isPending={createDealMutation.isPending} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function CreateDealForm({ onSubmit, isPending }: { onSubmit: (data: any) => void; isPending: boolean }) {
+  const [formData, setFormData] = useState({
+    propertyAddress: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    propertyType: "single_family",
+    bedrooms: "",
+    bathrooms: "",
+    sqft: "",
+    yearBuilt: "",
+    lotSize: "",
+    contractPrice: "",
+    assignmentFee: "",
+    arv: "",
+    estimatedRepairs: "",
+    strategy: "fix-flip",
+    description: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+      sqft: formData.sqft ? parseInt(formData.sqft) : null,
+      yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
+      contractPrice: parseInt(formData.contractPrice),
+      assignmentFee: parseInt(formData.assignmentFee),
+      arv: formData.arv ? parseInt(formData.arv) : null,
+      estimatedRepairs: formData.estimatedRepairs ? parseInt(formData.estimatedRepairs) : null,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <Label>Property Address</Label>
+          <Input 
+            value={formData.propertyAddress} 
+            onChange={(e) => setFormData(p => ({ ...p, propertyAddress: e.target.value }))}
+            placeholder="123 Main Street"
+            required
+            data-testid="input-deal-address"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <Label>City</Label>
+            <Input 
+              value={formData.city} 
+              onChange={(e) => setFormData(p => ({ ...p, city: e.target.value }))}
+              required
+              data-testid="input-deal-city"
+            />
+          </div>
+          <div>
+            <Label>State</Label>
+            <Input 
+              value={formData.state} 
+              onChange={(e) => setFormData(p => ({ ...p, state: e.target.value }))}
+              required
+              data-testid="input-deal-state"
+            />
+          </div>
+          <div>
+            <Label>Zip Code</Label>
+            <Input 
+              value={formData.zipCode} 
+              onChange={(e) => setFormData(p => ({ ...p, zipCode: e.target.value }))}
+              required
+              data-testid="input-deal-zip"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <Label>Property Type</Label>
+          <Select value={formData.propertyType} onValueChange={(v) => setFormData(p => ({ ...p, propertyType: v }))}>
+            <SelectTrigger data-testid="select-deal-property-type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="single_family">Single Family</SelectItem>
+              <SelectItem value="multi_family">Multi Family</SelectItem>
+              <SelectItem value="townhouse">Townhouse</SelectItem>
+              <SelectItem value="condo">Condo</SelectItem>
+              <SelectItem value="land">Land</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Bedrooms</Label>
+          <Input 
+            type="number" 
+            value={formData.bedrooms} 
+            onChange={(e) => setFormData(p => ({ ...p, bedrooms: e.target.value }))}
+            data-testid="input-deal-beds"
+          />
+        </div>
+        <div>
+          <Label>Bathrooms</Label>
+          <Input 
+            value={formData.bathrooms} 
+            onChange={(e) => setFormData(p => ({ ...p, bathrooms: e.target.value }))}
+            placeholder="2.5"
+            data-testid="input-deal-baths"
+          />
+        </div>
+        <div>
+          <Label>Sqft</Label>
+          <Input 
+            type="number" 
+            value={formData.sqft} 
+            onChange={(e) => setFormData(p => ({ ...p, sqft: e.target.value }))}
+            data-testid="input-deal-sqft"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <Label>Contract Price</Label>
+          <Input 
+            type="number" 
+            value={formData.contractPrice} 
+            onChange={(e) => setFormData(p => ({ ...p, contractPrice: e.target.value }))}
+            required
+            data-testid="input-deal-contract-price"
+          />
+        </div>
+        <div>
+          <Label>Assignment Fee</Label>
+          <Input 
+            type="number" 
+            value={formData.assignmentFee} 
+            onChange={(e) => setFormData(p => ({ ...p, assignmentFee: e.target.value }))}
+            required
+            data-testid="input-deal-assignment-fee"
+          />
+        </div>
+        <div>
+          <Label>ARV</Label>
+          <Input 
+            type="number" 
+            value={formData.arv} 
+            onChange={(e) => setFormData(p => ({ ...p, arv: e.target.value }))}
+            data-testid="input-deal-arv"
+          />
+        </div>
+        <div>
+          <Label>Est. Repairs</Label>
+          <Input 
+            type="number" 
+            value={formData.estimatedRepairs} 
+            onChange={(e) => setFormData(p => ({ ...p, estimatedRepairs: e.target.value }))}
+            data-testid="input-deal-repairs"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Strategy</Label>
+          <Select value={formData.strategy} onValueChange={(v) => setFormData(p => ({ ...p, strategy: v }))}>
+            <SelectTrigger data-testid="select-deal-strategy">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fix-flip">Fix & Flip</SelectItem>
+              <SelectItem value="buy-hold">Buy & Hold</SelectItem>
+              <SelectItem value="wholesale">Wholesale</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Year Built</Label>
+          <Input 
+            type="number" 
+            value={formData.yearBuilt} 
+            onChange={(e) => setFormData(p => ({ ...p, yearBuilt: e.target.value }))}
+            placeholder="1990"
+            data-testid="input-deal-year"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Description</Label>
+        <Textarea 
+          value={formData.description} 
+          onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
+          placeholder="Describe the property, condition, and potential..."
+          className="resize-none"
+          data-testid="input-deal-description"
+        />
+      </div>
+
+      <DialogFooter>
+        <Button type="submit" disabled={isPending} data-testid="button-create-deal">
+          {isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            "Create Deal"
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }

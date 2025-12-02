@@ -18,6 +18,7 @@ import ArticleDetail from "@/pages/article-detail";
 import Dreamspace from "@/pages/dreamspace";
 import Contact from "@/pages/contact";
 import HQ from "@/pages/hq";
+import Wholesale from "@/pages/wholesale";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />
       <Route path="/resources/:slug" component={ArticleDetail} />
+      <Route path="/wholesale" component={Wholesale} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
       <Route path="/hq" component={HQ} />

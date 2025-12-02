@@ -5,7 +5,9 @@ import {
   insertSellerLeadSchema, 
   insertInvestorLeadSchema, 
   insertContactSchema,
-  insertProjectSchema
+  insertProjectSchema,
+  insertWholesaleDealSchema,
+  insertWholesaleRequestSchema
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -261,6 +263,143 @@ export async function registerRoutes(
       return res.json(project);
     } catch (error) {
       console.error("Error fetching project:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Wholesale Deals Routes (public - only available deals)
+  app.get("/api/wholesale-deals", async (req, res) => {
+    try {
+      const deals = await storage.getAvailableWholesaleDeals();
+      return res.json(deals);
+    } catch (error) {
+      console.error("Error fetching wholesale deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/wholesale-deals/:id", async (req, res) => {
+    try {
+      const deal = await storage.getWholesaleDeal(parseInt(req.params.id));
+      if (!deal || deal.status !== "available") {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      return res.json(deal);
+    } catch (error) {
+      console.error("Error fetching wholesale deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Wholesale Request (public - investors can request deals)
+  app.post("/api/wholesale-requests", async (req, res) => {
+    try {
+      const result = insertWholesaleRequestSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: fromError(result.error).toString() 
+        });
+      }
+      
+      const request = await storage.createWholesaleRequest(result.data);
+      console.log("New wholesale request received:", request.email);
+      return res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating wholesale request:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Protected HQ Wholesale Routes
+  app.get("/api/hq/wholesale-deals", isAuthenticated, async (req, res) => {
+    try {
+      const deals = await storage.getWholesaleDeals();
+      return res.json(deals);
+    } catch (error) {
+      console.error("Error fetching all wholesale deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/hq/wholesale-deals", isAuthenticated, async (req, res) => {
+    try {
+      const result = insertWholesaleDealSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: fromError(result.error).toString() 
+        });
+      }
+      
+      const deal = await storage.createWholesaleDeal(result.data);
+      console.log("New wholesale deal created:", deal.propertyAddress);
+      return res.status(201).json(deal);
+    } catch (error) {
+      console.error("Error creating wholesale deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/wholesale-deals/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, notes } = req.body;
+      const updated = await storage.updateWholesaleDealStatus(id, status, notes);
+      if (!updated) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating wholesale deal status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/wholesale-deals/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateWholesaleDeal(id, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating wholesale deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/wholesale-requests", isAuthenticated, async (req, res) => {
+    try {
+      const requests = await storage.getWholesaleRequests();
+      return res.json(requests);
+    } catch (error) {
+      console.error("Error fetching wholesale requests:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/wholesale-deals/:id/requests", isAuthenticated, async (req, res) => {
+    try {
+      const dealId = parseInt(req.params.id);
+      const requests = await storage.getWholesaleRequestsByDeal(dealId);
+      return res.json(requests);
+    } catch (error) {
+      console.error("Error fetching deal requests:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/wholesale-requests/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateWholesaleRequestStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating wholesale request status:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

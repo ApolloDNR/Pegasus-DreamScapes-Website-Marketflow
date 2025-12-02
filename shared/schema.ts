@@ -149,3 +149,64 @@ export const leadActivities = pgTable("lead_activities", {
 export const insertLeadActivitySchema = createInsertSchema(leadActivities).omit({ id: true, createdAt: true });
 export type InsertLeadActivity = z.infer<typeof insertLeadActivitySchema>;
 export type LeadActivity = typeof leadActivities.$inferSelect;
+
+// Wholesale Deals table - off-market properties under contract
+export const wholesaleDeals = pgTable("wholesale_deals", {
+  id: serial("id").primaryKey(),
+  // Property details
+  propertyAddress: text("property_address").notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(),
+  zipCode: varchar("zip_code", { length: 20 }).notNull(),
+  propertyType: varchar("property_type", { length: 50 }).notNull(),
+  bedrooms: integer("bedrooms"),
+  bathrooms: varchar("bathrooms", { length: 10 }),
+  sqft: integer("sqft"),
+  yearBuilt: integer("year_built"),
+  lotSize: varchar("lot_size", { length: 50 }),
+  // Financial details
+  contractPrice: integer("contract_price").notNull(),
+  assignmentFee: integer("assignment_fee").notNull(),
+  arv: integer("arv"),
+  estimatedRepairs: integer("estimated_repairs"),
+  // Deal info
+  strategy: varchar("strategy", { length: 50 }).notNull(),
+  description: text("description"),
+  highlights: text("highlights").array(),
+  images: text("images").array(),
+  // Status workflow: under_review -> accepted/rejected/available -> assigned
+  status: varchar("status", { length: 50 }).notNull().default("under_review"),
+  // Management
+  acquisitionsNotes: text("acquisitions_notes"),
+  developmentNotes: text("development_notes"),
+  contractExpiration: timestamp("contract_expiration"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertWholesaleDealSchema = createInsertSchema(wholesaleDeals).omit({ id: true, createdAt: true, updatedAt: true, status: true });
+export type InsertWholesaleDeal = z.infer<typeof insertWholesaleDealSchema>;
+export type WholesaleDeal = typeof wholesaleDeals.$inferSelect;
+
+// Wholesale Deal Assignment Requests - investors requesting deals
+export const wholesaleRequests = pgTable("wholesale_requests", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  // Investor info
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }).notNull(),
+  company: varchar("company", { length: 255 }),
+  // Request details
+  experience: varchar("experience", { length: 50 }).notNull(),
+  fundingSource: varchar("funding_source", { length: 50 }).notNull(),
+  message: text("message"),
+  // Status
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertWholesaleRequestSchema = createInsertSchema(wholesaleRequests).omit({ id: true, createdAt: true, status: true });
+export type InsertWholesaleRequest = z.infer<typeof insertWholesaleRequestSchema>;
+export type WholesaleRequest = typeof wholesaleRequests.$inferSelect;
