@@ -365,6 +365,7 @@ export type LeadActivity = typeof leadActivities.$inferSelect;
 // Wholesale Deals table - off-market properties under contract
 export const wholesaleDeals = pgTable("wholesale_deals", {
   id: serial("id").primaryKey(),
+  submittedBy: varchar("submitted_by", { length: 255 }), // User ID of submitter (wholesaler)
   // Property details
   propertyAddress: text("property_address").notNull(),
   city: varchar("city", { length: 100 }).notNull(),
@@ -506,3 +507,199 @@ export const insertDirectMessageSchema = createInsertSchema(directMessages).omit
 });
 export type InsertDirectMessage = z.infer<typeof insertDirectMessageSchema>;
 export type DirectMessage = typeof directMessages.$inferSelect;
+
+// Capital Projects - for raising capital from investors
+export const capitalProjects = pgTable("capital_projects", {
+  id: serial("id").primaryKey(),
+  createdBy: varchar("created_by", { length: 255 }).notNull(), // Dreamscaper user ID
+  linkedDealId: integer("linked_deal_id"), // Optional link to wholesale deal
+  // Project details
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  location: varchar("location", { length: 255 }),
+  scopeOfWork: text("scope_of_work"),
+  // Funding
+  fundingGoal: integer("funding_goal").notNull(),
+  amountRaised: integer("amount_raised").default(0),
+  minInvestment: integer("min_investment").notNull(),
+  maxInvestmentPerInvestor: integer("max_investment_per_investor"),
+  // Structure: EQUITY, DEBT, HYBRID
+  structure: varchar("structure", { length: 50 }).notNull().default("EQUITY"),
+  projectedReturn: varchar("projected_return", { length: 50 }),
+  holdPeriod: varchar("hold_period", { length: 50 }),
+  // Status: DRAFT, OPEN_FOR_INVESTMENT, FUNDED, IN_PROGRESS, COMPLETED
+  status: varchar("status", { length: 50 }).notNull().default("DRAFT"),
+  // Timeline
+  startDate: timestamp("start_date"),
+  estimatedCompletion: timestamp("estimated_completion"),
+  // Media
+  images: text("images").array(),
+  documents: text("documents").array(),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCapitalProjectSchema = createInsertSchema(capitalProjects).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  amountRaised: true
+});
+export type InsertCapitalProject = z.infer<typeof insertCapitalProjectSchema>;
+export type CapitalProject = typeof capitalProjects.$inferSelect;
+
+// Project Milestones - track project progress
+export const projectMilestones = pgTable("project_milestones", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  targetDate: timestamp("target_date"),
+  isComplete: boolean("is_complete").default(false),
+  completedAt: timestamp("completed_at"),
+  order: integer("order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertProjectMilestoneSchema = createInsertSchema(projectMilestones).omit({ 
+  id: true, 
+  createdAt: true,
+  isComplete: true,
+  completedAt: true
+});
+export type InsertProjectMilestone = z.infer<typeof insertProjectMilestoneSchema>;
+export type ProjectMilestone = typeof projectMilestones.$inferSelect;
+
+// Investment Offers - investor proposals to join projects
+export const investmentOffers = pgTable("investment_offers", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  investorId: varchar("investor_id", { length: 255 }).notNull(),
+  // Offer details
+  amountOffered: integer("amount_offered").notNull(),
+  requestedRole: varchar("requested_role", { length: 50 }).notNull().default("LP"), // LP or GP
+  proposedEquityPercent: varchar("proposed_equity_percent", { length: 20 }),
+  proposedInterestRate: varchar("proposed_interest_rate", { length: 20 }),
+  holdPeriod: varchar("hold_period", { length: 50 }),
+  notes: text("notes"),
+  // Status: PENDING, COUNTERED, ACCEPTED, DECLINED
+  status: varchar("status", { length: 50 }).notNull().default("PENDING"),
+  // Counter offer fields (set by Dreamscaper)
+  counterAmount: integer("counter_amount"),
+  counterEquityPercent: varchar("counter_equity_percent", { length: 20 }),
+  counterInterestRate: varchar("counter_interest_rate", { length: 20 }),
+  counterNotes: text("counter_notes"),
+  // Negotiation history stored as JSON
+  negotiationHistory: jsonb("negotiation_history").default([]),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertInvestmentOfferSchema = createInsertSchema(investmentOffers).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  status: true,
+  counterAmount: true,
+  counterEquityPercent: true,
+  counterInterestRate: true,
+  counterNotes: true,
+  negotiationHistory: true
+});
+export type InsertInvestmentOffer = z.infer<typeof insertInvestmentOfferSchema>;
+export type InvestmentOffer = typeof investmentOffers.$inferSelect;
+
+// Committed Investments - finalized investments
+export const committedInvestments = pgTable("committed_investments", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  investorId: varchar("investor_id", { length: 255 }).notNull(),
+  offerId: integer("offer_id"), // Link to original offer
+  // Final terms
+  committedAmount: integer("committed_amount").notNull(),
+  role: varchar("role", { length: 50 }).notNull().default("LP"),
+  equityPercent: varchar("equity_percent", { length: 20 }),
+  interestRate: varchar("interest_rate", { length: 20 }),
+  notes: text("notes"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCommittedInvestmentSchema = createInsertSchema(committedInvestments).omit({ 
+  id: true, 
+  createdAt: true
+});
+export type InsertCommittedInvestment = z.infer<typeof insertCommittedInvestmentSchema>;
+export type CommittedInvestment = typeof committedInvestments.$inferSelect;
+
+// Deal Matches - connecting deals with buyers/investors
+export const dealMatches = pgTable("deal_matches", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  matchedUserId: varchar("matched_user_id", { length: 255 }).notNull(), // Buyer or investor
+  matchedBy: varchar("matched_by", { length: 255 }).notNull(), // Dreamscaper who made match
+  matchType: varchar("match_type", { length: 50 }).notNull(), // buyer, investor, jv_partner
+  // Fee structure
+  pegasusFee: integer("pegasus_fee"),
+  feeType: varchar("fee_type", { length: 50 }), // flat, percentage
+  jvSplit: varchar("jv_split", { length: 50 }),
+  // Status: proposed, accepted, in_progress, closed
+  status: varchar("status", { length: 50 }).notNull().default("proposed"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDealMatchSchema = createInsertSchema(dealMatches).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true
+});
+export type InsertDealMatch = z.infer<typeof insertDealMatchSchema>;
+export type DealMatch = typeof dealMatches.$inferSelect;
+
+// Announcements - staff announcements to portal users
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  createdBy: varchar("created_by", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  // Audience: ALL, INVESTORS, WHOLESALERS, BUYERS, DREAMSCAPERS
+  audience: varchar("audience", { length: 50 }).notNull().default("ALL"),
+  isPinned: boolean("is_pinned").default(false),
+  isActive: boolean("is_active").default(true),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ 
+  id: true, 
+  createdAt: true
+});
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
+
+// Notifications - user notifications
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  // Type: investment_offer, counter_offer, offer_accepted, deal_interest, announcement, message, match
+  type: varchar("type", { length: 50 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message"),
+  // Link to related entity
+  relatedType: varchar("related_type", { length: 50 }), // project, deal, offer, message
+  relatedId: integer("related_id"),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ 
+  id: true, 
+  createdAt: true,
+  isRead: true
+});
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

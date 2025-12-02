@@ -1,10 +1,12 @@
 import { db } from "./db";
-import { eq, and, desc, lte, isNotNull, asc, or, inArray, sql } from "drizzle-orm";
+import { eq, and, desc, lte, isNotNull, isNull, asc, or, inArray, sql, gte, ne } from "drizzle-orm";
 import { 
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
   wholesaleDeals, wholesaleRequests, userRoles, staffProfiles, investorProfiles, 
   wholesalerProfiles, buyerProfiles, savedProperties, buyerOffers, retailListings, buyerInquiries,
   communityCategories, communityPosts, communityReplies, directMessages, STAFF_ROLES,
+  capitalProjects, projectMilestones, investmentOffers, committedInvestments, dealMatches,
+  announcements, notifications,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -26,7 +28,14 @@ import {
   type CommunityCategory,
   type CommunityPost, type InsertCommunityPost,
   type CommunityReply, type InsertCommunityReply,
-  type DirectMessage, type InsertDirectMessage
+  type DirectMessage, type InsertDirectMessage,
+  type CapitalProject, type InsertCapitalProject,
+  type ProjectMilestone, type InsertProjectMilestone,
+  type InvestmentOffer, type InsertInvestmentOffer,
+  type CommittedInvestment, type InsertCommittedInvestment,
+  type DealMatch, type InsertDealMatch,
+  type Announcement, type InsertAnnouncement,
+  type Notification, type InsertNotification
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -182,6 +191,56 @@ export interface IStorage {
   createDirectMessage(message: InsertDirectMessage): Promise<DirectMessage>;
   markMessageRead(id: number): Promise<DirectMessage | undefined>;
   getUnreadMessageCount(userId: string): Promise<number>;
+
+  // Capital Projects
+  createCapitalProject(project: InsertCapitalProject): Promise<CapitalProject>;
+  getCapitalProjects(): Promise<CapitalProject[]>;
+  getOpenCapitalProjects(): Promise<CapitalProject[]>;
+  getCapitalProject(id: number): Promise<CapitalProject | undefined>;
+  updateCapitalProject(id: number, data: Partial<InsertCapitalProject>): Promise<CapitalProject | undefined>;
+  updateCapitalProjectStatus(id: number, status: string): Promise<CapitalProject | undefined>;
+  updateCapitalProjectFunding(id: number, amountRaised: number): Promise<CapitalProject | undefined>;
+
+  // Project Milestones
+  createProjectMilestone(milestone: InsertProjectMilestone): Promise<ProjectMilestone>;
+  getProjectMilestones(projectId: number): Promise<ProjectMilestone[]>;
+  updateMilestoneCompletion(id: number, isComplete: boolean): Promise<ProjectMilestone | undefined>;
+
+  // Investment Offers
+  createInvestmentOffer(offer: InsertInvestmentOffer): Promise<InvestmentOffer>;
+  getInvestmentOffersByProject(projectId: number): Promise<InvestmentOffer[]>;
+  getInvestmentOffersByInvestor(investorId: string): Promise<InvestmentOffer[]>;
+  getInvestmentOffer(id: number): Promise<InvestmentOffer | undefined>;
+  updateInvestmentOfferStatus(id: number, status: string): Promise<InvestmentOffer | undefined>;
+  counterInvestmentOffer(id: number, counterData: { counterAmount?: number; counterEquityPercent?: string; counterInterestRate?: string; counterNotes?: string }): Promise<InvestmentOffer | undefined>;
+  addNegotiationEntry(id: number, entry: { by: string; action: string; details: string; timestamp: Date }): Promise<InvestmentOffer | undefined>;
+
+  // Committed Investments
+  createCommittedInvestment(investment: InsertCommittedInvestment): Promise<CommittedInvestment>;
+  getCommittedInvestmentsByProject(projectId: number): Promise<CommittedInvestment[]>;
+  getCommittedInvestmentsByInvestor(investorId: string): Promise<CommittedInvestment[]>;
+
+  // Deal Matches
+  createDealMatch(match: InsertDealMatch): Promise<DealMatch>;
+  getDealMatches(): Promise<DealMatch[]>;
+  getDealMatchesByDeal(dealId: number): Promise<DealMatch[]>;
+  getDealMatchesByUser(userId: string): Promise<DealMatch[]>;
+  updateDealMatchStatus(id: number, status: string): Promise<DealMatch | undefined>;
+
+  // Announcements
+  createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  getAnnouncements(): Promise<Announcement[]>;
+  getAnnouncementsForAudience(audience: string): Promise<Announcement[]>;
+  updateAnnouncement(id: number, data: Partial<InsertAnnouncement>): Promise<Announcement | undefined>;
+  deleteAnnouncement(id: number): Promise<void>;
+
+  // Notifications
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId: string): Promise<Notification[]>;
+  getUnreadNotifications(userId: string): Promise<Notification[]>;
+  markNotificationRead(id: number): Promise<Notification | undefined>;
+  markAllNotificationsRead(userId: string): Promise<void>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -648,18 +707,6 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getAllBuyerProfiles(): Promise<BuyerProfile[]> {
-    return db.select().from(buyerProfiles).orderBy(buyerProfiles.createdAt);
-  }
-
-  async updateBuyerApproval(userId: string, isApproved: boolean): Promise<BuyerProfile | undefined> {
-    const [updated] = await db.update(buyerProfiles)
-      .set({ isApproved, updatedAt: new Date() })
-      .where(eq(buyerProfiles.userId, userId))
-      .returning();
-    return updated;
-  }
-
   // Retail Listings
   async createRetailListing(listing: InsertRetailListing): Promise<RetailListing> {
     const [created] = await db.insert(retailListings).values(listing).returning();
@@ -957,6 +1004,273 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(directMessages.receiverId, userId),
         eq(directMessages.isRead, false)
+      ));
+    return Number(result[0]?.count || 0);
+  }
+
+  // Capital Projects
+  async createCapitalProject(project: InsertCapitalProject): Promise<CapitalProject> {
+    const [created] = await db.insert(capitalProjects).values(project).returning();
+    return created;
+  }
+
+  async getCapitalProjects(): Promise<CapitalProject[]> {
+    return db.select().from(capitalProjects).orderBy(desc(capitalProjects.createdAt));
+  }
+
+  async getOpenCapitalProjects(): Promise<CapitalProject[]> {
+    return db.select().from(capitalProjects)
+      .where(eq(capitalProjects.status, "OPEN_FOR_INVESTMENT"))
+      .orderBy(desc(capitalProjects.createdAt));
+  }
+
+  async getCapitalProject(id: number): Promise<CapitalProject | undefined> {
+    const [project] = await db.select().from(capitalProjects).where(eq(capitalProjects.id, id));
+    return project;
+  }
+
+  async updateCapitalProject(id: number, data: Partial<InsertCapitalProject>): Promise<CapitalProject | undefined> {
+    const [updated] = await db.update(capitalProjects)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(capitalProjects.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateCapitalProjectStatus(id: number, status: string): Promise<CapitalProject | undefined> {
+    const [updated] = await db.update(capitalProjects)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(capitalProjects.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateCapitalProjectFunding(id: number, amountRaised: number): Promise<CapitalProject | undefined> {
+    const [updated] = await db.update(capitalProjects)
+      .set({ amountRaised, updatedAt: new Date() })
+      .where(eq(capitalProjects.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Project Milestones
+  async createProjectMilestone(milestone: InsertProjectMilestone): Promise<ProjectMilestone> {
+    const [created] = await db.insert(projectMilestones).values(milestone).returning();
+    return created;
+  }
+
+  async getProjectMilestones(projectId: number): Promise<ProjectMilestone[]> {
+    return db.select().from(projectMilestones)
+      .where(eq(projectMilestones.projectId, projectId))
+      .orderBy(asc(projectMilestones.order));
+  }
+
+  async updateMilestoneCompletion(id: number, isComplete: boolean): Promise<ProjectMilestone | undefined> {
+    const [updated] = await db.update(projectMilestones)
+      .set({ 
+        isComplete, 
+        completedAt: isComplete ? new Date() : null 
+      })
+      .where(eq(projectMilestones.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Investment Offers
+  async createInvestmentOffer(offer: InsertInvestmentOffer): Promise<InvestmentOffer> {
+    const [created] = await db.insert(investmentOffers).values(offer).returning();
+    return created;
+  }
+
+  async getInvestmentOffersByProject(projectId: number): Promise<InvestmentOffer[]> {
+    return db.select().from(investmentOffers)
+      .where(eq(investmentOffers.projectId, projectId))
+      .orderBy(desc(investmentOffers.createdAt));
+  }
+
+  async getInvestmentOffersByInvestor(investorId: string): Promise<InvestmentOffer[]> {
+    return db.select().from(investmentOffers)
+      .where(eq(investmentOffers.investorId, investorId))
+      .orderBy(desc(investmentOffers.createdAt));
+  }
+
+  async getInvestmentOffer(id: number): Promise<InvestmentOffer | undefined> {
+    const [offer] = await db.select().from(investmentOffers).where(eq(investmentOffers.id, id));
+    return offer;
+  }
+
+  async updateInvestmentOfferStatus(id: number, status: string): Promise<InvestmentOffer | undefined> {
+    const [updated] = await db.update(investmentOffers)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(investmentOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async counterInvestmentOffer(id: number, counterData: { counterAmount?: number; counterEquityPercent?: string; counterInterestRate?: string; counterNotes?: string }): Promise<InvestmentOffer | undefined> {
+    const [updated] = await db.update(investmentOffers)
+      .set({ 
+        ...counterData, 
+        status: "COUNTERED",
+        updatedAt: new Date() 
+      })
+      .where(eq(investmentOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async addNegotiationEntry(id: number, entry: { by: string; action: string; details: string; timestamp: Date }): Promise<InvestmentOffer | undefined> {
+    const offer = await this.getInvestmentOffer(id);
+    if (!offer) return undefined;
+    
+    const history = Array.isArray(offer.negotiationHistory) ? offer.negotiationHistory : [];
+    const [updated] = await db.update(investmentOffers)
+      .set({ 
+        negotiationHistory: [...history, entry],
+        updatedAt: new Date() 
+      })
+      .where(eq(investmentOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Committed Investments
+  async createCommittedInvestment(investment: InsertCommittedInvestment): Promise<CommittedInvestment> {
+    const [created] = await db.insert(committedInvestments).values(investment).returning();
+    
+    // Update project funding amount
+    const projectInvestments = await this.getCommittedInvestmentsByProject(investment.projectId);
+    const totalRaised = projectInvestments.reduce((sum, inv) => sum + inv.committedAmount, 0);
+    await this.updateCapitalProjectFunding(investment.projectId, totalRaised);
+    
+    return created;
+  }
+
+  async getCommittedInvestmentsByProject(projectId: number): Promise<CommittedInvestment[]> {
+    return db.select().from(committedInvestments)
+      .where(eq(committedInvestments.projectId, projectId))
+      .orderBy(desc(committedInvestments.createdAt));
+  }
+
+  async getCommittedInvestmentsByInvestor(investorId: string): Promise<CommittedInvestment[]> {
+    return db.select().from(committedInvestments)
+      .where(eq(committedInvestments.investorId, investorId))
+      .orderBy(desc(committedInvestments.createdAt));
+  }
+
+  // Deal Matches
+  async createDealMatch(match: InsertDealMatch): Promise<DealMatch> {
+    const [created] = await db.insert(dealMatches).values(match).returning();
+    return created;
+  }
+
+  async getDealMatches(): Promise<DealMatch[]> {
+    return db.select().from(dealMatches).orderBy(desc(dealMatches.createdAt));
+  }
+
+  async getDealMatchesByDeal(dealId: number): Promise<DealMatch[]> {
+    return db.select().from(dealMatches)
+      .where(eq(dealMatches.dealId, dealId))
+      .orderBy(desc(dealMatches.createdAt));
+  }
+
+  async getDealMatchesByUser(userId: string): Promise<DealMatch[]> {
+    return db.select().from(dealMatches)
+      .where(eq(dealMatches.matchedUserId, userId))
+      .orderBy(desc(dealMatches.createdAt));
+  }
+
+  async updateDealMatchStatus(id: number, status: string): Promise<DealMatch | undefined> {
+    const [updated] = await db.update(dealMatches)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(dealMatches.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Announcements
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+    const [created] = await db.insert(announcements).values(announcement).returning();
+    return created;
+  }
+
+  async getAnnouncements(): Promise<Announcement[]> {
+    return db.select().from(announcements)
+      .where(eq(announcements.isActive, true))
+      .orderBy(desc(announcements.isPinned), desc(announcements.createdAt));
+  }
+
+  async getAnnouncementsForAudience(audience: string): Promise<Announcement[]> {
+    const now = new Date();
+    return db.select().from(announcements)
+      .where(and(
+        eq(announcements.isActive, true),
+        or(
+          eq(announcements.audience, "ALL"),
+          eq(announcements.audience, audience)
+        ),
+        or(
+          isNull(announcements.expiresAt),
+          gte(announcements.expiresAt, now)
+        )
+      ))
+      .orderBy(desc(announcements.isPinned), desc(announcements.createdAt));
+  }
+
+  async updateAnnouncement(id: number, data: Partial<InsertAnnouncement>): Promise<Announcement | undefined> {
+    const [updated] = await db.update(announcements)
+      .set(data)
+      .where(eq(announcements.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAnnouncement(id: number): Promise<void> {
+    await db.delete(announcements).where(eq(announcements.id, id));
+  }
+
+  // Notifications
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [created] = await db.insert(notifications).values(notification).returning();
+    return created;
+  }
+
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return db.select().from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(50);
+  }
+
+  async getUnreadNotifications(userId: string): Promise<Notification[]> {
+    return db.select().from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      ))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async markNotificationRead(id: number): Promise<Notification | undefined> {
+    const [updated] = await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    return updated;
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
       ));
     return Number(result[0]?.count || 0);
   }

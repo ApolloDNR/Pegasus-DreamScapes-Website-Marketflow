@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 const homeLinks = [
   { href: "#services", label: "Services" },
   { href: "#sell", label: "Sell" },
+  { href: "/buyers", label: "Buy", isRoute: true },
   { href: "#invest", label: "Invest" },
   { href: "#creed", label: "Dreamscaper" },
   { href: "#contact", label: "Contact" },
@@ -132,16 +133,28 @@ export function Navigation() {
             {isHomePage ? (
               <>
                 {homeLinks.map((link) => (
-                  <a 
-                    key={link.href} 
-                    href={link.href}
-                    onClick={(e) => handleScrollClick(e, link.href)}
-                    className={`text-sm font-medium tracking-wide transition-colors cursor-pointer relative group ${scrolled ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'}`}
-                    data-testid={`link-nav-${link.label.toLowerCase()}`}
-                  >
-                    {link.label}
-                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${scrolled ? 'bg-primary' : 'bg-white'}`} />
-                  </a>
+                  link.isRoute ? (
+                    <Link 
+                      key={link.href} 
+                      href={link.href}
+                      className={`text-sm font-medium tracking-wide transition-colors cursor-pointer relative group ${scrolled ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'}`}
+                      data-testid={`link-nav-${link.label.toLowerCase()}`}
+                    >
+                      {link.label}
+                      <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${scrolled ? 'bg-primary' : 'bg-white'}`} />
+                    </Link>
+                  ) : (
+                    <a 
+                      key={link.href} 
+                      href={link.href}
+                      onClick={(e) => handleScrollClick(e, link.href)}
+                      className={`text-sm font-medium tracking-wide transition-colors cursor-pointer relative group ${scrolled ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'}`}
+                      data-testid={`link-nav-${link.label.toLowerCase()}`}
+                    >
+                      {link.label}
+                      <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${scrolled ? 'bg-primary' : 'bg-white'}`} />
+                    </a>
+                  )
                 ))}
               </>
             ) : (
@@ -275,15 +288,27 @@ export function Navigation() {
             {isHomePage ? (
               <>
                 {homeLinks.map((link) => (
-                  <a 
-                    key={link.href} 
-                    href={link.href}
-                    onClick={(e) => handleScrollClick(e, link.href)}
-                    className="block py-3 px-4 rounded-md text-sm font-medium transition-colors text-foreground hover:bg-secondary cursor-pointer"
-                    data-testid={`link-mobile-${link.label.toLowerCase()}`}
-                  >
-                    {link.label}
-                  </a>
+                  link.isRoute ? (
+                    <Link 
+                      key={link.href} 
+                      href={link.href}
+                      className="block py-3 px-4 rounded-md text-sm font-medium transition-colors text-foreground hover:bg-secondary cursor-pointer"
+                      onClick={() => setIsOpen(false)}
+                      data-testid={`link-mobile-${link.label.toLowerCase()}`}
+                    >
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a 
+                      key={link.href} 
+                      href={link.href}
+                      onClick={(e) => handleScrollClick(e, link.href)}
+                      className="block py-3 px-4 rounded-md text-sm font-medium transition-colors text-foreground hover:bg-secondary cursor-pointer"
+                      data-testid={`link-mobile-${link.label.toLowerCase()}`}
+                    >
+                      {link.label}
+                    </a>
+                  )
                 ))}
               </>
             ) : (

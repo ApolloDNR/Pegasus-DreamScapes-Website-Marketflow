@@ -15,6 +15,13 @@ import {
   insertBuyerProfileSchema,
   insertSavedPropertySchema,
   insertBuyerOfferSchema,
+  insertCapitalProjectSchema,
+  insertMilestoneSchema,
+  insertInvestmentOfferSchema,
+  insertCommittedInvestmentSchema,
+  insertDealMatchSchema,
+  insertAnnouncementSchema,
+  insertNotificationSchema,
   STAFF_ROLES
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
@@ -1160,6 +1167,493 @@ export async function registerRoutes(
       return res.json({ count });
     } catch (error) {
       console.error("Error getting unread count:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Capital Projects Routes (Staff only for management)
+  // =====================================================
+  
+  // Get all capital projects
+  app.get("/api/capital-projects", async (req, res) => {
+    try {
+      const projects = await storage.getCapitalProjects();
+      return res.json(projects);
+    } catch (error) {
+      console.error("Error fetching capital projects:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get active capital projects for investors
+  app.get("/api/capital-projects/active", async (req, res) => {
+    try {
+      const projects = await storage.getActiveCapitalProjects();
+      return res.json(projects);
+    } catch (error) {
+      console.error("Error fetching active capital projects:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get single capital project
+  app.get("/api/capital-projects/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const project = await storage.getCapitalProject(id);
+      if (!project) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      return res.json(project);
+    } catch (error) {
+      console.error("Error fetching capital project:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create capital project (Staff only)
+  app.post("/api/hq/capital-projects", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertCapitalProjectSchema.safeParse({ ...req.body, createdBy: userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const project = await storage.createCapitalProject(result.data);
+      return res.status(201).json(project);
+    } catch (error) {
+      console.error("Error creating capital project:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update capital project (Staff only)
+  app.patch("/api/hq/capital-projects/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const project = await storage.updateCapitalProject(id, req.body);
+      if (!project) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      return res.json(project);
+    } catch (error) {
+      console.error("Error updating capital project:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Milestones Routes
+  // =====================================================
+  
+  // Get milestones for a capital project
+  app.get("/api/capital-projects/:projectId/milestones", async (req, res) => {
+    try {
+      const projectId = Number(req.params.projectId);
+      const milestones = await storage.getMilestones(projectId);
+      return res.json(milestones);
+    } catch (error) {
+      console.error("Error fetching milestones:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create milestone (Staff only)
+  app.post("/api/hq/capital-projects/:projectId/milestones", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const projectId = Number(req.params.projectId);
+      const result = insertMilestoneSchema.safeParse({ ...req.body, projectId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const milestone = await storage.createMilestone(result.data);
+      return res.status(201).json(milestone);
+    } catch (error) {
+      console.error("Error creating milestone:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update milestone (Staff only)
+  app.patch("/api/hq/milestones/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const milestone = await storage.updateMilestone(id, req.body);
+      if (!milestone) {
+        return res.status(404).json({ message: "Milestone not found" });
+      }
+      return res.json(milestone);
+    } catch (error) {
+      console.error("Error updating milestone:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Investment Offers Routes (Negotiation)
+  // =====================================================
+  
+  // Get investment offers for a project (Staff sees all, investors see theirs)
+  app.get("/api/capital-projects/:projectId/offers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = Number(req.params.projectId);
+      const isStaff = await storage.hasAnyStaffRole(userId);
+      
+      if (isStaff) {
+        const offers = await storage.getInvestmentOffersByProject(projectId);
+        return res.json(offers);
+      } else {
+        const offers = await storage.getInvestmentOffersByInvestor(userId);
+        const filtered = offers.filter(o => o.projectId === projectId);
+        return res.json(filtered);
+      }
+    } catch (error) {
+      console.error("Error fetching investment offers:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get my investment offers (for investors)
+  app.get("/api/my-investment-offers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offers = await storage.getInvestmentOffersByInvestor(userId);
+      return res.json(offers);
+    } catch (error) {
+      console.error("Error fetching my investment offers:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create investment offer (Investors)
+  app.post("/api/investment-offers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertInvestmentOfferSchema.safeParse({ ...req.body, investorId: userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const offer = await storage.createInvestmentOffer(result.data);
+      return res.status(201).json(offer);
+    } catch (error) {
+      console.error("Error creating investment offer:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Respond to investment offer (Staff only - accept/decline/counter)
+  app.post("/api/hq/investment-offers/:id/respond", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      const { status, counterTerms, notes } = req.body;
+      
+      if (!["accepted", "declined", "countered"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const offer = await storage.respondToInvestmentOffer(id, status, counterTerms, notes, userId);
+      if (!offer) {
+        return res.status(404).json({ message: "Investment offer not found" });
+      }
+      
+      // If accepted, create committed investment
+      if (status === "accepted") {
+        await storage.createCommittedInvestment({
+          projectId: offer.projectId,
+          investorId: offer.investorId,
+          amount: offer.proposedAmount,
+          structure: offer.proposedStructure,
+          terms: offer.proposedTerms || "",
+          offerId: offer.id
+        });
+      }
+      
+      return res.json(offer);
+    } catch (error) {
+      console.error("Error responding to investment offer:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Committed Investments Routes
+  // =====================================================
+  
+  // Get committed investments for a project
+  app.get("/api/capital-projects/:projectId/commitments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = Number(req.params.projectId);
+      const isStaff = await storage.hasAnyStaffRole(userId);
+      
+      if (isStaff) {
+        const commitments = await storage.getCommittedInvestmentsByProject(projectId);
+        return res.json(commitments);
+      } else {
+        const commitments = await storage.getCommittedInvestmentsByInvestor(userId);
+        const filtered = commitments.filter(c => c.projectId === projectId);
+        return res.json(filtered);
+      }
+    } catch (error) {
+      console.error("Error fetching committed investments:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get my committed investments
+  app.get("/api/my-committed-investments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commitments = await storage.getCommittedInvestmentsByInvestor(userId);
+      return res.json(commitments);
+    } catch (error) {
+      console.error("Error fetching my committed investments:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Deal Matches Routes
+  // =====================================================
+  
+  // Get deal matches for staff
+  app.get("/api/hq/deal-matches", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const matches = await storage.getDealMatches();
+      return res.json(matches);
+    } catch (error) {
+      console.error("Error fetching deal matches:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get my deal matches (buyers/investors)
+  app.get("/api/my-deal-matches", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const matches = await storage.getDealMatchesByUser(userId);
+      return res.json(matches);
+    } catch (error) {
+      console.error("Error fetching my deal matches:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create deal match (Staff only)
+  app.post("/api/hq/deal-matches", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertDealMatchSchema.safeParse({ ...req.body, matchedBy: userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const match = await storage.createDealMatch(result.data);
+      return res.status(201).json(match);
+    } catch (error) {
+      console.error("Error creating deal match:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update deal match status
+  app.patch("/api/deal-matches/:id/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      const { status } = req.body;
+      
+      // Verify user can update this match
+      const matches = await storage.getDealMatchesByUser(userId);
+      const isStaff = await storage.hasAnyStaffRole(userId);
+      const match = matches.find(m => m.id === id);
+      
+      if (!match && !isStaff) {
+        return res.status(403).json({ message: "Not authorized to update this match" });
+      }
+      
+      const updated = await storage.updateDealMatchStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Deal match not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating deal match status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Announcements Routes
+  // =====================================================
+  
+  // Get announcements for current user's role
+  app.get("/api/announcements", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const roles = await storage.getUserRoles(userId);
+      const roleNames = roles.map(r => r.role);
+      
+      // Determine audience based on roles
+      let audience = "ALL";
+      if (roleNames.some(r => STAFF_ROLES.includes(r as any))) {
+        audience = "STAFF";
+      } else if (roleNames.includes("investor")) {
+        audience = "INVESTORS";
+      } else if (roleNames.includes("wholesaler")) {
+        audience = "WHOLESALERS";
+      } else if (roleNames.includes("buyer")) {
+        audience = "BUYERS";
+      }
+      
+      const announcements = await storage.getAnnouncementsForAudience(audience);
+      return res.json(announcements);
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all announcements (Staff only)
+  app.get("/api/hq/announcements", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const announcements = await storage.getAnnouncements();
+      return res.json(announcements);
+    } catch (error) {
+      console.error("Error fetching all announcements:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create announcement (Staff only)
+  app.post("/api/hq/announcements", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertAnnouncementSchema.safeParse({ ...req.body, createdBy: userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const announcement = await storage.createAnnouncement(result.data);
+      return res.status(201).json(announcement);
+    } catch (error) {
+      console.error("Error creating announcement:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update announcement (Staff only)
+  app.patch("/api/hq/announcements/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const announcement = await storage.updateAnnouncement(id, req.body);
+      if (!announcement) {
+        return res.status(404).json({ message: "Announcement not found" });
+      }
+      return res.json(announcement);
+    } catch (error) {
+      console.error("Error updating announcement:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete announcement (Staff only)
+  app.delete("/api/hq/announcements/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.deleteAnnouncement(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting announcement:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Notifications Routes
+  // =====================================================
+  
+  // Get my notifications
+  app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const notifications = await storage.getNotifications(userId);
+      return res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get unread notifications
+  app.get("/api/notifications/unread", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const notifications = await storage.getUnreadNotifications(userId);
+      return res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching unread notifications:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get unread notification count
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await storage.getUnreadNotificationCount(userId);
+      return res.json({ count });
+    } catch (error) {
+      console.error("Error getting unread notification count:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      
+      // Verify notification belongs to user
+      const notifications = await storage.getNotifications(userId);
+      const notification = notifications.find(n => n.id === id);
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      const updated = await storage.markNotificationRead(id);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.markAllNotificationsRead(userId);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create notification (Staff only - for manual notifications)
+  app.post("/api/hq/notifications", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const result = insertNotificationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const notification = await storage.createNotification(result.data);
+      return res.status(201).json(notification);
+    } catch (error) {
+      console.error("Error creating notification:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
