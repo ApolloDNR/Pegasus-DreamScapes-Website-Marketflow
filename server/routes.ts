@@ -1212,6 +1212,28 @@ export async function registerRoutes(
     }
   });
 
+  // Get all capital projects (Staff only - for HQ)
+  app.get("/api/hq/capital-projects", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const projects = await storage.getCapitalProjects();
+      return res.json(projects);
+    } catch (error) {
+      console.error("Error fetching capital projects:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all investment offers (Staff only - for HQ)
+  app.get("/api/hq/investment-offers", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const offers = await storage.getInvestmentOffers();
+      return res.json(offers);
+    } catch (error) {
+      console.error("Error fetching investment offers:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Create capital project (Staff only)
   app.post("/api/hq/capital-projects", isAuthenticated, requireStaffRole, async (req: any, res) => {
     try {

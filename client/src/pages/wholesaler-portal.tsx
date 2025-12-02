@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PortalHeader } from "@/components/portal-header";
+import { AnnouncementsBanner } from "@/components/announcements-banner";
 import { 
   Building2, 
   ArrowRight, 
@@ -98,6 +99,7 @@ export default function WholesalerPortal() {
 
   return (
     <div className="min-h-screen pt-20 bg-stone">
+      <AnnouncementsBanner audience="WHOLESALERS" />
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>

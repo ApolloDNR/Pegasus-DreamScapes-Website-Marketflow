@@ -21,6 +21,7 @@ import {
   Repeat
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/notification-bell";
 
 interface PortalHeaderProps {
   currentPortal: "staff" | "investor" | "wholesaler" | "buyer";
@@ -80,6 +81,8 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
           {currentPortalInfo.badge}
         </Badge>
       )}
+      
+      <NotificationBell />
       
       {availablePortals.length > 0 && (
         <DropdownMenu>

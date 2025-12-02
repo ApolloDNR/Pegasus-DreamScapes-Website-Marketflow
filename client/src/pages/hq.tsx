@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { PortalHeader } from "@/components/portal-header";
+import { AnnouncementsBanner } from "@/components/announcements-banner";
 import { 
   Users, 
   Home, 
@@ -111,6 +112,7 @@ export default function HQ() {
 
   return (
     <div className="min-h-screen pt-20">
+      <AnnouncementsBanner audience="STAFF" />
       <div className="max-w-7xl mx-auto px-6 py-8">
         <DashboardHeader user={user} />
         <QuickActions />
@@ -2104,22 +2106,38 @@ function UserManagementPanel() {
 }
 
 function ProjectCapitalPanel() {
-  const { data: projects, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/projects"],
+  const { toast } = useToast();
+  const [activeCapitalTab, setActiveCapitalTab] = useState("projects");
+  const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const [createAnnouncementOpen, setCreateAnnouncementOpen] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [respondDialogOpen, setRespondDialogOpen] = useState(false);
+
+  const { data: capitalProjects = [], isLoading: loadingProjects } = useQuery<any[]>({
+    queryKey: ["/api/hq/capital-projects"],
   });
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-        <p className="text-muted-foreground mt-4">Loading projects...</p>
-      </div>
-    );
-  }
+  const { data: investmentOffers = [], isLoading: loadingOffers } = useQuery<any[]>({
+    queryKey: ["/api/hq/investment-offers"],
+  });
 
-  const totalInvestment = projects?.reduce((acc, p) => acc + (p.totalInvestment || 0), 0) || 0;
-  const totalARV = projects?.reduce((acc, p) => acc + (p.arv || 0), 0) || 0;
-  const avgROI = projects?.length ? projects.reduce((acc, p) => acc + (p.projectedRoi || 0), 0) / projects.length : 0;
+  const { data: announcements = [], isLoading: loadingAnnouncements } = useQuery<any[]>({
+    queryKey: ["/api/hq/announcements"],
+  });
+
+  const pendingOffers = investmentOffers.filter((o: any) => o.status === "PENDING");
+  const openProjects = capitalProjects.filter((p: any) => p.status === "OPEN_FOR_INVESTMENT");
+  const totalRaised = capitalProjects.reduce((sum: number, p: any) => sum + (p.amountRaised || 0), 0);
+  const totalGoal = capitalProjects.reduce((sum: number, p: any) => sum + (p.fundingGoal || 0), 0);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   return (
     <div className="space-y-6">
@@ -2128,8 +2146,8 @@ function ProjectCapitalPanel() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Projects</p>
-                <p className="text-2xl font-bold">{projects?.length || 0}</p>
+                <p className="text-sm text-muted-foreground">Capital Projects</p>
+                <p className="text-2xl font-bold">{capitalProjects.length}</p>
               </div>
               <Building className="w-8 h-8 text-primary" />
             </div>
@@ -2139,99 +2157,638 @@ function ProjectCapitalPanel() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Investment</p>
-                <p className="text-2xl font-bold">${(totalInvestment / 1000000).toFixed(1)}M</p>
+                <p className="text-sm text-muted-foreground">Open for Investment</p>
+                <p className="text-2xl font-bold">{openProjects.length}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pending Offers</p>
+                <p className="text-2xl font-bold text-amber-600">{pendingOffers.length}</p>
+              </div>
+              <Clock className="w-8 h-8 text-amber-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Raised</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(totalRaised)}</p>
               </div>
               <DollarSign className="w-8 h-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        <Card className="sleek-card">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total ARV</p>
-                <p className="text-2xl font-bold">${(totalARV / 1000000).toFixed(1)}M</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="sleek-card">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg. Projected ROI</p>
-                <p className="text-2xl font-bold">{avgROI.toFixed(0)}%</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      <Card className="sleek-card">
-        <CardHeader>
-          <CardTitle>Project Capital Raising</CardTitle>
-          <CardDescription>Track capital needs and investor allocation for active projects</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!projects || projects.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Building className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No projects available</p>
+      <Tabs value={activeCapitalTab} onValueChange={setActiveCapitalTab} className="w-full">
+        <TabsList>
+          <TabsTrigger value="projects" data-testid="tab-capital-projects">
+            <Building className="w-4 h-4 mr-2" />
+            Capital Projects
+          </TabsTrigger>
+          <TabsTrigger value="offers" data-testid="tab-capital-offers">
+            <DollarSign className="w-4 h-4 mr-2" />
+            Investment Offers
+            {pendingOffers.length > 0 && (
+              <Badge className="ml-2 bg-amber-500">{pendingOffers.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="announcements" data-testid="tab-capital-announcements">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Announcements
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="projects" className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Capital Projects</h3>
+            <Button size="sm" onClick={() => setCreateProjectOpen(true)} data-testid="button-create-project">
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
+          </div>
+          
+          {loadingProjects ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
             </div>
+          ) : capitalProjects.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Building className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No capital projects yet</p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
-              {projects.map((project: any) => (
-                <Card key={project.id} className="border">
+              {capitalProjects.map((project: any) => {
+                const progress = project.fundingGoal > 0 
+                  ? ((project.amountRaised || 0) / project.fundingGoal) * 100 
+                  : 0;
+
+                return (
+                  <Card key={project.id} data-testid={`card-capital-project-${project.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+                        <div>
+                          <h4 className="font-semibold">{project.title}</h4>
+                          <p className="text-sm text-muted-foreground">{project.location}</p>
+                        </div>
+                        <Badge className={
+                          project.status === "OPEN_FOR_INVESTMENT" ? "bg-green-600" :
+                          project.status === "FUNDED" ? "bg-blue-600" :
+                          project.status === "IN_PROGRESS" ? "bg-amber-600" :
+                          project.status === "COMPLETED" ? "bg-emerald-600" :
+                          "bg-slate-600"
+                        }>
+                          {project.status?.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                        <div>
+                          <p className="text-muted-foreground">Funding Goal</p>
+                          <p className="font-bold">{formatCurrency(project.fundingGoal)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Amount Raised</p>
+                          <p className="font-bold text-green-600">{formatCurrency(project.amountRaised || 0)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Min Investment</p>
+                          <p className="font-bold">{formatCurrency(project.minInvestment)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Structure</p>
+                          <p className="font-bold">{project.structure}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress</span>
+                          <span>{Math.round(progress)}%</span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min(100, progress)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="offers" className="mt-6">
+          <h3 className="font-semibold mb-4">Investment Offers</h3>
+          
+          {loadingOffers ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            </div>
+          ) : investmentOffers.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <DollarSign className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No investment offers yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {investmentOffers.map((offer: any) => {
+                const project = capitalProjects.find((p: any) => p.id === offer.projectId);
+                
+                return (
+                  <Card key={offer.id} className={offer.status === "PENDING" ? "border-amber-300" : ""} data-testid={`card-offer-${offer.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+                        <div>
+                          <h4 className="font-semibold">{project?.title || "Unknown Project"}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Investor: {offer.investorId} | {new Date(offer.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge className={
+                          offer.status === "PENDING" ? "bg-amber-600" :
+                          offer.status === "ACCEPTED" ? "bg-green-600" :
+                          offer.status === "DECLINED" ? "bg-red-600" :
+                          "bg-blue-600"
+                        }>
+                          {offer.status}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                        <div>
+                          <p className="text-muted-foreground">Amount Offered</p>
+                          <p className="font-bold text-green-600">{formatCurrency(offer.amountOffered)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Role</p>
+                          <p className="font-bold">{offer.requestedRole}</p>
+                        </div>
+                        {offer.proposedEquityPercent && (
+                          <div>
+                            <p className="text-muted-foreground">Proposed Equity</p>
+                            <p className="font-bold">{offer.proposedEquityPercent}</p>
+                          </div>
+                        )}
+                        {offer.proposedInterestRate && (
+                          <div>
+                            <p className="text-muted-foreground">Proposed Interest</p>
+                            <p className="font-bold">{offer.proposedInterestRate}</p>
+                          </div>
+                        )}
+                      </div>
+                      {offer.notes && (
+                        <p className="text-sm text-muted-foreground mb-4 p-3 bg-secondary rounded-lg">{offer.notes}</p>
+                      )}
+                      {offer.status === "PENDING" && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => { setSelectedOffer({...offer, action: "accept"}); setRespondDialogOpen(true); }}
+                            className="bg-green-600 hover:bg-green-700"
+                            data-testid={`button-accept-offer-${offer.id}`}
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Accept
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => { setSelectedOffer({...offer, action: "counter"}); setRespondDialogOpen(true); }}
+                            data-testid={`button-counter-offer-${offer.id}`}
+                          >
+                            Counter
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => { setSelectedOffer({...offer, action: "decline"}); setRespondDialogOpen(true); }}
+                            data-testid={`button-decline-offer-${offer.id}`}
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="announcements" className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Announcements</h3>
+            <Button size="sm" onClick={() => setCreateAnnouncementOpen(true)} data-testid="button-create-announcement">
+              <Plus className="w-4 h-4 mr-2" />
+              New Announcement
+            </Button>
+          </div>
+          
+          {loadingAnnouncements ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            </div>
+          ) : announcements.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No announcements yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {announcements.map((announcement: any) => (
+                <Card key={announcement.id} data-testid={`card-announcement-${announcement.id}`}>
                   <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold">{project.title}</h3>
-                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                    <div className="flex items-start justify-between mb-2 flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{announcement.title}</h4>
+                        {announcement.isPinned && (
+                          <Badge className="bg-primary">Pinned</Badge>
+                        )}
                       </div>
-                      <Badge variant="outline">{project.status || 'Active'}</Badge>
+                      <Badge variant="outline">{announcement.targetAudience}</Badge>
                     </div>
-                    <div className="grid grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Total Investment</p>
-                        <p className="font-bold">${project.totalInvestment?.toLocaleString() || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Capital Raised</p>
-                        <p className="font-bold text-green-600">${(project.capitalRaised || 0).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Capital Needed</p>
-                        <p className="font-bold text-amber-600">
-                          ${((project.totalInvestment || 0) - (project.capitalRaised || 0)).toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Projected ROI</p>
-                        <p className="font-bold">{project.projectedRoi || 0}%</p>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Capital Progress</span>
-                        <span>{Math.round(((project.capitalRaised || 0) / (project.totalInvestment || 1)) * 100)}%</span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${Math.min(100, ((project.capitalRaised || 0) / (project.totalInvestment || 1)) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">{announcement.content}</p>
+                    {announcement.ctaText && (
+                      <p className="text-sm text-primary">{announcement.ctaText}: {announcement.ctaLink}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Posted: {new Date(announcement.createdAt).toLocaleDateString()}
+                      {announcement.expiresAt && ` | Expires: ${new Date(announcement.expiresAt).toLocaleDateString()}`}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
+
+      <CreateProjectDialog open={createProjectOpen} onClose={() => setCreateProjectOpen(false)} />
+      <CreateAnnouncementDialog open={createAnnouncementOpen} onClose={() => setCreateAnnouncementOpen(false)} />
+      {selectedOffer && (
+        <RespondToOfferDialog 
+          offer={selectedOffer} 
+          open={respondDialogOpen} 
+          onClose={() => { setRespondDialogOpen(false); setSelectedOffer(null); }}
+        />
+      )}
     </div>
+  );
+}
+
+function CreateProjectDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [fundingGoal, setFundingGoal] = useState("");
+  const [minInvestment, setMinInvestment] = useState("");
+  const [structure, setStructure] = useState("EQUITY");
+  const [projectedReturn, setProjectedReturn] = useState("");
+  const [holdPeriod, setHoldPeriod] = useState("");
+
+  const createProject = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/hq/capital-projects", {
+        title,
+        description,
+        location: location || undefined,
+        fundingGoal: parseInt(fundingGoal),
+        minInvestment: parseInt(minInvestment),
+        structure,
+        projectedReturn: projectedReturn || undefined,
+        holdPeriod: holdPeriod || undefined,
+        status: "DRAFT",
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/capital-projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
+      toast({
+        title: "Project Created",
+        description: "Capital project has been created successfully.",
+      });
+      onClose();
+      setTitle("");
+      setDescription("");
+      setLocation("");
+      setFundingGoal("");
+      setMinInvestment("");
+      setStructure("EQUITY");
+      setProjectedReturn("");
+      setHoldPeriod("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create project.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Create Capital Project</DialogTitle>
+          <DialogDescription>Create a new capital raising project for investors</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="title">Project Title</Label>
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Bay View Duplex Renovation" data-testid="input-project-title" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the investment opportunity..." rows={3} data-testid="input-project-description" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="location">Location</Label>
+              <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, State" data-testid="input-project-location" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="structure">Structure</Label>
+              <Select value={structure} onValueChange={setStructure}>
+                <SelectTrigger data-testid="select-project-structure">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EQUITY">Equity</SelectItem>
+                  <SelectItem value="DEBT">Debt</SelectItem>
+                  <SelectItem value="HYBRID">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="fundingGoal">Funding Goal ($)</Label>
+              <Input id="fundingGoal" type="number" value={fundingGoal} onChange={(e) => setFundingGoal(e.target.value)} placeholder="500000" data-testid="input-project-goal" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="minInvestment">Min Investment ($)</Label>
+              <Input id="minInvestment" type="number" value={minInvestment} onChange={(e) => setMinInvestment(e.target.value)} placeholder="25000" data-testid="input-project-min" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="projectedReturn">Projected Return</Label>
+              <Input id="projectedReturn" value={projectedReturn} onChange={(e) => setProjectedReturn(e.target.value)} placeholder="e.g., 15-20% IRR" data-testid="input-project-return" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="holdPeriod">Hold Period</Label>
+              <Input id="holdPeriod" value={holdPeriod} onChange={(e) => setHoldPeriod(e.target.value)} placeholder="e.g., 12-18 months" data-testid="input-project-hold" />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => createProject.mutate()} disabled={createProject.isPending || !title || !description || !fundingGoal || !minInvestment} data-testid="button-submit-project">
+            {createProject.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+            Create Project
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CreateAnnouncementDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [targetAudience, setTargetAudience] = useState("ALL");
+  const [isPinned, setIsPinned] = useState(false);
+  const [ctaText, setCtaText] = useState("");
+  const [ctaLink, setCtaLink] = useState("");
+
+  const createAnnouncement = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/hq/announcements", {
+        title,
+        content,
+        targetAudience,
+        isPinned,
+        ctaText: ctaText || undefined,
+        ctaLink: ctaLink || undefined,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
+      toast({
+        title: "Announcement Created",
+        description: "Announcement has been published.",
+      });
+      onClose();
+      setTitle("");
+      setContent("");
+      setTargetAudience("ALL");
+      setIsPinned(false);
+      setCtaText("");
+      setCtaLink("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create announcement.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={() => onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create Announcement</DialogTitle>
+          <DialogDescription>Publish a new announcement to portal users</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="ann-title">Title</Label>
+            <Input id="ann-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Announcement title" data-testid="input-announcement-title" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="ann-content">Content</Label>
+            <Textarea id="ann-content" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Announcement content..." rows={3} data-testid="input-announcement-content" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="ann-audience">Target Audience</Label>
+              <Select value={targetAudience} onValueChange={setTargetAudience}>
+                <SelectTrigger data-testid="select-announcement-audience">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Users</SelectItem>
+                  <SelectItem value="INVESTORS">Investors Only</SelectItem>
+                  <SelectItem value="WHOLESALERS">Wholesalers Only</SelectItem>
+                  <SelectItem value="BUYERS">Buyers Only</SelectItem>
+                  <SelectItem value="STAFF">Staff Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end gap-2">
+              <input type="checkbox" id="ann-pinned" checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} className="w-4 h-4" />
+              <Label htmlFor="ann-pinned">Pin to top</Label>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="cta-text">CTA Text (optional)</Label>
+              <Input id="cta-text" value={ctaText} onChange={(e) => setCtaText(e.target.value)} placeholder="Learn More" data-testid="input-announcement-cta-text" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cta-link">CTA Link (optional)</Label>
+              <Input id="cta-link" value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} placeholder="/capital-raising" data-testid="input-announcement-cta-link" />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => createAnnouncement.mutate()} disabled={createAnnouncement.isPending || !title || !content} data-testid="button-submit-announcement">
+            {createAnnouncement.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+            Publish
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RespondToOfferDialog({ offer, open, onClose }: { offer: any; open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const [notes, setNotes] = useState("");
+  const [counterAmount, setCounterAmount] = useState("");
+  const [counterEquity, setCounterEquity] = useState("");
+  const [counterInterest, setCounterInterest] = useState("");
+
+  const respondToOffer = useMutation({
+    mutationFn: async () => {
+      const data: any = {
+        status: offer.action === "accept" ? "accepted" : offer.action === "decline" ? "declined" : "countered",
+        notes: notes || undefined,
+      };
+      if (offer.action === "counter") {
+        data.counterTerms = `Amount: ${counterAmount || offer.amountOffered}, Equity: ${counterEquity || offer.proposedEquityPercent || "N/A"}, Interest: ${counterInterest || offer.proposedInterestRate || "N/A"}`;
+      }
+      const res = await apiRequest("POST", `/api/hq/investment-offers/${offer.id}/respond`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/investment-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/capital-projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
+      toast({
+        title: offer.action === "accept" ? "Offer Accepted" : offer.action === "decline" ? "Offer Declined" : "Counter Sent",
+        description: offer.action === "accept" ? "Investment has been committed." : offer.action === "decline" ? "Offer has been declined." : "Counter offer sent to investor.",
+      });
+      onClose();
+      setNotes("");
+      setCounterAmount("");
+      setCounterEquity("");
+      setCounterInterest("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to respond to offer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {offer.action === "accept" ? "Accept Offer" : offer.action === "decline" ? "Decline Offer" : "Counter Offer"}
+          </DialogTitle>
+          <DialogDescription>
+            {offer.action === "accept" ? "Accept this investment offer and commit the funds." : 
+             offer.action === "decline" ? "Decline this investment offer." : 
+             "Send a counter offer to the investor."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <div className="bg-secondary p-4 rounded-lg mb-4">
+            <p className="text-sm"><strong>Amount:</strong> {formatCurrency(offer.amountOffered)}</p>
+            <p className="text-sm"><strong>Role:</strong> {offer.requestedRole}</p>
+            {offer.proposedEquityPercent && <p className="text-sm"><strong>Equity:</strong> {offer.proposedEquityPercent}</p>}
+            {offer.proposedInterestRate && <p className="text-sm"><strong>Interest:</strong> {offer.proposedInterestRate}</p>}
+          </div>
+
+          {offer.action === "counter" && (
+            <div className="grid gap-4 mb-4">
+              <div className="grid gap-2">
+                <Label>Counter Amount ($)</Label>
+                <Input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder={offer.amountOffered.toString()} data-testid="input-counter-amount" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Counter Equity %</Label>
+                  <Input value={counterEquity} onChange={(e) => setCounterEquity(e.target.value)} placeholder={offer.proposedEquityPercent || "e.g., 8%"} data-testid="input-counter-equity" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Counter Interest Rate</Label>
+                  <Input value={counterInterest} onChange={(e) => setCounterInterest(e.target.value)} placeholder={offer.proposedInterestRate || "e.g., 10%"} data-testid="input-counter-interest" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-2">
+            <Label>Notes (optional)</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes for the investor..." rows={2} data-testid="input-response-notes" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button 
+            onClick={() => respondToOffer.mutate()} 
+            disabled={respondToOffer.isPending}
+            className={offer.action === "accept" ? "bg-green-600 hover:bg-green-700" : offer.action === "decline" ? "bg-red-600 hover:bg-red-700" : ""}
+            data-testid="button-confirm-response"
+          >
+            {respondToOffer.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            {offer.action === "accept" ? "Accept & Commit" : offer.action === "decline" ? "Decline" : "Send Counter"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

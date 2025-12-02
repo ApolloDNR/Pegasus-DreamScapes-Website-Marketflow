@@ -25,6 +25,7 @@ import InvestorPortal from "@/pages/investor-portal";
 import WholesalerPortal from "@/pages/wholesaler-portal";
 import BuyerPortal from "@/pages/buyer-portal";
 import Community from "@/pages/community";
+import CapitalRaising from "@/pages/capital-raising";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/portal/investor" component={InvestorPortal} />
       <Route path="/portal/wholesaler" component={WholesalerPortal} />
       <Route path="/portal/buyer" component={BuyerPortal} />
+      <Route path="/capital-raising" component={CapitalRaising} />
       <Route path="/community" component={Community} />
       <Route component={NotFound} />
     </Switch>

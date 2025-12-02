@@ -8,9 +8,10 @@ import type { Announcement } from "@shared/schema";
 
 interface AnnouncementsBannerProps {
   className?: string;
+  audience?: "ALL" | "INVESTORS" | "WHOLESALERS" | "BUYERS" | "STAFF";
 }
 
-export function AnnouncementsBanner({ className = "" }: AnnouncementsBannerProps) {
+export function AnnouncementsBanner({ className = "", audience }: AnnouncementsBannerProps) {
   const [dismissedIds, setDismissedIds] = useState<number[]>(() => {
     const saved = localStorage.getItem("dismissedAnnouncements");
     return saved ? JSON.parse(saved) : [];
@@ -21,9 +22,11 @@ export function AnnouncementsBanner({ className = "" }: AnnouncementsBannerProps
     queryKey: ["/api/announcements"],
   });
 
-  const visibleAnnouncements = announcements.filter(
-    (a) => !dismissedIds.includes(a.id)
-  );
+  const visibleAnnouncements = announcements.filter((a) => {
+    if (dismissedIds.includes(a.id)) return false;
+    if (!audience) return true;
+    return a.targetAudience === "ALL" || a.targetAudience === audience;
+  });
 
   const pinnedAnnouncements = visibleAnnouncements.filter((a) => a.isPinned);
   const regularAnnouncements = visibleAnnouncements.filter((a) => !a.isPinned);

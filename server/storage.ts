@@ -210,6 +210,7 @@ export interface IStorage {
 
   // Investment Offers
   createInvestmentOffer(offer: InsertInvestmentOffer): Promise<InvestmentOffer>;
+  getInvestmentOffers(): Promise<InvestmentOffer[]>;
   getInvestmentOffersByProject(projectId: number): Promise<InvestmentOffer[]>;
   getInvestmentOffersByInvestor(investorId: string): Promise<InvestmentOffer[]>;
   getInvestmentOffer(id: number): Promise<InvestmentOffer | undefined>;
@@ -1101,6 +1102,10 @@ export class DatabaseStorage implements IStorage {
   async createInvestmentOffer(offer: InsertInvestmentOffer): Promise<InvestmentOffer> {
     const [created] = await db.insert(investmentOffers).values(offer).returning();
     return created;
+  }
+
+  async getInvestmentOffers(): Promise<InvestmentOffer[]> {
+    return db.select().from(investmentOffers).orderBy(desc(investmentOffers.createdAt));
   }
 
   async getInvestmentOffersByProject(projectId: number): Promise<InvestmentOffer[]> {
