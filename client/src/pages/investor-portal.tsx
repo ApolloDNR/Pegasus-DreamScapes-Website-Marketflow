@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PortalHeader } from "@/components/portal-header";
 import { 
   TrendingUp, 
   ArrowRight, 
@@ -96,9 +97,8 @@ export default function InvestorPortal() {
   return (
     <div className="min-h-screen pt-20 bg-stone">
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <Badge className="bg-green-600 mb-2">Investor Portal</Badge>
             <h1 className="text-3xl font-bold" data-testid="text-investor-welcome">
               Welcome, {user?.firstName || "Investor"}
             </h1>
@@ -106,11 +106,7 @@ export default function InvestorPortal() {
               {hasProfile ? "View your investment opportunities" : "Complete your profile to get started"}
             </p>
           </div>
-          <Link href="/portal">
-            <Button variant="outline" size="sm">
-              Switch Portal
-            </Button>
-          </Link>
+          <PortalHeader currentPortal="investor" />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -149,14 +145,24 @@ export default function InvestorPortal() {
 function DashboardTab({ profile, deals }: { profile?: InvestorProfile; deals?: WholesaleDeal[] }) {
   const stats = [
     { label: "Available Deals", value: deals?.length || 0, icon: Building2, color: "text-blue-600" },
+    { label: "Active Investments", value: 0, icon: TrendingUp, color: "text-green-600" },
+    { label: "Capital Deployed", value: "$0", icon: DollarSign, color: "text-primary" },
     { label: "Profile Status", value: profile?.isApproved ? "Approved" : "Pending", icon: CheckCircle2, color: profile?.isApproved ? "text-green-600" : "text-amber-600" },
+  ];
+
+  const milestones = [
+    { title: "Account Created", completed: true, date: "Completed" },
+    { title: "Profile Submitted", completed: !!profile, date: profile ? "Completed" : "Pending" },
+    { title: "Profile Approved", completed: profile?.isApproved || false, date: profile?.isApproved ? "Approved" : "Pending" },
+    { title: "First Investment", completed: false, date: "Waiting" },
+    { title: "First Return", completed: false, date: "Waiting" },
   ];
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="sleek-card">
+          <Card key={index} className="sleek-card" data-testid={`stat-card-${index}`}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -168,6 +174,72 @@ function DashboardTab({ profile, deals }: { profile?: InvestorProfile; deals?: W
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="sleek-card lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              Investment Overview
+            </CardTitle>
+            <CardDescription>Your investment activity and returns</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center p-4 rounded-lg bg-secondary/50">
+                <p className="text-2xl font-bold text-primary">$0</p>
+                <p className="text-sm text-muted-foreground">Total Invested</p>
+              </div>
+              <div className="text-center p-4 rounded-lg bg-secondary/50">
+                <p className="text-2xl font-bold text-green-600">$0</p>
+                <p className="text-sm text-muted-foreground">Total Returns</p>
+              </div>
+              <div className="text-center p-4 rounded-lg bg-secondary/50">
+                <p className="text-2xl font-bold">0%</p>
+                <p className="text-sm text-muted-foreground">Avg. ROI</p>
+              </div>
+            </div>
+            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+              <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">No investments yet</p>
+              <p className="text-sm">Browse available deals to start investing</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              Your Milestones
+            </CardTitle>
+            <CardDescription>Track your investor journey</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {milestones.map((milestone, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    milestone.completed ? "bg-green-100 text-green-600" : "bg-secondary text-muted-foreground"
+                  }`}>
+                    {milestone.completed ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <Clock className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${milestone.completed ? "" : "text-muted-foreground"}`}>
+                      {milestone.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{milestone.date}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {!profile && (

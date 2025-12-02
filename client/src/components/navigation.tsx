@@ -19,7 +19,8 @@ import {
   Briefcase,
   Sparkles,
   LogIn,
-  User
+  User,
+  MessageSquare
 } from "lucide-react";
 import logoImage from "@assets/image_1764616120774.png";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +50,7 @@ const megaMenuSections = {
     items: [
       { href: "/calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator },
       { href: "/resources", label: "Investment Guides", description: "Learn the fundamentals", icon: FileText },
+      { href: "/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
       { href: "/projects", label: "Case Studies", description: "Real project examples", icon: Target },
     ]
   },

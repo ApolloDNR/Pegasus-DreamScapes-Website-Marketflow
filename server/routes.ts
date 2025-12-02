@@ -12,6 +12,9 @@ import {
   insertBuyerInquirySchema,
   insertInvestorProfileSchema,
   insertWholesalerProfileSchema,
+  insertBuyerProfileSchema,
+  insertSavedPropertySchema,
+  insertBuyerOfferSchema,
   STAFF_ROLES
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
@@ -81,7 +84,8 @@ export async function registerRoutes(
         roles: roleNames,
         isStaff,
         isInvestor: roleNames.includes("investor"),
-        isWholesaler: roleNames.includes("wholesaler")
+        isWholesaler: roleNames.includes("wholesaler"),
+        isBuyer: roleNames.includes("buyer")
       });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -138,6 +142,30 @@ export async function registerRoutes(
     }
   });
 
+  app.post('/api/portal/buyer/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertBuyerProfileSchema.safeParse({ ...req.body, userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      // Create buyer profile
+      const profile = await storage.upsertBuyerProfile(result.data);
+      
+      // Add buyer role if not exists
+      const hasRole = await storage.hasRole(userId, "buyer");
+      if (!hasRole) {
+        await storage.addUserRole({ userId, role: "buyer" });
+      }
+      
+      return res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating buyer profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Portal-specific data routes
   app.get('/api/portal/investor/profile', isAuthenticated, async (req: any, res) => {
     try {
@@ -163,6 +191,105 @@ export async function registerRoutes(
       return res.json(profile);
     } catch (error) {
       console.error("Error fetching wholesaler profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/portal/wholesaler/my-deals', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const deals = await storage.getWholesaleDealsBySubmitter(userId);
+      return res.json(deals);
+    } catch (error) {
+      console.error("Error fetching wholesaler deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/portal/buyer/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getBuyerProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      return res.json(profile);
+    } catch (error) {
+      console.error("Error fetching buyer profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Saved Properties routes (for buyers)
+  app.get('/api/portal/buyer/saved-properties', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const saved = await storage.getSavedProperties(userId);
+      return res.json(saved);
+    } catch (error) {
+      console.error("Error fetching saved properties:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/portal/buyer/saved-properties', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertSavedPropertySchema.safeParse({ ...req.body, userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      // Check if already saved
+      const isSaved = await storage.isPropertySaved(userId, result.data.propertyType, result.data.propertyId);
+      if (isSaved) {
+        return res.status(400).json({ message: "Property already saved" });
+      }
+      
+      const saved = await storage.saveProperty(result.data);
+      return res.status(201).json(saved);
+    } catch (error) {
+      console.error("Error saving property:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete('/api/portal/buyer/saved-properties/:propertyType/:propertyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { propertyType, propertyId } = req.params;
+      await storage.removeSavedProperty(userId, propertyType, parseInt(propertyId));
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error removing saved property:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Buyer Offers routes
+  app.get('/api/portal/buyer/offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offers = await storage.getBuyerOffers(userId);
+      return res.json(offers);
+    } catch (error) {
+      console.error("Error fetching buyer offers:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/portal/buyer/offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertBuyerOfferSchema.safeParse({ ...req.body, userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      const offer = await storage.createBuyerOffer(result.data);
+      return res.status(201).json(offer);
+    } catch (error) {
+      console.error("Error creating buyer offer:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -679,6 +806,36 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/hq/investor-profiles", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const profiles = await storage.getAllInvestorProfiles();
+      return res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching investor profiles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/wholesaler-profiles", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const profiles = await storage.getAllWholesalerProfiles();
+      return res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching wholesaler profiles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/buyer-profiles", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const profiles = await storage.getAllBuyerProfiles();
+      return res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching buyer profiles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/hq/users/:userId/roles", isAuthenticated, requireRole("admin"), async (req, res) => {
     try {
       const { userId } = req.params;
@@ -739,6 +896,21 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/hq/buyers/:userId/approve", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { isApproved } = req.body;
+      const updated = await storage.updateBuyerApproval(userId, isApproved);
+      if (!updated) {
+        return res.status(404).json({ message: "Buyer profile not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating buyer approval:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Check staff access route (for frontend to verify before accessing HQ)
   app.get("/api/auth/check-staff", isAuthenticated, async (req: any, res) => {
     try {
@@ -747,6 +919,247 @@ export async function registerRoutes(
       return res.json({ isStaff });
     } catch (error) {
       console.error("Error checking staff access:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Community Routes
+  // =====================================================
+  
+  // Get all community categories
+  app.get("/api/community/categories", async (req, res) => {
+    try {
+      const categories = await storage.getCommunityCategories();
+      return res.json(categories);
+    } catch (error) {
+      console.error("Error fetching community categories:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get community category by slug
+  app.get("/api/community/categories/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const category = await storage.getCommunityCategory(slug);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      return res.json(category);
+    } catch (error) {
+      console.error("Error fetching community category:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create community category (admin only)
+  app.post("/api/community/categories", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const { name, slug, description, icon, color, order } = req.body;
+      const category = await storage.createCommunityCategory({ name, slug, description, icon, color, order });
+      return res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating community category:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get community posts (optionally filtered by category)
+  app.get("/api/community/posts", async (req, res) => {
+    try {
+      const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
+      const posts = await storage.getCommunityPosts(categoryId);
+      return res.json(posts);
+    } catch (error) {
+      console.error("Error fetching community posts:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get single community post
+  app.get("/api/community/posts/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const post = await storage.getCommunityPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      // Increment view count
+      await storage.incrementPostViews(id);
+      return res.json(post);
+    } catch (error) {
+      console.error("Error fetching community post:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create community post (authenticated users only)
+  app.post("/api/community/posts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { categoryId, title, content, isPinned, isLocked } = req.body;
+      
+      const post = await storage.createCommunityPost({
+        categoryId,
+        userId,
+        title,
+        content,
+        isPinned: isPinned || false,
+        isLocked: isLocked || false
+      });
+      return res.status(201).json(post);
+    } catch (error) {
+      console.error("Error creating community post:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update community post (owner or admin)
+  app.patch("/api/community/posts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      const post = await storage.getCommunityPost(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if user is owner or admin
+      const userRoles = await storage.getUserRoles(userId);
+      const isAdmin = userRoles.some(r => r.role === "admin");
+      if (post.userId !== userId && !isAdmin) {
+        return res.status(403).json({ message: "Not authorized to edit this post" });
+      }
+      
+      const { title, content, isPinned, isLocked } = req.body;
+      const updated = await storage.updateCommunityPost(id, { title, content, isPinned, isLocked });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating community post:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get replies for a post
+  app.get("/api/community/posts/:id/replies", async (req, res) => {
+    try {
+      const postId = Number(req.params.id);
+      const replies = await storage.getCommunityReplies(postId);
+      return res.json(replies);
+    } catch (error) {
+      console.error("Error fetching community replies:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create reply to a post (authenticated users only)
+  app.post("/api/community/posts/:id/replies", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = Number(req.params.id);
+      const { content } = req.body;
+      
+      // Check if post exists and isn't locked
+      const post = await storage.getCommunityPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      if (post.isLocked) {
+        return res.status(403).json({ message: "This thread is locked" });
+      }
+      
+      const reply = await storage.createCommunityReply({
+        postId,
+        userId,
+        content
+      });
+      return res.status(201).json(reply);
+    } catch (error) {
+      console.error("Error creating community reply:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Direct Messaging Routes
+  // =====================================================
+  
+  // Get user's messages
+  app.get("/api/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const messages = await storage.getDirectMessages(userId);
+      return res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get conversation with another user
+  app.get("/api/messages/conversation/:otherUserId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { otherUserId } = req.params;
+      const messages = await storage.getConversation(userId, otherUserId);
+      return res.json(messages);
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Send a message
+  app.post("/api/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const senderId = req.user.claims.sub;
+      const { receiverId, subject, content, parentId } = req.body;
+      
+      const message = await storage.createDirectMessage({
+        senderId,
+        receiverId,
+        subject,
+        content,
+        parentId
+      });
+      return res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Mark message as read
+  app.patch("/api/messages/:id/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      
+      // Verify the message belongs to this user
+      const messages = await storage.getDirectMessages(userId);
+      const message = messages.find(m => m.id === id);
+      if (!message || message.receiverId !== userId) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      const updated = await storage.markMessageRead(id);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get unread message count
+  app.get("/api/messages/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await storage.getUnreadMessageCount(userId);
+      return res.json({ count });
+    } catch (error) {
+      console.error("Error getting unread count:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

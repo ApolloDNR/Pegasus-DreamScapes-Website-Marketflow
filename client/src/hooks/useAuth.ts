@@ -6,6 +6,7 @@ export interface AuthUser extends DbUser {
   isStaff?: boolean;
   isInvestor?: boolean;
   isWholesaler?: boolean;
+  isBuyer?: boolean;
 }
 
 export function useAuth() {

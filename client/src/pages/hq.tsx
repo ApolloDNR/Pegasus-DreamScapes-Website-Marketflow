@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PortalHeader } from "@/components/portal-header";
 import { 
   Users, 
   Home, 
@@ -121,10 +122,6 @@ export default function HQ() {
 }
 
 function DashboardHeader({ user }: { user: any }) {
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
-
   const displayName = user?.firstName 
     ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`
     : user?.email?.split('@')[0] || 'User';
@@ -134,27 +131,18 @@ function DashboardHeader({ user }: { user: any }) {
     : displayName.slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex items-center justify-between mb-8">
-      <div>
-        <h1 className="text-3xl font-bold" data-testid="text-hq-title">Pegasus Dreamscapes</h1>
-        <p className="text-muted-foreground">Command Center - Welcome back, {displayName}</p>
-      </div>
+    <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={user?.profileImageUrl} alt={displayName} className="object-cover" />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium">{displayName}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
-          </div>
+        <Avatar>
+          <AvatarImage src={user?.profileImageUrl} alt={displayName} className="object-cover" />
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+        <div>
+          <h1 className="text-3xl font-bold" data-testid="text-hq-title">Dreamscaper HQ</h1>
+          <p className="text-muted-foreground">Welcome back, {displayName}</p>
         </div>
-        <Button variant="outline" onClick={handleLogout} data-testid="button-logout">
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
-        </Button>
       </div>
+      <PortalHeader currentPortal="staff" />
     </div>
   );
 }
@@ -686,6 +674,14 @@ function LeadsTabs() {
             <Mail className="w-4 h-4 mr-2" />
             Contacts
           </TabsTrigger>
+          <TabsTrigger value="users" data-testid="tab-users">
+            <Users className="w-4 h-4 mr-2" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="projects" data-testid="tab-projects">
+            <Building className="w-4 h-4 mr-2" />
+            Projects
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue">
@@ -702,6 +698,12 @@ function LeadsTabs() {
         </TabsContent>
         <TabsContent value="contacts">
           <ContactsTable statusFilter={statusFilter} />
+        </TabsContent>
+        <TabsContent value="users">
+          <UserManagementPanel />
+        </TabsContent>
+        <TabsContent value="projects">
+          <ProjectCapitalPanel />
         </TabsContent>
       </Tabs>
     </div>
@@ -1849,5 +1851,387 @@ function CreateDealForm({ onSubmit, isPending }: { onSubmit: (data: any) => void
         </Button>
       </DialogFooter>
     </form>
+  );
+}
+
+interface UserProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: string[];
+  isApproved?: boolean;
+  createdAt?: string;
+}
+
+function UserManagementPanel() {
+  const { toast } = useToast();
+  const [activeUserTab, setActiveUserTab] = useState("investors");
+  
+  const { data: investorProfiles, isLoading: loadingInvestors } = useQuery<any[]>({
+    queryKey: ["/api/hq/investor-profiles"],
+  });
+
+  const { data: wholesalerProfiles, isLoading: loadingWholesalers } = useQuery<any[]>({
+    queryKey: ["/api/hq/wholesaler-profiles"],
+  });
+
+  const { data: buyerProfiles, isLoading: loadingBuyers } = useQuery<any[]>({
+    queryKey: ["/api/hq/buyer-profiles"],
+  });
+
+  const approveInvestorMutation = useMutation({
+    mutationFn: async ({ userId, isApproved }: { userId: string; isApproved: boolean }) => {
+      return apiRequest("PATCH", `/api/hq/investors/${userId}/approve`, { isApproved });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/investor-profiles"] });
+      toast({ title: "Success", description: "Investor status updated" });
+    },
+  });
+
+  const approveWholesalerMutation = useMutation({
+    mutationFn: async ({ userId, isApproved }: { userId: string; isApproved: boolean }) => {
+      return apiRequest("PATCH", `/api/hq/wholesalers/${userId}/approve`, { isApproved });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/wholesaler-profiles"] });
+      toast({ title: "Success", description: "Wholesaler status updated" });
+    },
+  });
+
+  const approveBuyerMutation = useMutation({
+    mutationFn: async ({ userId, isApproved }: { userId: string; isApproved: boolean }) => {
+      return apiRequest("PATCH", `/api/hq/buyers/${userId}/approve`, { isApproved });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/buyer-profiles"] });
+      toast({ title: "Success", description: "Buyer status updated" });
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Investors</p>
+                <p className="text-2xl font-bold">{investorProfiles?.length || 0}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Wholesalers</p>
+                <p className="text-2xl font-bold">{wholesalerProfiles?.length || 0}</p>
+              </div>
+              <Building className="w-8 h-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Buyers</p>
+                <p className="text-2xl font-bold">{buyerProfiles?.length || 0}</p>
+              </div>
+              <Users className="w-8 h-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs value={activeUserTab} onValueChange={setActiveUserTab}>
+        <TabsList>
+          <TabsTrigger value="investors">Investors</TabsTrigger>
+          <TabsTrigger value="wholesalers">Wholesalers</TabsTrigger>
+          <TabsTrigger value="buyers">Buyers</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="investors">
+          {loadingInvestors ? (
+            <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+          ) : !investorProfiles || investorProfiles.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No investor profiles yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-4">
+              {investorProfiles.map((profile: any) => (
+                <Card key={profile.id} className="sleek-card">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarFallback>{profile.company?.[0] || 'I'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{profile.company || 'Private Investor'}</p>
+                          <p className="text-sm text-muted-foreground">{profile.cityState}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">{profile.capitalRange}</Badge>
+                            <Badge variant="outline">{profile.experienceLevel}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={profile.isApproved ? "bg-green-600" : "bg-amber-600"}>
+                          {profile.isApproved ? "Approved" : "Pending"}
+                        </Badge>
+                        {!profile.isApproved && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => approveInvestorMutation.mutate({ userId: profile.userId, isApproved: true })}
+                          >
+                            Approve
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="wholesalers">
+          {loadingWholesalers ? (
+            <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+          ) : !wholesalerProfiles || wholesalerProfiles.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Building className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No wholesaler profiles yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-4">
+              {wholesalerProfiles.map((profile: any) => (
+                <Card key={profile.id} className="sleek-card">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarFallback>{profile.company?.[0] || 'W'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{profile.company || 'Independent Wholesaler'}</p>
+                          <p className="text-sm text-muted-foreground">{profile.cityState}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">{profile.yearsExperience || 0} years exp</Badge>
+                            <Badge variant="outline">{profile.dealsPerYear || 'N/A'} deals/yr</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={profile.isApproved ? "bg-green-600" : "bg-amber-600"}>
+                          {profile.isApproved ? "Approved" : "Pending"}
+                        </Badge>
+                        {!profile.isApproved && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => approveWholesalerMutation.mutate({ userId: profile.userId, isApproved: true })}
+                          >
+                            Approve
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="buyers">
+          {loadingBuyers ? (
+            <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+          ) : !buyerProfiles || buyerProfiles.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No buyer profiles yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-4">
+              {buyerProfiles.map((profile: any) => (
+                <Card key={profile.id} className="sleek-card">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarFallback>{profile.company?.[0] || 'B'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{profile.company || 'Private Buyer'}</p>
+                          <p className="text-sm text-muted-foreground">{profile.cityState}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">{profile.buyingPreference}</Badge>
+                            <Badge variant="outline">{profile.budgetRange}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={profile.isApproved ? "bg-green-600" : "bg-amber-600"}>
+                          {profile.isApproved ? "Approved" : "Pending"}
+                        </Badge>
+                        {!profile.isApproved && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => approveBuyerMutation.mutate({ userId: profile.userId, isApproved: true })}
+                          >
+                            Approve
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function ProjectCapitalPanel() {
+  const { data: projects, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/projects"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        <p className="text-muted-foreground mt-4">Loading projects...</p>
+      </div>
+    );
+  }
+
+  const totalInvestment = projects?.reduce((acc, p) => acc + (p.totalInvestment || 0), 0) || 0;
+  const totalARV = projects?.reduce((acc, p) => acc + (p.arv || 0), 0) || 0;
+  const avgROI = projects?.length ? projects.reduce((acc, p) => acc + (p.projectedRoi || 0), 0) / projects.length : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Active Projects</p>
+                <p className="text-2xl font-bold">{projects?.length || 0}</p>
+              </div>
+              <Building className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Investment</p>
+                <p className="text-2xl font-bold">${(totalInvestment / 1000000).toFixed(1)}M</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total ARV</p>
+                <p className="text-2xl font-bold">${(totalARV / 1000000).toFixed(1)}M</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg. Projected ROI</p>
+                <p className="text-2xl font-bold">{avgROI.toFixed(0)}%</p>
+              </div>
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="sleek-card">
+        <CardHeader>
+          <CardTitle>Project Capital Raising</CardTitle>
+          <CardDescription>Track capital needs and investor allocation for active projects</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!projects || projects.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Building className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No projects available</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {projects.map((project: any) => (
+                <Card key={project.id} className="border">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold">{project.title}</h3>
+                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                      </div>
+                      <Badge variant="outline">{project.status || 'Active'}</Badge>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Total Investment</p>
+                        <p className="font-bold">${project.totalInvestment?.toLocaleString() || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Capital Raised</p>
+                        <p className="font-bold text-green-600">${(project.capitalRaised || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Capital Needed</p>
+                        <p className="font-bold text-amber-600">
+                          ${((project.totalInvestment || 0) - (project.capitalRaised || 0)).toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Projected ROI</p>
+                        <p className="font-bold">{project.projectedRoi || 0}%</p>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Capital Progress</span>
+                        <span>{Math.round(((project.capitalRaised || 0) / (project.totalInvestment || 1)) * 100)}%</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full transition-all"
+                          style={{ width: `${Math.min(100, ((project.capitalRaised || 0) / (project.totalInvestment || 1)) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -10,7 +10,8 @@ import {
   ArrowRight, 
   Shield,
   Loader2,
-  LogIn
+  LogIn,
+  ShoppingBag
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -20,12 +21,18 @@ export default function PortalSelect() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      if (user.isStaff) {
-        setLocation("/hq");
-      } else if (user.isInvestor && !user.isWholesaler) {
-        setLocation("/portal/investor");
-      } else if (user.isWholesaler && !user.isInvestor) {
-        setLocation("/portal/wholesaler");
+      // Only auto-redirect if user has exactly one portal role
+      const portalRoles = [user.isStaff, user.isInvestor, user.isWholesaler, user.isBuyer].filter(Boolean);
+      if (portalRoles.length === 1) {
+        if (user.isStaff) {
+          setLocation("/hq");
+        } else if (user.isInvestor) {
+          setLocation("/portal/investor");
+        } else if (user.isWholesaler) {
+          setLocation("/portal/wholesaler");
+        } else if (user.isBuyer) {
+          setLocation("/portal/buyer");
+        }
       }
     }
   }, [isLoading, isAuthenticated, user, setLocation]);
@@ -63,7 +70,7 @@ export default function PortalSelect() {
   const portals = [
     {
       id: "staff",
-      title: "Staff HQ",
+      title: "Dreamscaper HQ",
       description: "Access the Pegasus Dreamscapes headquarters dashboard for lead management, deal tracking, and team operations.",
       icon: Shield,
       href: "/hq",
@@ -75,7 +82,7 @@ export default function PortalSelect() {
     {
       id: "investor",
       title: "Investor Portal",
-      description: "View investment opportunities, track your deals, and access exclusive investor resources.",
+      description: "View investment opportunities, track your capital, and access exclusive investor resources.",
       icon: TrendingUp,
       href: "/portal/investor",
       badge: "Investors",
@@ -86,13 +93,24 @@ export default function PortalSelect() {
     {
       id: "wholesaler",
       title: "Wholesaler Portal",
-      description: "Browse available wholesale deals, submit properties, and manage your assignments.",
+      description: "Post deals, track assignments, and connect with buyers and investors.",
       icon: Building2,
       href: "/portal/wholesaler",
       badge: "Wholesalers",
       badgeColor: "bg-purple-600",
       available: user?.isWholesaler,
       registerHref: "/portal/wholesaler",
+    },
+    {
+      id: "buyer",
+      title: "Buyer Portal",
+      description: "Browse wholesale deals and renovated properties, save favorites, and submit offers.",
+      icon: ShoppingBag,
+      href: "/portal/buyer",
+      badge: "Buyers",
+      badgeColor: "bg-orange-600",
+      available: user?.isBuyer,
+      registerHref: "/portal/buyer",
     },
   ];
 
@@ -113,7 +131,7 @@ export default function PortalSelect() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {portals.map((portal) => (
               <Card 
                 key={portal.id} 
@@ -159,12 +177,12 @@ export default function PortalSelect() {
             ))}
           </div>
 
-          {!user?.isInvestor && !user?.isWholesaler && !user?.isStaff && (
+          {!user?.isInvestor && !user?.isWholesaler && !user?.isBuyer && !user?.isStaff && (
             <div className="mt-12 text-center">
               <p className="text-muted-foreground mb-4">
-                Don't have a portal account yet? Register as an investor or wholesaler to get started.
+                Don't have a portal account yet? Choose your role to get started.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
                 <Link href="/portal/investor">
                   <Button variant="outline" data-testid="button-register-investor">
                     Register as Investor
@@ -173,6 +191,11 @@ export default function PortalSelect() {
                 <Link href="/portal/wholesaler">
                   <Button variant="outline" data-testid="button-register-wholesaler">
                     Register as Wholesaler
+                  </Button>
+                </Link>
+                <Link href="/portal/buyer">
+                  <Button variant="outline" data-testid="button-register-buyer">
+                    Register as Buyer
                   </Button>
                 </Link>
               </div>

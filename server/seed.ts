@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { projects, articles } from "@shared/schema";
+import { projects, articles, communityCategories } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const initialProjects = [
@@ -366,6 +366,292 @@ Ready to start your investment journey the right way? [Become an investor](/inve
     imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800",
     published: true,
     publishedAt: new Date("2024-10-15"),
+  },
+  {
+    slug: "brrrr-method-explained",
+    title: "The BRRRR Method: Build Wealth Through Real Estate Recycling",
+    excerpt: "Discover how the BRRRR strategy allows investors to recycle their capital and build a rental portfolio with limited funds.",
+    content: `# The BRRRR Method: Build Wealth Through Real Estate Recycling
+
+The BRRRR method is one of the most powerful wealth-building strategies in real estate. It allows investors to continuously recycle their capital to build a substantial rental portfolio.
+
+## What is BRRRR?
+
+BRRRR stands for:
+- **B**uy - Purchase undervalued property
+- **R**ehab - Renovate to add value
+- **R**ent - Place quality tenants
+- **R**efinance - Cash-out refinance at new value
+- **R**epeat - Use proceeds for next deal
+
+## The Power of BRRRR
+
+The magic of BRRRR lies in the refinance step. When executed correctly, you can:
+- Recover your initial investment
+- Keep the cash-flowing property
+- Use recovered funds for the next deal
+
+## Example Deal
+
+**Initial Investment:**
+- Purchase Price: $120,000
+- Rehab Costs: $40,000
+- Closing Costs: $5,000
+- **Total Investment: $165,000**
+
+**After Renovation:**
+- New Appraised Value: $220,000
+- Monthly Rent: $1,800
+- 75% LTV Refinance: $165,000
+
+**Result:** All money back, plus a cash-flowing rental!
+
+## Keys to Success
+
+1. **Buy Right** - Find properties at 65-70% of ARV
+2. **Control Rehab Costs** - Stay within budget
+3. **Add Real Value** - Focus on improvements that increase appraisals
+4. **Build Lender Relationships** - Have financing lined up
+
+## Is BRRRR Right for You?
+
+BRRRR works best for investors who:
+- Have some upfront capital
+- Want to build a rental portfolio
+- Are patient (process takes 6-12 months per property)
+- Have strong local market knowledge
+
+Learn more about [how we execute BRRRR deals](/services) or [partner with us](/invest).`,
+    category: "Investment Strategies",
+    author: "Pegasus Dreamscapes Team",
+    imageUrl: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800",
+    published: true,
+    publishedAt: new Date("2024-11-01"),
+  },
+  {
+    slug: "wholesale-real-estate-guide",
+    title: "Wholesale Real Estate: A Beginner's Complete Guide",
+    excerpt: "Learn how wholesaling works, the key steps involved, and whether this low-capital entry strategy is right for you.",
+    content: `# Wholesale Real Estate: A Beginner's Complete Guide
+
+Wholesaling is one of the most accessible ways to enter real estate investing. It requires little to no capital but does require hustle, knowledge, and negotiation skills.
+
+## What is Wholesaling?
+
+Wholesaling involves:
+1. Finding deeply discounted properties
+2. Getting them under contract
+3. Assigning the contract to an end buyer
+4. Earning an assignment fee
+
+You're essentially a deal finder who connects motivated sellers with cash buyers.
+
+## The Wholesaling Process
+
+### Step 1: Find Motivated Sellers
+- Driving for dollars
+- Direct mail campaigns
+- Online marketing
+- Networking with agents
+- Probate and foreclosure lists
+
+### Step 2: Analyze the Deal
+Use the 70% rule:
+- **MAO = (ARV × 70%) - Repairs - Your Fee**
+
+### Step 3: Get It Under Contract
+- Use an assignable purchase agreement
+- Include appropriate contingencies
+- Secure earnest money
+
+### Step 4: Find Your Buyer
+- Build a buyers list
+- Market the deal quickly
+- Verify proof of funds
+
+### Step 5: Assign and Close
+- Execute an assignment agreement
+- Collect your fee at closing
+
+## Profit Potential
+
+Average wholesale fees range from $5,000 to $25,000 per deal. Experienced wholesalers do 2-5 deals per month.
+
+## Common Mistakes to Avoid
+
+1. Not knowing your buyers' criteria
+2. Overestimating ARV
+3. Underestimating repairs
+4. Not building a buyers list first
+5. Poor follow-up with leads
+
+## Ready to Start?
+
+Check out our [wholesale deals](/wholesale) or [submit a property](/sell) you've found.`,
+    category: "Investment Strategies",
+    author: "Pegasus Dreamscapes Team",
+    imageUrl: "https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800",
+    published: true,
+    publishedAt: new Date("2024-09-20"),
+  },
+  {
+    slug: "financing-options-real-estate-investors",
+    title: "Financing Options for Real Estate Investors: Complete Overview",
+    excerpt: "Explore the different financing strategies available to real estate investors, from traditional loans to creative financing.",
+    content: `# Financing Options for Real Estate Investors
+
+Understanding your financing options is crucial to success in real estate investing. Each option has its own advantages, requirements, and ideal use cases.
+
+## Traditional Financing
+
+### Conventional Loans
+- Down Payment: 20-25%
+- Interest Rates: Competitive
+- Best For: Primary residences, long-term holds
+- Challenges: Strict qualification, limited properties
+
+### FHA Loans (House Hacking)
+- Down Payment: 3.5%
+- Must be owner-occupied
+- Great for getting started
+- Live in one unit, rent others
+
+## Investment-Specific Financing
+
+### Hard Money Loans
+- Fast closing (7-14 days)
+- Asset-based (less focus on credit)
+- Higher interest (12-18%)
+- Short term (6-12 months)
+- Best for fix-and-flip
+
+### Private Money
+- From individual investors
+- Negotiable terms
+- Relationship-based
+- More flexible than hard money
+
+### DSCR Loans
+- Based on property cash flow
+- No personal income verification
+- Ideal for investors with multiple properties
+- Competitive rates for rentals
+
+## Creative Financing
+
+### Seller Financing
+- Seller acts as the bank
+- Flexible terms possible
+- Often lower down payments
+- Good for unique situations
+
+### Subject-To
+- Take over existing mortgage
+- No new financing needed
+- Seller stays on loan
+- Requires careful legal work
+
+### Partnerships
+- Split capital and work
+- Access to more deals
+- Shared risk and reward
+- Important to document properly
+
+## Choosing the Right Option
+
+**For Flips:** Hard money or private money
+**For Rentals:** DSCR loans or conventional
+**For Getting Started:** FHA house hacking
+**For Scaling:** Private money or partnerships
+
+[Contact us](/contact) to discuss financing options for your next deal.`,
+    category: "Financing",
+    author: "Pegasus Dreamscapes Team",
+    imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800",
+    published: true,
+    publishedAt: new Date("2024-11-10"),
+  },
+  {
+    slug: "finding-contractors-renovation-projects",
+    title: "How to Find and Manage Contractors for Your Renovation",
+    excerpt: "A practical guide to finding reliable contractors, getting accurate bids, and managing renovation projects effectively.",
+    content: `# How to Find and Manage Contractors for Your Renovation
+
+Finding reliable contractors is one of the biggest challenges for real estate investors. A great contractor can make your project profitable; a bad one can destroy your margins.
+
+## Finding Quality Contractors
+
+### Sources for Contractors
+- Other investors (best referrals)
+- Real estate agents
+- Home Depot/Lowe's pro desk
+- Online reviews (be cautious)
+- Local REI meetups
+
+### Red Flags to Watch For
+- No references
+- No license or insurance
+- Requires large upfront payment
+- Cannot provide written contract
+- Prices significantly below market
+
+## The Bidding Process
+
+### Getting Multiple Bids
+- Get 3-5 bids for major work
+- Use detailed scope of work
+- Compare apples to apples
+- Don't always go cheapest
+
+### Scope of Work
+Include:
+- Specific materials and brands
+- Timeline expectations
+- Payment schedule
+- Who handles permits
+- Cleanup responsibilities
+
+## Managing the Project
+
+### Payment Structure
+- 10% to start (materials)
+- Progress payments tied to milestones
+- 10% holdback until completion
+- Never pay in full upfront
+
+### Communication
+- Weekly check-ins minimum
+- Document everything in writing
+- Take photos regularly
+- Address issues immediately
+
+### Common Issues and Solutions
+
+**Problem:** Work is behind schedule
+**Solution:** Build buffer into timeline, milestone-based payments
+
+**Problem:** Costs are exceeding estimates
+**Solution:** Detailed scope upfront, contingency budget (10-15%)
+
+**Problem:** Quality issues
+**Solution:** Clear specifications, periodic inspections, holdback payment
+
+## Building Your Team
+
+Over time, build relationships with:
+- General contractor
+- Electrician
+- Plumber
+- HVAC technician
+- Roofer
+- Handyman
+
+A reliable team is your competitive advantage. [Learn more about our renovation services](/services).`,
+    category: "Construction",
+    author: "Pegasus Dreamscapes Team",
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
+    published: true,
+    publishedAt: new Date("2024-10-05"),
   }
 ];
 
@@ -401,4 +687,64 @@ export async function seedArticles() {
   }
   
   console.log("Article seeding complete.");
+}
+
+const initialCommunityCategories = [
+  {
+    name: "Deal Analysis",
+    slug: "deals",
+    description: "Discuss deal analysis, property evaluations, and investment opportunities",
+    icon: "TrendingUp",
+    color: "emerald",
+    order: 1
+  },
+  {
+    name: "Construction & Rehab",
+    slug: "construction",
+    description: "Share renovation tips, contractor recommendations, and project management advice",
+    icon: "Hammer",
+    color: "amber",
+    order: 2
+  },
+  {
+    name: "Financing & Lending",
+    slug: "finance",
+    description: "Discuss financing options, lending strategies, and capital raising",
+    icon: "DollarSign",
+    color: "blue",
+    order: 3
+  },
+  {
+    name: "Education & Learning",
+    slug: "education",
+    description: "Share resources, ask questions, and help others learn about real estate investing",
+    icon: "BookOpen",
+    color: "purple",
+    order: 4
+  },
+  {
+    name: "General Discussion",
+    slug: "general",
+    description: "Network, introduce yourself, and discuss topics that don't fit elsewhere",
+    icon: "MessageSquare",
+    color: "gray",
+    order: 5
+  }
+];
+
+export async function seedCommunityCategories() {
+  console.log("Checking for existing community categories...");
+  
+  for (const category of initialCommunityCategories) {
+    const existing = await db.select().from(communityCategories).where(eq(communityCategories.slug, category.slug));
+    
+    if (existing.length === 0) {
+      console.log(`Seeding community category: ${category.name}`);
+      await db.insert(communityCategories).values(category);
+    } else {
+      console.log(`Community category already exists: ${category.name}`);
+    }
+  }
+  
+  console.log("Community category seeding complete.");
 }

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PortalHeader } from "@/components/portal-header";
 import { 
   Building2, 
   ArrowRight, 
@@ -98,9 +99,8 @@ export default function WholesalerPortal() {
   return (
     <div className="min-h-screen pt-20 bg-stone">
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <Badge className="bg-purple-600 mb-2">Wholesaler Portal</Badge>
             <h1 className="text-3xl font-bold" data-testid="text-wholesaler-welcome">
               Welcome, {user?.firstName || "Wholesaler"}
             </h1>
@@ -108,35 +108,39 @@ export default function WholesalerPortal() {
               {hasProfile ? "Browse assignments and submit deals" : "Complete your profile to get started"}
             </p>
           </div>
-          <Link href="/portal">
-            <Button variant="outline" size="sm">
-              Switch Portal
-            </Button>
-          </Link>
+          <PortalHeader currentPortal="wholesaler" />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-8">
+          <TabsList className="mb-8 flex-wrap">
             <TabsTrigger value="dashboard" data-testid="tab-wholesaler-dashboard">
               <BarChart3 className="w-4 h-4 mr-2" />
               Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="my-deals" data-testid="tab-wholesaler-mydeals">
+              <FileText className="w-4 h-4 mr-2" />
+              My Deals
             </TabsTrigger>
             <TabsTrigger value="assignments" data-testid="tab-wholesaler-assignments">
               <Building2 className="w-4 h-4 mr-2" />
               Available Assignments
             </TabsTrigger>
             <TabsTrigger value="submit" data-testid="tab-wholesaler-submit">
-              <FileText className="w-4 h-4 mr-2" />
-              Submit a Deal
+              <Hammer className="w-4 h-4 mr-2" />
+              Submit Deal
             </TabsTrigger>
             <TabsTrigger value="profile" data-testid="tab-wholesaler-profile">
               <User className="w-4 h-4 mr-2" />
-              My Profile
+              Profile
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <DashboardTab profile={profile} deals={deals} />
+          </TabsContent>
+
+          <TabsContent value="my-deals">
+            <MyDealsTab />
           </TabsContent>
 
           <TabsContent value="assignments">
@@ -268,6 +272,176 @@ function DashboardTab({ profile, deals }: { profile?: WholesalerProfile; deals?:
             </ol>
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+function MyDealsTab() {
+  const { data: myDeals, isLoading } = useQuery<WholesaleDeal[]>({
+    queryKey: ["/api/portal/wholesaler/my-deals"],
+  });
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "under_review": return "bg-amber-600";
+      case "accepted": return "bg-green-600";
+      case "rejected": return "bg-red-600";
+      case "available": return "bg-blue-600";
+      case "assigned": return "bg-purple-600";
+      default: return "bg-gray-600";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "under_review": return "Under Review";
+      case "accepted": return "Accepted";
+      case "rejected": return "Rejected";
+      case "available": return "Listed for Sale";
+      case "assigned": return "Assigned";
+      default: return status;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        <p className="text-muted-foreground mt-4">Loading your deals...</p>
+      </div>
+    );
+  }
+
+  if (!myDeals || myDeals.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-6">
+          <FileText className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-semibold mb-2">No Deals Submitted Yet</h3>
+        <p className="text-muted-foreground mb-6">
+          Submit your first deal to start tracking its status.
+        </p>
+        <Button onClick={() => (document.querySelector('[data-testid="tab-wholesaler-submit"]') as HTMLButtonElement)?.click()}>
+          <Hammer className="mr-2 w-4 h-4" />
+          Submit Your First Deal
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Submitted</p>
+                <p className="text-2xl font-bold">{myDeals.length}</p>
+              </div>
+              <FileText className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Under Review</p>
+                <p className="text-2xl font-bold">{myDeals.filter(d => d.status === "under_review").length}</p>
+              </div>
+              <Clock className="w-8 h-8 text-amber-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Accepted</p>
+                <p className="text-2xl font-bold">{myDeals.filter(d => d.status === "accepted" || d.status === "available").length}</p>
+              </div>
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="sleek-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Assigned/Sold</p>
+                <p className="text-2xl font-bold">{myDeals.filter(d => d.status === "assigned").length}</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {myDeals.map((deal) => (
+          <Card key={deal.id} className="sleek-card" data-testid={`card-mydeal-${deal.id}`}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Badge className={getStatusColor(deal.status)}>{getStatusLabel(deal.status)}</Badge>
+                <Badge variant="outline">{deal.strategy}</Badge>
+              </div>
+              <CardTitle className="text-lg mt-2">{deal.propertyAddress}</CardTitle>
+              <CardDescription className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                {deal.city}, {deal.state} {deal.zipCode}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="p-3 rounded bg-secondary/50">
+                  <p className="text-muted-foreground">Contract Price</p>
+                  <p className="font-bold">{formatCurrency(deal.contractPrice)}</p>
+                </div>
+                <div className="p-3 rounded bg-secondary/50">
+                  <p className="text-muted-foreground">Your Assignment Fee</p>
+                  <p className="font-bold text-primary">{formatCurrency(deal.assignmentFee)}</p>
+                </div>
+              </div>
+              {deal.status === "under_review" && (
+                <p className="text-sm text-muted-foreground text-center bg-amber-50 dark:bg-amber-950/30 p-3 rounded">
+                  Your deal is being reviewed by our acquisitions team. Expect a response within 24-48 hours.
+                </p>
+              )}
+              {deal.status === "accepted" && (
+                <p className="text-sm text-green-700 dark:text-green-400 text-center bg-green-50 dark:bg-green-950/30 p-3 rounded">
+                  Your deal was accepted! It will be listed for buyers shortly.
+                </p>
+              )}
+              {deal.status === "available" && (
+                <p className="text-sm text-blue-700 dark:text-blue-400 text-center bg-blue-50 dark:bg-blue-950/30 p-3 rounded">
+                  Your deal is now listed and visible to buyers.
+                </p>
+              )}
+              {deal.status === "assigned" && (
+                <p className="text-sm text-purple-700 dark:text-purple-400 text-center bg-purple-50 dark:bg-purple-950/30 p-3 rounded">
+                  Congratulations! This deal has been assigned. Payment pending at closing.
+                </p>
+              )}
+              {deal.status === "rejected" && (
+                <p className="text-sm text-red-700 dark:text-red-400 text-center bg-red-50 dark:bg-red-950/30 p-3 rounded">
+                  This deal was not accepted. Contact our team for more details.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

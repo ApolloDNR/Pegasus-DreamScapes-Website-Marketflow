@@ -45,7 +45,7 @@ export type UserRole = typeof userRoles.$inferSelect;
 
 // Role constants for type safety
 export const STAFF_ROLES = ["admin", "project_manager", "acquisitions", "dispositions"] as const;
-export const PORTAL_ROLES = ["investor", "wholesaler"] as const;
+export const PORTAL_ROLES = ["investor", "wholesaler", "buyer"] as const;
 export const ALL_ROLES = [...STAFF_ROLES, ...PORTAL_ROLES] as const;
 export type StaffRole = typeof STAFF_ROLES[number];
 export type PortalRole = typeof PORTAL_ROLES[number];
@@ -111,6 +111,66 @@ export const wholesalerProfiles = pgTable("wholesaler_profiles", {
 export const insertWholesalerProfileSchema = createInsertSchema(wholesalerProfiles).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertWholesalerProfile = z.infer<typeof insertWholesalerProfileSchema>;
 export type WholesalerProfile = typeof wholesalerProfiles.$inferSelect;
+
+// Buyer Profiles - for cash buyers and retail home buyers
+export const buyerProfiles = pgTable("buyer_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  company: varchar("company", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  cityState: varchar("city_state", { length: 255 }),
+  buyerType: varchar("buyer_type", { length: 50 }), // cash_buyer, homeowner, investor_buyer
+  budgetRange: varchar("budget_range", { length: 50 }),
+  propertyPreference: varchar("property_preference", { length: 50 }), // wholesale, renovated, both
+  marketAreas: text("market_areas").array(),
+  fundingSource: varchar("funding_source", { length: 100 }),
+  preApproved: boolean("pre_approved").default(false),
+  notes: text("notes"),
+  isApproved: boolean("is_approved").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuyerProfileSchema = createInsertSchema(buyerProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertBuyerProfile = z.infer<typeof insertBuyerProfileSchema>;
+export type BuyerProfile = typeof buyerProfiles.$inferSelect;
+
+// Saved Properties - for buyers to save listings they're interested in
+export const savedProperties = pgTable("saved_properties", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  propertyType: varchar("property_type", { length: 50 }).notNull(), // wholesale, retail
+  propertyId: integer("property_id").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSavedPropertySchema = createInsertSchema(savedProperties).omit({ id: true, createdAt: true });
+export type InsertSavedProperty = z.infer<typeof insertSavedPropertySchema>;
+export type SavedProperty = typeof savedProperties.$inferSelect;
+
+// Buyer Offers - offers submitted by buyers on properties
+export const buyerOffers = pgTable("buyer_offers", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  propertyType: varchar("property_type", { length: 50 }).notNull(), // wholesale, retail
+  propertyId: integer("property_id").notNull(),
+  offerAmount: integer("offer_amount").notNull(),
+  fundingType: varchar("funding_type", { length: 50 }).notNull(), // cash, hard_money, conventional
+  closingTimeline: varchar("closing_timeline", { length: 50 }),
+  proofOfFunds: text("proof_of_funds"), // URL to uploaded POF
+  message: text("message"),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, reviewing, accepted, rejected, countered
+  counterOffer: integer("counter_offer"),
+  staffNotes: text("staff_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuyerOfferSchema = createInsertSchema(buyerOffers).omit({ id: true, createdAt: true, updatedAt: true, status: true, counterOffer: true, staffNotes: true });
+export type InsertBuyerOffer = z.infer<typeof insertBuyerOfferSchema>;
+export type BuyerOffer = typeof buyerOffers.$inferSelect;
 
 // Retail Listings - renovated flip properties for sale
 export const retailListings = pgTable("retail_listings", {
@@ -362,3 +422,87 @@ export const wholesaleRequests = pgTable("wholesale_requests", {
 export const insertWholesaleRequestSchema = createInsertSchema(wholesaleRequests).omit({ id: true, createdAt: true, status: true });
 export type InsertWholesaleRequest = z.infer<typeof insertWholesaleRequestSchema>;
 export type WholesaleRequest = typeof wholesaleRequests.$inferSelect;
+
+// Community Discussion Topics/Categories
+export const communityCategories = pgTable("community_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }),
+  color: varchar("color", { length: 20 }),
+  order: integer("order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type CommunityCategory = typeof communityCategories.$inferSelect;
+
+// Community Posts/Threads
+export const communityPosts = pgTable("community_posts", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  isPinned: boolean("is_pinned").default(false),
+  isLocked: boolean("is_locked").default(false),
+  viewCount: integer("view_count").default(0),
+  replyCount: integer("reply_count").default(0),
+  lastReplyAt: timestamp("last_reply_at"),
+  lastReplyBy: varchar("last_reply_by", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true, 
+  viewCount: true,
+  replyCount: true,
+  lastReplyAt: true,
+  lastReplyBy: true
+});
+export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+export type CommunityPost = typeof communityPosts.$inferSelect;
+
+// Community Replies
+export const communityReplies = pgTable("community_replies", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  isAcceptedAnswer: boolean("is_accepted_answer").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCommunityReplySchema = createInsertSchema(communityReplies).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  isAcceptedAnswer: true
+});
+export type InsertCommunityReply = z.infer<typeof insertCommunityReplySchema>;
+export type CommunityReply = typeof communityReplies.$inferSelect;
+
+// Direct Messages
+export const directMessages = pgTable("direct_messages", {
+  id: serial("id").primaryKey(),
+  senderId: varchar("sender_id", { length: 255 }).notNull(),
+  receiverId: varchar("receiver_id", { length: 255 }).notNull(),
+  subject: varchar("subject", { length: 255 }),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
+  parentId: integer("parent_id"), // For threading/replies
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDirectMessageSchema = createInsertSchema(directMessages).omit({ 
+  id: true, 
+  createdAt: true,
+  isRead: true
+});
+export type InsertDirectMessage = z.infer<typeof insertDirectMessageSchema>;
+export type DirectMessage = typeof directMessages.$inferSelect;

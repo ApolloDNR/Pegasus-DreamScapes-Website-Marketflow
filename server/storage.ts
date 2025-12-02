@@ -1,9 +1,10 @@
 import { db } from "./db";
-import { eq, and, desc, lte, isNotNull, asc, or, inArray } from "drizzle-orm";
+import { eq, and, desc, lte, isNotNull, asc, or, inArray, sql } from "drizzle-orm";
 import { 
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
   wholesaleDeals, wholesaleRequests, userRoles, staffProfiles, investorProfiles, 
-  wholesalerProfiles, retailListings, buyerInquiries, STAFF_ROLES,
+  wholesalerProfiles, buyerProfiles, savedProperties, buyerOffers, retailListings, buyerInquiries,
+  communityCategories, communityPosts, communityReplies, directMessages, STAFF_ROLES,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -17,8 +18,15 @@ import {
   type StaffProfile, type InsertStaffProfile,
   type InvestorProfile, type InsertInvestorProfile,
   type WholesalerProfile, type InsertWholesalerProfile,
+  type BuyerProfile, type InsertBuyerProfile,
+  type SavedProperty, type InsertSavedProperty,
+  type BuyerOffer, type InsertBuyerOffer,
   type RetailListing, type InsertRetailListing,
-  type BuyerInquiry, type InsertBuyerInquiry
+  type BuyerInquiry, type InsertBuyerInquiry,
+  type CommunityCategory,
+  type CommunityPost, type InsertCommunityPost,
+  type CommunityReply, type InsertCommunityReply,
+  type DirectMessage, type InsertDirectMessage
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -82,6 +90,7 @@ export interface IStorage {
   createWholesaleDeal(deal: InsertWholesaleDeal): Promise<WholesaleDeal>;
   getWholesaleDeals(): Promise<WholesaleDeal[]>;
   getAvailableWholesaleDeals(): Promise<WholesaleDeal[]>;
+  getWholesaleDealsBySubmitter(submitterId: string): Promise<WholesaleDeal[]>;
   getWholesaleDeal(id: number): Promise<WholesaleDeal | undefined>;
   updateWholesaleDealStatus(id: number, status: string, notes?: string): Promise<WholesaleDeal | undefined>;
   updateWholesaleDeal(id: number, data: Partial<InsertWholesaleDeal>): Promise<WholesaleDeal | undefined>;
@@ -130,6 +139,49 @@ export interface IStorage {
   getBuyerInquiries(): Promise<BuyerInquiry[]>;
   getBuyerInquiriesByListing(listingType: string, listingId: number): Promise<BuyerInquiry[]>;
   updateBuyerInquiryStatus(id: number, status: string): Promise<BuyerInquiry | undefined>;
+
+  // Buyer Profiles
+  getBuyerProfile(userId: string): Promise<BuyerProfile | undefined>;
+  upsertBuyerProfile(profile: InsertBuyerProfile): Promise<BuyerProfile>;
+  getAllBuyerProfiles(): Promise<BuyerProfile[]>;
+  updateBuyerApproval(userId: string, isApproved: boolean): Promise<BuyerProfile | undefined>;
+
+  // Saved Properties
+  saveProperty(savedProperty: InsertSavedProperty): Promise<SavedProperty>;
+  getSavedProperties(userId: string): Promise<SavedProperty[]>;
+  removeSavedProperty(userId: string, propertyType: string, propertyId: number): Promise<void>;
+  isPropertySaved(userId: string, propertyType: string, propertyId: number): Promise<boolean>;
+
+  // Buyer Offers
+  createBuyerOffer(offer: InsertBuyerOffer): Promise<BuyerOffer>;
+  getBuyerOffers(userId: string): Promise<BuyerOffer[]>;
+  getAllBuyerOffers(): Promise<BuyerOffer[]>;
+  getBuyerOffersByProperty(propertyType: string, propertyId: number): Promise<BuyerOffer[]>;
+  updateBuyerOfferStatus(id: number, status: string, staffNotes?: string, counterOffer?: number): Promise<BuyerOffer | undefined>;
+
+  // Community Categories
+  getCommunityCategories(): Promise<CommunityCategory[]>;
+  getCommunityCategory(slug: string): Promise<CommunityCategory | undefined>;
+  createCommunityCategory(category: { name: string; slug: string; description?: string; icon?: string; color?: string; order?: number }): Promise<CommunityCategory>;
+
+  // Community Posts
+  getCommunityPosts(categoryId?: number): Promise<CommunityPost[]>;
+  getCommunityPost(id: number): Promise<CommunityPost | undefined>;
+  createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost>;
+  updateCommunityPost(id: number, data: Partial<InsertCommunityPost>): Promise<CommunityPost | undefined>;
+  incrementPostViews(id: number): Promise<void>;
+
+  // Community Replies
+  getCommunityReplies(postId: number): Promise<CommunityReply[]>;
+  createCommunityReply(reply: InsertCommunityReply): Promise<CommunityReply>;
+  updateCommunityReply(id: number, content: string): Promise<CommunityReply | undefined>;
+
+  // Direct Messages
+  getDirectMessages(userId: string): Promise<DirectMessage[]>;
+  getConversation(userId1: string, userId2: string): Promise<DirectMessage[]>;
+  createDirectMessage(message: InsertDirectMessage): Promise<DirectMessage>;
+  markMessageRead(id: number): Promise<DirectMessage | undefined>;
+  getUnreadMessageCount(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -428,6 +480,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(wholesaleDeals.createdAt));
   }
 
+  async getWholesaleDealsBySubmitter(submitterId: string): Promise<WholesaleDeal[]> {
+    return db.select().from(wholesaleDeals)
+      .where(eq(wholesaleDeals.submittedBy, submitterId))
+      .orderBy(desc(wholesaleDeals.createdAt));
+  }
+
   async getWholesaleDeal(id: number): Promise<WholesaleDeal | undefined> {
     const [deal] = await db.select().from(wholesaleDeals).where(eq(wholesaleDeals.id, id));
     return deal;
@@ -590,6 +648,18 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getAllBuyerProfiles(): Promise<BuyerProfile[]> {
+    return db.select().from(buyerProfiles).orderBy(buyerProfiles.createdAt);
+  }
+
+  async updateBuyerApproval(userId: string, isApproved: boolean): Promise<BuyerProfile | undefined> {
+    const [updated] = await db.update(buyerProfiles)
+      .set({ isApproved, updatedAt: new Date() })
+      .where(eq(buyerProfiles.userId, userId))
+      .returning();
+    return updated;
+  }
+
   // Retail Listings
   async createRetailListing(listing: InsertRetailListing): Promise<RetailListing> {
     const [created] = await db.insert(retailListings).values(listing).returning();
@@ -663,6 +733,232 @@ export class DatabaseStorage implements IStorage {
       .where(eq(buyerInquiries.id, id))
       .returning();
     return updated;
+  }
+
+  // Buyer Profiles
+  async getBuyerProfile(userId: string): Promise<BuyerProfile | undefined> {
+    const [profile] = await db.select().from(buyerProfiles).where(eq(buyerProfiles.userId, userId));
+    return profile;
+  }
+
+  async upsertBuyerProfile(profile: InsertBuyerProfile): Promise<BuyerProfile> {
+    const [upserted] = await db
+      .insert(buyerProfiles)
+      .values(profile)
+      .onConflictDoUpdate({
+        target: buyerProfiles.userId,
+        set: { ...profile, updatedAt: new Date() },
+      })
+      .returning();
+    return upserted;
+  }
+
+  async getAllBuyerProfiles(): Promise<BuyerProfile[]> {
+    return db.select().from(buyerProfiles).orderBy(buyerProfiles.createdAt);
+  }
+
+  async updateBuyerApproval(userId: string, isApproved: boolean): Promise<BuyerProfile | undefined> {
+    const [updated] = await db.update(buyerProfiles)
+      .set({ isApproved, updatedAt: new Date() })
+      .where(eq(buyerProfiles.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Saved Properties
+  async saveProperty(savedProperty: InsertSavedProperty): Promise<SavedProperty> {
+    const [created] = await db.insert(savedProperties).values(savedProperty).returning();
+    return created;
+  }
+
+  async getSavedProperties(userId: string): Promise<SavedProperty[]> {
+    return db.select().from(savedProperties)
+      .where(eq(savedProperties.userId, userId))
+      .orderBy(desc(savedProperties.createdAt));
+  }
+
+  async removeSavedProperty(userId: string, propertyType: string, propertyId: number): Promise<void> {
+    await db.delete(savedProperties).where(
+      and(
+        eq(savedProperties.userId, userId),
+        eq(savedProperties.propertyType, propertyType),
+        eq(savedProperties.propertyId, propertyId)
+      )
+    );
+  }
+
+  async isPropertySaved(userId: string, propertyType: string, propertyId: number): Promise<boolean> {
+    const [found] = await db.select().from(savedProperties)
+      .where(and(
+        eq(savedProperties.userId, userId),
+        eq(savedProperties.propertyType, propertyType),
+        eq(savedProperties.propertyId, propertyId)
+      ));
+    return !!found;
+  }
+
+  // Buyer Offers
+  async createBuyerOffer(offer: InsertBuyerOffer): Promise<BuyerOffer> {
+    const [created] = await db.insert(buyerOffers).values(offer).returning();
+    return created;
+  }
+
+  async getBuyerOffers(userId: string): Promise<BuyerOffer[]> {
+    return db.select().from(buyerOffers)
+      .where(eq(buyerOffers.userId, userId))
+      .orderBy(desc(buyerOffers.createdAt));
+  }
+
+  async getAllBuyerOffers(): Promise<BuyerOffer[]> {
+    return db.select().from(buyerOffers).orderBy(desc(buyerOffers.createdAt));
+  }
+
+  async getBuyerOffersByProperty(propertyType: string, propertyId: number): Promise<BuyerOffer[]> {
+    return db.select().from(buyerOffers)
+      .where(and(
+        eq(buyerOffers.propertyType, propertyType),
+        eq(buyerOffers.propertyId, propertyId)
+      ))
+      .orderBy(desc(buyerOffers.createdAt));
+  }
+
+  async updateBuyerOfferStatus(id: number, status: string, staffNotes?: string, counterOffer?: number): Promise<BuyerOffer | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (staffNotes !== undefined) updateData.staffNotes = staffNotes;
+    if (counterOffer !== undefined) updateData.counterOffer = counterOffer;
+    
+    const [updated] = await db.update(buyerOffers)
+      .set(updateData)
+      .where(eq(buyerOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Community Categories
+  async getCommunityCategories(): Promise<CommunityCategory[]> {
+    return db.select().from(communityCategories)
+      .where(eq(communityCategories.isActive, true))
+      .orderBy(asc(communityCategories.order));
+  }
+
+  async getCommunityCategory(slug: string): Promise<CommunityCategory | undefined> {
+    const [category] = await db.select().from(communityCategories)
+      .where(eq(communityCategories.slug, slug));
+    return category;
+  }
+
+  async createCommunityCategory(category: { name: string; slug: string; description?: string; icon?: string; color?: string; order?: number }): Promise<CommunityCategory> {
+    const [created] = await db.insert(communityCategories).values(category).returning();
+    return created;
+  }
+
+  // Community Posts
+  async getCommunityPosts(categoryId?: number): Promise<CommunityPost[]> {
+    if (categoryId) {
+      return db.select().from(communityPosts)
+        .where(eq(communityPosts.categoryId, categoryId))
+        .orderBy(desc(communityPosts.isPinned), desc(communityPosts.createdAt));
+    }
+    return db.select().from(communityPosts)
+      .orderBy(desc(communityPosts.isPinned), desc(communityPosts.createdAt));
+  }
+
+  async getCommunityPost(id: number): Promise<CommunityPost | undefined> {
+    const [post] = await db.select().from(communityPosts)
+      .where(eq(communityPosts.id, id));
+    return post;
+  }
+
+  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
+    const [created] = await db.insert(communityPosts).values(post).returning();
+    return created;
+  }
+
+  async updateCommunityPost(id: number, data: Partial<InsertCommunityPost>): Promise<CommunityPost | undefined> {
+    const [updated] = await db.update(communityPosts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(communityPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async incrementPostViews(id: number): Promise<void> {
+    await db.update(communityPosts)
+      .set({ viewCount: sql`${communityPosts.viewCount} + 1` })
+      .where(eq(communityPosts.id, id));
+  }
+
+  // Community Replies
+  async getCommunityReplies(postId: number): Promise<CommunityReply[]> {
+    return db.select().from(communityReplies)
+      .where(eq(communityReplies.postId, postId))
+      .orderBy(asc(communityReplies.createdAt));
+  }
+
+  async createCommunityReply(reply: InsertCommunityReply): Promise<CommunityReply> {
+    const [created] = await db.insert(communityReplies).values(reply).returning();
+    
+    // Update post reply count and last reply info
+    await db.update(communityPosts)
+      .set({ 
+        replyCount: sql`${communityPosts.replyCount} + 1`,
+        lastReplyAt: new Date(),
+        lastReplyBy: reply.userId,
+        updatedAt: new Date()
+      })
+      .where(eq(communityPosts.id, reply.postId));
+    
+    return created;
+  }
+
+  async updateCommunityReply(id: number, content: string): Promise<CommunityReply | undefined> {
+    const [updated] = await db.update(communityReplies)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(communityReplies.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Direct Messages
+  async getDirectMessages(userId: string): Promise<DirectMessage[]> {
+    return db.select().from(directMessages)
+      .where(or(
+        eq(directMessages.senderId, userId),
+        eq(directMessages.receiverId, userId)
+      ))
+      .orderBy(desc(directMessages.createdAt));
+  }
+
+  async getConversation(userId1: string, userId2: string): Promise<DirectMessage[]> {
+    return db.select().from(directMessages)
+      .where(or(
+        and(eq(directMessages.senderId, userId1), eq(directMessages.receiverId, userId2)),
+        and(eq(directMessages.senderId, userId2), eq(directMessages.receiverId, userId1))
+      ))
+      .orderBy(asc(directMessages.createdAt));
+  }
+
+  async createDirectMessage(message: InsertDirectMessage): Promise<DirectMessage> {
+    const [created] = await db.insert(directMessages).values(message).returning();
+    return created;
+  }
+
+  async markMessageRead(id: number): Promise<DirectMessage | undefined> {
+    const [updated] = await db.update(directMessages)
+      .set({ isRead: true })
+      .where(eq(directMessages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(directMessages)
+      .where(and(
+        eq(directMessages.receiverId, userId),
+        eq(directMessages.isRead, false)
+      ));
+    return Number(result[0]?.count || 0);
   }
 }
 
