@@ -1177,6 +1177,92 @@ export async function registerRoutes(
   });
 
   // =====================================================
+  // Deal Bookmark Routes
+  // =====================================================
+
+  // Save/like/pass on a deal
+  app.post("/api/deals/action", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { dealType, dealId, action } = req.body;
+      
+      if (!dealType || !dealId || !action) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const result = await storage.saveDeal(userId, dealType, dealId, action);
+      return res.json(result);
+    } catch (error) {
+      console.error("Error saving deal action:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user's saved deals
+  app.get("/api/deals/saved", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const savedDeals = await storage.getUserSavedDeals(userId);
+      
+      // Enrich with deal details
+      const enrichedDeals = await Promise.all(savedDeals.map(async (bookmark) => {
+        if (bookmark.dealType === "capital_project") {
+          const project = await storage.getCapitalProject(bookmark.dealId);
+          return { ...bookmark, deal: project };
+        } else if (bookmark.dealType === "wholesale_deal") {
+          const deal = await storage.getWholesaleDeal(bookmark.dealId);
+          return { ...bookmark, deal };
+        }
+        return bookmark;
+      }));
+      
+      return res.json(enrichedDeals);
+    } catch (error) {
+      console.error("Error fetching saved deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user's liked deals (matches)
+  app.get("/api/deals/liked", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const likedDeals = await storage.getUserLikedDeals(userId);
+      
+      // Enrich with deal details
+      const enrichedDeals = await Promise.all(likedDeals.map(async (bookmark) => {
+        if (bookmark.dealType === "capital_project") {
+          const project = await storage.getCapitalProject(bookmark.dealId);
+          return { ...bookmark, deal: project };
+        } else if (bookmark.dealType === "wholesale_deal") {
+          const deal = await storage.getWholesaleDeal(bookmark.dealId);
+          return { ...bookmark, deal };
+        }
+        return bookmark;
+      }));
+      
+      return res.json(enrichedDeals);
+    } catch (error) {
+      console.error("Error fetching liked deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Remove a saved deal
+  app.delete("/api/deals/:dealType/:dealId/saved", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { dealType, dealId } = req.params;
+      
+      await storage.removeDealBookmark(userId, dealType, Number(dealId));
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing saved deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
   // Direct Messaging Routes
   // =====================================================
   

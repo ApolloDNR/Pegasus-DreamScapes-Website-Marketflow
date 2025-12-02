@@ -4,7 +4,7 @@ import {
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
   wholesaleDeals, wholesaleRequests, userRoles, staffProfiles, investorProfiles, 
   wholesalerProfiles, buyerProfiles, savedProperties, buyerOffers, retailListings, buyerInquiries,
-  communityCategories, communityPosts, communityReplies, postLikes, postBookmarks,
+  communityCategories, communityPosts, communityReplies, postLikes, postBookmarks, dealBookmarks,
   directMessages, STAFF_ROLES,
   capitalProjects, projectMilestones, investmentOffers, committedInvestments, dealMatches,
   announcements, notifications,
@@ -31,6 +31,7 @@ import {
   type CommunityReply, type InsertCommunityReply,
   type PostLike, type InsertPostLike,
   type PostBookmark, type InsertPostBookmark,
+  type DealBookmark, type InsertDealBookmark,
   type DirectMessage, type InsertDirectMessage,
   type CapitalProject, type InsertCapitalProject,
   type ProjectMilestone, type InsertProjectMilestone,
@@ -1046,6 +1047,51 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(communityPosts)
       .orderBy(desc(communityPosts.isPinned), desc(communityPosts.createdAt))
       .limit(limit);
+  }
+
+  // Deal Bookmarks
+  async saveDeal(userId: string, dealType: string, dealId: number, action: string = "save"): Promise<DealBookmark> {
+    // Remove existing action if any
+    await db.delete(dealBookmarks).where(
+      and(eq(dealBookmarks.userId, userId), eq(dealBookmarks.dealType, dealType), eq(dealBookmarks.dealId, dealId))
+    );
+    
+    // Add new action (skip if pass)
+    if (action !== "pass") {
+      const [bookmark] = await db.insert(dealBookmarks).values({
+        userId,
+        dealType,
+        dealId,
+        action,
+      }).returning();
+      return bookmark;
+    }
+    
+    return { id: 0, userId, dealType, dealId, action, createdAt: new Date() };
+  }
+
+  async removeDealBookmark(userId: string, dealType: string, dealId: number): Promise<void> {
+    await db.delete(dealBookmarks).where(
+      and(eq(dealBookmarks.userId, userId), eq(dealBookmarks.dealType, dealType), eq(dealBookmarks.dealId, dealId))
+    );
+  }
+
+  async getUserSavedDeals(userId: string): Promise<DealBookmark[]> {
+    return db.select().from(dealBookmarks)
+      .where(and(eq(dealBookmarks.userId, userId), ne(dealBookmarks.action, "pass")))
+      .orderBy(desc(dealBookmarks.createdAt));
+  }
+
+  async getUserLikedDeals(userId: string): Promise<DealBookmark[]> {
+    return db.select().from(dealBookmarks)
+      .where(and(eq(dealBookmarks.userId, userId), eq(dealBookmarks.action, "like")))
+      .orderBy(desc(dealBookmarks.createdAt));
+  }
+
+  async isDealSaved(userId: string, dealType: string, dealId: number): Promise<DealBookmark | undefined> {
+    const [result] = await db.select().from(dealBookmarks)
+      .where(and(eq(dealBookmarks.userId, userId), eq(dealBookmarks.dealType, dealType), eq(dealBookmarks.dealId, dealId)));
+    return result;
   }
 
   // Direct Messages

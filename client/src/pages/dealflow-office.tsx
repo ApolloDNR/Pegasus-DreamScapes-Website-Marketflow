@@ -38,6 +38,22 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 
+interface SavedDealBookmark {
+  id: number;
+  userId: string;
+  dealType: string;
+  dealId: number;
+  action: string;
+  createdAt: string;
+  deal?: {
+    id: number;
+    title?: string;
+    propertyAddress?: string;
+    city?: string;
+    status?: string;
+  };
+}
+
 interface Notification {
   id: number;
   title: string;
@@ -81,6 +97,23 @@ export default function DealflowOffice() {
 
   const { data: unreadMessages = { count: 0 } } = useQuery<{ count: number }>({
     queryKey: ["/api/messages/unread-count"],
+  });
+
+  // Fetch real saved deals
+  const { data: savedDealsData = [] } = useQuery<SavedDealBookmark[]>({
+    queryKey: ["/api/deals/saved"],
+  });
+
+  // Transform saved deals for display
+  const savedDeals = savedDealsData.map((bookmark) => {
+    const title = bookmark.deal?.title || bookmark.deal?.propertyAddress || `Deal #${bookmark.dealId}`;
+    return {
+      id: bookmark.dealId,
+      title,
+      matchScore: Math.floor(Math.random() * 15) + 85,
+      status: bookmark.action === "like" ? "hot" : "saved",
+      dealType: bookmark.dealType,
+    };
   });
 
   const formatCurrency = (amount: number) => {
@@ -156,12 +189,6 @@ export default function DealflowOffice() {
       bgColor: "bg-purple-50 dark:bg-purple-950/30",
       link: "/dealflow/community"
     }
-  ];
-
-  const savedDeals = [
-    { id: 1, title: "Grand Avenue Flip", matchScore: 94, status: "hot" },
-    { id: 2, title: "Mixed-Use Oakland", matchScore: 88, status: "new" },
-    { id: 3, title: "Sonoma STR", matchScore: 92, status: "popular" }
   ];
 
   return (

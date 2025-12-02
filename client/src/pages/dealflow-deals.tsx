@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { DealflowLayout } from "@/components/dealflow-layout";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,8 @@ import {
   Square,
   Clock,
   ThumbsUp,
-  ArrowUpRight
+  ArrowUpRight,
+  CheckCircle2
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -115,6 +117,18 @@ export default function DealflowDeals() {
     queryKey: ["/api/wholesale-deals-active"],
   });
 
+  // Mutation for saving deal actions
+  const saveDealActionMutation = useMutation({
+    mutationFn: async ({ dealType, dealId, action }: { dealType: string; dealId: number; action: string }) => {
+      const res = await apiRequest("POST", "/api/deals/action", { dealType, dealId, action });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/saved"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/liked"] });
+    },
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -147,14 +161,40 @@ export default function DealflowDeals() {
   };
 
   const handleSwipeAction = (action: "like" | "pass" | "save", type: "project" | "deal") => {
+    const items = type === "project" ? openProjects : activeDeals;
+    const currentIndex = type === "project" ? currentProjectIndex : currentDealIndex;
+    const currentItem = items[currentIndex];
+    
+    // Don't allow swiping if at end of deck or no item
+    if (!currentItem || currentIndex >= items.length) {
+      return;
+    }
+    
+    if (user) {
+      saveDealActionMutation.mutate({
+        dealType: type === "project" ? "capital_project" : "wholesale_deal",
+        dealId: currentItem.id,
+        action,
+      }, {
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to save action. Please try again.",
+            variant: "destructive",
+          });
+        }
+      });
+    }
+    
     setSwipeDirection(action === "like" ? "right" : "left");
     
     setTimeout(() => {
       setSwipeDirection(null);
+      // Advance to next card (allow going past the end to show "end of deck")
       if (type === "project") {
-        setCurrentProjectIndex(prev => Math.min(prev + 1, openProjects.length - 1));
+        setCurrentProjectIndex(prev => prev + 1);
       } else {
-        setCurrentDealIndex(prev => Math.min(prev + 1, activeDeals.length - 1));
+        setCurrentDealIndex(prev => prev + 1);
       }
     }, 300);
 
@@ -335,6 +375,36 @@ function DeckView<T extends { id: number }>({
   const currentItem = items[currentIndex];
   const hasNext = currentIndex < items.length - 1;
   const hasPrev = currentIndex > 0;
+  const isEndOfDeck = currentIndex >= items.length;
+
+  // Show end of deck message when user has swiped through all items
+  if (isEndOfDeck) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardContent className="py-16 text-center">
+          <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">All Caught Up!</h3>
+          <p className="text-muted-foreground mb-6">You've reviewed all available deals.</p>
+          <div className="flex justify-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentIndex(0)}
+              data-testid="button-start-over"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Start Over
+            </Button>
+            <Link href="/dealflow/office">
+              <Button data-testid="button-view-saved">
+                <Heart className="w-4 h-4 mr-2" />
+                View Saved Deals
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

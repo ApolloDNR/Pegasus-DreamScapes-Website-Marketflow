@@ -531,6 +531,20 @@ export const insertPostBookmarkSchema = createInsertSchema(postBookmarks).omit({
 export type InsertPostBookmark = z.infer<typeof insertPostBookmarkSchema>;
 export type PostBookmark = typeof postBookmarks.$inferSelect;
 
+// Deal Bookmarks - Track saved capital projects and wholesale deals
+export const dealBookmarks = pgTable("deal_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // 'capital_project' or 'wholesale_deal'
+  dealId: integer("deal_id").notNull(),
+  action: varchar("action", { length: 20 }).default("save"), // 'like', 'pass', 'save'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDealBookmarkSchema = createInsertSchema(dealBookmarks).omit({ id: true, createdAt: true });
+export type InsertDealBookmark = z.infer<typeof insertDealBookmarkSchema>;
+export type DealBookmark = typeof dealBookmarks.$inferSelect;
+
 // Community Replies
 export const communityReplies = pgTable("community_replies", {
   id: serial("id").primaryKey(),
