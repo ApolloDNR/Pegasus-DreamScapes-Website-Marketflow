@@ -12,7 +12,19 @@ The platform features a **light editorial theme** with bronze/blood-orange accen
 
 ## Recent Updates
 
-- **Luxury Design Refinement (Latest)**: Enhanced sleek, professional aesthetic with:
+- **Wholesale Deals Marketplace (Latest)**: Full-featured assignment deal marketplace:
+  - Public `/wholesale` page showing available off-market deals
+  - Investor request form with credentials (experience, funding source)
+  - HQ dashboard tab for acquisitions team to manage deals
+  - Status workflow: Under Review → Accepted/Rejected → Available → Assigned
+  - Deal cards with property details, financials, and assignment fees
+- **Enhanced Navigation Branding**: Added prominent "Pegasus Dreamscapes Corp" header text next to logo with adaptive colors (white on hero, dark on scroll)
+- **Reorganized Navigation Menu**: Explore dropdown mega menu with three sections:
+  - Opportunities: Wholesale Deals, Sell Your Property, Invest With Us
+  - Tools & Resources: Deal Calculators, Investment Guides, Case Studies
+  - Company: About Us, Portfolio, Contact
+- **Improved Dropdown UX**: 150ms timeout pattern and invisible bridge element prevent accidental menu closes
+- **Luxury Design Refinement**: Enhanced sleek, professional aesthetic with:
   - Porcelain white backgrounds (HSL 0 0% 99%) for clean, premium feel
   - Warm stone sections (HSL 35 10% 96%) for visual rhythm
   - Champagne accent color (HSL 38 45% 65%) for sophisticated highlights
@@ -67,10 +79,11 @@ Preferred communication style: Simple, everyday language.
 - `/calculators` - ARV and ROI calculators for deal analysis
 - `/resources` - Blog/articles section with real estate investment content
 - `/resources/:slug` - Individual article detail pages
+- `/wholesale` - Off-market wholesale deals marketplace for investors
 - `/sell` - Seller lead capture form
 - `/invest` - Investor lead capture form
 - `/contact` - General contact form
-- `/hq` - Protected dashboard for lead management (requires authentication)
+- `/hq` - Protected dashboard for lead management and wholesale deals (requires authentication)
 
 **State Management**: TanStack Query (React Query) handles server state management, API calls, and caching. No global state management library is used - component state and React Query suffice for the application's needs.
 
@@ -107,6 +120,8 @@ Public Routes:
 - `GET /api/projects/:slug` - Get single project by slug
 - `GET /api/articles` - Get all published articles
 - `GET /api/articles/:slug` - Get single article by slug
+- `GET /api/wholesale-deals` - Get available wholesale deals (public)
+- `POST /api/wholesale-requests` - Submit interest in a wholesale deal
 
 Authentication Routes:
 - `GET /api/login` - Initiate Replit Auth login flow
@@ -121,6 +136,10 @@ Protected HQ Routes (require authentication):
 - `PATCH /api/hq/seller-leads/:id/status` - Update seller lead status
 - `PATCH /api/hq/investor-leads/:id/status` - Update investor lead status
 - `PATCH /api/hq/contacts/:id/status` - Update contact status
+- `GET /api/hq/wholesale-deals` - Get all wholesale deals (all statuses)
+- `POST /api/hq/wholesale-deals` - Create new wholesale deal
+- `PATCH /api/hq/wholesale-deals/:id/status` - Update deal status
+- `GET /api/hq/wholesale-requests` - Get all investor requests
 
 **Request Handling**: Express middleware stack includes JSON body parsing with raw body preservation for webhook compatibility, URL-encoded form data parsing, and custom logging middleware.
 
@@ -145,6 +164,8 @@ Protected HQ Routes (require authentication):
 - `projects` - Portfolio projects with investment metrics
 - `articles` - Blog/resource articles
 - `lead_activities` - Activity tracking for leads (CRM feature)
+- `wholesale_deals` - Off-market deals under contract with status workflow
+- `wholesale_requests` - Investor requests for wholesale deals
 
 **Schema Migrations**: Use `npm run db:push` to sync schema changes to the database.
 
