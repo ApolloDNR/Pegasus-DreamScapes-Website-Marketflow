@@ -138,6 +138,9 @@ export const retailListings = pgTable("retail_listings", {
   // Media
   images: text("images").array(),
   virtualTourUrl: text("virtual_tour_url"),
+  // Listing source: off_market, mls
+  listingSource: varchar("listing_source", { length: 50 }).notNull().default("off_market"),
+  mlsNumber: varchar("mls_number", { length: 50 }),
   // Status: coming_soon, active, pending, sold
   status: varchar("status", { length: 50 }).notNull().default("coming_soon"),
   featured: boolean("featured").default(false),

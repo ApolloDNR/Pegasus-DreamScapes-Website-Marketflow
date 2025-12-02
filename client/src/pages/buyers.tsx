@@ -55,6 +55,7 @@ export default function Buyers() {
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />
+      <FeaturedListingsSection />
       <PropertyTabs />
       <WhyBuyWithUs />
       <CTASection />
@@ -82,7 +83,7 @@ function HeroSection() {
           Pegasus Dreamscapes has the inventory to match your investment goals.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="#properties">
+          <a href="#listings">
             <Button size="lg" data-testid="button-browse-properties">
               Browse Properties
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -93,6 +94,257 @@ function HeroSection() {
               Become an Investor
             </Button>
           </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedListingsSection() {
+  const { data: listings, isLoading } = useQuery<RetailListing[]>({
+    queryKey: ["/api/retail-listings"],
+  });
+  
+  const { data: wholesaleDeals } = useQuery<WholesaleDeal[]>({
+    queryKey: ["/api/wholesale-deals"],
+  });
+
+  const offMarketListings = listings?.filter(l => l.listingSource === "off_market" && l.status === "active") || [];
+  const mlsListings = listings?.filter(l => l.listingSource === "mls" && l.status === "active") || [];
+  const availableDeals = wholesaleDeals?.filter(d => d.status === "available") || [];
+
+  const hasOffMarket = offMarketListings.length > 0 || availableDeals.length > 0;
+  const hasMLS = mlsListings.length > 0;
+
+  if (isLoading) {
+    return (
+      <section id="listings" className="py-16 lg:py-24 bg-stone scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!hasOffMarket && !hasMLS) {
+    return (
+      <section id="listings" className="py-16 lg:py-24 bg-stone scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="text-xs uppercase tracking-[0.2em] text-tan font-medium mb-4">Our Listings</p>
+            <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Current Properties</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Exclusive off-market deals and MLS listings - all available through Pegasus Dreamscapes.
+            </p>
+          </div>
+          <div className="text-center py-12">
+            <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-6">
+              <Home className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">No Properties Currently Available</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              New properties are coming soon. Join our buyer list to get notified first.
+            </p>
+            <Link href="/contact">
+              <Button data-testid="button-join-waitlist">
+                Join Buyer List
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  return (
+    <section id="listings" className="py-16 lg:py-24 bg-stone scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <p className="text-xs uppercase tracking-[0.2em] text-tan font-medium mb-4">Our Listings</p>
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4" data-testid="text-featured-listings-title">Current Properties</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Exclusive off-market deals and MLS listings - all available through Pegasus Dreamscapes.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Off-Market Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold" data-testid="text-off-market-title">Off-Market</h3>
+                <p className="text-sm text-muted-foreground">Exclusive properties not on MLS</p>
+              </div>
+              <Badge variant="secondary" className="ml-auto" data-testid="badge-off-market-count">
+                {offMarketListings.length + availableDeals.length} Available
+              </Badge>
+            </div>
+            
+            {(offMarketListings.length === 0 && availableDeals.length === 0) ? (
+              <Card className="sleek-card p-8 text-center">
+                <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <p className="text-muted-foreground">No off-market properties currently available.</p>
+                <p className="text-sm text-muted-foreground mt-2">Check back soon for new exclusive deals.</p>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {offMarketListings.slice(0, 3).map((listing) => (
+                  <Card key={listing.id} className="sleek-card overflow-hidden" data-testid={`card-off-market-${listing.id}`}>
+                    <div className="flex">
+                      <div className="w-32 h-32 flex-shrink-0 bg-gradient-to-br from-primary/20 to-primary/5 relative">
+                        {listing.images && listing.images.length > 0 ? (
+                          <img 
+                            src={listing.images[0]} 
+                            alt={listing.propertyAddress}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <Home className="w-8 h-8 text-primary/50" />
+                          </div>
+                        )}
+                        <Badge variant="default" className="absolute top-2 left-2 text-[10px] bg-primary">
+                          Off-Market
+                        </Badge>
+                      </div>
+                      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <p className="font-semibold text-lg">{formatCurrency(listing.listPrice)}</p>
+                          <p className="text-sm text-muted-foreground truncate">{listing.propertyAddress}</p>
+                          <p className="text-xs text-muted-foreground">{listing.city}, {listing.state}</p>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                          {listing.bedrooms && <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{listing.bedrooms}</span>}
+                          {listing.bathrooms && <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{listing.bathrooms}</span>}
+                          {listing.sqft && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{listing.sqft.toLocaleString()}</span>}
+                        </div>
+                      </CardContent>
+                    </div>
+                  </Card>
+                ))}
+                {availableDeals.slice(0, Math.max(0, 3 - offMarketListings.length)).map((deal) => (
+                  <Card key={deal.id} className="sleek-card overflow-hidden" data-testid={`card-off-market-deal-${deal.id}`}>
+                    <div className="flex">
+                      <div className="w-32 h-32 flex-shrink-0 bg-gradient-to-br from-green-600/20 to-green-600/5 relative">
+                        {deal.images && deal.images.length > 0 ? (
+                          <img 
+                            src={deal.images[0]} 
+                            alt={deal.propertyAddress}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <Hammer className="w-8 h-8 text-green-600/50" />
+                          </div>
+                        )}
+                        <Badge variant="default" className="absolute top-2 left-2 text-[10px] bg-green-600">
+                          Wholesale
+                        </Badge>
+                      </div>
+                      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <p className="font-semibold text-lg">{formatCurrency(deal.contractPrice)}</p>
+                          <p className="text-sm text-muted-foreground truncate">{deal.propertyAddress}</p>
+                          <p className="text-xs text-muted-foreground">{deal.city}, {deal.state}</p>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                          {deal.bedrooms && <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{deal.bedrooms}</span>}
+                          {deal.bathrooms && <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{deal.bathrooms}</span>}
+                          <span className="text-green-600 font-medium">Fee: {formatCurrency(deal.assignmentFee)}</span>
+                        </div>
+                      </CardContent>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* MLS Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-blue-600/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold" data-testid="text-mls-title">On MLS</h3>
+                <p className="text-sm text-muted-foreground">Listed on the open market</p>
+              </div>
+              <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700" data-testid="badge-mls-count">
+                {mlsListings.length} Available
+              </Badge>
+            </div>
+            
+            {mlsListings.length === 0 ? (
+              <Card className="sleek-card p-8 text-center">
+                <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <p className="text-muted-foreground">No MLS listings currently available.</p>
+                <p className="text-sm text-muted-foreground mt-2">Check back soon for new listings.</p>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {mlsListings.slice(0, 3).map((listing) => (
+                  <Card key={listing.id} className="sleek-card overflow-hidden" data-testid={`card-mls-${listing.id}`}>
+                    <div className="flex">
+                      <div className="w-32 h-32 flex-shrink-0 bg-gradient-to-br from-blue-600/20 to-blue-600/5 relative">
+                        {listing.images && listing.images.length > 0 ? (
+                          <img 
+                            src={listing.images[0]} 
+                            alt={listing.propertyAddress}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <Home className="w-8 h-8 text-blue-600/50" />
+                          </div>
+                        )}
+                        <Badge variant="default" className="absolute top-2 left-2 text-[10px] bg-blue-600">
+                          MLS
+                        </Badge>
+                      </div>
+                      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <p className="font-semibold text-lg">{formatCurrency(listing.listPrice)}</p>
+                          <p className="text-sm text-muted-foreground truncate">{listing.propertyAddress}</p>
+                          <p className="text-xs text-muted-foreground">{listing.city}, {listing.state}</p>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                          {listing.bedrooms && <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{listing.bedrooms}</span>}
+                          {listing.bathrooms && <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{listing.bathrooms}</span>}
+                          {listing.sqft && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{listing.sqft.toLocaleString()}</span>}
+                          {listing.mlsNumber && <span className="text-blue-600">MLS# {listing.mlsNumber}</span>}
+                        </div>
+                      </CardContent>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="text-center mt-12">
+          <a href="#properties">
+            <Button variant="outline" size="lg" data-testid="button-view-all-properties">
+              View All Properties
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </a>
         </div>
       </div>
     </section>
