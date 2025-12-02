@@ -868,6 +868,15 @@ export default function DealflowProject() {
   );
 }
 
+function getChemistryRating(value: number, max: number = 5): { label: string; color: string; textColor: string; description: string } {
+  const normalized = (value / max) * 5;
+  if (normalized >= 4.5) return { label: "Exceptional", color: "bg-green-500", textColor: "text-green-600", description: "Outstanding alignment with your investment profile" };
+  if (normalized >= 3.5) return { label: "Strong", color: "bg-emerald-500", textColor: "text-emerald-600", description: "Very good match for your preferences" };
+  if (normalized >= 2.5) return { label: "Good", color: "bg-amber-500", textColor: "text-amber-600", description: "Solid alignment with some considerations" };
+  if (normalized >= 1.5) return { label: "Fair", color: "bg-orange-500", textColor: "text-orange-600", description: "Partial match, review carefully" };
+  return { label: "Low", color: "bg-red-500", textColor: "text-red-600", description: "Limited alignment with preferences" };
+}
+
 function ChemistryBar({ 
   label, 
   value, 
@@ -884,28 +893,33 @@ function ChemistryBar({
   description: string;
 }) {
   const percentage = (value / max) * 100;
+  const rating = getChemistryRating(value, max);
   
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="space-y-1.5 cursor-help">
+        <div className="space-y-2 cursor-help p-3 bg-secondary/20 rounded-lg hover:bg-secondary/30 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium flex items-center gap-2">
               {icon}
               {label}
             </span>
-            <span className="text-sm font-bold">{value}/{max}</span>
+            <Badge variant="outline" className={`${rating.textColor} font-semibold`}>
+              {rating.label}
+            </Badge>
           </div>
-          <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
+          <div className="h-3 bg-secondary rounded-full overflow-hidden">
             <div 
-              className={`h-full rounded-full transition-all ${color}`}
+              className={`h-full rounded-full transition-all ${rating.color}`}
               style={{ width: `${percentage}%` }}
             />
           </div>
+          <p className="text-xs text-muted-foreground">{rating.description}</p>
         </div>
       </TooltipTrigger>
-      <TooltipContent>
-        <p className="max-w-xs text-sm">{description}</p>
+      <TooltipContent side="right" className="max-w-xs">
+        <p className="font-medium mb-1">{label}: {rating.label}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </TooltipContent>
     </Tooltip>
   );

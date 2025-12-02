@@ -120,7 +120,8 @@ export default function DealflowOffice() {
       time: "2 hours ago",
       icon: Heart,
       color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-950/30"
+      bgColor: "bg-green-50 dark:bg-green-950/30",
+      link: "/dealflow/deals"
     },
     {
       id: 2,
@@ -130,7 +131,8 @@ export default function DealflowOffice() {
       time: "4 hours ago",
       icon: MessageSquare,
       color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-950/30"
+      bgColor: "bg-blue-50 dark:bg-blue-950/30",
+      link: "/dealflow/messages"
     },
     {
       id: 3,
@@ -140,7 +142,8 @@ export default function DealflowOffice() {
       time: "1 day ago",
       icon: CheckCircle2,
       color: "text-amber-500",
-      bgColor: "bg-amber-50 dark:bg-amber-950/30"
+      bgColor: "bg-amber-50 dark:bg-amber-950/30",
+      link: "/dealflow/deals"
     },
     {
       id: 4,
@@ -150,7 +153,8 @@ export default function DealflowOffice() {
       time: "2 days ago",
       icon: Users,
       color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-950/30"
+      bgColor: "bg-purple-50 dark:bg-purple-950/30",
+      link: "/dealflow/community"
     }
   ];
 
@@ -417,9 +421,10 @@ export default function DealflowOffice() {
                       {recentActivity.map((activity) => {
                         const Icon = activity.icon;
                         return (
-                          <div 
+                          <Link 
                             key={activity.id} 
-                            className="flex gap-3 group cursor-pointer"
+                            href={activity.link}
+                            className="flex gap-3 group cursor-pointer p-2 rounded-lg hover:bg-secondary/30 transition-colors"
                             data-testid={`activity-${activity.id}`}
                           >
                             <div className={`w-10 h-10 rounded-full ${activity.bgColor} flex items-center justify-center shrink-0`}>
@@ -434,10 +439,8 @@ export default function DealflowOffice() {
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
                             </div>
-                            <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                              <ArrowRight className="w-4 h-4" />
-                            </Button>
-                          </div>
+                            <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 self-center" />
+                          </Link>
                         );
                       })}
                     </div>
@@ -463,16 +466,17 @@ export default function DealflowOffice() {
                   <div className="text-center py-6 text-muted-foreground text-sm">
                     <Bookmark className="w-10 h-10 mx-auto mb-3 opacity-50" />
                     <p>No saved deals yet</p>
-                    <Link href="/dealflow/deals">
-                      <Button variant="link" size="sm" className="text-primary">Browse marketplace</Button>
-                    </Link>
+                    <Button variant="ghost" size="sm" className="text-primary underline" asChild>
+                      <Link href="/dealflow/deals">Browse marketplace</Link>
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {savedDeals.map((deal) => (
-                      <div 
-                        key={deal.id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 hover-elevate cursor-pointer"
+                      <Link 
+                        key={deal.id} 
+                        href="/dealflow/deals"
+                        className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer"
                         data-testid={`saved-deal-${deal.id}`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -504,7 +508,7 @@ export default function DealflowOffice() {
                         >
                           {deal.matchScore}%
                         </Badge>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}

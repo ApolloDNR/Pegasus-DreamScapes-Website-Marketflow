@@ -430,14 +430,16 @@ function DeckView<T extends { id: number }>({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="rounded-full w-14 h-14 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
-              data-testid="button-message-deal"
-            >
-              <MessageCircle className="w-6 h-6 text-blue-500" />
-            </Button>
+            <Link href="/dealflow/messages">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="rounded-full w-14 h-14 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
+                data-testid="button-message-deal"
+              >
+                <MessageCircle className="w-6 h-6 text-blue-500" />
+              </Button>
+            </Link>
           </TooltipTrigger>
           <TooltipContent>Request Info</TooltipContent>
         </Tooltip>
@@ -529,7 +531,43 @@ function MatchScoreRing({ score, size = "md" }: { score: number; size?: "sm" | "
   );
 }
 
+function getChemistryLabel(value: number): { label: string; color: string; bgColor: string } {
+  if (value >= 5) return { label: "Exceptional", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-950" };
+  if (value >= 4) return { label: "Strong", color: "text-emerald-600", bgColor: "bg-emerald-100 dark:bg-emerald-950" };
+  if (value >= 3) return { label: "Good", color: "text-amber-600", bgColor: "bg-amber-100 dark:bg-amber-950" };
+  if (value >= 2) return { label: "Fair", color: "text-orange-600", bgColor: "bg-orange-100 dark:bg-orange-950" };
+  return { label: "Low", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-950" };
+}
+
+function ChemistryRating({ label, value, icon }: { label: string; value: number; icon?: JSX.Element }) {
+  const chemistry = getChemistryLabel(value);
+  const percentage = (value / 5) * 100;
+  
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 w-28">
+        {icon}
+        <span className="text-xs text-muted-foreground">{label}</span>
+      </div>
+      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+        <div 
+          className={`h-full rounded-full transition-all ${
+            value >= 4 ? "bg-gradient-to-r from-green-400 to-green-500" :
+            value >= 3 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
+            "bg-gradient-to-r from-orange-400 to-orange-500"
+          }`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <Badge variant="outline" className={`text-xs shrink-0 ${chemistry.color}`}>
+        {chemistry.label}
+      </Badge>
+    </div>
+  );
+}
+
 function RatingBar({ label, value, max = 5 }: { label: string; value: number; max?: number }) {
+  const chemistry = getChemistryLabel(value);
   const percentage = (value / max) * 100;
   
   return (
@@ -537,11 +575,17 @@ function RatingBar({ label, value, max = 5 }: { label: string; value: number; ma
       <span className="text-xs text-muted-foreground w-24">{label}</span>
       <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
         <div 
-          className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all"
+          className={`h-full rounded-full transition-all ${
+            value >= 4 ? "bg-gradient-to-r from-green-400 to-green-500" :
+            value >= 3 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
+            "bg-gradient-to-r from-orange-400 to-orange-500"
+          }`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-xs font-medium w-6 text-right">{value}/{max}</span>
+      <Badge variant="outline" className={`text-xs shrink-0 ${chemistry.color}`}>
+        {chemistry.label}
+      </Badge>
     </div>
   );
 }
