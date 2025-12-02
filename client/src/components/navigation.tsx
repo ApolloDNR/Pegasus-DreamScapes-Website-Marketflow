@@ -17,9 +17,12 @@ import {
   Award,
   BarChart3,
   Briefcase,
-  Sparkles
+  Sparkles,
+  LogIn,
+  User
 } from "lucide-react";
 import logoImage from "@assets/image_1764616120774.png";
+import { useAuth } from "@/hooks/useAuth";
 
 const homeLinks = [
   { href: "#services", label: "Services" },
@@ -34,7 +37,8 @@ const megaMenuSections = {
     title: "Opportunities",
     icon: DollarSign,
     items: [
-      { href: "/wholesale", label: "Wholesale Deals", description: "Off-market properties available", icon: Home },
+      { href: "/buyers", label: "Properties for Buyers", description: "Renovated homes & wholesale deals", icon: Home },
+      { href: "/wholesale", label: "Wholesale Deals", description: "Off-market properties available", icon: Briefcase },
       { href: "/sell", label: "Sell Your Property", description: "Get a cash offer", icon: DollarSign },
       { href: "/invest", label: "Invest With Us", description: "Partner on projects", icon: TrendingUp },
     ]
@@ -65,6 +69,7 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { user, isAuthenticated } = useAuth();
 
   const isHomePage = location === "/";
 
@@ -221,13 +226,25 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link 
-              href="/hq" 
-              className={`hidden sm:block text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
-              data-testid="link-nav-dashboard"
-            >
-              Dashboard
-            </Link>
+            {isAuthenticated ? (
+              <Link 
+                href={user?.isStaff ? "/hq" : "/portal"} 
+                className={`hidden sm:flex items-center gap-2 text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
+                data-testid="link-nav-portal"
+              >
+                <User className="w-4 h-4" />
+                {user?.isStaff ? "HQ" : "Portal"}
+              </Link>
+            ) : (
+              <a 
+                href="/api/login"
+                className={`hidden sm:flex items-center gap-2 text-sm font-medium tracking-wide transition-colors ${(scrolled || !isHomePage) ? 'text-muted-foreground hover:text-primary' : 'text-white/70 hover:text-white'}`}
+                data-testid="link-nav-login"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </a>
+            )}
             {isHomePage && (
               <a href="#sell" onClick={(e) => handleScrollClick(e, "#sell")}>
                 <Button size="sm" className={`hidden sm:flex text-xs uppercase tracking-widest font-medium ${scrolled ? '' : 'bg-white text-foreground hover:bg-white/90'}`} data-testid="button-nav-cta">
@@ -300,14 +317,26 @@ export function Navigation() {
             ))}
             
             <div className="pt-4 border-t border-border space-y-2">
-              <Link 
-                href="/hq"
-                className="block py-3 px-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                onClick={() => setIsOpen(false)} 
-                data-testid="link-mobile-dashboard"
-              >
-                Dashboard
-              </Link>
+              {isAuthenticated ? (
+                <Link 
+                  href={user?.isStaff ? "/hq" : "/portal"}
+                  className="flex items-center gap-2 py-3 px-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsOpen(false)} 
+                  data-testid="link-mobile-portal"
+                >
+                  <User className="w-4 h-4" />
+                  {user?.isStaff ? "HQ Dashboard" : "My Portal"}
+                </Link>
+              ) : (
+                <a 
+                  href="/api/login"
+                  className="flex items-center gap-2 py-3 px-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  data-testid="link-mobile-login"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </a>
+              )}
               <Link href="/sell" onClick={() => setIsOpen(false)}>
                 <Button className="w-full" data-testid="button-mobile-cta">
                   <Sparkles className="w-4 h-4 mr-2" />

@@ -2,7 +2,8 @@ import { db } from "./db";
 import { eq, and, desc, lte, isNotNull, asc, or, inArray } from "drizzle-orm";
 import { 
   users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
-  wholesaleDeals, wholesaleRequests,
+  wholesaleDeals, wholesaleRequests, userRoles, staffProfiles, investorProfiles, 
+  wholesalerProfiles, retailListings, buyerInquiries, STAFF_ROLES,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -11,7 +12,13 @@ import {
   type Article, type InsertArticle,
   type LeadActivity, type InsertLeadActivity,
   type WholesaleDeal, type InsertWholesaleDeal,
-  type WholesaleRequest, type InsertWholesaleRequest
+  type WholesaleRequest, type InsertWholesaleRequest,
+  type UserRole, type InsertUserRole,
+  type StaffProfile, type InsertStaffProfile,
+  type InvestorProfile, type InsertInvestorProfile,
+  type WholesalerProfile, type InsertWholesalerProfile,
+  type RetailListing, type InsertRetailListing,
+  type BuyerInquiry, type InsertBuyerInquiry
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -84,6 +91,45 @@ export interface IStorage {
   getWholesaleRequests(): Promise<WholesaleRequest[]>;
   getWholesaleRequestsByDeal(dealId: number): Promise<WholesaleRequest[]>;
   updateWholesaleRequestStatus(id: number, status: string): Promise<WholesaleRequest | undefined>;
+
+  // User Roles
+  getUserRoles(userId: string): Promise<UserRole[]>;
+  addUserRole(role: InsertUserRole): Promise<UserRole>;
+  removeUserRole(userId: string, role: string): Promise<void>;
+  hasRole(userId: string, role: string): Promise<boolean>;
+  hasAnyStaffRole(userId: string): Promise<boolean>;
+
+  // Staff Profiles
+  getStaffProfile(userId: string): Promise<StaffProfile | undefined>;
+  upsertStaffProfile(profile: InsertStaffProfile): Promise<StaffProfile>;
+  getAllStaffProfiles(): Promise<StaffProfile[]>;
+
+  // Investor Profiles
+  getInvestorProfile(userId: string): Promise<InvestorProfile | undefined>;
+  upsertInvestorProfile(profile: InsertInvestorProfile): Promise<InvestorProfile>;
+  getAllInvestorProfiles(): Promise<InvestorProfile[]>;
+  updateInvestorApproval(userId: string, isApproved: boolean): Promise<InvestorProfile | undefined>;
+
+  // Wholesaler Profiles
+  getWholesalerProfile(userId: string): Promise<WholesalerProfile | undefined>;
+  upsertWholesalerProfile(profile: InsertWholesalerProfile): Promise<WholesalerProfile>;
+  getAllWholesalerProfiles(): Promise<WholesalerProfile[]>;
+  updateWholesalerApproval(userId: string, isApproved: boolean): Promise<WholesalerProfile | undefined>;
+
+  // Retail Listings
+  createRetailListing(listing: InsertRetailListing): Promise<RetailListing>;
+  getRetailListings(): Promise<RetailListing[]>;
+  getActiveRetailListings(): Promise<RetailListing[]>;
+  getRetailListingBySlug(slug: string): Promise<RetailListing | undefined>;
+  getRetailListingById(id: number): Promise<RetailListing | undefined>;
+  updateRetailListing(id: number, data: Partial<InsertRetailListing>): Promise<RetailListing | undefined>;
+  updateRetailListingStatus(id: number, status: string): Promise<RetailListing | undefined>;
+
+  // Buyer Inquiries
+  createBuyerInquiry(inquiry: InsertBuyerInquiry): Promise<BuyerInquiry>;
+  getBuyerInquiries(): Promise<BuyerInquiry[]>;
+  getBuyerInquiriesByListing(listingType: string, listingId: number): Promise<BuyerInquiry[]>;
+  updateBuyerInquiryStatus(id: number, status: string): Promise<BuyerInquiry | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -431,6 +477,190 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(wholesaleRequests)
       .set({ status })
       .where(eq(wholesaleRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  // User Roles
+  async getUserRoles(userId: string): Promise<UserRole[]> {
+    return db.select().from(userRoles).where(eq(userRoles.userId, userId));
+  }
+
+  async addUserRole(role: InsertUserRole): Promise<UserRole> {
+    const [created] = await db.insert(userRoles).values(role).returning();
+    return created;
+  }
+
+  async removeUserRole(userId: string, role: string): Promise<void> {
+    await db.delete(userRoles).where(
+      and(eq(userRoles.userId, userId), eq(userRoles.role, role))
+    );
+  }
+
+  async hasRole(userId: string, role: string): Promise<boolean> {
+    const [found] = await db.select().from(userRoles)
+      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
+    return !!found;
+  }
+
+  async hasAnyStaffRole(userId: string): Promise<boolean> {
+    const roles = await this.getUserRoles(userId);
+    return roles.some(r => STAFF_ROLES.includes(r.role as any));
+  }
+
+  // Staff Profiles
+  async getStaffProfile(userId: string): Promise<StaffProfile | undefined> {
+    const [profile] = await db.select().from(staffProfiles).where(eq(staffProfiles.userId, userId));
+    return profile;
+  }
+
+  async upsertStaffProfile(profile: InsertStaffProfile): Promise<StaffProfile> {
+    const [upserted] = await db
+      .insert(staffProfiles)
+      .values(profile)
+      .onConflictDoUpdate({
+        target: staffProfiles.userId,
+        set: { ...profile, updatedAt: new Date() },
+      })
+      .returning();
+    return upserted;
+  }
+
+  async getAllStaffProfiles(): Promise<StaffProfile[]> {
+    return db.select().from(staffProfiles).orderBy(staffProfiles.createdAt);
+  }
+
+  // Investor Profiles
+  async getInvestorProfile(userId: string): Promise<InvestorProfile | undefined> {
+    const [profile] = await db.select().from(investorProfiles).where(eq(investorProfiles.userId, userId));
+    return profile;
+  }
+
+  async upsertInvestorProfile(profile: InsertInvestorProfile): Promise<InvestorProfile> {
+    const [upserted] = await db
+      .insert(investorProfiles)
+      .values(profile)
+      .onConflictDoUpdate({
+        target: investorProfiles.userId,
+        set: { ...profile, updatedAt: new Date() },
+      })
+      .returning();
+    return upserted;
+  }
+
+  async getAllInvestorProfiles(): Promise<InvestorProfile[]> {
+    return db.select().from(investorProfiles).orderBy(investorProfiles.createdAt);
+  }
+
+  async updateInvestorApproval(userId: string, isApproved: boolean): Promise<InvestorProfile | undefined> {
+    const [updated] = await db.update(investorProfiles)
+      .set({ isApproved, updatedAt: new Date() })
+      .where(eq(investorProfiles.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Wholesaler Profiles
+  async getWholesalerProfile(userId: string): Promise<WholesalerProfile | undefined> {
+    const [profile] = await db.select().from(wholesalerProfiles).where(eq(wholesalerProfiles.userId, userId));
+    return profile;
+  }
+
+  async upsertWholesalerProfile(profile: InsertWholesalerProfile): Promise<WholesalerProfile> {
+    const [upserted] = await db
+      .insert(wholesalerProfiles)
+      .values(profile)
+      .onConflictDoUpdate({
+        target: wholesalerProfiles.userId,
+        set: { ...profile, updatedAt: new Date() },
+      })
+      .returning();
+    return upserted;
+  }
+
+  async getAllWholesalerProfiles(): Promise<WholesalerProfile[]> {
+    return db.select().from(wholesalerProfiles).orderBy(wholesalerProfiles.createdAt);
+  }
+
+  async updateWholesalerApproval(userId: string, isApproved: boolean): Promise<WholesalerProfile | undefined> {
+    const [updated] = await db.update(wholesalerProfiles)
+      .set({ isApproved, updatedAt: new Date() })
+      .where(eq(wholesalerProfiles.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Retail Listings
+  async createRetailListing(listing: InsertRetailListing): Promise<RetailListing> {
+    const [created] = await db.insert(retailListings).values(listing).returning();
+    return created;
+  }
+
+  async getRetailListings(): Promise<RetailListing[]> {
+    return db.select().from(retailListings).orderBy(desc(retailListings.createdAt));
+  }
+
+  async getActiveRetailListings(): Promise<RetailListing[]> {
+    return db.select().from(retailListings)
+      .where(or(eq(retailListings.status, "active"), eq(retailListings.status, "coming_soon")))
+      .orderBy(desc(retailListings.featured), desc(retailListings.createdAt));
+  }
+
+  async getRetailListingBySlug(slug: string): Promise<RetailListing | undefined> {
+    const [listing] = await db.select().from(retailListings).where(eq(retailListings.slug, slug));
+    return listing;
+  }
+
+  async getRetailListingById(id: number): Promise<RetailListing | undefined> {
+    const [listing] = await db.select().from(retailListings).where(eq(retailListings.id, id));
+    return listing;
+  }
+
+  async updateRetailListing(id: number, data: Partial<InsertRetailListing>): Promise<RetailListing | undefined> {
+    const [updated] = await db.update(retailListings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(retailListings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateRetailListingStatus(id: number, status: string): Promise<RetailListing | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (status === "active" && !updateData.listedAt) {
+      updateData.listedAt = new Date();
+    } else if (status === "sold") {
+      updateData.soldAt = new Date();
+    }
+    const [updated] = await db.update(retailListings)
+      .set(updateData)
+      .where(eq(retailListings.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Buyer Inquiries
+  async createBuyerInquiry(inquiry: InsertBuyerInquiry): Promise<BuyerInquiry> {
+    const [created] = await db.insert(buyerInquiries).values(inquiry).returning();
+    return created;
+  }
+
+  async getBuyerInquiries(): Promise<BuyerInquiry[]> {
+    return db.select().from(buyerInquiries).orderBy(desc(buyerInquiries.createdAt));
+  }
+
+  async getBuyerInquiriesByListing(listingType: string, listingId: number): Promise<BuyerInquiry[]> {
+    return db.select().from(buyerInquiries)
+      .where(and(
+        eq(buyerInquiries.listingType, listingType),
+        eq(buyerInquiries.listingId, listingId)
+      ))
+      .orderBy(desc(buyerInquiries.createdAt));
+  }
+
+  async updateBuyerInquiryStatus(id: number, status: string): Promise<BuyerInquiry | undefined> {
+    const [updated] = await db.update(buyerInquiries)
+      .set({ status })
+      .where(eq(buyerInquiries.id, id))
       .returning();
     return updated;
   }

@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -7,10 +7,57 @@ import {
   insertContactSchema,
   insertProjectSchema,
   insertWholesaleDealSchema,
-  insertWholesaleRequestSchema
+  insertWholesaleRequestSchema,
+  insertRetailListingSchema,
+  insertBuyerInquirySchema,
+  insertInvestorProfileSchema,
+  insertWholesalerProfileSchema,
+  STAFF_ROLES
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+
+// Middleware to require staff roles for HQ access
+const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const hasStaffAccess = await storage.hasAnyStaffRole(userId);
+    if (!hasStaffAccess) {
+      return res.status(403).json({ message: "Forbidden: Staff access required" });
+    }
+    
+    next();
+  } catch (error) {
+    console.error("Error checking staff role:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Middleware to require specific roles
+const requireRole = (...roles: string[]) => async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const userRoles = await storage.getUserRoles(userId);
+    const hasRequiredRole = userRoles.some(r => roles.includes(r.role));
+    
+    if (!hasRequiredRole) {
+      return res.status(403).json({ message: `Forbidden: Required roles: ${roles.join(", ")}` });
+    }
+    
+    next();
+  } catch (error) {
+    console.error("Error checking role:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export async function registerRoutes(
   httpServer: Server,
@@ -25,10 +72,98 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      const roles = await storage.getUserRoles(userId);
+      const roleNames = roles.map(r => r.role);
+      const isStaff = roleNames.some(r => STAFF_ROLES.includes(r as any));
+      
+      res.json({ 
+        ...user, 
+        roles: roleNames,
+        isStaff,
+        isInvestor: roleNames.includes("investor"),
+        isWholesaler: roleNames.includes("wholesaler")
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Portal registration routes - investors and wholesalers can register
+  app.post('/api/portal/investor/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertInvestorProfileSchema.safeParse({ ...req.body, userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      // Create investor profile
+      const profile = await storage.upsertInvestorProfile(result.data);
+      
+      // Add investor role if not exists
+      const hasRole = await storage.hasRole(userId, "investor");
+      if (!hasRole) {
+        await storage.addUserRole({ userId, role: "investor" });
+      }
+      
+      return res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating investor profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/portal/wholesaler/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = insertWholesalerProfileSchema.safeParse({ ...req.body, userId });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      // Create wholesaler profile
+      const profile = await storage.upsertWholesalerProfile(result.data);
+      
+      // Add wholesaler role if not exists
+      const hasRole = await storage.hasRole(userId, "wholesaler");
+      if (!hasRole) {
+        await storage.addUserRole({ userId, role: "wholesaler" });
+      }
+      
+      return res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating wholesaler profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Portal-specific data routes
+  app.get('/api/portal/investor/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getInvestorProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      return res.json(profile);
+    } catch (error) {
+      console.error("Error fetching investor profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/portal/wholesaler/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getWholesalerProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      return res.json(profile);
+    } catch (error) {
+      console.error("Error fetching wholesaler profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   });
   
@@ -400,6 +535,218 @@ export async function registerRoutes(
       return res.json(updated);
     } catch (error) {
       console.error("Error updating wholesale request status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============ RETAIL LISTINGS ROUTES ============
+
+  // Public Routes - Active retail listings for buyers
+  app.get("/api/retail-listings", async (req, res) => {
+    try {
+      const listings = await storage.getActiveRetailListings();
+      return res.json(listings);
+    } catch (error) {
+      console.error("Error fetching retail listings:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/retail-listings/:slug", async (req, res) => {
+    try {
+      const listing = await storage.getRetailListingBySlug(req.params.slug);
+      if (!listing || (listing.status !== "active" && listing.status !== "coming_soon")) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      return res.json(listing);
+    } catch (error) {
+      console.error("Error fetching retail listing:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Buyer Inquiries (public)
+  app.post("/api/buyer-inquiries", async (req, res) => {
+    try {
+      const result = insertBuyerInquirySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      const inquiry = await storage.createBuyerInquiry(result.data);
+      console.log("New buyer inquiry received:", inquiry.email);
+      return res.status(201).json(inquiry);
+    } catch (error) {
+      console.error("Error creating buyer inquiry:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Protected HQ Routes for Retail Listings (staff only)
+  app.get("/api/hq/retail-listings", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const listings = await storage.getRetailListings();
+      return res.json(listings);
+    } catch (error) {
+      console.error("Error fetching all retail listings:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/hq/retail-listings", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const result = insertRetailListingSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      
+      const listing = await storage.createRetailListing(result.data);
+      console.log("New retail listing created:", listing.propertyAddress);
+      return res.status(201).json(listing);
+    } catch (error) {
+      console.error("Error creating retail listing:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/retail-listings/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateRetailListing(id, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating retail listing:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/retail-listings/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateRetailListingStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating retail listing status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Protected HQ Routes for Buyer Inquiries (staff only)
+  app.get("/api/hq/buyer-inquiries", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const inquiries = await storage.getBuyerInquiries();
+      return res.json(inquiries);
+    } catch (error) {
+      console.error("Error fetching buyer inquiries:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/buyer-inquiries/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateBuyerInquiryStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Inquiry not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating buyer inquiry status:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============ ADMIN ROUTES FOR USER/ROLE MANAGEMENT ============
+
+  // Admin-only routes for managing staff and portal users
+  app.get("/api/hq/users/roles", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const allUsers = await storage.getAllStaffProfiles();
+      const investors = await storage.getAllInvestorProfiles();
+      const wholesalers = await storage.getAllWholesalerProfiles();
+      return res.json({ staff: allUsers, investors, wholesalers });
+    } catch (error) {
+      console.error("Error fetching user profiles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/hq/users/:userId/roles", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+      
+      // Check if role already exists
+      const hasRole = await storage.hasRole(userId, role);
+      if (hasRole) {
+        return res.status(400).json({ message: "User already has this role" });
+      }
+      
+      const userRole = await storage.addUserRole({ userId, role });
+      return res.status(201).json(userRole);
+    } catch (error) {
+      console.error("Error adding user role:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/hq/users/:userId/roles/:role", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId, role } = req.params;
+      await storage.removeUserRole(userId, role);
+      return res.json({ message: "Role removed successfully" });
+    } catch (error) {
+      console.error("Error removing user role:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/investors/:userId/approve", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { isApproved } = req.body;
+      const updated = await storage.updateInvestorApproval(userId, isApproved);
+      if (!updated) {
+        return res.status(404).json({ message: "Investor profile not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating investor approval:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/wholesalers/:userId/approve", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { isApproved } = req.body;
+      const updated = await storage.updateWholesalerApproval(userId, isApproved);
+      if (!updated) {
+        return res.status(404).json({ message: "Wholesaler profile not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating wholesaler approval:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Check staff access route (for frontend to verify before accessing HQ)
+  app.get("/api/auth/check-staff", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const isStaff = await storage.hasAnyStaffRole(userId);
+      return res.json({ isStaff });
+    } catch (error) {
+      console.error("Error checking staff access:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

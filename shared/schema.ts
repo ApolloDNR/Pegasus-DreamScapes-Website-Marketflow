@@ -22,12 +22,161 @@ export const users = pgTable("users", {
   lastName: varchar("last_name", { length: 255 }),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role", { length: 50 }).notNull().default("user"),
+  portalType: varchar("portal_type", { length: 50 }), // staff, investor, wholesaler
+  lastPortal: varchar("last_portal", { length: 50 }), // Remember last portal used
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// User Roles - supports multiple roles per user
+export const userRoles = pgTable("user_roles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull(), // admin, project_manager, acquisitions, dispositions, investor, wholesaler
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({ id: true, createdAt: true });
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
+
+// Role constants for type safety
+export const STAFF_ROLES = ["admin", "project_manager", "acquisitions", "dispositions"] as const;
+export const PORTAL_ROLES = ["investor", "wholesaler"] as const;
+export const ALL_ROLES = [...STAFF_ROLES, ...PORTAL_ROLES] as const;
+export type StaffRole = typeof STAFF_ROLES[number];
+export type PortalRole = typeof PORTAL_ROLES[number];
+export type Role = typeof ALL_ROLES[number];
+
+// Staff Profiles - for internal team members
+export const staffProfiles = pgTable("staff_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  department: varchar("department", { length: 100 }), // acquisitions, dispositions, management
+  title: varchar("title", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  bio: text("bio"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertStaffProfileSchema = createInsertSchema(staffProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertStaffProfile = z.infer<typeof insertStaffProfileSchema>;
+export type StaffProfile = typeof staffProfiles.$inferSelect;
+
+// Investor Profiles - for investment partners
+export const investorProfiles = pgTable("investor_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  company: varchar("company", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  cityState: varchar("city_state", { length: 255 }),
+  capitalRange: varchar("capital_range", { length: 50 }),
+  investmentPreference: varchar("investment_preference", { length: 50 }),
+  experienceLevel: varchar("experience_level", { length: 50 }),
+  accreditedInvestor: boolean("accredited_investor").default(false),
+  notes: text("notes"),
+  isApproved: boolean("is_approved").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertInvestorProfileSchema = createInsertSchema(investorProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertInvestorProfile = z.infer<typeof insertInvestorProfileSchema>;
+export type InvestorProfile = typeof investorProfiles.$inferSelect;
+
+// Wholesaler Profiles - for external wholesalers
+export const wholesalerProfiles = pgTable("wholesaler_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  company: varchar("company", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  cityState: varchar("city_state", { length: 255 }),
+  yearsExperience: integer("years_experience"),
+  dealsPerYear: varchar("deals_per_year", { length: 50 }),
+  marketAreas: text("market_areas").array(),
+  buyersList: boolean("buyers_list").default(false),
+  notes: text("notes"),
+  isApproved: boolean("is_approved").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertWholesalerProfileSchema = createInsertSchema(wholesalerProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertWholesalerProfile = z.infer<typeof insertWholesalerProfileSchema>;
+export type WholesalerProfile = typeof wholesalerProfiles.$inferSelect;
+
+// Retail Listings - renovated flip properties for sale
+export const retailListings = pgTable("retail_listings", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  // Property details
+  propertyAddress: text("property_address").notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(),
+  zipCode: varchar("zip_code", { length: 20 }).notNull(),
+  propertyType: varchar("property_type", { length: 50 }).notNull(),
+  bedrooms: integer("bedrooms"),
+  bathrooms: varchar("bathrooms", { length: 10 }),
+  sqft: integer("sqft"),
+  yearBuilt: integer("year_built"),
+  lotSize: varchar("lot_size", { length: 50 }),
+  // Pricing
+  listPrice: integer("list_price").notNull(),
+  originalPurchase: integer("original_purchase"),
+  renovationCost: integer("renovation_cost"),
+  // Features
+  description: text("description"),
+  features: text("features").array(),
+  highlights: text("highlights").array(),
+  // Media
+  images: text("images").array(),
+  virtualTourUrl: text("virtual_tour_url"),
+  // Status: coming_soon, active, pending, sold
+  status: varchar("status", { length: 50 }).notNull().default("coming_soon"),
+  featured: boolean("featured").default(false),
+  // Dates
+  listedAt: timestamp("listed_at"),
+  soldAt: timestamp("sold_at"),
+  soldPrice: integer("sold_price"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertRetailListingSchema = createInsertSchema(retailListings).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertRetailListing = z.infer<typeof insertRetailListingSchema>;
+export type RetailListing = typeof retailListings.$inferSelect;
+
+// Buyer Inquiries - for both wholesale deals and retail listings
+export const buyerInquiries = pgTable("buyer_inquiries", {
+  id: serial("id").primaryKey(),
+  listingType: varchar("listing_type", { length: 50 }).notNull(), // wholesale, retail
+  listingId: integer("listing_id").notNull(),
+  // Buyer info
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }).notNull(),
+  company: varchar("company", { length: 255 }),
+  // Details
+  buyerType: varchar("buyer_type", { length: 50 }).notNull(), // investor, homeowner, wholesaler
+  preApproved: boolean("pre_approved").default(false),
+  fundingSource: varchar("funding_source", { length: 100 }),
+  message: text("message"),
+  // Status
+  status: varchar("status", { length: 50 }).notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBuyerInquirySchema = createInsertSchema(buyerInquiries).omit({ id: true, createdAt: true, status: true });
+export type InsertBuyerInquiry = z.infer<typeof insertBuyerInquirySchema>;
+export type BuyerInquiry = typeof buyerInquiries.$inferSelect;
 
 // Seller Leads table
 export const sellerLeads = pgTable("seller_leads", {

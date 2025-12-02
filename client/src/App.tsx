@@ -19,6 +19,10 @@ import Dreamspace from "@/pages/dreamspace";
 import Contact from "@/pages/contact";
 import HQ from "@/pages/hq";
 import Wholesale from "@/pages/wholesale";
+import Buyers from "@/pages/buyers";
+import PortalSelect from "@/pages/portal-select";
+import InvestorPortal from "@/pages/investor-portal";
+import WholesalerPortal from "@/pages/wholesaler-portal";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -35,9 +39,13 @@ function Router() {
       <Route path="/resources" component={Resources} />
       <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/wholesale" component={Wholesale} />
+      <Route path="/buyers" component={Buyers} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
       <Route path="/hq" component={HQ} />
+      <Route path="/portal" component={PortalSelect} />
+      <Route path="/portal/investor" component={InvestorPortal} />
+      <Route path="/portal/wholesaler" component={WholesalerPortal} />
       <Route component={NotFound} />
     </Switch>
   );

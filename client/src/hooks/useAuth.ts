@@ -1,8 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import type { User } from "@shared/schema";
+import type { User as DbUser } from "@shared/schema";
+
+export interface AuthUser extends DbUser {
+  roles?: string[];
+  isStaff?: boolean;
+  isInvestor?: boolean;
+  isWholesaler?: boolean;
+}
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery<User>({
+  const { data: user, isLoading } = useQuery<AuthUser>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
