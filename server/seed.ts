@@ -1,5 +1,18 @@
 import { db } from "./db";
-import { projects, articles, communityCategories } from "@shared/schema";
+import { 
+  projects, 
+  articles, 
+  communityCategories, 
+  capitalProjects, 
+  wholesaleDeals, 
+  communityPosts,
+  communityReplies,
+  directMessages,
+  users,
+  investorProfiles,
+  notifications,
+  investorActivity
+} from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const initialProjects = [
@@ -22,22 +35,17 @@ const initialProjects = [
     bathrooms: "2",
     sqft: 1450,
     yearBuilt: 1962,
-    description: "This classic Richmond ranch was transformed from a dated property into a modern family home. The renovation included a complete kitchen overhaul with quartz countertops and new cabinetry, updated bathrooms, new flooring throughout, fresh interior and exterior paint, and professional landscaping. The project was completed on time and under budget, resulting in a strong return for our investors.",
+    description: "This classic Richmond ranch was transformed from a dated property into a modern family home.",
     beforeImages: [
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"
+      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"
     ],
     afterImages: [
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"
     ],
     highlights: [
       "Complete kitchen renovation with quartz countertops",
       "Updated bathrooms with modern fixtures",
-      "New LVP flooring throughout",
-      "Fresh interior and exterior paint",
-      "Professional landscaping and curb appeal improvements",
-      "New HVAC system installed"
+      "New LVP flooring throughout"
     ]
   },
   {
@@ -55,56 +63,17 @@ const initialProjects = [
     bathrooms: "1",
     sqft: 1100,
     yearBuilt: 1955,
-    description: "A strategic buy-and-hold acquisition in a rapidly appreciating Oakland neighborhood. This 2-bedroom property was renovated to maximize rental income while maintaining long-term appreciation potential. Updates focused on durability and tenant appeal, including a modernized kitchen, refreshed bathroom, and new flooring.",
+    description: "A strategic buy-and-hold acquisition in a rapidly appreciating Oakland neighborhood.",
     beforeImages: [
       "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
     ],
     afterImages: [
-      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800",
-      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800"
+      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800"
     ],
     highlights: [
       "Modernized kitchen with stainless appliances",
       "Updated bathroom with new vanity and tile",
-      "Durable LVP flooring for rental longevity",
-      "Fresh neutral paint throughout",
       "Strong rental income in growing neighborhood"
-    ]
-  },
-  {
-    slug: "bay-view-duplex",
-    name: "Bay View Duplex",
-    address: "890 Bay View Avenue",
-    city: "San Francisco",
-    state: "CA",
-    strategy: "fix-flip",
-    status: "completed",
-    purchasePrice: 950000,
-    rehabCost: 175000,
-    arv: 1350000,
-    salePrice: 1325000,
-    profit: 200000,
-    roi: "17.8%",
-    holdTime: "6 months",
-    bedrooms: 4,
-    bathrooms: "3",
-    sqft: 2200,
-    yearBuilt: 1928,
-    description: "This stunning Bay View duplex conversion project transformed a deteriorating multi-family property into a highly desirable single-family home with income potential. The extensive renovation preserved original charm while adding modern amenities, creating tremendous value for our investors.",
-    beforeImages: [
-      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800"
-    ],
-    afterImages: [
-      "https://images.unsplash.com/photo-1600047509782-20d39509f26d?w=800",
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800"
-    ],
-    highlights: [
-      "Full duplex-to-single-family conversion",
-      "Premium kitchen with custom cabinetry",
-      "Original hardwood floors restored",
-      "Three completely renovated bathrooms",
-      "New electrical and plumbing throughout",
-      "ADU potential maintained for future value"
     ]
   }
 ];
@@ -113,581 +82,15 @@ const initialArticles = [
   {
     slug: "70-percent-rule-explained",
     title: "The 70% Rule in Real Estate: A Complete Guide",
-    excerpt: "Learn how the 70% rule helps real estate investors quickly evaluate fix-and-flip opportunities and avoid overpaying for properties.",
-    content: `# The 70% Rule in Real Estate: A Complete Guide
-
-The 70% rule is one of the most fundamental tools in a real estate investor's toolkit. It provides a quick way to determine the maximum price you should pay for a fix-and-flip property.
-
-## What is the 70% Rule?
-
-The 70% rule states that an investor should pay no more than 70% of a property's After Repair Value (ARV), minus the cost of repairs.
-
-**Formula:** Maximum Purchase Price = (ARV × 0.70) − Repair Costs
-
-## Example Calculation
-
-Let's say you find a property with:
-- ARV: $500,000
-- Estimated Repairs: $75,000
-
-Maximum Purchase Price = ($500,000 × 0.70) − $75,000 = $275,000
-
-## Why 70%?
-
-The 30% margin accounts for:
-- **Closing costs** (buying and selling): ~6-10%
-- **Holding costs** (utilities, taxes, insurance): ~2-4%
-- **Financing costs**: ~3-5%
-- **Your profit margin**: ~10-15%
-
-## When to Use the 70% Rule
-
-This rule works best for:
-- Quick property analysis
-- Competitive bidding situations
-- Screening multiple deals
-- Setting initial offer prices
-
-## Limitations
-
-The 70% rule is a starting point, not a final answer. You should also consider:
-- Market conditions (hot markets may require adjustments)
-- Your holding period
-- Financing terms
-- Your experience level
-
-## Conclusion
-
-While the 70% rule isn't perfect, it's an excellent screening tool that has stood the test of time. Use it to quickly filter opportunities, then dive deeper into deals that pass the initial test.
-
-Ready to analyze your next deal? Use our [Deal Calculator](/calculators) to run the numbers.`,
+    excerpt: "Learn how the 70% rule helps real estate investors quickly evaluate fix-and-flip opportunities.",
+    content: `# The 70% Rule in Real Estate\n\nThe 70% rule is a fundamental tool for real estate investors. It provides a quick way to determine the maximum price you should pay for a fix-and-flip property.\n\n## Formula\nMaximum Purchase Price = (ARV x 0.70) - Repair Costs`,
     category: "Investment Strategies",
     author: "Pegasus Dreamscapes Team",
     imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800",
     published: true,
     publishedAt: new Date("2024-11-15"),
-  },
-  {
-    slug: "fix-and-flip-vs-buy-and-hold",
-    title: "Fix & Flip vs. Buy & Hold: Which Strategy is Right for You?",
-    excerpt: "Compare the two most popular real estate investment strategies and discover which one aligns with your financial goals and risk tolerance.",
-    content: `# Fix & Flip vs. Buy & Hold: Which Strategy is Right for You?
-
-When it comes to real estate investing, two strategies dominate the conversation: fix-and-flip and buy-and-hold. Each has its own advantages, challenges, and ideal use cases.
-
-## Fix & Flip Overview
-
-**What it is:** Purchase a distressed property, renovate it, and sell it for a profit within a short timeframe (typically 3-6 months).
-
-**Pros:**
-- Quick returns on investment
-- No landlord responsibilities
-- Capital recycling for new deals
-- Active income generation
-
-**Cons:**
-- Higher risk if market shifts
-- Active management required
-- Capital gains taxes
-- Renovation surprises
-
-## Buy & Hold Overview
-
-**What it is:** Purchase a property (often with light renovations) and rent it out for ongoing passive income and long-term appreciation.
-
-**Pros:**
-- Passive monthly income
-- Long-term appreciation
-- Tax advantages (depreciation)
-- Wealth building over time
-
-**Cons:**
-- Landlord responsibilities
-- Property management costs
-- Tenant issues
-- Capital tied up longer
-
-## Which is Right for You?
-
-**Choose Fix & Flip if you:**
-- Want quick returns
-- Have renovation experience or a reliable team
-- Can handle active project management
-- Have strong local market knowledge
-
-**Choose Buy & Hold if you:**
-- Want passive income
-- Are focused on long-term wealth
-- Prefer less active involvement
-- Want tax advantages
-
-## Our Approach at Pegasus
-
-We use both strategies depending on the opportunity. Some properties are perfect flip candidates, while others make better rentals. Our team analyzes each deal individually to maximize returns.
-
-Interested in partnering on either strategy? [Become an investor](/invest) or [sell us your property](/sell).`,
-    category: "Investment Strategies",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-    published: true,
-    publishedAt: new Date("2024-10-28"),
-  },
-  {
-    slug: "california-real-estate-market-2024",
-    title: "California Real Estate Market Outlook: What Investors Need to Know",
-    excerpt: "An analysis of the California real estate market trends, including Bay Area dynamics, interest rate impacts, and opportunities for investors.",
-    content: `# California Real Estate Market Outlook: What Investors Need to Know
-
-California remains one of the most dynamic real estate markets in the country. Here's what investors need to know about current conditions and opportunities.
-
-## Current Market Conditions
-
-The California market has experienced significant shifts:
-- **Inventory levels** are gradually increasing
-- **Days on market** have extended compared to 2021-2022
-- **Price growth** has moderated but remains positive in many areas
-- **Rental demand** continues to be strong
-
-## Bay Area Dynamics
-
-The Bay Area presents unique opportunities:
-- Tech sector layoffs have created more seller motivation
-- Premium properties still command strong prices
-- Suburban markets are seeing increased demand
-- ADU (Accessory Dwelling Unit) opportunities abound
-
-## Interest Rate Impact
-
-Higher interest rates have:
-- Reduced buyer pool for traditional purchases
-- Created opportunities for cash buyers
-- Made rental properties more attractive (fewer can afford to buy)
-- Increased seller motivation
-
-## Opportunities for Investors
-
-**Fix & Flip:**
-- Properties needing significant work are more negotiable
-- Less competition from retail buyers
-- Renovation costs have stabilized
-
-**Buy & Hold:**
-- Strong rental demand
-- Potential for rent growth
-- Long-term appreciation in key markets
-
-## Our Focus Areas
-
-At Pegasus Dreamscapes, we're focusing on:
-- Richmond and East Bay submarkets
-- Properties with value-add potential
-- Multi-family conversion opportunities
-- ADU development projects
-
-## Conclusion
-
-Despite challenges, California continues to offer opportunities for informed investors. The key is having the right team and strategy.
-
-Want to discuss California investment opportunities? [Contact us](/contact) or [explore our projects](/projects).`,
-    category: "Market Insights",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800",
-    published: true,
-    publishedAt: new Date("2024-11-01"),
-  },
-  {
-    slug: "first-time-investor-mistakes",
-    title: "5 Common Mistakes First-Time Real Estate Investors Make",
-    excerpt: "Avoid costly errors by learning from the experiences of others. These five mistakes can derail your first real estate investment.",
-    content: `# 5 Common Mistakes First-Time Real Estate Investors Make
-
-Real estate investing can be incredibly rewarding, but first-time investors often make avoidable mistakes that eat into their returns or cause deals to fail entirely.
-
-## Mistake #1: Underestimating Repair Costs
-
-**The Problem:** Inexperienced investors often underestimate renovation costs by 20-40%.
-
-**The Solution:**
-- Get multiple contractor bids
-- Add a 15-20% contingency
-- Walk properties with an experienced investor or contractor
-- Use detailed scope of work documents
-
-## Mistake #2: Overestimating ARV
-
-**The Problem:** Using best-case comparable sales instead of realistic ones.
-
-**The Solution:**
-- Use conservative comparable sales
-- Account for market conditions
-- Get input from local agents
-- Consider listing below market for a quick sale
-
-## Mistake #3: Ignoring Holding Costs
-
-**The Problem:** Forgetting that every month you hold a property costs money.
-
-**The Solution:**
-- Calculate all monthly costs (mortgage, utilities, taxes, insurance)
-- Add 2-3 months buffer to your timeline
-- Factor holding costs into your maximum purchase price
-
-## Mistake #4: Not Having a Team
-
-**The Problem:** Trying to do everything yourself.
-
-**The Solution:**
-- Build relationships with contractors
-- Find a reliable real estate agent
-- Connect with other investors
-- Consider partnering on first deals
-
-## Mistake #5: Analysis Paralysis
-
-**The Problem:** Waiting for the "perfect" deal and never taking action.
-
-**The Solution:**
-- Set clear investment criteria
-- Analyze multiple deals weekly
-- Make offers regularly
-- Learn from each experience
-
-## How We Help
-
-At Pegasus Dreamscapes, we help new investors avoid these mistakes by:
-- Providing detailed deal analysis
-- Managing renovation projects
-- Offering partnership opportunities
-- Sharing our experience and network
-
-Ready to start your investment journey the right way? [Become an investor](/invest) or use our [deal calculators](/calculators) to analyze opportunities.`,
-    category: "Education",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800",
-    published: true,
-    publishedAt: new Date("2024-10-15"),
-  },
-  {
-    slug: "brrrr-method-explained",
-    title: "The BRRRR Method: Build Wealth Through Real Estate Recycling",
-    excerpt: "Discover how the BRRRR strategy allows investors to recycle their capital and build a rental portfolio with limited funds.",
-    content: `# The BRRRR Method: Build Wealth Through Real Estate Recycling
-
-The BRRRR method is one of the most powerful wealth-building strategies in real estate. It allows investors to continuously recycle their capital to build a substantial rental portfolio.
-
-## What is BRRRR?
-
-BRRRR stands for:
-- **B**uy - Purchase undervalued property
-- **R**ehab - Renovate to add value
-- **R**ent - Place quality tenants
-- **R**efinance - Cash-out refinance at new value
-- **R**epeat - Use proceeds for next deal
-
-## The Power of BRRRR
-
-The magic of BRRRR lies in the refinance step. When executed correctly, you can:
-- Recover your initial investment
-- Keep the cash-flowing property
-- Use recovered funds for the next deal
-
-## Example Deal
-
-**Initial Investment:**
-- Purchase Price: $120,000
-- Rehab Costs: $40,000
-- Closing Costs: $5,000
-- **Total Investment: $165,000**
-
-**After Renovation:**
-- New Appraised Value: $220,000
-- Monthly Rent: $1,800
-- 75% LTV Refinance: $165,000
-
-**Result:** All money back, plus a cash-flowing rental!
-
-## Keys to Success
-
-1. **Buy Right** - Find properties at 65-70% of ARV
-2. **Control Rehab Costs** - Stay within budget
-3. **Add Real Value** - Focus on improvements that increase appraisals
-4. **Build Lender Relationships** - Have financing lined up
-
-## Is BRRRR Right for You?
-
-BRRRR works best for investors who:
-- Have some upfront capital
-- Want to build a rental portfolio
-- Are patient (process takes 6-12 months per property)
-- Have strong local market knowledge
-
-Learn more about [how we execute BRRRR deals](/services) or [partner with us](/invest).`,
-    category: "Investment Strategies",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800",
-    published: true,
-    publishedAt: new Date("2024-11-01"),
-  },
-  {
-    slug: "wholesale-real-estate-guide",
-    title: "Wholesale Real Estate: A Beginner's Complete Guide",
-    excerpt: "Learn how wholesaling works, the key steps involved, and whether this low-capital entry strategy is right for you.",
-    content: `# Wholesale Real Estate: A Beginner's Complete Guide
-
-Wholesaling is one of the most accessible ways to enter real estate investing. It requires little to no capital but does require hustle, knowledge, and negotiation skills.
-
-## What is Wholesaling?
-
-Wholesaling involves:
-1. Finding deeply discounted properties
-2. Getting them under contract
-3. Assigning the contract to an end buyer
-4. Earning an assignment fee
-
-You're essentially a deal finder who connects motivated sellers with cash buyers.
-
-## The Wholesaling Process
-
-### Step 1: Find Motivated Sellers
-- Driving for dollars
-- Direct mail campaigns
-- Online marketing
-- Networking with agents
-- Probate and foreclosure lists
-
-### Step 2: Analyze the Deal
-Use the 70% rule:
-- **MAO = (ARV × 70%) - Repairs - Your Fee**
-
-### Step 3: Get It Under Contract
-- Use an assignable purchase agreement
-- Include appropriate contingencies
-- Secure earnest money
-
-### Step 4: Find Your Buyer
-- Build a buyers list
-- Market the deal quickly
-- Verify proof of funds
-
-### Step 5: Assign and Close
-- Execute an assignment agreement
-- Collect your fee at closing
-
-## Profit Potential
-
-Average wholesale fees range from $5,000 to $25,000 per deal. Experienced wholesalers do 2-5 deals per month.
-
-## Common Mistakes to Avoid
-
-1. Not knowing your buyers' criteria
-2. Overestimating ARV
-3. Underestimating repairs
-4. Not building a buyers list first
-5. Poor follow-up with leads
-
-## Ready to Start?
-
-Check out our [wholesale deals](/wholesale) or [submit a property](/sell) you've found.`,
-    category: "Investment Strategies",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=800",
-    published: true,
-    publishedAt: new Date("2024-09-20"),
-  },
-  {
-    slug: "financing-options-real-estate-investors",
-    title: "Financing Options for Real Estate Investors: Complete Overview",
-    excerpt: "Explore the different financing strategies available to real estate investors, from traditional loans to creative financing.",
-    content: `# Financing Options for Real Estate Investors
-
-Understanding your financing options is crucial to success in real estate investing. Each option has its own advantages, requirements, and ideal use cases.
-
-## Traditional Financing
-
-### Conventional Loans
-- Down Payment: 20-25%
-- Interest Rates: Competitive
-- Best For: Primary residences, long-term holds
-- Challenges: Strict qualification, limited properties
-
-### FHA Loans (House Hacking)
-- Down Payment: 3.5%
-- Must be owner-occupied
-- Great for getting started
-- Live in one unit, rent others
-
-## Investment-Specific Financing
-
-### Hard Money Loans
-- Fast closing (7-14 days)
-- Asset-based (less focus on credit)
-- Higher interest (12-18%)
-- Short term (6-12 months)
-- Best for fix-and-flip
-
-### Private Money
-- From individual investors
-- Negotiable terms
-- Relationship-based
-- More flexible than hard money
-
-### DSCR Loans
-- Based on property cash flow
-- No personal income verification
-- Ideal for investors with multiple properties
-- Competitive rates for rentals
-
-## Creative Financing
-
-### Seller Financing
-- Seller acts as the bank
-- Flexible terms possible
-- Often lower down payments
-- Good for unique situations
-
-### Subject-To
-- Take over existing mortgage
-- No new financing needed
-- Seller stays on loan
-- Requires careful legal work
-
-### Partnerships
-- Split capital and work
-- Access to more deals
-- Shared risk and reward
-- Important to document properly
-
-## Choosing the Right Option
-
-**For Flips:** Hard money or private money
-**For Rentals:** DSCR loans or conventional
-**For Getting Started:** FHA house hacking
-**For Scaling:** Private money or partnerships
-
-[Contact us](/contact) to discuss financing options for your next deal.`,
-    category: "Financing",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800",
-    published: true,
-    publishedAt: new Date("2024-11-10"),
-  },
-  {
-    slug: "finding-contractors-renovation-projects",
-    title: "How to Find and Manage Contractors for Your Renovation",
-    excerpt: "A practical guide to finding reliable contractors, getting accurate bids, and managing renovation projects effectively.",
-    content: `# How to Find and Manage Contractors for Your Renovation
-
-Finding reliable contractors is one of the biggest challenges for real estate investors. A great contractor can make your project profitable; a bad one can destroy your margins.
-
-## Finding Quality Contractors
-
-### Sources for Contractors
-- Other investors (best referrals)
-- Real estate agents
-- Home Depot/Lowe's pro desk
-- Online reviews (be cautious)
-- Local REI meetups
-
-### Red Flags to Watch For
-- No references
-- No license or insurance
-- Requires large upfront payment
-- Cannot provide written contract
-- Prices significantly below market
-
-## The Bidding Process
-
-### Getting Multiple Bids
-- Get 3-5 bids for major work
-- Use detailed scope of work
-- Compare apples to apples
-- Don't always go cheapest
-
-### Scope of Work
-Include:
-- Specific materials and brands
-- Timeline expectations
-- Payment schedule
-- Who handles permits
-- Cleanup responsibilities
-
-## Managing the Project
-
-### Payment Structure
-- 10% to start (materials)
-- Progress payments tied to milestones
-- 10% holdback until completion
-- Never pay in full upfront
-
-### Communication
-- Weekly check-ins minimum
-- Document everything in writing
-- Take photos regularly
-- Address issues immediately
-
-### Common Issues and Solutions
-
-**Problem:** Work is behind schedule
-**Solution:** Build buffer into timeline, milestone-based payments
-
-**Problem:** Costs are exceeding estimates
-**Solution:** Detailed scope upfront, contingency budget (10-15%)
-
-**Problem:** Quality issues
-**Solution:** Clear specifications, periodic inspections, holdback payment
-
-## Building Your Team
-
-Over time, build relationships with:
-- General contractor
-- Electrician
-- Plumber
-- HVAC technician
-- Roofer
-- Handyman
-
-A reliable team is your competitive advantage. [Learn more about our renovation services](/services).`,
-    category: "Construction",
-    author: "Pegasus Dreamscapes Team",
-    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
-    published: true,
-    publishedAt: new Date("2024-10-05"),
   }
 ];
-
-export async function seedProjects() {
-  console.log("Checking for existing projects...");
-  
-  for (const project of initialProjects) {
-    const existing = await db.select().from(projects).where(eq(projects.slug, project.slug));
-    
-    if (existing.length === 0) {
-      console.log(`Seeding project: ${project.name}`);
-      await db.insert(projects).values(project);
-    } else {
-      console.log(`Project already exists: ${project.name}`);
-    }
-  }
-  
-  console.log("Project seeding complete.");
-}
-
-export async function seedArticles() {
-  console.log("Checking for existing articles...");
-  
-  for (const article of initialArticles) {
-    const existing = await db.select().from(articles).where(eq(articles.slug, article.slug));
-    
-    if (existing.length === 0) {
-      console.log(`Seeding article: ${article.title}`);
-      await db.insert(articles).values(article);
-    } else {
-      console.log(`Article already exists: ${article.title}`);
-    }
-  }
-  
-  console.log("Article seeding complete.");
-}
 
 const initialCommunityCategories = [
   {
@@ -715,12 +118,20 @@ const initialCommunityCategories = [
     order: 3
   },
   {
+    name: "Design & Aesthetics",
+    slug: "design",
+    description: "Share renovation inspiration, interior design ideas, staging tips, and curb appeal strategies",
+    icon: "Palette",
+    color: "rose",
+    order: 4
+  },
+  {
     name: "Education & Learning",
     slug: "education",
     description: "Share resources, ask questions, and help others learn about real estate investing",
     icon: "BookOpen",
     color: "purple",
-    order: 4
+    order: 5
   },
   {
     name: "General Discussion",
@@ -728,23 +139,877 @@ const initialCommunityCategories = [
     description: "Network, introduce yourself, and discuss topics that don't fit elsewhere",
     icon: "MessageSquare",
     color: "gray",
-    order: 5
+    order: 6
   }
 ];
 
-export async function seedCommunityCategories() {
-  console.log("Checking for existing community categories...");
-  
-  for (const category of initialCommunityCategories) {
-    const existing = await db.select().from(communityCategories).where(eq(communityCategories.slug, category.slug));
-    
+const dealflowCapitalProjects = [
+  {
+    createdBy: "system",
+    title: "Luxury Flip - Pacific Heights Victorian",
+    description: "Premium Victorian restoration in one of San Francisco's most prestigious neighborhoods. This 4BR/3BA property features original architectural details, high ceilings, and stunning bay views. Our design team will preserve historic charm while adding modern luxury finishes including a chef's kitchen, spa bathrooms, and smart home integration.",
+    location: "Pacific Heights, San Francisco, CA",
+    scopeOfWork: "Full interior renovation, kitchen and bath upgrades, landscaping, smart home integration, structural repairs",
+    fundingGoal: 850000,
+    amountRaised: 425000,
+    minInvestment: 50000,
+    maxInvestmentPerInvestor: 200000,
+    structure: "EQUITY",
+    projectedReturn: "22-28%",
+    holdPeriod: "8-12 months",
+    status: "OPEN_FOR_INVESTMENT",
+    images: [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+    ],
+    riskLevel: "medium",
+    designAppeal: 5,
+    roiPotential: 5,
+    marketDemand: 5,
+    neighborhoodGrade: "A",
+    strategy: "fix-flip",
+    propertyType: "single-family",
+    investorCount: 4,
+    isFeatured: true,
+    isHot: true,
+  },
+  {
+    createdBy: "system",
+    title: "Boutique Short-Term Rental - Wine Country",
+    description: "Convert this charming Sonoma cottage into a premium vacation rental. Prime location near top wineries with strong year-round demand. Projected 85%+ occupancy rate based on comparable properties. Design-forward renovation will maximize nightly rates.",
+    location: "Sonoma, CA",
+    scopeOfWork: "Full renovation, outdoor entertainment space, hot tub installation, luxury furnishing package",
+    fundingGoal: 425000,
+    amountRaised: 318750,
+    minInvestment: 25000,
+    maxInvestmentPerInvestor: 100000,
+    structure: "HYBRID",
+    projectedReturn: "15-20% annual",
+    holdPeriod: "3-5 years",
+    status: "OPEN_FOR_INVESTMENT",
+    images: [
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
+      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800"
+    ],
+    riskLevel: "low",
+    designAppeal: 5,
+    roiPotential: 4,
+    marketDemand: 5,
+    neighborhoodGrade: "A",
+    strategy: "buy-hold",
+    propertyType: "single-family",
+    investorCount: 7,
+    isFeatured: true,
+    isHot: false,
+  },
+  {
+    createdBy: "system",
+    title: "Mixed-Use Reposition - Downtown Oakland",
+    description: "Value-add opportunity in thriving downtown Oakland corridor. Ground floor retail with 6 residential units above. Currently 50% occupied at below-market rents. Strategic renovations and professional management will significantly increase NOI.",
+    location: "Downtown Oakland, CA",
+    scopeOfWork: "Unit renovations, common area upgrades, retail facade improvement, mechanical systems",
+    fundingGoal: 1200000,
+    amountRaised: 480000,
+    minInvestment: 75000,
+    maxInvestmentPerInvestor: 300000,
+    structure: "EQUITY",
+    projectedReturn: "18-24%",
+    holdPeriod: "3-5 years",
+    status: "OPEN_FOR_INVESTMENT",
+    images: [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800"
+    ],
+    riskLevel: "medium",
+    designAppeal: 3,
+    roiPotential: 5,
+    marketDemand: 4,
+    neighborhoodGrade: "B",
+    strategy: "value-add",
+    propertyType: "multi-family",
+    investorCount: 3,
+    isFeatured: false,
+    isHot: true,
+  },
+  {
+    createdBy: "system",
+    title: "Elegant Craftsman Restoration - Berkeley Hills",
+    description: "Restore this 1920s Craftsman to its original glory while adding modern conveniences. Features original woodwork, built-ins, and a stunning hillside lot with bay views. Perfect for buyers seeking character and location.",
+    location: "Berkeley Hills, CA",
+    scopeOfWork: "Kitchen renovation, bathroom updates, foundation work, deck expansion, landscaping",
+    fundingGoal: 550000,
+    amountRaised: 550000,
+    minInvestment: 50000,
+    maxInvestmentPerInvestor: 150000,
+    structure: "EQUITY",
+    projectedReturn: "20-25%",
+    holdPeriod: "6-10 months",
+    status: "FUNDED",
+    images: [
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800"
+    ],
+    riskLevel: "low",
+    designAppeal: 5,
+    roiPotential: 4,
+    marketDemand: 5,
+    neighborhoodGrade: "A",
+    strategy: "fix-flip",
+    propertyType: "single-family",
+    investorCount: 6,
+    isFeatured: false,
+    isHot: false,
+  },
+  {
+    createdBy: "system",
+    title: "Suburban Renovation Portfolio - Contra Costa",
+    description: "Portfolio of 3 single-family homes in family-friendly Contra Costa County. All properties acquired 15-20% below market. Light renovations will yield quick returns in this strong rental/resale market.",
+    location: "Walnut Creek & Concord, CA",
+    scopeOfWork: "Cosmetic updates, kitchen/bath refresh, flooring, paint, landscaping",
+    fundingGoal: 320000,
+    amountRaised: 160000,
+    minInvestment: 20000,
+    maxInvestmentPerInvestor: 80000,
+    structure: "EQUITY",
+    projectedReturn: "16-20%",
+    holdPeriod: "4-6 months",
+    status: "OPEN_FOR_INVESTMENT",
+    images: [
+      "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800"
+    ],
+    riskLevel: "low",
+    designAppeal: 3,
+    roiPotential: 4,
+    marketDemand: 4,
+    neighborhoodGrade: "B",
+    strategy: "fix-flip",
+    propertyType: "single-family",
+    investorCount: 5,
+    isFeatured: false,
+    isHot: false,
+  },
+  {
+    createdBy: "system",
+    title: "ADU Development - East Bay Package",
+    description: "Develop accessory dwelling units on 4 qualifying properties. California's ADU-friendly regulations create opportunity for 15-20% value increase per property. Turnkey execution with experienced builders.",
+    location: "Oakland & Berkeley, CA",
+    scopeOfWork: "ADU construction (4 units), permit processing, utility connections, landscaping",
+    fundingGoal: 680000,
+    amountRaised: 204000,
+    minInvestment: 35000,
+    maxInvestmentPerInvestor: 150000,
+    structure: "DEBT",
+    projectedReturn: "12% annual + profit share",
+    holdPeriod: "12-18 months",
+    status: "OPEN_FOR_INVESTMENT",
+    images: [
+      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800"
+    ],
+    riskLevel: "medium",
+    designAppeal: 4,
+    roiPotential: 4,
+    marketDemand: 5,
+    neighborhoodGrade: "B",
+    strategy: "development",
+    propertyType: "multi-family",
+    investorCount: 4,
+    isFeatured: true,
+    isHot: false,
+  }
+];
+
+const dealflowWholesaleDeals = [
+  {
+    propertyAddress: "2847 Grand Avenue",
+    city: "Oakland",
+    state: "CA",
+    zipCode: "94610",
+    propertyType: "single-family",
+    bedrooms: 4,
+    bathrooms: "2.5",
+    sqft: 2100,
+    yearBuilt: 1948,
+    lotSize: "5,500 sq ft",
+    contractPrice: 485000,
+    assignmentFee: 18000,
+    arv: 725000,
+    estimatedRepairs: 115000,
+    strategy: "fix-flip",
+    status: "available",
+    description: "Motivated seller estate sale. Original hardwood floors under carpet, good bones. Large backyard with ADU potential. High-demand Lake Merritt adjacent location.",
+    highlights: [
+      "Estate sale - motivated seller",
+      "ADU potential in backyard",
+      "Walk to Lake Merritt",
+      "Strong school district"
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800"
+    ],
+    riskLevel: "medium",
+    profitPotential: 5,
+    marketDemand: 5,
+    neighborhoodGrade: "B",
+    matchScore: 94,
+    isFeatured: true,
+    isHot: true,
+    viewCount: 156,
+  },
+  {
+    propertyAddress: "1523 Fruitvale Ave",
+    city: "Oakland",
+    state: "CA",
+    zipCode: "94601",
+    propertyType: "duplex",
+    bedrooms: 4,
+    bathrooms: "2",
+    sqft: 1800,
+    yearBuilt: 1925,
+    lotSize: "4,200 sq ft",
+    contractPrice: 365000,
+    assignmentFee: 12000,
+    arv: 565000,
+    estimatedRepairs: 95000,
+    strategy: "fix-flip",
+    status: "available",
+    description: "Up/down duplex with separate meters. Owner-occupied unit in good condition. Tenant unit needs cosmetic updates. Strong rental history in area.",
+    highlights: [
+      "Duplex - two income streams",
+      "Separate utilities",
+      "Below market acquisition",
+      "Rent control exempt (small landlord)"
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"
+    ],
+    riskLevel: "medium",
+    profitPotential: 4,
+    marketDemand: 4,
+    neighborhoodGrade: "C",
+    matchScore: 87,
+    isFeatured: false,
+    isHot: true,
+    viewCount: 89,
+  },
+  {
+    propertyAddress: "4892 Telegraph Ave",
+    city: "Oakland",
+    state: "CA",
+    zipCode: "94609",
+    propertyType: "single-family",
+    bedrooms: 3,
+    bathrooms: "1",
+    sqft: 1350,
+    yearBuilt: 1938,
+    lotSize: "3,800 sq ft",
+    contractPrice: 298000,
+    assignmentFee: 10000,
+    arv: 525000,
+    estimatedRepairs: 110000,
+    strategy: "fix-flip",
+    status: "available",
+    description: "Pre-foreclosure acquisition. Property needs substantial work but has excellent layout and location near Temescal dining district.",
+    highlights: [
+      "Pre-foreclosure - deep discount",
+      "Temescal location",
+      "Great lot size",
+      "Potential for expansion"
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
+    ],
+    riskLevel: "high",
+    profitPotential: 5,
+    marketDemand: 5,
+    neighborhoodGrade: "B",
+    matchScore: 91,
+    isFeatured: true,
+    isHot: false,
+    viewCount: 203,
+  },
+  {
+    propertyAddress: "789 Castro Street",
+    city: "Richmond",
+    state: "CA",
+    zipCode: "94801",
+    propertyType: "single-family",
+    bedrooms: 3,
+    bathrooms: "2",
+    sqft: 1450,
+    yearBuilt: 1955,
+    lotSize: "6,000 sq ft",
+    contractPrice: 245000,
+    assignmentFee: 8000,
+    arv: 485000,
+    estimatedRepairs: 125000,
+    strategy: "fix-flip",
+    status: "available",
+    description: "Inherited property, heirs live out of state. House vacant for 2 years, needs full renovation. Excellent BRRRR candidate in appreciating Richmond Point area.",
+    highlights: [
+      "Absentee heir sale",
+      "Large lot - expansion possible",
+      "Near ferry terminal",
+      "Rising neighborhood values"
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800"
+    ],
+    riskLevel: "medium",
+    profitPotential: 5,
+    marketDemand: 4,
+    neighborhoodGrade: "C",
+    matchScore: 88,
+    isFeatured: false,
+    isHot: false,
+    viewCount: 67,
+  },
+  {
+    propertyAddress: "3156 Broadway",
+    city: "Oakland",
+    state: "CA",
+    zipCode: "94611",
+    propertyType: "single-family",
+    bedrooms: 5,
+    bathrooms: "3",
+    sqft: 2800,
+    yearBuilt: 1912,
+    lotSize: "7,200 sq ft",
+    contractPrice: 625000,
+    assignmentFee: 25000,
+    arv: 1050000,
+    estimatedRepairs: 225000,
+    strategy: "fix-flip",
+    status: "available",
+    description: "Historic craftsman in prime Piedmont-adjacent location. Original details intact including stained glass, built-ins, and crown molding. Major systems need updating.",
+    highlights: [
+      "Historic craftsman charm",
+      "Piedmont schools",
+      "Original architectural details",
+      "Premium location"
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800"
+    ],
+    riskLevel: "medium",
+    profitPotential: 5,
+    marketDemand: 5,
+    neighborhoodGrade: "A",
+    matchScore: 96,
+    isFeatured: true,
+    isHot: true,
+    viewCount: 312,
+  },
+  {
+    propertyAddress: "1842 23rd Street",
+    city: "San Pablo",
+    state: "CA",
+    zipCode: "94806",
+    propertyType: "single-family",
+    bedrooms: 3,
+    bathrooms: "1",
+    sqft: 1150,
+    yearBuilt: 1962,
+    lotSize: "5,000 sq ft",
+    contractPrice: 195000,
+    assignmentFee: 7000,
+    arv: 385000,
+    estimatedRepairs: 85000,
+    strategy: "fix-flip",
+    status: "available",
+    description: "Fire-damaged property, 60% rehab needed. Insurance proceeds available to buyer. Quick close possible. Excellent entry-level flip opportunity.",
+    highlights: [
+      "Insurance proceeds available",
+      "Clear title",
+      "Entry-level price point",
+      "Strong buyer demand at ARV"
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800"
+    ],
+    riskLevel: "high",
+    profitPotential: 4,
+    marketDemand: 4,
+    neighborhoodGrade: "C",
+    matchScore: 78,
+    isFeatured: false,
+    isHot: false,
+    viewCount: 45,
+  }
+];
+
+const sampleUsers = [
+  {
+    id: "investor-marcus-chen",
+    email: "marcus.chen@email.com",
+    firstName: "Marcus",
+    lastName: "Chen",
+    profileImageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+    role: "user",
+    portalType: "investor"
+  },
+  {
+    id: "investor-sarah-williams",
+    email: "sarah.williams@email.com",
+    firstName: "Sarah",
+    lastName: "Williams",
+    profileImageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+    role: "user",
+    portalType: "investor"
+  },
+  {
+    id: "investor-james-rodriguez",
+    email: "james.rodriguez@email.com",
+    firstName: "James",
+    lastName: "Rodriguez",
+    profileImageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+    role: "user",
+    portalType: "investor"
+  },
+  {
+    id: "investor-emily-park",
+    email: "emily.park@email.com",
+    firstName: "Emily",
+    lastName: "Park",
+    profileImageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+    role: "user",
+    portalType: "investor"
+  },
+  {
+    id: "wholesaler-david-kim",
+    email: "david.kim@email.com",
+    firstName: "David",
+    lastName: "Kim",
+    profileImageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
+    role: "user",
+    portalType: "wholesaler"
+  },
+  {
+    id: "staff-alex-dreamscaper",
+    email: "alex@pegasusdreamscapes.com",
+    firstName: "Alex",
+    lastName: "Thompson",
+    profileImageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150",
+    role: "admin",
+    portalType: "staff"
+  }
+];
+
+const sampleInvestorProfiles = [
+  {
+    userId: "investor-marcus-chen",
+    company: "Chen Capital Partners",
+    phone: "(415) 555-1234",
+    cityState: "San Francisco, CA",
+    capitalRange: "$250k-$500k",
+    investmentPreference: "fix-flip",
+    experienceLevel: "advanced",
+    accreditedInvestor: true,
+    isApproved: true,
+    preferredRiskLevel: "medium",
+    preferredStrategies: ["fix-flip", "value-add"],
+    preferredPropertyTypes: ["single-family", "multi-family"],
+    preferredLocations: ["San Francisco", "Oakland", "Berkeley"],
+    minInvestment: 50000,
+    maxInvestment: 200000,
+    targetReturnMin: 18,
+    targetReturnMax: 28,
+    preferredHoldPeriod: "6-12 months",
+    dealsSaved: 12,
+    dealsPassed: 8
+  },
+  {
+    userId: "investor-sarah-williams",
+    company: "Williams Investments LLC",
+    phone: "(510) 555-2345",
+    cityState: "Oakland, CA",
+    capitalRange: "$100k-$250k",
+    investmentPreference: "buy-hold",
+    experienceLevel: "intermediate",
+    accreditedInvestor: true,
+    isApproved: true,
+    preferredRiskLevel: "low",
+    preferredStrategies: ["buy-hold", "value-add"],
+    preferredPropertyTypes: ["single-family", "duplex"],
+    preferredLocations: ["Oakland", "Berkeley", "Richmond"],
+    minInvestment: 25000,
+    maxInvestment: 100000,
+    targetReturnMin: 12,
+    targetReturnMax: 20,
+    preferredHoldPeriod: "3-5 years",
+    dealsSaved: 8,
+    dealsPassed: 15
+  },
+  {
+    userId: "investor-james-rodriguez",
+    company: null,
+    phone: "(925) 555-3456",
+    cityState: "Walnut Creek, CA",
+    capitalRange: "$500k-$1M",
+    investmentPreference: "development",
+    experienceLevel: "advanced",
+    accreditedInvestor: true,
+    isApproved: true,
+    preferredRiskLevel: "high",
+    preferredStrategies: ["fix-flip", "development"],
+    preferredPropertyTypes: ["single-family", "multi-family", "commercial"],
+    preferredLocations: ["San Francisco", "Oakland", "Contra Costa"],
+    minInvestment: 100000,
+    maxInvestment: 500000,
+    targetReturnMin: 20,
+    targetReturnMax: 35,
+    preferredHoldPeriod: "6-12 months",
+    dealsSaved: 18,
+    dealsPassed: 5
+  },
+  {
+    userId: "investor-emily-park",
+    company: "Park Family Office",
+    phone: "(650) 555-4567",
+    cityState: "Palo Alto, CA",
+    capitalRange: "$1M+",
+    investmentPreference: "value-add",
+    experienceLevel: "advanced",
+    accreditedInvestor: true,
+    isApproved: true,
+    preferredRiskLevel: "medium",
+    preferredStrategies: ["value-add", "buy-hold"],
+    preferredPropertyTypes: ["multi-family", "commercial"],
+    preferredLocations: ["San Francisco", "Peninsula", "South Bay"],
+    minInvestment: 150000,
+    maxInvestment: 750000,
+    targetReturnMin: 15,
+    targetReturnMax: 25,
+    preferredHoldPeriod: "1-3 years",
+    dealsSaved: 6,
+    dealsPassed: 22
+  }
+];
+
+export async function seedProjects() {
+  console.log("Seeding projects...");
+  for (const project of initialProjects) {
+    const existing = await db.select().from(projects).where(eq(projects.slug, project.slug));
     if (existing.length === 0) {
-      console.log(`Seeding community category: ${category.name}`);
-      await db.insert(communityCategories).values(category);
-    } else {
-      console.log(`Community category already exists: ${category.name}`);
+      await db.insert(projects).values(project);
     }
   }
+  console.log("Projects seeded.");
+}
+
+export async function seedArticles() {
+  console.log("Seeding articles...");
+  for (const article of initialArticles) {
+    const existing = await db.select().from(articles).where(eq(articles.slug, article.slug));
+    if (existing.length === 0) {
+      await db.insert(articles).values(article);
+    }
+  }
+  console.log("Articles seeded.");
+}
+
+export async function seedCommunityCategories() {
+  console.log("Seeding community categories...");
+  for (const category of initialCommunityCategories) {
+    const existing = await db.select().from(communityCategories).where(eq(communityCategories.slug, category.slug));
+    if (existing.length === 0) {
+      await db.insert(communityCategories).values(category);
+    }
+  }
+  console.log("Community categories seeded.");
+}
+
+export async function seedDealflowData() {
+  console.log("Seeding dealflow sample data...");
   
-  console.log("Community category seeding complete.");
+  // Seed sample users
+  for (const user of sampleUsers) {
+    const existing = await db.select().from(users).where(eq(users.id, user.id));
+    if (existing.length === 0) {
+      await db.insert(users).values(user);
+    }
+  }
+  console.log("Sample users seeded.");
+  
+  // Seed investor profiles
+  for (const profile of sampleInvestorProfiles) {
+    const existing = await db.select().from(investorProfiles).where(eq(investorProfiles.userId, profile.userId));
+    if (existing.length === 0) {
+      await db.insert(investorProfiles).values(profile);
+    }
+  }
+  console.log("Investor profiles seeded.");
+  
+  // Seed capital projects
+  for (const project of dealflowCapitalProjects) {
+    const existing = await db.select().from(capitalProjects).where(eq(capitalProjects.title, project.title));
+    if (existing.length === 0) {
+      await db.insert(capitalProjects).values(project);
+    }
+  }
+  console.log("Capital projects seeded.");
+  
+  // Seed wholesale deals
+  for (const deal of dealflowWholesaleDeals) {
+    const existing = await db.select().from(wholesaleDeals).where(eq(wholesaleDeals.propertyAddress, deal.propertyAddress));
+    if (existing.length === 0) {
+      await db.insert(wholesaleDeals).values(deal);
+    }
+  }
+  console.log("Wholesale deals seeded.");
+  
+  // Get category IDs for community posts
+  const categories = await db.select().from(communityCategories);
+  const designCategory = categories.find(c => c.slug === "design");
+  const dealsCategory = categories.find(c => c.slug === "deals");
+  const constructionCategory = categories.find(c => c.slug === "construction");
+  const generalCategory = categories.find(c => c.slug === "general");
+  
+  if (designCategory && dealsCategory && constructionCategory && generalCategory) {
+    const communityPostsData = [
+      {
+        categoryId: designCategory.id,
+        userId: "investor-sarah-williams",
+        title: "Best Paint Colors for Maximizing Flip ROI?",
+        content: "I'm working on a flip in Oakland and want to choose paint colors that appeal to the widest buyer pool. Any recommendations for trendy yet timeless colors? I've heard Sherwin-Williams Agreeable Gray is popular. What has worked for you?",
+        isPinned: true,
+        viewCount: 234,
+        replyCount: 12
+      },
+      {
+        categoryId: designCategory.id,
+        userId: "investor-marcus-chen",
+        title: "Kitchen Design Trends That Actually Add Value",
+        content: "Just finished analyzing our last 5 flips and noticed some interesting patterns. White shaker cabinets still performing well, but we're seeing buyers respond more to warmer tones. Waterfall islands are a hit in the $800k+ price point. What kitchen upgrades are you prioritizing?",
+        isPinned: false,
+        viewCount: 189,
+        replyCount: 8
+      },
+      {
+        categoryId: designCategory.id,
+        userId: "staff-alex-dreamscaper",
+        title: "Curb Appeal Upgrades: Cost vs Value Analysis",
+        content: "We've compiled data from our recent projects on curb appeal investments. Top performers: 1) Fresh landscaping (3x ROI), 2) New front door (2.5x), 3) Exterior paint (2x), 4) New mailbox & house numbers (5x on small investment). What's your experience?",
+        isPinned: true,
+        viewCount: 412,
+        replyCount: 18
+      },
+      {
+        categoryId: dealsCategory.id,
+        userId: "investor-james-rodriguez",
+        title: "Oakland Market Heating Up - Anyone Else Seeing This?",
+        content: "I've been tracking the Oakland market closely and seeing significant buyer activity in the Temescal area. Multiple offers on recent listings, even fixers. Anyone else noticing this trend? Might be time to accelerate acquisitions.",
+        isPinned: false,
+        viewCount: 156,
+        replyCount: 6
+      },
+      {
+        categoryId: dealsCategory.id,
+        userId: "investor-emily-park",
+        title: "Multi-Family Cap Rates in East Bay",
+        content: "Looking at a 6-unit in Oakland. Seller asking for 5.5% cap rate which seems aggressive. What cap rates are you seeing for value-add multi-family in the East Bay currently?",
+        isPinned: false,
+        viewCount: 98,
+        replyCount: 4
+      },
+      {
+        categoryId: constructionCategory.id,
+        userId: "wholesaler-david-kim",
+        title: "Contractor Recommendation for Foundation Work?",
+        content: "Have a deal that needs foundation repair in Richmond. Looking for reliable foundation contractors who work with investors and understand timelines. Any recommendations?",
+        isPinned: false,
+        viewCount: 67,
+        replyCount: 5
+      },
+      {
+        categoryId: generalCategory.id,
+        userId: "staff-alex-dreamscaper",
+        title: "Welcome New Dealflow Members!",
+        content: "Welcome to all our new community members! This is your space to connect with fellow investors, share insights, and discover opportunities. Feel free to introduce yourself and let us know your investment focus. We're here to help you succeed!",
+        isPinned: true,
+        viewCount: 523,
+        replyCount: 24
+      },
+      {
+        categoryId: designCategory.id,
+        userId: "investor-emily-park",
+        title: "Staging vs Selling Empty - Data from My Last 10 Flips",
+        content: "I've tracked staging costs vs sale price premium on my last 10 flips. Average staging cost: $3,500. Average premium over unstaged comps: $18,000. That's a 5x return! Key was using modern, neutral staging that photographed well. Happy to share specific vendor recommendations.",
+        isPinned: false,
+        viewCount: 287,
+        replyCount: 15
+      }
+    ];
+    
+    for (const post of communityPostsData) {
+      const existing = await db.select().from(communityPosts).where(eq(communityPosts.title, post.title));
+      if (existing.length === 0) {
+        await db.insert(communityPosts).values(post);
+      }
+    }
+    console.log("Community posts seeded.");
+  }
+  
+  // Seed some replies to posts
+  const posts = await db.select().from(communityPosts);
+  const paintPost = posts.find(p => p.title?.includes("Paint Colors"));
+  
+  if (paintPost) {
+    const replies = [
+      {
+        postId: paintPost.id,
+        userId: "investor-marcus-chen",
+        content: "Agreeable Gray is solid but I've been having great results with Benjamin Moore Revere Pewter. It's a greige that works with both warm and cool tones. Highly recommend for flips targeting the $600k-$800k buyer."
+      },
+      {
+        postId: paintPost.id,
+        userId: "investor-emily-park",
+        content: "Don't sleep on accent walls! We've been doing dark navy or forest green accent walls in primary bedrooms and they photograph incredibly well. Just make sure the rest of the room is light and neutral."
+      },
+      {
+        postId: paintPost.id,
+        userId: "staff-alex-dreamscaper",
+        content: "Great discussion! We've compiled a color guide based on our project data. Key insight: warm whites (like BM Simply White) are outperforming cool whites in the current market. Buyers seem to want that cozy feel post-pandemic."
+      }
+    ];
+    
+    for (const reply of replies) {
+      const existing = await db.select().from(communityReplies).where(eq(communityReplies.content, reply.content));
+      if (existing.length === 0) {
+        await db.insert(communityReplies).values(reply);
+      }
+    }
+    console.log("Community replies seeded.");
+  }
+  
+  // Seed sample messages
+  const sampleMessages = [
+    {
+      senderId: "staff-alex-dreamscaper",
+      receiverId: "investor-marcus-chen",
+      subject: "New Deal Alert: Pacific Heights Victorian",
+      content: "Hi Marcus,\n\nI wanted to reach out personally about a new opportunity that matches your investment criteria perfectly. The Pacific Heights Victorian we just listed has a projected 22-28% return, which aligns with your target range.\n\nGiven your experience with high-end flips, I think you'd be an ideal partner for this project. The property has incredible bones and our design team has put together a stunning renovation plan.\n\nWould you be interested in scheduling a call to discuss?\n\nBest,\nAlex"
+    },
+    {
+      senderId: "investor-marcus-chen",
+      receiverId: "staff-alex-dreamscaper",
+      subject: "RE: New Deal Alert: Pacific Heights Victorian",
+      content: "Alex,\n\nThanks for thinking of me on this one. Pacific Heights is definitely my wheelhouse. I reviewed the materials and I'm very interested.\n\nI'd like to schedule a call and also visit the property if possible. My available times this week are Tuesday afternoon or Thursday morning.\n\nLooking forward to discussing!\n\nMarcus"
+    },
+    {
+      senderId: "investor-sarah-williams",
+      receiverId: "investor-emily-park",
+      subject: "Multi-family investment question",
+      content: "Hi Emily,\n\nI saw your post about the 6-unit in Oakland and wanted to connect. I'm looking to transition from single-family flips to multi-family and would love to learn from your experience.\n\nWould you be open to a quick coffee chat sometime?\n\nBest,\nSarah"
+    },
+    {
+      senderId: "staff-alex-dreamscaper",
+      receiverId: "investor-james-rodriguez",
+      subject: "Exclusive: Broadway Craftsman",
+      content: "James,\n\nBig news - we just locked up the Broadway Craftsman I mentioned last week. This is the Piedmont-adjacent historic property with the stunning original details.\n\nAt $625k contract price with $1.05M ARV, this is exactly the kind of high-margin deal you've been looking for. Estimated 25% return if renovation stays on budget.\n\nI'm only reaching out to a few select investors on this one. Let me know if you want first look.\n\nAlex"
+    }
+  ];
+  
+  for (const message of sampleMessages) {
+    const existing = await db.select().from(directMessages).where(eq(directMessages.subject, message.subject || ""));
+    if (existing.length === 0) {
+      await db.insert(directMessages).values(message);
+    }
+  }
+  console.log("Direct messages seeded.");
+  
+  // Seed sample notifications
+  const sampleNotifications = [
+    {
+      userId: "investor-marcus-chen",
+      type: "new_deal",
+      title: "New Match: 96% Compatible",
+      message: "A new deal in Pacific Heights matches your investment criteria. Projected 22-28% return.",
+      link: "/dealflow/deals",
+      isRead: false
+    },
+    {
+      userId: "investor-marcus-chen",
+      type: "message",
+      title: "New Message from Alex Thompson",
+      message: "Alex sent you a message about a new investment opportunity.",
+      link: "/dealflow/messages",
+      isRead: false
+    },
+    {
+      userId: "investor-sarah-williams",
+      type: "community",
+      title: "Reply to Your Post",
+      message: "Marcus Chen replied to your discussion about paint colors.",
+      link: "/dealflow/community",
+      isRead: true
+    },
+    {
+      userId: "investor-james-rodriguez",
+      type: "new_deal",
+      title: "Hot Deal Alert",
+      message: "The Broadway Craftsman you viewed is getting high interest. 5 investors viewing.",
+      link: "/dealflow/deals",
+      isRead: false
+    },
+    {
+      userId: "investor-emily-park",
+      type: "investment",
+      title: "Investment Update",
+      message: "The Berkeley Hills Craftsman project has reached 100% funding. Construction begins next week.",
+      link: "/dealflow/office",
+      isRead: true
+    }
+  ];
+  
+  for (const notification of sampleNotifications) {
+    const existing = await db.select().from(notifications).where(eq(notifications.title, notification.title));
+    if (existing.length === 0) {
+      await db.insert(notifications).values(notification);
+    }
+  }
+  console.log("Notifications seeded.");
+  
+  // Seed investor activity
+  const sampleActivity = [
+    {
+      userId: "investor-marcus-chen",
+      activityType: "new_match",
+      title: "New High Match Deal",
+      description: "Pacific Heights Victorian matched your profile at 96%",
+      relatedType: "capital_project",
+      link: "/dealflow/deals"
+    },
+    {
+      userId: "investor-marcus-chen",
+      activityType: "community_post",
+      title: "Posted in Design & Aesthetics",
+      description: "Kitchen Design Trends That Actually Add Value",
+      relatedType: "post",
+      link: "/dealflow/community"
+    },
+    {
+      userId: "investor-sarah-williams",
+      activityType: "message",
+      title: "Received Message",
+      description: "Emily Park sent you a message",
+      relatedType: "message",
+      link: "/dealflow/messages"
+    },
+    {
+      userId: "investor-james-rodriguez",
+      activityType: "investment",
+      title: "Investment Submitted",
+      description: "$150,000 investment offer on Mixed-Use Reposition",
+      relatedType: "capital_project",
+      link: "/dealflow/office"
+    }
+  ];
+  
+  for (const activity of sampleActivity) {
+    const existing = await db.select().from(investorActivity).where(eq(investorActivity.title, activity.title));
+    if (existing.length === 0) {
+      await db.insert(investorActivity).values(activity);
+    }
+  }
+  console.log("Investor activity seeded.");
+  
+  console.log("Dealflow data seeding complete!");
 }

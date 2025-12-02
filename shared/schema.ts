@@ -82,6 +82,20 @@ export const investorProfiles = pgTable("investor_profiles", {
   accreditedInvestor: boolean("accredited_investor").default(false),
   notes: text("notes"),
   isApproved: boolean("is_approved").notNull().default(false),
+  // Match preferences for dating-app style matching
+  preferredRiskLevel: varchar("preferred_risk_level", { length: 20 }), // low, medium, high
+  preferredStrategies: text("preferred_strategies").array(), // fix-flip, buy-hold, value-add
+  preferredPropertyTypes: text("preferred_property_types").array(), // single-family, multi-family
+  preferredLocations: text("preferred_locations").array(),
+  minInvestment: integer("min_investment"),
+  maxInvestment: integer("max_investment"),
+  targetReturnMin: integer("target_return_min"), // percentage
+  targetReturnMax: integer("target_return_max"),
+  preferredHoldPeriod: varchar("preferred_hold_period", { length: 50 }), // 6-12 months, 1-3 years, etc
+  // Activity tracking
+  lastActiveAt: timestamp("last_active_at"),
+  dealsSaved: integer("deals_saved").default(0),
+  dealsPassed: integer("deals_passed").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -393,6 +407,16 @@ export const wholesaleDeals = pgTable("wholesale_deals", {
   acquisitionsNotes: text("acquisitions_notes"),
   developmentNotes: text("development_notes"),
   contractExpiration: timestamp("contract_expiration"),
+  // Match scoring fields
+  riskLevel: varchar("risk_level", { length: 20 }), // low, medium, high
+  profitPotential: integer("profit_potential"), // 1-5 rating
+  marketDemand: integer("market_demand"), // 1-5 rating
+  neighborhoodGrade: varchar("neighborhood_grade", { length: 10 }), // A, B, C, D
+  matchScore: integer("match_score"), // 0-100 overall score
+  // Featured/Hot deal
+  isFeatured: boolean("is_featured").default(false),
+  isHot: boolean("is_hot").default(false),
+  viewCount: integer("view_count").default(0),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -535,6 +559,19 @@ export const capitalProjects = pgTable("capital_projects", {
   // Media
   images: text("images").array(),
   documents: text("documents").array(),
+  // Match scoring fields
+  riskLevel: varchar("risk_level", { length: 20 }), // low, medium, high
+  designAppeal: integer("design_appeal"), // 1-5 rating
+  roiPotential: integer("roi_potential"), // 1-5 rating
+  marketDemand: integer("market_demand"), // 1-5 rating
+  neighborhoodGrade: varchar("neighborhood_grade", { length: 10 }), // A, B, C, D
+  strategy: varchar("strategy", { length: 50 }), // fix-flip, buy-hold, value-add, development
+  propertyType: varchar("property_type", { length: 50 }), // single-family, multi-family, commercial
+  // Investor count
+  investorCount: integer("investor_count").default(0),
+  // Featured/Hot deal
+  isFeatured: boolean("is_featured").default(false),
+  isHot: boolean("is_hot").default(false),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -706,3 +743,36 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 });
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// Deal Swipes - track user interactions with deals (like/pass for matching)
+export const dealSwipes = pgTable("deal_swipes", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // capital_project, wholesale_deal
+  dealId: integer("deal_id").notNull(),
+  action: varchar("action", { length: 20 }).notNull(), // like, pass, save, request_intro
+  matchScore: integer("match_score"), // calculated at time of swipe
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDealSwipeSchema = createInsertSchema(dealSwipes).omit({ 
+  id: true, 
+  createdAt: true
+});
+export type InsertDealSwipe = z.infer<typeof insertDealSwipeSchema>;
+export type DealSwipe = typeof dealSwipes.$inferSelect;
+
+// Investor Activity Feed - recent activity for My Office dashboard
+export const investorActivity = pgTable("investor_activity", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  activityType: varchar("activity_type", { length: 50 }).notNull(), // new_match, new_deal, message, investment, community_post
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  relatedType: varchar("related_type", { length: 50 }),
+  relatedId: integer("related_id"),
+  link: varchar("link", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type InvestorActivity = typeof investorActivity.$inferSelect;
