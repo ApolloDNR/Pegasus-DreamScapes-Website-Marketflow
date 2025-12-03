@@ -63,6 +63,15 @@ Preferred communication style: Simple, everyday language.
 - Counter-offer system with offer history tracking
 - Offer states: pending, accepted, countered, rejected, expired
 
+### Investment Offer Dialog (client/src/components/investment-offer-dialog.tsx)
+- Unified two-step investment flow used across deal detail and discover pages
+- **Step 1 (Choose)**: Shows project summary, "Seeking" statement, operator's asking terms, and two action buttons:
+  - "Accept Operator's Terms" - Pre-fills all operator terms into the form
+  - "Make Counter-Offer" - Opens blank form for custom terms
+- **Step 2 (Form)**: Investment amount, structure selection (Equity/Debt/Hybrid), role (LP/GP), and term inputs
+- Prominent "Seeking" banner displays operator's capital goals (e.g., "Seeking $500,000 at 9% interest")
+- Integrated in both /dealflow/project/:id (detail page) and /dealflow/deals (discover page)
+
 ### Staff Permission System
 - Role-based access: admin, project_manager, acquisitions, dispositions, it
 - Granular permissions defined in STAFF_PERMISSIONS

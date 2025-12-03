@@ -60,6 +60,7 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DealChat } from "@/components/deal-chat";
+import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
 
 interface CapitalProject {
   id: number;
@@ -98,15 +99,6 @@ export default function DealflowProject() {
   const projectId = params?.id ? parseInt(params.id) : null;
 
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
-  const [investAmount, setInvestAmount] = useState("");
-  const [investStructure, setInvestStructure] = useState<"equity" | "debt" | "hybrid">("equity");
-  const [investRole, setInvestRole] = useState("LP");
-  const [requestGP, setRequestGP] = useState(false);
-  const [proposedEquity, setProposedEquity] = useState("");
-  const [proposedProfitSplit, setProposedProfitSplit] = useState("70/30");
-  const [proposedInterest, setProposedInterest] = useState("");
-  const [proposedLoanDuration, setProposedLoanDuration] = useState("");
-  const [investNotes, setInvestNotes] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   
   // Admin edit mode states
@@ -131,40 +123,6 @@ export default function DealflowProject() {
   const { data: negotiations = [] } = useQuery<any[]>({
     queryKey: ["/api/negotiations", "capital_project", projectId],
     enabled: !!projectId,
-  });
-
-  const submitOfferMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/investment-offers", {
-        projectId,
-        amountOffered: parseInt(investAmount),
-        structureType: investStructure,
-        requestedRole: requestGP ? "GP" : investRole,
-        proposedEquityPercent: proposedEquity || undefined,
-        proposedProfitSplit: proposedProfitSplit || undefined,
-        proposedInterestRate: proposedInterest || undefined,
-        proposedLoanDuration: proposedLoanDuration || undefined,
-        notes: investNotes || undefined,
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects", projectId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/my-investment-offers"] });
-      toast({
-        title: "Offer Submitted",
-        description: "Your investment offer has been sent to the project creator.",
-      });
-      setInvestDialogOpen(false);
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit offer",
-        variant: "destructive",
-      });
-    },
   });
 
   // Admin update project mutation
@@ -214,55 +172,6 @@ export default function DealflowProject() {
     if (Object.keys(editData).length > 0) {
       updateProjectMutation.mutate(editData);
     }
-  };
-
-  const resetForm = () => {
-    setInvestAmount("");
-    setInvestStructure("equity");
-    setInvestRole("LP");
-    setRequestGP(false);
-    setProposedEquity("");
-    setProposedProfitSplit("70/30");
-    setProposedLoanDuration("");
-    setProposedInterest("");
-    setInvestNotes("");
-  };
-
-  const openConformToTerms = () => {
-    if (!project) return;
-    
-    resetForm();
-    
-    const hasDebt = project.askingInterestRate || project.askingLoanDuration;
-    const hasEquity = project.askingEquityPercent || project.askingProfitSplit;
-    
-    if (hasDebt && hasEquity) {
-      setInvestStructure("hybrid");
-    } else if (hasDebt) {
-      setInvestStructure("debt");
-    } else {
-      setInvestStructure("equity");
-    }
-    
-    setInvestAmount(String(project.minInvestment));
-    
-    if (hasDebt) {
-      setProposedInterest(project.askingInterestRate || "");
-      setProposedLoanDuration(project.askingLoanDuration || "");
-    }
-    
-    if (hasEquity) {
-      setProposedEquity(project.askingEquityPercent || "");
-      setProposedProfitSplit(project.askingProfitSplit || "70/30");
-    }
-    
-    setInvestNotes("Conforming to operator's asking terms.");
-    setInvestDialogOpen(true);
-  };
-
-  const openCounterOffer = () => {
-    resetForm();
-    setInvestDialogOpen(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -921,6 +830,28 @@ export default function DealflowProject() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Prominent Seeking Statement */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-2 border-primary/30 text-center">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Seeking</p>
+                  <p className="text-lg font-bold text-primary" data-testid="text-seeking-amount">
+                    {formatCurrency(project.fundingGoal)}
+                    {project.structure?.toLowerCase() === "debt" && project.askingInterestRate && (
+                      <span className="text-green-600"> at {project.askingInterestRate}</span>
+                    )}
+                    {project.structure?.toLowerCase() === "equity" && project.askingEquityPercent && (
+                      <span className="text-blue-600"> for {project.askingEquityPercent}</span>
+                    )}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {project.structure?.toLowerCase() === "debt" && project.askingLoanDuration 
+                      ? `${project.askingLoanDuration} term` 
+                      : project.askingProfitSplit 
+                        ? `${project.askingProfitSplit} profit split`
+                        : project.holdPeriod || "Flexible terms"
+                    }
+                  </p>
+                </div>
+
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-muted-foreground">Funding Progress</span>
@@ -1089,26 +1020,15 @@ export default function DealflowProject() {
                   </div>
                 )}
                 
-                {/* Action Buttons */}
-                <div className="pt-2 flex flex-col gap-2">
-                  {(project.askingInterestRate || project.askingEquityPercent) && (
-                    <Button 
-                      onClick={openConformToTerms}
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-                      data-testid="button-conform-terms"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Accept Operator's Terms
-                    </Button>
-                  )}
+                {/* Action Button - Opens unified investment dialog */}
+                <div className="pt-2">
                   <Button 
-                    variant="outline" 
-                    onClick={openCounterOffer}
-                    className="w-full border-primary/50 hover:bg-primary/10"
-                    data-testid="button-counter-offer"
+                    onClick={() => setInvestDialogOpen(true)}
+                    className="w-full bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+                    data-testid="button-invest-from-terms"
                   >
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Counter-Offer
+                    <Zap className="w-4 h-4 mr-2" />
+                    Make Investment Offer
                   </Button>
                 </div>
               </CardContent>
@@ -1157,235 +1077,11 @@ export default function DealflowProject() {
         </div>
       </div>
 
-      <Dialog open={investDialogOpen} onOpenChange={setInvestDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              Invest in {project.title}
-            </DialogTitle>
-            <DialogDescription>
-              Structure your investment offer with your preferred terms
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            {(project.askingInterestRate || project.askingEquityPercent) && (
-              <Card className="bg-gradient-to-r from-amber-500/10 to-primary/10 border-amber-500/30">
-                <CardContent className="py-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Target className="w-4 h-4 text-amber-500" />
-                    <span className="text-sm font-medium">Operator's Asking Terms</span>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    {project.askingInterestRate && (
-                      <div>
-                        <p className="text-muted-foreground text-xs">Interest Rate</p>
-                        <p className="font-semibold text-green-600">{project.askingInterestRate}</p>
-                      </div>
-                    )}
-                    {project.askingLoanDuration && (
-                      <div>
-                        <p className="text-muted-foreground text-xs">Loan Duration</p>
-                        <p className="font-semibold">{project.askingLoanDuration}</p>
-                      </div>
-                    )}
-                    {project.askingEquityPercent && (
-                      <div>
-                        <p className="text-muted-foreground text-xs">Equity Offered</p>
-                        <p className="font-semibold text-blue-600">{project.askingEquityPercent}</p>
-                      </div>
-                    )}
-                    {project.askingProfitSplit && (
-                      <div>
-                        <p className="text-muted-foreground text-xs">Profit Split</p>
-                        <p className="font-semibold">{project.askingProfitSplit}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Investment Amount</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder={`Min ${formatCurrency(project.minInvestment)}`}
-                    value={investAmount}
-                    onChange={(e) => setInvestAmount(e.target.value)}
-                    className="pl-10"
-                    data-testid="input-invest-amount"
-                  />
-                </div>
-                {parseInt(investAmount) > 0 && parseInt(investAmount) < project.minInvestment && (
-                  <p className="text-xs text-destructive flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Below minimum investment
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Investment Role</Label>
-                <RadioGroup value={investRole} onValueChange={setInvestRole} className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="LP" id="role-lp" />
-                    <Label htmlFor="role-lp" className="font-normal text-sm cursor-pointer">LP</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="GP" id="role-gp" />
-                    <Label htmlFor="role-gp" className="font-normal text-sm cursor-pointer">GP</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Investment Structure</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: "equity", label: "Equity", icon: <TrendingUp className="w-4 h-4" />, desc: "Own a stake in the project" },
-                  { value: "debt", label: "Debt", icon: <DollarSign className="w-4 h-4" />, desc: "Loan with fixed returns" },
-                  { value: "hybrid", label: "Hybrid", icon: <Sparkles className="w-4 h-4" />, desc: "Equity + Debt combined" },
-                ].map((struct) => (
-                  <button
-                    key={struct.value}
-                    type="button"
-                    onClick={() => setInvestStructure(struct.value as any)}
-                    className={`p-4 rounded-lg border-2 text-left transition-all hover-elevate ${
-                      investStructure === struct.value 
-                        ? "border-primary bg-primary/5" 
-                        : "border-muted"
-                    }`}
-                    data-testid={`button-structure-${struct.value}`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      {struct.icon}
-                      <span className="font-medium">{struct.label}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{struct.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {(investStructure === "equity" || investStructure === "hybrid") && (
-              <Card>
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-blue-500" />
-                    Equity Terms
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="equity-pct">Equity Percentage (%)</Label>
-                      <Input
-                        id="equity-pct"
-                        placeholder="e.g., 10"
-                        value={proposedEquity}
-                        onChange={(e) => setProposedEquity(e.target.value)}
-                        data-testid="input-proposed-equity"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Profit Split (You/Operator)</Label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {["50/50", "60/40", "70/30", "80/20", "90/10"].map((split) => (
-                          <button
-                            key={split}
-                            type="button"
-                            onClick={() => setProposedProfitSplit(split)}
-                            className={`px-2.5 py-1.5 text-xs rounded-md border transition-all ${
-                              proposedProfitSplit === split 
-                                ? "border-primary bg-primary/10 font-medium" 
-                                : "border-muted hover-elevate"
-                            }`}
-                            data-testid={`button-split-${split.replace("/", "-")}`}
-                          >
-                            {split}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {(investStructure === "debt" || investStructure === "hybrid") && (
-              <Card>
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-green-500" />
-                    Debt Terms
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="interest-rate">Interest Rate</Label>
-                      <Input
-                        id="interest-rate"
-                        placeholder="e.g., 10%"
-                        value={proposedInterest}
-                        onChange={(e) => setProposedInterest(e.target.value)}
-                        data-testid="input-proposed-interest"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="loan-duration">Loan Duration</Label>
-                      <Input
-                        id="loan-duration"
-                        placeholder="e.g., 12 months"
-                        value={proposedLoanDuration}
-                        onChange={(e) => setProposedLoanDuration(e.target.value)}
-                        data-testid="input-loan-duration"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (optional)</Label>
-              <Textarea
-                id="notes"
-                placeholder="Any additional terms, conditions, or questions..."
-                value={investNotes}
-                onChange={(e) => setInvestNotes(e.target.value)}
-                rows={2}
-                data-testid="input-invest-notes"
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setInvestDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => submitOfferMutation.mutate()}
-              disabled={submitOfferMutation.isPending || !investAmount || parseInt(investAmount) < project.minInvestment}
-              data-testid="button-submit-offer"
-            >
-              {submitOfferMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Send className="w-4 h-4 mr-2" />
-              )}
-              Submit Offer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <InvestmentOfferDialog
+        open={investDialogOpen}
+        onOpenChange={setInvestDialogOpen}
+        project={project}
+      />
     </DealflowLayout>
   );
 }

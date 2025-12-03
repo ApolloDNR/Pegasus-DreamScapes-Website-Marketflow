@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { DealNegotiationDialog } from "@/components/deal-negotiation-dialog";
+import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
 import { 
   Building2, 
   DollarSign, 
@@ -111,6 +112,7 @@ export default function DealflowDeals() {
   const [viewMode, setViewMode] = useState<"deck" | "grid">("deck");
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const [negotiationOpen, setNegotiationOpen] = useState(false);
+  const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<{
     type: "capital_project" | "wholesale_deal";
     id: number;
@@ -118,6 +120,7 @@ export default function DealflowDeals() {
     responderId: string;
     structure?: string;
   } | null>(null);
+  const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
 
   const { data: capitalProjects = [], isLoading: loadingProjects } = useQuery<CapitalProject[]>({
     queryKey: ["/api/capital-projects"],
@@ -335,14 +338,19 @@ export default function DealflowDeals() {
   const currentDeal = activeDeals[currentDealIndex];
 
   const openNegotiation = (type: "capital_project" | "wholesale_deal", item: any) => {
-    setSelectedDeal({
-      type,
-      id: item.id,
-      title: type === "capital_project" ? item.title : `${item.propertyAddress}, ${item.city}`,
-      responderId: type === "capital_project" ? "staff" : (item.submittedBy || "staff"),
-      structure: item.structure,
-    });
-    setNegotiationOpen(true);
+    if (type === "capital_project") {
+      setSelectedProject(item as CapitalProject);
+      setInvestDialogOpen(true);
+    } else {
+      setSelectedDeal({
+        type,
+        id: item.id,
+        title: `${item.propertyAddress}, ${item.city}`,
+        responderId: item.submittedBy || "staff",
+        structure: item.structure,
+      });
+      setNegotiationOpen(true);
+    }
   };
 
   return (
@@ -487,6 +495,14 @@ export default function DealflowDeals() {
           responderId={selectedDeal.responderId}
           existingStructure={selectedDeal.structure}
           onSuccess={() => setNegotiationOpen(false)}
+        />
+      )}
+
+      {selectedProject && (
+        <InvestmentOfferDialog
+          open={investDialogOpen}
+          onOpenChange={setInvestDialogOpen}
+          project={selectedProject}
         />
       )}
     </DealflowLayout>
