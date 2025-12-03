@@ -20,7 +20,9 @@ import {
   Wallet,
   PiggyBank,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Handshake,
+  Target
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -76,7 +78,7 @@ function CalculatorTabs() {
     <section className="py-12 lg:py-20 border-t border-border bg-tan/5">
       <div className="max-w-5xl mx-auto px-6">
         <Tabs defaultValue="arv" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-8 h-auto p-1">
             <TabsTrigger value="arv" className="flex items-center gap-2 py-3" data-testid="tab-arv">
               <Home className="w-4 h-4" />
               <span className="hidden sm:inline">ARV</span> Calculator
@@ -92,6 +94,10 @@ function CalculatorTabs() {
             <TabsTrigger value="cashflow" className="flex items-center gap-2 py-3" data-testid="tab-cashflow">
               <BarChart3 className="w-4 h-4" />
               Cash Flow
+            </TabsTrigger>
+            <TabsTrigger value="wholesale" className="flex items-center gap-2 py-3" data-testid="tab-wholesale">
+              <Handshake className="w-4 h-4" />
+              Wholesale
             </TabsTrigger>
           </TabsList>
           
@@ -109,6 +115,10 @@ function CalculatorTabs() {
           
           <TabsContent value="cashflow">
             <CashFlowCalculator />
+          </TabsContent>
+          
+          <TabsContent value="wholesale">
+            <WholesaleCalculator />
           </TabsContent>
         </Tabs>
       </div>
@@ -1302,6 +1312,335 @@ function CashFlowCalculator() {
               <Link href="/invest">
                 <Button data-testid="button-cashflow-cta">
                   Explore Opportunities
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function WholesaleCalculator() {
+  const [arv, setArv] = useState("");
+  const [rehabCost, setRehabCost] = useState("");
+  const [buyerProfit, setBuyerProfit] = useState("25");
+  const [closingCosts, setClosingCosts] = useState("6");
+  const [holdingCosts, setHoldingCosts] = useState("");
+  const [desiredAssignmentFee, setDesiredAssignmentFee] = useState("");
+  const [results, setResults] = useState<{
+    mao: number;
+    buyerExpectedProfit: number;
+    maxOfferWithFee: number;
+    dealViability: "great" | "good" | "marginal" | "not_viable";
+    netSpread: number;
+    assignmentFeePercent: number;
+  } | null>(null);
+
+  const calculate = () => {
+    const afterRepairValue = parseFloat(arv) || 0;
+    const rehab = parseFloat(rehabCost) || 0;
+    const profitPercent = parseFloat(buyerProfit) || 25;
+    const closingPercent = parseFloat(closingCosts) || 6;
+    const holding = parseFloat(holdingCosts) || 0;
+    const assignmentFee = parseFloat(desiredAssignmentFee) || 0;
+
+    const closingAmount = afterRepairValue * (closingPercent / 100);
+    const buyerExpectedProfit = afterRepairValue * (profitPercent / 100);
+    const mao = afterRepairValue - rehab - holding - closingAmount - buyerExpectedProfit;
+    const maxOfferWithFee = Math.max(0, mao - assignmentFee);
+    const netSpread = mao - assignmentFee;
+    const assignmentFeePercent = mao > 0 ? (assignmentFee / mao) * 100 : 0;
+
+    let dealViability: "great" | "good" | "marginal" | "not_viable" = "not_viable";
+    if (mao > 0) {
+      if (assignmentFee === 0 && mao > 0) {
+        dealViability = "good";
+      } else if (assignmentFee >= 10000 && netSpread >= 0 && assignmentFeePercent <= 40) {
+        dealViability = "great";
+      } else if (assignmentFee >= 5000 && netSpread >= 0 && assignmentFeePercent <= 60) {
+        dealViability = "good";
+      } else if (netSpread >= 0 && assignmentFee > 0) {
+        dealViability = "marginal";
+      }
+    }
+
+    setResults({
+      mao,
+      buyerExpectedProfit,
+      maxOfferWithFee,
+      dealViability,
+      netSpread,
+      assignmentFeePercent,
+    });
+  };
+
+  const reset = () => {
+    setArv("");
+    setRehabCost("");
+    setBuyerProfit("25");
+    setClosingCosts("6");
+    setHoldingCosts("");
+    setDesiredAssignmentFee("");
+    setResults(null);
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-tan/20">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <Handshake className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <CardTitle>Wholesale Deal Analyzer</CardTitle>
+              <CardDescription>
+                Calculate your Maximum Allowable Offer (MAO) and assignment fee potential
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
+            <h4 className="font-medium text-sm mb-2 text-green-700 dark:text-green-400 flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              How MAO Works
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              MAO = ARV - Rehab - Holding Costs - Closing Costs - Buyer's Expected Profit. 
+              Your purchase price should be below MAO minus your desired assignment fee.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="wholesaleArv">After Repair Value (ARV)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="wholesaleArv"
+                  type="number"
+                  placeholder="300000"
+                  value={arv}
+                  onChange={(e) => setArv(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-wholesale-arv"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="wholesaleRehab">Estimated Rehab Cost</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="wholesaleRehab"
+                  type="number"
+                  placeholder="50000"
+                  value={rehabCost}
+                  onChange={(e) => setRehabCost(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-wholesale-rehab"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="buyerProfit">Buyer's Expected Profit (%)</Label>
+              <div className="relative">
+                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="buyerProfit"
+                  type="number"
+                  placeholder="25"
+                  value={buyerProfit}
+                  onChange={(e) => setBuyerProfit(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-wholesale-profit"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Typically 20-30% of ARV for fix & flip</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="wholesaleClosing">Buyer's Closing Costs (%)</Label>
+              <div className="relative">
+                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="wholesaleClosing"
+                  type="number"
+                  placeholder="6"
+                  value={closingCosts}
+                  onChange={(e) => setClosingCosts(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-wholesale-closing"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="wholesaleHolding">Holding Costs</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="wholesaleHolding"
+                  type="number"
+                  placeholder="15000"
+                  value={holdingCosts}
+                  onChange={(e) => setHoldingCosts(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-wholesale-holding"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Buyer's expected holding costs during rehab</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="assignmentFee">Your Desired Assignment Fee</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="assignmentFee"
+                  type="number"
+                  placeholder="10000"
+                  value={desiredAssignmentFee}
+                  onChange={(e) => setDesiredAssignmentFee(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-wholesale-fee"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Your profit from assigning the contract</p>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <Button onClick={calculate} className="flex-1 bg-green-600 text-white hover:bg-green-700" data-testid="button-calculate-wholesale">
+              <Calculator className="w-4 h-4 mr-2" />
+              Calculate MAO
+            </Button>
+            <Button variant="outline" onClick={reset} data-testid="button-reset-wholesale">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {results && (
+        <Card className="border-green-500/30 bg-gradient-to-br from-card to-green-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-green-600" />
+              Wholesale Deal Analysis
+              <Badge className={`ml-2 ${
+                results.dealViability === "great" ? "bg-green-500/10 text-green-600" :
+                results.dealViability === "good" ? "bg-blue-500/10 text-blue-600" :
+                results.dealViability === "marginal" ? "bg-amber-500/10 text-amber-600" :
+                "bg-red-500/10 text-red-600"
+              }`}>
+                {results.dealViability === "great" ? "Great Deal" :
+                 results.dealViability === "good" ? "Good Deal" :
+                 results.dealViability === "marginal" ? "Marginal" : "Not Viable"}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Maximum Allowable Offer</p>
+                <p className={`text-xl font-bold ${results.mao > 0 ? "text-green-600" : "text-red-500"}`} data-testid="result-wholesale-mao">
+                  {formatCurrency(results.mao)}
+                </p>
+              </div>
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Buyer's Expected Profit</p>
+                <p className="text-xl font-bold" data-testid="result-wholesale-buyer-profit">
+                  {formatCurrency(results.buyerExpectedProfit)}
+                </p>
+              </div>
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Your Max Offer to Seller</p>
+                <p className={`text-xl font-bold ${results.maxOfferWithFee > 0 ? "text-primary" : "text-red-500"}`} data-testid="result-wholesale-max-offer">
+                  {formatCurrency(results.maxOfferWithFee)}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-background rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Assignment Fee as % of MAO</span>
+                <span className="text-sm font-medium">
+                  {results.assignmentFeePercent.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={Math.min(100, results.assignmentFeePercent)} className="h-3" />
+              <p className="text-xs text-muted-foreground mt-2">
+                Target: Keep assignment fee under 50% of MAO for buyer appeal
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+              <div className="p-6 bg-green-500/5 rounded-lg text-center border border-green-500/20">
+                <p className="text-sm text-muted-foreground mb-2">Your Assignment Fee</p>
+                <p className="text-3xl font-bold text-green-600" data-testid="result-wholesale-assignment-fee">
+                  {formatCurrency(parseFloat(desiredAssignmentFee) || 0)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {results.assignmentFeePercent > 0 ? `${results.assignmentFeePercent.toFixed(0)}% of MAO` : "No fee"}
+                </p>
+              </div>
+              <div className="p-6 bg-background rounded-lg text-center">
+                <p className="text-sm text-muted-foreground mb-2">Total MAO Available</p>
+                <p className={`text-3xl font-bold ${results.mao >= 0 ? "" : "text-red-500"}`} data-testid="result-wholesale-spread">
+                  {formatCurrency(results.mao)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Maximum available for deal
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <h4 className="font-medium text-sm mb-3">Quick Reference</h4>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Offer to Seller:</span>
+                  <span className="font-medium">{formatCurrency(results.maxOfferWithFee)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Assign to Buyer:</span>
+                  <span className="font-medium">{formatCurrency(results.mao)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Your Profit:</span>
+                  <span className="font-medium text-green-600">{formatCurrency(parseFloat(desiredAssignmentFee) || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Buyer's Profit:</span>
+                  <span className="font-medium">{formatCurrency(results.buyerExpectedProfit)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-4">
+                Looking for wholesale deals or buyers for your contracts? Join our marketplace to connect with active investors.
+              </p>
+              <Link href="/dealflow/deals">
+                <Button className="bg-green-600 text-white hover:bg-green-700" data-testid="button-wholesale-cta">
+                  Browse Wholesale Deals
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
