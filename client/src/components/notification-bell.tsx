@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
   PopoverContent,
@@ -230,28 +229,31 @@ export function NotificationBell() {
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b px-2">
-            <TabsList className="h-9 w-full justify-start gap-1 bg-transparent p-0">
-              {Object.entries(categoryLabels).map(([key, label]) => (
-                <TabsTrigger 
-                  key={key}
-                  value={key} 
-                  className="text-xs px-2.5 py-1.5 h-7 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md relative"
-                  data-testid={`notification-tab-${key}`}
-                >
-                  {label}
-                  {categoryUnreadCounts[key as keyof typeof categoryUnreadCounts] > 0 && (
-                    <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1.5">
-                      {categoryUnreadCounts[key as keyof typeof categoryUnreadCounts]}
-                    </span>
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-          
-          <ScrollArea className="h-80">
+        <div className="flex overflow-x-auto border-b px-2 py-1 gap-1">
+          {Object.entries(categoryLabels).map(([key, label]) => (
+            <Button
+              key={key}
+              variant={activeTab === key ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab(key)}
+              className={`text-xs h-7 px-2.5 shrink-0 ${
+                activeTab === key 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-accent"
+              }`}
+              data-testid={`notification-tab-${key}`}
+            >
+              {label}
+              {categoryUnreadCounts[key as keyof typeof categoryUnreadCounts] > 0 && (
+                <Badge variant="secondary" className="ml-1 h-4 min-w-4 p-0 text-[10px] justify-center">
+                  {categoryUnreadCounts[key as keyof typeof categoryUnreadCounts]}
+                </Badge>
+              )}
+            </Button>
+          ))}
+        </div>
+        
+        <ScrollArea className="h-80">
             {isLoading ? (
               <div className="flex items-center justify-center h-20">
                 <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
@@ -278,7 +280,6 @@ export function NotificationBell() {
               </div>
             )}
           </ScrollArea>
-        </Tabs>
         
         <div className="border-t p-2">
           <Link href="/dealflow/notifications" onClick={() => setOpen(false)}>
