@@ -100,6 +100,33 @@ export async function registerRoutes(
     }
   });
 
+  // Dealflow stats route for authenticated users
+  app.get('/api/dealflow/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get user's saved deals (liked)
+      const savedDeals = await storage.getUserLikedDeals(userId);
+      
+      // Get all wholesale deals to count active ones
+      const allDeals = await storage.getWholesaleDeals();
+      const activeDeals = allDeals.filter((d: any) => d.status === 'available').length;
+      
+      // Get all saved deals (not passed)
+      const allSaved = await storage.getUserSavedDeals(userId);
+      
+      res.json({
+        savedDeals: savedDeals.length,
+        activeDeals,
+        pendingDeals: allSaved.filter((b: any) => b.action === 'save').length,
+        matchScore: 87 // Placeholder for AI matching score
+      });
+    } catch (error) {
+      console.error("Error fetching dealflow stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
   // Portal registration routes - investors and wholesalers can register
   app.post('/api/portal/investor/register', isAuthenticated, async (req: any, res) => {
     try {
