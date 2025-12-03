@@ -117,6 +117,11 @@ export default function DealflowProject() {
     enabled: !!projectId,
   });
 
+  const { data: negotiations = [] } = useQuery<any[]>({
+    queryKey: ["/api/negotiations", "capital_project", projectId],
+    enabled: !!projectId,
+  });
+
   const submitOfferMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/investment-offers", {
@@ -416,10 +421,11 @@ export default function DealflowProject() {
             </div>
 
             <Tabs defaultValue="chemistry" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="chemistry" data-testid="tab-chemistry">Chemistry</TabsTrigger>
                 <TabsTrigger value="overview" data-testid="tab-overview">Details</TabsTrigger>
                 <TabsTrigger value="milestones" data-testid="tab-milestones">Milestones</TabsTrigger>
+                <TabsTrigger value="offers" data-testid="tab-offers">Offers</TabsTrigger>
                 <TabsTrigger value="investors" data-testid="tab-investors">Investors</TabsTrigger>
               </TabsList>
 
@@ -577,6 +583,132 @@ export default function DealflowProject() {
                             <Badge variant={milestone.isComplete ? "default" : "outline"} className="shrink-0">
                               {milestone.isComplete ? "Complete" : "Pending"}
                             </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="offers" className="mt-6 space-y-4">
+                <Card className="border-2 border-dashed border-primary/30">
+                  <CardContent className="py-6 text-center">
+                    <Button onClick={() => setInvestDialogOpen(true)} className="gap-2" data-testid="button-make-offer">
+                      <Zap className="w-4 h-4" />
+                      Make an Investment Offer
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Submit your terms and start negotiating
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {negotiations.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="font-medium">No offers yet</p>
+                      <p className="text-sm">Be the first to make an investment offer</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                      Negotiation History ({negotiations.length})
+                    </h3>
+                    {negotiations.map((negotiation: any) => (
+                      <Card key={negotiation.id} className={
+                        negotiation.status === "accepted" ? "border-green-500/50 bg-green-50/50 dark:bg-green-950/20" :
+                        negotiation.status === "declined" ? "border-red-500/50 bg-red-50/50 dark:bg-red-950/20" :
+                        negotiation.status === "countered" ? "border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20" :
+                        ""
+                      }>
+                        <CardContent className="py-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={
+                                  negotiation.status === "accepted" ? "default" :
+                                  negotiation.status === "declined" ? "destructive" :
+                                  negotiation.status === "countered" ? "secondary" :
+                                  "outline"
+                                }>
+                                  {negotiation.status}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {negotiation.structureType === "debt" ? "Debt" : "Equity"}
+                                </Badge>
+                                {negotiation.transactionRole && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {negotiation.transactionRole}
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                                <div>
+                                  <p className="text-muted-foreground text-xs">Amount</p>
+                                  <p className="font-semibold">{formatCurrency(negotiation.proposedAmount)}</p>
+                                </div>
+                                {negotiation.structureType === "debt" && (
+                                  <>
+                                    {negotiation.proposedInterestRate && (
+                                      <div>
+                                        <p className="text-muted-foreground text-xs">Interest Rate</p>
+                                        <p className="font-semibold text-green-600">{negotiation.proposedInterestRate}</p>
+                                      </div>
+                                    )}
+                                    {negotiation.proposedLoanDuration && (
+                                      <div>
+                                        <p className="text-muted-foreground text-xs">Duration</p>
+                                        <p className="font-semibold">{negotiation.proposedLoanDuration}</p>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                                {negotiation.structureType === "equity" && (
+                                  <>
+                                    {negotiation.proposedEquityPercent && (
+                                      <div>
+                                        <p className="text-muted-foreground text-xs">Equity</p>
+                                        <p className="font-semibold text-blue-600">{negotiation.proposedEquityPercent}</p>
+                                      </div>
+                                    )}
+                                    {negotiation.proposedProfitSplit && (
+                                      <div>
+                                        <p className="text-muted-foreground text-xs">Profit Split</p>
+                                        <p className="font-semibold">{negotiation.proposedProfitSplit}</p>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                              
+                              {negotiation.notes && (
+                                <p className="text-sm text-muted-foreground mt-3 italic">
+                                  "{negotiation.notes}"
+                                </p>
+                              )}
+                              
+                              <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                                <Clock className="w-3 h-3" />
+                                {new Date(negotiation.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                            
+                            {negotiation.status === "pending" && negotiation.responderId === user?.claims?.sub && (
+                              <div className="flex flex-col gap-2">
+                                <Button size="sm" variant="default" className="gap-1" data-testid={`button-accept-${negotiation.id}`}>
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Accept
+                                </Button>
+                                <Button size="sm" variant="outline" className="gap-1" data-testid={`button-counter-${negotiation.id}`}>
+                                  <MessageCircle className="w-3 h-3" />
+                                  Counter
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
