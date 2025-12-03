@@ -99,18 +99,38 @@ export default function UserProfile() {
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewContent, setReviewContent] = useState("");
 
+  const validUserId = userId || "";
+
   const { data: profile, isLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/users", userId],
+    queryKey: ["user-profile", validUserId],
+    queryFn: async ({ queryKey }) => {
+      const [, id] = queryKey as [string, string];
+      const res = await fetch(`/api/users/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch user profile");
+      return res.json();
+    },
     enabled: !!userId,
   });
 
   const { data: stats } = useQuery<UserStats>({
-    queryKey: ["/api/users", userId, "stats"],
+    queryKey: ["user-stats", validUserId],
+    queryFn: async ({ queryKey }) => {
+      const [, id] = queryKey as [string, string];
+      const res = await fetch(`/api/users/${id}/stats`);
+      if (!res.ok) throw new Error("Failed to fetch user stats");
+      return res.json();
+    },
     enabled: !!userId,
   });
 
   const { data: reviews = [] } = useQuery<UserReview[]>({
-    queryKey: ["/api/users", userId, "reviews"],
+    queryKey: ["user-reviews", validUserId],
+    queryFn: async ({ queryKey }) => {
+      const [, id] = queryKey as [string, string];
+      const res = await fetch(`/api/users/${id}/reviews`);
+      if (!res.ok) throw new Error("Failed to fetch user reviews");
+      return res.json();
+    },
     enabled: !!userId,
   });
 
@@ -132,7 +152,7 @@ export default function UserProfile() {
       setReviewTitle("");
       setReviewContent("");
       setReviewRating(5);
-      queryClient.invalidateQueries({ queryKey: ["/api/users", userId, "reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["user-reviews", validUserId] });
     },
     onError: () => {
       toast({
