@@ -39,8 +39,43 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 
 **Database**: PostgreSQL with Drizzle ORM for type-safe operations.
-**Database Tables**: `sessions`, `users`, `seller_leads`, `investor_leads`, `contacts`, `projects`, `articles`, `lead_activities`, `wholesale_deals`, `wholesale_requests`.
+**Database Tables**: `sessions`, `users`, `user_roles`, `staff_profiles`, `seller_leads`, `investor_leads`, `contacts`, `projects`, `articles`, `lead_activities`, `wholesale_deals`, `wholesale_requests`, `investor_profiles`, `investor_wanted_deals`, `capital_projects`, `project_investments`, `deal_offers`, `deal_bookmarks`, `user_stats`, `user_reviews`, `community_categories`, `community_posts`, `community_replies`, `direct_messages`, `notifications`.
 **Schema Migrations**: `npm run db:push` to sync schema changes.
+
+## Key Features
+
+### Dealflow Platform (/dealflow)
+- **My Office**: Personal dashboard with deal stats, saved deals, and activity feed
+- **Marketplace**: Dating-app style swipe interface for browsing deals with Like/Skip/Save actions
+- **Community**: Forum discussions with categories for Market Talk, Deal Analysis, Success Stories, and Q&A
+- **Messages**: Direct messaging between users for deal negotiations
+
+### Portal System (/portal)
+- **Dreamscaper Portal**: Staff dashboard at /hq with lead management, deal overview, and admin tools
+- **Investor Portal**: Investment preferences, wanted deal posting, and capital raising access
+- **Wholesaler Portal**: 3-step deal submission wizard with property details, financials, and media uploads
+- **Buyer Portal**: Property search and deal discovery
+
+### Deal Negotiation System
+- Supports debt (interest rate) and equity (percentage) investment structures
+- Counter-offer system with offer history tracking
+- Offer states: pending, accepted, countered, rejected, expired
+
+### Staff Permission System
+- Role-based access: admin, project_manager, acquisitions, dispositions, it
+- Granular permissions defined in STAFF_PERMISSIONS
+- Admin-only staff management at /api/hq/staff/*
+
+### User Profiles (/profile/:userId)
+- Stats display: deals completed, volume, returns, response rate
+- Reviews and ratings system with 5-star ratings
+- Achievement badges and verification levels
+- Activity timeline and transaction history
+
+### Capital Raising (/capital-raising)
+- Project posting for flips, rentals, multifamily, commercial investments
+- Investment packet downloads and ROI projections
+- Funding progress tracking
 
 ### Build and Deployment
 
