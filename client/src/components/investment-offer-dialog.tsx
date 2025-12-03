@@ -196,7 +196,7 @@ export function InvestmentOfferDialog({
       }
     } else if (hasEquityTerms) {
       if (project.askingEquityPercent) {
-        parts.push(`for ${project.askingEquityPercent} equity`);
+        parts.push(`for ${project.askingEquityPercent}% equity`);
       }
       if (project.askingProfitSplit) {
         parts.push(`with ${project.askingProfitSplit} profit split`);
@@ -285,7 +285,7 @@ export function InvestmentOfferDialog({
                         <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg text-center">
                           <TrendingUp className="w-4 h-4 mx-auto text-blue-600 mb-1" />
                           <p className="text-xs text-muted-foreground">Equity</p>
-                          <p className="font-bold text-blue-600">{project.askingEquityPercent}</p>
+                          <p className="font-bold text-blue-600">{project.askingEquityPercent}%</p>
                         </div>
                       )}
                       {project.askingProfitSplit && (
@@ -309,7 +309,7 @@ export function InvestmentOfferDialog({
                     data-testid="button-accept-operator-terms"
                   >
                     <CheckCircle2 className="w-5 h-5 mr-2" />
-                    Accept Operator's Terms
+                    Accept Terms & Invest
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 )}
@@ -321,7 +321,7 @@ export function InvestmentOfferDialog({
                   data-testid="button-make-counter-offer"
                 >
                   <Send className="w-5 h-5 mr-2" />
-                  {hasOperatorTerms ? "Make Counter-Offer" : "Submit Investment Offer"}
+                  {hasOperatorTerms ? "Counter-Offer" : "Submit Investment Offer"}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
@@ -386,7 +386,7 @@ export function InvestmentOfferDialog({
                       {hasEquityTerms && project.askingEquityPercent && (
                         <div>
                           <p className="text-muted-foreground text-xs">Equity</p>
-                          <p className="font-semibold text-blue-600">{project.askingEquityPercent}</p>
+                          <p className="font-semibold text-blue-600">{project.askingEquityPercent}%</p>
                         </div>
                       )}
                       {project.askingProfitSplit && (

@@ -255,6 +255,8 @@ const dealflowCapitalProjects = [
     structure: "EQUITY",
     projectedReturn: "20-25%",
     holdPeriod: "6-10 months",
+    askingEquityPercent: 20,
+    askingProfitSplit: "70/30",
     status: "FUNDED",
     images: [
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800"
@@ -283,6 +285,8 @@ const dealflowCapitalProjects = [
     structure: "EQUITY",
     projectedReturn: "16-20%",
     holdPeriod: "4-6 months",
+    askingEquityPercent: 15,
+    askingProfitSplit: "80/20",
     status: "OPEN_FOR_INVESTMENT",
     images: [
       "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800"

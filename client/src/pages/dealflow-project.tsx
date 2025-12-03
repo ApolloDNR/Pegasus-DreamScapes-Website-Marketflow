@@ -839,7 +839,7 @@ export default function DealflowProject() {
                       <span className="text-green-600"> at {project.askingInterestRate}</span>
                     )}
                     {project.structure?.toLowerCase() === "equity" && project.askingEquityPercent && (
-                      <span className="text-blue-600"> for {project.askingEquityPercent}</span>
+                      <span className="text-blue-600"> for {project.askingEquityPercent}% equity</span>
                     )}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -1000,7 +1000,7 @@ export default function DealflowProject() {
                       {project.askingEquityPercent && (
                         <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
                           <p className="text-muted-foreground text-xs">Equity Offered</p>
-                          <p className="text-lg font-bold text-blue-600">{project.askingEquityPercent}</p>
+                          <p className="text-lg font-bold text-blue-600">{project.askingEquityPercent}%</p>
                         </div>
                       )}
                       {project.askingProfitSplit && (
