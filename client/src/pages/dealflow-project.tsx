@@ -56,6 +56,7 @@ import {
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { DealChat } from "@/components/deal-chat";
 
 interface CapitalProject {
   id: number;
@@ -697,7 +698,7 @@ export default function DealflowProject() {
                               </div>
                             </div>
                             
-                            {negotiation.status === "pending" && negotiation.responderId === user?.claims?.sub && (
+                            {negotiation.status === "pending" && negotiation.responderId === user?.id && (
                               <div className="flex flex-col gap-2">
                                 <Button size="sm" variant="default" className="gap-1" data-testid={`button-accept-${negotiation.id}`}>
                                   <CheckCircle2 className="w-3 h-3" />
@@ -947,6 +948,13 @@ export default function DealflowProject() {
                 </div>
               </CardContent>
             </Card>
+
+            {projectId && (
+              <DealChat 
+                dealType="capital_project" 
+                dealId={projectId} 
+              />
+            )}
           </div>
         </div>
       </div>
