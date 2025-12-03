@@ -382,8 +382,8 @@ export async function registerRoutes(
     }
   });
 
-  // Protected HQ Routes (require authentication)
-  app.get("/api/hq/seller-leads", isAuthenticated, async (req, res) => {
+  // Protected HQ Routes (require staff role)
+  app.get("/api/hq/seller-leads", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const leads = await storage.getSellerLeads();
       return res.json(leads);
@@ -393,7 +393,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/hq/investor-leads", isAuthenticated, async (req, res) => {
+  app.get("/api/hq/investor-leads", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const leads = await storage.getInvestorLeads();
       return res.json(leads);
@@ -403,7 +403,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/hq/contacts", isAuthenticated, async (req, res) => {
+  app.get("/api/hq/contacts", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const contactsList = await storage.getContacts();
       return res.json(contactsList);
@@ -413,7 +413,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/seller-leads/:id/status", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/seller-leads/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
@@ -428,7 +428,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/investor-leads/:id/status", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/investor-leads/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
@@ -443,7 +443,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/contacts/:id/status", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/contacts/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
@@ -458,8 +458,8 @@ export async function registerRoutes(
     }
   });
 
-  // Lead Activities Routes (for CRM)
-  app.get("/api/hq/activities/:leadType/:leadId", isAuthenticated, async (req, res) => {
+  // Lead Activities Routes (for CRM - staff only)
+  app.get("/api/hq/activities/:leadType/:leadId", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const { leadType, leadId } = req.params;
       const activities = await storage.getLeadActivities(leadType, parseInt(leadId));
@@ -470,7 +470,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/hq/activities", isAuthenticated, async (req, res) => {
+  app.post("/api/hq/activities", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const { leadType, leadId, activityType, notes, followUpDate } = req.body;
       const activity = await storage.createLeadActivity({
@@ -487,7 +487,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/activities/:id/complete", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/activities/:id/complete", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updated = await storage.markActivityCompleted(id);
@@ -501,8 +501,8 @@ export async function registerRoutes(
     }
   });
 
-  // Queue Routes (for work queue/task management)
-  app.get("/api/hq/queue", isAuthenticated, async (req, res) => {
+  // Queue Routes (for work queue/task management - staff only)
+  app.get("/api/hq/queue", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const queueItems = await storage.getQueueItems();
       return res.json(queueItems);
@@ -590,8 +590,8 @@ export async function registerRoutes(
     }
   });
 
-  // Protected HQ Wholesale Routes
-  app.get("/api/hq/wholesale-deals", isAuthenticated, async (req, res) => {
+  // Protected HQ Wholesale Routes (staff only)
+  app.get("/api/hq/wholesale-deals", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const deals = await storage.getWholesaleDeals();
       return res.json(deals);
@@ -601,7 +601,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/hq/wholesale-deals", isAuthenticated, async (req, res) => {
+  app.post("/api/hq/wholesale-deals", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const result = insertWholesaleDealSchema.safeParse(req.body);
       if (!result.success) {
@@ -619,7 +619,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/wholesale-deals/:id/status", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/wholesale-deals/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status, notes } = req.body;
@@ -634,7 +634,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/wholesale-deals/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/wholesale-deals/:id", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updated = await storage.updateWholesaleDeal(id, req.body);
@@ -648,7 +648,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/hq/wholesale-requests", isAuthenticated, async (req, res) => {
+  app.get("/api/hq/wholesale-requests", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const requests = await storage.getWholesaleRequests();
       return res.json(requests);
@@ -658,7 +658,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/hq/wholesale-deals/:id/requests", isAuthenticated, async (req, res) => {
+  app.get("/api/hq/wholesale-deals/:id/requests", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const dealId = parseInt(req.params.id);
       const requests = await storage.getWholesaleRequestsByDeal(dealId);
@@ -669,7 +669,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/hq/wholesale-requests/:id/status", isAuthenticated, async (req, res) => {
+  app.patch("/api/hq/wholesale-requests/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
