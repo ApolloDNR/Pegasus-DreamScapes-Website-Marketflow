@@ -617,6 +617,38 @@ export async function registerRoutes(
     }
   });
 
+  // Wholesaler deal submission (authenticated wholesalers)
+  app.post("/api/wholesale-deals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Check if user has a wholesaler profile
+      const profile = await storage.getWholesalerProfile(userId);
+      if (!profile) {
+        return res.status(403).json({ message: "Please complete your wholesaler profile first" });
+      }
+      
+      const result = insertWholesaleDealSchema.safeParse({
+        ...req.body,
+        submittedBy: userId,
+        status: "under_review", // All submitted deals start under review
+      });
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: fromError(result.error).toString() 
+        });
+      }
+      
+      const deal = await storage.createWholesaleDeal(result.data);
+      console.log("New wholesale deal submitted by wholesaler:", deal.propertyAddress);
+      return res.status(201).json(deal);
+    } catch (error) {
+      console.error("Error submitting wholesale deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Protected HQ Wholesale Routes (staff only)
   app.get("/api/hq/wholesale-deals", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
@@ -1795,6 +1827,111 @@ export async function registerRoutes(
   });
 
   // =====================================================
+  // Staff Management Routes (Admin only)
+  // =====================================================
+  
+  // Get all staff members with their roles
+  app.get("/api/hq/staff", isAuthenticated, requireRole("admin"), async (req: any, res) => {
+    try {
+      const profiles = await storage.getAllStaffProfiles();
+      // Get roles for each staff member
+      const staffWithRoles = await Promise.all(
+        profiles.map(async (profile) => {
+          const user = await storage.getUser(profile.userId);
+          const roles = await storage.getUserRoles(profile.userId);
+          return {
+            ...profile,
+            user,
+            roles: roles.map(r => r.role),
+          };
+        })
+      );
+      return res.json(staffWithRoles);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all users with staff roles (for listing team)
+  app.get("/api/hq/staff/all-users", isAuthenticated, requireRole("admin"), async (req: any, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      // Get roles for each user
+      const usersWithRoles = await Promise.all(
+        allUsers.map(async (user) => {
+          const roles = await storage.getUserRoles(user.id);
+          return {
+            ...user,
+            roles: roles.map(r => r.role),
+          };
+        })
+      );
+      return res.json(usersWithRoles);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Add role to user
+  app.post("/api/hq/staff/roles", isAuthenticated, requireRole("admin"), async (req: any, res) => {
+    try {
+      const { userId, role } = req.body;
+      if (!userId || !role) {
+        return res.status(400).json({ message: "userId and role are required" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Add the role
+      await storage.addUserRole({ userId, role });
+      
+      // Return updated roles
+      const roles = await storage.getUserRoles(userId);
+      return res.json({ userId, roles: roles.map(r => r.role) });
+    } catch (error) {
+      console.error("Error adding role:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Remove role from user
+  app.delete("/api/hq/staff/roles", isAuthenticated, requireRole("admin"), async (req: any, res) => {
+    try {
+      const { userId, role } = req.body;
+      if (!userId || !role) {
+        return res.status(400).json({ message: "userId and role are required" });
+      }
+      
+      // Remove the role
+      await storage.removeUserRole(userId, role);
+      
+      // Return updated roles
+      const roles = await storage.getUserRoles(userId);
+      return res.json({ userId, roles: roles.map(r => r.role) });
+    } catch (error) {
+      console.error("Error removing role:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create or update staff profile
+  app.post("/api/hq/staff/profile", isAuthenticated, requireRole("admin"), async (req: any, res) => {
+    try {
+      const profile = await storage.upsertStaffProfile(req.body);
+      return res.json(profile);
+    } catch (error) {
+      console.error("Error creating/updating staff profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
   // Notifications Routes
   // =====================================================
   
@@ -1878,6 +2015,453 @@ export async function registerRoutes(
       return res.status(201).json(notification);
     } catch (error) {
       console.error("Error creating notification:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Investor Wanted Deals Routes
+  // =====================================================
+  
+  // Get all active investor wanted deals (public)
+  app.get("/api/investor-wanted-deals", async (req, res) => {
+    try {
+      const deals = await storage.getActiveInvestorWantedDeals();
+      return res.json(deals);
+    } catch (error) {
+      console.error("Error fetching investor wanted deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get my investor wanted deals
+  app.get("/api/my-investor-wanted-deals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const deals = await storage.getInvestorWantedDealsByUser(userId);
+      return res.json(deals);
+    } catch (error) {
+      console.error("Error fetching my investor wanted deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get single investor wanted deal
+  app.get("/api/investor-wanted-deals/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const deal = await storage.getInvestorWantedDeal(id);
+      if (!deal) {
+        return res.status(404).json({ message: "Investor wanted deal not found" });
+      }
+      return res.json(deal);
+    } catch (error) {
+      console.error("Error fetching investor wanted deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create investor wanted deal
+  app.post("/api/investor-wanted-deals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const deal = await storage.createInvestorWantedDeal({ ...req.body, userId });
+      return res.status(201).json(deal);
+    } catch (error) {
+      console.error("Error creating investor wanted deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update investor wanted deal
+  app.patch("/api/investor-wanted-deals/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      
+      // Verify ownership
+      const existingDeal = await storage.getInvestorWantedDeal(id);
+      if (!existingDeal) {
+        return res.status(404).json({ message: "Investor wanted deal not found" });
+      }
+      if (existingDeal.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this deal" });
+      }
+      
+      const deal = await storage.updateInvestorWantedDeal(id, req.body);
+      return res.json(deal);
+    } catch (error) {
+      console.error("Error updating investor wanted deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete investor wanted deal
+  app.delete("/api/investor-wanted-deals/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      
+      // Verify ownership
+      const existingDeal = await storage.getInvestorWantedDeal(id);
+      if (!existingDeal) {
+        return res.status(404).json({ message: "Investor wanted deal not found" });
+      }
+      if (existingDeal.userId !== userId) {
+        const isStaff = await storage.hasAnyStaffRole(userId);
+        if (!isStaff) {
+          return res.status(403).json({ message: "Not authorized to delete this deal" });
+        }
+      }
+      
+      await storage.deleteInvestorWantedDeal(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting investor wanted deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // User Profile Routes
+  // =====================================================
+  
+  // Get user profile by ID
+  app.get("/api/users/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const roles = await storage.getUserRoles(userId);
+      return res.json({
+        ...user,
+        roles: roles.map(r => r.role)
+      });
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // User Reviews Routes
+  // =====================================================
+  
+  // Get reviews for a user
+  app.get("/api/users/:userId/reviews", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const reviews = await storage.getUserReviews(userId);
+      return res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching user reviews:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get my given reviews
+  app.get("/api/my-reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reviews = await storage.getReviewsByReviewer(userId);
+      return res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching my reviews:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create review
+  app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewerId = req.user.claims.sub;
+      const { revieweeId, dealType, dealId, transactionRole, overallRating, 
+              communicationRating, reliabilityRating, professionalismRating, title, content } = req.body;
+      
+      if (!revieweeId || !overallRating) {
+        return res.status(400).json({ message: "Reviewee ID and rating are required" });
+      }
+      
+      if (reviewerId === revieweeId) {
+        return res.status(400).json({ message: "Cannot review yourself" });
+      }
+      
+      const review = await storage.createUserReview({
+        reviewerId,
+        revieweeId,
+        dealType,
+        dealId,
+        transactionRole,
+        overallRating,
+        communicationRating,
+        reliabilityRating,
+        professionalismRating,
+        title,
+        content
+      });
+      return res.status(201).json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Respond to review (reviewee only)
+  app.post("/api/reviews/:id/respond", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      const { response } = req.body;
+      
+      // Verify this is the reviewee
+      const review = await storage.getUserReview(id);
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      if (review.revieweeId !== userId) {
+        return res.status(403).json({ message: "Only the reviewee can respond to this review" });
+      }
+      
+      const updated = await storage.respondToReview(id, response);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error responding to review:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // User Stats Routes
+  // =====================================================
+  
+  // Get user stats
+  app.get("/api/users/:userId/stats", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const stats = await storage.getUserStats(userId);
+      return res.json(stats || {});
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Deal Negotiations Routes
+  // =====================================================
+  
+  // Get negotiations for a deal
+  app.get("/api/negotiations/:dealType/:dealId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { dealType, dealId } = req.params;
+      const negotiations = await storage.getDealNegotiations(dealType, Number(dealId));
+      return res.json(negotiations);
+    } catch (error) {
+      console.error("Error fetching deal negotiations:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get my negotiations
+  app.get("/api/my-negotiations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const negotiations = await storage.getNegotiationsByUser(userId);
+      return res.json(negotiations);
+    } catch (error) {
+      console.error("Error fetching my negotiations:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create negotiation (make offer/counter-offer)
+  app.post("/api/negotiations", isAuthenticated, async (req: any, res) => {
+    try {
+      const initiatorId = req.user.claims.sub;
+      const { dealType, dealId, responderId, structureType, 
+              proposedEquityPercent, proposedInterestRate, proposedAmount, proposedLoanTerm,
+              proposedPreferredReturn, proposedProfitSplit, proposedHoldPeriod, exitStrategy,
+              notes, isCounterOffer, parentNegotiationId } = req.body;
+      
+      if (!dealType || !dealId || !responderId || !structureType) {
+        return res.status(400).json({ message: "Deal type, deal ID, responder ID, and structure type are required" });
+      }
+      
+      const negotiation = await storage.createDealNegotiation({
+        dealType,
+        dealId,
+        initiatorId,
+        responderId,
+        structureType,
+        proposedEquityPercent,
+        proposedInterestRate,
+        proposedAmount,
+        proposedLoanTerm,
+        proposedPreferredReturn,
+        proposedProfitSplit,
+        proposedHoldPeriod,
+        exitStrategy,
+        notes,
+        isCounterOffer: isCounterOffer || false,
+        parentNegotiationId
+      });
+      return res.status(201).json(negotiation);
+    } catch (error) {
+      console.error("Error creating negotiation:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get negotiation thread (original + all counter-offers)
+  app.get("/api/negotiations/:id/thread", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const thread = await storage.getNegotiationThread(id);
+      return res.json(thread);
+    } catch (error) {
+      console.error("Error fetching negotiation thread:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Respond to negotiation (accept/decline/counter)
+  app.post("/api/negotiations/:id/respond", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      const { status } = req.body;
+      
+      if (!["accepted", "declined", "countered"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      // Verify user is the responder
+      const negotiation = await storage.getDealNegotiation(id);
+      if (!negotiation) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+      if (negotiation.responderId !== userId) {
+        return res.status(403).json({ message: "Only the responder can respond to this negotiation" });
+      }
+      
+      const updated = await storage.updateNegotiationStatus(id, status);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error responding to negotiation:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Wholesale Deal Documents Routes
+  // =====================================================
+  
+  // Get documents for a wholesale deal
+  app.get("/api/wholesale-deals/:dealId/documents", async (req, res) => {
+    try {
+      const dealId = Number(req.params.dealId);
+      const documents = await storage.getWholesaleDealDocuments(dealId);
+      return res.json(documents);
+    } catch (error) {
+      console.error("Error fetching wholesale deal documents:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Upload document (wholesaler only)
+  app.post("/api/wholesale-deals/:dealId/documents", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const dealId = Number(req.params.dealId);
+      
+      // Verify ownership of deal
+      const deal = await storage.getWholesaleDeal(dealId);
+      if (!deal) {
+        return res.status(404).json({ message: "Wholesale deal not found" });
+      }
+      if (deal.submittedBy !== userId) {
+        const isStaff = await storage.hasAnyStaffRole(userId);
+        if (!isStaff) {
+          return res.status(403).json({ message: "Not authorized to add documents to this deal" });
+        }
+      }
+      
+      const document = await storage.createWholesaleDealDocument({
+        dealId,
+        uploadedBy: userId,
+        ...req.body
+      });
+      return res.status(201).json(document);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete document
+  app.delete("/api/wholesale-deal-documents/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.deleteWholesaleDealDocument(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Deal Analyzer Routes
+  // =====================================================
+  
+  // Get my analyzer results
+  app.get("/api/my-deal-analyses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const results = await storage.getDealAnalyzerResults(userId);
+      return res.json(results);
+    } catch (error) {
+      console.error("Error fetching deal analyses:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Save analyzer result
+  app.post("/api/deal-analyses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.createDealAnalyzerResult({
+        userId,
+        ...req.body
+      });
+      return res.status(201).json(result);
+    } catch (error) {
+      console.error("Error saving deal analysis:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete analyzer result
+  app.delete("/api/deal-analyses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = Number(req.params.id);
+      
+      // Verify ownership
+      const result = await storage.getDealAnalyzerResult(id);
+      if (!result) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+      if (result.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this analysis" });
+      }
+      
+      await storage.deleteDealAnalyzerResult(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting deal analysis:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

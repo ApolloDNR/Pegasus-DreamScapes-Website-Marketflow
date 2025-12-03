@@ -44,12 +44,96 @@ export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
 export type UserRole = typeof userRoles.$inferSelect;
 
 // Role constants for type safety
-export const STAFF_ROLES = ["admin", "project_manager", "acquisitions", "dispositions"] as const;
-export const PORTAL_ROLES = ["investor", "wholesaler", "buyer"] as const;
+export const STAFF_ROLES = ["admin", "project_manager", "acquisitions", "dispositions", "it"] as const;
+export const PORTAL_ROLES = ["investor", "wholesaler", "buyer", "dreamscaper"] as const;
 export const ALL_ROLES = [...STAFF_ROLES, ...PORTAL_ROLES] as const;
 export type StaffRole = typeof STAFF_ROLES[number];
 export type PortalRole = typeof PORTAL_ROLES[number];
 export type Role = typeof ALL_ROLES[number];
+
+// Staff Role Permissions - defines what each role can access/do
+export const STAFF_PERMISSIONS = {
+  admin: {
+    label: "Administrator",
+    description: "Full system access with all permissions",
+    permissions: [
+      "manage_staff",
+      "manage_users", 
+      "manage_leads",
+      "manage_deals",
+      "manage_projects",
+      "manage_capital",
+      "manage_announcements",
+      "manage_community",
+      "view_analytics",
+      "manage_settings",
+    ],
+  },
+  project_manager: {
+    label: "Project Manager",
+    description: "Manages projects, timelines, and team coordination",
+    permissions: [
+      "manage_projects",
+      "manage_deals",
+      "view_leads",
+      "manage_capital",
+      "view_analytics",
+      "manage_community",
+    ],
+  },
+  acquisitions: {
+    label: "Acquisitions",
+    description: "Handles property acquisitions and seller leads",
+    permissions: [
+      "manage_leads",
+      "manage_deals",
+      "view_projects",
+      "view_analytics",
+    ],
+  },
+  dispositions: {
+    label: "Dispositions",
+    description: "Handles property sales and buyer management",
+    permissions: [
+      "manage_leads",
+      "manage_deals",
+      "view_projects",
+      "view_analytics",
+    ],
+  },
+  it: {
+    label: "IT / Tech Support",
+    description: "Technical support and system maintenance",
+    permissions: [
+      "manage_settings",
+      "view_analytics",
+      "view_users",
+    ],
+  },
+} as const;
+
+export type StaffPermission = 
+  | "manage_staff"
+  | "manage_users"
+  | "manage_leads"
+  | "manage_deals"
+  | "manage_projects"
+  | "manage_capital"
+  | "manage_announcements"
+  | "manage_community"
+  | "view_analytics"
+  | "manage_settings"
+  | "view_leads"
+  | "view_projects"
+  | "view_users";
+
+// Helper function to check if a role has a specific permission
+export function hasPermission(roles: string[], permission: StaffPermission): boolean {
+  return roles.some(role => {
+    const staffRole = STAFF_PERMISSIONS[role as StaffRole];
+    return staffRole?.permissions.includes(permission);
+  });
+}
 
 // Staff Profiles - for internal team members
 export const staffProfiles = pgTable("staff_profiles", {
@@ -829,3 +913,239 @@ export const investorActivity = pgTable("investor_activity", {
 });
 
 export type InvestorActivity = typeof investorActivity.$inferSelect;
+
+// Investor Wanted Deals - investors posting what they're looking for
+export const investorWantedDeals = pgTable("investor_wanted_deals", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  // Investment criteria
+  propertyTypes: text("property_types").array(), // single-family, multi-family, commercial, industrial
+  strategies: text("strategies").array(), // fix-flip, buy-hold, BRRRR, development
+  locations: text("locations").array(), // target markets
+  // Budget
+  minBudget: integer("min_budget"),
+  maxBudget: integer("max_budget"),
+  // Returns
+  targetReturnMin: integer("target_return_min"), // percentage
+  targetReturnMax: integer("target_return_max"),
+  targetIRR: varchar("target_irr", { length: 50 }),
+  // Deal structure preferences
+  preferredStructure: varchar("preferred_structure", { length: 50 }), // equity, debt, hybrid
+  maxEquityPercent: integer("max_equity_percent"),
+  maxInterestRate: varchar("max_interest_rate", { length: 20 }),
+  // Capacity
+  activelyLooking: boolean("actively_looking").default(true),
+  availableCapital: integer("available_capital"),
+  dealsWanted: integer("deals_wanted"), // how many deals they want to fund
+  // Timeline
+  urgency: varchar("urgency", { length: 50 }), // immediate, this_month, this_quarter
+  holdPeriodPreference: varchar("hold_period_preference", { length: 50 }),
+  // Status
+  isPublic: boolean("is_public").default(true),
+  isFeatured: boolean("is_featured").default(false),
+  viewCount: integer("view_count").default(0),
+  responseCount: integer("response_count").default(0),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertInvestorWantedDealSchema = createInsertSchema(investorWantedDeals).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  viewCount: true,
+  responseCount: true
+});
+export type InsertInvestorWantedDeal = z.infer<typeof insertInvestorWantedDealSchema>;
+export type InvestorWantedDeal = typeof investorWantedDeals.$inferSelect;
+
+// User Reviews - ratings and reviews between users
+export const userReviews = pgTable("user_reviews", {
+  id: serial("id").primaryKey(),
+  reviewerId: varchar("reviewer_id", { length: 255 }).notNull(),
+  revieweeId: varchar("reviewee_id", { length: 255 }).notNull(),
+  // Transaction context
+  dealType: varchar("deal_type", { length: 50 }), // capital_project, wholesale_deal
+  dealId: integer("deal_id"),
+  transactionRole: varchar("transaction_role", { length: 50 }), // investor, wholesaler, dreamscaper
+  // Ratings (1-5 stars)
+  overallRating: integer("overall_rating").notNull(),
+  communicationRating: integer("communication_rating"),
+  reliabilityRating: integer("reliability_rating"),
+  professionalismRating: integer("professionalism_rating"),
+  // Review content
+  title: varchar("title", { length: 255 }),
+  content: text("content"),
+  // Response from reviewee
+  response: text("response"),
+  responseAt: timestamp("response_at"),
+  // Status
+  isPublic: boolean("is_public").default(true),
+  isVerified: boolean("is_verified").default(false), // verified transaction
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserReviewSchema = createInsertSchema(userReviews).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  response: true,
+  responseAt: true,
+  isVerified: true
+});
+export type InsertUserReview = z.infer<typeof insertUserReviewSchema>;
+export type UserReview = typeof userReviews.$inferSelect;
+
+// User Stats - aggregated statistics for user profiles
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  // Deal statistics
+  totalDealsCompleted: integer("total_deals_completed").default(0),
+  totalDealsValue: integer("total_deals_value").default(0),
+  totalInvested: integer("total_invested").default(0),
+  totalReturns: integer("total_returns").default(0),
+  avgReturnRate: varchar("avg_return_rate", { length: 20 }),
+  // Ratings
+  avgOverallRating: varchar("avg_overall_rating", { length: 10 }),
+  totalReviews: integer("total_reviews").default(0),
+  // Activity
+  dealsListed: integer("deals_listed").default(0),
+  projectsFunded: integer("projects_funded").default(0),
+  communityPosts: integer("community_posts").default(0),
+  responseRate: varchar("response_rate", { length: 10 }),
+  avgResponseTime: varchar("avg_response_time", { length: 50 }),
+  // Badges/Achievements
+  badges: text("badges").array(),
+  verificationLevel: varchar("verification_level", { length: 50 }).default("basic"), // basic, verified, premium
+  // Member since
+  memberSince: timestamp("member_since"),
+  lastActiveAt: timestamp("last_active_at"),
+  // Timestamps
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type UserStats = typeof userStats.$inferSelect;
+
+// Deal Negotiations - detailed negotiation history for deals
+export const dealNegotiations = pgTable("deal_negotiations", {
+  id: serial("id").primaryKey(),
+  // Deal reference
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // capital_project, wholesale_deal
+  dealId: integer("deal_id").notNull(),
+  offerId: integer("offer_id"), // reference to investment_offers if applicable
+  // Participants
+  initiatorId: varchar("initiator_id", { length: 255 }).notNull(),
+  responderId: varchar("responder_id", { length: 255 }).notNull(),
+  // Structure type
+  structureType: varchar("structure_type", { length: 50 }).notNull(), // debt, equity, hybrid
+  // Current terms (for debt deals)
+  proposedInterestRate: varchar("proposed_interest_rate", { length: 20 }),
+  proposedLoanTerm: varchar("proposed_loan_term", { length: 50 }),
+  proposedLTV: integer("proposed_ltv"), // loan to value percentage
+  proposedPoints: varchar("proposed_points", { length: 20 }),
+  // Current terms (for equity deals)
+  proposedEquityPercent: integer("proposed_equity_percent"),
+  proposedPreferredReturn: varchar("proposed_preferred_return", { length: 20 }),
+  proposedProfitSplit: varchar("proposed_profit_split", { length: 50 }), // e.g., "70/30"
+  proposedVestingSchedule: varchar("proposed_vesting_schedule", { length: 255 }),
+  // General terms
+  proposedAmount: integer("proposed_amount"),
+  proposedHoldPeriod: varchar("proposed_hold_period", { length: 50 }),
+  exitStrategy: varchar("exit_strategy", { length: 100 }),
+  notes: text("notes"),
+  // Counter offer fields
+  isCounterOffer: boolean("is_counter_offer").default(false),
+  parentNegotiationId: integer("parent_negotiation_id"),
+  // Status: pending, accepted, rejected, countered, expired
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  expiresAt: timestamp("expires_at"),
+  respondedAt: timestamp("responded_at"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDealNegotiationSchema = createInsertSchema(dealNegotiations).omit({ 
+  id: true, 
+  createdAt: true,
+  respondedAt: true,
+  status: true
+});
+export type InsertDealNegotiation = z.infer<typeof insertDealNegotiationSchema>;
+export type DealNegotiation = typeof dealNegotiations.$inferSelect;
+
+// Wholesale Deal Documents - files and images for wholesale deals
+export const wholesaleDealDocuments = pgTable("wholesale_deal_documents", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  // Document info
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(), // image, pdf, spreadsheet, contract
+  fileSize: integer("file_size"),
+  // Category
+  category: varchar("category", { length: 100 }), // property_photos, before_photos, inspection, title, contract, comps
+  description: text("description"),
+  // Access control
+  isPublic: boolean("is_public").default(true),
+  accessLevel: varchar("access_level", { length: 50 }).default("all"), // all, verified, approved_buyers
+  // Timestamps
+  uploadedBy: varchar("uploaded_by", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertWholesaleDealDocumentSchema = createInsertSchema(wholesaleDealDocuments).omit({ 
+  id: true, 
+  createdAt: true
+});
+export type InsertWholesaleDealDocument = z.infer<typeof insertWholesaleDealDocumentSchema>;
+export type WholesaleDealDocument = typeof wholesaleDealDocuments.$inferSelect;
+
+// Deal Analyzer Results - saved calculator results for deals
+export const dealAnalyzerResults = pgTable("deal_analyzer_results", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  dealType: varchar("deal_type", { length: 50 }), // wholesale_deal, capital_project, custom
+  dealId: integer("deal_id"),
+  name: varchar("name", { length: 255 }),
+  // Input values
+  purchasePrice: integer("purchase_price"),
+  arv: integer("arv"),
+  repairCost: integer("repair_cost"),
+  holdingCosts: integer("holding_costs"),
+  closingCosts: integer("closing_costs"),
+  sellingCosts: integer("selling_costs"),
+  assignmentFee: integer("assignment_fee"),
+  // Loan info
+  loanAmount: integer("loan_amount"),
+  interestRate: varchar("interest_rate", { length: 20 }),
+  loanTerm: integer("loan_term"),
+  points: varchar("points", { length: 20 }),
+  // Calculated results
+  totalInvestment: integer("total_investment"),
+  potentialProfit: integer("potential_profit"),
+  roi: varchar("roi", { length: 20 }),
+  cashOnCash: varchar("cash_on_cash", { length: 20 }),
+  capRate: varchar("cap_rate", { length: 20 }),
+  mao: integer("mao"), // max allowable offer
+  // Analysis type
+  analysisType: varchar("analysis_type", { length: 50 }).default("flip"), // flip, rental, brrrr, wholesale
+  // Full calculation data
+  calculationData: jsonb("calculation_data"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDealAnalyzerResultSchema = createInsertSchema(dealAnalyzerResults).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true
+});
+export type InsertDealAnalyzerResult = z.infer<typeof insertDealAnalyzerResultSchema>;
+export type DealAnalyzerResult = typeof dealAnalyzerResults.$inferSelect;

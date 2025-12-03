@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { DealflowLayout } from "@/components/dealflow-layout";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NegotiationHistoryDialog } from "@/components/negotiation-history";
 import { 
   Building2, 
   DollarSign, 
@@ -34,9 +36,15 @@ import {
   BarChart3,
   TrendingDown,
   ArrowUpRight,
-  Calendar
+  Calendar,
+  Scale,
+  ArrowRightLeft,
+  X,
+  Check,
+  Percent
 } from "lucide-react";
 import { Link } from "wouter";
+import { format } from "date-fns";
 
 interface SavedDealBookmark {
   id: number;
@@ -76,8 +84,22 @@ interface CapitalProject {
   images?: string[];
 }
 
+interface DealNegotiation {
+  id: number;
+  dealType: string;
+  dealId: number;
+  initiatorId: string;
+  responderId: string;
+  structureType: string;
+  proposedAmount?: number;
+  status: string;
+  createdAt: string;
+}
+
 export default function DealflowOffice() {
   const { user } = useAuth();
+  const [selectedNegotiationId, setSelectedNegotiationId] = useState<number | null>(null);
+  const [negotiationHistoryOpen, setNegotiationHistoryOpen] = useState(false);
 
   const { data: capitalProjects = [] } = useQuery<CapitalProject[]>({
     queryKey: ["/api/capital-projects"],
@@ -97,6 +119,11 @@ export default function DealflowOffice() {
 
   const { data: unreadMessages = { count: 0 } } = useQuery<{ count: number }>({
     queryKey: ["/api/messages/unread-count"],
+  });
+
+  // Fetch user's negotiations
+  const { data: myNegotiations = [] } = useQuery<DealNegotiation[]>({
+    queryKey: ["/api/my-negotiations"],
   });
 
   // Fetch real saved deals
@@ -544,6 +571,80 @@ export default function DealflowOffice() {
 
             <Card>
               <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Scale className="w-5 h-5 text-blue-500" />
+                    My Negotiations
+                  </CardTitle>
+                  <Badge variant="secondary">{myNegotiations.length}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {myNegotiations.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    <Scale className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                    <p>No active negotiations</p>
+                    <p className="text-xs mt-1">Make offers on deals to start negotiating</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2">
+                      {myNegotiations.slice(0, 5).map((negotiation) => {
+                        const isFromMe = user && negotiation.initiatorId === user.id;
+                        const needsAction = negotiation.status === "pending" && !isFromMe;
+
+                        return (
+                          <div
+                            key={negotiation.id}
+                            className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer"
+                            onClick={() => {
+                              setSelectedNegotiationId(negotiation.id);
+                              setNegotiationHistoryOpen(true);
+                            }}
+                            data-testid={`negotiation-${negotiation.id}`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                negotiation.structureType === "debt" 
+                                  ? "bg-blue-100 dark:bg-blue-950" 
+                                  : "bg-purple-100 dark:bg-purple-950"
+                              }`}>
+                                {negotiation.structureType === "debt" ? (
+                                  <DollarSign className="w-4 h-4 text-blue-600" />
+                                ) : (
+                                  <Percent className="w-4 h-4 text-purple-600" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm truncate">
+                                  {negotiation.dealType.replace("_", " ")} #{negotiation.dealId}
+                                </p>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  {negotiation.status === "pending" && <Clock className="w-3 h-3" />}
+                                  {negotiation.status === "accepted" && <Check className="w-3 h-3 text-green-500" />}
+                                  {negotiation.status === "declined" && <X className="w-3 h-3 text-red-500" />}
+                                  {negotiation.status === "countered" && <ArrowRightLeft className="w-3 h-3 text-blue-500" />}
+                                  <span className="capitalize">{negotiation.status}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {needsAction && (
+                                <Badge className="bg-amber-500 text-white text-xs">Action</Badge>
+                              )}
+                              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -627,6 +728,15 @@ export default function DealflowOffice() {
           </div>
         </div>
       </div>
+
+      {selectedNegotiationId && (
+        <NegotiationHistoryDialog
+          open={negotiationHistoryOpen}
+          onOpenChange={setNegotiationHistoryOpen}
+          negotiationId={selectedNegotiationId}
+          dealTitle={`Negotiation #${selectedNegotiationId}`}
+        />
+      )}
     </DealflowLayout>
   );
 }

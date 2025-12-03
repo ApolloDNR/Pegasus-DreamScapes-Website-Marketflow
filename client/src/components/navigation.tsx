@@ -49,7 +49,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const homeLinks = [
   { href: "#services", label: "Services" },
   { href: "#sell", label: "Sell" },
-  { href: "/buyers", label: "Buy", isRoute: true },
+  { href: "#projects", label: "Buy" },
   { href: "#invest", label: "Invest" },
   { href: "#creed", label: "Dreamscaper" },
   { href: "#contact", label: "Contact" },
@@ -339,28 +339,28 @@ export function Navigation() {
             ? 'bg-background/80 backdrop-blur-xl shadow-lg shadow-black/5 border-b border-border/50' 
             : 'bg-gradient-to-b from-black/50 to-transparent'
         }`}>
-          <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 lg:h-20 flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-3 group" data-testid="link-logo">
+          <div className="w-full px-6 lg:px-10 xl:px-12 h-18 lg:h-22 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-4 group flex-shrink-0" data-testid="link-logo">
               <div className="relative">
                 <img 
                   src={logoImage} 
                   alt="Pegasus Dreamscapes" 
-                  className="h-10 lg:h-12 w-auto transition-transform duration-300 group-hover:scale-105"
+                  className="h-12 lg:h-14 w-auto transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
-              <div className="hidden md:block">
-                <h1 className={`font-serif text-lg lg:text-xl font-semibold tracking-tight transition-colors ${scrolled || !isHomePage ? 'text-foreground' : 'text-white'}`}>
+              <div className="hidden md:block min-w-max">
+                <h1 className={`font-serif text-xl lg:text-2xl font-semibold tracking-tight transition-colors whitespace-nowrap ${scrolled || !isHomePage ? 'text-foreground' : 'text-white'}`}>
                   Pegasus Dreamscapes
                 </h1>
                 <div className="flex items-center gap-2">
-                  <p className={`text-[10px] uppercase tracking-[0.2em] transition-colors ${scrolled || !isHomePage ? 'text-muted-foreground' : 'text-white/70'}`}>
+                  <p className={`text-[11px] uppercase tracking-[0.2em] transition-colors ${scrolled || !isHomePage ? 'text-muted-foreground' : 'text-white/70'}`}>
                     Corp
                   </p>
                   <div className={`h-3 w-px ${scrolled || !isHomePage ? 'bg-border' : 'bg-white/30'}`} />
                   <div className="flex items-center gap-1">
-                    <Zap className={`w-2.5 h-2.5 ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`} />
-                    <span className={`text-[10px] font-medium ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`}>
+                    <Zap className={`w-3 h-3 ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`} />
+                    <span className={`text-[11px] font-medium ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`}>
                       AI-Powered
                     </span>
                   </div>
@@ -368,40 +368,24 @@ export function Navigation() {
               </div>
             </Link>
 
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-2 xl:gap-3">
               {isHomePage ? (
                 <>
                   {homeLinks.map((link) => (
-                    link.isRoute ? (
-                      <Link 
-                        key={link.href} 
-                        href={link.href}
-                        className={`px-3 py-2 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
-                          scrolled 
-                            ? 'text-foreground hover:text-primary hover:bg-primary/5' 
-                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                        }`}
-                        data-testid={`link-nav-${link.label.toLowerCase()}`}
-                      >
-                        {link.label}
-                        <span className={`absolute bottom-1 left-3 right-3 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
-                      </Link>
-                    ) : (
-                      <a 
-                        key={link.href} 
-                        href={link.href}
-                        onClick={(e) => handleScrollClick(e, link.href)}
-                        className={`px-3 py-2 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
-                          scrolled 
-                            ? 'text-foreground hover:text-primary hover:bg-primary/5' 
-                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                        }`}
-                        data-testid={`link-nav-${link.label.toLowerCase()}`}
-                      >
-                        {link.label}
-                        <span className={`absolute bottom-1 left-3 right-3 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
-                      </a>
-                    )
+                    <a 
+                      key={link.href} 
+                      href={link.href}
+                      onClick={(e) => handleScrollClick(e, link.href)}
+                      className={`px-4 py-2.5 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
+                        scrolled 
+                          ? 'text-foreground hover:text-primary hover:bg-primary/5' 
+                          : 'text-white/90 hover:text-white hover:bg-white/10'
+                      }`}
+                      data-testid={`link-nav-${link.label.toLowerCase()}`}
+                    >
+                      {link.label}
+                      <span className={`absolute bottom-1 left-4 right-4 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
+                    </a>
                   ))}
                 </>
               ) : (
@@ -596,27 +580,15 @@ export function Navigation() {
                 {isHomePage ? (
                   <>
                     {homeLinks.map((link) => (
-                      link.isRoute ? (
-                        <Link 
-                          key={link.href} 
-                          href={link.href}
-                          className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all text-foreground hover:bg-secondary cursor-pointer"
-                          onClick={() => setIsOpen(false)}
-                          data-testid={`link-mobile-${link.label.toLowerCase()}`}
-                        >
-                          {link.label}
-                        </Link>
-                      ) : (
-                        <a 
-                          key={link.href} 
-                          href={link.href}
-                          onClick={(e) => handleScrollClick(e, link.href)}
-                          className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all text-foreground hover:bg-secondary cursor-pointer"
-                          data-testid={`link-mobile-${link.label.toLowerCase()}`}
-                        >
-                          {link.label}
-                        </a>
-                      )
+                      <a 
+                        key={link.href} 
+                        href={link.href}
+                        onClick={(e) => handleScrollClick(e, link.href)}
+                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all text-foreground hover:bg-secondary cursor-pointer"
+                        data-testid={`link-mobile-${link.label.toLowerCase()}`}
+                      >
+                        {link.label}
+                      </a>
                     ))}
                   </>
                 ) : (

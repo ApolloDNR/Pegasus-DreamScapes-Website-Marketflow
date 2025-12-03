@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { DealNegotiationDialog } from "@/components/deal-negotiation-dialog";
 import { 
   Building2, 
   DollarSign, 
@@ -41,7 +42,8 @@ import {
   Clock,
   ThumbsUp,
   ArrowUpRight,
-  CheckCircle2
+  CheckCircle2,
+  Scale
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -108,6 +110,14 @@ export default function DealflowDeals() {
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
   const [viewMode, setViewMode] = useState<"deck" | "grid">("deck");
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  const [negotiationOpen, setNegotiationOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<{
+    type: "capital_project" | "wholesale_deal";
+    id: number;
+    title: string;
+    responderId: string;
+    structure?: string;
+  } | null>(null);
 
   const { data: capitalProjects = [], isLoading: loadingProjects } = useQuery<CapitalProject[]>({
     queryKey: ["/api/capital-projects"],
@@ -214,6 +224,17 @@ export default function DealflowDeals() {
   const currentProject = openProjects[currentProjectIndex];
   const currentDeal = activeDeals[currentDealIndex];
 
+  const openNegotiation = (type: "capital_project" | "wholesale_deal", item: any) => {
+    setSelectedDeal({
+      type,
+      id: item.id,
+      title: type === "capital_project" ? item.title : `${item.propertyAddress}, ${item.city}`,
+      responderId: type === "capital_project" ? "staff" : (item.submittedBy || "staff"),
+      structure: item.structure,
+    });
+    setNegotiationOpen(true);
+  };
+
   return (
     <DealflowLayout>
       <div className="container mx-auto px-4 py-6">
@@ -289,6 +310,7 @@ export default function DealflowDeals() {
                     <ProjectMatchCard 
                       project={project} 
                       matchScore={calculateMatchScore(project)}
+                      onNegotiate={() => openNegotiation("capital_project", project)}
                     />
                   )}
                   emptyMessage="No capital projects available"
@@ -301,6 +323,7 @@ export default function DealflowDeals() {
                     <ProjectGridCard 
                       project={project} 
                       matchScore={calculateMatchScore(project)}
+                      onNegotiate={() => openNegotiation("capital_project", project)}
                     />
                   )}
                   emptyMessage="No capital projects available"
@@ -318,7 +341,10 @@ export default function DealflowDeals() {
                   swipeDirection={swipeDirection}
                   onSwipe={(action) => handleSwipeAction(action, "deal")}
                   renderCard={(deal) => (
-                    <WholesaleMatchCard deal={deal} />
+                    <WholesaleMatchCard 
+                      deal={deal}
+                      onNegotiate={() => openNegotiation("wholesale_deal", deal)}
+                    />
                   )}
                   emptyMessage="No wholesale deals available"
                   emptyIcon={<Home className="w-16 h-16 text-muted-foreground" />}
@@ -327,7 +353,10 @@ export default function DealflowDeals() {
                 <GridView
                   items={activeDeals}
                   renderCard={(deal) => (
-                    <WholesaleGridCard deal={deal} />
+                    <WholesaleGridCard 
+                      deal={deal}
+                      onNegotiate={() => openNegotiation("wholesale_deal", deal)}
+                    />
                   )}
                   emptyMessage="No wholesale deals available"
                   emptyIcon={<Home className="w-16 h-16 text-muted-foreground" />}
@@ -337,6 +366,19 @@ export default function DealflowDeals() {
           </Tabs>
         )}
       </div>
+
+      {selectedDeal && (
+        <DealNegotiationDialog
+          open={negotiationOpen}
+          onOpenChange={setNegotiationOpen}
+          dealType={selectedDeal.type}
+          dealId={selectedDeal.id}
+          dealTitle={selectedDeal.title}
+          responderId={selectedDeal.responderId}
+          existingStructure={selectedDeal.structure}
+          onSuccess={() => setNegotiationOpen(false)}
+        />
+      )}
     </DealflowLayout>
   );
 }
@@ -660,7 +702,7 @@ function RatingBar({ label, value, max = 5 }: { label: string; value: number; ma
   );
 }
 
-function ProjectMatchCard({ project, matchScore }: { project: CapitalProject; matchScore: number }) {
+function ProjectMatchCard({ project, matchScore, onNegotiate }: { project: CapitalProject; matchScore: number; onNegotiate?: () => void }) {
   const progress = project.fundingGoal > 0 
     ? Math.round((project.amountRaised / project.fundingGoal) * 100) 
     : 0;
@@ -809,6 +851,16 @@ function ProjectMatchCard({ project, matchScore }: { project: CapitalProject; ma
               View Details
             </Button>
           </Link>
+          {onNegotiate && (
+            <Button 
+              variant="outline"
+              onClick={onNegotiate}
+              data-testid={`button-negotiate-project-${project.id}`}
+            >
+              <Scale className="w-4 h-4 mr-1" />
+              Offer
+            </Button>
+          )}
           <Link href={`/dealflow/project/${project.id}?invest=true`}>
             <Button data-testid={`button-invest-${project.id}`}>
               <DollarSign className="w-4 h-4 mr-1" />
@@ -821,7 +873,7 @@ function ProjectMatchCard({ project, matchScore }: { project: CapitalProject; ma
   );
 }
 
-function ProjectGridCard({ project, matchScore }: { project: CapitalProject; matchScore: number }) {
+function ProjectGridCard({ project, matchScore, onNegotiate }: { project: CapitalProject; matchScore: number; onNegotiate?: () => void }) {
   const progress = project.fundingGoal > 0 
     ? Math.round((project.amountRaised / project.fundingGoal) * 100) 
     : 0;
@@ -888,18 +940,30 @@ function ProjectGridCard({ project, matchScore }: { project: CapitalProject; mat
           <Badge variant="secondary" className="text-xs">{project.holdPeriod}</Badge>
         </div>
 
-        <Link href={`/dealflow/project/${project.id}`}>
-          <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-project-grid-${project.id}`}>
-            View Details
-            <ArrowUpRight className="w-3 h-3 ml-1" />
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/dealflow/project/${project.id}`} className="flex-1">
+            <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-project-grid-${project.id}`}>
+              View Details
+              <ArrowUpRight className="w-3 h-3 ml-1" />
+            </Button>
+          </Link>
+          {onNegotiate && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={onNegotiate}
+              data-testid={`button-negotiate-project-grid-${project.id}`}
+            >
+              <Scale className="w-3 h-3" />
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function WholesaleMatchCard({ deal }: { deal: WholesaleDeal }) {
+function WholesaleMatchCard({ deal, onNegotiate }: { deal: WholesaleDeal; onNegotiate?: () => void }) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -1054,6 +1118,16 @@ function WholesaleMatchCard({ deal }: { deal: WholesaleDeal }) {
               View Details
             </Button>
           </Link>
+          {onNegotiate && (
+            <Button 
+              variant="outline"
+              onClick={onNegotiate}
+              data-testid={`button-negotiate-deal-${deal.id}`}
+            >
+              <Scale className="w-4 h-4 mr-1" />
+              Offer
+            </Button>
+          )}
           <Button data-testid={`button-interested-${deal.id}`}>
             <Zap className="w-4 h-4 mr-1" />
             I Want This
@@ -1064,7 +1138,7 @@ function WholesaleMatchCard({ deal }: { deal: WholesaleDeal }) {
   );
 }
 
-function WholesaleGridCard({ deal }: { deal: WholesaleDeal }) {
+function WholesaleGridCard({ deal, onNegotiate }: { deal: WholesaleDeal; onNegotiate?: () => void }) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -1131,12 +1205,24 @@ function WholesaleGridCard({ deal }: { deal: WholesaleDeal }) {
           </div>
         </div>
 
-        <Link href={`/dealflow/deal/${deal.id}`}>
-          <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-deal-grid-${deal.id}`}>
-            View Details
-            <ArrowUpRight className="w-3 h-3 ml-1" />
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/dealflow/deal/${deal.id}`} className="flex-1">
+            <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-deal-grid-${deal.id}`}>
+              View Details
+              <ArrowUpRight className="w-3 h-3 ml-1" />
+            </Button>
+          </Link>
+          {onNegotiate && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={onNegotiate}
+              data-testid={`button-negotiate-deal-grid-${deal.id}`}
+            >
+              <Scale className="w-3 h-3" />
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

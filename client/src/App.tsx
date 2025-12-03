@@ -31,6 +31,7 @@ import DealflowDeals from "@/pages/dealflow-deals";
 import DealflowProject from "@/pages/dealflow-project";
 import DealflowCommunity from "@/pages/dealflow-community";
 import DealflowMessages from "@/pages/dealflow-messages";
+import UserProfile from "@/pages/user-profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/dealflow/project/:id" component={DealflowProject} />
       <Route path="/dealflow/community" component={DealflowCommunity} />
       <Route path="/dealflow/messages" component={DealflowMessages} />
+      <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
   );

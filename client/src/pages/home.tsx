@@ -298,7 +298,7 @@ function ServicesSection() {
   ];
 
   return (
-    <section id="services" className="py-32 lg:py-40 bg-stone">
+    <section id="services" className="py-32 lg:py-40 bg-stone scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Section header - refined typography */}
         <div className="mb-20">
@@ -379,7 +379,7 @@ function ServicesSection() {
 
 function FeaturedProjectSection() {
   return (
-    <section id="projects" className="py-32 lg:py-40 bg-stone">
+    <section id="projects" className="py-32 lg:py-40 bg-stone scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Section header */}
         <div className="mb-16">
@@ -505,7 +505,7 @@ function SellPropertySection() {
   };
 
   return (
-    <section id="sell" className="py-32 lg:py-40 bg-background">
+    <section id="sell" className="py-32 lg:py-40 bg-background scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-2 gap-20 items-start">
           <div>
@@ -725,7 +725,7 @@ function InvestSection() {
   };
 
   return (
-    <section id="invest" className="py-32 lg:py-40 bg-stone">
+    <section id="invest" className="py-32 lg:py-40 bg-stone scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-2 gap-20 items-start">
           <div className="p-10 sleek-card rounded-lg lg:order-2">
@@ -886,7 +886,7 @@ function DreamsCaperCreedSection() {
   ];
 
   return (
-    <section id="creed" className="py-32 lg:py-40 bg-background">
+    <section id="creed" className="py-32 lg:py-40 bg-background scroll-mt-24">
       <div className="max-w-4xl mx-auto px-6 lg:px-12">
         <div className="text-center mb-20">
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Our Identity</p>
@@ -977,7 +977,7 @@ function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-32 lg:py-40 bg-stone">
+    <section id="contact" className="py-32 lg:py-40 bg-stone scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-2 gap-20 items-start">
           <div>

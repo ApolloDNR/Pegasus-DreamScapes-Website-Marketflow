@@ -22,7 +22,14 @@ import {
   LogIn,
   User,
   BarChart3,
-  FileText
+  FileText,
+  Search,
+  Target,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -32,7 +39,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import type { WholesaleDeal, InvestorProfile } from "@shared/schema";
+import type { WholesaleDeal, InvestorProfile, InvestorWantedDeal } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const profileFormSchema = z.object({
   company: z.string().optional(),
@@ -125,6 +133,10 @@ export default function InvestorPortal() {
               <User className="w-4 h-4 mr-2" />
               My Profile
             </TabsTrigger>
+            <TabsTrigger value="wanted" data-testid="tab-investor-wanted">
+              <Target className="w-4 h-4 mr-2" />
+              Wanted Deals
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -137,6 +149,10 @@ export default function InvestorPortal() {
 
           <TabsContent value="profile">
             <ProfileTab profile={profile} />
+          </TabsContent>
+
+          <TabsContent value="wanted">
+            <WantedDealsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -592,5 +608,753 @@ function ProfileTab({ profile }: { profile?: InvestorProfile }) {
         </Form>
       </CardContent>
     </Card>
+  );
+}
+
+const wantedDealFormSchema = z.object({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  description: z.string().optional(),
+  propertyTypes: z.array(z.string()).min(1, "Select at least one property type"),
+  strategies: z.array(z.string()).min(1, "Select at least one strategy"),
+  locations: z.array(z.string()).optional(),
+  minBudget: z.number().min(0).optional(),
+  maxBudget: z.number().min(0).optional(),
+  targetReturnMin: z.number().min(0).max(100).optional(),
+  targetReturnMax: z.number().min(0).max(100).optional(),
+  preferredStructure: z.string().optional(),
+  maxEquityPercent: z.number().min(0).max(100).optional(),
+  maxInterestRate: z.string().optional(),
+  availableCapital: z.number().min(0).optional(),
+  dealsWanted: z.number().min(1).optional(),
+  urgency: z.string().optional(),
+  holdPeriodPreference: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  activelyLooking: z.boolean().optional(),
+});
+
+type WantedDealFormData = z.infer<typeof wantedDealFormSchema>;
+
+function WantedDealsTab() {
+  const { toast } = useToast();
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingDeal, setEditingDeal] = useState<InvestorWantedDeal | null>(null);
+  const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+  const [strategies, setStrategies] = useState<string[]>([]);
+  const [locationInput, setLocationInput] = useState("");
+  const [locations, setLocations] = useState<string[]>([]);
+
+  const { data: myWantedDeals, isLoading } = useQuery<InvestorWantedDeal[]>({
+    queryKey: ["/api/my-investor-wanted-deals"],
+  });
+
+  const form = useForm<WantedDealFormData>({
+    resolver: zodResolver(wantedDealFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      propertyTypes: [],
+      strategies: [],
+      locations: [],
+      minBudget: undefined,
+      maxBudget: undefined,
+      targetReturnMin: undefined,
+      targetReturnMax: undefined,
+      preferredStructure: "",
+      maxEquityPercent: undefined,
+      maxInterestRate: "",
+      availableCapital: undefined,
+      dealsWanted: 1,
+      urgency: "",
+      holdPeriodPreference: "",
+      isPublic: true,
+      activelyLooking: true,
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: WantedDealFormData) => {
+      return apiRequest("POST", "/api/investor-wanted-deals", {
+        ...data,
+        propertyTypes,
+        strategies,
+        locations,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Criteria Posted",
+        description: "Your investment criteria has been posted. Wholesalers can now see what you're looking for!",
+      });
+      form.reset();
+      setPropertyTypes([]);
+      setStrategies([]);
+      setLocations([]);
+      setIsCreating(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/my-investor-wanted-deals"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post criteria. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<WantedDealFormData> }) => {
+      return apiRequest("PATCH", `/api/investor-wanted-deals/${id}`, {
+        ...data,
+        propertyTypes,
+        strategies,
+        locations,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Criteria Updated",
+        description: "Your investment criteria has been updated.",
+      });
+      setEditingDeal(null);
+      form.reset();
+      setPropertyTypes([]);
+      setStrategies([]);
+      setLocations([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/my-investor-wanted-deals"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update criteria. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/investor-wanted-deals/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Criteria Deleted",
+        description: "Your investment criteria has been removed.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-investor-wanted-deals"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete criteria. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const togglePropertyType = (type: string) => {
+    setPropertyTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleStrategy = (strategy: string) => {
+    setStrategies(prev => 
+      prev.includes(strategy) ? prev.filter(s => s !== strategy) : [...prev, strategy]
+    );
+  };
+
+  const addLocation = () => {
+    if (locationInput.trim() && !locations.includes(locationInput.trim())) {
+      setLocations([...locations, locationInput.trim()]);
+      setLocationInput("");
+    }
+  };
+
+  const removeLocation = (location: string) => {
+    setLocations(locations.filter(l => l !== location));
+  };
+
+  const startEditing = (deal: InvestorWantedDeal) => {
+    setEditingDeal(deal);
+    setPropertyTypes(deal.propertyTypes || []);
+    setStrategies(deal.strategies || []);
+    setLocations(deal.locations || []);
+    form.reset({
+      title: deal.title,
+      description: deal.description || "",
+      propertyTypes: deal.propertyTypes || [],
+      strategies: deal.strategies || [],
+      locations: deal.locations || [],
+      minBudget: deal.minBudget || undefined,
+      maxBudget: deal.maxBudget || undefined,
+      targetReturnMin: deal.targetReturnMin || undefined,
+      targetReturnMax: deal.targetReturnMax || undefined,
+      preferredStructure: deal.preferredStructure || "",
+      maxEquityPercent: deal.maxEquityPercent || undefined,
+      maxInterestRate: deal.maxInterestRate || "",
+      availableCapital: deal.availableCapital || undefined,
+      dealsWanted: deal.dealsWanted || 1,
+      urgency: deal.urgency || "",
+      holdPeriodPreference: deal.holdPeriodPreference || "",
+      isPublic: deal.isPublic ?? true,
+      activelyLooking: deal.activelyLooking ?? true,
+    });
+    setIsCreating(true);
+  };
+
+  const formatCurrency = (amount?: number | null) => {
+    if (!amount) return "Not specified";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const propertyTypeOptions = [
+    { value: "single_family", label: "Single Family" },
+    { value: "multi_family", label: "Multi-Family" },
+    { value: "commercial", label: "Commercial" },
+    { value: "industrial", label: "Industrial" },
+    { value: "land", label: "Land" },
+    { value: "mixed_use", label: "Mixed Use" },
+  ];
+
+  const strategyOptions = [
+    { value: "fix_flip", label: "Fix & Flip" },
+    { value: "buy_hold", label: "Buy & Hold" },
+    { value: "brrrr", label: "BRRRR" },
+    { value: "wholesale", label: "Wholesale" },
+    { value: "development", label: "Development" },
+    { value: "syndication", label: "Syndication" },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {!isCreating ? (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">My Investment Criteria</h2>
+              <p className="text-muted-foreground">
+                Post what you're looking for and let wholesalers bring you deals
+              </p>
+            </div>
+            <Button onClick={() => setIsCreating(true)} data-testid="button-create-wanted">
+              <Plus className="w-4 h-4 mr-2" />
+              Post New Criteria
+            </Button>
+          </div>
+
+          {(!myWantedDeals || myWantedDeals.length === 0) ? (
+            <Card className="sleek-card">
+              <CardContent className="py-12 text-center">
+                <Target className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">No Investment Criteria Posted</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Let wholesalers know what you're looking for! Post your investment criteria 
+                  and receive targeted deal notifications.
+                </p>
+                <Button onClick={() => setIsCreating(true)} data-testid="button-create-first-wanted">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Post Your First Criteria
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {myWantedDeals.map((deal) => (
+                <Card key={deal.id} className="sleek-card" data-testid={`wanted-deal-${deal.id}`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-2">
+                          {deal.title}
+                          {deal.activelyLooking ? (
+                            <Badge className="bg-green-600">Actively Looking</Badge>
+                          ) : (
+                            <Badge variant="secondary">Paused</Badge>
+                          )}
+                          {deal.isPublic ? (
+                            <Badge variant="outline" className="text-xs"><Eye className="w-3 h-3 mr-1" />Public</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs"><EyeOff className="w-3 h-3 mr-1" />Private</Badge>
+                          )}
+                        </CardTitle>
+                        <CardDescription>{deal.description}</CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          onClick={() => startEditing(deal)}
+                          data-testid={`button-edit-wanted-${deal.id}`}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          onClick={() => deleteMutation.mutate(deal.id)}
+                          disabled={deleteMutation.isPending}
+                          data-testid={`button-delete-wanted-${deal.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="p-3 rounded bg-secondary/50">
+                        <p className="text-xs text-muted-foreground">Budget Range</p>
+                        <p className="font-medium">
+                          {deal.minBudget || deal.maxBudget 
+                            ? `${formatCurrency(deal.minBudget)} - ${formatCurrency(deal.maxBudget)}`
+                            : "Flexible"}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded bg-secondary/50">
+                        <p className="text-xs text-muted-foreground">Target Return</p>
+                        <p className="font-medium">
+                          {deal.targetReturnMin || deal.targetReturnMax
+                            ? `${deal.targetReturnMin || 0}% - ${deal.targetReturnMax || 100}%`
+                            : "Flexible"}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded bg-secondary/50">
+                        <p className="text-xs text-muted-foreground">Available Capital</p>
+                        <p className="font-medium">{formatCurrency(deal.availableCapital)}</p>
+                      </div>
+                      <div className="p-3 rounded bg-secondary/50">
+                        <p className="text-xs text-muted-foreground">Deals Wanted</p>
+                        <p className="font-medium">{deal.dealsWanted || "Unlimited"}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      {deal.propertyTypes && deal.propertyTypes.length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Property Types: </span>
+                          {deal.propertyTypes.map((type, i) => (
+                            <Badge key={i} variant="secondary" className="mr-1">
+                              {propertyTypeOptions.find(o => o.value === type)?.label || type}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {deal.strategies && deal.strategies.length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Strategies: </span>
+                          {deal.strategies.map((s, i) => (
+                            <Badge key={i} variant="secondary" className="mr-1">
+                              {strategyOptions.find(o => o.value === s)?.label || s}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {deal.locations && deal.locations.length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Locations: </span>
+                          {deal.locations.map((loc, i) => (
+                            <Badge key={i} variant="outline" className="mr-1">{loc}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t flex items-center gap-4 text-xs text-muted-foreground">
+                      <span><Eye className="w-3 h-3 inline mr-1" />{deal.viewCount || 0} views</span>
+                      <span><FileText className="w-3 h-3 inline mr-1" />{deal.responseCount || 0} responses</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <Card className="sleek-card max-w-3xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              {editingDeal ? "Edit Investment Criteria" : "Post Investment Criteria"}
+            </CardTitle>
+            <CardDescription>
+              Describe what types of deals you're looking for. This helps wholesalers match you with the right opportunities.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form 
+                onSubmit={form.handleSubmit((data) => {
+                  if (editingDeal) {
+                    updateMutation.mutate({ id: editingDeal.id, data });
+                  } else {
+                    createMutation.mutate(data);
+                  }
+                })} 
+                className="space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., Looking for SFR Fix & Flips in Atlanta" 
+                          {...field} 
+                          data-testid="input-wanted-title" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe your ideal deal in detail..."
+                          className="min-h-[100px]"
+                          {...field} 
+                          data-testid="textarea-wanted-description" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div>
+                  <FormLabel>Property Types *</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {propertyTypeOptions.map((option) => (
+                      <Badge
+                        key={option.value}
+                        variant={propertyTypes.includes(option.value) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => togglePropertyType(option.value)}
+                        data-testid={`badge-property-${option.value}`}
+                      >
+                        {option.label}
+                      </Badge>
+                    ))}
+                  </div>
+                  {propertyTypes.length === 0 && (
+                    <p className="text-xs text-destructive mt-1">Select at least one property type</p>
+                  )}
+                </div>
+
+                <div>
+                  <FormLabel>Investment Strategies *</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {strategyOptions.map((option) => (
+                      <Badge
+                        key={option.value}
+                        variant={strategies.includes(option.value) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => toggleStrategy(option.value)}
+                        data-testid={`badge-strategy-${option.value}`}
+                      >
+                        {option.label}
+                      </Badge>
+                    ))}
+                  </div>
+                  {strategies.length === 0 && (
+                    <p className="text-xs text-destructive mt-1">Select at least one strategy</p>
+                  )}
+                </div>
+
+                <div>
+                  <FormLabel>Target Markets</FormLabel>
+                  <div className="flex gap-2 mt-2">
+                    <Input 
+                      placeholder="Add a market (e.g., Atlanta, GA)"
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addLocation())}
+                      data-testid="input-wanted-location"
+                    />
+                    <Button type="button" variant="outline" onClick={addLocation} data-testid="button-add-location">
+                      Add
+                    </Button>
+                  </div>
+                  {locations.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {locations.map((loc, i) => (
+                        <Badge key={i} variant="secondary" className="flex items-center gap-1">
+                          {loc}
+                          <button 
+                            type="button" 
+                            onClick={() => removeLocation(loc)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="minBudget"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Minimum Budget</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="100000"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            data-testid="input-wanted-min-budget"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxBudget"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Maximum Budget</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="500000"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            data-testid="input-wanted-max-budget"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="targetReturnMin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Min Target Return (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="15"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            data-testid="input-wanted-return-min"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="targetReturnMax"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Target Return (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="30"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            data-testid="input-wanted-return-max"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="availableCapital"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Available Capital</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="250000"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            data-testid="input-wanted-capital"
+                          />
+                        </FormControl>
+                        <FormDescription>Total capital you have available to deploy</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dealsWanted"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Deals Wanted</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="5"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            data-testid="input-wanted-deals-count"
+                          />
+                        </FormControl>
+                        <FormDescription>How many deals you want to fund</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="preferredStructure"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preferred Deal Structure</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-wanted-structure">
+                              <SelectValue placeholder="Select structure" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="equity">Equity Only</SelectItem>
+                            <SelectItem value="debt">Debt Only</SelectItem>
+                            <SelectItem value="hybrid">Hybrid</SelectItem>
+                            <SelectItem value="flexible">Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="urgency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Urgency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-wanted-urgency">
+                              <SelectValue placeholder="Select urgency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="immediate">Immediate</SelectItem>
+                            <SelectItem value="this_month">This Month</SelectItem>
+                            <SelectItem value="this_quarter">This Quarter</SelectItem>
+                            <SelectItem value="flexible">Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex gap-6">
+                  <FormField
+                    control={form.control}
+                    name="isPublic"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange}
+                            data-testid="checkbox-wanted-public"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">Make visible to wholesalers</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="activelyLooking"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange}
+                            data-testid="checkbox-wanted-active"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">Actively looking for deals</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsCreating(false);
+                      setEditingDeal(null);
+                      form.reset();
+                      setPropertyTypes([]);
+                      setStrategies([]);
+                      setLocations([]);
+                    }}
+                    data-testid="button-cancel-wanted"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={createMutation.isPending || updateMutation.isPending || propertyTypes.length === 0 || strategies.length === 0}
+                    data-testid="button-submit-wanted"
+                  >
+                    {(createMutation.isPending || updateMutation.isPending) && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    {editingDeal ? "Update Criteria" : "Post Criteria"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

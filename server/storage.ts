@@ -8,6 +8,7 @@ import {
   directMessages, STAFF_ROLES,
   capitalProjects, projectMilestones, investmentOffers, committedInvestments, dealMatches,
   announcements, notifications,
+  investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -39,7 +40,13 @@ import {
   type CommittedInvestment, type InsertCommittedInvestment,
   type DealMatch, type InsertDealMatch,
   type Announcement, type InsertAnnouncement,
-  type Notification, type InsertNotification
+  type Notification, type InsertNotification,
+  type InvestorWantedDeal, type InsertInvestorWantedDeal,
+  type UserReview, type InsertUserReview,
+  type UserStats,
+  type DealNegotiation, type InsertDealNegotiation,
+  type WholesaleDealDocument, type InsertWholesaleDealDocument,
+  type DealAnalyzerResult, type InsertDealAnalyzerResult
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -59,6 +66,7 @@ export interface QueueItem {
 export interface IStorage {
   // Users - Replit Auth
   getUser(id: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Seller Leads
@@ -249,6 +257,45 @@ export interface IStorage {
   markNotificationRead(id: number): Promise<Notification | undefined>;
   markAllNotificationsRead(userId: string): Promise<void>;
   getUnreadNotificationCount(userId: string): Promise<number>;
+
+  // Investor Wanted Deals
+  createInvestorWantedDeal(deal: InsertInvestorWantedDeal): Promise<InvestorWantedDeal>;
+  getInvestorWantedDeals(): Promise<InvestorWantedDeal[]>;
+  getActiveInvestorWantedDeals(): Promise<InvestorWantedDeal[]>;
+  getInvestorWantedDealsByUser(userId: string): Promise<InvestorWantedDeal[]>;
+  getInvestorWantedDeal(id: number): Promise<InvestorWantedDeal | undefined>;
+  updateInvestorWantedDeal(id: number, data: Partial<InsertInvestorWantedDeal>): Promise<InvestorWantedDeal | undefined>;
+  deleteInvestorWantedDeal(id: number): Promise<void>;
+
+  // User Reviews
+  createUserReview(review: InsertUserReview): Promise<UserReview>;
+  getUserReviews(revieweeId: string): Promise<UserReview[]>;
+  getReviewsByReviewer(reviewerId: string): Promise<UserReview[]>;
+  getUserReview(id: number): Promise<UserReview | undefined>;
+  respondToReview(id: number, response: string): Promise<UserReview | undefined>;
+
+  // User Stats
+  getUserStats(userId: string): Promise<UserStats | undefined>;
+  updateUserStats(userId: string, data: Partial<UserStats>): Promise<UserStats>;
+
+  // Deal Negotiations
+  createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation>;
+  getDealNegotiations(dealType: string, dealId: number): Promise<DealNegotiation[]>;
+  getNegotiationsByUser(userId: string): Promise<DealNegotiation[]>;
+  getDealNegotiation(id: number): Promise<DealNegotiation | undefined>;
+  getNegotiationThread(negotiationId: number): Promise<DealNegotiation[]>;
+  updateNegotiationStatus(id: number, status: string): Promise<DealNegotiation | undefined>;
+
+  // Wholesale Deal Documents
+  createWholesaleDealDocument(doc: InsertWholesaleDealDocument): Promise<WholesaleDealDocument>;
+  getWholesaleDealDocuments(dealId: number): Promise<WholesaleDealDocument[]>;
+  deleteWholesaleDealDocument(id: number): Promise<void>;
+
+  // Deal Analyzer Results
+  createDealAnalyzerResult(result: InsertDealAnalyzerResult): Promise<DealAnalyzerResult>;
+  getDealAnalyzerResults(userId: string): Promise<DealAnalyzerResult[]>;
+  getDealAnalyzerResult(id: number): Promise<DealAnalyzerResult | undefined>;
+  deleteDealAnalyzerResult(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -256,6 +303,10 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users).orderBy(desc(users.createdAt));
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -1463,6 +1514,189 @@ export class DatabaseStorage implements IStorage {
         eq(notifications.isRead, false)
       ));
     return Number(result[0]?.count || 0);
+  }
+
+  // Investor Wanted Deals
+  async createInvestorWantedDeal(deal: InsertInvestorWantedDeal): Promise<InvestorWantedDeal> {
+    const [created] = await db.insert(investorWantedDeals).values(deal).returning();
+    return created;
+  }
+
+  async getInvestorWantedDeals(): Promise<InvestorWantedDeal[]> {
+    return db.select().from(investorWantedDeals).orderBy(desc(investorWantedDeals.createdAt));
+  }
+
+  async getActiveInvestorWantedDeals(): Promise<InvestorWantedDeal[]> {
+    return db.select().from(investorWantedDeals)
+      .where(and(
+        eq(investorWantedDeals.isPublic, true),
+        eq(investorWantedDeals.activelyLooking, true)
+      ))
+      .orderBy(desc(investorWantedDeals.createdAt));
+  }
+
+  async getInvestorWantedDealsByUser(userId: string): Promise<InvestorWantedDeal[]> {
+    return db.select().from(investorWantedDeals)
+      .where(eq(investorWantedDeals.userId, userId))
+      .orderBy(desc(investorWantedDeals.createdAt));
+  }
+
+  async getInvestorWantedDeal(id: number): Promise<InvestorWantedDeal | undefined> {
+    const [deal] = await db.select().from(investorWantedDeals).where(eq(investorWantedDeals.id, id));
+    return deal;
+  }
+
+  async updateInvestorWantedDeal(id: number, data: Partial<InsertInvestorWantedDeal>): Promise<InvestorWantedDeal | undefined> {
+    const [updated] = await db.update(investorWantedDeals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(investorWantedDeals.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteInvestorWantedDeal(id: number): Promise<void> {
+    await db.delete(investorWantedDeals).where(eq(investorWantedDeals.id, id));
+  }
+
+  // User Reviews
+  async createUserReview(review: InsertUserReview): Promise<UserReview> {
+    const [created] = await db.insert(userReviews).values(review).returning();
+    return created;
+  }
+
+  async getUserReviews(revieweeId: string): Promise<UserReview[]> {
+    return db.select().from(userReviews)
+      .where(eq(userReviews.revieweeId, revieweeId))
+      .orderBy(desc(userReviews.createdAt));
+  }
+
+  async getReviewsByReviewer(reviewerId: string): Promise<UserReview[]> {
+    return db.select().from(userReviews)
+      .where(eq(userReviews.reviewerId, reviewerId))
+      .orderBy(desc(userReviews.createdAt));
+  }
+
+  async getUserReview(id: number): Promise<UserReview | undefined> {
+    const [review] = await db.select().from(userReviews).where(eq(userReviews.id, id));
+    return review;
+  }
+
+  async respondToReview(id: number, response: string): Promise<UserReview | undefined> {
+    const [updated] = await db.update(userReviews)
+      .set({ response, responseAt: new Date(), updatedAt: new Date() })
+      .where(eq(userReviews.id, id))
+      .returning();
+    return updated;
+  }
+
+  // User Stats
+  async getUserStats(userId: string): Promise<UserStats | undefined> {
+    const [stats] = await db.select().from(userStats).where(eq(userStats.userId, userId));
+    return stats;
+  }
+
+  async updateUserStats(userId: string, data: Partial<UserStats>): Promise<UserStats> {
+    const existing = await this.getUserStats(userId);
+    if (existing) {
+      const [updated] = await db.update(userStats)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userStats.userId, userId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(userStats)
+        .values({ userId, ...data } as any)
+        .returning();
+      return created;
+    }
+  }
+
+  // Deal Negotiations
+  async createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation> {
+    const [created] = await db.insert(dealNegotiations).values(negotiation).returning();
+    return created;
+  }
+
+  async getDealNegotiations(dealType: string, dealId: number): Promise<DealNegotiation[]> {
+    return db.select().from(dealNegotiations)
+      .where(and(
+        eq(dealNegotiations.dealType, dealType),
+        eq(dealNegotiations.dealId, dealId)
+      ))
+      .orderBy(desc(dealNegotiations.createdAt));
+  }
+
+  async getNegotiationsByUser(userId: string): Promise<DealNegotiation[]> {
+    return db.select().from(dealNegotiations)
+      .where(or(
+        eq(dealNegotiations.initiatorId, userId),
+        eq(dealNegotiations.responderId, userId)
+      ))
+      .orderBy(desc(dealNegotiations.createdAt));
+  }
+
+  async getDealNegotiation(id: number): Promise<DealNegotiation | undefined> {
+    const [negotiation] = await db.select().from(dealNegotiations).where(eq(dealNegotiations.id, id));
+    return negotiation;
+  }
+
+  async getNegotiationThread(negotiationId: number): Promise<DealNegotiation[]> {
+    const negotiation = await this.getDealNegotiation(negotiationId);
+    if (!negotiation) return [];
+    
+    const rootId = negotiation.parentNegotiationId || negotiation.id;
+    
+    return db.select().from(dealNegotiations)
+      .where(or(
+        eq(dealNegotiations.id, rootId),
+        eq(dealNegotiations.parentNegotiationId, rootId)
+      ))
+      .orderBy(dealNegotiations.createdAt);
+  }
+
+  async updateNegotiationStatus(id: number, status: string): Promise<DealNegotiation | undefined> {
+    const [updated] = await db.update(dealNegotiations)
+      .set({ status, respondedAt: new Date() })
+      .where(eq(dealNegotiations.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Wholesale Deal Documents
+  async createWholesaleDealDocument(doc: InsertWholesaleDealDocument): Promise<WholesaleDealDocument> {
+    const [created] = await db.insert(wholesaleDealDocuments).values(doc).returning();
+    return created;
+  }
+
+  async getWholesaleDealDocuments(dealId: number): Promise<WholesaleDealDocument[]> {
+    return db.select().from(wholesaleDealDocuments)
+      .where(eq(wholesaleDealDocuments.dealId, dealId))
+      .orderBy(wholesaleDealDocuments.createdAt);
+  }
+
+  async deleteWholesaleDealDocument(id: number): Promise<void> {
+    await db.delete(wholesaleDealDocuments).where(eq(wholesaleDealDocuments.id, id));
+  }
+
+  // Deal Analyzer Results
+  async createDealAnalyzerResult(result: InsertDealAnalyzerResult): Promise<DealAnalyzerResult> {
+    const [created] = await db.insert(dealAnalyzerResults).values(result).returning();
+    return created;
+  }
+
+  async getDealAnalyzerResults(userId: string): Promise<DealAnalyzerResult[]> {
+    return db.select().from(dealAnalyzerResults)
+      .where(eq(dealAnalyzerResults.userId, userId))
+      .orderBy(desc(dealAnalyzerResults.createdAt));
+  }
+
+  async getDealAnalyzerResult(id: number): Promise<DealAnalyzerResult | undefined> {
+    const [result] = await db.select().from(dealAnalyzerResults).where(eq(dealAnalyzerResults.id, id));
+    return result;
+  }
+
+  async deleteDealAnalyzerResult(id: number): Promise<void> {
+    await db.delete(dealAnalyzerResults).where(eq(dealAnalyzerResults.id, id));
   }
 }
 
