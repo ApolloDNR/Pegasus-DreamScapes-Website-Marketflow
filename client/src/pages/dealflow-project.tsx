@@ -81,6 +81,10 @@ interface CapitalProject {
   investorCount?: number;
   isFeatured?: boolean;
   isHot?: boolean;
+  askingInterestRate?: string;
+  askingLoanDuration?: string;
+  askingEquityPercent?: string;
+  askingProfitSplit?: string;
 }
 
 export default function DealflowProject() {
@@ -719,6 +723,65 @@ export default function DealflowProject() {
                 )}
               </CardContent>
             </Card>
+
+            {(project.askingInterestRate || project.askingLoanDuration || project.askingEquityPercent || project.askingProfitSplit) && (
+              <Card className="border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Target className="w-5 h-5 text-amber-500" />
+                    Operator's Terms
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs text-xs">These are the operator's asking terms for this investment. You can propose different terms when making your offer.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(project.askingInterestRate || project.askingLoanDuration) && (
+                    <div className="pb-3 border-b">
+                      <Badge variant="secondary" className="mb-2 text-xs">Debt Structure</Badge>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {project.askingInterestRate && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Interest Rate</p>
+                            <p className="font-semibold text-green-600">{project.askingInterestRate}</p>
+                          </div>
+                        )}
+                        {project.askingLoanDuration && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Loan Duration</p>
+                            <p className="font-semibold">{project.askingLoanDuration}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {(project.askingEquityPercent || project.askingProfitSplit) && (
+                    <div>
+                      <Badge variant="secondary" className="mb-2 text-xs">Equity Structure</Badge>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {project.askingEquityPercent && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Equity Offered</p>
+                            <p className="font-semibold text-blue-600">{project.askingEquityPercent}</p>
+                          </div>
+                        )}
+                        {project.askingProfitSplit && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Profit Split</p>
+                            <p className="font-semibold">{project.askingProfitSplit}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader className="pb-3">
