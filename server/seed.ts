@@ -157,6 +157,9 @@ const dealflowCapitalProjects = [
     structure: "EQUITY",
     projectedReturn: "22-28%",
     holdPeriod: "8-12 months",
+    askingEquityPercent: 25,
+    askingProfitSplit: "75/25",
+    askingPreferredReturn: "8% pref",
     status: "OPEN_FOR_INVESTMENT",
     images: [
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
@@ -186,6 +189,12 @@ const dealflowCapitalProjects = [
     structure: "HYBRID",
     projectedReturn: "15-20% annual",
     holdPeriod: "3-5 years",
+    askingDebtPortion: 40,
+    askingEquityPortion: 60,
+    askingInterestRate: "10% annual",
+    askingLoanDuration: "36 months",
+    askingEquityPercent: 20,
+    askingProfitSplit: "70/30",
     status: "OPEN_FOR_INVESTMENT",
     images: [
       "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
@@ -215,6 +224,9 @@ const dealflowCapitalProjects = [
     structure: "EQUITY",
     projectedReturn: "18-24%",
     holdPeriod: "3-5 years",
+    askingEquityPercent: 30,
+    askingProfitSplit: "70/30",
+    askingPreferredReturn: "10% pref",
     status: "OPEN_FOR_INVESTMENT",
     images: [
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800"
@@ -299,6 +311,9 @@ const dealflowCapitalProjects = [
     structure: "DEBT",
     projectedReturn: "12% annual + profit share",
     holdPeriod: "12-18 months",
+    askingInterestRate: "12% annual",
+    askingLoanDuration: "18 months",
+    askingPoints: "2 points",
     status: "OPEN_FOR_INVESTMENT",
     images: [
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800"

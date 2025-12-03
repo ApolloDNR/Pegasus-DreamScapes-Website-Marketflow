@@ -295,6 +295,66 @@ function ProjectCard({
             </div>
           )}
         </div>
+
+        {/* Operator Seeking Terms */}
+        <div className="pt-3 mt-3 border-t border-dashed">
+          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <Target className="w-3 h-3" />
+            Operator Seeking
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {project.structure === "DEBT" && project.askingInterestRate && (
+              <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700">
+                <Percent className="w-3 h-3 mr-1" />
+                {project.askingInterestRate} Interest
+              </Badge>
+            )}
+            {project.structure === "DEBT" && project.askingLoanDuration && (
+              <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700">
+                <Clock className="w-3 h-3 mr-1" />
+                {project.askingLoanDuration}
+              </Badge>
+            )}
+            {project.structure === "DEBT" && project.askingPoints && (
+              <Badge variant="outline" className="bg-purple-50 border-purple-300 text-purple-700">
+                {project.askingPoints} Points
+              </Badge>
+            )}
+            {(project.structure === "EQUITY" || project.structure === "HYBRID") && project.askingEquityPercent && (
+              <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">
+                <Percent className="w-3 h-3 mr-1" />
+                {project.askingEquityPercent}% Equity
+              </Badge>
+            )}
+            {(project.structure === "EQUITY" || project.structure === "HYBRID") && project.askingProfitSplit && (
+              <Badge variant="outline" className="bg-emerald-50 border-emerald-300 text-emerald-700">
+                {project.askingProfitSplit} Split
+              </Badge>
+            )}
+            {(project.structure === "EQUITY" || project.structure === "HYBRID") && project.askingPreferredReturn && (
+              <Badge variant="outline" className="bg-teal-50 border-teal-300 text-teal-700">
+                {project.askingPreferredReturn} Pref
+              </Badge>
+            )}
+            {project.structure === "HYBRID" && (
+              <>
+                {project.askingDebtPortion && (
+                  <Badge variant="outline" className="bg-slate-50 border-slate-300 text-slate-700">
+                    {project.askingDebtPortion}% Debt
+                  </Badge>
+                )}
+                {project.askingEquityPortion && (
+                  <Badge variant="outline" className="bg-slate-50 border-slate-300 text-slate-700">
+                    {project.askingEquityPortion}% Equity
+                  </Badge>
+                )}
+              </>
+            )}
+            {!project.askingInterestRate && !project.askingEquityPercent && !project.askingProfitSplit && (
+              <span className="text-xs text-muted-foreground italic">Terms negotiable</span>
+            )}
+          </div>
+        </div>
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button className="flex-1" onClick={onInvest} data-testid={`button-invest-${project.id}`}>
@@ -318,20 +378,39 @@ function OfferDialog({
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [role, setRole] = useState("LP");
+  const [offerType, setOfferType] = useState<"conform" | "counter">("conform");
   const [equityPercent, setEquityPercent] = useState("");
   const [interestRate, setInterestRate] = useState("");
   const [holdPeriod, setHoldPeriod] = useState("");
   const [notes, setNotes] = useState("");
 
+  const hasAskingTerms = project.askingInterestRate || project.askingEquityPercent || project.askingProfitSplit;
+
   const submitOffer = useMutation({
     mutationFn: async () => {
+      let finalEquityPercent = equityPercent;
+      let finalInterestRate = interestRate;
+      let finalHoldPeriod = holdPeriod;
+      
+      // If conforming to terms, use the operator's asking terms
+      if (offerType === "conform") {
+        if (project.structure === "EQUITY" || project.structure === "HYBRID") {
+          finalEquityPercent = project.askingEquityPercent ? `${project.askingEquityPercent}%` : equityPercent;
+        }
+        if (project.structure === "DEBT" || project.structure === "HYBRID") {
+          finalInterestRate = project.askingInterestRate || interestRate;
+        }
+        finalHoldPeriod = project.askingLoanDuration || project.holdPeriod || holdPeriod;
+      }
+
       const offerData = {
         projectId: project.id,
         amountOffered: parseInt(amount),
         requestedRole: role,
-        proposedEquityPercent: equityPercent || undefined,
-        proposedInterestRate: interestRate || undefined,
-        holdPeriod: holdPeriod || undefined,
+        offerType: offerType, // conform or counter
+        proposedEquityPercent: finalEquityPercent || undefined,
+        proposedInterestRate: finalInterestRate || undefined,
+        holdPeriod: finalHoldPeriod || undefined,
         notes: notes || undefined,
       };
       return apiRequest("POST", "/api/investment-offers", offerData);
@@ -446,8 +525,132 @@ function OfferDialog({
             </CardContent>
           </Card>
 
+          {/* Operator Seeking Terms - Highlighted Section */}
+          {hasAskingTerms && (
+            <Card className="border-2 border-primary/30 bg-primary/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary" />
+                  Operator Seeking Terms
+                </CardTitle>
+                <CardDescription>
+                  The operator is seeking the following investment terms for this project
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {project.structure === "DEBT" && (
+                    <>
+                      {project.askingInterestRate && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Interest Rate</p>
+                          <p className="font-bold text-lg text-primary">{project.askingInterestRate}</p>
+                        </div>
+                      )}
+                      {project.askingLoanDuration && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Loan Duration</p>
+                          <p className="font-bold text-lg">{project.askingLoanDuration}</p>
+                        </div>
+                      )}
+                      {project.askingPoints && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Points</p>
+                          <p className="font-bold text-lg">{project.askingPoints}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {(project.structure === "EQUITY" || project.structure === "HYBRID") && (
+                    <>
+                      {project.askingEquityPercent && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Equity to Investor</p>
+                          <p className="font-bold text-lg text-primary">{project.askingEquityPercent}%</p>
+                        </div>
+                      )}
+                      {project.askingProfitSplit && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Profit Split</p>
+                          <p className="font-bold text-lg">{project.askingProfitSplit}</p>
+                        </div>
+                      )}
+                      {project.askingPreferredReturn && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Preferred Return</p>
+                          <p className="font-bold text-lg">{project.askingPreferredReturn}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {project.structure === "HYBRID" && (
+                    <>
+                      {project.askingDebtPortion && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Debt Portion</p>
+                          <p className="font-bold text-lg">{project.askingDebtPortion}%</p>
+                        </div>
+                      )}
+                      {project.askingEquityPortion && (
+                        <div className="p-3 rounded-lg bg-background border">
+                          <p className="text-xs text-muted-foreground mb-1">Equity Portion</p>
+                          <p className="font-bold text-lg">{project.askingEquityPortion}%</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="space-y-4">
             <h3 className="font-semibold">Your Investment Offer</h3>
+            
+            {/* Conform vs Counter Toggle */}
+            {hasAskingTerms && (
+              <div className="p-4 rounded-lg border bg-muted/30">
+                <Label className="text-sm font-medium mb-3 block">How would you like to proceed?</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOfferType("conform")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      offerType === "conform"
+                        ? "border-green-500 bg-green-50 dark:bg-green-950"
+                        : "border-border hover:border-green-300"
+                    }`}
+                    data-testid="button-conform-terms"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className={`w-5 h-5 ${offerType === "conform" ? "text-green-600" : "text-muted-foreground"}`} />
+                      <span className="font-semibold">Conform to Terms</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Accept the operator's asking terms as proposed
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOfferType("counter")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      offerType === "counter"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                        : "border-border hover:border-blue-300"
+                    }`}
+                    data-testid="button-counter-terms"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertCircle className={`w-5 h-5 ${offerType === "counter" ? "text-blue-600" : "text-muted-foreground"}`} />
+                      <span className="font-semibold">Counter-Offer</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Propose your own terms for negotiation
+                    </p>
+                  </button>
+                </div>
+              </div>
+            )}
             
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -475,49 +678,91 @@ function OfferDialog({
                 </Select>
               </div>
 
-              {project.structure === "EQUITY" || project.structure === "HYBRID" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="equity">Proposed Equity %</Label>
-                  <Input
-                    id="equity"
-                    placeholder="e.g., 10%"
-                    value={equityPercent}
-                    onChange={(e) => setEquityPercent(e.target.value)}
-                    data-testid="input-offer-equity"
-                  />
-                </div>
-              ) : null}
+              {/* Show counter-offer fields only when counter is selected, OR when there are no asking terms */}
+              {(offerType === "counter" || !hasAskingTerms) && (
+                <>
+                  {(project.structure === "EQUITY" || project.structure === "HYBRID") && (
+                    <div className="space-y-2">
+                      <Label htmlFor="equity">Proposed Equity %</Label>
+                      <Input
+                        id="equity"
+                        placeholder={project.askingEquityPercent ? `Asking: ${project.askingEquityPercent}%` : "e.g., 10%"}
+                        value={equityPercent}
+                        onChange={(e) => setEquityPercent(e.target.value)}
+                        data-testid="input-offer-equity"
+                      />
+                    </div>
+                  )}
 
-              {project.structure === "DEBT" || project.structure === "HYBRID" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="interest">Proposed Interest Rate</Label>
-                  <Input
-                    id="interest"
-                    placeholder="e.g., 12% APR"
-                    value={interestRate}
-                    onChange={(e) => setInterestRate(e.target.value)}
-                    data-testid="input-offer-interest"
-                  />
-                </div>
-              ) : null}
+                  {(project.structure === "DEBT" || project.structure === "HYBRID") && (
+                    <div className="space-y-2">
+                      <Label htmlFor="interest">Proposed Interest Rate</Label>
+                      <Input
+                        id="interest"
+                        placeholder={project.askingInterestRate ? `Asking: ${project.askingInterestRate}` : "e.g., 12% APR"}
+                        value={interestRate}
+                        onChange={(e) => setInterestRate(e.target.value)}
+                        data-testid="input-offer-interest"
+                      />
+                    </div>
+                  )}
 
-              <div className="space-y-2">
-                <Label htmlFor="hold">Preferred Hold Period</Label>
-                <Input
-                  id="hold"
-                  placeholder="e.g., 12 months"
-                  value={holdPeriod}
-                  onChange={(e) => setHoldPeriod(e.target.value)}
-                  data-testid="input-offer-hold"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hold">Preferred Hold Period</Label>
+                    <Input
+                      id="hold"
+                      placeholder={project.askingLoanDuration || project.holdPeriod ? `Asking: ${project.askingLoanDuration || project.holdPeriod}` : "e.g., 12 months"}
+                      value={holdPeriod}
+                      onChange={(e) => setHoldPeriod(e.target.value)}
+                      data-testid="input-offer-hold"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Show summary when conforming */}
+              {offerType === "conform" && hasAskingTerms && (
+                <div className="col-span-2 p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    You're accepting the operator's terms:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.askingInterestRate && (
+                      <Badge variant="outline" className="bg-white dark:bg-green-900">
+                        {project.askingInterestRate} Interest
+                      </Badge>
+                    )}
+                    {project.askingEquityPercent && (
+                      <Badge variant="outline" className="bg-white dark:bg-green-900">
+                        {project.askingEquityPercent}% Equity
+                      </Badge>
+                    )}
+                    {project.askingProfitSplit && (
+                      <Badge variant="outline" className="bg-white dark:bg-green-900">
+                        {project.askingProfitSplit} Split
+                      </Badge>
+                    )}
+                    {project.askingLoanDuration && (
+                      <Badge variant="outline" className="bg-white dark:bg-green-900">
+                        {project.askingLoanDuration}
+                      </Badge>
+                    )}
+                    {project.askingPreferredReturn && (
+                      <Badge variant="outline" className="bg-white dark:bg-green-900">
+                        {project.askingPreferredReturn} Pref
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes">Additional Notes</Label>
               <Textarea
                 id="notes"
-                placeholder="Any additional terms or notes for the Dreamscaper team..."
+                placeholder={offerType === "counter" ? "Explain why you're proposing different terms..." : "Any additional notes for the Dreamscaper team..."}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
