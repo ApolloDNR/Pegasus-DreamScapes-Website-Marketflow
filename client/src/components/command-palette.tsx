@@ -83,7 +83,7 @@ export function CommandPalette() {
   const toolItems: CommandItem[] = [
     { id: "calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator, href: "/calculators", keywords: ["math", "analyze"], badge: "Pro" },
     { id: "resources", label: "Investment Guides", description: "Learn the fundamentals", icon: BookOpen, href: "/resources", keywords: ["learn", "education"] },
-    { id: "community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare, href: "/community", keywords: ["forum", "chat", "social"] },
+    { id: "community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare, href: "/dealflow/community", keywords: ["forum", "chat", "social"] },
   ];
 
   const dealflowItems: CommandItem[] = isAuthenticated ? [

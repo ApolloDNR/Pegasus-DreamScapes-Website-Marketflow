@@ -1,10 +1,21 @@
-import { Switch, Route, Redirect } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
+
+function ScrollToTop() {
+  const [location] = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [location]);
+  
+  return null;
+}
 import Home from "@/pages/home";
 import About from "@/pages/about";
 import Services from "@/pages/services";
@@ -59,7 +70,7 @@ function Router() {
       <Route path="/portal/wholesaler">{() => <Redirect to="/dealflow/office" />}</Route>
       <Route path="/portal/buyer">{() => <Redirect to="/dealflow/office" />}</Route>
       <Route path="/capital-raising" component={CapitalRaising} />
-      <Route path="/community" component={Community} />
+      <Route path="/community">{() => <Redirect to="/dealflow/community" />}</Route>
       <Route path="/dealflow">{() => <Redirect to="/dealflow/office" />}</Route>
       <Route path="/dealflow/office" component={DealflowOffice} />
       <Route path="/dealflow/deals" component={DealflowDeals} />
@@ -76,6 +87,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <ScrollToTop />
         <div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1">
