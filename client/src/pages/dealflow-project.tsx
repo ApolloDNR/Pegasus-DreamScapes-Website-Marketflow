@@ -51,7 +51,10 @@ import {
   ThumbsUp,
   AlertTriangle,
   TrendingDown,
-  Activity
+  Activity,
+  Pencil,
+  Save,
+  X
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -105,6 +108,10 @@ export default function DealflowProject() {
   const [proposedLoanDuration, setProposedLoanDuration] = useState("");
   const [investNotes, setInvestNotes] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  
+  // Admin edit mode states
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editData, setEditData] = useState<Partial<CapitalProject>>({});
 
   const { data: project, isLoading } = useQuery<CapitalProject>({
     queryKey: ["/api/capital-projects", projectId],
@@ -159,6 +166,55 @@ export default function DealflowProject() {
       });
     },
   });
+
+  // Admin update project mutation
+  const updateProjectMutation = useMutation({
+    mutationFn: async (data: Partial<CapitalProject>) => {
+      const res = await apiRequest("PATCH", `/api/hq/capital-projects/${projectId}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
+      toast({
+        title: "Project Updated",
+        description: "Your changes have been saved.",
+      });
+      setIsEditMode(false);
+      setEditData({});
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update project",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditToggle = () => {
+    if (isEditMode) {
+      setEditData({});
+    } else if (project) {
+      setEditData({
+        title: project.title,
+        description: project.description,
+        fundingGoal: project.fundingGoal,
+        amountRaised: project.amountRaised,
+        minInvestment: project.minInvestment,
+        projectedReturn: project.projectedReturn,
+        holdPeriod: project.holdPeriod,
+        riskLevel: project.riskLevel,
+      });
+    }
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleSaveEdits = () => {
+    if (Object.keys(editData).length > 0) {
+      updateProjectMutation.mutate(editData);
+    }
+  };
 
   const resetForm = () => {
     setInvestAmount("");
@@ -252,6 +308,48 @@ export default function DealflowProject() {
             </Button>
           </Link>
           <div className="flex items-center gap-2">
+            {/* Staff Admin Edit Controls */}
+            {user?.isStaff && (
+              <>
+                {isEditMode ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleEditToggle}
+                      data-testid="button-cancel-edit"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSaveEdits}
+                      disabled={updateProjectMutation.isPending}
+                      data-testid="button-save-edit"
+                    >
+                      {updateProjectMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      Save Changes
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleEditToggle}
+                    className="border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                    data-testid="button-edit-project"
+                  >
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Deal
+                  </Button>
+                )}
+              </>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -282,6 +380,21 @@ export default function DealflowProject() {
             </Button>
           </div>
         </div>
+
+        {/* Admin Edit Mode Banner */}
+        {isEditMode && (
+          <Card className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-3">
+                <Pencil className="w-5 h-5 text-amber-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-amber-800 dark:text-amber-300">Edit Mode Active</p>
+                  <p className="text-sm text-amber-700 dark:text-amber-400">Click on editable fields below to modify deal information</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">

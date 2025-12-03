@@ -223,18 +223,75 @@ export default function DealflowOffice() {
     }
   ];
 
+  const getUserRoles = () => {
+    const roles: string[] = [];
+    if (user?.isStaff) roles.push("Dreamscaper");
+    if (user?.isInvestor) roles.push("Investor");
+    if (user?.isWholesaler) roles.push("Wholesaler");
+    if (user?.isBuyer) roles.push("Buyer");
+    return roles.length > 0 ? roles : ["Member"];
+  };
+
+  const getGreetingTime = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const getInsight = () => {
+    if (savedDeals.length > 0 && investmentOffers.filter((o: any) => o.status === "PENDING").length > 0) {
+      return "You have pending offers to review";
+    }
+    if (openProjects.length >= 3) {
+      return `${openProjects.length} new opportunities match your criteria`;
+    }
+    if (savedDeals.length > 3) {
+      return "Time to review your saved deals";
+    }
+    return "Your portfolio is performing well";
+  };
+
   return (
     <DealflowLayout>
       <div className="container mx-auto px-4 py-6">
+        {/* Enhanced Personalized Greeting */}
         <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-serif font-bold mb-1">
-                Welcome back, {user?.firstName || "there"}
-              </h1>
-              <p className="text-muted-foreground">
-                Your investment command center
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <Avatar className="h-14 w-14 border-2 border-primary/20">
+                <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || "User"} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                  {user?.firstName?.[0] || "U"}{user?.lastName?.[0] || ""}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-serif font-bold mb-1" data-testid="text-greeting">
+                  {getGreetingTime()}, {user?.firstName || "there"}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  {getUserRoles().map((role, index) => (
+                    <Badge 
+                      key={index}
+                      variant="outline" 
+                      className={`text-xs ${
+                        role === "Dreamscaper" ? "border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30" :
+                        role === "Investor" ? "border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30" :
+                        role === "Wholesaler" ? "border-blue-500 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30" :
+                        role === "Buyer" ? "border-purple-500 text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30" :
+                        ""
+                      }`}
+                      data-testid={`badge-role-${role.toLowerCase()}`}
+                    >
+                      {role}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  {getInsight()}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" asChild>
@@ -367,143 +424,191 @@ export default function DealflowOffice() {
         </Card>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card data-testid="metric-deals">
+          <Card className="relative overflow-hidden border-blue-200/50 dark:border-blue-800/50" data-testid="metric-deals">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/10 to-transparent" />
             <CardContent className="pt-5 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Open Opportunities</p>
-                <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <Building2 className="w-5 h-5 text-white" />
                 </div>
+                <Badge variant="outline" className="text-blue-600 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/50">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Live
+                </Badge>
               </div>
-              <p className="text-2xl font-bold">{openProjects.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {formatCurrency(totalOpportunityValue)} available
-              </p>
+              <p className="text-3xl font-bold tracking-tight">{openProjects.length}</p>
+              <p className="text-sm text-muted-foreground mt-1">Open Opportunities</p>
+              <div className="flex items-center gap-1.5 mt-2 text-xs text-blue-600 dark:text-blue-400">
+                <DollarSign className="w-3 h-3" />
+                <span className="font-medium">{formatCurrency(totalOpportunityValue)} available</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card data-testid="metric-saved">
+          <Card className="relative overflow-hidden border-pink-200/50 dark:border-pink-800/50" data-testid="metric-saved">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-500/10 to-transparent" />
             <CardContent className="pt-5 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Saved Matches</p>
-                <div className="w-9 h-9 rounded-lg bg-pink-100 dark:bg-pink-950 flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-pink-600" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
+                  <Heart className="w-5 h-5 text-white" />
                 </div>
+                {savedDeals.filter(d => d.status === "hot").length > 0 && (
+                  <Badge className="bg-red-500 text-white">
+                    <Flame className="w-3 h-3 mr-1" />
+                    {savedDeals.filter(d => d.status === "hot").length} hot
+                  </Badge>
+                )}
               </div>
-              <p className="text-2xl font-bold">{savedDeals.length}</p>
-              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <p className="text-3xl font-bold tracking-tight">{savedDeals.length}</p>
+              <p className="text-sm text-muted-foreground mt-1">Saved Matches</p>
+              <div className="flex items-center gap-1.5 mt-2 text-xs text-green-600 dark:text-green-400">
                 <TrendingUp className="w-3 h-3" />
-                2 hot deals
-              </p>
+                <span className="font-medium">Ready to review</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card data-testid="metric-investments">
+          <Card className="relative overflow-hidden border-green-200/50 dark:border-green-800/50" data-testid="metric-investments">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-green-500/10 to-transparent" />
             <CardContent className="pt-5 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Active Investments</p>
-                <div className="w-9 h-9 rounded-lg bg-green-100 dark:bg-green-950 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-green-600" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/25">
+                  <DollarSign className="w-5 h-5 text-white" />
                 </div>
+                {investmentOffers.filter((o: any) => o.status === "PENDING").length > 0 && (
+                  <Badge variant="outline" className="text-amber-600 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {investmentOffers.filter((o: any) => o.status === "PENDING").length} pending
+                  </Badge>
+                )}
               </div>
-              <p className="text-2xl font-bold">{committedInvestments.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {investmentOffers.filter((o: any) => o.status === "PENDING").length} pending
-              </p>
+              <p className="text-3xl font-bold tracking-tight">{committedInvestments.length}</p>
+              <p className="text-sm text-muted-foreground mt-1">Active Investments</p>
+              <div className="flex items-center gap-1.5 mt-2 text-xs text-green-600 dark:text-green-400">
+                <TrendingUp className="w-3 h-3" />
+                <span className="font-medium">All performing</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card data-testid="metric-notifications">
+          <Card className="relative overflow-hidden border-amber-200/50 dark:border-amber-800/50" data-testid="metric-notifications">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent" />
             <CardContent className="pt-5 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Notifications</p>
-                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <Bell className="w-5 h-5 text-white" />
                 </div>
+                {unreadMessages.count > 0 && (
+                  <Badge className="bg-primary text-primary-foreground">
+                    <MessageSquare className="w-3 h-3 mr-1" />
+                    {unreadMessages.count}
+                  </Badge>
+                )}
               </div>
-              <p className="text-2xl font-bold">{notifications.filter(n => !n.isRead).length}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {unreadMessages.count} unread messages
-              </p>
+              <p className="text-3xl font-bold tracking-tight">{notifications.filter(n => !n.isRead).length}</p>
+              <p className="text-sm text-muted-foreground mt-1">Notifications</p>
+              <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+                <Eye className="w-3 h-3" />
+                <span className="font-medium">Check your updates</span>
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Portfolio Performance Widget */}
-        <Card className="mb-6" data-testid="portfolio-performance">
+        <Card className="mb-6 border-primary/20 bg-gradient-to-br from-white to-primary/5 dark:from-card dark:to-primary/10" data-testid="portfolio-performance">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" />
-                  Portfolio Performance
-                </CardTitle>
-                <CardDescription>Your investment performance at a glance</CardDescription>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center shadow-lg shadow-primary/25">
+                  <BarChart3 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Portfolio Performance</CardTitle>
+                  <CardDescription>Your investment performance at a glance</CardDescription>
+                </div>
               </div>
-              <Badge variant="outline" className="text-green-600 border-green-300 dark:border-green-800">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                +18.4% YTD
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200 dark:border-green-800">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  +18.4% YTD
+                </Badge>
+                <Badge variant="outline" className="text-muted-foreground">
+                  <Activity className="w-3 h-3 mr-1" />
+                  Healthy
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Capital Deployed */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <DollarSign className="w-4 h-4" />
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/5 to-blue-500/10 border border-blue-200/50 dark:border-blue-800/50">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <DollarSign className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
                   <span>Capital Deployed</span>
                 </div>
-                <p className="text-2xl font-bold">{formatCurrency(committedInvestments.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 125000)}</p>
-                <div className="flex items-center gap-1 text-xs text-green-600">
-                  <TrendingUp className="w-3 h-3" />
+                <p className="text-2xl font-bold tracking-tight">{formatCurrency(committedInvestments.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 125000)}</p>
+                <div className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                  <ArrowUpRight className="w-3 h-3" />
                   <span>+$25K this quarter</span>
                 </div>
               </div>
               
               {/* IRR */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Percent className="w-4 h-4" />
+              <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-200/50 dark:border-green-800/50">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <div className="w-6 h-6 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <Percent className="w-3.5 h-3.5 text-green-600" />
+                  </div>
                   <span>IRR</span>
                 </div>
-                <p className="text-2xl font-bold text-green-600">18.4%</p>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <p className="text-2xl font-bold tracking-tight text-green-600">18.4%</p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
                   <Target className="w-3 h-3" />
                   <span>Target: 15%</span>
+                  <CheckCircle2 className="w-3 h-3 text-green-500 ml-1" />
                 </div>
               </div>
               
               {/* Total Returns */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <TrendingUp className="w-4 h-4" />
+              <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/5 to-amber-500/10 border border-amber-200/50 dark:border-amber-800/50">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
+                  </div>
                   <span>Total Returns</span>
                 </div>
-                <p className="text-2xl font-bold">{formatCurrency(23500)}</p>
-                <div className="flex items-center gap-1 text-xs text-green-600">
+                <p className="text-2xl font-bold tracking-tight">{formatCurrency(23500)}</p>
+                <div className="flex items-center gap-1 text-xs text-green-600 mt-2">
                   <ArrowUpRight className="w-3 h-3" />
                   <span>+$5.2K this month</span>
                 </div>
               </div>
               
               {/* Sparkline Chart */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Activity className="w-4 h-4" />
+              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/5 to-purple-500/10 border border-purple-200/50 dark:border-purple-800/50">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <Activity className="w-3.5 h-3.5 text-purple-600" />
+                  </div>
                   <span>12-Month Trend</span>
                 </div>
-                <div className="h-16 flex items-end justify-between gap-1">
+                <div className="h-14 flex items-end justify-between gap-1">
                   {[35, 45, 40, 55, 50, 65, 60, 75, 70, 85, 80, 92].map((value, index) => (
                     <div 
                       key={index}
-                      className="flex-1 bg-primary/20 rounded-t-sm transition-all hover:bg-primary/40"
+                      className={`flex-1 rounded-t-sm transition-all cursor-pointer hover:opacity-80 ${
+                        index === 11 ? "bg-gradient-to-t from-purple-600 to-purple-400" : "bg-gradient-to-t from-purple-400/40 to-purple-300/40"
+                      }`}
                       style={{ height: `${value}%` }}
                       title={`Month ${index + 1}: ${value}%`}
                     />
                   ))}
                 </div>
-                <p className="text-xs text-center text-muted-foreground">Jan - Dec</p>
+                <p className="text-xs text-center text-muted-foreground mt-2">Jan - Dec 2024</p>
               </div>
             </div>
           </CardContent>

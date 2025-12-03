@@ -733,7 +733,7 @@ function ProjectMatchCard({ project, matchScore, onNegotiate }: { project: Capit
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
-        <div className="absolute top-3 left-3 flex gap-2">
+        <div className="absolute top-3 left-3 flex gap-2 flex-wrap max-w-[60%]">
           {project.isHot && (
             <Badge className="bg-red-500 text-white">
               <Flame className="w-3 h-3 mr-1" />
@@ -748,6 +748,22 @@ function ProjectMatchCard({ project, matchScore, onNegotiate }: { project: Capit
           )}
           {project.status === "FUNDED" && (
             <Badge className="bg-green-600 text-white">Fully Funded</Badge>
+          )}
+          {project.riskLevel && (
+            <Badge className={`${
+              project.riskLevel === "low" ? "bg-green-600" : 
+              project.riskLevel === "high" ? "bg-red-600" : 
+              "bg-amber-600"
+            } text-white`}>
+              <Shield className="w-3 h-3 mr-1" />
+              {project.riskLevel === "low" ? "Low Risk" : project.riskLevel === "high" ? "High Risk" : "Mod Risk"}
+            </Badge>
+          )}
+          {project.holdPeriod && (
+            <Badge className="bg-blue-600 text-white">
+              <Clock className="w-3 h-3 mr-1" />
+              {project.holdPeriod}
+            </Badge>
           )}
         </div>
 
@@ -994,7 +1010,7 @@ function WholesaleMatchCard({ deal, onNegotiate }: { deal: WholesaleDeal; onNego
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
-        <div className="absolute top-3 left-3 flex gap-2">
+        <div className="absolute top-3 left-3 flex gap-2 flex-wrap max-w-[60%]">
           {deal.isHot && (
             <Badge className="bg-red-500 text-white">
               <Flame className="w-3 h-3 mr-1" />
@@ -1008,6 +1024,21 @@ function WholesaleMatchCard({ deal, onNegotiate }: { deal: WholesaleDeal; onNego
             </Badge>
           )}
           <Badge className="bg-amber-600 text-white">Wholesale</Badge>
+          {deal.riskLevel && (
+            <Badge className={`${
+              deal.riskLevel === "low" ? "bg-green-600" : 
+              deal.riskLevel === "high" ? "bg-red-600" : 
+              "bg-amber-600"
+            } text-white`}>
+              <Shield className="w-3 h-3 mr-1" />
+              {deal.riskLevel === "low" ? "Low" : deal.riskLevel === "high" ? "High" : "Med"}
+            </Badge>
+          )}
+          {deal.strategy && (
+            <Badge className="bg-blue-600 text-white">
+              {deal.strategy === "flip" ? "Flip" : deal.strategy === "rental" ? "Rental" : deal.strategy}
+            </Badge>
+          )}
         </div>
 
         <div className="absolute top-3 right-3">
