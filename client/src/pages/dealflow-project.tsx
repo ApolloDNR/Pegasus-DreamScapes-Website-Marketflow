@@ -230,6 +230,9 @@ export default function DealflowProject() {
 
   const openConformToTerms = () => {
     if (!project) return;
+    
+    resetForm();
+    
     const hasDebt = project.askingInterestRate || project.askingLoanDuration;
     const hasEquity = project.askingEquityPercent || project.askingProfitSplit;
     
@@ -241,10 +244,18 @@ export default function DealflowProject() {
       setInvestStructure("equity");
     }
     
-    if (project.askingInterestRate) setProposedInterest(project.askingInterestRate);
-    if (project.askingLoanDuration) setProposedLoanDuration(project.askingLoanDuration);
-    if (project.askingEquityPercent) setProposedEquity(project.askingEquityPercent);
-    if (project.askingProfitSplit) setProposedProfitSplit(project.askingProfitSplit);
+    setInvestAmount(String(project.minInvestment));
+    
+    if (hasDebt) {
+      setProposedInterest(project.askingInterestRate || "");
+      setProposedLoanDuration(project.askingLoanDuration || "");
+    }
+    
+    if (hasEquity) {
+      setProposedEquity(project.askingEquityPercent || "");
+      setProposedProfitSplit(project.askingProfitSplit || "70/30");
+    }
+    
     setInvestNotes("Conforming to operator's asking terms.");
     setInvestDialogOpen(true);
   };
