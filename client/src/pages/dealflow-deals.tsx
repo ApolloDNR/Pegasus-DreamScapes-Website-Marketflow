@@ -127,6 +127,22 @@ export default function DealflowDeals() {
     queryKey: ["/api/wholesale-deals-active"],
   });
 
+  // Fetch user's investment preferences for matching
+  const { data: investorPrefs } = useQuery<{
+    propertyTypes?: string[];
+    strategies?: string[];
+    locations?: string[];
+    minBudget?: number;
+    maxBudget?: number;
+    targetReturnMin?: number;
+    targetReturnMax?: number;
+    preferredStructure?: string;
+    holdPeriodPreference?: string;
+  }>({
+    queryKey: ["/api/my-investor-preferences"],
+    enabled: !!user,
+  });
+
   // Mutation for saving deal actions
   const saveDealActionMutation = useMutation({
     mutationFn: async ({ dealType, dealId, action }: { dealType: string; dealId: number; action: string }) => {
@@ -161,13 +177,107 @@ export default function DealflowDeals() {
   const isLoading = loadingProjects || loadingDeals;
 
   const calculateMatchScore = (project: CapitalProject) => {
-    let score = 75;
-    if (project.roiPotential) score += project.roiPotential * 3;
-    if (project.designAppeal) score += project.designAppeal * 2;
-    if (project.marketDemand) score += project.marketDemand * 2;
+    let score = 50;
+    let matchReasons: string[] = [];
+    
+    if (investorPrefs) {
+      if (investorPrefs.propertyTypes?.length && project.propertyType) {
+        if (investorPrefs.propertyTypes.some(pt => 
+          project.propertyType?.toLowerCase().includes(pt.toLowerCase())
+        )) {
+          score += 15;
+          matchReasons.push("Property type matches");
+        }
+      }
+      
+      if (investorPrefs.strategies?.length && project.strategy) {
+        if (investorPrefs.strategies.some(s => 
+          project.strategy?.toLowerCase().includes(s.toLowerCase())
+        )) {
+          score += 15;
+          matchReasons.push("Strategy aligns");
+        }
+      }
+      
+      if (investorPrefs.locations?.length && project.location) {
+        if (investorPrefs.locations.some(loc => 
+          project.location?.toLowerCase().includes(loc.toLowerCase())
+        )) {
+          score += 10;
+          matchReasons.push("Target market");
+        }
+      }
+      
+      if (investorPrefs.preferredStructure && project.structure) {
+        if (project.structure.toLowerCase().includes(investorPrefs.preferredStructure.toLowerCase())) {
+          score += 10;
+          matchReasons.push("Structure preference");
+        }
+      }
+      
+      const projReturn = parseFloat(project.projectedReturn || "0");
+      if (investorPrefs.targetReturnMin && projReturn >= investorPrefs.targetReturnMin) {
+        score += 10;
+        matchReasons.push("Meets return target");
+      }
+      
+      if (investorPrefs.maxBudget && project.minInvestment <= investorPrefs.maxBudget) {
+        score += 5;
+      }
+    }
+    
+    if (project.roiPotential) score += project.roiPotential * 2;
+    if (project.designAppeal) score += project.designAppeal * 1.5;
+    if (project.marketDemand) score += project.marketDemand * 1.5;
     if (project.isFeatured) score += 5;
     if (project.isHot) score += 3;
-    return Math.min(score, 100);
+    
+    return Math.min(Math.round(score), 100);
+  };
+  
+  const calculateWholesaleMatchScore = (deal: WholesaleDeal) => {
+    let score = 55;
+    
+    if (investorPrefs) {
+      if (investorPrefs.propertyTypes?.length && deal.propertyType) {
+        if (investorPrefs.propertyTypes.some(pt => 
+          deal.propertyType?.toLowerCase().includes(pt.toLowerCase())
+        )) {
+          score += 15;
+        }
+      }
+      
+      if (investorPrefs.strategies?.length && deal.strategy) {
+        if (investorPrefs.strategies.some(s => 
+          deal.strategy?.toLowerCase().includes(s.toLowerCase())
+        )) {
+          score += 15;
+        }
+      }
+      
+      if (investorPrefs.locations?.length) {
+        const dealLocation = `${deal.city}, ${deal.state}`.toLowerCase();
+        if (investorPrefs.locations.some(loc => 
+          dealLocation.includes(loc.toLowerCase())
+        )) {
+          score += 10;
+        }
+      }
+      
+      if (investorPrefs.maxBudget) {
+        const totalCost = deal.contractPrice + deal.assignmentFee;
+        if (totalCost <= investorPrefs.maxBudget) {
+          score += 5;
+        }
+      }
+    }
+    
+    if (deal.profitPotential) score += deal.profitPotential * 2;
+    if (deal.marketDemand) score += deal.marketDemand * 1.5;
+    if (deal.isFeatured) score += 5;
+    if (deal.isHot) score += 3;
+    
+    return Math.min(Math.round(score), 100);
   };
 
   const handleSwipeAction = (action: "like" | "pass" | "save", type: "project" | "deal") => {

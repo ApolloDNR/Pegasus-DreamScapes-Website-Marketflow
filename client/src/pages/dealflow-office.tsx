@@ -665,6 +665,137 @@ export default function DealflowOffice() {
           </CardContent>
         </Card>
 
+        {/* Investment Portfolio Tracker */}
+        <Card className="mb-6" data-testid="investment-portfolio">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <Folder className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Investment Portfolio</CardTitle>
+                  <CardDescription>Track your active investments and returns</CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-emerald-600 border-emerald-500/50">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                All Performing
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {committedInvestments.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium">No investments yet</p>
+                <p className="text-sm mt-1">Browse deals to make your first investment</p>
+                <Button variant="outline" size="sm" className="mt-4" asChild>
+                  <Link href="/dealflow/deals">
+                    Explore Deals
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {committedInvestments.slice(0, 4).map((investment: any, index: number) => {
+                  const investmentAmount = investment.amountOffered || investment.amount || 0;
+                  const projectedReturn = investment.projectedReturn ? parseFloat(investment.projectedReturn) : 0;
+                  const currentReturn = investment.currentReturn ? parseFloat(investment.currentReturn) : 0;
+                  const distributionsReceived = investment.distributionsReceived || 0;
+                  
+                  const performanceStatus = projectedReturn > 0 
+                    ? (currentReturn >= projectedReturn ? "ahead" : currentReturn >= projectedReturn * 0.9 ? "on-track" : "behind")
+                    : "on-track";
+                  
+                  return (
+                    <div 
+                      key={investment.id || index}
+                      className="p-4 rounded-xl border bg-card hover-elevate cursor-pointer"
+                      data-testid={`investment-${investment.id || index}`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center shrink-0">
+                            <Building2 className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate">{investment.projectTitle || investment.title || `Investment #${index + 1}`}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {investmentAmount > 0 ? formatCurrency(investmentAmount) : "Pending"} invested
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Current ROI</p>
+                            <p className={`font-bold ${currentReturn >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {currentReturn > 0 ? `+${currentReturn.toFixed(1)}%` : "Pending"}
+                            </p>
+                          </div>
+                          
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Distributions</p>
+                            <p className="font-semibold text-primary">
+                              {distributionsReceived > 0 ? formatCurrency(distributionsReceived) : "--"}
+                            </p>
+                          </div>
+                          
+                          <Badge 
+                            className={
+                              performanceStatus === "ahead" 
+                                ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200 dark:border-green-800" 
+                                : performanceStatus === "on-track"
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                            }
+                          >
+                            {performanceStatus === "ahead" && <TrendingUp className="w-3 h-3 mr-1" />}
+                            {performanceStatus === "on-track" && <Target className="w-3 h-3 mr-1" />}
+                            {performanceStatus === "behind" && <TrendingDown className="w-3 h-3 mr-1" />}
+                            {performanceStatus === "ahead" ? "Ahead" : performanceStatus === "on-track" ? "On Track" : "Monitor"}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-4">
+                          {projectedReturn > 0 && (
+                            <span className="text-muted-foreground">
+                              <span className="font-medium text-foreground">Target:</span> {projectedReturn}% ROI
+                            </span>
+                          )}
+                          <span className="text-muted-foreground">
+                            <span className="font-medium text-foreground">Structure:</span> {investment.structureType || "Equity"}
+                          </span>
+                          <span className="text-muted-foreground">
+                            <span className="font-medium text-foreground">Status:</span> {investment.status || "Active"}
+                          </span>
+                        </div>
+                        {investment.createdAt && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            <span>Invested: {format(new Date(investment.createdAt), "MMM yyyy")}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {committedInvestments.length > 4 && (
+                  <Button variant="ghost" className="w-full text-muted-foreground" size="sm">
+                    View all {committedInvestments.length} investments
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <Card>

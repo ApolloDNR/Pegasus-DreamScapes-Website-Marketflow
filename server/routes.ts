@@ -2091,6 +2091,35 @@ export async function registerRoutes(
     }
   });
 
+  // Get user's investment preferences (for matching)
+  app.get("/api/my-investor-preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const deals = await storage.getInvestorWantedDealsByUser(userId);
+      
+      if (deals.length === 0) {
+        return res.json({});
+      }
+      
+      const primaryDeal = deals.find(d => d.activelyLooking) || deals[0];
+      
+      return res.json({
+        propertyTypes: primaryDeal.propertyTypes || [],
+        strategies: primaryDeal.strategies || [],
+        locations: primaryDeal.locations || [],
+        minBudget: primaryDeal.minBudget,
+        maxBudget: primaryDeal.maxBudget,
+        targetReturnMin: primaryDeal.targetReturnMin,
+        targetReturnMax: primaryDeal.targetReturnMax,
+        preferredStructure: primaryDeal.preferredStructure,
+        holdPeriodPreference: primaryDeal.holdPeriodPreference,
+      });
+    } catch (error) {
+      console.error("Error fetching investor preferences:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get single investor wanted deal
   app.get("/api/investor-wanted-deals/:id", async (req, res) => {
     try {
