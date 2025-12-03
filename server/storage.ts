@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { eq, and, desc, lte, isNotNull, isNull, asc, or, inArray, sql, gte, ne } from "drizzle-orm";
 import { 
-  users, sellerLeads, investorLeads, contacts, projects, articles, leadActivities,
+  users, sellerLeads, investorLeads, buyerLeads, contacts, projects, articles, leadActivities,
   wholesaleDeals, wholesaleRequests, userRoles, staffProfiles, investorProfiles, 
   wholesalerProfiles, buyerProfiles, savedProperties, buyerOffers, retailListings, buyerInquiries,
   communityCategories, communityPosts, communityReplies, postLikes, postBookmarks, dealBookmarks,
@@ -13,6 +13,7 @@ import {
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
+  type BuyerLead, type InsertBuyerLead,
   type Contact, type InsertContact,
   type Project, type InsertProject,
   type Article, type InsertArticle,
@@ -82,6 +83,12 @@ export interface IStorage {
   getInvestorLeads(): Promise<InvestorLead[]>;
   getInvestorLead(id: number): Promise<InvestorLead | undefined>;
   updateInvestorLeadStatus(id: number, status: string): Promise<InvestorLead | undefined>;
+
+  // Buyer Leads
+  createBuyerLead(lead: InsertBuyerLead): Promise<BuyerLead>;
+  getBuyerLeads(): Promise<BuyerLead[]>;
+  getBuyerLead(id: number): Promise<BuyerLead | undefined>;
+  updateBuyerLeadStatus(id: number, status: string): Promise<BuyerLead | undefined>;
 
   // Contacts
   createContact(contact: InsertContact): Promise<Contact>;
@@ -369,6 +376,26 @@ export class DatabaseStorage implements IStorage {
 
   async updateInvestorLeadStatus(id: number, status: string): Promise<InvestorLead | undefined> {
     const [updated] = await db.update(investorLeads).set({ status }).where(eq(investorLeads.id, id)).returning();
+    return updated;
+  }
+
+  // Buyer Leads
+  async createBuyerLead(lead: InsertBuyerLead): Promise<BuyerLead> {
+    const [created] = await db.insert(buyerLeads).values(lead).returning();
+    return created;
+  }
+
+  async getBuyerLeads(): Promise<BuyerLead[]> {
+    return db.select().from(buyerLeads).orderBy(buyerLeads.createdAt);
+  }
+
+  async getBuyerLead(id: number): Promise<BuyerLead | undefined> {
+    const [lead] = await db.select().from(buyerLeads).where(eq(buyerLeads.id, id));
+    return lead;
+  }
+
+  async updateBuyerLeadStatus(id: number, status: string): Promise<BuyerLead | undefined> {
+    const [updated] = await db.update(buyerLeads).set({ status }).where(eq(buyerLeads.id, id)).returning();
     return updated;
   }
 

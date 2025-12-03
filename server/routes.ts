@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { 
   insertSellerLeadSchema, 
   insertInvestorLeadSchema, 
+  insertBuyerLeadSchema,
   insertContactSchema,
   insertProjectSchema,
   insertWholesaleDealSchema,
@@ -366,6 +367,25 @@ export async function registerRoutes(
     }
   });
 
+  // Buyer Lead Routes
+  app.post("/api/buyer-leads", async (req, res) => {
+    try {
+      const result = insertBuyerLeadSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: fromError(result.error).toString() 
+        });
+      }
+      
+      const lead = await storage.createBuyerLead(result.data);
+      console.log("New buyer lead received:", lead.email);
+      return res.status(201).json(lead);
+    } catch (error) {
+      console.error("Error creating buyer lead:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Contact Routes
   app.post("/api/contacts", async (req, res) => {
     try {
@@ -426,6 +446,31 @@ export async function registerRoutes(
       return res.json(leads);
     } catch (error) {
       console.error("Error fetching investor leads:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/hq/buyer-leads", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const leads = await storage.getBuyerLeads();
+      return res.json(leads);
+    } catch (error) {
+      console.error("Error fetching buyer leads:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/buyer-leads/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const updated = await storage.updateBuyerLeadStatus(id, status);
+      if (!updated) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating buyer lead status:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

@@ -20,6 +20,7 @@ import Contact from "@/pages/contact";
 import HQ from "@/pages/hq";
 import Wholesale from "@/pages/wholesale";
 import Buyers from "@/pages/buyers";
+import Buy from "@/pages/buy";
 import PortalSelect from "@/pages/portal-select";
 import InvestorPortal from "@/pages/investor-portal";
 import WholesalerPortal from "@/pages/wholesaler-portal";
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/wholesale" component={Wholesale} />
       <Route path="/buyers" component={Buyers} />
+      <Route path="/buy" component={Buy} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
       <Route path="/hq" component={HQ} />

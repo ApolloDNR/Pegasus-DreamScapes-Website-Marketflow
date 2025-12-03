@@ -377,6 +377,27 @@ export const insertInvestorLeadSchema = createInsertSchema(investorLeads).omit({
 export type InsertInvestorLead = z.infer<typeof insertInvestorLeadSchema>;
 export type InvestorLead = typeof investorLeads.$inferSelect;
 
+// Buyer Leads table
+export const buyerLeads = pgTable("buyer_leads", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }).notNull(),
+  cityState: varchar("city_state", { length: 255 }).notNull(),
+  buyerType: varchar("buyer_type", { length: 50 }).notNull(),
+  propertyTypes: varchar("property_types", { length: 255 }).notNull(),
+  budgetRange: varchar("budget_range", { length: 50 }).notNull(),
+  timeline: varchar("timeline", { length: 50 }).notNull(),
+  fundingStatus: varchar("funding_status", { length: 50 }).notNull(),
+  notes: text("notes"),
+  status: varchar("status", { length: 50 }).notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBuyerLeadSchema = createInsertSchema(buyerLeads).omit({ id: true, createdAt: true, status: true });
+export type InsertBuyerLead = z.infer<typeof insertBuyerLeadSchema>;
+export type BuyerLead = typeof buyerLeads.$inferSelect;
+
 // Contact form submissions table
 export const contacts = pgTable("contacts", {
   id: serial("id").primaryKey(),
