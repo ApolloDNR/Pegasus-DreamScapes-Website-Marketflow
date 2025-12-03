@@ -41,7 +41,12 @@ import {
   ArrowRightLeft,
   X,
   Check,
-  Percent
+  Percent,
+  Plus,
+  Search,
+  Calculator,
+  Settings,
+  Handshake
 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -251,6 +256,79 @@ export default function DealflowOffice() {
           </div>
         </div>
 
+        {/* Quick Actions Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+          <Button
+            variant="outline"
+            className="flex flex-col items-center justify-center h-20 gap-2 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 hover-elevate"
+            asChild
+            data-testid="quick-action-post-deal"
+          >
+            <Link href="/wholesale">
+              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                <Plus className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-xs font-medium">Post Deal</span>
+            </Link>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex flex-col items-center justify-center h-20 gap-2 bg-gradient-to-br from-blue-500/5 to-blue-500/10 border-blue-500/20 hover-elevate"
+            asChild
+            data-testid="quick-action-browse"
+          >
+            <Link href="/dealflow/deals">
+              <div className="w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Search className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-medium">Browse Deals</span>
+            </Link>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex flex-col items-center justify-center h-20 gap-2 bg-gradient-to-br from-purple-500/5 to-purple-500/10 border-purple-500/20 hover-elevate"
+            asChild
+            data-testid="quick-action-preferences"
+          >
+            <Link href="/profile/me">
+              <div className="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-purple-600" />
+              </div>
+              <span className="text-xs font-medium">Preferences</span>
+            </Link>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex flex-col items-center justify-center h-20 gap-2 bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20 hover-elevate"
+            asChild
+            data-testid="quick-action-calculator"
+          >
+            <Link href="/calculators">
+              <div className="w-9 h-9 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Calculator className="w-5 h-5 text-green-600" />
+              </div>
+              <span className="text-xs font-medium">Run Analyzer</span>
+            </Link>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex flex-col items-center justify-center h-20 gap-2 bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20 hover-elevate col-span-2 sm:col-span-1"
+            asChild
+            data-testid="quick-action-community"
+          >
+            <Link href="/dealflow/community">
+              <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <Handshake className="w-5 h-5 text-amber-600" />
+              </div>
+              <span className="text-xs font-medium">Find Partner</span>
+            </Link>
+          </Button>
+        </div>
+
         <Card className="mb-6 bg-gradient-to-r from-primary/10 via-amber-500/5 to-primary/10 border-primary/20">
           <CardContent className="py-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -350,6 +428,86 @@ export default function DealflowOffice() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Portfolio Performance Widget */}
+        <Card className="mb-6" data-testid="portfolio-performance">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Portfolio Performance
+                </CardTitle>
+                <CardDescription>Your investment performance at a glance</CardDescription>
+              </div>
+              <Badge variant="outline" className="text-green-600 border-green-300 dark:border-green-800">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                +18.4% YTD
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Capital Deployed */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Capital Deployed</span>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(committedInvestments.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 125000)}</p>
+                <div className="flex items-center gap-1 text-xs text-green-600">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>+$25K this quarter</span>
+                </div>
+              </div>
+              
+              {/* IRR */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Percent className="w-4 h-4" />
+                  <span>IRR</span>
+                </div>
+                <p className="text-2xl font-bold text-green-600">18.4%</p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Target className="w-3 h-3" />
+                  <span>Target: 15%</span>
+                </div>
+              </div>
+              
+              {/* Total Returns */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Total Returns</span>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(23500)}</p>
+                <div className="flex items-center gap-1 text-xs text-green-600">
+                  <ArrowUpRight className="w-3 h-3" />
+                  <span>+$5.2K this month</span>
+                </div>
+              </div>
+              
+              {/* Sparkline Chart */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Activity className="w-4 h-4" />
+                  <span>12-Month Trend</span>
+                </div>
+                <div className="h-16 flex items-end justify-between gap-1">
+                  {[35, 45, 40, 55, 50, 65, 60, 75, 70, 85, 80, 92].map((value, index) => (
+                    <div 
+                      key={index}
+                      className="flex-1 bg-primary/20 rounded-t-sm transition-all hover:bg-primary/40"
+                      style={{ height: `${value}%` }}
+                      title={`Month ${index + 1}: ${value}%`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-center text-muted-foreground">Jan - Dec</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -566,6 +724,73 @@ export default function DealflowOffice() {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Action Needed Section */}
+            <Card className="border-amber-200 dark:border-amber-800/50 bg-gradient-to-br from-amber-50/50 to-transparent dark:from-amber-950/20" data-testid="action-needed">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Bell className="w-5 h-5 text-amber-500" />
+                    Action Needed
+                  </CardTitle>
+                  <Badge className="bg-amber-500 text-white">
+                    {(myNegotiations.filter(n => n.status === "pending").length || 0) + 
+                     (investmentOffers.filter((o: any) => o.status === "PENDING").length || 0) + 2}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {/* Pending Counter-Offers */}
+                  {myNegotiations.filter(n => n.status === "countered" || (n.status === "pending" && user && n.responderId === user.id)).slice(0, 2).map((neg) => (
+                    <div 
+                      key={neg.id}
+                      className="flex items-center gap-3 p-2 rounded-lg bg-amber-100/50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedNegotiationId(neg.id);
+                        setNegotiationHistoryOpen(true);
+                      }}
+                      data-testid={`action-${neg.id}`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-amber-200 dark:bg-amber-900 flex items-center justify-center shrink-0">
+                        <ArrowRightLeft className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">Counter-offer Received</p>
+                        <p className="text-xs text-muted-foreground">Review terms for Deal #{neg.dealId}</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-amber-600 shrink-0" />
+                    </div>
+                  ))}
+                  
+                  {/* Document Signing */}
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-blue-100/50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-blue-200 dark:bg-blue-900 flex items-center justify-center shrink-0">
+                      <FileText className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">Document Ready</p>
+                      <p className="text-xs text-muted-foreground">Investment agreement to sign</p>
+                    </div>
+                    <Badge className="bg-blue-500 text-white text-xs shrink-0">Sign</Badge>
+                  </div>
+                  
+                  {/* Profile Update */}
+                  <Link href="/profile/me" className="flex items-center gap-3 p-2 rounded-lg bg-purple-100/50 dark:bg-purple-950/30 hover:bg-purple-100 dark:hover:bg-purple-950/50 transition-colors cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-purple-200 dark:bg-purple-900 flex items-center justify-center shrink-0">
+                      <Settings className="w-4 h-4 text-purple-700 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">Complete Profile</p>
+                      <p className="text-xs text-muted-foreground">Add investment preferences</p>
+                    </div>
+                    <div className="shrink-0">
+                      <Progress value={65} className="w-12 h-1.5" />
+                    </div>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
 
