@@ -241,21 +241,6 @@ export function InvestmentOfferDialog({
                 </div>
               </div>
 
-              {/* Seeking Statement - Prominent Banner */}
-              <Card className="border-2 border-primary/30 bg-gradient-to-r from-amber-500/10 via-primary/5 to-amber-500/10">
-                <CardContent className="py-4">
-                  <div className="text-center">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Operator is Seeking</p>
-                    <p className="text-xl font-bold text-primary">
-                      {buildSeekingStatement() || `${formatCurrency(project.fundingGoal)} total capital`}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Minimum investment: {formatCurrency(project.minInvestment)}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Operator's Terms Display */}
               {hasOperatorTerms && (
                 <Card className="bg-green-500/5 border-green-500/30">

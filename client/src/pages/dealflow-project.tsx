@@ -830,28 +830,6 @@ export default function DealflowProject() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Prominent Seeking Statement */}
-                <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-2 border-primary/30 text-center">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Seeking</p>
-                  <p className="text-lg font-bold text-primary" data-testid="text-seeking-amount">
-                    {formatCurrency(project.fundingGoal)}
-                    {project.structure?.toLowerCase() === "debt" && project.askingInterestRate && (
-                      <span className="text-green-600"> at {project.askingInterestRate}</span>
-                    )}
-                    {project.structure?.toLowerCase() === "equity" && project.askingEquityPercent && (
-                      <span className="text-blue-600"> for {project.askingEquityPercent}% equity</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {project.structure?.toLowerCase() === "debt" && project.askingLoanDuration 
-                      ? `${project.askingLoanDuration} term` 
-                      : project.askingProfitSplit 
-                        ? `${project.askingProfitSplit} profit split`
-                        : project.holdPeriod || "Flexible terms"
-                    }
-                  </p>
-                </div>
-
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-muted-foreground">Funding Progress</span>
@@ -873,6 +851,28 @@ export default function DealflowProject() {
                     </p>
                     <p className="text-sm text-muted-foreground">goal</p>
                   </div>
+                </div>
+
+                {/* Seeking Statement - aligned with investment details */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-2 border-primary/30 text-center">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Seeking</p>
+                  <p className="text-lg font-bold text-primary" data-testid="text-seeking-amount">
+                    {formatCurrency(project.fundingGoal)}
+                    {project.structure?.toLowerCase() === "debt" && project.askingInterestRate && (
+                      <span className="text-green-600"> at {project.askingInterestRate}</span>
+                    )}
+                    {project.structure?.toLowerCase() === "equity" && project.askingEquityPercent && (
+                      <span className="text-blue-600"> for {project.askingEquityPercent}% equity</span>
+                    )}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {project.structure?.toLowerCase() === "debt" && project.askingLoanDuration 
+                      ? `${project.askingLoanDuration} term` 
+                      : project.askingProfitSplit 
+                        ? `${project.askingProfitSplit} profit split`
+                        : project.holdPeriod || "Flexible terms"
+                    }
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t space-y-2 text-sm">
