@@ -96,10 +96,13 @@ export default function DealflowProject() {
 
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const [investAmount, setInvestAmount] = useState("");
+  const [investStructure, setInvestStructure] = useState<"equity" | "debt" | "hybrid">("equity");
   const [investRole, setInvestRole] = useState("LP");
   const [requestGP, setRequestGP] = useState(false);
   const [proposedEquity, setProposedEquity] = useState("");
+  const [proposedProfitSplit, setProposedProfitSplit] = useState("70/30");
   const [proposedInterest, setProposedInterest] = useState("");
+  const [proposedLoanDuration, setProposedLoanDuration] = useState("");
   const [investNotes, setInvestNotes] = useState("");
   const [isSaved, setIsSaved] = useState(false);
 
@@ -128,9 +131,12 @@ export default function DealflowProject() {
       const res = await apiRequest("POST", "/api/investment-offers", {
         projectId,
         amountOffered: parseInt(investAmount),
+        structureType: investStructure,
         requestedRole: requestGP ? "GP" : investRole,
         proposedEquityPercent: proposedEquity || undefined,
+        proposedProfitSplit: proposedProfitSplit || undefined,
         proposedInterestRate: proposedInterest || undefined,
+        proposedLoanDuration: proposedLoanDuration || undefined,
         notes: investNotes || undefined,
       });
       return res.json();
@@ -156,9 +162,12 @@ export default function DealflowProject() {
 
   const resetForm = () => {
     setInvestAmount("");
+    setInvestStructure("equity");
     setInvestRole("LP");
     setRequestGP(false);
     setProposedEquity("");
+    setProposedProfitSplit("70/30");
+    setProposedLoanDuration("");
     setProposedInterest("");
     setInvestNotes("");
   };
@@ -960,80 +969,201 @@ export default function DealflowProject() {
       </div>
 
       <Dialog open={investDialogOpen} onOpenChange={setInvestDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
               Invest in {project.title}
             </DialogTitle>
             <DialogDescription>
-              Submit your investment offer for review
+              Structure your investment offer with your preferred terms
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Investment Amount</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder={`Minimum ${formatCurrency(project.minInvestment)}`}
-                  value={investAmount}
-                  onChange={(e) => setInvestAmount(e.target.value)}
-                  className="pl-10"
-                  data-testid="input-invest-amount"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Investment Role</Label>
-              <RadioGroup value={investRole} onValueChange={setInvestRole}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="LP" id="lp" />
-                  <Label htmlFor="lp" className="font-normal">Limited Partner (LP)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="DEBT" id="debt" />
-                  <Label htmlFor="debt" className="font-normal">Debt / Lender</Label>
-                </div>
-              </RadioGroup>
-              <div className="flex items-center space-x-2 mt-2">
-                <Checkbox 
-                  id="gp" 
-                  checked={requestGP} 
-                  onCheckedChange={(checked) => setRequestGP(checked as boolean)} 
-                />
-                <Label htmlFor="gp" className="font-normal text-sm">
-                  Request General Partner (GP) role
-                </Label>
-              </div>
-            </div>
+          <div className="space-y-6 py-4">
+            {(project.askingInterestRate || project.askingEquityPercent) && (
+              <Card className="bg-gradient-to-r from-amber-500/10 to-primary/10 border-amber-500/30">
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="w-4 h-4 text-amber-500" />
+                    <span className="text-sm font-medium">Operator's Asking Terms</span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    {project.askingInterestRate && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Interest Rate</p>
+                        <p className="font-semibold text-green-600">{project.askingInterestRate}</p>
+                      </div>
+                    )}
+                    {project.askingLoanDuration && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Loan Duration</p>
+                        <p className="font-semibold">{project.askingLoanDuration}</p>
+                      </div>
+                    )}
+                    {project.askingEquityPercent && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Equity Offered</p>
+                        <p className="font-semibold text-blue-600">{project.askingEquityPercent}</p>
+                      </div>
+                    )}
+                    {project.askingProfitSplit && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Profit Split</p>
+                        <p className="font-semibold">{project.askingProfitSplit}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="equity">Proposed Equity %</Label>
-                <Input
-                  id="equity"
-                  placeholder="e.g., 10%"
-                  value={proposedEquity}
-                  onChange={(e) => setProposedEquity(e.target.value)}
-                  data-testid="input-proposed-equity"
-                />
+                <Label htmlFor="amount">Investment Amount</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder={`Min ${formatCurrency(project.minInvestment)}`}
+                    value={investAmount}
+                    onChange={(e) => setInvestAmount(e.target.value)}
+                    className="pl-10"
+                    data-testid="input-invest-amount"
+                  />
+                </div>
+                {parseInt(investAmount) > 0 && parseInt(investAmount) < project.minInvestment && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Below minimum investment
+                  </p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="interest">Proposed Interest Rate</Label>
-                <Input
-                  id="interest"
-                  placeholder="e.g., 12%"
-                  value={proposedInterest}
-                  onChange={(e) => setProposedInterest(e.target.value)}
-                  data-testid="input-proposed-interest"
-                />
+                <Label>Investment Role</Label>
+                <RadioGroup value={investRole} onValueChange={setInvestRole} className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="LP" id="role-lp" />
+                    <Label htmlFor="role-lp" className="font-normal text-sm cursor-pointer">LP</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="GP" id="role-gp" />
+                    <Label htmlFor="role-gp" className="font-normal text-sm cursor-pointer">GP</Label>
+                  </div>
+                </RadioGroup>
               </div>
             </div>
+
+            <div className="space-y-3">
+              <Label>Investment Structure</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "equity", label: "Equity", icon: <TrendingUp className="w-4 h-4" />, desc: "Own a stake in the project" },
+                  { value: "debt", label: "Debt", icon: <DollarSign className="w-4 h-4" />, desc: "Loan with fixed returns" },
+                  { value: "hybrid", label: "Hybrid", icon: <Sparkles className="w-4 h-4" />, desc: "Equity + Debt combined" },
+                ].map((struct) => (
+                  <button
+                    key={struct.value}
+                    type="button"
+                    onClick={() => setInvestStructure(struct.value as any)}
+                    className={`p-4 rounded-lg border-2 text-left transition-all hover-elevate ${
+                      investStructure === struct.value 
+                        ? "border-primary bg-primary/5" 
+                        : "border-muted"
+                    }`}
+                    data-testid={`button-structure-${struct.value}`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      {struct.icon}
+                      <span className="font-medium">{struct.label}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{struct.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {(investStructure === "equity" || investStructure === "hybrid") && (
+              <Card>
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-blue-500" />
+                    Equity Terms
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="equity-pct">Equity Percentage (%)</Label>
+                      <Input
+                        id="equity-pct"
+                        placeholder="e.g., 10"
+                        value={proposedEquity}
+                        onChange={(e) => setProposedEquity(e.target.value)}
+                        data-testid="input-proposed-equity"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Profit Split (You/Operator)</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {["50/50", "60/40", "70/30", "80/20", "90/10"].map((split) => (
+                          <button
+                            key={split}
+                            type="button"
+                            onClick={() => setProposedProfitSplit(split)}
+                            className={`px-2.5 py-1.5 text-xs rounded-md border transition-all ${
+                              proposedProfitSplit === split 
+                                ? "border-primary bg-primary/10 font-medium" 
+                                : "border-muted hover-elevate"
+                            }`}
+                            data-testid={`button-split-${split.replace("/", "-")}`}
+                          >
+                            {split}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {(investStructure === "debt" || investStructure === "hybrid") && (
+              <Card>
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-green-500" />
+                    Debt Terms
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="interest-rate">Interest Rate</Label>
+                      <Input
+                        id="interest-rate"
+                        placeholder="e.g., 10%"
+                        value={proposedInterest}
+                        onChange={(e) => setProposedInterest(e.target.value)}
+                        data-testid="input-proposed-interest"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="loan-duration">Loan Duration</Label>
+                      <Input
+                        id="loan-duration"
+                        placeholder="e.g., 12 months"
+                        value={proposedLoanDuration}
+                        onChange={(e) => setProposedLoanDuration(e.target.value)}
+                        data-testid="input-loan-duration"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (optional)</Label>
@@ -1042,13 +1172,13 @@ export default function DealflowProject() {
                 placeholder="Any additional terms, conditions, or questions..."
                 value={investNotes}
                 onChange={(e) => setInvestNotes(e.target.value)}
-                rows={3}
+                rows={2}
                 data-testid="input-invest-notes"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setInvestDialogOpen(false)}>
               Cancel
             </Button>
