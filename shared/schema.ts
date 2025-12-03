@@ -131,7 +131,7 @@ export type StaffPermission =
 export function hasPermission(roles: string[], permission: StaffPermission): boolean {
   return roles.some(role => {
     const staffRole = STAFF_PERMISSIONS[role as StaffRole];
-    return staffRole?.permissions.includes(permission);
+    return staffRole?.permissions.includes(permission as any);
   });
 }
 
@@ -688,6 +688,17 @@ export const capitalProjects = pgTable("capital_projects", {
   structure: varchar("structure", { length: 50 }).notNull().default("EQUITY"),
   projectedReturn: varchar("projected_return", { length: 50 }),
   holdPeriod: varchar("hold_period", { length: 50 }),
+  // Operator Asking Terms - Debt Structure
+  askingInterestRate: varchar("asking_interest_rate", { length: 20 }), // e.g., "10%", "12% annual"
+  askingLoanDuration: varchar("asking_loan_duration", { length: 50 }), // e.g., "12 months", "18 months"
+  askingPoints: varchar("asking_points", { length: 20 }), // e.g., "2 points", "1.5%"
+  // Operator Asking Terms - Equity Structure
+  askingEquityPercent: integer("asking_equity_percent"), // e.g., 20 for 20% to investor
+  askingProfitSplit: varchar("asking_profit_split", { length: 50 }), // e.g., "70/30" (investor/operator)
+  askingPreferredReturn: varchar("asking_preferred_return", { length: 20 }), // e.g., "8% pref"
+  // Hybrid Terms
+  askingDebtPortion: integer("asking_debt_portion"), // percentage of funding as debt
+  askingEquityPortion: integer("asking_equity_portion"), // percentage of funding as equity
   // Status: DRAFT, OPEN_FOR_INVESTMENT, FUNDED, IN_PROGRESS, COMPLETED
   status: varchar("status", { length: 50 }).notNull().default("DRAFT"),
   // Timeline
@@ -1149,3 +1160,32 @@ export const insertDealAnalyzerResultSchema = createInsertSchema(dealAnalyzerRes
 });
 export type InsertDealAnalyzerResult = z.infer<typeof insertDealAnalyzerResultSchema>;
 export type DealAnalyzerResult = typeof dealAnalyzerResults.$inferSelect;
+
+// Deal Messages - chat messages for deals/projects
+export const dealMessages = pgTable("deal_messages", {
+  id: serial("id").primaryKey(),
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // capital_project, wholesale_deal
+  dealId: integer("deal_id").notNull(),
+  senderId: varchar("sender_id", { length: 255 }).notNull(),
+  senderName: varchar("sender_name", { length: 255 }),
+  senderAvatar: varchar("sender_avatar"),
+  message: text("message").notNull(),
+  // Message type
+  messageType: varchar("message_type", { length: 50 }).default("text"), // text, offer, counter_offer, system
+  // Metadata for offer-related messages
+  relatedOfferId: integer("related_offer_id"),
+  // Read status
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDealMessageSchema = createInsertSchema(dealMessages).omit({ 
+  id: true, 
+  createdAt: true,
+  isRead: true,
+  readAt: true
+});
+export type InsertDealMessage = z.infer<typeof insertDealMessageSchema>;
+export type DealMessage = typeof dealMessages.$inferSelect;

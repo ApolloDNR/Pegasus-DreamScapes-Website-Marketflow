@@ -2355,6 +2355,60 @@ export async function registerRoutes(
   });
 
   // =====================================================
+  // Deal Messages (Chat) Routes
+  // =====================================================
+  
+  // Get messages for a deal
+  app.get("/api/deal-messages/:dealType/:dealId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { dealType, dealId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Mark messages as read
+      await storage.markDealMessagesRead(dealType, Number(dealId), userId);
+      
+      const messages = await storage.getDealMessages(dealType, Number(dealId));
+      return res.json(messages);
+    } catch (error) {
+      console.error("Error fetching deal messages:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Send a message
+  app.post("/api/deal-messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      const message = await storage.createDealMessage({
+        ...req.body,
+        senderId: userId,
+        senderName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User',
+        senderAvatar: user?.profileImageUrl || undefined,
+      });
+      return res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending deal message:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Get unread message count
+  app.get("/api/deal-messages/:dealType/:dealId/unread", isAuthenticated, async (req: any, res) => {
+    try {
+      const { dealType, dealId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      const count = await storage.getUnreadDealMessageCount(dealType, Number(dealId), userId);
+      return res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
   // Wholesale Deal Documents Routes
   // =====================================================
   

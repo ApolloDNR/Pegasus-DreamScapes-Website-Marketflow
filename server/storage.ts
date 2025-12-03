@@ -9,6 +9,7 @@ import {
   capitalProjects, projectMilestones, investmentOffers, committedInvestments, dealMatches,
   announcements, notifications,
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
+  dealMessages,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -46,7 +47,8 @@ import {
   type UserStats,
   type DealNegotiation, type InsertDealNegotiation,
   type WholesaleDealDocument, type InsertWholesaleDealDocument,
-  type DealAnalyzerResult, type InsertDealAnalyzerResult
+  type DealAnalyzerResult, type InsertDealAnalyzerResult,
+  type DealMessage, type InsertDealMessage
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -296,6 +298,12 @@ export interface IStorage {
   getDealAnalyzerResults(userId: string): Promise<DealAnalyzerResult[]>;
   getDealAnalyzerResult(id: number): Promise<DealAnalyzerResult | undefined>;
   deleteDealAnalyzerResult(id: number): Promise<void>;
+
+  // Deal Messages (Chat)
+  createDealMessage(message: InsertDealMessage): Promise<DealMessage>;
+  getDealMessages(dealType: string, dealId: number): Promise<DealMessage[]>;
+  markDealMessagesRead(dealType: string, dealId: number, userId: string): Promise<void>;
+  getUnreadDealMessageCount(dealType: string, dealId: number, userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1697,6 +1705,44 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDealAnalyzerResult(id: number): Promise<void> {
     await db.delete(dealAnalyzerResults).where(eq(dealAnalyzerResults.id, id));
+  }
+
+  // Deal Messages (Chat)
+  async createDealMessage(message: InsertDealMessage): Promise<DealMessage> {
+    const [created] = await db.insert(dealMessages).values(message).returning();
+    return created;
+  }
+
+  async getDealMessages(dealType: string, dealId: number): Promise<DealMessage[]> {
+    return db.select().from(dealMessages)
+      .where(and(
+        eq(dealMessages.dealType, dealType),
+        eq(dealMessages.dealId, dealId)
+      ))
+      .orderBy(asc(dealMessages.createdAt));
+  }
+
+  async markDealMessagesRead(dealType: string, dealId: number, userId: string): Promise<void> {
+    await db.update(dealMessages)
+      .set({ isRead: true, readAt: new Date() })
+      .where(and(
+        eq(dealMessages.dealType, dealType),
+        eq(dealMessages.dealId, dealId),
+        ne(dealMessages.senderId, userId),
+        eq(dealMessages.isRead, false)
+      ));
+  }
+
+  async getUnreadDealMessageCount(dealType: string, dealId: number, userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(dealMessages)
+      .where(and(
+        eq(dealMessages.dealType, dealType),
+        eq(dealMessages.dealId, dealId),
+        ne(dealMessages.senderId, userId),
+        eq(dealMessages.isRead, false)
+      ));
+    return result[0]?.count || 0;
   }
 }
 
