@@ -515,6 +515,57 @@ export default function DealflowOffice() {
           </Card>
         </div>
 
+        {/* Deal Pipeline Tracker */}
+        <Card className="mb-6" data-testid="deal-pipeline">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                  <Folder className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Deal Pipeline</CardTitle>
+                  <CardDescription>Track your deals through each stage</CardDescription>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dealflow/deals">
+                  View All
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between overflow-x-auto pb-2 gap-2">
+              {[
+                { stage: "Discovered", count: openProjects.length, color: "bg-blue-500", icon: Eye },
+                { stage: "Interested", count: savedDeals.filter(d => d.status === "saved").length, color: "bg-purple-500", icon: Heart },
+                { stage: "Negotiating", count: myNegotiations.filter(n => n.status === "pending" || n.status === "countered").length, color: "bg-amber-500", icon: HandshakeIcon },
+                { stage: "Due Diligence", count: investmentOffers.filter((o: any) => o.status === "PENDING").length, color: "bg-orange-500", icon: FileText },
+                { stage: "Committed", count: committedInvestments.length, color: "bg-green-500", icon: CheckCircle2 },
+                { stage: "Completed", count: capitalProjects.filter(p => p.status === "COMPLETED").length, color: "bg-emerald-600", icon: Star },
+              ].map((item, index, arr) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.stage} className="flex items-center">
+                    <div className="flex flex-col items-center min-w-[100px]">
+                      <div className={`w-12 h-12 rounded-full ${item.color} flex items-center justify-center text-white shadow-lg mb-2`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-2xl font-bold">{item.count}</span>
+                      <span className="text-xs text-muted-foreground text-center">{item.stage}</span>
+                    </div>
+                    {index < arr.length - 1 && (
+                      <div className="flex-shrink-0 w-8 h-0.5 bg-muted mx-1 hidden sm:block" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Portfolio Performance Widget */}
         <Card className="mb-6 border-primary/20 bg-gradient-to-br from-white to-primary/5 dark:from-card dark:to-primary/10" data-testid="portfolio-performance">
           <CardHeader className="pb-3">

@@ -228,6 +228,32 @@ export default function DealflowProject() {
     setInvestNotes("");
   };
 
+  const openConformToTerms = () => {
+    if (!project) return;
+    const hasDebt = project.askingInterestRate || project.askingLoanDuration;
+    const hasEquity = project.askingEquityPercent || project.askingProfitSplit;
+    
+    if (hasDebt && hasEquity) {
+      setInvestStructure("hybrid");
+    } else if (hasDebt) {
+      setInvestStructure("debt");
+    } else {
+      setInvestStructure("equity");
+    }
+    
+    if (project.askingInterestRate) setProposedInterest(project.askingInterestRate);
+    if (project.askingLoanDuration) setProposedLoanDuration(project.askingLoanDuration);
+    if (project.askingEquityPercent) setProposedEquity(project.askingEquityPercent);
+    if (project.askingProfitSplit) setProposedProfitSplit(project.askingProfitSplit);
+    setInvestNotes("Conforming to operator's asking terms.");
+    setInvestDialogOpen(true);
+  };
+
+  const openCounterOffer = () => {
+    resetForm();
+    setInvestDialogOpen(true);
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -979,64 +1005,103 @@ export default function DealflowProject() {
               </CardContent>
             </Card>
 
-            {(project.askingInterestRate || project.askingLoanDuration || project.askingEquityPercent || project.askingProfitSplit) && (
-              <Card className="border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-primary/5">
-                <CardHeader className="pb-3">
+            {/* Capital Raising Block - Operator Terms */}
+            <Card className="border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-amber-500/5 to-primary/10 shadow-lg" data-testid="capital-raising-block">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Target className="w-5 h-5 text-amber-500" />
-                    Operator's Terms
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs text-xs">These are the operator's asking terms for this investment. You can propose different terms when making your offer.</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center">
+                      <Target className="w-4 h-4 text-white" />
+                    </div>
+                    <span>Capital Raising Terms</span>
                   </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {(project.askingInterestRate || project.askingLoanDuration) && (
-                    <div className="pb-3 border-b">
-                      <Badge variant="secondary" className="mb-2 text-xs">Debt Structure</Badge>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        {project.askingInterestRate && (
-                          <div>
-                            <p className="text-muted-foreground text-xs">Interest Rate</p>
-                            <p className="font-semibold text-green-600">{project.askingInterestRate}</p>
-                          </div>
-                        )}
-                        {project.askingLoanDuration && (
-                          <div>
-                            <p className="text-muted-foreground text-xs">Loan Duration</p>
-                            <p className="font-semibold">{project.askingLoanDuration}</p>
-                          </div>
-                        )}
-                      </div>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-4 h-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">These are the operator's asking terms. Accept as-is or propose your own terms.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(project.askingInterestRate || project.askingLoanDuration) && (
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-semibold text-green-700 dark:text-green-400">Debt Structure</span>
                     </div>
-                  )}
-                  {(project.askingEquityPercent || project.askingProfitSplit) && (
-                    <div>
-                      <Badge variant="secondary" className="mb-2 text-xs">Equity Structure</Badge>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        {project.askingEquityPercent && (
-                          <div>
-                            <p className="text-muted-foreground text-xs">Equity Offered</p>
-                            <p className="font-semibold text-blue-600">{project.askingEquityPercent}</p>
-                          </div>
-                        )}
-                        {project.askingProfitSplit && (
-                          <div>
-                            <p className="text-muted-foreground text-xs">Profit Split</p>
-                            <p className="font-semibold">{project.askingProfitSplit}</p>
-                          </div>
-                        )}
-                      </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {project.askingInterestRate && (
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
+                          <p className="text-muted-foreground text-xs">Interest Rate</p>
+                          <p className="text-lg font-bold text-green-600">{project.askingInterestRate}</p>
+                        </div>
+                      )}
+                      {project.askingLoanDuration && (
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
+                          <p className="text-muted-foreground text-xs">Loan Duration</p>
+                          <p className="text-lg font-bold">{project.askingLoanDuration}</p>
+                        </div>
+                      )}
                     </div>
+                  </div>
+                )}
+                {(project.askingEquityPercent || project.askingProfitSplit) && (
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">Equity Structure</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {project.askingEquityPercent && (
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
+                          <p className="text-muted-foreground text-xs">Equity Offered</p>
+                          <p className="text-lg font-bold text-blue-600">{project.askingEquityPercent}</p>
+                        </div>
+                      )}
+                      {project.askingProfitSplit && (
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
+                          <p className="text-muted-foreground text-xs">Profit Split</p>
+                          <p className="text-lg font-bold">{project.askingProfitSplit}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {!(project.askingInterestRate || project.askingLoanDuration || project.askingEquityPercent || project.askingProfitSplit) && (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p className="text-sm">Terms to be discussed</p>
+                    <p className="text-xs">Submit an offer to start negotiation</p>
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                <div className="pt-2 flex flex-col gap-2">
+                  {(project.askingInterestRate || project.askingEquityPercent) && (
+                    <Button 
+                      onClick={openConformToTerms}
+                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                      data-testid="button-conform-terms"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Accept Operator's Terms
+                    </Button>
                   )}
-                </CardContent>
-              </Card>
-            )}
+                  <Button 
+                    variant="outline" 
+                    onClick={openCounterOffer}
+                    className="w-full border-primary/50 hover:bg-primary/10"
+                    data-testid="button-counter-offer"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit Counter-Offer
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader className="pb-3">
