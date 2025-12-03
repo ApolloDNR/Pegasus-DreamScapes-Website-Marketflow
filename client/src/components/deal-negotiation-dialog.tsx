@@ -330,7 +330,7 @@ export function DealNegotiationDialog({
                           onValueChange={setProfitSplit}
                           className="flex flex-wrap gap-2 mt-1.5"
                         >
-                          {["60/40", "70/30", "80/20", "90/10"].map((split) => (
+                          {["50/50", "55/45", "60/40", "65/35", "70/30", "75/25", "80/20", "85/15", "90/10"].map((split) => (
                             <div key={split}>
                               <RadioGroupItem value={split} id={`split-${split}`} className="peer sr-only" />
                               <Label 
@@ -341,7 +341,24 @@ export function DealNegotiationDialog({
                               </Label>
                             </div>
                           ))}
+                          <div>
+                            <RadioGroupItem value="custom" id="split-custom" className="peer sr-only" />
+                            <Label 
+                              htmlFor="split-custom" 
+                              className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-3 py-2 text-sm hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                            >
+                              Custom
+                            </Label>
+                          </div>
                         </RadioGroup>
+                        {profitSplit === "custom" && (
+                          <Input
+                            placeholder="e.g., 72/28"
+                            className="mt-2"
+                            onChange={(e) => setProfitSplit(e.target.value)}
+                            data-testid="input-custom-profit-split"
+                          />
+                        )}
                       </div>
                     </>
                   )}
