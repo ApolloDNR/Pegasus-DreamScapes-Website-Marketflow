@@ -151,11 +151,26 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
     );
   }
 
+  const getUserRole = () => {
+    if (user?.isStaff) return { name: "Dreamscaper", color: "text-purple-500", bgColor: "bg-purple-500/10" };
+    if (user?.isInvestor) return { name: "Investor", color: "text-green-500", bgColor: "bg-green-500/10" };
+    if (user?.isWholesaler) return { name: "Wholesaler", color: "text-blue-500", bgColor: "bg-blue-500/10" };
+    if (user?.isBuyer) return { name: "Buyer", color: "text-amber-500", bgColor: "bg-amber-500/10" };
+    return { name: "Member", color: "text-muted-foreground", bgColor: "bg-secondary" };
+  };
+  
+  const userRole = getUserRole();
+
   const navItems = [
     { path: "/dealflow/office", label: "My Office", icon: Briefcase, badge: null },
     { path: "/dealflow/deals", label: "Discover", icon: Heart, badge: "12" },
     { path: "/dealflow/community", label: "Community", icon: Users, badge: null },
     { path: "/dealflow/messages", label: "Messages", icon: MessageSquare, badge: "3" },
+  ];
+  
+  const toolItems = [
+    { path: "/calculators", label: "Calculators", icon: BarChart3 },
+    { path: "/resources", label: "Resources", icon: Building2 },
   ];
 
   const quickStats: QuickStat[] = [
@@ -264,6 +279,33 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                         <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{item.badge}</Badge>
                       )}
                     </TooltipContent>
+                  )}
+                </Tooltip>
+              );
+            })}
+
+            <div className={`my-3 border-t border-border/50 ${sidebarCollapsed ? '' : 'mx-3'}`} />
+            {!sidebarCollapsed && (
+              <p className="px-3 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tools</p>
+            )}
+            {toolItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Tooltip key={item.path} delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Link 
+                      href={item.path}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 ${sidebarCollapsed ? 'justify-center' : ''}`}
+                      data-testid={`nav-${item.label.toLowerCase()}`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {!sidebarCollapsed && (
+                        <span className="font-medium flex-1">{item.label}</span>
+                      )}
+                    </Link>
+                  </TooltipTrigger>
+                  {sidebarCollapsed && (
+                    <TooltipContent side="right">{item.label}</TooltipContent>
                   )}
                 </Tooltip>
               );
@@ -439,6 +481,24 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                         </Link>
                       );
                     })}
+                    <div className="pt-4 border-t mt-4">
+                      <p className="px-4 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tools</p>
+                      {toolItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.path}
+                            href={item.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+                            data-testid={`nav-mobile-${item.label.toLowerCase()}`}
+                          >
+                            <Icon className="w-5 h-5" />
+                            <span className="font-medium">{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
                     {user?.isStaff && (
                       <Link
                         href="/hq"

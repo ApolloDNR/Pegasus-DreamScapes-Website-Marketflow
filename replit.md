@@ -51,10 +51,12 @@ Preferred communication style: Simple, everyday language.
 - **Messages**: Direct messaging between users for deal negotiations
 
 ### Portal System (/portal)
-- **Dreamscaper Portal**: Staff dashboard at /hq with lead management, deal overview, and admin tools
-- **Investor Portal**: Investment preferences, wanted deal posting, and capital raising access
-- **Wholesaler Portal**: 3-step deal submission wizard with property details, financials, and media uploads
-- **Buyer Portal**: Property search and deal discovery
+- **Dreamscaper HQ** (/hq): Staff-only dashboard with lead management, deal overview, and admin tools
+- **Dealflow** (/dealflow): Unified platform for Investors, Wholesalers, and Buyers with role-based dashboards
+  - Sidebar navigation: My Office, Discover, Community, Messages
+  - Tools section: Calculators, Resources
+  - Staff users see HQ Dashboard link in sidebar
+- Portal routing: Staff auto-redirect to /hq; Investors/Wholesalers/Buyers auto-redirect to /dealflow/office
 
 ### Deal Negotiation System
 - Supports debt (interest rate) and equity (percentage) investment structures

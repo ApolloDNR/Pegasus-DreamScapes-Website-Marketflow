@@ -26,13 +26,13 @@ export default function PortalSelect() {
       if (portalRoles.length === 1) {
         if (user.isStaff) {
           setLocation("/hq");
-        } else if (user.isInvestor) {
-          setLocation("/portal/investor");
-        } else if (user.isWholesaler) {
-          setLocation("/portal/wholesaler");
-        } else if (user.isBuyer) {
-          setLocation("/portal/buyer");
+        } else if (user.isInvestor || user.isWholesaler || user.isBuyer) {
+          // Non-staff users go to Dealflow
+          setLocation("/dealflow/office");
         }
+      } else if (portalRoles.length > 1 && !user.isStaff) {
+        // Multiple roles but not staff - go to Dealflow
+        setLocation("/dealflow/office");
       }
     }
   }, [isLoading, isAuthenticated, user, setLocation]);
@@ -81,36 +81,36 @@ export default function PortalSelect() {
     },
     {
       id: "investor",
-      title: "Investor Portal",
-      description: "View investment opportunities, track your capital, and access exclusive investor resources.",
+      title: "Investor Dealflow",
+      description: "View investment opportunities, track your portfolio, and discover deals matched to your criteria.",
       icon: TrendingUp,
-      href: "/portal/investor",
+      href: "/dealflow/office",
       badge: "Investors",
       badgeColor: "bg-green-600",
       available: user?.isInvestor,
-      registerHref: "/portal/investor",
+      registerHref: "/invest",
     },
     {
       id: "wholesaler",
-      title: "Wholesaler Portal",
+      title: "Wholesaler Dealflow",
       description: "Post deals, track assignments, and connect with buyers and investors.",
       icon: Building2,
-      href: "/portal/wholesaler",
+      href: "/dealflow/office",
       badge: "Wholesalers",
       badgeColor: "bg-purple-600",
       available: user?.isWholesaler,
-      registerHref: "/portal/wholesaler",
+      registerHref: "/dealflow/office",
     },
     {
       id: "buyer",
-      title: "Buyer Portal",
+      title: "Buyer Dealflow",
       description: "Browse wholesale deals and renovated properties, save favorites, and submit offers.",
       icon: ShoppingBag,
-      href: "/portal/buyer",
+      href: "/dealflow/office",
       badge: "Buyers",
       badgeColor: "bg-orange-600",
       available: user?.isBuyer,
-      registerHref: "/portal/buyer",
+      registerHref: "/buyers",
     },
   ];
 

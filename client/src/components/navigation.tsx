@@ -49,7 +49,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const homeLinks = [
   { href: "#services", label: "Services" },
   { href: "#sell", label: "Sell" },
-  { href: "#projects", label: "Buy" },
+  { href: "/buyers", label: "Buy", isPage: true },
   { href: "#invest", label: "Invest" },
   { href: "#creed", label: "Dreamscaper" },
   { href: "#contact", label: "Contact" },
@@ -372,20 +372,36 @@ export function Navigation() {
               {isHomePage ? (
                 <>
                   {homeLinks.map((link) => (
-                    <a 
-                      key={link.href} 
-                      href={link.href}
-                      onClick={(e) => handleScrollClick(e, link.href)}
-                      className={`px-4 py-2.5 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
-                        scrolled 
-                          ? 'text-foreground hover:text-primary hover:bg-primary/5' 
-                          : 'text-white/90 hover:text-white hover:bg-white/10'
-                      }`}
-                      data-testid={`link-nav-${link.label.toLowerCase()}`}
-                    >
-                      {link.label}
-                      <span className={`absolute bottom-1 left-4 right-4 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
-                    </a>
+                    (link as any).isPage ? (
+                      <Link 
+                        key={link.href} 
+                        href={link.href}
+                        className={`px-4 py-2.5 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
+                          scrolled 
+                            ? 'text-foreground hover:text-primary hover:bg-primary/5' 
+                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                        }`}
+                        data-testid={`link-nav-${link.label.toLowerCase()}`}
+                      >
+                        {link.label}
+                        <span className={`absolute bottom-1 left-4 right-4 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
+                      </Link>
+                    ) : (
+                      <a 
+                        key={link.href} 
+                        href={link.href}
+                        onClick={(e) => handleScrollClick(e, link.href)}
+                        className={`px-4 py-2.5 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
+                          scrolled 
+                            ? 'text-foreground hover:text-primary hover:bg-primary/5' 
+                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                        }`}
+                        data-testid={`link-nav-${link.label.toLowerCase()}`}
+                      >
+                        {link.label}
+                        <span className={`absolute bottom-1 left-4 right-4 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
+                      </a>
+                    )
                   ))}
                 </>
               ) : (
@@ -429,10 +445,10 @@ export function Navigation() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-[750px] bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 overflow-hidden"
+                      className="absolute top-full right-0 mt-4 w-[750px] bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-tan/5" />
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-card border-l border-t border-border/50 rotate-45" />
+                      <div className="absolute -top-2 right-6 w-4 h-4 bg-card border-l border-t border-border/50 rotate-45" />
                       
                       <div className="relative grid grid-cols-3 divide-x divide-border/50">
                         {Object.entries(megaMenuSections).map(([key, section]) => (

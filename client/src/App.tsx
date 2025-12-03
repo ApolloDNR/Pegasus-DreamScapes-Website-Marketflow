@@ -53,9 +53,9 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/hq" component={HQ} />
       <Route path="/portal" component={PortalSelect} />
-      <Route path="/portal/investor" component={InvestorPortal} />
-      <Route path="/portal/wholesaler" component={WholesalerPortal} />
-      <Route path="/portal/buyer" component={BuyerPortal} />
+      <Route path="/portal/investor">{() => <Redirect to="/dealflow/office" />}</Route>
+      <Route path="/portal/wholesaler">{() => <Redirect to="/dealflow/office" />}</Route>
+      <Route path="/portal/buyer">{() => <Redirect to="/dealflow/office" />}</Route>
       <Route path="/capital-raising" component={CapitalRaising} />
       <Route path="/community" component={Community} />
       <Route path="/dealflow">{() => <Redirect to="/dealflow/office" />}</Route>
