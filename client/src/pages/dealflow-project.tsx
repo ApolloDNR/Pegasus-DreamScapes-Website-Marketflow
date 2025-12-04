@@ -90,6 +90,22 @@ interface CapitalProject {
   askingLoanDuration?: string;
   askingEquityPercent?: string;
   askingProfitSplit?: string;
+  // Capital Stack
+  purchasePrice?: number;
+  rehabBudget?: number;
+  softCosts?: number;
+  operatorEquity?: number;
+  contingency?: number;
+  projectedARV?: number;
+  projectedProfit?: number;
+  // Timeline phases
+  acquisitionDate?: string;
+  constructionStart?: string;
+  constructionEnd?: string;
+  stabilizationDate?: string;
+  exitDate?: string;
+  startDate?: string;
+  estimatedCompletion?: string;
 }
 
 export default function DealflowProject() {

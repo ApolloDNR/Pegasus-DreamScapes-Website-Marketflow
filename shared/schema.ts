@@ -720,11 +720,24 @@ export const capitalProjects = pgTable("capital_projects", {
   // Hybrid Terms
   askingDebtPortion: integer("asking_debt_portion"), // percentage of funding as debt
   askingEquityPortion: integer("asking_equity_portion"), // percentage of funding as equity
+  // Capital Stack Breakdown - for transparency
+  purchasePrice: integer("purchase_price"), // Property purchase price
+  rehabBudget: integer("rehab_budget"), // Renovation/construction budget
+  softCosts: integer("soft_costs"), // Closing costs, permits, fees, etc.
+  operatorEquity: integer("operator_equity"), // Operator's own capital contribution
+  contingency: integer("contingency"), // Buffer for unexpected costs
+  projectedARV: integer("projected_arv"), // After Repair Value for equity/flip projects
+  projectedProfit: integer("projected_profit"), // Expected gross profit
   // Status: DRAFT, OPEN_FOR_INVESTMENT, FUNDED, IN_PROGRESS, COMPLETED
   status: varchar("status", { length: 50 }).notNull().default("DRAFT"),
-  // Timeline
+  // Timeline - detailed phases
   startDate: timestamp("start_date"),
   estimatedCompletion: timestamp("estimated_completion"),
+  acquisitionDate: timestamp("acquisition_date"), // Property purchase date
+  constructionStart: timestamp("construction_start"),
+  constructionEnd: timestamp("construction_end"),
+  stabilizationDate: timestamp("stabilization_date"), // For rentals
+  exitDate: timestamp("exit_date"), // Target sale/refinance date
   // Media
   images: text("images").array(),
   documents: text("documents").array(),
