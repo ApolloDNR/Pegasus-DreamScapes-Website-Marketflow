@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -30,7 +30,8 @@ import {
   AlertTriangle,
   Building2,
   Loader2,
-  Zap
+  Zap,
+  Calculator
 } from "lucide-react";
 
 interface CapitalProject {
@@ -50,6 +51,7 @@ interface CapitalProject {
   askingEquityPercent?: string;
   askingProfitSplit?: string;
   images?: string[];
+  projectedProfit?: number;
 }
 
 interface InvestmentOfferDialogProps {
@@ -92,6 +94,64 @@ export function InvestmentOfferDialog({
   const hasDebtTerms = project.askingInterestRate || project.askingLoanDuration;
   const hasEquityTerms = project.askingEquityPercent || project.askingProfitSplit;
   const hasOperatorTerms = hasDebtTerms || hasEquityTerms;
+
+  const parseRate = (rateStr?: string): number => {
+    if (!rateStr) return 0;
+    const match = rateStr.match(/(\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  const parseMonths = (durationStr?: string): number => {
+    if (!durationStr) return 12;
+    const match = durationStr.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 12;
+  };
+
+  const dynamicROI = useMemo(() => {
+    const principal = parseFloat(investAmount) || 0;
+    if (principal <= 0) return null;
+
+    const isDebt = investStructure === "debt" || (isAcceptingTerms && hasDebtTerms && !hasEquityTerms);
+    const isEquity = investStructure === "equity" || (isAcceptingTerms && hasEquityTerms && !hasDebtTerms);
+
+    if (isDebt) {
+      const rate = parseRate(isAcceptingTerms ? project.askingInterestRate : proposedInterest);
+      const months = parseMonths(isAcceptingTerms ? project.askingLoanDuration : proposedLoanDuration);
+      const totalInterest = principal * (rate / 100) * (months / 12);
+      const monthlyInterest = months > 0 ? totalInterest / months : 0;
+      const totalPayout = principal + totalInterest;
+      return {
+        type: "debt",
+        principal,
+        totalInterest,
+        monthlyInterest,
+        totalPayout,
+        roi: principal > 0 ? (totalInterest / principal) * 100 : 0,
+        termMonths: months,
+        rate,
+      };
+    }
+
+    if (isEquity) {
+      const projectedProfit = project.projectedProfit || 0;
+      const profitSplit = (isAcceptingTerms ? project.askingProfitSplit : proposedProfitSplit) || "70/30";
+      const investorSplitPercent = parseInt(profitSplit.split("/")[0]) || 70;
+      const investorShareOfRaise = principal / (project.fundingGoal || 1);
+      const estimatedProfit = projectedProfit * (investorSplitPercent / 100) * investorShareOfRaise;
+      return {
+        type: "equity",
+        principal,
+        totalInterest: estimatedProfit,
+        monthlyInterest: 0,
+        totalPayout: principal + estimatedProfit,
+        roi: principal > 0 ? (estimatedProfit / principal) * 100 : 0,
+        termMonths: 0,
+        rate: 0,
+      };
+    }
+
+    return null;
+  }, [investAmount, investStructure, isAcceptingTerms, hasDebtTerms, hasEquityTerms, proposedInterest, proposedLoanDuration, proposedProfitSplit, project]);
 
   const resetForm = () => {
     setInvestAmount("");
@@ -429,6 +489,40 @@ export function InvestmentOfferDialog({
                   </RadioGroup>
                 </div>
               </div>
+
+              {/* Dynamic ROI Preview */}
+              {dynamicROI && (
+                <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20 animate-in fade-in-50 duration-200" data-testid="roi-preview">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calculator className="w-5 h-5 text-green-600" />
+                    <span className="font-medium text-green-700 dark:text-green-400">Your Projected Returns</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Principal</p>
+                      <p className="font-bold">{formatCurrency(dynamicROI.principal)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{dynamicROI.type === "debt" ? "Interest Earned" : "Profit Share"}</p>
+                      <p className="font-bold text-green-600">+{formatCurrency(dynamicROI.totalInterest)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Payout</p>
+                      <p className="font-bold text-primary">{formatCurrency(dynamicROI.totalPayout)}</p>
+                    </div>
+                  </div>
+                  {dynamicROI.type === "debt" && dynamicROI.monthlyInterest > 0 && (
+                    <div className="mt-3 pt-3 border-t border-green-500/20">
+                      <p className="text-xs text-center text-muted-foreground">
+                        {formatCurrency(dynamicROI.monthlyInterest)}/month over {dynamicROI.termMonths} months ({dynamicROI.roi.toFixed(1)}% ROI)
+                      </p>
+                      <p className="text-xs text-center text-green-600 mt-1">
+                        Formula: {formatCurrency(dynamicROI.principal)} x {dynamicROI.rate}% x ({dynamicROI.termMonths} / 12)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Investment Structure Selection - Only for counter-offers */}
               {!isAcceptingTerms && (
