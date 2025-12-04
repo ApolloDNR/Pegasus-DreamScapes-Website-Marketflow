@@ -394,7 +394,7 @@ export function InvestmentOfferDialog({
                 <div>
                   <DialogTitle className="flex items-center gap-2">
                     <DollarSign className="w-5 h-5" />
-                    {isAcceptingTerms ? "Confirm Investment" : "Counter-Offer Terms"}
+                    {isAcceptingTerms ? "Accept Terms & Invest" : "Counter-Offer"}
                   </DialogTitle>
                   <DialogDescription>
                     {isAcceptingTerms 
@@ -675,7 +675,7 @@ export function InvestmentOfferDialog({
                   ) : (
                     <Send className="w-4 h-4 mr-2" />
                   )}
-                  {isAcceptingTerms ? "Confirm Investment" : "Submit Offer"}
+                  {isAcceptingTerms ? "Accept Terms & Invest" : "Counter-Offer"}
                 </Button>
               </div>
             </div>
