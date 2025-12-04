@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { PortalHeader } from "@/components/portal-header";
 import { AnnouncementsBanner } from "@/components/announcements-banner";
+import { WholesaleDealForm } from "@/components/wholesale-deal-form";
 import { 
   Building2, 
   ArrowRight, 
@@ -520,703 +521,73 @@ function AssignmentsTab({ deals }: { deals?: WholesaleDeal[] }) {
   );
 }
 
-const dealFormSchema = z.object({
-  propertyAddress: z.string().min(5, "Property address is required"),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State is required"),
-  zipCode: z.string().min(5, "Zip code is required"),
-  propertyType: z.string().min(1, "Property type is required"),
-  bedrooms: z.number().min(0).optional(),
-  bathrooms: z.string().optional(),
-  sqft: z.number().min(0).optional(),
-  yearBuilt: z.number().min(1800).max(2025).optional(),
-  lotSize: z.string().optional(),
-  contractPrice: z.number().min(1, "Contract price is required"),
-  assignmentFee: z.number().min(1, "Assignment fee is required"),
-  arv: z.number().min(0).optional(),
-  estimatedRepairs: z.number().min(0).optional(),
-  strategy: z.string().min(1, "Investment strategy is required"),
-  description: z.string().optional(),
-  highlights: z.array(z.string()).optional(),
-  contractExpiration: z.string().optional(),
-});
-
-type DealFormData = z.infer<typeof dealFormSchema>;
-
 function SubmitDealTab() {
-  const { toast } = useToast();
-  const [step, setStep] = useState(1);
-  const [highlightInput, setHighlightInput] = useState("");
-  const [highlights, setHighlights] = useState<string[]>([]);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [imageUrlInput, setImageUrlInput] = useState("");
-  const [showAnalyzer, setShowAnalyzer] = useState(false);
-
-  const form = useForm<DealFormData>({
-    resolver: zodResolver(dealFormSchema),
-    defaultValues: {
-      propertyAddress: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      propertyType: "",
-      bedrooms: undefined,
-      bathrooms: "",
-      sqft: undefined,
-      yearBuilt: undefined,
-      lotSize: "",
-      contractPrice: 0,
-      assignmentFee: 0,
-      arv: undefined,
-      estimatedRepairs: undefined,
-      strategy: "",
-      description: "",
-      highlights: [],
-      contractExpiration: "",
-    },
-  });
-
-  const watchedValues = form.watch();
-  const contractPrice = watchedValues.contractPrice || 0;
-  const assignmentFee = watchedValues.assignmentFee || 0;
-  const arv = watchedValues.arv || 0;
-  const estimatedRepairs = watchedValues.estimatedRepairs || 0;
-
-  const totalCost = contractPrice + assignmentFee + estimatedRepairs;
-  const potentialProfit = arv - totalCost;
-  const roi = totalCost > 0 ? ((potentialProfit / totalCost) * 100).toFixed(1) : "0";
-  const maxOffer = arv > 0 ? Math.round(arv * 0.7 - estimatedRepairs) : 0;
-  const dealGrade = 
-    potentialProfit >= 50000 ? "A" :
-    potentialProfit >= 30000 ? "B" :
-    potentialProfit >= 15000 ? "C" : "D";
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: DealFormData) => {
-      return apiRequest("POST", "/api/wholesale-deals", {
-        ...data,
-        highlights,
-        images: imageUrls,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Deal Submitted",
-        description: "Your wholesale deal has been submitted for review.",
-      });
-      form.reset();
-      setHighlights([]);
-      setImageUrls([]);
-      setStep(1);
-      queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to submit deal. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addHighlight = () => {
-    if (highlightInput.trim() && highlights.length < 5) {
-      setHighlights([...highlights, highlightInput.trim()]);
-      setHighlightInput("");
-    }
+  const [, setLocation] = useLocation();
+  
+  const handleSuccess = () => {
+    setLocation("/portal/wholesaler");
   };
-
-  const removeHighlight = (index: number) => {
-    setHighlights(highlights.filter((_, i) => i !== index));
-  };
-
-  const addImageUrl = () => {
-    if (imageUrlInput.trim() && imageUrls.length < 10) {
-      setImageUrls([...imageUrls, imageUrlInput.trim()]);
-      setImageUrlInput("");
-    }
-  };
-
-  const removeImageUrl = (index: number) => {
-    setImageUrls(imageUrls.filter((_, i) => i !== index));
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
+  
   return (
-    <div className="max-w-4xl">
-      <Card className="sleek-card mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-primary" />
-            Submit a Wholesale Deal
-          </CardTitle>
-          <CardDescription>
-            Complete all fields to submit your deal for review. Accurate information helps us process faster.
-          </CardDescription>
-          <div className="flex items-center gap-2 mt-4">
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${step >= 1 ? "bg-primary text-white" : "bg-secondary"}`}>
-              <span>1</span>
-              <span className="hidden sm:inline">Property</span>
-            </div>
-            <div className="h-px flex-1 bg-border" />
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${step >= 2 ? "bg-primary text-white" : "bg-secondary"}`}>
-              <span>2</span>
-              <span className="hidden sm:inline">Financials</span>
-            </div>
-            <div className="h-px flex-1 bg-border" />
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${step >= 3 ? "bg-primary text-white" : "bg-secondary"}`}>
-              <span>3</span>
-              <span className="hidden sm:inline">Details</span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => submitMutation.mutate(data))} className="space-y-6">
-              {step === 1 && (
-                <div className="space-y-6">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Home className="w-4 h-4" />
-                    Property Information
-                  </h3>
-                  
-                  <FormField
-                    control={form.control}
-                    name="propertyAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Property Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123 Main Street" {...field} data-testid="input-deal-address" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Los Angeles" {...field} data-testid="input-deal-city" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input placeholder="CA" {...field} data-testid="input-deal-state" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="zipCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Zip Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="90001" {...field} data-testid="input-deal-zip" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="propertyType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Property Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-deal-type">
-                              <SelectValue placeholder="Select property type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="single_family">Single Family</SelectItem>
-                            <SelectItem value="multi_family">Multi-Family</SelectItem>
-                            <SelectItem value="condo">Condo/Townhouse</SelectItem>
-                            <SelectItem value="duplex">Duplex</SelectItem>
-                            <SelectItem value="triplex">Triplex</SelectItem>
-                            <SelectItem value="fourplex">Fourplex</SelectItem>
-                            <SelectItem value="land">Land</SelectItem>
-                            <SelectItem value="commercial">Commercial</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="bedrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bedrooms</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="3" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                              data-testid="input-deal-beds" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bathrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bathrooms</FormLabel>
-                          <FormControl>
-                            <Input placeholder="2" {...field} data-testid="input-deal-baths" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="sqft"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Sq Ft</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1500" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                              data-testid="input-deal-sqft" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="yearBuilt"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Year Built</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1990" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                              data-testid="input-deal-year" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button type="button" onClick={() => setStep(2)} data-testid="button-next-step">
-                      Next: Financials
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2">
+        <WholesaleDealForm onSuccess={handleSuccess} />
+      </div>
+      <div className="space-y-6">
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              What We Look For
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3 h-3 text-green-600" />
                 </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-6">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Financial Details
-                  </h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="contractPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contract Price *</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="150000" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                              data-testid="input-deal-contract" 
-                            />
-                          </FormControl>
-                          <FormDescription>Price you have under contract</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="assignmentFee"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Assignment Fee *</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="15000" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                              data-testid="input-deal-assignment" 
-                            />
-                          </FormControl>
-                          <FormDescription>Your wholesale fee</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="arv"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>After Repair Value (ARV)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="250000" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                              data-testid="input-deal-arv" 
-                            />
-                          </FormControl>
-                          <FormDescription>Estimated value after repairs</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="estimatedRepairs"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Estimated Repairs</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="50000" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                              data-testid="input-deal-repairs" 
-                            />
-                          </FormControl>
-                          <FormDescription>Total rehab budget estimate</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="contractExpiration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contract Expiration Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} data-testid="input-deal-expiration" />
-                        </FormControl>
-                        <FormDescription>When does your contract expire?</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Card className="bg-secondary/30 border-primary/20">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4" />
-                        Deal Analysis
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="p-3 rounded bg-background">
-                          <p className="text-xs text-muted-foreground">Total Cost</p>
-                          <p className="font-bold">{formatCurrency(totalCost)}</p>
-                        </div>
-                        <div className="p-3 rounded bg-background">
-                          <p className="text-xs text-muted-foreground">Potential Profit</p>
-                          <p className={`font-bold ${potentialProfit > 0 ? "text-green-600" : "text-red-600"}`}>
-                            {formatCurrency(potentialProfit)}
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-background">
-                          <p className="text-xs text-muted-foreground">ROI</p>
-                          <p className={`font-bold ${Number(roi) > 15 ? "text-green-600" : "text-amber-600"}`}>
-                            {roi}%
-                          </p>
-                        </div>
-                        <div className="p-3 rounded bg-background">
-                          <p className="text-xs text-muted-foreground">Deal Grade</p>
-                          <Badge className={
-                            dealGrade === "A" ? "bg-green-600" :
-                            dealGrade === "B" ? "bg-blue-600" :
-                            dealGrade === "C" ? "bg-amber-600" : "bg-red-600"
-                          }>
-                            {dealGrade}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="mt-4 p-3 rounded bg-background">
-                        <p className="text-xs text-muted-foreground">70% Rule Max Offer</p>
-                        <p className="font-bold text-primary">{formatCurrency(maxOffer)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          (ARV × 70%) - Repairs = Maximum purchase price
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setStep(1)} data-testid="button-prev-step">
-                      Back
-                    </Button>
-                    <Button type="button" onClick={() => setStep(3)} data-testid="button-next-details">
-                      Next: Details
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                <span>Properties at 70% or less of ARV minus repairs</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3 h-3 text-green-600" />
                 </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-6">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Deal Details
-                  </h3>
-
-                  <FormField
-                    control={form.control}
-                    name="strategy"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Investment Strategy *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-deal-strategy">
-                              <SelectValue placeholder="Select best strategy for this property" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="fix_and_flip">Fix and Flip</SelectItem>
-                            <SelectItem value="buy_and_hold">Buy and Hold (Rental)</SelectItem>
-                            <SelectItem value="brrrr">BRRRR</SelectItem>
-                            <SelectItem value="live_in_flip">Live-In Flip</SelectItem>
-                            <SelectItem value="development">Development/Subdivision</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Describe the property condition, neighborhood, and why this is a great deal..."
-                            className="min-h-[120px]"
-                            {...field} 
-                            data-testid="textarea-deal-description" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div>
-                    <FormLabel>Deal Highlights</FormLabel>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        placeholder="Add a highlight (e.g., 'Corner lot')"
-                        value={highlightInput}
-                        onChange={(e) => setHighlightInput(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addHighlight())}
-                        data-testid="input-deal-highlight"
-                      />
-                      <Button type="button" variant="outline" onClick={addHighlight} data-testid="button-add-highlight">
-                        Add
-                      </Button>
-                    </div>
-                    {highlights.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {highlights.map((h, i) => (
-                          <Badge key={i} variant="secondary" className="flex items-center gap-1">
-                            {h}
-                            <button 
-                              type="button" 
-                              onClick={() => removeHighlight(i)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              ×
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <FormLabel>Property Images (URLs)</FormLabel>
-                    <FormDescription className="mb-2">
-                      Add image URLs for property photos. Support for file uploads coming soon.
-                    </FormDescription>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="https://example.com/image.jpg"
-                        value={imageUrlInput}
-                        onChange={(e) => setImageUrlInput(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addImageUrl())}
-                        data-testid="input-deal-image"
-                      />
-                      <Button type="button" variant="outline" onClick={addImageUrl} data-testid="button-add-image">
-                        Add
-                      </Button>
-                    </div>
-                    {imageUrls.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2 mt-3">
-                        {imageUrls.map((url, i) => (
-                          <div key={i} className="relative group">
-                            <img 
-                              src={url} 
-                              alt={`Property ${i + 1}`} 
-                              className="w-full h-20 object-cover rounded border"
-                              onError={(e) => (e.currentTarget.src = "https://via.placeholder.com/150")}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeImageUrl(i)}
-                              className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-green-800 dark:text-green-400">Ready to Submit</h4>
-                          <p className="text-sm text-green-700 dark:text-green-500">
-                            Your deal will be reviewed by our acquisitions team within 24 hours.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setStep(2)} data-testid="button-back-financials">
-                      Back
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={submitMutation.isPending}
-                      data-testid="button-submit-deal-final"
-                    >
-                      {submitMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                      )}
-                      Submit Deal for Review
-                    </Button>
-                  </div>
+                <span>Clear title and motivated sellers</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3 h-3 text-green-600" />
                 </div>
-              )}
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      <Card className="sleek-card">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            What We Look For
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-green-600" />
-              </div>
-              <span>Properties at 70% or less of ARV minus repairs</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-green-600" />
-              </div>
-              <span>Clear title and motivated sellers</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-green-600" />
-              </div>
-              <span>Realistic repair estimates with comps to support ARV</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-green-600" />
-              </div>
-              <span>At least 14 days remaining on contract</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+                <span>Realistic repair estimates with comps to support ARV</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3 h-3 text-green-600" />
+                </div>
+                <span>At least 14 days remaining on contract</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+        
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              Review Timeline
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2">
+            <p className="text-muted-foreground">
+              Our acquisitions team reviews submissions within 24-48 hours.
+            </p>
+            <p className="text-muted-foreground">
+              If your deal meets our criteria, we'll reach out to discuss next steps.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -83,6 +83,16 @@ Preferred communication style: Simple, everyday language.
 - Achievement badges and verification levels
 - Activity timeline and transaction history
 
+### Wholesale Deal Submission (client/src/components/wholesale-deal-form.tsx)
+- 5-step wizard form tailored for wholesale acquisitions
+- **Step 1 (Property)**: Address, type, beds/baths/sqft, occupancy status, investment strategy
+- **Step 2 (Seller)**: Confidential seller info - name, contact, motivation (1-10 scale), situation notes
+- **Step 3 (Contract)**: EMD details, contract dates (signed, inspection, DD, closing), property access (lockbox, showing times)
+- **Step 4 (Financials)**: Asking price, contract price, assignment fee, ARV, repairs, holding costs, live deal analysis
+- **Step 5 (Marketing)**: Buyer type requirements, disposition method (assignment/double-close/novation), highlights, images
+- Real-time deal analysis: ROI, spread %, deal grade (A/B/C/D), 70% rule max offer calculation
+- Pipeline stages: sourcing, underwriting, contract, disposition
+
 ### Capital Raising (/capital-raising)
 - Project posting for flips, rentals, multifamily, commercial investments
 - Investment packet downloads and ROI projections

@@ -481,48 +481,125 @@ export const insertLeadActivitySchema = createInsertSchema(leadActivities).omit(
 export type InsertLeadActivity = z.infer<typeof insertLeadActivitySchema>;
 export type LeadActivity = typeof leadActivities.$inferSelect;
 
-// Wholesale Deals table - off-market properties under contract
+// Wholesale Deal Pipeline Stages
+export const WHOLESALE_PIPELINE_STAGES = [
+  "sourcing",      // Lead identified, researching
+  "underwriting",  // Analyzing numbers, running comps
+  "negotiating",   // Making offers, negotiating terms
+  "under_contract", // Contract signed, in DD period
+  "marketing",     // Listed for assignment
+  "assigned",      // Assigned to end buyer
+  "closed",        // Deal completed
+  "dead"           // Deal fell through
+] as const;
+
+export type WholesalePipelineStage = typeof WHOLESALE_PIPELINE_STAGES[number];
+
+// Wholesale Deals table - off-market properties for assignment
 export const wholesaleDeals = pgTable("wholesale_deals", {
   id: serial("id").primaryKey(),
   submittedBy: varchar("submitted_by", { length: 255 }), // User ID of submitter (wholesaler)
-  // Property details
+  
+  // === PROPERTY DETAILS ===
   propertyAddress: text("property_address").notNull(),
   city: varchar("city", { length: 100 }).notNull(),
   state: varchar("state", { length: 50 }).notNull(),
   zipCode: varchar("zip_code", { length: 20 }).notNull(),
+  county: varchar("county", { length: 100 }),
   propertyType: varchar("property_type", { length: 50 }).notNull(),
   bedrooms: integer("bedrooms"),
   bathrooms: varchar("bathrooms", { length: 10 }),
   sqft: integer("sqft"),
   yearBuilt: integer("year_built"),
   lotSize: varchar("lot_size", { length: 50 }),
-  // Financial details
+  
+  // === SELLER INFORMATION ===
+  sellerName: varchar("seller_name", { length: 255 }),
+  sellerPhone: varchar("seller_phone", { length: 50 }),
+  sellerEmail: varchar("seller_email", { length: 255 }),
+  sellerMotivation: varchar("seller_motivation", { length: 100 }), // divorce, foreclosure, inherited, relocation, tired_landlord, etc.
+  motivationLevel: integer("motivation_level"), // 1-10 scale
+  sellerSituation: text("seller_situation"), // Detailed notes about seller's circumstances
+  
+  // === FINANCIAL DETAILS ===
+  askingPrice: integer("asking_price"), // What seller initially asked
   contractPrice: integer("contract_price").notNull(),
   assignmentFee: integer("assignment_fee").notNull(),
+  maxAssignmentFee: integer("max_assignment_fee"), // Ceiling for negotiation
   arv: integer("arv"),
   estimatedRepairs: integer("estimated_repairs"),
-  // Deal info
-  strategy: varchar("strategy", { length: 50 }).notNull(),
+  repairDetails: text("repair_details"), // Breakdown of repairs needed
+  holdingCosts: integer("holding_costs"), // Monthly carrying costs
+  closingCosts: integer("closing_costs"),
+  
+  // === EARNEST MONEY ===
+  emdAmount: integer("emd_amount"), // Earnest Money Deposit
+  emdDueDate: timestamp("emd_due_date"),
+  emdHeldBy: varchar("emd_held_by", { length: 255 }), // Title company or escrow
+  emdStatus: varchar("emd_status", { length: 50 }), // pending, deposited, released, forfeited
+  
+  // === CONTRACT DATES ===
+  contractDate: timestamp("contract_date"), // When contract was signed
+  inspectionDeadline: timestamp("inspection_deadline"),
+  dueDiligenceDeadline: timestamp("due_diligence_deadline"),
+  financingDeadline: timestamp("financing_deadline"),
+  closingDate: timestamp("closing_date"),
+  contractExpiration: timestamp("contract_expiration"),
+  
+  // === PROPERTY ACCESS ===
+  occupancyStatus: varchar("occupancy_status", { length: 50 }), // vacant, owner_occupied, tenant_occupied
+  accessInstructions: text("access_instructions"), // How to show property
+  lockboxCode: varchar("lockbox_code", { length: 50 }),
+  showingAvailability: text("showing_availability"), // When property can be shown
+  tenantInfo: text("tenant_info"), // Lease details if tenant-occupied
+  
+  // === TITLE & ESCROW ===
+  titleCompany: varchar("title_company", { length: 255 }),
+  titleContact: varchar("title_contact", { length: 255 }),
+  titlePhone: varchar("title_phone", { length: 50 }),
+  titleIssues: text("title_issues"), // Known title problems
+  
+  // === DEAL INFO ===
+  strategy: varchar("strategy", { length: 50 }).notNull(), // flip, rental, wholetail, etc.
+  exitStrategy: varchar("exit_strategy", { length: 50 }), // How end buyer will profit
   description: text("description"),
   highlights: text("highlights").array(),
   images: text("images").array(),
-  // Status workflow: under_review -> accepted/rejected/available -> assigned
+  documents: text("documents").array(), // Contract, disclosures, etc.
+  
+  // === BUYER REQUIREMENTS ===
+  idealBuyerType: varchar("ideal_buyer_type", { length: 100 }), // cash_buyer, hard_money, conventional
+  buyerExperienceRequired: varchar("buyer_experience_required", { length: 50 }), // none, beginner, experienced
+  proofOfFundsRequired: boolean("proof_of_funds_required").default(true),
+  assignmentNotes: text("assignment_notes"), // Special assignment terms
+  
+  // === PIPELINE STATUS ===
+  pipelineStage: varchar("pipeline_stage", { length: 50 }).notNull().default("sourcing"),
   status: varchar("status", { length: 50 }).notNull().default("under_review"),
-  // Management
+  dispositionPath: varchar("disposition_path", { length: 50 }), // assignment, double_close, novation
+  
+  // === MANAGEMENT NOTES ===
   acquisitionsNotes: text("acquisitions_notes"),
   developmentNotes: text("development_notes"),
-  contractExpiration: timestamp("contract_expiration"),
-  // Match scoring fields
+  internalNotes: text("internal_notes"), // Staff-only notes
+  
+  // === MATCH SCORING ===
   riskLevel: varchar("risk_level", { length: 20 }), // low, medium, high
   profitPotential: integer("profit_potential"), // 1-5 rating
   marketDemand: integer("market_demand"), // 1-5 rating
   neighborhoodGrade: varchar("neighborhood_grade", { length: 10 }), // A, B, C, D
   matchScore: integer("match_score"), // 0-100 overall score
-  // Featured/Hot deal
+  dealScore: integer("deal_score"), // Calculated deal quality score
+  
+  // === MARKETING ===
   isFeatured: boolean("is_featured").default(false),
   isHot: boolean("is_hot").default(false),
   viewCount: integer("view_count").default(0),
-  // Timestamps
+  inquiryCount: integer("inquiry_count").default(0),
+  marketingStartDate: timestamp("marketing_start_date"),
+  daysOnMarket: integer("days_on_market").default(0),
+  
+  // === TIMESTAMPS ===
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
