@@ -61,6 +61,14 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DealChat } from "@/components/deal-chat";
 import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
+import { 
+  CapitalStackBreakdown, 
+  DealLevelTransparency, 
+  InvestorReturnCalculator, 
+  ScenarioCalculator,
+  InvestorBreakdownTable,
+  RepaymentTimeline 
+} from "@/components/deal-transparency";
 
 interface CapitalProject {
   id: number;
@@ -506,8 +514,9 @@ export default function DealflowProject() {
             </div>
 
             <Tabs defaultValue="chemistry" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="chemistry" data-testid="tab-chemistry">Chemistry</TabsTrigger>
+                <TabsTrigger value="transparency" data-testid="tab-transparency">Transparency</TabsTrigger>
                 <TabsTrigger value="overview" data-testid="tab-overview">Details</TabsTrigger>
                 <TabsTrigger value="milestones" data-testid="tab-milestones">Milestones</TabsTrigger>
                 <TabsTrigger value="offers" data-testid="tab-offers">Offers</TabsTrigger>
@@ -609,6 +618,24 @@ export default function DealflowProject() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="transparency" className="mt-6 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <CapitalStackBreakdown project={project} />
+                  <DealLevelTransparency project={project} commitments={commitments} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {project.structure?.toLowerCase() === "debt" ? (
+                    <InvestorReturnCalculator project={project} />
+                  ) : (
+                    <ScenarioCalculator project={project} />
+                  )}
+                  <RepaymentTimeline project={project} />
+                </div>
+
+                <InvestorBreakdownTable project={project} commitments={commitments} />
               </TabsContent>
 
               <TabsContent value="overview" className="mt-6">
