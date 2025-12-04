@@ -1,0 +1,261 @@
+PROJECT OVERVIEW
+You are working on the Pegasus Dreamscapes investor portal / deal page.
+
+The goal of this phase:
+Make each investment deal page fully transparent and dynamic, and generate a branded “Investor Term Sheet” PDF automatically whenever an investor confirms an investment (for debt, equity, or hybrid structures). 
+
+Do not change visual layout drastically; wire up dynamic calculators, transparency features, and PDF generation logic while keeping the existing UI style.
+
+==============================================================
+1. DATA MODEL (ASSUMPTIONS)
+==============================================================
+Deal model fields needed:
+- id, name, location
+- raise_goal, raise_current, term_months
+- target_annual_rate
+- structure_type (Debt / Equity / Hybrid)
+- min_investment
+- purchase_price, construction_cost, soft_costs, contingency_amount
+- senior_loan, operator_equity
+- projected_profit_low, projected_profit_base, projected_profit_high
+
+Investment model fields:
+- id, deal_id, investor_id
+- investment_amount
+- structure_type
+- interest_rate
+- equity_percentage
+- role (LP / GP / Lender)
+- created_at
+
+Use or extend current schemas as needed.
+
+==============================================================
+2. DYNAMIC CALCULATIONS ON DEAL PAGE
+==============================================================
+
+===============================
+2.1 DEBT STRUCTURE CALCULATIONS
+===============================
+When investor enters "investment_amount":
+
+annual_rate = deal.target_annual_rate / 100
+term_years  = deal.term_months / 12
+
+interest_earned = investment_amount * annual_rate * term_years
+total_payout    = investment_amount + interest_earned
+monthly_equiv   = interest_earned / deal.term_months
+
+Display in modal + side panel:
+- Principal
+- Annual Rate
+- Term
+- Interest Earned
+- Total Payout
+- Monthly Equivalent Return
+
+Deal-wide interest transparency:
+deal_interest_total = deal.raise_goal * annual_rate * term_years
+
+Display:
+- Total raise amount
+- Total expected interest paid
+- Number of investors
+- Funding progress
+
+===============================
+2.2 EQUITY STRUCTURE CALCULATIONS
+===============================
+equity_pct  = equity_percentage / 100
+
+profit_base = deal.projected_profit_base
+profit_low  = deal.projected_profit_low
+profit_high = deal.projected_profit_high
+
+investor_share_base = profit_base * equity_pct
+investor_share_low  = profit_low * equity_pct
+investor_share_high = profit_high * equity_pct
+
+equity_multiple_base = (investment_amount + investor_share_base) / investment_amount
+
+Display scenario table:
+- Low Case
+- Base Case
+- High Case
+- Equity multiple
+
+===============================
+2.3 HYBRID STRUCTURE CALCULATIONS
+===============================
+term_years    = deal.term_months / 12
+debt_rate     = hybrid_debt_rate / 100
+equity_pct    = hybrid_equity_percentage / 100
+
+debt_return   = investment_amount * debt_rate * term_years
+equity_share  = deal.projected_profit_base * equity_pct
+hybrid_total  = debt_return + equity_share
+
+Display:
+- Debt return
+- Equity share
+- Total estimated return
+- Base case multiple
+
+==============================================================
+3. CAPITAL STACK SECTION
+==============================================================
+Compute:
+
+total_project_cost = purchase_price + construction_cost + soft_costs + contingency_amount
+raise_pct           = raise_goal / total_project_cost
+senior_loan_pct     = senior_loan / total_project_cost
+operator_equity_pct = operator_equity / total_project_cost
+
+Render a table:
+
+| Component          | Amount                  | Percentage |
+|-------------------|--------------------------|------------|
+| Purchase Price    | $purchase_price          | —          |
+| Construction      | $construction_cost       | —          |
+| Soft Costs        | $soft_costs              | —          |
+| Contingency       | $contingency_amount      | —          |
+| Total Cost        | $total_project_cost      | 100%       |
+| Senior Loan       | $senior_loan             | senior_loan_pct% |
+| Investor Capital  | $raise_goal              | raise_pct% |
+| Operator Equity   | $operator_equity         | operator_equity_pct% |
+
+Add optional investor table:
+| Investor | Amount | Structure | Estimated Return |
+
+==============================================================
+4. INVESTMENT TIMELINE
+==============================================================
+Add horizontal timeline:
+- Month 0: Raise starts
+- Month 1: Acquisition / deployment
+- Months 2–(term_months-3): Construction & stabilization
+- Month term_months: Exit & repayment
+
+==============================================================
+5. AUTO-GENERATED INVESTOR TERM SHEET PDF
+==============================================================
+
+Trigger: When investor clicks “Confirm Investment.”
+
+Steps:
+1. Save investment record
+2. Generate PDF using HTML template rendered with Puppeteer or pdfkit
+3. Upload/store file
+4. Save PDF URL into investment.term_sheet_url
+5. Show success page with “Download Term Sheet (PDF)” button
+
+==============================================================
+5A. PDF CONTENT
+==============================================================
+
+HEADER
+- Pegasus Dreamscapes logo
+- Title: Investor Term Sheet
+- Subtitle: {{deal.name}} – {{deal.location}}
+
+---------------------------------------------
+SECTION 1 — DEAL OVERVIEW
+---------------------------------------------
+- Project Name
+- Location
+- Operator (Pegasus Dreamscapes Corp)
+- Raise Type
+- Raise Goal
+- Term Length
+- Target Return (APR or Equity/Hybrid terms)
+
+---------------------------------------------
+SECTION 2 — INVESTOR COMMITMENT
+---------------------------------------------
+- Investor Name
+- Investor Role
+- Investment Amount
+- Investment Date
+
+---------------------------------------------
+SECTION 3 — RETURN STRUCTURE
+---------------------------------------------
+IF DEBT:
+annual_rate   = interest_rate / 100
+term_years    = deal.term_months / 12
+
+interest_earned = investment_amount * annual_rate * term_years
+total_payout    = investment_amount + interest_earned
+monthly_equiv   = interest_earned / deal.term_months
+
+Display all values in PDF.
+
+IF EQUITY:
+equity_pct  = investment.equity_percentage / 100
+profit_base = deal.projected_profit_base
+profit_low  = deal.projected_profit_low
+profit_high = deal.projected_profit_high
+
+share_base  = profit_base * equity_pct
+share_low   = profit_low * equity_pct
+share_high  = profit_high * equity_pct
+
+Display scenario table.
+
+IF HYBRID:
+term_years = deal.term_months / 12
+debt_return  = investment_amount * (interest_rate/100) * term_years
+equity_share = deal.projected_profit_base * (equity_percentage/100)
+hybrid_total = debt_return + equity_share
+
+Display breakdown.
+
+---------------------------------------------
+SECTION 4 — CAPITAL STACK
+---------------------------------------------
+Reuse capital stack table described earlier.
+
+---------------------------------------------
+SECTION 5 — TIMELINE
+---------------------------------------------
+Bulleted timeline from acquisition to exit.
+
+---------------------------------------------
+SECTION 6 — RISKS & DISCLOSURES
+---------------------------------------------
+Include static legal disclaimers (project risk, no guarantee except fixed debt terms, etc.).
+
+---------------------------------------------
+SECTION 7 — OPERATOR INFORMATION
+---------------------------------------------
+- Pegasus Dreamscapes Corp
+- Paolo A. Duran
+- Project history & success rate (if fields exist)
+
+---------------------------------------------
+SECTION 8 — SIGNATURE BLOCKS
+---------------------------------------------
+Investor Signature: ____________
+Operator Signature: ____________
+Date: ____________
+
+==============================================================
+6. PDF BRANDING GUIDELINES
+==============================================================
+- Fonts: Inter or Montserrat
+- Colors: Pegasus gradient (gold → bronze)
+- Header bar with gold accent
+- Tables with soft grey borders
+- Subtle Pegasus watermark in background
+- Clean spacing and hierarchy
+
+==============================================================
+PRIMARY GOAL
+==============================================================
+Deliver a professional, transparent, and dynamically calculated investment experience:
+- Interactive ROI calculators for debt, equity, hybrid
+- Full capital stack visibility
+- Scenario analysis
+- Auto-generated, branded PDF term sheet attached to every investment
+
+Please implement using our current stack and ensure UI remains consistent with existing Pegasus Dreamscapes design.

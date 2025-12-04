@@ -31,7 +31,9 @@ import {
   Building2,
   Loader2,
   Zap,
-  Calculator
+  Calculator,
+  FileText,
+  Download
 } from "lucide-react";
 
 interface CapitalProject {
@@ -201,6 +203,57 @@ export function InvestmentOfferDialog({
   const handleClose = () => {
     resetForm();
     onOpenChange(false);
+  };
+
+  const [isDownloadingTermSheet, setIsDownloadingTermSheet] = useState(false);
+
+  const downloadTermSheet = async () => {
+    try {
+      setIsDownloadingTermSheet(true);
+      const response = await fetch(`/api/capital-projects/${project.id}/term-sheet-preview`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          investmentAmount: parseInt(investAmount) || project.minInvestment,
+          structureType: investStructure,
+          role: investRole,
+          equityPercent: proposedEquity || undefined,
+          profitSplit: proposedProfitSplit || undefined,
+          interestRate: proposedInterest || undefined,
+          loanDuration: proposedLoanDuration || undefined,
+          isAcceptingOperatorTerms: isAcceptingTerms,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate term sheet");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `term-sheet-${project.id}-preview.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Term Sheet Downloaded",
+        description: "Review the term sheet before finalizing your investment.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download term sheet. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingTermSheet(false);
+    }
   };
 
   const submitOfferMutation = useMutation({
@@ -414,28 +467,30 @@ export function InvestmentOfferDialog({
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle2 className="w-5 h-5 text-green-600" />
                       <span className="font-medium text-green-700 dark:text-green-400">
-                        You're accepting the operator's terms
+                        Operator's Terms (you choose your investment amount)
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-muted-foreground text-xs">Investment Amount</p>
-                        <p className="font-semibold">{formatCurrency(project.minInvestment)}</p>
-                      </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                       {hasDebtTerms && project.askingInterestRate && (
-                        <div>
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg text-center">
                           <p className="text-muted-foreground text-xs">Interest Rate</p>
                           <p className="font-semibold text-green-600">{project.askingInterestRate}</p>
                         </div>
                       )}
+                      {hasDebtTerms && project.askingLoanDuration && (
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg text-center">
+                          <p className="text-muted-foreground text-xs">Duration</p>
+                          <p className="font-semibold">{project.askingLoanDuration}</p>
+                        </div>
+                      )}
                       {hasEquityTerms && project.askingEquityPercent && (
-                        <div>
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg text-center">
                           <p className="text-muted-foreground text-xs">Equity</p>
                           <p className="font-semibold text-blue-600">{project.askingEquityPercent}%</p>
                         </div>
                       )}
                       {project.askingProfitSplit && (
-                        <div>
+                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg text-center">
                           <p className="text-muted-foreground text-xs">Profit Split</p>
                           <p className="font-semibold">{project.askingProfitSplit}</p>
                         </div>
@@ -448,7 +503,14 @@ export function InvestmentOfferDialog({
               {/* Investment Amount and Role */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Investment Amount</Label>
+                  <Label htmlFor="amount">
+                    Investment Amount
+                    {isAcceptingTerms && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        (adjust as needed)
+                      </span>
+                    )}
+                  </Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -457,8 +519,7 @@ export function InvestmentOfferDialog({
                       placeholder={`Min ${formatCurrency(project.minInvestment)}`}
                       value={investAmount}
                       onChange={(e) => setInvestAmount(e.target.value)}
-                      className="pl-10"
-                      disabled={isAcceptingTerms}
+                      className={`pl-10 ${isAcceptingTerms ? "border-green-300 focus:border-green-500" : ""}`}
                       data-testid="input-invest-amount"
                     />
                   </div>
@@ -466,6 +527,11 @@ export function InvestmentOfferDialog({
                     <p className="text-xs text-destructive flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" />
                       Below minimum investment
+                    </p>
+                  )}
+                  {isAcceptingTerms && parseInt(investAmount) >= project.minInvestment && (
+                    <p className="text-xs text-muted-foreground">
+                      Min: {formatCurrency(project.minInvestment)} | Goal: {formatCurrency(project.fundingGoal)}
                     </p>
                   )}
                 </div>
@@ -476,7 +542,6 @@ export function InvestmentOfferDialog({
                     value={investRole} 
                     onValueChange={setInvestRole} 
                     className="flex gap-4"
-                    disabled={isAcceptingTerms}
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="LP" id="role-lp" />
@@ -651,6 +716,32 @@ export function InvestmentOfferDialog({
                   data-testid="input-invest-notes"
                 />
               </div>
+
+              {/* Download Term Sheet Preview */}
+              {parseInt(investAmount) >= project.minInvestment && (
+                <div className="p-3 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Preview your term sheet before investing</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadTermSheet}
+                      disabled={isDownloadingTermSheet}
+                      data-testid="button-download-term-sheet"
+                    >
+                      {isDownloadingTermSheet ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4 mr-2" />
+                      )}
+                      Download Term Sheet
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-2">

@@ -726,8 +726,11 @@ export const capitalProjects = pgTable("capital_projects", {
   softCosts: integer("soft_costs"), // Closing costs, permits, fees, etc.
   operatorEquity: integer("operator_equity"), // Operator's own capital contribution
   contingency: integer("contingency"), // Buffer for unexpected costs
+  seniorLoan: integer("senior_loan"), // Senior debt amount (bank/hard money loan)
   projectedARV: integer("projected_arv"), // After Repair Value for equity/flip projects
-  projectedProfit: integer("projected_profit"), // Expected gross profit
+  projectedProfit: integer("projected_profit"), // Expected gross profit (base case)
+  projectedProfitLow: integer("projected_profit_low"), // Low scenario profit estimate
+  projectedProfitHigh: integer("projected_profit_high"), // High scenario profit estimate
   // Status: DRAFT, OPEN_FOR_INVESTMENT, FUNDED, IN_PROGRESS, COMPLETED
   status: varchar("status", { length: 50 }).notNull().default("DRAFT"),
   // Timeline - detailed phases
@@ -798,9 +801,13 @@ export const investmentOffers = pgTable("investment_offers", {
   // Offer details
   amountOffered: integer("amount_offered").notNull(),
   requestedRole: varchar("requested_role", { length: 50 }).notNull().default("LP"), // LP or GP
+  structureType: varchar("structure_type", { length: 50 }), // equity, debt, hybrid
   proposedEquityPercent: varchar("proposed_equity_percent", { length: 20 }),
+  proposedProfitSplit: varchar("proposed_profit_split", { length: 50 }),
   proposedInterestRate: varchar("proposed_interest_rate", { length: 20 }),
+  proposedLoanDuration: varchar("proposed_loan_duration", { length: 50 }),
   holdPeriod: varchar("hold_period", { length: 50 }),
+  isAcceptingOperatorTerms: boolean("is_accepting_operator_terms").default(false),
   notes: text("notes"),
   // Status: PENDING, COUNTERED, ACCEPTED, DECLINED
   status: varchar("status", { length: 50 }).notNull().default("PENDING"),
@@ -839,9 +846,15 @@ export const committedInvestments = pgTable("committed_investments", {
   // Final terms
   committedAmount: integer("committed_amount").notNull(),
   role: varchar("role", { length: 50 }).notNull().default("LP"),
+  structureType: varchar("structure_type", { length: 50 }), // equity, debt, hybrid
   equityPercent: varchar("equity_percent", { length: 20 }),
   interestRate: varchar("interest_rate", { length: 20 }),
+  loanDuration: varchar("loan_duration", { length: 50 }),
+  profitSplit: varchar("profit_split", { length: 50 }),
   notes: text("notes"),
+  // Term Sheet PDF
+  termSheetUrl: text("term_sheet_url"), // Generated PDF term sheet URL
+  termSheetGeneratedAt: timestamp("term_sheet_generated_at"),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

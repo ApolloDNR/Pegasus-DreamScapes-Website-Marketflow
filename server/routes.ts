@@ -27,6 +27,7 @@ import {
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { generateTermSheetPDF } from "./term-sheet-generator";
 
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
@@ -1713,6 +1714,107 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching my committed investments:", error);
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // Term Sheet PDF Generation Routes
+  // =====================================================
+  
+  // Generate term sheet PDF for an investment
+  app.post("/api/investments/:investmentId/term-sheet", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const investmentId = Number(req.params.investmentId);
+      
+      // Get the investment offer
+      const offers = await storage.getInvestmentOffersByInvestor(userId);
+      const offer = offers.find(o => o.id === investmentId);
+      
+      if (!offer) {
+        return res.status(404).json({ message: "Investment offer not found" });
+      }
+      
+      // Get the project
+      const project = await storage.getCapitalProject(offer.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Get the user
+      const user = await storage.getUser(userId);
+      
+      // Generate PDF
+      const { buffer, filename } = await generateTermSheetPDF(
+        project,
+        { 
+          firstName: user?.firstName, 
+          lastName: user?.lastName, 
+          email: user?.email 
+        },
+        {
+          investmentAmount: offer.amountOffered,
+          structureType: (offer.structureType as "equity" | "debt" | "hybrid") || "equity",
+          role: offer.requestedRole,
+          equityPercent: offer.proposedEquityPercent || undefined,
+          profitSplit: offer.proposedProfitSplit || undefined,
+          interestRate: offer.proposedInterestRate || undefined,
+          loanDuration: offer.proposedLoanDuration || undefined,
+          isAcceptingOperatorTerms: offer.isAcceptingOperatorTerms || false
+        }
+      );
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating term sheet:", error);
+      return res.status(500).json({ message: "Failed to generate term sheet" });
+    }
+  });
+  
+  // Generate preview term sheet PDF (before confirming investment)
+  app.post("/api/capital-projects/:projectId/term-sheet-preview", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = Number(req.params.projectId);
+      const { investmentAmount, structureType, role, equityPercent, profitSplit, interestRate, loanDuration, isAcceptingOperatorTerms } = req.body;
+      
+      // Get the project
+      const project = await storage.getCapitalProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Get the user
+      const user = await storage.getUser(userId);
+      
+      // Generate PDF
+      const { buffer, filename } = await generateTermSheetPDF(
+        project,
+        { 
+          firstName: user?.firstName, 
+          lastName: user?.lastName, 
+          email: user?.email 
+        },
+        {
+          investmentAmount: investmentAmount || 0,
+          structureType: structureType || "equity",
+          role: role || "LP",
+          equityPercent,
+          profitSplit,
+          interestRate,
+          loanDuration,
+          isAcceptingOperatorTerms: isAcceptingOperatorTerms || false
+        }
+      );
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating term sheet preview:", error);
+      return res.status(500).json({ message: "Failed to generate term sheet preview" });
     }
   });
 
