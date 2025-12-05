@@ -50,6 +50,22 @@ Preferred communication style: Simple, everyday language.
 - **Community**: Forum discussions with categories for Market Talk, Deal Analysis, Success Stories, and Q&A
 - **Messages**: Direct messaging between users for deal negotiations
 
+### Centralized Deal Components (client/src/components/deal-cards.tsx)
+Unified component library for consistent deal card rendering across all views:
+- **CapitalProjectMatchCard**: Large swipe-style card with match score ring, funding progress, deal chemistry ratings
+- **CapitalProjectGridCard**: Compact grid card for capital projects
+- **WholesaleDealMatchCard**: Large swipe-style card for wholesale deals with ROI calculations
+- **WholesaleDealGridCard**: Compact grid card for wholesale deals
+- **MatchScoreRing**: Circular progress indicator showing 0-100% compatibility score
+- **RatingBar**: Progress bar for deal quality metrics (ROI potential, design appeal, market demand)
+
+### Compatibility Scoring Engine (client/src/lib/compatibility-score.ts)
+Centralized scoring algorithm for matching deals to investor preferences:
+- **calculateProjectMatchScore**: Scores capital projects against investor preferences
+- **calculateWholesaleMatchScore**: Scores wholesale deals against investor preferences
+- **Weighted Factors**: Property type (20%), strategy alignment (20%), location preference (15%), budget fit (15%), experience level (10%), return expectations (10%), structure preference (10%)
+- Returns ScoreResult with total score, breakdown by factor, and labels for transparency
+
 ### Portal System (/portal)
 - **Dreamscaper HQ** (/hq): Staff-only dashboard with lead management, deal overview, and admin tools
 - **Dealflow** (/dealflow): Unified platform for Investors, Wholesalers, and Buyers with role-based dashboards
