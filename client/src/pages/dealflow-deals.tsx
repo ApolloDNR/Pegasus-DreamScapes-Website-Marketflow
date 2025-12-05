@@ -8,100 +8,41 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { DealNegotiationDialog } from "@/components/deal-negotiation-dialog";
 import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
+import {
+  CapitalProjectMatchCard,
+  CapitalProjectGridCard,
+  WholesaleDealMatchCard,
+  WholesaleDealGridCard,
+  type CapitalProject,
+  type WholesaleDeal,
+} from "@/components/deal-cards";
+import {
+  calculateProjectMatchScore,
+  calculateWholesaleMatchScore,
+  type InvestorPreferences,
+} from "@/lib/compatibility-score";
 import { 
   Building2, 
-  DollarSign, 
-  MapPin,
   Search,
   Loader2,
   Home,
-  TrendingUp,
   Heart,
   X,
   ChevronLeft,
   ChevronRight,
-  Flame,
-  Star,
-  Sparkles,
-  Target,
-  Users,
-  Eye,
   Bookmark,
   MessageCircle,
-  Shield,
-  Zap,
+  LayoutGrid,
+  Layers,
+  Sparkles,
   BarChart3,
-  Bed,
-  Bath,
-  Square,
-  Clock,
-  ThumbsUp,
-  ArrowUpRight,
-  CheckCircle2,
-  Scale
 } from "lucide-react";
 import { Link } from "wouter";
-
-interface CapitalProject {
-  id: number;
-  title: string;
-  description: string;
-  location: string;
-  fundingGoal: number;
-  amountRaised: number;
-  minInvestment: number;
-  structure: string;
-  projectedReturn: string;
-  holdPeriod: string;
-  status: string;
-  images?: string[];
-  riskLevel?: string;
-  designAppeal?: number;
-  roiPotential?: number;
-  marketDemand?: number;
-  neighborhoodGrade?: string;
-  strategy?: string;
-  propertyType?: string;
-  investorCount?: number;
-  isFeatured?: boolean;
-  isHot?: boolean;
-}
-
-interface WholesaleDeal {
-  id: number;
-  propertyAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  propertyType: string;
-  bedrooms: number;
-  bathrooms: string;
-  sqft: number;
-  yearBuilt: number;
-  contractPrice: number;
-  assignmentFee: number;
-  arv: number;
-  estimatedRepairs: number;
-  strategy: string;
-  description: string;
-  highlights?: string[];
-  images?: string[];
-  status: string;
-  riskLevel?: string;
-  profitPotential?: number;
-  marketDemand?: number;
-  neighborhoodGrade?: string;
-  matchScore?: number;
-  isFeatured?: boolean;
-  isHot?: boolean;
-  viewCount?: number;
-}
 
 export default function DealflowDeals() {
   const { user } = useAuth();
@@ -131,17 +72,7 @@ export default function DealflowDeals() {
   });
 
   // Fetch user's investment preferences for matching
-  const { data: investorPrefs } = useQuery<{
-    propertyTypes?: string[];
-    strategies?: string[];
-    locations?: string[];
-    minBudget?: number;
-    maxBudget?: number;
-    targetReturnMin?: number;
-    targetReturnMax?: number;
-    preferredStructure?: string;
-    holdPeriodPreference?: string;
-  }>({
+  const { data: investorPrefs } = useQuery<InvestorPreferences>({
     queryKey: ["/api/my-investor-preferences"],
     enabled: !!user,
   });
@@ -158,15 +89,6 @@ export default function DealflowDeals() {
     },
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const openProjects = capitalProjects.filter(p => 
     (p.status === "OPEN_FOR_INVESTMENT" || p.status === "FUNDED") && 
     (searchQuery === "" || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.location?.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -179,108 +101,13 @@ export default function DealflowDeals() {
 
   const isLoading = loadingProjects || loadingDeals;
 
-  const calculateMatchScore = (project: CapitalProject) => {
-    let score = 50;
-    let matchReasons: string[] = [];
-    
-    if (investorPrefs) {
-      if (investorPrefs.propertyTypes?.length && project.propertyType) {
-        if (investorPrefs.propertyTypes.some(pt => 
-          project.propertyType?.toLowerCase().includes(pt.toLowerCase())
-        )) {
-          score += 15;
-          matchReasons.push("Property type matches");
-        }
-      }
-      
-      if (investorPrefs.strategies?.length && project.strategy) {
-        if (investorPrefs.strategies.some(s => 
-          project.strategy?.toLowerCase().includes(s.toLowerCase())
-        )) {
-          score += 15;
-          matchReasons.push("Strategy aligns");
-        }
-      }
-      
-      if (investorPrefs.locations?.length && project.location) {
-        if (investorPrefs.locations.some(loc => 
-          project.location?.toLowerCase().includes(loc.toLowerCase())
-        )) {
-          score += 10;
-          matchReasons.push("Target market");
-        }
-      }
-      
-      if (investorPrefs.preferredStructure && project.structure) {
-        if (project.structure.toLowerCase().includes(investorPrefs.preferredStructure.toLowerCase())) {
-          score += 10;
-          matchReasons.push("Structure preference");
-        }
-      }
-      
-      const projReturn = parseFloat(project.projectedReturn || "0");
-      if (investorPrefs.targetReturnMin && projReturn >= investorPrefs.targetReturnMin) {
-        score += 10;
-        matchReasons.push("Meets return target");
-      }
-      
-      if (investorPrefs.maxBudget && project.minInvestment <= investorPrefs.maxBudget) {
-        score += 5;
-      }
-    }
-    
-    if (project.roiPotential) score += project.roiPotential * 2;
-    if (project.designAppeal) score += project.designAppeal * 1.5;
-    if (project.marketDemand) score += project.marketDemand * 1.5;
-    if (project.isFeatured) score += 5;
-    if (project.isHot) score += 3;
-    
-    return Math.min(Math.round(score), 100);
+  // Scoring functions that use the new engine with breakdowns
+  const getProjectScore = (project: CapitalProject) => {
+    return calculateProjectMatchScore(project, investorPrefs);
   };
-  
-  const calculateWholesaleMatchScore = (deal: WholesaleDeal) => {
-    let score = 55;
-    
-    if (investorPrefs) {
-      if (investorPrefs.propertyTypes?.length && deal.propertyType) {
-        if (investorPrefs.propertyTypes.some(pt => 
-          deal.propertyType?.toLowerCase().includes(pt.toLowerCase())
-        )) {
-          score += 15;
-        }
-      }
-      
-      if (investorPrefs.strategies?.length && deal.strategy) {
-        if (investorPrefs.strategies.some(s => 
-          deal.strategy?.toLowerCase().includes(s.toLowerCase())
-        )) {
-          score += 15;
-        }
-      }
-      
-      if (investorPrefs.locations?.length) {
-        const dealLocation = `${deal.city}, ${deal.state}`.toLowerCase();
-        if (investorPrefs.locations.some(loc => 
-          dealLocation.includes(loc.toLowerCase())
-        )) {
-          score += 10;
-        }
-      }
-      
-      if (investorPrefs.maxBudget) {
-        const totalCost = deal.contractPrice + deal.assignmentFee;
-        if (totalCost <= investorPrefs.maxBudget) {
-          score += 5;
-        }
-      }
-    }
-    
-    if (deal.profitPotential) score += deal.profitPotential * 2;
-    if (deal.marketDemand) score += deal.marketDemand * 1.5;
-    if (deal.isFeatured) score += 5;
-    if (deal.isHot) score += 3;
-    
-    return Math.min(Math.round(score), 100);
+
+  const getWholesaleScore = (deal: WholesaleDeal) => {
+    return calculateWholesaleMatchScore(deal, investorPrefs);
   };
 
   const handleSwipeAction = (action: "like" | "pass" | "save", type: "project" | "deal") => {
@@ -424,26 +251,34 @@ export default function DealflowDeals() {
                   setCurrentIndex={setCurrentProjectIndex}
                   swipeDirection={swipeDirection}
                   onSwipe={(action) => handleSwipeAction(action, "project")}
-                  renderCard={(project) => (
-                    <ProjectMatchCard 
-                      project={project} 
-                      matchScore={calculateMatchScore(project)}
-                      onNegotiate={() => openNegotiation("capital_project", project)}
-                    />
-                  )}
+                  renderCard={(project) => {
+                    const scoreResult = getProjectScore(project);
+                    return (
+                      <CapitalProjectMatchCard 
+                        project={project} 
+                        matchScore={scoreResult.total}
+                        scoreBreakdown={scoreResult}
+                        onNegotiate={() => openNegotiation("capital_project", project)}
+                      />
+                    );
+                  }}
                   emptyMessage="No capital projects available"
                   emptyIcon={<Building2 className="w-16 h-16 text-muted-foreground" />}
                 />
               ) : (
                 <GridView
                   items={openProjects}
-                  renderCard={(project) => (
-                    <ProjectGridCard 
-                      project={project} 
-                      matchScore={calculateMatchScore(project)}
-                      onNegotiate={() => openNegotiation("capital_project", project)}
-                    />
-                  )}
+                  renderCard={(project) => {
+                    const scoreResult = getProjectScore(project);
+                    return (
+                      <CapitalProjectGridCard 
+                        project={project} 
+                        matchScore={scoreResult.total}
+                        scoreBreakdown={scoreResult}
+                        onNegotiate={() => openNegotiation("capital_project", project)}
+                      />
+                    );
+                  }}
                   emptyMessage="No capital projects available"
                   emptyIcon={<Building2 className="w-16 h-16 text-muted-foreground" />}
                 />
@@ -458,24 +293,34 @@ export default function DealflowDeals() {
                   setCurrentIndex={setCurrentDealIndex}
                   swipeDirection={swipeDirection}
                   onSwipe={(action) => handleSwipeAction(action, "deal")}
-                  renderCard={(deal) => (
-                    <WholesaleMatchCard 
-                      deal={deal}
-                      onNegotiate={() => openNegotiation("wholesale_deal", deal)}
-                    />
-                  )}
+                  renderCard={(deal) => {
+                    const scoreResult = getWholesaleScore(deal);
+                    return (
+                      <WholesaleDealMatchCard 
+                        deal={deal}
+                        matchScore={scoreResult.total}
+                        scoreBreakdown={scoreResult}
+                        onNegotiate={() => openNegotiation("wholesale_deal", deal)}
+                      />
+                    );
+                  }}
                   emptyMessage="No wholesale deals available"
                   emptyIcon={<Home className="w-16 h-16 text-muted-foreground" />}
                 />
               ) : (
                 <GridView
                   items={activeDeals}
-                  renderCard={(deal) => (
-                    <WholesaleGridCard 
-                      deal={deal}
-                      onNegotiate={() => openNegotiation("wholesale_deal", deal)}
-                    />
-                  )}
+                  renderCard={(deal) => {
+                    const scoreResult = getWholesaleScore(deal);
+                    return (
+                      <WholesaleDealGridCard 
+                        deal={deal}
+                        matchScore={scoreResult.total}
+                        scoreBreakdown={scoreResult}
+                        onNegotiate={() => openNegotiation("wholesale_deal", deal)}
+                      />
+                    );
+                  }}
                   emptyMessage="No wholesale deals available"
                   emptyIcon={<Home className="w-16 h-16 text-muted-foreground" />}
                 />
@@ -717,670 +562,5 @@ function GridView<T extends { id: number }>({
         </div>
       ))}
     </div>
-  );
-}
-
-function MatchScoreRing({ score, size = "md" }: { score: number; size?: "sm" | "md" | "lg" }) {
-  const sizeClasses = {
-    sm: "w-12 h-12 text-sm",
-    md: "w-16 h-16 text-lg",
-    lg: "w-20 h-20 text-xl"
-  };
-  
-  const strokeWidth = size === "sm" ? 3 : 4;
-  const radius = size === "sm" ? 18 : size === "md" ? 24 : 30;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
-  
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-green-500";
-    if (score >= 75) return "text-emerald-500";
-    if (score >= 60) return "text-amber-500";
-    return "text-orange-500";
-  };
-
-  return (
-    <div className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
-      <svg className="absolute transform -rotate-90" viewBox="0 0 64 64">
-        <circle
-          cx="32"
-          cy="32"
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className="text-secondary"
-        />
-        <circle
-          cx="32"
-          cy="32"
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          className={getScoreColor(score)}
-        />
-      </svg>
-      <span className={`font-bold ${getScoreColor(score)}`}>{score}%</span>
-    </div>
-  );
-}
-
-function getChemistryLabel(value: number): { label: string; color: string; bgColor: string } {
-  if (value >= 5) return { label: "Exceptional", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-950" };
-  if (value >= 4) return { label: "Strong", color: "text-emerald-600", bgColor: "bg-emerald-100 dark:bg-emerald-950" };
-  if (value >= 3) return { label: "Good", color: "text-amber-600", bgColor: "bg-amber-100 dark:bg-amber-950" };
-  if (value >= 2) return { label: "Fair", color: "text-orange-600", bgColor: "bg-orange-100 dark:bg-orange-950" };
-  return { label: "Low", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-950" };
-}
-
-function ChemistryRating({ label, value, icon }: { label: string; value: number; icon?: JSX.Element }) {
-  const chemistry = getChemistryLabel(value);
-  const percentage = (value / 5) * 100;
-  
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 w-28">
-        {icon}
-        <span className="text-xs text-muted-foreground">{label}</span>
-      </div>
-      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all ${
-            value >= 4 ? "bg-gradient-to-r from-green-400 to-green-500" :
-            value >= 3 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
-            "bg-gradient-to-r from-orange-400 to-orange-500"
-          }`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <Badge variant="outline" className={`text-xs shrink-0 ${chemistry.color}`}>
-        {chemistry.label}
-      </Badge>
-    </div>
-  );
-}
-
-function RatingBar({ label, value, max = 5 }: { label: string; value: number; max?: number }) {
-  const chemistry = getChemistryLabel(value);
-  const percentage = (value / max) * 100;
-  
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground w-24">{label}</span>
-      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all ${
-            value >= 4 ? "bg-gradient-to-r from-green-400 to-green-500" :
-            value >= 3 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
-            "bg-gradient-to-r from-orange-400 to-orange-500"
-          }`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <Badge variant="outline" className={`text-xs shrink-0 ${chemistry.color}`}>
-        {chemistry.label}
-      </Badge>
-    </div>
-  );
-}
-
-function ProjectMatchCard({ project, matchScore, onNegotiate }: { project: CapitalProject; matchScore: number; onNegotiate?: () => void }) {
-  const progress = project.fundingGoal > 0 
-    ? Math.round((project.amountRaised / project.fundingGoal) * 100) 
-    : 0;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  return (
-    <Card className="overflow-hidden" data-testid={`match-card-project-${project.id}`}>
-      <div className="relative aspect-video bg-gradient-to-br from-primary/20 via-primary/10 to-amber-500/10">
-        {project.images && project.images[0] ? (
-          <img 
-            src={project.images[0]} 
-            alt={project.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Building2 className="w-20 h-20 text-primary/30" />
-          </div>
-        )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
-        <div className="absolute top-3 left-3 flex gap-2 flex-wrap max-w-[60%]">
-          {project.isHot && (
-            <Badge className="bg-red-500 text-white">
-              <Flame className="w-3 h-3 mr-1" />
-              Hot
-            </Badge>
-          )}
-          {project.isFeatured && (
-            <Badge className="bg-amber-500 text-white">
-              <Star className="w-3 h-3 mr-1" />
-              Featured
-            </Badge>
-          )}
-          {project.status === "FUNDED" && (
-            <Badge className="bg-green-600 text-white">Fully Funded</Badge>
-          )}
-          {project.riskLevel && (
-            <Badge className={`${
-              project.riskLevel === "low" ? "bg-green-600" : 
-              project.riskLevel === "high" ? "bg-red-600" : 
-              "bg-amber-600"
-            } text-white`}>
-              <Shield className="w-3 h-3 mr-1" />
-              {project.riskLevel === "low" ? "Low Risk" : project.riskLevel === "high" ? "High Risk" : "Mod Risk"}
-            </Badge>
-          )}
-          {project.holdPeriod && (
-            <Badge className="bg-blue-600 text-white">
-              <Clock className="w-3 h-3 mr-1" />
-              {project.holdPeriod}
-            </Badge>
-          )}
-        </div>
-
-        <div className="absolute top-3 right-3">
-          <div className="bg-white/95 backdrop-blur-sm rounded-full p-1 shadow-lg">
-            <MatchScoreRing score={matchScore} size="md" />
-          </div>
-        </div>
-
-        <div className="absolute bottom-3 left-3 right-3">
-          <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{project.title}</h3>
-          {project.location && (
-            <p className="text-white/80 text-sm flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {project.location}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-              {project.description}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {project.strategy && (
-                <Badge variant="outline" className="text-xs">
-                  {project.strategy.replace("-", " & ")}
-                </Badge>
-              )}
-              {project.propertyType && (
-                <Badge variant="outline" className="text-xs">
-                  {project.propertyType.replace("-", " ")}
-                </Badge>
-              )}
-              {project.neighborhoodGrade && (
-                <Badge variant="outline" className="text-xs">
-                  Grade {project.neighborhoodGrade}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2 mb-4 p-3 bg-secondary/30 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Funding Progress</span>
-            <span className="text-sm font-semibold">{progress}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between text-sm">
-            <span className="font-medium text-green-600">{formatCurrency(project.amountRaised)}</span>
-            <span className="text-muted-foreground">of {formatCurrency(project.fundingGoal)}</span>
-          </div>
-          {project.investorCount && project.investorCount > 0 && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground pt-1">
-              <Users className="w-3 h-3" />
-              {project.investorCount} investors committed
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2 mb-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deal Chemistry</p>
-          {project.roiPotential && (
-            <RatingBar label="ROI Potential" value={project.roiPotential} />
-          )}
-          {project.designAppeal && (
-            <RatingBar label="Design Appeal" value={project.designAppeal} />
-          )}
-          {project.marketDemand && (
-            <RatingBar label="Market Demand" value={project.marketDemand} />
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-          <div className="p-2 bg-secondary/50 rounded">
-            <p className="text-xs text-muted-foreground">Min Investment</p>
-            <p className="font-semibold">{formatCurrency(project.minInvestment)}</p>
-          </div>
-          <div className="p-2 bg-secondary/50 rounded">
-            <p className="text-xs text-muted-foreground">Target Return</p>
-            <p className="font-semibold text-green-600">{project.projectedReturn}</p>
-          </div>
-          <div className="p-2 bg-secondary/50 rounded">
-            <p className="text-xs text-muted-foreground">Hold Period</p>
-            <p className="font-semibold">{project.holdPeriod}</p>
-          </div>
-          <div className="p-2 bg-secondary/50 rounded">
-            <p className="text-xs text-muted-foreground">Structure</p>
-            <p className="font-semibold">{project.structure}</p>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Link href={`/dealflow/project/${project.id}`} className="flex-1">
-            <Button variant="outline" className="w-full" data-testid={`button-view-project-${project.id}`}>
-              <Eye className="w-4 h-4 mr-2" />
-              View Details
-            </Button>
-          </Link>
-          {onNegotiate && (
-            <Button 
-              variant="outline"
-              onClick={onNegotiate}
-              data-testid={`button-negotiate-project-${project.id}`}
-            >
-              <Scale className="w-4 h-4 mr-1" />
-              Offer
-            </Button>
-          )}
-          <Link href={`/dealflow/project/${project.id}?invest=true`}>
-            <Button data-testid={`button-invest-${project.id}`}>
-              <DollarSign className="w-4 h-4 mr-1" />
-              Invest
-            </Button>
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ProjectGridCard({ project, matchScore, onNegotiate }: { project: CapitalProject; matchScore: number; onNegotiate?: () => void }) {
-  const progress = project.fundingGoal > 0 
-    ? Math.round((project.amountRaised / project.fundingGoal) * 100) 
-    : 0;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  return (
-    <Card className="overflow-hidden hover-elevate" data-testid={`grid-card-project-${project.id}`}>
-      <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-primary/5">
-        {project.images && project.images[0] ? (
-          <img 
-            src={project.images[0]} 
-            alt={project.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Building2 className="w-12 h-12 text-primary/30" />
-          </div>
-        )}
-        
-        <div className="absolute top-2 left-2 flex gap-1">
-          {project.isHot && (
-            <Badge className="bg-red-500 text-white text-xs">
-              <Flame className="w-3 h-3 mr-1" />Hot
-            </Badge>
-          )}
-        </div>
-        
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-0.5">
-          <MatchScoreRing score={matchScore} size="sm" />
-        </div>
-      </div>
-      
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-semibold line-clamp-1">{project.title}</h3>
-        </div>
-        
-        {project.location && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
-            <MapPin className="w-3 h-3" />
-            {project.location}
-          </p>
-        )}
-
-        <div className="space-y-2 mb-3">
-          <Progress value={progress} className="h-1.5" />
-          <div className="flex justify-between text-xs">
-            <span className="font-medium text-green-600">{progress}% funded</span>
-            <span className="text-muted-foreground">{formatCurrency(project.fundingGoal)}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-1 flex-wrap mb-3">
-          <Badge variant="secondary" className="text-xs">{project.projectedReturn}</Badge>
-          <Badge variant="secondary" className="text-xs">{project.holdPeriod}</Badge>
-        </div>
-
-        <div className="flex gap-2">
-          <Link href={`/dealflow/project/${project.id}`} className="flex-1">
-            <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-project-grid-${project.id}`}>
-              View Details
-              <ArrowUpRight className="w-3 h-3 ml-1" />
-            </Button>
-          </Link>
-          {onNegotiate && (
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={onNegotiate}
-              data-testid={`button-negotiate-project-grid-${project.id}`}
-            >
-              <Scale className="w-3 h-3" />
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function WholesaleMatchCard({ deal, onNegotiate }: { deal: WholesaleDeal; onNegotiate?: () => void }) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const totalCost = deal.contractPrice + deal.assignmentFee + deal.estimatedRepairs;
-  const spread = deal.arv - totalCost;
-  const roi = totalCost > 0 ? ((spread / totalCost) * 100).toFixed(1) : "0";
-
-  return (
-    <Card className="overflow-hidden" data-testid={`match-card-deal-${deal.id}`}>
-      <div className="relative aspect-video bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-primary/10">
-        {deal.images && deal.images[0] ? (
-          <img 
-            src={deal.images[0]} 
-            alt={deal.propertyAddress}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Home className="w-20 h-20 text-amber-500/30" />
-          </div>
-        )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
-        <div className="absolute top-3 left-3 flex gap-2 flex-wrap max-w-[60%]">
-          {deal.isHot && (
-            <Badge className="bg-red-500 text-white">
-              <Flame className="w-3 h-3 mr-1" />
-              Hot
-            </Badge>
-          )}
-          {deal.isFeatured && (
-            <Badge className="bg-amber-500 text-white">
-              <Star className="w-3 h-3 mr-1" />
-              Featured
-            </Badge>
-          )}
-          <Badge className="bg-amber-600 text-white">Wholesale</Badge>
-          {deal.riskLevel && (
-            <Badge className={`${
-              deal.riskLevel === "low" ? "bg-green-600" : 
-              deal.riskLevel === "high" ? "bg-red-600" : 
-              "bg-amber-600"
-            } text-white`}>
-              <Shield className="w-3 h-3 mr-1" />
-              {deal.riskLevel === "low" ? "Low" : deal.riskLevel === "high" ? "High" : "Med"}
-            </Badge>
-          )}
-          {deal.strategy && (
-            <Badge className="bg-blue-600 text-white">
-              {deal.strategy === "flip" ? "Flip" : deal.strategy === "rental" ? "Rental" : deal.strategy}
-            </Badge>
-          )}
-        </div>
-
-        <div className="absolute top-3 right-3">
-          <div className="bg-white/95 backdrop-blur-sm rounded-full p-1 shadow-lg">
-            <MatchScoreRing score={deal.matchScore || 85} size="md" />
-          </div>
-        </div>
-
-        <div className="absolute bottom-3 left-3 right-3">
-          <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{deal.propertyAddress}</h3>
-          <p className="text-white/80 text-sm flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {deal.city}, {deal.state} {deal.zipCode}
-          </p>
-        </div>
-      </div>
-
-      <CardContent className="p-5">
-        <div className="flex items-center gap-4 text-sm mb-4 p-3 bg-secondary/30 rounded-lg">
-          <span className="flex items-center gap-1">
-            <Bed className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.bedrooms}</span> bd
-          </span>
-          <span className="flex items-center gap-1">
-            <Bath className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.bathrooms}</span> ba
-          </span>
-          <span className="flex items-center gap-1">
-            <Square className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.sqft?.toLocaleString()}</span> sqft
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.yearBuilt}</span>
-          </span>
-        </div>
-
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-          {deal.description}
-        </p>
-
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="p-3 bg-secondary/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">Contract + Fee</p>
-            <p className="text-lg font-bold">{formatCurrency(deal.contractPrice + deal.assignmentFee)}</p>
-          </div>
-          <div className="p-3 bg-secondary/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">ARV</p>
-            <p className="text-lg font-bold">{formatCurrency(deal.arv)}</p>
-          </div>
-          <div className="p-3 bg-secondary/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">Est. Repairs</p>
-            <p className="font-semibold">{formatCurrency(deal.estimatedRepairs)}</p>
-          </div>
-          <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
-            <p className="text-xs text-green-700 dark:text-green-400">Potential Profit</p>
-            <p className={`font-bold text-lg ${spread > 0 ? "text-green-600" : "text-red-600"}`}>
-              {formatCurrency(spread)}
-            </p>
-            <p className="text-xs text-green-600">{roi}% ROI</p>
-          </div>
-        </div>
-
-        <div className="space-y-2 mb-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deal Quality</p>
-          {deal.profitPotential && (
-            <RatingBar label="Profit Potential" value={deal.profitPotential} />
-          )}
-          {deal.marketDemand && (
-            <RatingBar label="Market Demand" value={deal.marketDemand} />
-          )}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-24">Risk Level</span>
-            <Badge 
-              variant={deal.riskLevel === "low" ? "outline" : deal.riskLevel === "high" ? "destructive" : "secondary"}
-              className="text-xs"
-            >
-              {deal.riskLevel || "Medium"}
-            </Badge>
-          </div>
-        </div>
-
-        {deal.highlights && deal.highlights.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Highlights</p>
-            <div className="flex flex-wrap gap-1">
-              {deal.highlights.slice(0, 3).map((highlight, i) => (
-                <Badge key={i} variant="outline" className="text-xs">
-                  <ThumbsUp className="w-3 h-3 mr-1" />
-                  {highlight}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {deal.viewCount && deal.viewCount > 0 && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-4">
-            <Eye className="w-3 h-3" />
-            {deal.viewCount} investors viewing
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <Link href={`/dealflow/deal/${deal.id}`} className="flex-1">
-            <Button variant="outline" className="w-full" data-testid={`button-view-deal-${deal.id}`}>
-              <Eye className="w-4 h-4 mr-2" />
-              View Details
-            </Button>
-          </Link>
-          {onNegotiate && (
-            <Button 
-              variant="outline"
-              onClick={onNegotiate}
-              data-testid={`button-negotiate-deal-${deal.id}`}
-            >
-              <Scale className="w-4 h-4 mr-1" />
-              Offer
-            </Button>
-          )}
-          <Button data-testid={`button-interested-${deal.id}`}>
-            <Zap className="w-4 h-4 mr-1" />
-            I Want This
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function WholesaleGridCard({ deal, onNegotiate }: { deal: WholesaleDeal; onNegotiate?: () => void }) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const spread = deal.arv - deal.contractPrice - deal.assignmentFee - deal.estimatedRepairs;
-
-  return (
-    <Card className="overflow-hidden hover-elevate" data-testid={`grid-card-deal-${deal.id}`}>
-      <div className="relative aspect-video bg-gradient-to-br from-amber-500/20 to-amber-500/5">
-        {deal.images && deal.images[0] ? (
-          <img 
-            src={deal.images[0]} 
-            alt={deal.propertyAddress}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Home className="w-12 h-12 text-amber-500/30" />
-          </div>
-        )}
-        
-        <div className="absolute top-2 left-2 flex gap-1">
-          {deal.isHot && (
-            <Badge className="bg-red-500 text-white text-xs">
-              <Flame className="w-3 h-3 mr-1" />Hot
-            </Badge>
-          )}
-        </div>
-        
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-0.5">
-          <MatchScoreRing score={deal.matchScore || 85} size="sm" />
-        </div>
-      </div>
-      
-      <CardContent className="p-4">
-        <h3 className="font-semibold line-clamp-1 mb-1">{deal.propertyAddress}</h3>
-        
-        <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
-          <MapPin className="w-3 h-3" />
-          {deal.city}, {deal.state}
-        </p>
-
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-          <span>{deal.bedrooms} bd</span>
-          <span>{deal.bathrooms} ba</span>
-          <span>{deal.sqft?.toLocaleString()} sqft</span>
-        </div>
-
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <p className="text-xs text-muted-foreground">Price</p>
-            <p className="font-bold">{formatCurrency(deal.contractPrice + deal.assignmentFee)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Spread</p>
-            <p className={`font-bold ${spread > 0 ? "text-green-600" : "text-red-600"}`}>
-              {formatCurrency(spread)}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Link href={`/dealflow/deal/${deal.id}`} className="flex-1">
-            <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-deal-grid-${deal.id}`}>
-              View Details
-              <ArrowUpRight className="w-3 h-3 ml-1" />
-            </Button>
-          </Link>
-          {onNegotiate && (
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={onNegotiate}
-              data-testid={`button-negotiate-deal-grid-${deal.id}`}
-            >
-              <Scale className="w-3 h-3" />
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
   );
 }
