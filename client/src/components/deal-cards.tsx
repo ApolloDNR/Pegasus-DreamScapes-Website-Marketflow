@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "wouter";
+import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import {
   Building2,
   Home,
@@ -106,16 +108,41 @@ function getChemistryLabel(value: number): { label: string; color: string; bgCol
   return { label: "Low", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-950" };
 }
 
-// Match Score Ring Component
+// Match Score Ring Component with Animation
 export function MatchScoreRing({ 
   score, 
   size = "md",
-  breakdown
+  breakdown,
+  animated = true
 }: { 
   score: number; 
   size?: "sm" | "md" | "lg";
   breakdown?: ScoreBreakdown;
+  animated?: boolean;
 }) {
+  const [isVisible, setIsVisible] = useState(!animated);
+  const ref = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!animated) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, [animated]);
+
   const sizeClasses = {
     sm: "w-12 h-12 text-sm",
     md: "w-16 h-16 text-lg",
@@ -135,7 +162,7 @@ export function MatchScoreRing({
   };
 
   const ring = (
-    <div className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
+    <div ref={ref} className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
       <svg className="absolute transform -rotate-90" viewBox="0 0 64 64">
         <circle
           cx="32"
@@ -146,20 +173,30 @@ export function MatchScoreRing({
           strokeWidth={strokeWidth}
           className="text-secondary"
         />
-        <circle
+        <motion.circle
           cx="32"
           cy="32"
           r={radius}
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           className={getScoreColor(score)}
+          initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
+          animate={{ 
+            strokeDashoffset: isVisible ? strokeDashoffset : circumference 
+          }}
+          transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
         />
       </svg>
-      <span className={`font-bold ${getScoreColor(score)}`}>{score}%</span>
+      <motion.span 
+        className={`font-bold ${getScoreColor(score)}`}
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.5 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        {score}%
+      </motion.span>
     </div>
   );
 
@@ -196,27 +233,57 @@ export function MatchScoreRing({
   return ring;
 }
 
-// Rating Bar Component
-export function RatingBar({ label, value, max = 5 }: { label: string; value: number; max?: number }) {
+// Rating Bar Component with Animation
+export function RatingBar({ label, value, max = 5, animated = true }: { label: string; value: number; max?: number; animated?: boolean }) {
   const chemistry = getChemistryLabel(value);
   const percentage = (value / max) * 100;
+  const [isVisible, setIsVisible] = useState(!animated);
+  const ref = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!animated) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, [animated]);
   
   return (
-    <div className="flex items-center gap-2">
+    <div ref={ref} className="flex items-center gap-2">
       <span className="text-xs text-muted-foreground w-24">{label}</span>
       <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all ${
+        <motion.div 
+          className={`h-full rounded-full ${
             value >= 4 ? "bg-gradient-to-r from-green-400 to-green-500" :
             value >= 3 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
             "bg-gradient-to-r from-orange-400 to-orange-500"
           }`}
-          style={{ width: `${percentage}%` }}
+          initial={{ width: 0 }}
+          animate={{ width: isVisible ? `${percentage}%` : 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
         />
       </div>
-      <Badge variant="outline" className={`text-xs shrink-0 ${chemistry.color}`}>
-        {chemistry.label}
-      </Badge>
+      <motion.div
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : 10 }}
+        transition={{ duration: 0.3, delay: 0.6 }}
+      >
+        <Badge variant="outline" className={`text-xs shrink-0 ${chemistry.color}`}>
+          {chemistry.label}
+        </Badge>
+      </motion.div>
     </div>
   );
 }

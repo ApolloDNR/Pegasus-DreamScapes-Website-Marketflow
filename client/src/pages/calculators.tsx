@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from "recharts";
+import { motion } from "framer-motion";
 import { 
   Calculator, 
   TrendingUp, 
@@ -384,6 +386,59 @@ function ARVCalculator() {
                 </Badge>
               </div>
             </div>
+
+            {/* Investment Breakdown Chart */}
+            <motion.div 
+              className="pt-4 border-t border-border"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <p className="text-sm font-medium mb-4">Investment Breakdown</p>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Purchase Price', value: parseFloat(purchasePrice) || 0, fill: 'hsl(var(--primary))' },
+                        { name: 'Rehab Cost', value: parseFloat(rehabCost) || 0, fill: 'hsl(var(--tan, 30 80% 50%))' },
+                        { name: 'Holding Costs', value: parseFloat(holdingCosts) || 0, fill: 'hsl(var(--muted-foreground))' },
+                      ].filter(d => d.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                      animationBegin={0}
+                      animationDuration={800}
+                    >
+                      {[
+                        { name: 'Purchase Price', value: parseFloat(purchasePrice) || 0, fill: 'hsl(var(--primary))' },
+                        { name: 'Rehab Cost', value: parseFloat(rehabCost) || 0, fill: 'hsl(30 80% 50%)' },
+                        { name: 'Holding Costs', value: parseFloat(holdingCosts) || 0, fill: 'hsl(var(--muted-foreground))' },
+                      ].filter(d => d.value > 0).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      formatter={(value: number) => formatCurrency(value)}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend 
+                      verticalAlign="middle" 
+                      align="right"
+                      layout="vertical"
+                      formatter={(value) => <span className="text-xs">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
 
             <CalculatorActions
               calculatorType="arv"

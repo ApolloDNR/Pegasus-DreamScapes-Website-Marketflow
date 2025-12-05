@@ -12,6 +12,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { InsertLead } from "@shared/schema";
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift, AnimatedCounter as SharedAnimatedCounter } from "@/components/animations";
 import { 
   Home as HomeIcon, 
   TrendingUp, 
@@ -115,16 +117,18 @@ function StatsSection() {
   return (
     <section className="py-20 lg:py-24 bg-card">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
+        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16" staggerDelay={0.15}>
           {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3 tracking-tight" data-testid={`stat-value-${index}`}>
-                <AnimatedCounter end={stat.value} prefix={stat.prefix || ""} suffix={stat.suffix} />
-              </p>
-              <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-medium">{stat.label}</p>
-            </div>
+            <StaggerItem key={index}>
+              <div className="text-center group cursor-default">
+                <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
+                  <SharedAnimatedCounter end={stat.value} prefix={stat.prefix || ""} suffix={stat.suffix} />
+                </p>
+                <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-medium">{stat.label}</p>
+              </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );
@@ -158,31 +162,47 @@ function TestimonialsSection() {
   return (
     <section id="testimonials" className="py-32 lg:py-40 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="text-center mb-20">
+        <ScrollReveal className="text-center mb-20">
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Client Experiences</p>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
             Trusted by Sellers & Investors
           </h2>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <StaggerChildren className="grid md:grid-cols-3 gap-8" staggerDelay={0.15}>
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="p-10 sleek-card rounded-lg" data-testid={`testimonial-card-${index}`}>
-              <div className="flex gap-1 mb-6">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                ))}
-              </div>
-              <p className="text-foreground leading-relaxed mb-8 text-base">
-                "{testimonial.quote}"
-              </p>
-              <div className="pt-6 border-t border-border/50">
-                <p className="font-semibold text-foreground">{testimonial.author}</p>
-                <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
-              </div>
-            </div>
+            <StaggerItem key={index}>
+              <HoverLift>
+                <div className="p-10 sleek-card rounded-lg h-full" data-testid={`testimonial-card-${index}`}>
+                  <motion.div 
+                    className="flex gap-1 mb-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                  >
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.4 + i * 0.1, type: "spring", stiffness: 200 }}
+                      >
+                        <Star className="w-4 h-4 fill-primary text-primary" />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                  <p className="text-foreground leading-relaxed mb-8 text-base">
+                    "{testimonial.quote}"
+                  </p>
+                  <div className="pt-6 border-t border-border/50">
+                    <p className="font-semibold text-foreground">{testimonial.author}</p>
+                    <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
+                  </div>
+                </div>
+              </HoverLift>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
 
         {/* Trust badges - refined styling */}
         <div className="mt-20 pt-16 border-t border-border/30">
@@ -301,78 +321,79 @@ function ServicesSection() {
   return (
     <section id="services" className="py-32 lg:py-40 bg-stone scroll-mt-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        {/* Section header - refined typography */}
-        <div className="mb-20">
+        <ScrollReveal className="mb-20">
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">What We Offer</p>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
             Our Services
           </h2>
-        </div>
+        </ScrollReveal>
 
-        {/* Two-column service cards - refined styling */}
         <div className="space-y-12">
           {services.map((service, index) => (
-            <div 
-              key={index}
-              className="grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden luxury-card"
-              data-testid={`card-service-${index}`}
-            >
-              {/* Image left - refined with overlay gradient */}
-              <div className="aspect-[4/3] lg:aspect-auto relative overflow-hidden">
-                <img 
-                  src={service.image} 
-                  alt={service.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              {/* Content right - refined padding and typography */}
-              <div className="p-10 lg:p-16 flex flex-col justify-center">
-                <h3 className="text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">{service.title}</h3>
-                <p className="text-muted-foreground text-base leading-relaxed mb-10">{service.description}</p>
-                <div>
-                  <a href={service.ctaLink}>
-                    <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium">
-                      {service.cta}
-                      <ArrowRight className="ml-3 w-4 h-4" />
-                    </Button>
-                  </a>
+            <ScrollReveal key={index} delay={index * 0.2} direction={index % 2 === 0 ? "left" : "right"}>
+              <motion.div 
+                className="grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden luxury-card"
+                data-testid={`card-service-${index}`}
+                whileHover={{ boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.15)" }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="aspect-[4/3] lg:aspect-auto relative overflow-hidden group">
+                  <motion.img 
+                    src={service.image} 
+                    alt={service.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
                 </div>
-              </div>
-            </div>
+                
+                <div className="p-10 lg:p-16 flex flex-col justify-center">
+                  <h3 className="text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">{service.title}</h3>
+                  <p className="text-muted-foreground text-base leading-relaxed mb-10">{service.description}</p>
+                  <div>
+                    <a href={service.ctaLink}>
+                      <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium">
+                        {service.cta}
+                        <ArrowRight className="ml-3 w-4 h-4" />
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            </ScrollReveal>
           ))}
         </div>
 
-        {/* Additional services grid - refined sleek cards */}
-        <div className="mt-24">
+        <ScrollReveal className="mt-24" delay={0.2}>
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-8 font-medium">Investment Strategies</p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
             {[
               { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties into profitable assets" },
               { icon: TrendingUp, title: "Buy & Hold", desc: "Build wealth through strategic rental investments" },
               { icon: Palette, title: "Design & Reno", desc: "Full-service renovation and design management" },
               { icon: Building, title: "New Construction", desc: "Ground-up development coming soon", comingSoon: true },
             ].map((item, index) => (
-              <div 
-                key={index}
-                className={`p-8 sleek-card rounded-lg ${item.comingSoon ? 'opacity-75' : ''}`}
-              >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-primary/10'}`}>
-                  <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
+              <StaggerItem key={index}>
+                <div className={`p-8 sleek-card rounded-lg h-full hover-elevate transition-all duration-300 ${item.comingSoon ? 'opacity-75' : ''}`}>
+                  <motion.div 
+                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-primary/10'}`}
+                    whileHover={{ rotate: [0, -10, 10, 0] }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
+                  </motion.div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="font-semibold text-lg">{item.title}</h4>
+                    {item.comingSoon && (
+                      <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">
+                        Soon
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                 </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <h4 className="font-semibold text-lg">{item.title}</h4>
-                  {item.comingSoon && (
-                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">
-                      Soon
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
-        </div>
+          </StaggerChildren>
+        </ScrollReveal>
       </div>
     </section>
   );

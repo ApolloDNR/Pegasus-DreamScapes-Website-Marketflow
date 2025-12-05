@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   MessageCircle, 
   X, 
@@ -20,6 +21,36 @@ import {
   RotateCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-3 mb-4">
+      <Avatar className="h-8 w-8 flex-shrink-0">
+        <AvatarFallback className="bg-accent text-accent-foreground text-xs font-medium">
+          P
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex items-center gap-1 bg-muted rounded-lg px-4 py-3">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-2 h-2 bg-muted-foreground/50 rounded-full"
+            animate={{
+              y: [0, -6, 0],
+              opacity: [0.5, 1, 0.5]
+            }}
+            transition={{
+              duration: 0.6,
+              repeat: Infinity,
+              delay: i * 0.15,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface Message {
   id: number;
@@ -45,10 +76,15 @@ function PeggyMessage({
   const isUser = message.role === 'user';
   
   return (
-    <div className={cn(
-      "flex gap-3 mb-4",
-      isUser ? "flex-row-reverse" : "flex-row"
-    )}>
+    <motion.div 
+      className={cn(
+        "flex gap-3 mb-4",
+        isUser ? "flex-row-reverse" : "flex-row"
+      )}
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarFallback className={cn(
           "text-xs font-medium",
@@ -100,7 +136,7 @@ function PeggyMessage({
           </Badge>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -328,22 +364,18 @@ export function PeggyChatBubble() {
             />
           ))}
           
-          {chatMutation.isPending && (
-            <div className="flex gap-3 mb-4">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarFallback className="bg-accent text-accent-foreground text-xs">
-                  P
-                </AvatarFallback>
-              </Avatar>
-              <div className="bg-muted rounded-lg px-4 py-3">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {chatMutation.isPending && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <TypingIndicator />
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           <div ref={messagesEndRef} />
         </ScrollArea>
