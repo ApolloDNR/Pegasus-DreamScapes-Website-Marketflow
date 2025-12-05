@@ -95,7 +95,7 @@ export function CommandPalette() {
   ] : [];
 
   const staffItems: CommandItem[] = user?.isStaff ? [
-    { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/hq", keywords: ["admin", "staff"], badge: "Staff" },
+    { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/dealflow/hq", keywords: ["admin", "staff"], badge: "Staff" },
   ] : [];
 
   const quickActions: CommandItem[] = [

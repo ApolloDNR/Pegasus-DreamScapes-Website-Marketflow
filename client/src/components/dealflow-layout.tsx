@@ -317,7 +317,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
                     <Link 
-                      href="/hq"
+                      href="/dealflow/hq"
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-blue-500 hover:bg-blue-500/10 ${sidebarCollapsed ? 'justify-center' : ''}`}
                       data-testid="nav-hq"
                     >
@@ -501,7 +501,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                     </div>
                     {user?.isStaff && (
                       <Link
-                        href="/hq"
+                        href="/dealflow/hq"
                         onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-500 hover:bg-blue-500/10 transition-all"
                         data-testid="nav-mobile-hq"

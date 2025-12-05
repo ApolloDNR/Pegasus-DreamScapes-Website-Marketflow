@@ -25,7 +25,7 @@ export default function PortalSelect() {
       const portalRoles = [user.isStaff, user.isInvestor, user.isWholesaler, user.isBuyer].filter(Boolean);
       if (portalRoles.length === 1) {
         if (user.isStaff) {
-          setLocation("/hq");
+          setLocation("/dealflow/hq");
         } else if (user.isInvestor || user.isWholesaler || user.isBuyer) {
           // Non-staff users go to Dealflow
           setLocation("/dealflow/office");
@@ -73,7 +73,7 @@ export default function PortalSelect() {
       title: "Dreamscaper HQ",
       description: "Access the Pegasus Dreamscapes headquarters dashboard for lead management, deal tracking, and team operations.",
       icon: Shield,
-      href: "/hq",
+      href: "/dealflow/hq",
       badge: "Staff Only",
       badgeColor: "bg-blue-600",
       available: user?.isStaff,

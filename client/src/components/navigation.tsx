@@ -257,7 +257,7 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
         {user?.isStaff && (
           <>
             <DropdownMenuSeparator />
-            <Link href="/hq">
+            <Link href="/dealflow/hq">
               <DropdownMenuItem className="cursor-pointer gap-2 text-blue-600">
                 <Shield className="w-4 h-4" />
                 <span>HQ Dashboard</span>
@@ -667,7 +667,7 @@ export function Navigation() {
                       </Link>
                       {user?.isStaff && (
                         <Link 
-                          href="/hq"
+                          href="/dealflow/hq"
                           className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-blue-600 bg-blue-500/5 transition-all"
                           onClick={() => setIsOpen(false)} 
                           data-testid="link-mobile-hq"

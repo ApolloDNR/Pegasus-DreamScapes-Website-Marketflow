@@ -1,0 +1,450 @@
+============================================================
+PEGASUS DREAMSCAPES — MASTER SYSTEM SPECIFICATION (FULL BUILD)
+============================================================
+
+PROJECT GOAL:
+-------------
+Build a unified real estate ecosystem consisting of:
+1) Public Website (Marketing Layer)
+2) Dreamscaper Dealflow Portal (User Product Layer)
+3) Pegasus Staff HQ (Internal Admin Layer)
+4) Peggy AI (Global, Context-Aware Assistant)
+5) Pegasus Analyzer Suite (Advanced Calculators)
+
+Maintain all existing branding, hero design, navigation style, and visual identity.
+
+============================================================
+0. RULES FOR THE BUILD
+============================================================
+- Do NOT redesign or remove the existing homepage hero section or brand identity.
+- Keep all existing public pages, but integrate portals + AI into the backend structure.
+- System must support MULTI-ROLE users: Investor, Buyer, Wholesaler, Dreamscaper.
+- Peggy AI must be floating globally + a sidebar panel inside Dealflow.
+- All forms across the entire site must unify into the Leads Pipeline in Staff HQ.
+- Everything must be context-aware.
+
+============================================================
+1. SYSTEM ARCHITECTURE
+============================================================
+
+Three main layers:
+
+A) PUBLIC WEBSITE (Marketing Layer)
+-----------------------------------
+Pages:
+- Home (keep hero)
+- Services
+- Sell
+- Buy → Available Properties
+- Invest
+- Dreamscaper
+- Contact
+- Explore
+- Calculators (Pegasus Analyzer Suite)
+
+Purpose:
+- Educate visitors
+- Route them by intent
+- Collect leads for Staff HQ
+- Push users into Dealflow portal
+
+B) DREAMSCAPER DEALFLOW PORTAL (User Product Layer)
+---------------------------------------------------
+Accessible at: /dealflow
+
+User roles:
+- INVESTOR
+- BUYER
+- WHOLESALER
+- DREAMSCAPER (Operator)
+- Additional flag: isStaff (internal access)
+
+Portal sections:
+- My Office (role-aware dashboard)
+- Discover Deals
+- Community
+- Messages
+- Tools:
+    - Calculators (Pegasus Analyzer Suite)
+    - Resources
+    - Peggy AI (sidebar panel)
+- HQ Dashboard (visible only if isStaff = true)
+
+Deal types available inside portal:
+- CAPITAL_PROJECT
+- WHOLESALE
+- RETAIL_TURNKEY (optional)
+
+C) PEGASUS STAFF HQ (Admin Layer)
+---------------------------------
+Accessible at: /dealflow/hq
+
+Sections:
+- Dashboard (KPIs)
+- Inbox (All Leads)
+- Investors (filtered Leads)
+- Buyers (filtered Leads)
+- Sellers (filtered Leads)
+- Wholesalers & Deals
+- Partner / Dreamscaper Applicants
+
+Lead data always stored from public-site + dealflow interactions.
+
+============================================================
+2. ROLE SELECTION & USER AUTH
+============================================================
+
+On first signup:
+“Which roles apply to you?”
+- Investor
+- Buyer
+- Wholesaler
+- Dreamscaper (Operator)
+
+Store roles in `user.roles[]`.
+
+Homeowners selling a property through the Sell form DO NOT need a portal account.
+They enter as inbound SELLER leads.
+
+============================================================
+3. DATA MODELS (REQUIRED)
+============================================================
+
+A) User
+- id, name, email, phone
+- roles: [INVESTOR, BUYER, WHOLESALER, DREAMSCAPER]
+- isStaff: boolean
+- preferences (optional JSON)
+
+B) Deal
+- id
+- title
+- dealType: CAPITAL_PROJECT | WHOLESALE | RETAIL_TURNKEY
+- createdByUserId
+- status: PENDING_REVIEW | ACTIVE | UNDER_CONTRACT | CLOSED
+- images[]
+- address fields
+- property details (beds, baths, sqFt, yearBuilt)
+- financials:
+    - askingPrice, arv, estimatedRepairs
+- tags: Featured, Hot, riskLevel, strategy tags
+
+C) Project (Capital Deals)
+- projectId
+- dealId
+- description, scopeOfWork
+- structure: EQUITY | DEBT | HYBRID
+- fundingGoal
+- amountRaised
+- minInvestment
+- maxInvestmentPerInvestor (optional)
+- timelineMonths
+- targetReturnDescription
+- status: DRAFT | OPEN_FOR_INVESTMENT | FUNDED | IN_PROGRESS | COMPLETED
+
+D) Milestone
+- projectId, title, description, targetDate, isComplete, completedAt
+
+E) InvestmentOffer
+- projectId, investorId
+- amount
+- role: LP | GP_REQUESTED
+- structure: EQUITY | DEBT | HYBRID
+- proposedEquityPercent(optional)
+- proposedInterestRate(optional)
+- durationMonths
+- notes
+- status: PENDING | COUNTERED | ACCEPTED | REJECTED
+- negotiationHistory[]
+
+F) CommittedInvestment
+- projectId, investorId, amount, finalTerms{}
+
+G) WholesaleOffer
+- dealId, buyerUserId
+- offerPrice
+- earnestMoney
+- closingTimelineDays
+- dueDiligenceDays
+- fundingType: CASH | HARD_MONEY | PRIVATE
+- contingencies
+- assignmentOk
+- jvOk
+- notes
+- status: PENDING | COUNTERED | ACCEPTED | REJECTED
+- negotiationHistory[]
+
+H) Lead
+- id
+- source: SELL_FORM | BUY_FORM | INVEST_FORM | CONTACT_FORM | DEALFLOW_INVEST_REQUEST | DEALFLOW_BUY_INTEREST | WHOLESALE_DEAL_SUBMISSION | PARTNER_REQUEST
+- leadType: SELLER | BUYER | INVESTOR | WHOLESALER | PARTNER | GENERAL
+- name, email, phone
+- message / rawPayload
+- relatedUserId
+- relatedDealId
+- relatedProjectId
+- status: NEW | IN_REVIEW | CONTACTED | FOLLOW_UP | WARM | CLOSED_WON | CLOSED_LOST
+- assignedToUserId
+- timestamps
+
+============================================================
+4. PUBLIC WEBSITE FLOWS
+============================================================
+
+SELL FORM:
+- Creates Lead { leadType: SELLER, source: SELL_FORM }
+
+INVEST FORM:
+- Lead { INVESTOR, INVEST_FORM }
+- CTA to join Dealflow as Investor.
+
+BUY FORM:
+- Lead { BUYER, BUY_FORM, relatedDealId }
+
+DREAMSCAPER APPLY:
+- Lead { PARTNER, PARTNER_REQUEST }
+
+CONTACT FORM:
+- Lead { GENERAL, CONTACT_FORM }
+
+============================================================
+5. DEALFLOW PORTAL – FULL LAYOUT
+============================================================
+
+Sidebar:
+- My Office
+- Discover
+- Community
+- Messages
+- Tools
+    - Calculators
+    - Resources
+    - Peggy AI (sidebar)
+- HQ Dashboard (if isStaff)
+
+============================================================
+6. MY OFFICE (Role-Aware Dashboards)
+============================================================
+
+INVESTOR:
+- Capital deployed
+- Active projects
+- Pending offers
+- Payout schedule
+
+BUYER:
+- Saved deals
+- Offers submitted
+- Under contract pipeline
+
+WHOLESALER:
+- Deals posted
+- Deals approved / pending
+- Matches
+- Estimated assignments
+
+DREAMSCAPER:
+- Projects launched
+- Funding progress
+- Investors committed
+- Milestones completed
+
+Shared:
+- Recent activity
+- Files
+- Notifications
+
+============================================================
+7. DISCOVER DEALS
+============================================================
+
+Tabs:
+- Capital Projects
+- Wholesale Deals
+- Renovated / Turnkey (optional)
+
+Matching:
+- Match view (advanced)
+- Grid view (clean)
+
+============================================================
+8. CAPITAL PROJECT INVESTMENT FLOW
+============================================================
+
+Project Detail:
+- Funding progress bar
+- Deal chemistry scores
+- Timeline, structure, min investment, target return
+- Invest button → Opens INVESTMENT OFFER modal.
+
+Offer Modal:
+1. Accept Terms & Invest
+- user selects amount only
+- show projected returns
+
+2. Counter-Offer
+- structure: equity / debt / hybrid
+- proposed rate/equity
+- duration
+- notes
+- show projected returns
+
+Negotiation:
+- back-and-forth until ACCEPTED
+- once accepted → CommittedInvestment
+- update funding progress bar
+
+============================================================
+9. WHOLESALE DEAL FLOW
+============================================================
+
+Wholesale Deal Detail:
+- price, arv, repairs
+- tags
+- Make Offer button
+
+Wholesale Offer Modal:
+- offerPrice
+- earnestMoney
+- closingTimeline
+- dueDiligence
+- fundingType
+- contingencies
+- assignmentOk, jvOk
+- notes
+(no ROI or capital investment structure here)
+
+Negotiation history saved.
+
+============================================================
+10. WHOLESALER PORTAL
+============================================================
+
+Wholesaler abilities:
+- Post Deals (status: PENDING_REVIEW)
+- Manage their deals
+- Receive offers
+- Negotiate
+
+Deal submission automatically creates:
+Lead { WHOLESALER, source: WHOLESALE_DEAL_SUBMISSION }
+
+============================================================
+11. DREAMSCAPER (OPERATOR) PORTAL
+============================================================
+
+Operators can:
+- Create capital projects
+- Set funding goals & terms
+- Upload scope / images
+- Add milestones
+- Manage investment offers
+- Post project updates
+
+============================================================
+12. PEGASUS STAFF HQ (ADMIN LAYER)
+============================================================
+
+HQ Dashboard:
+- New Leads
+- Leads by Type
+- Pending Wholesale Deals
+- Follow-ups due
+- Investor activity summary
+
+Inbox:
+- All leads in table view
+- Filter by type, source, status
+- Lead detail page w/ actions:
+    - Update status
+    - Assign staff
+    - Add notes
+    - View related deal/project
+
+============================================================
+13. PEGASUS ANALYZER SUITE (CALCULATORS)
+============================================================
+
+Tabs:
+- ARV
+- Investment ROI
+- BRRRR
+- Cash Flow
+- Wholesale MAO
+- (Future) Equity Split, Loan Terms, Projections
+
+Upgrades:
+- Clear results summary
+- Graphs/charts
+- Save Analysis
+- Download PDF
+- “Ask Peggy About This Analysis”
+- Integration with deals:
+  Deal → “Analyze This Deal” → Pre-fills calculator fields
+
+============================================================
+14. PEGGY AI – FLOATING BUBBLE + SIDEBAR + CONTEXT AWARENESS
+============================================================
+
+A) Floating Peggy Bubble:
+- Visible on ALL pages (public + portal + HQ)
+- Bottom-right floating button
+- Opens chat panel
+- Shows context-aware suggestions
+
+B) Sidebar Peggy Panel (inside Dealflow):
+- Under TOOLS → “Peggy AI”
+- Opens right side drawer
+- Uses same chat thread as bubble
+
+C) PeggyContext (Frontend Provider):
+Include in every chat request:
+{
+  user: { id, name, roles[], isStaff },
+  uiMode: PUBLIC_SITE | DEALFLOW_PORTAL | STAFF_HQ,
+  route: current route,
+  dealContext: if viewing deal,
+  projectContext: if viewing project,
+  calculatorContext: if using calculator,
+  leadContext: if staff is viewing a lead
+}
+
+D) Suggestion Chips:
+Adapt to context:
+- Public: “What does Pegasus do?”, “I want to invest.”
+- Capital Deal: “Explain this deal”, “Suggest terms.”
+- Wholesale Deal: “Help me find MAO”, “Draft an offer.”
+- Calculators: “Interpret these results”, “Is this a good deal?”
+- Staff HQ: “Summarize lead”, “Write follow-up message.”
+
+E) Nudges (Light Automation):
+- After idle time, bubble shows hints:
+  “Need help evaluating this deal? Ask Peggy.”
+- In offer modal:
+  “Not sure what terms to choose? Peggy can help.”
+
+F) Integration Hooks:
+- Deal Detail → “Ask Peggy about this deal”
+- Calculator Result → “Ask Peggy about this analysis”
+- Staff Lead Detail → “Ask Peggy to summarize”
+
+============================================================
+15. UNIFYING ALL FORMS INTO LEADS
+============================================================
+
+Every submit or event creates a Lead:
+
+SELL FORM → SELLER  
+INVEST FORM → INVESTOR  
+BUY FORM → BUYER  
+CONTACT FORM → GENERAL  
+DREAMSCAPER APPLY → PARTNER  
+DEALFLOW INVEST REQUEST → INVESTOR  
+DEALFLOW BUY INTEREST → BUYER  
+WHOLESALE DEAL SUBMISSION → WHOLESALER  
+
+HQ Inbox processes all lead types.
+
+============================================================
+END OF SPEC.
+============================================================

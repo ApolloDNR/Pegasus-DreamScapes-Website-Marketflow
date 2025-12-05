@@ -36,7 +36,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       id: "staff",
       title: "Dreamscaper HQ",
       icon: Shield,
-      href: "/hq",
+      href: "/dealflow/hq",
       available: user?.isStaff,
       badge: "Staff",
       color: "bg-blue-600",

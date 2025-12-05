@@ -1,0 +1,106 @@
+Upgrade all calculators into the “Pegasus Analyzer Suite” with the following unified requirements:
+
+GLOBAL FEATURES (ALL CALCULATORS)
+- Add Save Calculation (stores JSON in user account)
+- Add Download PDF (branded Pegasus template)
+- Add Share function (generates shareable link)
+- Add “Ask Peggy” button that sends inputs to Peggy AI for analysis
+- Add ability to pre-fill calculators from deal cards (e.g., ARV, rehab, rent)
+- Add expandable “Advanced Options” section for more experienced users
+- Add result visualizations: bars, charts, indicators
+- Add mobile-optimized layout
+
+CALCULATOR-SPECIFIC REQUIREMENTS
+
+1. ARV CALCULATOR
+Inputs:
+- Purchase Price  
+- ARV  
+- Rehab Cost  
+- Holding Costs  
+- Closing Costs (%)  
+- Assignment Fee (optional)
+
+Outputs:
+- Total Project Cost
+- Estimated Net Profit
+- Profit Margin %
+- 70% Rule Indicator (green if under threshold)
+- Break-even score
+- Recommendation from Peggy AI
+
+2. ROI CALCULATOR
+Inputs:
+- Purchase Price
+- Rehab/Closing Costs
+- Monthly Rent
+- Down Payment %
+- Interest Rate %
+- Monthly Expenses
+
+Outputs:
+- Cash-on-Cash Return
+- Cap Rate
+- NOI
+- Annual Net Cash Flow
+- Debt Service Coverage Ratio
+- Green/Yellow/Red indicators
+
+3. BRRRR CALCULATOR
+Inputs:
+- Purchase Price
+- Rehab Cost
+- ARV
+- Monthly Rent
+- Monthly Expenses
+- Refinance LTV (%)
+
+Outputs:
+- Cash Out Amount
+- Equity Position
+- Cash Left in Deal
+- Cash-on-Cash Return
+- Break-even Rent Number
+- Peggy’s BRRRR Strategy Suggestion
+
+4. CASH FLOW CALCULATOR
+Inputs:
+- Rent
+- Vacancy Rate
+- Property Tax
+- Insurance
+- Repairs
+- Management %
+- Utilities/Expenses
+- Mortgage Payment
+
+Outputs:
+- Net Monthly Cash Flow
+- Net Annual Cash Flow
+- Expense Ratio
+- Operating Expense Breakdown Pie Chart
+- Stability Score
+
+5. WHOLESALE MAO CALCULATOR
+Inputs:
+- ARV
+- Rehab Cost
+- Holding Costs
+- Closing Costs %
+- Buyer Expected Profit %
+- Desired Assignment Fee
+
+Outputs:
+- MAO (Maximum Allowable Offer)
+- Recommended Contract Price
+- Buyer Net Profit Preview
+- Assignment Fee Breakdown
+- Contract Warning Indicators (if deal is too tight)
+
+ADDITIONAL REQUIREMENTS
+- Calculators must share a unified design system
+- Output sections should be collapsible and neat
+- Add “Compare Scenarios” button to see multiple versions side-by-side
+- All calculations should be reusable inside deal creation forms
+- Wholesale MAO calculator must link directly to wholesaler deal submission
+- Capital raise calculators should integrate with project funding progress bars

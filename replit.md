@@ -67,12 +67,13 @@ Centralized scoring algorithm for matching deals to investor preferences:
 - Returns ScoreResult with total score, breakdown by factor, and labels for transparency
 
 ### Portal System (/portal)
-- **Dreamscaper HQ** (/hq): Staff-only dashboard with lead management, deal overview, and admin tools
+- **Dreamscaper HQ** (/dealflow/hq): Staff-only dashboard with lead management, deal overview, and admin tools
 - **Dealflow** (/dealflow): Unified platform for Investors, Wholesalers, and Buyers with role-based dashboards
   - Sidebar navigation: My Office, Discover, Community, Messages
-  - Tools section: Calculators, Resources
+  - Tools section: Calculators, Resources, Peggy AI (sidebar)
   - Staff users see HQ Dashboard link in sidebar
-- Portal routing: Staff auto-redirect to /hq; Investors/Wholesalers/Buyers auto-redirect to /dealflow/office
+- Portal routing: Staff auto-redirect to /dealflow/hq; Investors/Wholesalers/Buyers auto-redirect to /dealflow/office
+- Legacy route /hq redirects to /dealflow/hq for backwards compatibility
 
 ### Deal Negotiation System
 - Supports debt (interest rate) and equity (percentage) investment structures
