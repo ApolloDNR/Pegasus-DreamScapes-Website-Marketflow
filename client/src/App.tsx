@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
+import { PeggyProvider } from "@/contexts/peggy-context";
+import { PeggyChatBubble } from "@/components/peggy-chat";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -88,15 +90,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ScrollToTop />
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          <main className="flex-1">
-            <Router />
-          </main>
-          <Footer />
-        </div>
-        <Toaster />
+        <PeggyProvider>
+          <ScrollToTop />
+          <div className="min-h-screen flex flex-col">
+            <Navigation />
+            <main className="flex-1">
+              <Router />
+            </main>
+            <Footer />
+          </div>
+          <PeggyChatBubble />
+          <Toaster />
+        </PeggyProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -44,11 +44,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Key Features
 
+### Peggy AI Assistant
+Context-aware AI assistant powered by OpenAI (via Replit AI Integrations) that provides real estate investing guidance:
+- **Floating Chat Bubble** (client/src/components/peggy-chat.tsx): Global chat bubble visible on all pages
+- **PeggyContext Provider** (client/src/contexts/peggy-context.tsx): Tracks current page, user role, deal context, calculator data
+- **Backend Service** (server/peggy.ts): OpenAI integration with context-aware prompts and suggestion generation
+- **API Routes**: `/api/peggy/*` endpoints for conversations, chat, suggestions, calculator analysis, feedback
+- **Calculator Integration**: "Ask Peggy" button component for analyzing calculator results
+- **Suggestion Chips**: Dynamic suggestions based on current page and user role
+- **Feedback System**: Users can rate responses as helpful/not helpful
+
 ### Dealflow Platform (/dealflow)
 - **My Office**: Personal dashboard with deal stats, saved deals, and activity feed
 - **Marketplace**: Dating-app style swipe interface for browsing deals with Like/Skip/Save actions
 - **Community**: Forum discussions with categories for Market Talk, Deal Analysis, Success Stories, and Q&A
 - **Messages**: Direct messaging between users for deal negotiations
+- **Peggy AI**: Accessible via sidebar Tools section or floating chat bubble
 
 ### Centralized Deal Components (client/src/components/deal-cards.tsx)
 Unified component library for consistent deal card rendering across all views:

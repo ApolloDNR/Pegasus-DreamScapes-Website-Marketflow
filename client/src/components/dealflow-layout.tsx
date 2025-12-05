@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { usePeggyContext } from "@/contexts/peggy-context";
 import { NotificationBell } from "./notification-bell";
 import { CommandPalette, CommandTrigger } from "./command-palette";
 import { Button } from "@/components/ui/button";
@@ -117,6 +118,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   const [location] = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { openChat } = usePeggyContext();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -171,6 +173,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   const toolItems = [
     { path: "/calculators", label: "Calculators", icon: BarChart3 },
     { path: "/resources", label: "Resources", icon: Building2 },
+    { path: "#peggy", label: "Peggy AI", icon: Sparkles, isPeggy: true },
   ];
 
   const quickStats: QuickStat[] = [
@@ -290,6 +293,33 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
             )}
             {toolItems.map((item) => {
               const Icon = item.icon;
+              const isPeggy = (item as any).isPeggy;
+              
+              if (isPeggy) {
+                return (
+                  <Tooltip key={item.path} delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <button 
+                        onClick={openChat}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-primary hover:bg-primary/10 w-full ${sidebarCollapsed ? 'justify-center' : ''}`}
+                        data-testid="nav-peggy-ai"
+                      >
+                        <Icon className="w-5 h-5" />
+                        {!sidebarCollapsed && (
+                          <>
+                            <span className="font-medium flex-1">{item.label}</span>
+                            <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">New</Badge>
+                          </>
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    {sidebarCollapsed && (
+                      <TooltipContent side="right">{item.label}</TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              }
+              
               return (
                 <Tooltip key={item.path} delayDuration={0}>
                   <TooltipTrigger asChild>

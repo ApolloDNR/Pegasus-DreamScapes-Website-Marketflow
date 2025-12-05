@@ -23,11 +23,15 @@ import {
   insertDealMatchSchema,
   insertAnnouncementSchema,
   insertNotificationSchema,
+  insertLeadSchema,
+  insertSavedAnalysisSchema,
+  insertWholesaleDealOfferSchema,
   STAFF_ROLES
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
+import peggy from "./peggy";
 
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
@@ -2693,6 +2697,492 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting deal analysis:", error);
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
+  // PEGGY AI ASSISTANT ROUTES
+  // =====================================================
+
+  // Get or create a conversation
+  app.post("/api/peggy/conversations", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
+      const context = req.body.context || {};
+      
+      const conversation = await peggy.getOrCreateConversation(userId, sessionId, context);
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error getting/creating Peggy conversation:", error);
+      res.status(500).json({ message: "Failed to get/create conversation" });
+    }
+  });
+
+  // Start a new conversation
+  app.post("/api/peggy/conversations/new", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
+      const context = req.body.context || {};
+      
+      const conversation = await peggy.startConversation(userId, sessionId, context);
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error starting new Peggy conversation:", error);
+      res.status(500).json({ message: "Failed to start conversation" });
+    }
+  });
+
+  // Get conversation history
+  app.get("/api/peggy/conversations/:id", async (req: any, res) => {
+    try {
+      const conversationId = Number(req.params.id);
+      const conversation = await storage.getPeggyConversation(conversationId);
+      
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      const messages = await storage.getPeggyMessages(conversationId);
+      res.json({ conversation, messages });
+    } catch (error) {
+      console.error("Error fetching Peggy conversation:", error);
+      res.status(500).json({ message: "Failed to fetch conversation" });
+    }
+  });
+
+  // Get user's conversations list
+  app.get("/api/peggy/conversations", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const sessionId = req.query.sessionId as string;
+      
+      const conversations = await storage.getPeggyConversations(userId, sessionId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching Peggy conversations:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Send a message to Peggy
+  app.post("/api/peggy/chat", async (req: any, res) => {
+    try {
+      const { conversationId, message, context } = req.body;
+      
+      if (!conversationId || !message) {
+        return res.status(400).json({ message: "conversationId and message are required" });
+      }
+      
+      const result = await peggy.chat(message, conversationId, context);
+      res.json(result);
+    } catch (error) {
+      console.error("Error in Peggy chat:", error);
+      res.status(500).json({ message: "Failed to get response from Peggy" });
+    }
+  });
+
+  // Get context-aware suggestions
+  app.post("/api/peggy/suggestions", async (req: any, res) => {
+    try {
+      const context = req.body.context || {};
+      const suggestions = peggy.getSuggestions(context);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error getting Peggy suggestions:", error);
+      res.status(500).json({ message: "Failed to get suggestions" });
+    }
+  });
+
+  // Analyze calculator results (Ask Peggy button)
+  app.post("/api/peggy/analyze-calculator", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
+      const { calculatorType, inputs, results } = req.body;
+      
+      if (!calculatorType || !inputs || !results) {
+        return res.status(400).json({ message: "calculatorType, inputs, and results are required" });
+      }
+      
+      const response = await peggy.analyzeCalculatorResults(
+        calculatorType,
+        inputs,
+        results,
+        userId,
+        sessionId
+      );
+      
+      res.json(response);
+    } catch (error) {
+      console.error("Error in Peggy calculator analysis:", error);
+      res.status(500).json({ message: "Failed to analyze calculator results" });
+    }
+  });
+
+  // Provide feedback on a message
+  app.post("/api/peggy/messages/:id/feedback", async (req: any, res) => {
+    try {
+      const messageId = Number(req.params.id);
+      const { feedback, feedbackNotes } = req.body;
+      
+      if (!feedback || !['helpful', 'not_helpful'].includes(feedback)) {
+        return res.status(400).json({ message: "Valid feedback (helpful/not_helpful) is required" });
+      }
+      
+      const message = await storage.updatePeggyMessageFeedback(messageId, feedback, feedbackNotes);
+      res.json(message);
+    } catch (error) {
+      console.error("Error saving Peggy message feedback:", error);
+      res.status(500).json({ message: "Failed to save feedback" });
+    }
+  });
+
+  // =====================================================
+  // UNIFIED LEADS PIPELINE ROUTES
+  // =====================================================
+
+  // Get all leads (staff only)
+  app.get("/api/hq/leads", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const leadType = req.query.leadType as string | undefined;
+      const stage = req.query.stage as string | undefined;
+      const assignedTo = req.query.assignedTo as string | undefined;
+      
+      const leads = await storage.getLeads({ leadType, stage, assignedTo });
+      res.json(leads);
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      res.status(500).json({ message: "Failed to fetch leads" });
+    }
+  });
+
+  // Get single lead (staff only)
+  app.get("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const lead = await storage.getLead(id);
+      
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(lead);
+    } catch (error) {
+      console.error("Error fetching lead:", error);
+      res.status(500).json({ message: "Failed to fetch lead" });
+    }
+  });
+
+  // Create a new lead (public or authenticated)
+  app.post("/api/leads", async (req: any, res) => {
+    try {
+      const parseResult = insertLeadSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid lead data", 
+          errors: fromError(parseResult.error).toString() 
+        });
+      }
+      
+      const lead = await storage.createLead(parseResult.data);
+      res.status(201).json(lead);
+    } catch (error) {
+      console.error("Error creating lead:", error);
+      res.status(500).json({ message: "Failed to create lead" });
+    }
+  });
+
+  // Update lead (staff only)
+  app.patch("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const lead = await storage.updateLead(id, req.body);
+      
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(lead);
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      res.status(500).json({ message: "Failed to update lead" });
+    }
+  });
+
+  // Update lead stage (staff only)
+  app.patch("/api/hq/leads/:id/stage", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { stage } = req.body;
+      
+      if (!stage) {
+        return res.status(400).json({ message: "Stage is required" });
+      }
+      
+      const lead = await storage.updateLeadStage(id, stage);
+      
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(lead);
+    } catch (error) {
+      console.error("Error updating lead stage:", error);
+      res.status(500).json({ message: "Failed to update lead stage" });
+    }
+  });
+
+  // Assign lead (staff only)
+  app.patch("/api/hq/leads/:id/assign", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { assignedTo } = req.body;
+      
+      if (!assignedTo) {
+        return res.status(400).json({ message: "assignedTo is required" });
+      }
+      
+      const lead = await storage.assignLead(id, assignedTo);
+      
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(lead);
+    } catch (error) {
+      console.error("Error assigning lead:", error);
+      res.status(500).json({ message: "Failed to assign lead" });
+    }
+  });
+
+  // =====================================================
+  // SAVED ANALYSES ROUTES (Enhanced Calculator Saves)
+  // =====================================================
+
+  // Get user's saved analyses
+  app.get("/api/saved-analyses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const calculatorType = req.query.calculatorType as string | undefined;
+      
+      const analyses = await storage.getSavedAnalyses(userId, calculatorType);
+      res.json(analyses);
+    } catch (error) {
+      console.error("Error fetching saved analyses:", error);
+      res.status(500).json({ message: "Failed to fetch analyses" });
+    }
+  });
+
+  // Get single saved analysis
+  app.get("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const analysis = await storage.getSavedAnalysis(id);
+      
+      if (!analysis) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+      
+      // Check ownership
+      if (analysis.userId !== req.user.claims.sub) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error fetching analysis:", error);
+      res.status(500).json({ message: "Failed to fetch analysis" });
+    }
+  });
+
+  // Get shared analysis by token (public)
+  app.get("/api/shared-analyses/:token", async (req: any, res) => {
+    try {
+      const token = req.params.token;
+      const analysis = await storage.getSavedAnalysisByShareToken(token);
+      
+      if (!analysis) {
+        return res.status(404).json({ message: "Shared analysis not found" });
+      }
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error fetching shared analysis:", error);
+      res.status(500).json({ message: "Failed to fetch shared analysis" });
+    }
+  });
+
+  // Create saved analysis
+  app.post("/api/saved-analyses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const parseResult = insertSavedAnalysisSchema.safeParse({
+        ...req.body,
+        userId
+      });
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid analysis data", 
+          errors: fromError(parseResult.error).toString() 
+        });
+      }
+      
+      const analysis = await storage.createSavedAnalysis(parseResult.data);
+      res.status(201).json(analysis);
+    } catch (error) {
+      console.error("Error saving analysis:", error);
+      res.status(500).json({ message: "Failed to save analysis" });
+    }
+  });
+
+  // Update saved analysis
+  app.patch("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Verify ownership
+      const existing = await storage.getSavedAnalysis(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+      if (existing.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const analysis = await storage.updateSavedAnalysis(id, req.body);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error updating analysis:", error);
+      res.status(500).json({ message: "Failed to update analysis" });
+    }
+  });
+
+  // Delete saved analysis
+  app.delete("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Verify ownership
+      const existing = await storage.getSavedAnalysis(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+      if (existing.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      await storage.deleteSavedAnalysis(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting analysis:", error);
+      res.status(500).json({ message: "Failed to delete analysis" });
+    }
+  });
+
+  // =====================================================
+  // WHOLESALE DEAL OFFERS ROUTES
+  // =====================================================
+
+  // Get offers for a deal
+  app.get("/api/wholesale-deals/:dealId/offers", isAuthenticated, async (req: any, res) => {
+    try {
+      const dealId = Number(req.params.dealId);
+      const offers = await storage.getWholesaleDealOffers(dealId);
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching deal offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Get my offers
+  app.get("/api/my-wholesale-offers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offers = await storage.getWholesaleDealOffersByBuyer(userId);
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching my offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Create offer on a deal
+  app.post("/api/wholesale-deals/:dealId/offers", isAuthenticated, async (req: any, res) => {
+    try {
+      const dealId = Number(req.params.dealId);
+      const buyerId = req.user.claims.sub;
+      
+      const parseResult = insertWholesaleDealOfferSchema.safeParse({
+        ...req.body,
+        dealId,
+        buyerId
+      });
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid offer data", 
+          errors: fromError(parseResult.error).toString() 
+        });
+      }
+      
+      const offer = await storage.createWholesaleDealOffer(parseResult.data);
+      res.status(201).json(offer);
+    } catch (error) {
+      console.error("Error creating offer:", error);
+      res.status(500).json({ message: "Failed to create offer" });
+    }
+  });
+
+  // Update offer status (wholesaler accepting/rejecting)
+  app.patch("/api/wholesale-offers/:id/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['accepted', 'rejected', 'expired'].includes(status)) {
+        return res.status(400).json({ message: "Valid status is required" });
+      }
+      
+      const offer = await storage.updateWholesaleDealOfferStatus(id, status);
+      
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+      
+      res.json(offer);
+    } catch (error) {
+      console.error("Error updating offer status:", error);
+      res.status(500).json({ message: "Failed to update offer status" });
+    }
+  });
+
+  // Counter an offer
+  app.post("/api/wholesale-offers/:id/counter", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { counterAmount, counterNotes } = req.body;
+      
+      if (!counterAmount) {
+        return res.status(400).json({ message: "counterAmount is required" });
+      }
+      
+      const offer = await storage.counterWholesaleDealOffer(id, counterAmount, counterNotes);
+      
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+      
+      res.json(offer);
+    } catch (error) {
+      console.error("Error countering offer:", error);
+      res.status(500).json({ message: "Failed to counter offer" });
     }
   });
 
