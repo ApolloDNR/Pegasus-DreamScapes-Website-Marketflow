@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 
 **Database**: PostgreSQL with Drizzle ORM for type-safe operations.
-**Database Tables**: `sessions`, `users`, `user_roles`, `staff_profiles`, `seller_leads`, `investor_leads`, `contacts`, `projects`, `articles`, `lead_activities`, `wholesale_deals`, `wholesale_requests`, `investor_profiles`, `investor_wanted_deals`, `capital_projects`, `project_investments`, `deal_offers`, `deal_bookmarks`, `user_stats`, `user_reviews`, `community_categories`, `community_posts`, `community_replies`, `direct_messages`, `notifications`.
+**Database Tables**: `sessions`, `users`, `user_roles`, `staff_profiles`, `seller_leads`, `investor_leads`, `buyer_leads`, `contacts`, `projects`, `articles`, `lead_activities`, `wholesale_deals`, `wholesale_requests`, `wholesale_deal_offers`, `investor_profiles`, `investor_wanted_deals`, `capital_projects`, `project_milestones`, `investment_offers`, `committed_investments`, `deal_matches`, `deal_bookmarks`, `deal_swipes`, `deal_negotiations`, `deal_messages`, `deal_analyzer_results`, `user_stats`, `user_reviews`, `community_categories`, `community_posts`, `community_replies`, `direct_messages`, `announcements`, `notifications`, `retail_listings`, `buyer_profiles`, `buyer_offers`, `buyer_inquiries`, `saved_properties`, `leads` (unified pipeline), `peggy_conversations`, `peggy_messages`, `saved_analyses`.
 **Schema Migrations**: `npm run db:push` to sync schema changes.
 
 ## Key Features

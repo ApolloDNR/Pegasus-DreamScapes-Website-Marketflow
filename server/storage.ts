@@ -10,6 +10,7 @@ import {
   announcements, notifications,
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
+  leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -49,7 +50,12 @@ import {
   type DealNegotiation, type InsertDealNegotiation,
   type WholesaleDealDocument, type InsertWholesaleDealDocument,
   type DealAnalyzerResult, type InsertDealAnalyzerResult,
-  type DealMessage, type InsertDealMessage
+  type DealMessage, type InsertDealMessage,
+  type Lead, type InsertLead,
+  type PeggyConversation, type InsertPeggyConversation,
+  type PeggyMessage, type InsertPeggyMessage,
+  type SavedAnalysis, type InsertSavedAnalysis,
+  type WholesaleDealOffer, type InsertWholesaleDealOffer
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -311,6 +317,41 @@ export interface IStorage {
   getDealMessages(dealType: string, dealId: number): Promise<DealMessage[]>;
   markDealMessagesRead(dealType: string, dealId: number, userId: string): Promise<void>;
   getUnreadDealMessageCount(dealType: string, dealId: number, userId: string): Promise<number>;
+
+  // Unified Leads
+  createLead(lead: InsertLead): Promise<Lead>;
+  getLeads(filters?: { leadType?: string; stage?: string; assignedTo?: string }): Promise<Lead[]>;
+  getLead(id: number): Promise<Lead | undefined>;
+  updateLead(id: number, data: Partial<InsertLead>): Promise<Lead | undefined>;
+  updateLeadStage(id: number, stage: string): Promise<Lead | undefined>;
+  assignLead(id: number, assignedTo: string): Promise<Lead | undefined>;
+  
+  // Peggy AI Conversations
+  createPeggyConversation(conversation: InsertPeggyConversation): Promise<PeggyConversation>;
+  getPeggyConversations(userId?: string, sessionId?: string): Promise<PeggyConversation[]>;
+  getPeggyConversation(id: number): Promise<PeggyConversation | undefined>;
+  updatePeggyConversation(id: number, data: Partial<InsertPeggyConversation>): Promise<PeggyConversation | undefined>;
+  
+  // Peggy AI Messages
+  createPeggyMessage(message: InsertPeggyMessage): Promise<PeggyMessage>;
+  getPeggyMessages(conversationId: number): Promise<PeggyMessage[]>;
+  updatePeggyMessageFeedback(id: number, feedback: string, feedbackNotes?: string): Promise<PeggyMessage | undefined>;
+  
+  // Saved Analyses (Calculators)
+  createSavedAnalysis(analysis: InsertSavedAnalysis): Promise<SavedAnalysis>;
+  getSavedAnalyses(userId: string, calculatorType?: string): Promise<SavedAnalysis[]>;
+  getSavedAnalysis(id: number): Promise<SavedAnalysis | undefined>;
+  getSavedAnalysisByShareToken(shareToken: string): Promise<SavedAnalysis | undefined>;
+  updateSavedAnalysis(id: number, data: Partial<InsertSavedAnalysis>): Promise<SavedAnalysis | undefined>;
+  deleteSavedAnalysis(id: number): Promise<void>;
+  
+  // Wholesale Deal Offers
+  createWholesaleDealOffer(offer: InsertWholesaleDealOffer): Promise<WholesaleDealOffer>;
+  getWholesaleDealOffers(dealId: number): Promise<WholesaleDealOffer[]>;
+  getWholesaleDealOffersByBuyer(buyerId: string): Promise<WholesaleDealOffer[]>;
+  getWholesaleDealOffer(id: number): Promise<WholesaleDealOffer | undefined>;
+  updateWholesaleDealOfferStatus(id: number, status: string): Promise<WholesaleDealOffer | undefined>;
+  counterWholesaleDealOffer(id: number, counterAmount: number, counterNotes?: string): Promise<WholesaleDealOffer | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1770,6 +1811,250 @@ export class DatabaseStorage implements IStorage {
         eq(dealMessages.isRead, false)
       ));
     return result[0]?.count || 0;
+  }
+
+  // ============================================
+  // UNIFIED LEADS
+  // ============================================
+  
+  async createLead(lead: InsertLead): Promise<Lead> {
+    const [created] = await db.insert(leads).values(lead).returning();
+    return created;
+  }
+
+  async getLeads(filters?: { leadType?: string; stage?: string; assignedTo?: string }): Promise<Lead[]> {
+    let query = db.select().from(leads);
+    const conditions = [];
+    
+    if (filters?.leadType) {
+      conditions.push(eq(leads.leadType, filters.leadType));
+    }
+    if (filters?.stage) {
+      conditions.push(eq(leads.stage, filters.stage));
+    }
+    if (filters?.assignedTo) {
+      conditions.push(eq(leads.assignedTo, filters.assignedTo));
+    }
+    
+    if (conditions.length > 0) {
+      return db.select().from(leads).where(and(...conditions)).orderBy(desc(leads.createdAt));
+    }
+    return db.select().from(leads).orderBy(desc(leads.createdAt));
+  }
+
+  async getLead(id: number): Promise<Lead | undefined> {
+    const [lead] = await db.select().from(leads).where(eq(leads.id, id));
+    return lead;
+  }
+
+  async updateLead(id: number, data: Partial<InsertLead>): Promise<Lead | undefined> {
+    const [updated] = await db.update(leads)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(leads.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateLeadStage(id: number, stage: string): Promise<Lead | undefined> {
+    const [updated] = await db.update(leads)
+      .set({ stage, updatedAt: new Date() })
+      .where(eq(leads.id, id))
+      .returning();
+    return updated;
+  }
+
+  async assignLead(id: number, assignedTo: string): Promise<Lead | undefined> {
+    const [updated] = await db.update(leads)
+      .set({ assignedTo, assignedAt: new Date(), updatedAt: new Date() })
+      .where(eq(leads.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ============================================
+  // PEGGY AI CONVERSATIONS
+  // ============================================
+  
+  async createPeggyConversation(conversation: InsertPeggyConversation): Promise<PeggyConversation> {
+    const [created] = await db.insert(peggyConversations).values(conversation).returning();
+    return created;
+  }
+
+  async getPeggyConversations(userId?: string, sessionId?: string): Promise<PeggyConversation[]> {
+    if (userId) {
+      return db.select().from(peggyConversations)
+        .where(eq(peggyConversations.userId, userId))
+        .orderBy(desc(peggyConversations.updatedAt));
+    }
+    if (sessionId) {
+      return db.select().from(peggyConversations)
+        .where(eq(peggyConversations.sessionId, sessionId))
+        .orderBy(desc(peggyConversations.updatedAt));
+    }
+    return [];
+  }
+
+  async getPeggyConversation(id: number): Promise<PeggyConversation | undefined> {
+    const [conversation] = await db.select().from(peggyConversations).where(eq(peggyConversations.id, id));
+    return conversation;
+  }
+
+  async updatePeggyConversation(id: number, data: Partial<InsertPeggyConversation>): Promise<PeggyConversation | undefined> {
+    const [updated] = await db.update(peggyConversations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(peggyConversations.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ============================================
+  // PEGGY AI MESSAGES
+  // ============================================
+  
+  async createPeggyMessage(message: InsertPeggyMessage): Promise<PeggyMessage> {
+    const [created] = await db.insert(peggyMessages).values(message).returning();
+    
+    // Update conversation message count and last message time
+    await db.update(peggyConversations)
+      .set({ 
+        messageCount: sql`${peggyConversations.messageCount} + 1`,
+        lastMessageAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(peggyConversations.id, message.conversationId));
+    
+    return created;
+  }
+
+  async getPeggyMessages(conversationId: number): Promise<PeggyMessage[]> {
+    return db.select().from(peggyMessages)
+      .where(eq(peggyMessages.conversationId, conversationId))
+      .orderBy(asc(peggyMessages.createdAt));
+  }
+
+  async updatePeggyMessageFeedback(id: number, feedback: string, feedbackNotes?: string): Promise<PeggyMessage | undefined> {
+    const [updated] = await db.update(peggyMessages)
+      .set({ feedback, feedbackNotes })
+      .where(eq(peggyMessages.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ============================================
+  // SAVED ANALYSES (CALCULATORS)
+  // ============================================
+  
+  async createSavedAnalysis(analysis: InsertSavedAnalysis): Promise<SavedAnalysis> {
+    const [created] = await db.insert(savedAnalyses).values(analysis).returning();
+    return created;
+  }
+
+  async getSavedAnalyses(userId: string, calculatorType?: string): Promise<SavedAnalysis[]> {
+    if (calculatorType) {
+      return db.select().from(savedAnalyses)
+        .where(and(
+          eq(savedAnalyses.userId, userId),
+          eq(savedAnalyses.calculatorType, calculatorType)
+        ))
+        .orderBy(desc(savedAnalyses.updatedAt));
+    }
+    return db.select().from(savedAnalyses)
+      .where(eq(savedAnalyses.userId, userId))
+      .orderBy(desc(savedAnalyses.updatedAt));
+  }
+
+  async getSavedAnalysis(id: number): Promise<SavedAnalysis | undefined> {
+    const [analysis] = await db.select().from(savedAnalyses).where(eq(savedAnalyses.id, id));
+    return analysis;
+  }
+
+  async getSavedAnalysisByShareToken(shareToken: string): Promise<SavedAnalysis | undefined> {
+    const [analysis] = await db.select().from(savedAnalyses)
+      .where(and(
+        eq(savedAnalyses.shareToken, shareToken),
+        eq(savedAnalyses.isShared, true)
+      ));
+    if (analysis) {
+      // Increment view count
+      await db.update(savedAnalyses)
+        .set({ viewCount: sql`${savedAnalyses.viewCount} + 1` })
+        .where(eq(savedAnalyses.id, analysis.id));
+    }
+    return analysis;
+  }
+
+  async updateSavedAnalysis(id: number, data: Partial<InsertSavedAnalysis>): Promise<SavedAnalysis | undefined> {
+    const [updated] = await db.update(savedAnalyses)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(savedAnalyses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSavedAnalysis(id: number): Promise<void> {
+    await db.delete(savedAnalyses).where(eq(savedAnalyses.id, id));
+  }
+
+  // ============================================
+  // WHOLESALE DEAL OFFERS
+  // ============================================
+  
+  async createWholesaleDealOffer(offer: InsertWholesaleDealOffer): Promise<WholesaleDealOffer> {
+    const [created] = await db.insert(wholesaleDealOffers).values(offer).returning();
+    return created;
+  }
+
+  async getWholesaleDealOffers(dealId: number): Promise<WholesaleDealOffer[]> {
+    return db.select().from(wholesaleDealOffers)
+      .where(eq(wholesaleDealOffers.dealId, dealId))
+      .orderBy(desc(wholesaleDealOffers.createdAt));
+  }
+
+  async getWholesaleDealOffersByBuyer(buyerId: string): Promise<WholesaleDealOffer[]> {
+    return db.select().from(wholesaleDealOffers)
+      .where(eq(wholesaleDealOffers.buyerId, buyerId))
+      .orderBy(desc(wholesaleDealOffers.createdAt));
+  }
+
+  async getWholesaleDealOffer(id: number): Promise<WholesaleDealOffer | undefined> {
+    const [offer] = await db.select().from(wholesaleDealOffers).where(eq(wholesaleDealOffers.id, id));
+    return offer;
+  }
+
+  async updateWholesaleDealOfferStatus(id: number, status: string): Promise<WholesaleDealOffer | undefined> {
+    const [updated] = await db.update(wholesaleDealOffers)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(wholesaleDealOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async counterWholesaleDealOffer(id: number, counterAmount: number, counterNotes?: string): Promise<WholesaleDealOffer | undefined> {
+    const offer = await this.getWholesaleDealOffer(id);
+    if (!offer) return undefined;
+    
+    // Build negotiation history entry
+    const historyEntry = {
+      action: 'counter',
+      amount: counterAmount,
+      notes: counterNotes,
+      timestamp: new Date().toISOString()
+    };
+    
+    const currentHistory = (offer.negotiationHistory as any[]) || [];
+    
+    const [updated] = await db.update(wholesaleDealOffers)
+      .set({ 
+        status: 'countered',
+        counterAmount,
+        counterNotes,
+        counteredAt: new Date(),
+        negotiationHistory: [...currentHistory, historyEntry],
+        updatedAt: new Date()
+      })
+      .where(eq(wholesaleDealOffers.id, id))
+      .returning();
+    return updated;
   }
 }
 

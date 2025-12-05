@@ -1313,3 +1313,339 @@ export const insertDealMessageSchema = createInsertSchema(dealMessages).omit({
 });
 export type InsertDealMessage = z.infer<typeof insertDealMessageSchema>;
 export type DealMessage = typeof dealMessages.$inferSelect;
+
+// ============================================
+// UNIFIED LEADS PIPELINE
+// ============================================
+
+// Lead Types for unified pipeline
+export const LEAD_TYPES = [
+  "seller",        // Property sellers
+  "investor",      // Investment inquiries
+  "buyer",         // Property buyers
+  "contact",       // General contact forms
+  "dreamscaper",   // Dreamscaper/Operator applications
+  "wholesaler",    // Wholesaler applications
+] as const;
+export type LeadType = typeof LEAD_TYPES[number];
+
+// Lead Sources - where the lead came from
+export const LEAD_SOURCES = [
+  "sell_page",        // /sell form
+  "invest_page",      // /invest form
+  "buy_page",         // /buy form
+  "contact_page",     // /contact form
+  "apply_dreamscaper", // Dreamscaper application
+  "apply_wholesaler", // Wholesaler application
+  "deal_inquiry",     // From a specific deal
+  "referral",         // Referred by another user
+  "manual",           // Staff-entered lead
+] as const;
+export type LeadSource = typeof LEAD_SOURCES[number];
+
+// Lead Pipeline Stages
+export const LEAD_STAGES = [
+  "new",           // Just submitted
+  "contacted",     // First contact made
+  "qualified",     // Lead is qualified
+  "nurturing",     // In nurturing sequence
+  "negotiating",   // Active negotiation
+  "converted",     // Became a user/deal
+  "lost",          // Lead lost/closed
+  "archived",      // Archived for reference
+] as const;
+export type LeadStage = typeof LEAD_STAGES[number];
+
+// Unified Leads - single table for all lead types
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  
+  // === CORE LEAD INFO ===
+  leadType: varchar("lead_type", { length: 50 }).notNull(), // seller, investor, buyer, contact, dreamscaper, wholesaler
+  source: varchar("source", { length: 50 }).notNull(), // where lead came from
+  stage: varchar("stage", { length: 50 }).notNull().default("new"),
+  
+  // === CONTACT INFO ===
+  firstName: varchar("first_name", { length: 255 }).notNull(),
+  lastName: varchar("last_name", { length: 255 }),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  company: varchar("company", { length: 255 }),
+  
+  // === LOCATION ===
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zip_code", { length: 20 }),
+  
+  // === TYPE-SPECIFIC FIELDS (JSON) ===
+  // Seller fields: propertyType, condition, timeline, motivation
+  // Investor fields: capitalRange, investmentPreference, experienceLevel, accredited
+  // Buyer fields: buyerType, budgetRange, propertyTypes, fundingStatus
+  // Contact fields: subject, message
+  // Dreamscaper fields: bio, experience, portfolio, strategy
+  leadData: jsonb("lead_data"), // Flexible storage for type-specific fields
+  
+  // === DEAL REFERENCE ===
+  relatedDealType: varchar("related_deal_type", { length: 50 }), // wholesale_deal, capital_project, retail_listing
+  relatedDealId: integer("related_deal_id"),
+  
+  // === SCORING & PRIORITY ===
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, urgent
+  score: integer("score"), // 0-100 lead quality score
+  motivationLevel: integer("motivation_level"), // 1-10 for sellers
+  
+  // === ASSIGNMENT ===
+  assignedTo: varchar("assigned_to", { length: 255 }), // Staff user ID
+  assignedAt: timestamp("assigned_at"),
+  
+  // === TRACKING ===
+  lastContactAt: timestamp("last_contact_at"),
+  nextFollowUpAt: timestamp("next_follow_up_at"),
+  contactAttempts: integer("contact_attempts").default(0),
+  
+  // === CONVERSION ===
+  convertedToUserId: varchar("converted_to_user_id", { length: 255 }), // If converted to registered user
+  convertedToDealId: integer("converted_to_deal_id"),
+  conversionDate: timestamp("conversion_date"),
+  
+  // === NOTES ===
+  notes: text("notes"),
+  internalNotes: text("internal_notes"), // Staff only
+  
+  // === UTM/ATTRIBUTION ===
+  utmSource: varchar("utm_source", { length: 100 }),
+  utmMedium: varchar("utm_medium", { length: 100 }),
+  utmCampaign: varchar("utm_campaign", { length: 100 }),
+  referredBy: varchar("referred_by", { length: 255 }), // User ID if referral
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  stage: true,
+  assignedAt: true,
+  contactAttempts: true,
+  conversionDate: true
+});
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Lead = typeof leads.$inferSelect;
+
+// ============================================
+// PEGGY AI CONVERSATIONS
+// ============================================
+
+// Peggy Chat Conversations
+export const peggyConversations = pgTable("peggy_conversations", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }), // null for anonymous users
+  sessionId: varchar("session_id", { length: 255 }).notNull(), // Browser session for anonymous
+  
+  // === CONTEXT ===
+  // What page/context the conversation started in
+  contextType: varchar("context_type", { length: 50 }), // calculator, deal, page, general
+  contextPage: varchar("context_page", { length: 255 }), // URL path
+  contextDealType: varchar("context_deal_type", { length: 50 }),
+  contextDealId: integer("context_deal_id"),
+  contextCalculator: varchar("context_calculator", { length: 50 }), // arv, roi, brrrr, cashflow, mao
+  
+  // === METADATA ===
+  title: varchar("title", { length: 255 }), // Auto-generated or user-set title
+  messageCount: integer("message_count").default(0),
+  lastMessageAt: timestamp("last_message_at"),
+  
+  // === STATUS ===
+  isActive: boolean("is_active").default(true),
+  isPinned: boolean("is_pinned").default(false),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPeggyConversationSchema = createInsertSchema(peggyConversations).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  messageCount: true,
+  lastMessageAt: true
+});
+export type InsertPeggyConversation = z.infer<typeof insertPeggyConversationSchema>;
+export type PeggyConversation = typeof peggyConversations.$inferSelect;
+
+// Peggy Chat Messages
+export const peggyMessages = pgTable("peggy_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull(),
+  
+  // === MESSAGE ===
+  role: varchar("role", { length: 20 }).notNull(), // user, assistant, system
+  content: text("content").notNull(),
+  
+  // === CONTEXT AT TIME OF MESSAGE ===
+  contextSnapshot: jsonb("context_snapshot"), // Snapshot of context when message sent
+  
+  // === AI METADATA ===
+  model: varchar("model", { length: 100 }), // gpt-4, gpt-3.5-turbo, etc.
+  tokensUsed: integer("tokens_used"),
+  
+  // === FEEDBACK ===
+  feedback: varchar("feedback", { length: 20 }), // helpful, not_helpful
+  feedbackNotes: text("feedback_notes"),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPeggyMessageSchema = createInsertSchema(peggyMessages).omit({ 
+  id: true, 
+  createdAt: true,
+  tokensUsed: true,
+  feedback: true,
+  feedbackNotes: true
+});
+export type InsertPeggyMessage = z.infer<typeof insertPeggyMessageSchema>;
+export type PeggyMessage = typeof peggyMessages.$inferSelect;
+
+// ============================================
+// ENHANCED SAVED ANALYSES (Calculator Results)
+// ============================================
+
+// Calculator Types
+export const CALCULATOR_TYPES = [
+  "arv",       // After Repair Value
+  "roi",       // Return on Investment
+  "brrrr",     // Buy, Rehab, Rent, Refinance, Repeat
+  "cashflow",  // Cash Flow Analysis
+  "mao",       // Maximum Allowable Offer (Wholesale)
+] as const;
+export type CalculatorType = typeof CALCULATOR_TYPES[number];
+
+// Saved Calculator Analyses - enhanced for all calculator types
+export const savedAnalyses = pgTable("saved_analyses", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  
+  // === ANALYSIS INFO ===
+  name: varchar("name", { length: 255 }).notNull(),
+  calculatorType: varchar("calculator_type", { length: 50 }).notNull(), // arv, roi, brrrr, cashflow, mao
+  
+  // === DEAL REFERENCE ===
+  dealType: varchar("deal_type", { length: 50 }), // wholesale_deal, capital_project, retail_listing, custom
+  dealId: integer("deal_id"),
+  propertyAddress: text("property_address"),
+  
+  // === INPUT VALUES (stored as JSON for flexibility) ===
+  inputs: jsonb("inputs").notNull(), // All calculator inputs
+  
+  // === CALCULATED RESULTS (stored as JSON for flexibility) ===
+  results: jsonb("results").notNull(), // All calculated outputs
+  
+  // === KEY METRICS (denormalized for quick display/filtering) ===
+  // These are extracted from results for easy access
+  primaryMetric: varchar("primary_metric", { length: 50 }), // Main result label (e.g., "ROI", "MAO", "Cash Flow")
+  primaryValue: varchar("primary_value", { length: 100 }), // Main result value
+  secondaryMetric: varchar("secondary_metric", { length: 50 }),
+  secondaryValue: varchar("secondary_value", { length: 100 }),
+  dealGrade: varchar("deal_grade", { length: 10 }), // A, B, C, D, F
+  
+  // === COMPARISON ===
+  isScenario: boolean("is_scenario").default(false), // Part of a comparison set
+  scenarioGroupId: integer("scenario_group_id"), // Links related scenarios
+  scenarioLabel: varchar("scenario_label", { length: 100 }), // "Conservative", "Optimistic", etc.
+  
+  // === SHARING ===
+  isShared: boolean("is_shared").default(false),
+  shareToken: varchar("share_token", { length: 100 }),
+  sharedAt: timestamp("shared_at"),
+  viewCount: integer("view_count").default(0),
+  
+  // === PDF EXPORT ===
+  pdfUrl: text("pdf_url"),
+  pdfGeneratedAt: timestamp("pdf_generated_at"),
+  
+  // === NOTES ===
+  notes: text("notes"),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSavedAnalysisSchema = createInsertSchema(savedAnalyses).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  shareToken: true,
+  sharedAt: true,
+  viewCount: true,
+  pdfUrl: true,
+  pdfGeneratedAt: true
+});
+export type InsertSavedAnalysis = z.infer<typeof insertSavedAnalysisSchema>;
+export type SavedAnalysis = typeof savedAnalyses.$inferSelect;
+
+// ============================================
+// WHOLESALE NEGOTIATION ENHANCEMENTS
+// ============================================
+
+// Wholesale Deal Offers - separate from capital project offers
+export const wholesaleDealOffers = pgTable("wholesale_deal_offers", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  buyerId: varchar("buyer_id", { length: 255 }).notNull(),
+  
+  // === OFFER DETAILS ===
+  offerAmount: integer("offer_amount").notNull(),
+  fundingType: varchar("funding_type", { length: 50 }).notNull(), // cash, hard_money, conventional
+  closingTimeline: varchar("closing_timeline", { length: 50 }),
+  earnestMoney: integer("earnest_money"),
+  proofOfFunds: boolean("proof_of_funds").default(false),
+  
+  // === CONTINGENCIES ===
+  inspectionContingency: boolean("inspection_contingency").default(true),
+  financingContingency: boolean("financing_contingency").default(false),
+  appraisalContingency: boolean("appraisal_contingency").default(false),
+  contingencyNotes: text("contingency_notes"),
+  
+  // === BUYER DETAILS ===
+  buyerExperience: varchar("buyer_experience", { length: 50 }),
+  intendedStrategy: varchar("intended_strategy", { length: 50 }), // flip, rental, wholetail
+  notes: text("notes"),
+  
+  // === STATUS ===
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, countered, accepted, rejected, expired, withdrawn
+  
+  // === COUNTER OFFER ===
+  counterAmount: integer("counter_amount"),
+  counterNotes: text("counter_notes"),
+  counteredAt: timestamp("countered_at"),
+  
+  // === NEGOTIATION HISTORY ===
+  negotiationHistory: jsonb("negotiation_history").default([]),
+  
+  // === EXPIRATION ===
+  expiresAt: timestamp("expires_at"),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertWholesaleDealOfferSchema = createInsertSchema(wholesaleDealOffers).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  status: true,
+  counterAmount: true,
+  counterNotes: true,
+  counteredAt: true,
+  negotiationHistory: true
+});
+export type InsertWholesaleDealOffer = z.infer<typeof insertWholesaleDealOfferSchema>;
+export type WholesaleDealOffer = typeof wholesaleDealOffers.$inferSelect;
