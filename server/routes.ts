@@ -31,6 +31,7 @@ import {
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
+import { generateCalculatorPDF, generateDealPacketPDF } from "./pdf";
 import peggy from "./peggy";
 
 // Middleware to require staff roles for HQ access
@@ -3343,6 +3344,137 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error countering offer:", error);
       res.status(500).json({ message: "Failed to counter offer" });
+    }
+  });
+
+  // ============== PDF GENERATION ROUTES ==============
+  
+  // Generate calculator analysis PDF
+  app.post("/api/pdf/calculator", async (req, res) => {
+    try {
+      const { calculatorType, inputs, outputs } = req.body;
+      
+      if (!calculatorType || !inputs || !outputs) {
+        return res.status(400).json({ 
+          message: "calculatorType, inputs, and outputs are required" 
+        });
+      }
+      
+      const buffer = await generateCalculatorPDF(calculatorType, inputs, outputs);
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition", 
+        `attachment; filename="${calculatorType}-analysis-${Date.now()}.pdf"`
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating calculator PDF:", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // Generate deal packet PDF
+  app.post("/api/pdf/deal-packet", async (req, res) => {
+    try {
+      const dealData = req.body;
+      
+      if (!dealData.title || !dealData.type || !dealData.propertyAddress) {
+        return res.status(400).json({ 
+          message: "title, type, and propertyAddress are required" 
+        });
+      }
+      
+      const buffer = await generateDealPacketPDF(dealData);
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition", 
+        `attachment; filename="deal-packet-${Date.now()}.pdf"`
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating deal packet PDF:", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // Generate wholesale deal PDF
+  app.get("/api/pdf/wholesale-deal/:id", async (req, res) => {
+    try {
+      const dealId = Number(req.params.id);
+      const deal = await storage.getWholesaleDeal(dealId);
+      
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      const buffer = await generateDealPacketPDF({
+        title: deal.title,
+        type: "wholesale",
+        propertyAddress: deal.propertyAddress,
+        city: deal.city || undefined,
+        state: deal.state || undefined,
+        propertyType: deal.propertyType || undefined,
+        beds: deal.beds || undefined,
+        baths: deal.baths || undefined,
+        sqft: deal.sqft || undefined,
+        arv: deal.arv || undefined,
+        purchasePrice: deal.askingPrice || undefined,
+        rehabCost: deal.estimatedRepairs || undefined,
+        assignmentFee: deal.assignmentFee || undefined,
+        description: deal.description || undefined,
+        highlights: deal.highlights || undefined,
+      });
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition", 
+        `attachment; filename="wholesale-deal-${dealId}-${Date.now()}.pdf"`
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating wholesale deal PDF:", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // Generate capital project PDF
+  app.get("/api/pdf/capital-project/:id", async (req, res) => {
+    try {
+      const projectId = Number(req.params.id);
+      const project = await storage.getCapitalProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      const buffer = await generateDealPacketPDF({
+        title: project.title,
+        type: "capital",
+        propertyAddress: project.location,
+        propertyType: project.propertyType || undefined,
+        arv: project.arv || undefined,
+        purchasePrice: project.purchasePrice || undefined,
+        rehabCost: project.rehabCost || undefined,
+        expectedProfit: project.projectedReturn ? 
+          (project.fundingGoal || 0) * (parseFloat(project.projectedReturn) / 100) : 
+          undefined,
+        description: project.description || undefined,
+        highlights: project.highlights || undefined,
+        timeline: project.holdPeriod || undefined,
+        operatorName: project.operatorId || "Dreamscaper Operator",
+      });
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition", 
+        `attachment; filename="capital-project-${projectId}-${Date.now()}.pdf"`
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating capital project PDF:", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
     }
   });
 
