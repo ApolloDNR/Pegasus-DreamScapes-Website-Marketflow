@@ -38,7 +38,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { SellerLead, InvestorLead, Contact, LeadActivity, WholesaleDeal, WholesaleRequest } from "@shared/schema";
+import type { SellerLead, InvestorLead, Contact, LeadActivity, WholesaleDeal, WholesaleRequest, Lead } from "@shared/schema";
+import { 
+  Inbox as InboxIcon,
+  Filter,
+  ChevronDown,
+  ExternalLink,
+  Eye
+} from "lucide-react";
 
 interface QueueItem {
   id: string;
@@ -660,6 +667,10 @@ function LeadsTabs() {
             <Clock className="w-4 h-4 mr-2" />
             Work Queue
           </TabsTrigger>
+          <TabsTrigger value="leads-inbox" data-testid="tab-leads-inbox">
+            <InboxIcon className="w-4 h-4 mr-2" />
+            Leads Inbox
+          </TabsTrigger>
           <TabsTrigger value="wholesale" data-testid="tab-wholesale">
             <DollarSign className="w-4 h-4 mr-2" />
             Wholesale
@@ -689,6 +700,9 @@ function LeadsTabs() {
         <TabsContent value="queue">
           <QueuePanel />
         </TabsContent>
+        <TabsContent value="leads-inbox">
+          <UnifiedLeadsInbox />
+        </TabsContent>
         <TabsContent value="wholesale">
           <WholesaleDealsPanel />
         </TabsContent>
@@ -709,6 +723,469 @@ function LeadsTabs() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+const LEAD_TYPES = ["seller", "investor", "buyer", "contact", "wholesaler", "dreamscaper"] as const;
+const LEAD_STAGES = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"] as const;
+
+const LEAD_TYPE_ICONS: Record<string, typeof Home> = {
+  seller: Home,
+  investor: TrendingUp,
+  buyer: Users,
+  contact: Mail,
+  wholesaler: DollarSign,
+  dreamscaper: Building,
+};
+
+const LEAD_TYPE_COLORS: Record<string, string> = {
+  seller: "bg-primary/20 text-primary border-primary/30",
+  investor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  buyer: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  contact: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  wholesaler: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  dreamscaper: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+};
+
+const STAGE_COLORS: Record<string, string> = {
+  new: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  contacted: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  qualified: "bg-green-500/20 text-green-400 border-green-500/30",
+  proposal: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+  negotiation: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  won: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  lost: "bg-red-500/20 text-red-400 border-red-500/30",
+};
+
+function UnifiedLeadsInbox() {
+  const { toast } = useToast();
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [stageFilter, setStageFilter] = useState<string>("all");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  const queryParams = new URLSearchParams();
+  if (typeFilter !== "all") queryParams.set("leadType", typeFilter);
+  if (stageFilter !== "all") queryParams.set("stage", stageFilter);
+  const queryString = queryParams.toString();
+
+  const { data: leads, isLoading, refetch } = useQuery<Lead[]>({
+    queryKey: ["/api/hq/leads", typeFilter, stageFilter],
+    queryFn: async () => {
+      const url = queryString ? `/api/hq/leads?${queryString}` : "/api/hq/leads";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch leads");
+      return res.json();
+    },
+  });
+
+  const updateStageMutation = useMutation({
+    mutationFn: async ({ id, stage }: { id: number; stage: string }) => {
+      const res = await apiRequest("PATCH", `/api/hq/leads/${id}`, { stage });
+      return res.json();
+    },
+    onSuccess: () => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/leads"] });
+      toast({
+        title: "Lead Updated",
+        description: "The lead stage has been changed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update lead.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getLeadDisplayName = (lead: Lead) => {
+    if (lead.firstName && lead.lastName) {
+      return `${lead.firstName} ${lead.lastName}`;
+    }
+    return lead.firstName || lead.email || "Unknown";
+  };
+
+  const handleViewDetails = (lead: Lead) => {
+    setSelectedLead(lead);
+    setDetailDialogOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const leadsByType = LEAD_TYPES.reduce((acc, type) => {
+    acc[type] = leads?.filter(l => l.leadType === type).length || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalLeads = leads?.length || 0;
+  const newLeads = leads?.filter(l => l.stage === "new").length || 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-4 flex-wrap">
+          <Badge variant="outline" className="text-sm">
+            {totalLeads} total lead{totalLeads !== 1 ? 's' : ''}
+          </Badge>
+          {newLeads > 0 && (
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+              {newLeads} new
+            </Badge>
+          )}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-40" data-testid="select-lead-type-filter">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Lead Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {LEAD_TYPES.map(type => (
+                <SelectItem key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)} ({leadsByType[type]})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={stageFilter} onValueChange={setStageFilter}>
+            <SelectTrigger className="w-40" data-testid="select-lead-stage-filter">
+              <ChevronDown className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stages</SelectItem>
+              {LEAD_STAGES.map(stage => (
+                <SelectItem key={stage} value={stage}>
+                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => refetch()}
+            data-testid="button-refresh-leads"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {totalLeads === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <InboxIcon className="w-12 h-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Leads Found</h3>
+            <p className="text-muted-foreground max-w-sm">
+              {typeFilter !== "all" || stageFilter !== "all" 
+                ? "No leads match your current filters. Try adjusting the filters."
+                : "No leads have been submitted yet. New leads will appear here."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {leads?.map(lead => {
+            const TypeIcon = LEAD_TYPE_ICONS[lead.leadType] || Mail;
+            const typeColor = LEAD_TYPE_COLORS[lead.leadType] || "bg-gray-500/20 text-gray-400";
+            const stageColor = STAGE_COLORS[lead.stage] || "bg-gray-500/20 text-gray-400";
+
+            return (
+              <Card key={lead.id} className="hover-elevate" data-testid={`lead-card-${lead.id}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`p-2 rounded-lg ${typeColor.split(' ')[0]}`}>
+                        <TypeIcon className={`w-4 h-4 ${typeColor.split(' ')[1]}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium truncate" data-testid={`lead-name-${lead.id}`}>
+                            {getLeadDisplayName(lead)}
+                          </span>
+                          <Badge variant="outline" className={`text-xs ${typeColor}`}>
+                            {lead.leadType}
+                          </Badge>
+                          <Badge variant="outline" className={`text-xs ${stageColor}`}>
+                            {lead.stage}
+                          </Badge>
+                          {lead.source && (
+                            <Badge variant="outline" className="text-xs">
+                              {lead.source}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
+                          {lead.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              {lead.email}
+                            </span>
+                          )}
+                          {lead.phone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {lead.phone}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(lead.createdAt)}
+                          </span>
+                        </div>
+                        {lead.address && (
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                            {lead.address}
+                          </p>
+                        )}
+                        {lead.notes && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {lead.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Select 
+                        value={lead.stage} 
+                        onValueChange={(stage) => updateStageMutation.mutate({ id: lead.id, stage })}
+                      >
+                        <SelectTrigger className="w-32" data-testid={`select-stage-${lead.id}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LEAD_STAGES.map(stage => (
+                            <SelectItem key={stage} value={stage}>
+                              {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewDetails(lead)}
+                        data-testid={`button-view-lead-${lead.id}`}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <LeadDetailDialog
+        lead={selectedLead}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
+    </div>
+  );
+}
+
+function LeadDetailDialog({
+  lead,
+  open,
+  onOpenChange,
+}: {
+  lead: Lead | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [notes, setNotes] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: Partial<Lead>) => {
+      if (!lead) return;
+      const res = await apiRequest("PATCH", `/api/hq/leads/${lead.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hq/leads"] });
+      toast({
+        title: "Lead Updated",
+        description: "The lead has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update lead.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (!lead) return null;
+
+  const TypeIcon = LEAD_TYPE_ICONS[lead.leadType] || Mail;
+  const typeColor = LEAD_TYPE_COLORS[lead.leadType] || "bg-gray-500/20 text-gray-400";
+  const leadData = lead.leadData as Record<string, any> || {};
+
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const displayName = lead.firstName && lead.lastName 
+    ? `${lead.firstName} ${lead.lastName}`
+    : lead.firstName || lead.email || "Unknown";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${typeColor.split(' ')[0]}`}>
+              <TypeIcon className={`w-5 h-5 ${typeColor.split(' ')[1]}`} />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">{displayName}</DialogTitle>
+              <DialogDescription>
+                <Badge variant="outline" className={`text-xs ${typeColor}`}>
+                  {lead.leadType}
+                </Badge>
+                {" "}
+                <Badge variant="outline" className={`text-xs ${STAGE_COLORS[lead.stage] || ''}`}>
+                  {lead.stage}
+                </Badge>
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
+              <p className="font-medium">{lead.email || "N/A"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Phone</p>
+              <p className="font-medium">{lead.phone || "N/A"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Source</p>
+              <p className="font-medium">{lead.source || "N/A"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Created</p>
+              <p className="font-medium">{formatDate(lead.createdAt)}</p>
+            </div>
+          </div>
+
+          {lead.address && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Address</p>
+              <p className="font-medium">{lead.address}</p>
+            </div>
+          )}
+
+          {Object.keys(leadData).length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Additional Data</p>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(leadData).map(([key, value]) => (
+                      <div key={key} className="space-y-1">
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                        </p>
+                        <p className="text-sm font-medium">
+                          {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="lead-notes">Notes</Label>
+            <Textarea
+              id="lead-notes"
+              placeholder="Add notes about this lead..."
+              defaultValue={lead.notes || ""}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              data-testid="input-lead-notes"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assigned-to">Assign To</Label>
+            <Input
+              id="assigned-to"
+              placeholder="Enter staff username or ID..."
+              defaultValue={lead.assignedTo || ""}
+              onChange={(e) => setAssignedTo(e.target.value)}
+              data-testid="input-assigned-to"
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end pt-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              data-testid="button-close-lead-detail"
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => {
+                updateMutation.mutate({
+                  notes: notes || lead.notes,
+                  assignedTo: assignedTo || lead.assignedTo,
+                });
+              }}
+              disabled={updateMutation.isPending}
+              data-testid="button-save-lead"
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

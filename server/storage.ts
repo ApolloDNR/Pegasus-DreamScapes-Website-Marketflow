@@ -225,6 +225,7 @@ export interface IStorage {
   getActiveCapitalProjects(): Promise<CapitalProject[]>;
   getOpenCapitalProjects(): Promise<CapitalProject[]>;
   getCapitalProject(id: number): Promise<CapitalProject | undefined>;
+  getCapitalProjectsByCreator(creatorId: string): Promise<CapitalProject[]>;
   updateCapitalProject(id: number, data: Partial<InsertCapitalProject>): Promise<CapitalProject | undefined>;
   updateCapitalProjectStatus(id: number, status: string): Promise<CapitalProject | undefined>;
   updateCapitalProjectFunding(id: number, amountRaised: number): Promise<CapitalProject | undefined>;
@@ -1292,6 +1293,12 @@ export class DatabaseStorage implements IStorage {
   async getCapitalProject(id: number): Promise<CapitalProject | undefined> {
     const [project] = await db.select().from(capitalProjects).where(eq(capitalProjects.id, id));
     return project;
+  }
+
+  async getCapitalProjectsByCreator(creatorId: string): Promise<CapitalProject[]> {
+    return db.select().from(capitalProjects)
+      .where(eq(capitalProjects.createdBy, creatorId))
+      .orderBy(desc(capitalProjects.createdAt));
   }
 
   async updateCapitalProject(id: number, data: Partial<InsertCapitalProject>): Promise<CapitalProject | undefined> {

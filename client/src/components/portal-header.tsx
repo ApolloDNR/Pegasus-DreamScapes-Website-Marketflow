@@ -18,13 +18,14 @@ import {
   Home,
   LogOut,
   User,
-  Repeat
+  Repeat,
+  Hammer
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/notification-bell";
 
 interface PortalHeaderProps {
-  currentPortal: "staff" | "investor" | "wholesaler" | "buyer";
+  currentPortal: "staff" | "investor" | "wholesaler" | "buyer" | "dreamscaper";
 }
 
 export function PortalHeader({ currentPortal }: PortalHeaderProps) {
@@ -67,6 +68,15 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       available: user?.isBuyer,
       badge: "Buyer",
       color: "bg-orange-600",
+    },
+    {
+      id: "dreamscaper",
+      title: "Dreamscaper Portal",
+      icon: Hammer,
+      href: "/portal/dreamscaper",
+      available: user?.isDreamscaper,
+      badge: "Operator",
+      color: "bg-amber-600",
     },
   ];
 

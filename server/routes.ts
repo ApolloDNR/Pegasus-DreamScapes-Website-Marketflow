@@ -91,6 +91,7 @@ export async function registerRoutes(
       const roles = await storage.getUserRoles(userId);
       const roleNames = roles.map(r => r.role);
       const isStaff = roleNames.some(r => STAFF_ROLES.includes(r as any));
+      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
       
       res.json({ 
         ...user, 
@@ -98,7 +99,8 @@ export async function registerRoutes(
         isStaff,
         isInvestor: roleNames.includes("investor"),
         isWholesaler: roleNames.includes("wholesaler"),
-        isBuyer: roleNames.includes("buyer")
+        isBuyer: roleNames.includes("buyer"),
+        isDreamscaper
       });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -221,6 +223,29 @@ export async function registerRoutes(
     }
   });
 
+  // Investor portfolio routes
+  app.get('/api/portal/investor/my-investments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const investments = await storage.getCommittedInvestmentsByInvestor(userId);
+      return res.json(investments || []);
+    } catch (error) {
+      console.error("Error fetching investor investments:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/portal/investor/my-offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offers = await storage.getInvestmentOffersByInvestor(userId);
+      return res.json(offers || []);
+    } catch (error) {
+      console.error("Error fetching investor offers:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get('/api/portal/wholesaler/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -330,6 +355,141 @@ export async function registerRoutes(
       return res.status(201).json(offer);
     } catch (error) {
       console.error("Error creating buyer offer:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Dreamscaper (Operator) Portal Routes
+  app.get('/api/portal/dreamscaper/my-projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const roles = await storage.getUserRoles(userId);
+      const roleNames = roles.map(r => r.role);
+      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
+      
+      if (!isDreamscaper) {
+        return res.status(403).json({ message: "Not authorized as a Dreamscaper" });
+      }
+      
+      const projects = await storage.getCapitalProjectsByCreator(userId);
+      return res.json(projects || []);
+    } catch (error) {
+      console.error("Error fetching dreamscaper projects:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/portal/dreamscaper/pending-offers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const roles = await storage.getUserRoles(userId);
+      const roleNames = roles.map(r => r.role);
+      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
+      
+      if (!isDreamscaper) {
+        return res.status(403).json({ message: "Not authorized as a Dreamscaper" });
+      }
+      
+      const userProjects = await storage.getCapitalProjectsByCreator(userId);
+      const projectIds = userProjects.map(p => p.id);
+      
+      const allOffers = [];
+      for (const projectId of projectIds) {
+        const offers = await storage.getInvestmentOffersByProject(projectId);
+        const pendingOffers = offers.filter(o => o.status === 'PENDING');
+        allOffers.push(...pendingOffers);
+      }
+      
+      return res.json(allOffers);
+    } catch (error) {
+      console.error("Error fetching pending offers:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/portal/dreamscaper/all-investments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const roles = await storage.getUserRoles(userId);
+      const roleNames = roles.map(r => r.role);
+      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
+      
+      if (!isDreamscaper) {
+        return res.status(403).json({ message: "Not authorized as a Dreamscaper" });
+      }
+      
+      const userProjects = await storage.getCapitalProjectsByCreator(userId);
+      const projectIds = userProjects.map(p => p.id);
+      
+      const allInvestments = [];
+      for (const projectId of projectIds) {
+        const investments = await storage.getCommittedInvestmentsByProject(projectId);
+        allInvestments.push(...investments);
+      }
+      
+      return res.json(allInvestments);
+    } catch (error) {
+      console.error("Error fetching all investments:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/investment-offers/:offerId/accept', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offerId = parseInt(req.params.offerId);
+      
+      const offer = await storage.getInvestmentOffer(offerId);
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+      
+      const project = await storage.getCapitalProject(offer.projectId);
+      if (!project || project.createdBy !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage this offer" });
+      }
+      
+      const updatedOffer = await storage.updateInvestmentOfferStatus(offerId, 'ACCEPTED');
+      
+      const committedInvestment = await storage.createCommittedInvestment({
+        projectId: offer.projectId,
+        investorId: offer.investorId,
+        committedAmount: offer.amountOffered,
+        structureType: offer.structureType,
+        interestRate: offer.requestedInterestRate,
+        equityPercent: offer.requestedEquityPercent,
+        role: offer.requestedRole,
+        status: 'ACTIVE'
+      });
+      
+      await storage.updateCapitalProjectFunding(offer.projectId, offer.amountOffered);
+      
+      return res.json({ offer: updatedOffer, investment: committedInvestment });
+    } catch (error) {
+      console.error("Error accepting offer:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/investment-offers/:offerId/decline', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offerId = parseInt(req.params.offerId);
+      
+      const offer = await storage.getInvestmentOffer(offerId);
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+      
+      const project = await storage.getCapitalProject(offer.projectId);
+      if (!project || project.createdBy !== userId) {
+        return res.status(403).json({ message: "Not authorized to manage this offer" });
+      }
+      
+      const updatedOffer = await storage.updateInvestmentOfferStatus(offerId, 'DECLINED');
+      return res.json(updatedOffer);
+    } catch (error) {
+      console.error("Error declining offer:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

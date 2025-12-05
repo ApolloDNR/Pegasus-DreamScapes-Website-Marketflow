@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { insertInvestorLeadSchema, type InsertInvestorLead } from "@shared/schema";
+import { insertInvestorLeadSchema, type InsertInvestorLead, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   TrendingUp,
@@ -256,7 +256,31 @@ function InvestorFormSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertInvestorLead) => {
-      const response = await apiRequest("POST", "/api/investor-leads", data);
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const cityStateParts = data.cityState.split(',');
+      const city = cityStateParts[0]?.trim() || '';
+      const state = cityStateParts[1]?.trim() || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'investor',
+        source: 'invest_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone,
+        city,
+        state,
+        leadData: {
+          capitalRange: data.capitalRange,
+          investmentPreference: data.investmentPreference,
+          experienceLevel: data.experienceLevel,
+        },
+        notes: data.notes,
+      };
+      
+      const response = await apiRequest("POST", "/api/leads", unifiedLead);
       return response;
     },
     onSuccess: () => {

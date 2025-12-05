@@ -11,7 +11,8 @@ import {
   Shield,
   Loader2,
   LogIn,
-  ShoppingBag
+  ShoppingBag,
+  Hammer
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -111,6 +112,17 @@ export default function PortalSelect() {
       badgeColor: "bg-orange-600",
       available: user?.isBuyer,
       registerHref: "/buyers",
+    },
+    {
+      id: "dreamscaper",
+      title: "Dreamscaper Portal",
+      description: "Manage your capital projects, track investor commitments, and monitor funding progress.",
+      icon: Hammer,
+      href: "/portal/dreamscaper",
+      badge: "Operators",
+      badgeColor: "bg-amber-600",
+      available: user?.isDreamscaper,
+      registerHref: "/dreamspace",
     },
   ];
 

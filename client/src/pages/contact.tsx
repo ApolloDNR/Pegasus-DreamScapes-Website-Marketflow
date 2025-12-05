@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { insertContactSchema, type InsertContact } from "@shared/schema";
+import { insertContactSchema, type InsertContact, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Mail, 
@@ -69,7 +69,25 @@ function ContactSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertContact) => {
-      const response = await apiRequest("POST", "/api/contacts", data);
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'contact',
+        source: 'contact_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone || undefined,
+        leadData: {
+          subject: data.subject,
+          message: data.message,
+        },
+        notes: data.message,
+      };
+      
+      const response = await apiRequest("POST", "/api/leads", unifiedLead);
       return response;
     },
     onSuccess: () => {

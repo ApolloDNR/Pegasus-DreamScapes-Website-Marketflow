@@ -29,7 +29,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { insertSellerLeadSchema, type InsertSellerLead } from "@shared/schema";
+import { insertSellerLeadSchema, type InsertSellerLead, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   MessageSquare, 
@@ -182,7 +182,27 @@ function LeadFormSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertSellerLead) => {
-      const response = await apiRequest("POST", "/api/seller-leads", data);
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'seller',
+        source: 'sell_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone,
+        address: data.propertyAddress,
+        leadData: {
+          propertyType: data.propertyType,
+          condition: data.condition,
+          timeline: data.timeline,
+        },
+        notes: data.notes,
+      };
+      
+      const response = await apiRequest("POST", "/api/leads", unifiedLead);
       return response;
     },
     onSuccess: () => {

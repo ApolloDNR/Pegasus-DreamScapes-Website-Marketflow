@@ -38,6 +38,7 @@ import PortalSelect from "@/pages/portal-select";
 import InvestorPortal from "@/pages/investor-portal";
 import WholesalerPortal from "@/pages/wholesaler-portal";
 import BuyerPortal from "@/pages/buyer-portal";
+import DreamscaperPortal from "@/pages/dreamscaper-portal";
 import Community from "@/pages/community";
 import CapitalRaising from "@/pages/capital-raising";
 import DealflowOffice from "@/pages/dealflow-office";
@@ -72,6 +73,7 @@ function Router() {
       <Route path="/portal/investor">{() => <Redirect to="/dealflow/office" />}</Route>
       <Route path="/portal/wholesaler">{() => <Redirect to="/dealflow/office" />}</Route>
       <Route path="/portal/buyer">{() => <Redirect to="/dealflow/office" />}</Route>
+      <Route path="/portal/dreamscaper" component={DreamscaperPortal} />
       <Route path="/capital-raising" component={CapitalRaising} />
       <Route path="/community">{() => <Redirect to="/dealflow/community" />}</Route>
       <Route path="/dealflow">{() => <Redirect to="/dealflow/office" />}</Route>

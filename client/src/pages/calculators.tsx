@@ -25,6 +25,16 @@ import {
   Target
 } from "lucide-react";
 import { Link } from "wouter";
+import { 
+  CalculatorActions, 
+  AdvancedOptions, 
+  MetricCard, 
+  StatusIndicator, 
+  DealGradeBadge,
+  ProgressBar,
+  calculateDealGrade,
+  formatCurrency as formatCurrencyShared
+} from "@/components/calculator-shared";
 
 export default function Calculators() {
   return (
@@ -375,10 +385,32 @@ function ARVCalculator() {
               </div>
             </div>
 
+            <CalculatorActions
+              calculatorType="arv"
+              inputs={{
+                purchasePrice: parseFloat(purchasePrice) || 0,
+                rehabCost: parseFloat(rehabCost) || 0,
+                arv: parseFloat(arv) || 0,
+                holdingCosts: parseFloat(holdingCosts) || 0,
+                closingCosts: parseFloat(closingCosts) || 6,
+              }}
+              outputs={{
+                totalInvestment: results.totalInvestment,
+                potentialProfit: results.potentialProfit,
+                netProfit: results.netProfit,
+                roi: results.roi,
+                seventyPercentRule: results.seventyPercentRule,
+                meetsRule: results.meetsRule,
+              }}
+            />
+
             <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-4">
-                Want to discuss this deal with our team? We can provide a more detailed analysis and potentially make you an offer.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Want to discuss this deal with our team?
+                </p>
+                <DealGradeBadge grade={calculateDealGrade(results.roi, undefined, results.meetsRule)} />
+              </div>
               <Link href="/sell">
                 <Button data-testid="button-arv-cta">
                   Submit Your Property
@@ -665,10 +697,29 @@ function ROICalculator() {
               </div>
             </div>
 
+            <CalculatorActions
+              calculatorType="roi"
+              inputs={{
+                purchasePrice: parseFloat(purchasePrice) || 0,
+                downPayment: parseFloat(downPayment) || 25,
+                rehabCost: parseFloat(rehabCost) || 0,
+                monthlyRent: parseFloat(monthlyRent) || 0,
+                monthlyExpenses: parseFloat(monthlyExpenses) || 0,
+                loanRate: parseFloat(loanRate) || 7.5,
+                loanTerm: parseFloat(loanTerm) || 30,
+              }}
+              outputs={{
+                ...results,
+              }}
+            />
+
             <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-4">
-                Interested in partnering on deals like this? Join our investor network for access to vetted opportunities.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Interested in partnering on deals like this?
+                </p>
+                <DealGradeBadge grade={calculateDealGrade(results.cashOnCashReturn, results.monthlyCashFlow)} />
+              </div>
               <Link href="/invest">
                 <Button data-testid="button-roi-cta">
                   Become an Investor
@@ -965,10 +1016,29 @@ function BRRRRCalculator() {
               </div>
             </div>
 
+            <CalculatorActions
+              calculatorType="brrrr"
+              inputs={{
+                purchasePrice: parseFloat(purchasePrice) || 0,
+                rehabCost: parseFloat(rehabCost) || 0,
+                arv: parseFloat(arv) || 0,
+                monthlyRent: parseFloat(monthlyRent) || 0,
+                monthlyExpenses: parseFloat(monthlyExpenses) || 0,
+                refinanceLTV: parseFloat(refinanceLTV) || 75,
+                refinanceRate: parseFloat(refinanceRate) || 7.5,
+              }}
+              outputs={{
+                ...results,
+              }}
+            />
+
             <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-4">
-                Want help finding BRRRR-eligible properties? Our team specializes in identifying high-potential distressed properties.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Want help finding BRRRR-eligible properties?
+                </p>
+                <DealGradeBadge grade={calculateDealGrade(results.cashOnCash, results.monthlyCashFlow)} />
+              </div>
               <Link href="/invest">
                 <Button className="bg-tan text-tan-foreground hover:bg-tan/90" data-testid="button-brrrr-cta">
                   Join Investor Network
@@ -1305,10 +1375,30 @@ function CashFlowCalculator() {
               </div>
             </div>
 
+            <CalculatorActions
+              calculatorType="cashflow"
+              inputs={{
+                grossRent: parseFloat(grossRent) || 0,
+                vacancy: parseFloat(vacancy) || 5,
+                propertyTax: parseFloat(propertyTax) || 0,
+                insurance: parseFloat(insurance) || 0,
+                repairs: parseFloat(repairs) || 0,
+                management: parseFloat(management) || 0,
+                utilities: parseFloat(utilities) || 0,
+                mortgage: parseFloat(mortgage) || 0,
+              }}
+              outputs={{
+                ...results,
+              }}
+            />
+
             <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-4">
-                Looking for properties with strong cash flow potential? We can help identify opportunities in your target market.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Looking for properties with strong cash flow?
+                </p>
+                <DealGradeBadge grade={calculateDealGrade(0, results.monthlyCashFlow)} />
+              </div>
               <Link href="/invest">
                 <Button data-testid="button-cashflow-cta">
                   Explore Opportunities
@@ -1634,10 +1724,28 @@ function WholesaleCalculator() {
               </div>
             </div>
 
+            <CalculatorActions
+              calculatorType="wholesale"
+              inputs={{
+                arv: parseFloat(arv) || 0,
+                rehabCost: parseFloat(rehabCost) || 0,
+                buyerProfit: parseFloat(buyerProfit) || 25,
+                closingCosts: parseFloat(closingCosts) || 6,
+                holdingCosts: parseFloat(holdingCosts) || 0,
+                assignmentFee: parseFloat(assignmentFee) || 10000,
+              }}
+              outputs={{
+                ...results,
+              }}
+            />
+
             <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-4">
-                Looking for wholesale deals or buyers for your contracts? Join our marketplace to connect with active investors.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Looking for wholesale deals?
+                </p>
+                <DealGradeBadge grade={calculateDealGrade(results.spreadPercentage)} />
+              </div>
               <Link href="/dealflow/deals">
                 <Button className="bg-green-600 text-white hover:bg-green-700" data-testid="button-wholesale-cta">
                   Browse Wholesale Deals

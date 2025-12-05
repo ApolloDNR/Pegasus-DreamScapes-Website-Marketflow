@@ -28,7 +28,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { insertBuyerLeadSchema, type InsertBuyerLead } from "@shared/schema";
+import { insertBuyerLeadSchema, type InsertBuyerLead, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Home,
@@ -187,7 +187,33 @@ function LeadFormSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertBuyerLead) => {
-      const response = await apiRequest("POST", "/api/buyer-leads", data);
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const cityStateParts = data.cityState.split(',');
+      const city = cityStateParts[0]?.trim() || '';
+      const state = cityStateParts[1]?.trim() || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'buyer',
+        source: 'buy_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone,
+        city,
+        state,
+        leadData: {
+          buyerType: data.buyerType,
+          propertyTypes: data.propertyTypes,
+          budgetRange: data.budgetRange,
+          timeline: data.timeline,
+          fundingStatus: data.fundingStatus,
+        },
+        notes: data.notes,
+      };
+      
+      const response = await apiRequest("POST", "/api/leads", unifiedLead);
       return response;
     },
     onSuccess: () => {

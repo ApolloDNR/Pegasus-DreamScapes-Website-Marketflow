@@ -25,7 +25,14 @@ import {
   BarChart3,
   FileText,
   Hammer,
-  Users
+  Users,
+  TrendingUp,
+  Target,
+  Briefcase,
+  Award,
+  Calendar,
+  AlertCircle,
+  Eye
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -164,23 +171,58 @@ export default function WholesalerPortal() {
 }
 
 function DashboardTab({ profile, deals }: { profile?: WholesalerProfile; deals?: WholesaleDeal[] }) {
+  const { data: myDeals } = useQuery<WholesaleDeal[]>({
+    queryKey: ["/api/portal/wholesaler/my-deals"],
+  });
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "$0";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const underReviewCount = myDeals?.filter(d => d.status === "under_review").length || 0;
+  const acceptedCount = myDeals?.filter(d => d.status === "accepted" || d.status === "available").length || 0;
+  const assignedCount = myDeals?.filter(d => d.status === "assigned").length || 0;
+  const totalSubmitted = myDeals?.length || 0;
+  
+  const totalEarningsPotential = myDeals?.reduce((sum, d) => sum + (d.assignmentFee || 0), 0) || 0;
+  const pendingEarnings = myDeals?.filter(d => d.status === "available" || d.status === "accepted")
+    .reduce((sum, d) => sum + (d.assignmentFee || 0), 0) || 0;
+  const closedEarnings = myDeals?.filter(d => d.status === "assigned")
+    .reduce((sum, d) => sum + (d.assignmentFee || 0), 0) || 0;
+  
   const stats = [
-    { label: "Available Assignments", value: deals?.length || 0, icon: Building2, color: "text-blue-600" },
-    { label: "Profile Status", value: profile?.isApproved ? "Approved" : "Pending", icon: CheckCircle2, color: profile?.isApproved ? "text-green-600" : "text-amber-600" },
+    { label: "Deals Submitted", value: totalSubmitted, icon: FileText, color: "text-blue-600", bgColor: "bg-blue-600/10" },
+    { label: "Under Review", value: underReviewCount, icon: Clock, color: "text-amber-600", bgColor: "bg-amber-600/10" },
+    { label: "Accepted", value: acceptedCount, icon: CheckCircle2, color: "text-green-600", bgColor: "bg-green-600/10" },
+    { label: "Assigned/Closed", value: assignedCount, icon: Award, color: "text-purple-600", bgColor: "bg-purple-600/10" },
+  ];
+
+  const pipelineStages = [
+    { label: "Submitted", count: totalSubmitted, color: "bg-blue-500" },
+    { label: "Under Review", count: underReviewCount, color: "bg-amber-500" },
+    { label: "Accepted", count: acceptedCount, color: "bg-green-500" },
+    { label: "Closed", count: assignedCount, color: "bg-purple-500" },
   ];
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="sleek-card">
+          <Card key={index} className="sleek-card hover-elevate" data-testid={`stat-card-${index}`}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-3xl font-bold">{stat.value}</p>
                 </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -213,11 +255,88 @@ function DashboardTab({ profile, deals }: { profile?: WholesalerProfile; deals?:
         </Card>
       )}
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="sleek-card lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Deal Pipeline
+            </CardTitle>
+            <CardDescription>Track your deals from submission to close</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 mb-6">
+              {pipelineStages.map((stage, index) => (
+                <div key={stage.label} className="flex-1" data-testid={`pipeline-stage-${index}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-3 h-3 rounded-full ${stage.color}`} />
+                    <span className="text-sm font-medium">{stage.label}</span>
+                  </div>
+                  <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`absolute left-0 top-0 h-full ${stage.color} transition-all`} 
+                      style={{ width: stage.count > 0 ? '100%' : '0%' }}
+                    />
+                  </div>
+                  <p className="text-center mt-1 text-2xl font-bold">{stage.count}</p>
+                </div>
+              ))}
+            </div>
+            
+            {myDeals && myDeals.filter(d => d.status === "under_review").length > 0 && (
+              <div className="pt-4 border-t">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600" />
+                  Awaiting Review
+                </h4>
+                <div className="space-y-2">
+                  {myDeals.filter(d => d.status === "under_review").slice(0, 3).map(deal => (
+                    <div key={deal.id} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800" data-testid={`review-deal-${deal.id}`}>
+                      <div>
+                        <p className="font-medium text-sm">{deal.propertyAddress}</p>
+                        <p className="text-xs text-muted-foreground">{deal.city}, {deal.state}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-amber-600">{formatCurrency(deal.assignmentFee)}</p>
+                        <p className="text-xs text-muted-foreground">Assignment Fee</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
+              Earnings Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+              <p className="text-sm text-muted-foreground">Closed Earnings</p>
+              <p className="text-3xl font-bold text-green-600">{formatCurrency(closedEarnings)}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-muted-foreground">Pending Earnings</p>
+              <p className="text-2xl font-bold text-amber-600">{formatCurrency(pendingEarnings)}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-secondary/50">
+              <p className="text-sm text-muted-foreground">Total Pipeline Value</p>
+              <p className="text-xl font-bold">{formatCurrency(totalEarningsPotential)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="sleek-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-primary" />
+              <Target className="w-5 h-5 text-primary" />
               Quick Actions
             </CardTitle>
           </CardHeader>
@@ -226,6 +345,7 @@ function DashboardTab({ profile, deals }: { profile?: WholesalerProfile; deals?:
               variant="outline" 
               className="w-full justify-start"
               onClick={() => (document.querySelector('[data-testid="tab-wholesaler-submit"]') as HTMLButtonElement)?.click()}
+              data-testid="button-quick-submit"
             >
               <FileText className="mr-2 w-4 h-4" />
               Submit a New Deal
@@ -233,15 +353,25 @@ function DashboardTab({ profile, deals }: { profile?: WholesalerProfile; deals?:
             <Button 
               variant="outline" 
               className="w-full justify-start"
+              onClick={() => (document.querySelector('[data-testid="tab-wholesaler-mydeals"]') as HTMLButtonElement)?.click()}
+              data-testid="button-quick-mydeals"
+            >
+              <Eye className="mr-2 w-4 h-4" />
+              View My Deals
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
               onClick={() => (document.querySelector('[data-testid="tab-wholesaler-assignments"]') as HTMLButtonElement)?.click()}
+              data-testid="button-quick-assignments"
             >
               <Building2 className="mr-2 w-4 h-4" />
-              Browse Assignments
+              Browse Available Assignments
             </Button>
             <Link href="/calculators">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" data-testid="button-quick-calculator">
                 <DollarSign className="mr-2 w-4 h-4" />
-                Deal Calculator
+                MAO Calculator
               </Button>
             </Link>
           </CardContent>
@@ -276,6 +406,45 @@ function DashboardTab({ profile, deals }: { profile?: WholesalerProfile; deals?:
           </CardContent>
         </Card>
       </div>
+
+      {deals && deals.length > 0 && (
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              Available Assignments
+            </CardTitle>
+            <CardDescription>Co-wholesale opportunities from our network</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {deals.slice(0, 3).map(deal => (
+                <div key={deal.id} className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors" data-testid={`assignment-preview-${deal.id}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge className="bg-green-600">Available</Badge>
+                    <Badge variant="outline">{deal.strategy}</Badge>
+                  </div>
+                  <p className="font-medium">{deal.propertyAddress}</p>
+                  <p className="text-sm text-muted-foreground">{deal.city}, {deal.state}</p>
+                  <div className="mt-3 flex justify-between items-center">
+                    <span className="font-bold text-green-600">{formatCurrency(deal.assignmentFee)}</span>
+                    <span className="text-xs text-muted-foreground">Assignment Fee</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full mt-4"
+              onClick={() => (document.querySelector('[data-testid="tab-wholesaler-assignments"]') as HTMLButtonElement)?.click()}
+              data-testid="button-view-all-assignments"
+            >
+              View All Assignments
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

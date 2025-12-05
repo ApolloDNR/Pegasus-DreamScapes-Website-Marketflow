@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import type { InsertLead } from "@shared/schema";
 import { useState, useEffect, useRef } from "react";
 import { 
   Home as HomeIcon, 
@@ -473,16 +474,26 @@ function SellPropertySection() {
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof sellerFormSchema>) => {
-      return apiRequest("POST", "/api/seller-leads", {
-        fullName: data.name,
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'seller',
+        source: 'sell_page',
+        firstName,
+        lastName,
         email: data.email,
         phone: data.phone,
-        propertyAddress: data.propertyAddress,
-        propertyCondition: data.condition,
-        timeline: data.timeline,
-        propertyType: "Single Family",
-        motivation: "Website Inquiry",
-      });
+        address: data.propertyAddress,
+        leadData: {
+          condition: data.condition,
+          timeline: data.timeline,
+          propertyType: "Single Family",
+        },
+      };
+      
+      return apiRequest("POST", "/api/leads", unifiedLead);
     },
     onSuccess: () => {
       toast({
@@ -694,15 +705,24 @@ function InvestSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof investorFormSchema>) => {
-      return apiRequest("POST", "/api/investor-leads", {
-        fullName: data.name,
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'investor',
+        source: 'invest_page',
+        firstName,
+        lastName,
         email: data.email,
         phone: data.phone,
-        capitalRange: data.capitalRange,
-        investmentPreference: data.investmentPreference,
-        investmentGoals: "Website Inquiry",
-        accreditedStatus: "not_specified",
-      });
+        leadData: {
+          capitalRange: data.capitalRange,
+          investmentPreference: data.investmentPreference,
+        },
+      };
+      
+      return apiRequest("POST", "/api/leads", unifiedLead);
     },
     onSuccess: () => {
       toast({
@@ -948,13 +968,24 @@ function ContactSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof contactFormSchema>) => {
-      return apiRequest("POST", "/api/contacts", {
-        fullName: data.name,
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'contact',
+        source: 'contact_page',
+        firstName,
+        lastName,
         email: data.email,
-        phone: data.phone || null,
-        message: data.message,
-        inquiryType: "general",
-      });
+        phone: data.phone || undefined,
+        leadData: {
+          message: data.message,
+        },
+        notes: data.message,
+      };
+      
+      return apiRequest("POST", "/api/leads", unifiedLead);
     },
     onSuccess: () => {
       toast({

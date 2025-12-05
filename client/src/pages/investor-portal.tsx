@@ -29,7 +29,13 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff
+  EyeOff,
+  Calendar,
+  Award,
+  Wallet,
+  PieChart,
+  CircleDollarSign,
+  Activity
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -39,7 +45,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import type { WholesaleDeal, InvestorProfile, InvestorWantedDeal } from "@shared/schema";
+import type { WholesaleDeal, InvestorProfile, InvestorWantedDeal, CapitalProject, CommittedInvestment, InvestmentOffer } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const profileFormSchema = z.object({
@@ -120,10 +126,14 @@ export default function InvestorPortal() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-8">
+          <TabsList className="mb-8 flex-wrap">
             <TabsTrigger value="dashboard" data-testid="tab-investor-dashboard">
               <BarChart3 className="w-4 h-4 mr-2" />
               Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="portfolio" data-testid="tab-investor-portfolio">
+              <Wallet className="w-4 h-4 mr-2" />
+              My Portfolio
             </TabsTrigger>
             <TabsTrigger value="deals" data-testid="tab-investor-deals">
               <Building2 className="w-4 h-4 mr-2" />
@@ -141,6 +151,10 @@ export default function InvestorPortal() {
 
           <TabsContent value="dashboard">
             <DashboardTab profile={profile} deals={deals} />
+          </TabsContent>
+
+          <TabsContent value="portfolio">
+            <PortfolioTab />
           </TabsContent>
 
           <TabsContent value="deals">
@@ -322,6 +336,236 @@ function DashboardTab({ profile, deals }: { profile?: InvestorProfile; deals?: W
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-8">No deals available right now</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function PortfolioTab() {
+  const { data: myInvestments, isLoading: investmentsLoading } = useQuery<CommittedInvestment[]>({
+    queryKey: ["/api/portal/investor/my-investments"],
+  });
+
+  const { data: myOffers, isLoading: offersLoading } = useQuery<InvestmentOffer[]>({
+    queryKey: ["/api/portal/investor/my-offers"],
+  });
+
+  const { data: projects } = useQuery<CapitalProject[]>({
+    queryKey: ["/api/capital-projects"],
+  });
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "$0";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const totalDeployed = myInvestments?.reduce((sum, inv) => sum + (inv.committedAmount || 0), 0) || 0;
+  const pendingOffers = myOffers?.filter(o => o.status === "PENDING") || [];
+  const acceptedOffers = myOffers?.filter(o => o.status === "ACCEPTED") || [];
+  
+  const portfolioStats = [
+    { label: "Total Deployed", value: formatCurrency(totalDeployed), icon: DollarSign, color: "text-green-600", bgColor: "bg-green-600/10" },
+    { label: "Active Projects", value: myInvestments?.length || 0, icon: Building2, color: "text-blue-600", bgColor: "bg-blue-600/10" },
+    { label: "Pending Offers", value: pendingOffers.length, icon: Clock, color: "text-amber-600", bgColor: "bg-amber-600/10" },
+    { label: "Accepted Offers", value: acceptedOffers.length, icon: CheckCircle2, color: "text-purple-600", bgColor: "bg-purple-600/10" },
+  ];
+
+  const isLoading = investmentsLoading || offersLoading;
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        <p className="text-muted-foreground mt-4">Loading your portfolio...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {portfolioStats.map((stat, index) => (
+          <Card key={index} className="sleek-card hover-elevate" data-testid={`portfolio-stat-${index}`}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-3xl font-bold">{stat.value}</p>
+                </div>
+                <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-green-600" />
+              Active Investments
+            </CardTitle>
+            <CardDescription>Your current capital deployments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {myInvestments && myInvestments.length > 0 ? (
+              <div className="space-y-4">
+                {myInvestments.map((investment) => {
+                  const project = projects?.find(p => p.id === investment.projectId);
+                  return (
+                    <div key={investment.id} className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800" data-testid={`investment-${investment.id}`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium">{project?.title || `Project #${investment.projectId}`}</p>
+                          <p className="text-sm text-muted-foreground">{project?.location || "N/A"}</p>
+                        </div>
+                        <Badge className="bg-green-600">{investment.role}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
+                        <div className="p-2 rounded bg-white/50 dark:bg-black/20">
+                          <p className="text-muted-foreground">Invested</p>
+                          <p className="font-bold text-green-600">{formatCurrency(investment.committedAmount)}</p>
+                        </div>
+                        <div className="p-2 rounded bg-white/50 dark:bg-black/20">
+                          <p className="text-muted-foreground">Structure</p>
+                          <p className="font-bold capitalize">{investment.structureType || "Equity"}</p>
+                        </div>
+                        {investment.equityPercent && (
+                          <div className="p-2 rounded bg-white/50 dark:bg-black/20">
+                            <p className="text-muted-foreground">Equity</p>
+                            <p className="font-bold">{investment.equityPercent}%</p>
+                          </div>
+                        )}
+                        {investment.interestRate && (
+                          <div className="p-2 rounded bg-white/50 dark:bg-black/20">
+                            <p className="text-muted-foreground">Interest</p>
+                            <p className="font-bold">{investment.interestRate}%</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                <Wallet className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                <p className="font-medium text-muted-foreground">No active investments</p>
+                <p className="text-sm text-muted-foreground mt-1">Browse deals to find your first investment</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="sleek-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-amber-600" />
+              Pending Offers
+            </CardTitle>
+            <CardDescription>Awaiting response from operators</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pendingOffers.length > 0 ? (
+              <div className="space-y-4">
+                {pendingOffers.map((offer) => {
+                  const project = projects?.find(p => p.id === offer.projectId);
+                  return (
+                    <div key={offer.id} className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800" data-testid={`offer-${offer.id}`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium">{project?.title || `Project #${offer.projectId}`}</p>
+                          <p className="text-sm text-muted-foreground">{project?.location || "N/A"}</p>
+                        </div>
+                        <Badge variant="secondary">Pending</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
+                        <div className="p-2 rounded bg-white/50 dark:bg-black/20">
+                          <p className="text-muted-foreground">Offered</p>
+                          <p className="font-bold text-amber-600">{formatCurrency(offer.amountOffered)}</p>
+                        </div>
+                        <div className="p-2 rounded bg-white/50 dark:bg-black/20">
+                          <p className="text-muted-foreground">Role</p>
+                          <p className="font-bold">{offer.requestedRole}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                <FileText className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                <p className="font-medium text-muted-foreground">No pending offers</p>
+                <p className="text-sm text-muted-foreground mt-1">Submit offers on capital projects</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="sleek-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            Payout Schedule
+          </CardTitle>
+          <CardDescription>Expected returns and distributions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {myInvestments && myInvestments.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Project</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Structure</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Your Investment</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Expected Return</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {myInvestments.map((investment) => {
+                    const project = projects?.find(p => p.id === investment.projectId);
+                    const estimatedReturn = investment.structureType === "debt" 
+                      ? (investment.committedAmount * (parseFloat(investment.interestRate || "0") / 100))
+                      : investment.committedAmount * 0.2;
+                    return (
+                      <tr key={investment.id} className="border-b last:border-0">
+                        <td className="py-3 px-4">
+                          <p className="font-medium">{project?.title || `Project #${investment.projectId}`}</p>
+                          <p className="text-xs text-muted-foreground">{project?.location || "N/A"}</p>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className="capitalize">{investment.structureType || "equity"}</Badge>
+                        </td>
+                        <td className="py-3 px-4 font-bold">{formatCurrency(investment.committedAmount)}</td>
+                        <td className="py-3 px-4 font-bold text-green-600">{formatCurrency(estimatedReturn)}</td>
+                        <td className="py-3 px-4">
+                          <Badge className="bg-blue-600">Active</Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12 border-2 border-dashed rounded-lg">
+              <PieChart className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+              <p className="font-medium text-muted-foreground">No scheduled payouts</p>
+              <p className="text-sm text-muted-foreground mt-1">Invest in projects to see your expected returns</p>
+            </div>
           )}
         </CardContent>
       </Card>
