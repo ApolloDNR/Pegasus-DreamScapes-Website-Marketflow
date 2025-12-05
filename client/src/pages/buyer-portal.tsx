@@ -214,26 +214,38 @@ function DashboardTab({
 }) {
   const activeListings = retailListings?.filter(l => l.status === "active") || [];
   const pendingOffers = myOffers?.filter(o => o.status === "pending" || o.status === "reviewing") || [];
+  const acceptedOffers = myOffers?.filter(o => o.status === "accepted") || [];
+  const underContractOffers = myOffers?.filter(o => o.status === "under_contract" || o.status === "closing") || [];
+  const closedOffers = myOffers?.filter(o => o.status === "closed") || [];
   
   const stats = [
-    { label: "Wholesale Deals", value: wholesaleDeals?.length || 0, icon: Hammer, color: "text-green-600" },
-    { label: "Renovated Homes", value: activeListings.length, icon: Home, color: "text-blue-600" },
-    { label: "Saved Properties", value: savedProperties?.length || 0, icon: Heart, color: "text-pink-600" },
-    { label: "Active Offers", value: pendingOffers.length, icon: FileText, color: "text-amber-600" },
+    { label: "Available Deals", value: (wholesaleDeals?.length || 0) + activeListings.length, icon: Building2, color: "text-primary", bgColor: "bg-primary/10" },
+    { label: "Saved Properties", value: savedProperties?.length || 0, icon: Heart, color: "text-pink-600", bgColor: "bg-pink-600/10" },
+    { label: "Active Offers", value: pendingOffers.length, icon: FileText, color: "text-amber-600", bgColor: "bg-amber-600/10" },
+    { label: "Under Contract", value: underContractOffers.length, icon: TrendingUp, color: "text-green-600", bgColor: "bg-green-600/10" },
+  ];
+
+  const pipelineStages = [
+    { label: "Offers Submitted", count: pendingOffers.length, color: "bg-amber-500" },
+    { label: "Accepted", count: acceptedOffers.length, color: "bg-blue-500" },
+    { label: "Under Contract", count: underContractOffers.length, color: "bg-green-500" },
+    { label: "Closed", count: closedOffers.length, color: "bg-purple-500" },
   ];
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="sleek-card">
+          <Card key={index} className="sleek-card hover-elevate" data-testid={`stat-card-${index}`}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-3xl font-bold">{stat.value}</p>
                 </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -258,6 +270,62 @@ function DashboardTab({
         </Card>
       )}
 
+      <Card className="sleek-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Deal Pipeline
+          </CardTitle>
+          <CardDescription>Track your progress from offer to close</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 mb-4">
+            {pipelineStages.map((stage, index) => (
+              <div key={stage.label} className="flex-1" data-testid={`pipeline-stage-${index}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-3 h-3 rounded-full ${stage.color}`} />
+                  <span className="text-sm font-medium">{stage.label}</span>
+                </div>
+                <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={`absolute left-0 top-0 h-full ${stage.color} transition-all`} 
+                    style={{ width: stage.count > 0 ? '100%' : '0%' }}
+                  />
+                </div>
+                <p className="text-center mt-1 text-2xl font-bold">{stage.count}</p>
+              </div>
+            ))}
+          </div>
+          
+          {underContractOffers.length > 0 && (
+            <div className="mt-6 pt-4 border-t">
+              <h4 className="font-medium mb-3">Properties Under Contract</h4>
+              <div className="space-y-3">
+                {underContractOffers.map(offer => (
+                  <div key={offer.id} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800" data-testid={`under-contract-${offer.id}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                        <Home className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Property #{offer.propertyId}</p>
+                        <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-300">
+                          {offer.status === "closing" ? "Closing Soon" : "Under Contract"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-green-600">{formatCurrency(offer.offerAmount)}</p>
+                      <p className="text-xs text-muted-foreground">{offer.fundingType}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="sleek-card">
           <CardHeader>
@@ -271,17 +339,25 @@ function DashboardTab({
             {wholesaleDeals && wholesaleDeals.length > 0 ? (
               <div className="space-y-4">
                 {wholesaleDeals.slice(0, 3).map(deal => (
-                  <div key={deal.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{deal.propertyAddress}</p>
-                      <p className="text-sm text-muted-foreground">{deal.city}, {deal.state}</p>
+                  <Link key={deal.id} href={`/wholesale/${deal.id}`} className="block">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors" data-testid={`deal-row-${deal.id}`}>
+                      <div>
+                        <p className="font-medium">{deal.propertyAddress}</p>
+                        <p className="text-sm text-muted-foreground">{deal.city}, {deal.state}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-green-600">{formatCurrency(deal.contractPrice)}</p>
+                        <p className="text-xs text-muted-foreground">Fee: {formatCurrency(deal.assignmentFee)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green-600">{formatCurrency(deal.contractPrice)}</p>
-                      <p className="text-xs text-muted-foreground">Fee: {formatCurrency(deal.assignmentFee)}</p>
-                    </div>
-                  </div>
+                  </Link>
                 ))}
+                <Link href="/portal/buyer?tab=properties" className="block">
+                  <Button variant="outline" className="w-full mt-2" data-testid="button-view-all-deals">
+                    View All Deals
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
             ) : (
               <p className="text-muted-foreground text-center py-8">No wholesale deals available</p>
@@ -298,23 +374,31 @@ function DashboardTab({
             <CardDescription>Move-in ready properties</CardDescription>
           </CardHeader>
           <CardContent>
-            {retailListings && retailListings.filter(l => l.status === "active").length > 0 ? (
+            {activeListings.length > 0 ? (
               <div className="space-y-4">
-                {retailListings.filter(l => l.status === "active").slice(0, 3).map(listing => (
-                  <div key={listing.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{listing.propertyAddress}</p>
-                      <p className="text-sm text-muted-foreground">{listing.city}, {listing.state}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-blue-600">{formatCurrency(listing.listPrice)}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {listing.bedrooms && <span>{listing.bedrooms} bd</span>}
-                        {listing.bathrooms && <span>{listing.bathrooms} ba</span>}
+                {activeListings.slice(0, 3).map(listing => (
+                  <Link key={listing.id} href={`/buyers/${listing.slug}`} className="block">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors" data-testid={`listing-row-${listing.id}`}>
+                      <div>
+                        <p className="font-medium">{listing.propertyAddress}</p>
+                        <p className="text-sm text-muted-foreground">{listing.city}, {listing.state}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-600">{formatCurrency(listing.listPrice)}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {listing.bedrooms && <span>{listing.bedrooms} bd</span>}
+                          {listing.bathrooms && <span>{listing.bathrooms} ba</span>}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
+                <Link href="/portal/buyer?tab=properties" className="block">
+                  <Button variant="outline" className="w-full mt-2" data-testid="button-view-all-listings">
+                    View All Properties
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
             ) : (
               <p className="text-muted-foreground text-center py-8">No listings available</p>

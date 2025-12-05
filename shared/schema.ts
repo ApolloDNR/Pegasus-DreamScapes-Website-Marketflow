@@ -259,7 +259,7 @@ export const buyerOffers = pgTable("buyer_offers", {
   closingTimeline: varchar("closing_timeline", { length: 50 }),
   proofOfFunds: text("proof_of_funds"), // URL to uploaded POF
   message: text("message"),
-  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, reviewing, accepted, rejected, countered
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, reviewing, accepted, rejected, countered, under_contract, closing, closed
   counterOffer: integer("counter_offer"),
   staffNotes: text("staff_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
