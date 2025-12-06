@@ -50,6 +50,12 @@ import DealflowMessages from "@/pages/dealflow-messages";
 import UserProfile from "@/pages/user-profile";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import Marketplace from "@/pages/marketplace";
+import MarketplaceWholesaler from "@/pages/marketplace-wholesaler";
+import MarketplaceDreamscaper from "@/pages/marketplace-dreamscaper";
+import MarketplaceInvestor from "@/pages/marketplace-investor";
+import MarketplaceBuyer from "@/pages/marketplace-buyer";
+import MarketplaceAdmin from "@/pages/marketplace-admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -87,6 +93,23 @@ function Router() {
       <Route path="/dealflow/project/:id" component={DealflowProject} />
       <Route path="/dealflow/community" component={DealflowCommunity} />
       <Route path="/dealflow/messages" component={DealflowMessages} />
+      
+      {/* New Marketplace Routes with Supabase Auth */}
+      <Route path="/marketplace" component={Marketplace} />
+      <Route path="/marketplace/wholesaler/:rest*" component={MarketplaceWholesaler} />
+      <Route path="/marketplace/wholesaler" component={MarketplaceWholesaler} />
+      <Route path="/marketplace/dreamscaper/:rest*" component={MarketplaceDreamscaper} />
+      <Route path="/marketplace/dreamscaper" component={MarketplaceDreamscaper} />
+      <Route path="/marketplace/investor/:rest*" component={MarketplaceInvestor} />
+      <Route path="/marketplace/investor" component={MarketplaceInvestor} />
+      <Route path="/marketplace/buyer/:rest*" component={MarketplaceBuyer} />
+      <Route path="/marketplace/buyer" component={MarketplaceBuyer} />
+      <Route path="/marketplace/admin/:rest*" component={MarketplaceAdmin} />
+      <Route path="/marketplace/admin" component={MarketplaceAdmin} />
+      <Route path="/marketplace/discover">{() => <Redirect to="/marketplace" />}</Route>
+      <Route path="/marketplace/community" component={DealflowCommunity} />
+      <Route path="/marketplace/messages" component={DealflowMessages} />
+      
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
