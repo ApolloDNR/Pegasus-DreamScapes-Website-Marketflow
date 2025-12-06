@@ -200,6 +200,457 @@ export async function registerRoutes(
     }
   });
 
+  // ========== SUPABASE MARKETPLACE ROUTES ==========
+  // These routes use Supabase for data persistence
+
+  // --- Saved Items ---
+  app.get('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { type } = req.query;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const items = await supabaseStorage.getSavedItems(userId, type as any);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching saved items:', error);
+      res.status(500).json({ message: 'Failed to fetch saved items' });
+    }
+  });
+
+  app.post('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { itemType, itemId } = req.body;
+      
+      if (!itemType || !itemId) {
+        return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const item = await supabaseStorage.saveItem(userId, itemType, itemId);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error('Error saving item:', error);
+      res.status(500).json({ message: 'Failed to save item' });
+    }
+  });
+
+  app.delete('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { itemType, itemId } = req.body;
+      
+      if (!itemType || !itemId) {
+        return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const success = await supabaseStorage.unsaveItem(userId, itemType, itemId);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error unsaving item:', error);
+      res.status(500).json({ message: 'Failed to unsave item' });
+    }
+  });
+
+  app.get('/api/supabase/saved-items/check', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { itemType, itemId } = req.query;
+      
+      if (!itemType || !itemId) {
+        return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const isSaved = await supabaseStorage.isItemSaved(userId, itemType as any, itemId as string);
+      res.json({ isSaved });
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+      res.status(500).json({ message: 'Failed to check saved status' });
+    }
+  });
+
+  // --- JV Requests (Supabase) ---
+  app.post('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { dealId, wholesalerId, strategy, fundingSource, proposedFee, message } = req.body;
+      
+      if (!dealId || !wholesalerId || !strategy) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const request = await supabaseStorage.createJVRequest({
+        deal_id: dealId,
+        requester_id: userId,
+        wholesaler_id: wholesalerId,
+        strategy,
+        funding_source: fundingSource,
+        proposed_fee: proposedFee,
+        message,
+        status: 'pending'
+      });
+      
+      if (request) {
+        await supabaseStorage.createNotification({
+          user_id: wholesalerId,
+          type: 'jv_request',
+          title: 'New JV Request',
+          message: `You have a new JV request on your deal`,
+          link: `/marketplace/wholesaler/requests`
+        });
+      }
+      
+      res.status(201).json(request);
+    } catch (error) {
+      console.error('Error creating JV request:', error);
+      res.status(500).json({ message: 'Failed to create JV request' });
+    }
+  });
+
+  app.get('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const requests = await supabaseStorage.getJVRequestsByUser(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error('Error fetching JV requests:', error);
+      res.status(500).json({ message: 'Failed to fetch JV requests' });
+    }
+  });
+
+  app.patch('/api/supabase/jv-requests/:id', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ message: 'Missing status' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const updated = await supabaseStorage.updateJVRequestStatus(id, status);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating JV request:', error);
+      res.status(500).json({ message: 'Failed to update JV request' });
+    }
+  });
+
+  // --- Capital Projects (Supabase) ---
+  app.get('/api/supabase/capital-projects', async (req: any, res) => {
+    try {
+      const { supabaseStorage } = await import('./supabase-storage');
+      const projects = await supabaseStorage.getPublicCapitalProjects();
+      res.json(projects);
+    } catch (error) {
+      console.error('Error fetching capital projects:', error);
+      res.status(500).json({ message: 'Failed to fetch capital projects' });
+    }
+  });
+
+  app.get('/api/supabase/capital-projects/my', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const projects = await supabaseStorage.getCapitalProjectsByUser(userId);
+      res.json(projects);
+    } catch (error) {
+      console.error('Error fetching user projects:', error);
+      res.status(500).json({ message: 'Failed to fetch user projects' });
+    }
+  });
+
+  app.get('/api/supabase/capital-projects/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const project = await supabaseStorage.getCapitalProject(id);
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error('Error fetching capital project:', error);
+      res.status(500).json({ message: 'Failed to fetch capital project' });
+    }
+  });
+
+  app.post('/api/supabase/capital-projects', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectData = req.body;
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const project = await supabaseStorage.createCapitalProject({
+        ...projectData,
+        owner_id: userId
+      });
+      
+      res.status(201).json(project);
+    } catch (error) {
+      console.error('Error creating capital project:', error);
+      res.status(500).json({ message: 'Failed to create capital project' });
+    }
+  });
+
+  // --- Capital Commitments (Supabase) ---
+  app.post('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { projectId, amount, structurePreference, notes } = req.body;
+      
+      if (!projectId || !amount) {
+        return res.status(400).json({ message: 'Missing projectId or amount' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      
+      const project = await supabaseStorage.getCapitalProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      const commitment = await supabaseStorage.createCapitalCommitment({
+        project_id: projectId,
+        investor_id: userId,
+        amount,
+        structure_preference: structurePreference,
+        notes,
+        status: 'pending'
+      });
+      
+      if (commitment) {
+        await supabaseStorage.createNotification({
+          user_id: project.owner_id,
+          type: 'capital_commitment',
+          title: 'New Investment Commitment',
+          message: `An investor has committed $${amount.toLocaleString()} to your project`,
+          link: `/marketplace/dreamscaper/projects/${projectId}`
+        });
+      }
+      
+      res.status(201).json(commitment);
+    } catch (error) {
+      console.error('Error creating capital commitment:', error);
+      res.status(500).json({ message: 'Failed to create commitment' });
+    }
+  });
+
+  app.get('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const commitments = await supabaseStorage.getCapitalCommitmentsByUser(userId);
+      res.json(commitments);
+    } catch (error) {
+      console.error('Error fetching commitments:', error);
+      res.status(500).json({ message: 'Failed to fetch commitments' });
+    }
+  });
+
+  app.get('/api/supabase/capital-projects/:id/commitments', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const commitments = await supabaseStorage.getCapitalCommitmentsByProject(id);
+      res.json(commitments);
+    } catch (error) {
+      console.error('Error fetching project commitments:', error);
+      res.status(500).json({ message: 'Failed to fetch commitments' });
+    }
+  });
+
+  // --- Wholesale Deals (Supabase) ---
+  app.get('/api/supabase/wholesale-deals', async (req: any, res) => {
+    try {
+      const { supabaseStorage } = await import('./supabase-storage');
+      const deals = await supabaseStorage.getPublicWholesaleDeals();
+      res.json(deals);
+    } catch (error) {
+      console.error('Error fetching wholesale deals:', error);
+      res.status(500).json({ message: 'Failed to fetch wholesale deals' });
+    }
+  });
+
+  app.get('/api/supabase/wholesale-deals/my', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const deals = await supabaseStorage.getWholesaleDealsByUser(userId);
+      res.json(deals);
+    } catch (error) {
+      console.error('Error fetching user deals:', error);
+      res.status(500).json({ message: 'Failed to fetch user deals' });
+    }
+  });
+
+  app.get('/api/supabase/wholesale-deals/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const deal = await supabaseStorage.getWholesaleDeal(id);
+      
+      if (!deal) {
+        return res.status(404).json({ message: 'Deal not found' });
+      }
+      
+      res.json(deal);
+    } catch (error) {
+      console.error('Error fetching wholesale deal:', error);
+      res.status(500).json({ message: 'Failed to fetch wholesale deal' });
+    }
+  });
+
+  app.post('/api/supabase/wholesale-deals', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const dealData = req.body;
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      const deal = await supabaseStorage.createWholesaleDeal({
+        ...dealData,
+        wholesaler_id: userId,
+        status: 'Under Review',
+        is_public: false,
+        raising_capital: false
+      });
+      
+      res.status(201).json(deal);
+    } catch (error) {
+      console.error('Error creating wholesale deal:', error);
+      res.status(500).json({ message: 'Failed to create wholesale deal' });
+    }
+  });
+
+  // --- Listings (Supabase) ---
+  app.get('/api/supabase/listings', async (req: any, res) => {
+    try {
+      const { supabaseStorage } = await import('./supabase-storage');
+      const listings = await supabaseStorage.getPublicListings();
+      res.json(listings);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+      res.status(500).json({ message: 'Failed to fetch listings' });
+    }
+  });
+
+  app.get('/api/supabase/listings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const listing = await supabaseStorage.getListing(id);
+      
+      if (!listing) {
+        return res.status(404).json({ message: 'Listing not found' });
+      }
+      
+      res.json(listing);
+    } catch (error) {
+      console.error('Error fetching listing:', error);
+      res.status(500).json({ message: 'Failed to fetch listing' });
+    }
+  });
+
+  // --- Buyer Offers (Supabase) ---
+  app.post('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { listingId, offerAmount, financingType, contingencies, message } = req.body;
+      
+      if (!listingId || !offerAmount) {
+        return res.status(400).json({ message: 'Missing listingId or offerAmount' });
+      }
+      
+      const { supabaseStorage } = await import('./supabase-storage');
+      
+      const listing = await supabaseStorage.getListing(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: 'Listing not found' });
+      }
+      
+      const offer = await supabaseStorage.createBuyerOffer({
+        listing_id: listingId,
+        buyer_id: userId,
+        offer_amount: offerAmount,
+        financing_type: financingType,
+        contingencies,
+        message,
+        status: 'pending'
+      });
+      
+      if (offer && listing.owner_id) {
+        await supabaseStorage.createNotification({
+          user_id: listing.owner_id,
+          type: 'buyer_offer',
+          title: 'New Offer Received',
+          message: `You received an offer of $${offerAmount.toLocaleString()} on your listing`,
+          link: `/marketplace/listings/${listingId}`
+        });
+      }
+      
+      res.status(201).json(offer);
+    } catch (error) {
+      console.error('Error creating buyer offer:', error);
+      res.status(500).json({ message: 'Failed to create offer' });
+    }
+  });
+
+  app.get('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const offers = await supabaseStorage.getBuyerOffersByUser(userId);
+      res.json(offers);
+    } catch (error) {
+      console.error('Error fetching buyer offers:', error);
+      res.status(500).json({ message: 'Failed to fetch offers' });
+    }
+  });
+
+  // --- Notifications (Supabase) ---
+  app.get('/api/supabase/notifications', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { unreadOnly } = req.query;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const notifications = await supabaseStorage.getNotifications(userId, unreadOnly === 'true');
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.patch('/api/supabase/notifications/:id/read', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const success = await supabaseStorage.markNotificationRead(id);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error marking notification read:', error);
+      res.status(500).json({ message: 'Failed to mark notification read' });
+    }
+  });
+
+  app.post('/api/supabase/notifications/mark-all-read', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { supabaseStorage } = await import('./supabase-storage');
+      const success = await supabaseStorage.markAllNotificationsRead(userId);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error marking all notifications read:', error);
+      res.status(500).json({ message: 'Failed to mark notifications read' });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isHybridAuthenticated, async (req: any, res) => {
     try {
