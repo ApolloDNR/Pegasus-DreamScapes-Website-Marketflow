@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
+import type { CommittedInvestment, CapitalProject } from "@shared/schema";
 import {
   TrendingUp,
   DollarSign,
@@ -16,6 +17,8 @@ import {
   Sparkles,
   Compass,
   Heart,
+  Building,
+  MapPin,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
@@ -26,11 +29,23 @@ interface InvestorStats {
   pendingOffers: number;
 }
 
+interface CommitmentWithProject extends CommittedInvestment {
+  project?: CapitalProject;
+}
+
 export default function MarketplaceInvestorPage() {
   const { profile } = useSupabaseAuth();
 
   const { data: stats, isLoading } = useQuery<InvestorStats>({
     queryKey: ["/api/marketplace/investor/stats"],
+  });
+
+  const { data: myCommitments, isLoading: isCommitmentsLoading } = useQuery<CommitmentWithProject[]>({
+    queryKey: ["/api/marketplace/investor/commitments"],
+  });
+
+  const { data: availableProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
+    queryKey: ["/api/capital-projects"],
   });
 
   const displayStats: InvestorStats = stats ?? {
@@ -39,6 +54,9 @@ export default function MarketplaceInvestorPage() {
     savedDeals: 0,
     pendingOffers: 0,
   };
+
+  const recentCommitments = myCommitments?.slice(0, 3) || [];
+  const recommendedProjects = availableProjects?.slice(0, 3) || [];
 
   return (
     <AuthGuard requiredRoles={["admin", "investor"]}>
@@ -140,29 +158,48 @@ export default function MarketplaceInvestorPage() {
                 <CardDescription>Your active investments</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <div>
-                      <p className="font-medium">Victorian Revival Project</p>
-                      <p className="text-sm text-muted-foreground">$50,000 invested | 12% projected</p>
-                    </div>
-                    <Badge>Active</Badge>
+                {isCommitmentsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <div>
-                      <p className="font-medium">Multifamily Acquisition</p>
-                      <p className="text-sm text-muted-foreground">$75,000 invested | 15% projected</p>
-                    </div>
-                    <Badge>Active</Badge>
+                ) : recentCommitments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-4">No investments yet</p>
+                    <Link href="/marketplace/capital">
+                      <Button size="sm">
+                        <Compass className="w-4 h-4 mr-2" />
+                        Discover Opportunities
+                      </Button>
+                    </Link>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <div>
-                      <p className="font-medium">Fix & Flip - Cedar Lane</p>
-                      <p className="text-sm text-muted-foreground">$25,000 invested | 22% actual</p>
-                    </div>
-                    <Badge variant="outline">Completed</Badge>
+                ) : (
+                  <div className="space-y-4">
+                    {recentCommitments.map((commitment) => (
+                      <div 
+                        key={commitment.id} 
+                        className="flex items-center justify-between p-3 rounded-lg border hover-elevate"
+                        data-testid={`commitment-item-${commitment.id}`}
+                      >
+                        <div>
+                          <p className="font-medium">
+                            {commitment.project?.title || `Project #${commitment.projectId}`}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            ${(commitment.committedAmount || 0).toLocaleString()} invested | 
+                            {commitment.structureType === "debt" 
+                              ? ` ${commitment.interestRate || "0"}% interest`
+                              : ` ${commitment.equityPercent || "0"}% equity`
+                            }
+                          </p>
+                        </div>
+                        <Badge>Active</Badge>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
                 <Link href="/marketplace/investor/portfolio">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-view-portfolio">
                     View Full Portfolio
@@ -174,39 +211,58 @@ export default function MarketplaceInvestorPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recommended Deals</CardTitle>
-                <CardDescription>Based on your investment profile</CardDescription>
+                <CardTitle>Capital Opportunities</CardTitle>
+                <CardDescription>Projects seeking investor capital</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">123 Oak Street</p>
-                        <Badge variant="secondary" className="gap-1">
-                          <Sparkles className="h-3 w-3" />
-                          92% Match
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Wholesale | ARV $180k | 25% ROI</p>
-                    </div>
+                {isProjectsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">Modern Duplex Project</p>
-                        <Badge variant="secondary" className="gap-1">
-                          <Sparkles className="h-3 w-3" />
-                          88% Match
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Capital Raise | $500k goal | 15% return</p>
-                    </div>
+                ) : recommendedProjects.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Building className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No open opportunities at this time</p>
                   </div>
-                </div>
-                <Link href="/marketplace/discover">
+                ) : (
+                  <div className="space-y-4">
+                    {recommendedProjects.map((project) => (
+                      <Link key={project.id} href={`/marketplace/capital/${project.id}`}>
+                        <div 
+                          className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer"
+                          data-testid={`project-recommendation-${project.id}`}
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{project.title}</p>
+                              {project.status === "OPEN_FOR_INVESTMENT" && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Sparkles className="h-3 w-3" />
+                                  Open
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              {project.location && (
+                                <>
+                                  <MapPin className="h-3 w-3" />
+                                  {project.location} |{" "}
+                                </>
+                              )}
+                              ${((project.fundingGoal || 0) / 1000).toFixed(0)}K goal
+                              {project.projectedReturn ? ` | ${project.projectedReturn} return` : ""}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                <Link href="/marketplace/capital">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-discover-more">
-                    Discover More Deals
+                    Browse All Opportunities
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
@@ -279,4 +335,23 @@ export default function MarketplaceInvestorPage() {
       </MarketplaceLayout>
     </AuthGuard>
   );
+}
+
+function CommitmentStatusBadge({ status }: { status: string }) {
+  switch (status.toLowerCase()) {
+    case "pending":
+      return <Badge variant="secondary">Pending</Badge>;
+    case "approved":
+    case "active":
+      return <Badge>Active</Badge>;
+    case "funded":
+      return <Badge className="bg-green-600">Funded</Badge>;
+    case "completed":
+    case "exited":
+      return <Badge variant="outline">Completed</Badge>;
+    case "rejected":
+      return <Badge variant="destructive">Rejected</Badge>;
+    default:
+      return <Badge variant="secondary">{status}</Badge>;
+  }
 }

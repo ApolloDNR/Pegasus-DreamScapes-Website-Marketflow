@@ -187,20 +187,26 @@ function PartnershipTypesSection() {
   const partnerships = [
     {
       icon: DollarSign,
-      title: "Debt-Style",
-      description: "Fixed return for funding a portion of purchase/rehab. Lower risk, predictable returns.",
-      note: "Future Goal",
+      title: "Debt Investment",
+      description: "Provide a loan secured by real estate. Receive fixed interest payments regardless of project outcome. Lower risk with predictable cash flow, typically 8-12% annual returns.",
+      benefits: ["Fixed monthly income", "Principal protected by property", "First position on capital stack"],
+      risks: ["Lower upside than equity", "Returns capped at agreed rate"],
+      note: "Available",
     },
     {
       icon: TrendingUp,
-      title: "Equity-Style",
-      description: "Profit share on flips or rentals. Higher potential returns tied to project success.",
+      title: "Equity Investment",
+      description: "Share in the profits (and risks) of property flips or hold strategies. Higher potential returns tied directly to project success, typically 15-30% annualized.",
+      benefits: ["Higher profit potential", "Share in property appreciation", "Tax advantages on gains"],
+      risks: ["Returns tied to project success", "Longer hold periods possible"],
       note: "Available",
     },
     {
       icon: Users,
       title: "Joint Ventures",
-      description: "You bring funds, we operate. Shared profits with active partnership involvement.",
+      description: "Partner directly with our operators. You provide capital, we handle execution. Profit splits customized per deal with active involvement in major decisions.",
+      benefits: ["Direct project control", "Customized deal terms", "True partnership relationship"],
+      risks: ["Requires larger capital", "More active involvement needed"],
       note: "Available",
     },
   ];
@@ -218,15 +224,39 @@ function PartnershipTypesSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {partnerships.map((partnership, index) => (
             <Card key={index} className="hover-elevate transition-all duration-300 relative overflow-visible" data-testid={`card-partnership-${index}`}>
-              <CardContent className="p-8 text-center">
+              <CardContent className="p-8">
                 <div className="absolute -top-3 right-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full">
                   {partnership.note}
                 </div>
                 <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <partnership.icon className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{partnership.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{partnership.description}</p>
+                <h3 className="text-xl font-semibold mb-3 text-center">{partnership.title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-sm mb-4">{partnership.description}</p>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-medium text-green-600 mb-1">Benefits:</p>
+                    <ul className="text-muted-foreground space-y-1">
+                      {partnership.benefits.map((b, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="font-medium text-amber-600 mb-1">Considerations:</p>
+                    <ul className="text-muted-foreground space-y-1">
+                      {partnership.risks.map((r, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Target className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
+                          {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -475,6 +505,7 @@ function InvestorFormSection() {
                           placeholder="Tell us about your investment goals, experience, and what you're looking for in a partnership..."
                           className="min-h-32 resize-none"
                           {...field}
+                          value={field.value ?? ""}
                           data-testid="textarea-investor-notes"
                         />
                       </FormControl>

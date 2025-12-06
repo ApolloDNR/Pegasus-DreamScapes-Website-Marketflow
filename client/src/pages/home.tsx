@@ -283,12 +283,12 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="#invest">
+              <Link href="/partner">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-widest px-10 py-6 w-full sm:w-auto border-white/40 text-white hover:bg-white/10 backdrop-blur-sm font-medium" data-testid="button-hero-invest">
                   Partner With Us
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

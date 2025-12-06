@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "wouter";
+import type { CapitalProject } from "@shared/schema";
 import {
   Building2,
   TrendingUp,
@@ -17,6 +18,9 @@ import {
   Hammer,
   Target,
   Sparkles,
+  Search,
+  Handshake,
+  MapPin,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
@@ -35,12 +39,18 @@ export default function MarketplaceDreamscaperPage() {
     queryKey: ["/api/marketplace/dreamscaper/stats"],
   });
 
+  const { data: myProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
+    queryKey: ["/api/marketplace/dreamscaper/projects"],
+  });
+
   const displayStats: ProjectStats = stats ?? {
     activeProjects: 0,
     totalRaised: 0,
     totalFundingGoal: 0,
     projectsCompleted: 0,
   };
+
+  const recentProjects = myProjects?.slice(0, 3) || [];
 
   return (
     <AuthGuard requiredRoles={["admin", "pegasus_dreamscaper", "dreamscaper"]}>
@@ -145,37 +155,58 @@ export default function MarketplaceDreamscaperPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Active Projects</CardTitle>
-                <CardDescription>Your ongoing transformations</CardDescription>
+                <CardDescription>Your ongoing transformations and capital raises</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2 p-3 rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">Victorian Revival - 234 Elm St</p>
-                      <Badge>In Progress</Badge>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Renovation Progress</span>
-                        <span>65%</span>
-                      </div>
-                      <Progress value={65} className="h-2" />
-                    </div>
+                {isProjectsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map((i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
                   </div>
-                  <div className="space-y-2 p-3 rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">Modern Flip - 567 Cedar Lane</p>
-                      <Badge variant="secondary">Raising Capital</Badge>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Funding Progress</span>
-                        <span>$180k / $250k</span>
-                      </div>
-                      <Progress value={72} className="h-2" />
-                    </div>
+                ) : recentProjects.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Hammer className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-4">No projects yet</p>
+                    <Link href="/marketplace/dreamscaper/projects/new">
+                      <Button size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Your First Project
+                      </Button>
+                    </Link>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recentProjects.map((project) => {
+                      const fundingProgress = project.fundingGoal 
+                        ? Math.min(100, ((project.amountRaised || 0) / project.fundingGoal) * 100) 
+                        : 0;
+                      return (
+                        <div key={project.id} className="space-y-2 p-3 rounded-lg border hover-elevate" data-testid={`project-item-${project.id}`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{project.title}</p>
+                              {project.location && (
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {project.location}
+                                </p>
+                              )}
+                            </div>
+                            <ProjectStatusBadge status={project.status || "DRAFT"} />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Funding Progress</span>
+                              <span>${((project.amountRaised || 0) / 1000).toFixed(0)}K / ${((project.fundingGoal || 0) / 1000).toFixed(0)}K</span>
+                            </div>
+                            <Progress value={fundingProgress} className="h-2" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 <Link href="/marketplace/dreamscaper/projects">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-view-all-projects">
                     View All Projects
@@ -203,12 +234,6 @@ export default function MarketplaceDreamscaperPage() {
                     Raise Capital
                   </Button>
                 </Link>
-                <Link href="/marketplace/discover" className="block">
-                  <Button variant="outline" className="w-full justify-start" data-testid="action-find-deals">
-                    <Target className="h-4 w-4 mr-2" />
-                    Find Wholesale Deals
-                  </Button>
-                </Link>
                 <Link href="/calculators" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-calculators">
                     <TrendingUp className="h-4 w-4 mr-2" />
@@ -218,8 +243,55 @@ export default function MarketplaceDreamscaperPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="border-2 border-primary/20 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Browse Wholesale Deals</CardTitle>
+              </div>
+              <CardDescription>
+                Discover off-market properties from verified wholesalers. Submit JV requests on deals that match your investment criteria.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/marketplace/deals">
+                  <Button data-testid="button-browse-deals">
+                    <Target className="h-4 w-4 mr-2" />
+                    Browse All Deals
+                  </Button>
+                </Link>
+                <Link href="/marketplace/capital">
+                  <Button variant="outline" data-testid="button-browse-capital">
+                    <Handshake className="h-4 w-4 mr-2" />
+                    View Capital Opportunities
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </MarketplaceLayout>
     </AuthGuard>
   );
+}
+
+function ProjectStatusBadge({ status }: { status: string }) {
+  switch (status.toUpperCase()) {
+    case "OPEN_FOR_INVESTMENT":
+    case "FUNDING":
+      return <Badge variant="secondary">Raising Capital</Badge>;
+    case "FUNDED":
+      return <Badge className="bg-green-600">Funded</Badge>;
+    case "IN_PROGRESS":
+      return <Badge>In Progress</Badge>;
+    case "COMPLETED":
+    case "EXITED":
+      return <Badge variant="outline">Completed</Badge>;
+    case "DRAFT":
+      return <Badge variant="outline">Draft</Badge>;
+    default:
+      return <Badge variant="secondary">{status}</Badge>;
+  }
 }

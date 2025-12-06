@@ -64,16 +64,24 @@ function HeroSection() {
       <div className="relative max-w-7xl mx-auto px-6 text-center">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6" data-testid="text-buy-hero">
           Find Your Next
-          <span className="block text-primary">Investment Property</span>
+          <span className="block text-primary">Dream Property</span>
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-10">
-          Whether you're looking for a fixer-upper to flip, a turnkey rental, or a wholesale deal, 
-          we'll help you find properties that match your investment criteria.
+          Whether you're looking for a beautifully renovated move-in ready home, or wholesale deals for your investment portfolio, 
+          we have the right opportunity for you.
         </p>
-        <Button size="lg" className="text-base px-8 py-6" onClick={() => document.getElementById('buyer-form')?.scrollIntoView({ behavior: 'smooth' })} data-testid="button-join-buyer-list">
-          Join Our Buyer List
-          <ArrowRight className="ml-2 w-5 h-5" />
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button size="lg" className="text-base px-8 py-6" onClick={() => document.getElementById('retail-homes')?.scrollIntoView({ behavior: 'smooth' })} data-testid="button-buy-finished-home">
+            <Home className="mr-2 w-5 h-5" />
+            Buy a Finished Pegasus Home
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+          <Button size="lg" variant="outline" className="text-base px-8 py-6" onClick={() => document.getElementById('investment-deals')?.scrollIntoView({ behavior: 'smooth' })} data-testid="button-investment-deals">
+            <DollarSign className="mr-2 w-5 h-5" />
+            Investment & Wholesale Deals
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
       </div>
     </section>
   );

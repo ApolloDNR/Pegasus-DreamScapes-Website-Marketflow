@@ -3626,6 +3626,55 @@ export async function registerRoutes(
     }
   });
 
+  // Wholesaler JV Requests (requests on their deals)
+  app.get("/api/marketplace/wholesaler/jv-requests", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const requests = await storage.getJvRequestsByWholesaler(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching wholesaler JV requests:", error);
+      res.status(500).json({ message: "Failed to fetch JV requests" });
+    }
+  });
+
+  // Update JV Request Status (accept/reject)
+  app.patch("/api/marketplace/jv-requests/:id", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const requestId = Number(req.params.id);
+      const { status } = req.body;
+
+      if (!["accepted", "rejected", "pending"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const jvRequest = await storage.getJvRequest(requestId);
+      if (!jvRequest) {
+        return res.status(404).json({ message: "JV request not found" });
+      }
+
+      // Verify the user is the wholesaler for this deal
+      if (jvRequest.wholesalerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this request" });
+      }
+
+      const updated = await storage.updateJvRequestStatus(requestId, status);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating JV request:", error);
+      res.status(500).json({ message: "Failed to update JV request" });
+    }
+  });
+
   // Investor Dashboard Stats
   app.get("/api/marketplace/investor/stats", async (req: any, res) => {
     try {
@@ -3667,6 +3716,31 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching investor saved deals:", error);
       res.status(500).json({ message: "Failed to fetch saved deals" });
+    }
+  });
+
+  // Investor Commitments - Get investments with project details
+  app.get("/api/marketplace/investor/commitments", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const commitments = await storage.getCommittedInvestmentsByInvestor(userId);
+      
+      // Enrich with project details
+      const enrichedCommitments = await Promise.all(
+        commitments.map(async (commitment) => {
+          const project = await storage.getCapitalProject(commitment.projectId);
+          return { ...commitment, project };
+        })
+      );
+      
+      res.json(enrichedCommitments);
+    } catch (error) {
+      console.error("Error fetching investor commitments:", error);
+      res.status(500).json({ message: "Failed to fetch commitments" });
     }
   });
 
