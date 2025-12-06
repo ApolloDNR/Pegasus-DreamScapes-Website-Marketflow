@@ -4,7 +4,7 @@
 
 Pegasus Dreamscapes Corp is a real estate investment platform connecting property sellers with investors. It targets sellers of distressed properties and investors seeking fix-and-flip or rental opportunities.
 
-**Brand Tagline**: "Where Designed Profits Are Crafted."
+**Brand Tagline**: "Designed Profits. Elevated Communities."
 
 **Mission**: "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
 
