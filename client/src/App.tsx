@@ -8,6 +8,7 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { PeggyProvider } from "@/contexts/peggy-context";
 import { PeggyChatBubble } from "@/components/peggy-chat";
+import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -47,12 +48,16 @@ import DealflowProject from "@/pages/dealflow-project";
 import DealflowCommunity from "@/pages/dealflow-community";
 import DealflowMessages from "@/pages/dealflow-messages";
 import UserProfile from "@/pages/user-profile";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
       <Route path="/services" component={Services} />
       <Route path="/sell" component={Sell} />
@@ -91,20 +96,22 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <PeggyProvider>
-          <ScrollToTop />
-          <div className="min-h-screen flex flex-col">
-            <Navigation />
-            <main className="flex-1">
-              <Router />
-            </main>
-            <Footer />
-          </div>
-          <PeggyChatBubble />
-          <Toaster />
-        </PeggyProvider>
-      </TooltipProvider>
+      <SupabaseAuthProvider>
+        <TooltipProvider>
+          <PeggyProvider>
+            <ScrollToTop />
+            <div className="min-h-screen flex flex-col">
+              <Navigation />
+              <main className="flex-1">
+                <Router />
+              </main>
+              <Footer />
+            </div>
+            <PeggyChatBubble />
+            <Toaster />
+          </PeggyProvider>
+        </TooltipProvider>
+      </SupabaseAuthProvider>
     </QueryClientProvider>
   );
 }
