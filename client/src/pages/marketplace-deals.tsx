@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
-import { AuthGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -64,11 +63,9 @@ interface MarketplaceDeal extends WholesaleDeal {
 
 export default function MarketplaceDeals() {
   return (
-    <AuthGuard requiredRoles={["dreamscaper", "pegasus_dreamscaper", "admin", "investor", "buyer_investment"]}>
-      <MarketplaceLayout>
-        <DealsPage />
-      </MarketplaceLayout>
-    </AuthGuard>
+    <MarketplaceLayout>
+      <DealsPage />
+    </MarketplaceLayout>
   );
 }
 

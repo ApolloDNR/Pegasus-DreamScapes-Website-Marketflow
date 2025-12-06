@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
-import { AuthGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -46,11 +45,9 @@ interface MarketplaceProject extends CapitalProject {
 
 export default function MarketplaceCapital() {
   return (
-    <AuthGuard requiredRoles={["investor", "admin", "dreamscaper", "pegasus_dreamscaper"]}>
-      <MarketplaceLayout>
-        <CapitalPage />
-      </MarketplaceLayout>
-    </AuthGuard>
+    <MarketplaceLayout>
+      <CapitalPage />
+    </MarketplaceLayout>
   );
 }
 
