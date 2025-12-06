@@ -33,6 +33,13 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF } from "./pdf";
 import peggy from "./peggy";
+import { 
+  createUserProfile, 
+  createUserReputation, 
+  getUserProfile, 
+  getUserReputation, 
+  getUserBadges 
+} from "./lib/supabase";
 
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
@@ -97,6 +104,75 @@ export async function registerRoutes(
     res.json({
       apiKey: process.env.GOOGLE_MAPS_API_KEY || ''
     });
+  });
+
+  // Supabase user provisioning (called after signup)
+  app.post('/api/supabase/provision-user', async (req, res) => {
+    try {
+      const { userId, role, displayName } = req.body;
+      
+      if (!userId || !role || !displayName) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+      
+      await createUserProfile(userId, {
+        primary_role: role,
+        display_name: displayName
+      });
+      
+      await createUserReputation(userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error provisioning user:', error);
+      res.status(500).json({ message: 'Failed to provision user' });
+    }
+  });
+
+  // Get user profile from Supabase
+  app.get('/api/supabase/profile/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const profile = await getUserProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+  });
+
+  // Get user reputation from Supabase
+  app.get('/api/supabase/reputation/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const reputation = await getUserReputation(userId);
+      
+      if (!reputation) {
+        return res.status(404).json({ message: 'Reputation not found' });
+      }
+      
+      res.json(reputation);
+    } catch (error) {
+      console.error('Error fetching reputation:', error);
+      res.status(500).json({ message: 'Failed to fetch reputation' });
+    }
+  });
+
+  // Get user badges from Supabase
+  app.get('/api/supabase/badges/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const badges = await getUserBadges(userId);
+      res.json(badges);
+    } catch (error) {
+      console.error('Error fetching badges:', error);
+      res.status(500).json({ message: 'Failed to fetch badges' });
+    }
   });
 
   // Auth routes

@@ -25,18 +25,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const supabase = await getSupabase();
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
+      const response = await fetch(`/api/supabase/profile/${userId}`);
+      if (!response.ok) {
         return null;
       }
-      return data as UserProfile;
+      return await response.json() as UserProfile;
     } catch (err) {
       console.error('Error fetching profile:', err);
       return null;
@@ -130,32 +123,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            user_id: data.user.id,
-            primary_role: role,
-            display_name: displayName,
-            is_pegasus_badged: role.startsWith('pegasus_')
-          });
+        const response = await fetch('/api/supabase/provision-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: data.user.id,
+            role,
+            displayName
+          })
+        });
 
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-        }
-
-        const { error: reputationError } = await supabase
-          .from('user_reputation')
-          .insert({
-            user_id: data.user.id,
-            trust_score: 50,
-            rating: 0,
-            deals_closed_count: 0,
-            on_time_closings_count: 0,
-            cancellations_count: 0
-          });
-
-        if (reputationError) {
-          console.error('Error creating reputation:', reputationError);
+        if (!response.ok) {
+          console.error('Error provisioning user profile');
         }
       }
 
@@ -243,32 +222,26 @@ export function getRoleDashboardPath(role: UserRole | null): string {
 export function canAccessRoute(userRole: UserRole | null, path: string): boolean {
   if (!userRole) return false;
   
-  const adminOnlyPaths = ['/marketplace/admin'];
-  const wholesalerPaths = ['/marketplace/wholesaler'];
-  const dreamscaperPaths = ['/marketplace/dreamscaper'];
-  const investorPaths = ['/marketplace/investor'];
-  const buyerPaths = ['/marketplace/buyer'];
-  
   if (userRole === 'admin') return true;
   
-  if (adminOnlyPaths.some(p => path.startsWith(p))) {
-    return userRole === 'admin';
+  if (path.startsWith('/marketplace/admin')) {
+    return false;
   }
   
-  if (wholesalerPaths.some(p => path.startsWith(p))) {
-    return ['pegasus_wholesaler', 'wholesaler'].includes(userRole);
+  if (path.startsWith('/marketplace/wholesaler')) {
+    return userRole === 'pegasus_wholesaler' || userRole === 'wholesaler';
   }
   
-  if (dreamscaperPaths.some(p => path.startsWith(p))) {
-    return ['pegasus_dreamscaper', 'dreamscaper'].includes(userRole);
+  if (path.startsWith('/marketplace/dreamscaper')) {
+    return userRole === 'pegasus_dreamscaper' || userRole === 'dreamscaper';
   }
   
-  if (investorPaths.some(p => path.startsWith(p))) {
+  if (path.startsWith('/marketplace/investor')) {
     return userRole === 'investor';
   }
   
-  if (buyerPaths.some(p => path.startsWith(p))) {
-    return ['buyer_retail', 'buyer_investment'].includes(userRole);
+  if (path.startsWith('/marketplace/buyer')) {
+    return userRole === 'buyer_retail' || userRole === 'buyer_investment';
   }
   
   return true;
