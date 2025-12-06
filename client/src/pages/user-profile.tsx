@@ -24,13 +24,76 @@ import {
   BarChart3,
   ThumbsUp,
   ArrowLeft,
-  Send
+  Send,
+  Trophy,
+  Crown,
+  Medal,
+  Target,
+  FileText,
+  HandCoins,
+  MessageSquare,
+  Gavel
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User, UserReview } from "@shared/schema";
+
+interface UserActivity {
+  id: number;
+  type: string;
+  title: string;
+  description: string;
+  amount?: number;
+  createdAt: string;
+}
+
+const RANK_TIERS = [
+  { name: "Bronze", minDeals: 0, minVolume: 0, color: "bg-amber-700", textColor: "text-amber-100", icon: Medal },
+  { name: "Silver", minDeals: 5, minVolume: 100000, color: "bg-slate-400", textColor: "text-slate-900", icon: Trophy },
+  { name: "Gold", minDeals: 15, minVolume: 500000, color: "bg-amber-400", textColor: "text-amber-900", icon: Crown },
+  { name: "Platinum", minDeals: 50, minVolume: 2000000, color: "bg-cyan-200", textColor: "text-cyan-800", icon: Crown },
+  { name: "Diamond", minDeals: 100, minVolume: 10000000, color: "bg-violet-300", textColor: "text-violet-900", icon: Crown },
+];
+
+const getRankTier = (totalDeals: number, totalVolume: number) => {
+  let currentTier = RANK_TIERS[0];
+  let nextTier = RANK_TIERS[1];
+  
+  for (let i = RANK_TIERS.length - 1; i >= 0; i--) {
+    const tier = RANK_TIERS[i];
+    if (totalDeals >= tier.minDeals && totalVolume >= tier.minVolume) {
+      currentTier = tier;
+      nextTier = RANK_TIERS[i + 1] || null;
+      break;
+    }
+  }
+  
+  const dealsProgress = nextTier 
+    ? Math.min(100, ((totalDeals - currentTier.minDeals) / (nextTier.minDeals - currentTier.minDeals)) * 100)
+    : 100;
+  const volumeProgress = nextTier 
+    ? Math.min(100, ((totalVolume - currentTier.minVolume) / (nextTier.minVolume - currentTier.minVolume)) * 100)
+    : 100;
+  const overallProgress = Math.min(dealsProgress, volumeProgress);
+  
+  return { currentTier, nextTier, dealsProgress, volumeProgress, overallProgress };
+};
+
+const getActivityIcon = (type: string) => {
+  switch (type) {
+    case "deal_submitted": return FileText;
+    case "deal_completed": return CheckCircle2;
+    case "offer_made": return HandCoins;
+    case "offer_received": return Gavel;
+    case "review_given": return Star;
+    case "review_received": return ThumbsUp;
+    case "message_sent": return MessageSquare;
+    case "project_funded": return TrendingUp;
+    default: return Target;
+  }
+};
 
 interface UserStats {
   userId: string;
@@ -134,6 +197,17 @@ export default function UserProfile() {
     enabled: !!userId,
   });
 
+  const { data: activities = [] } = useQuery<UserActivity[]>({
+    queryKey: ["user-activity", validUserId],
+    queryFn: async ({ queryKey }) => {
+      const [, id] = queryKey as [string, string];
+      const res = await fetch(`/api/users/${id}/activity`);
+      if (!res.ok) throw new Error("Failed to fetch user activity");
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/reviews", {
@@ -199,6 +273,12 @@ export default function UserProfile() {
     : { icon: CheckCircle2, color: "bg-slate-100 text-slate-700", label: "Basic Member" };
 
   const avgRating = parseFloat(stats?.avgOverallRating || "0");
+  
+  const rankInfo = getRankTier(
+    stats?.totalDealsCompleted || 0,
+    stats?.totalDealsValue || 0
+  );
+  const RankIcon = rankInfo.currentTier.icon;
 
   return (
     <div className="min-h-screen pt-20 bg-stone">
@@ -225,10 +305,14 @@ export default function UserProfile() {
                   {profile.firstName} {profile.lastName}
                 </h1>
                 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
                   <Badge className={verificationBadge.color}>
                     <verificationBadge.icon className="w-3 h-3 mr-1" />
                     {verificationBadge.label}
+                  </Badge>
+                  <Badge className={`${rankInfo.currentTier.color} ${rankInfo.currentTier.textColor}`} data-testid="badge-rank-tier">
+                    <RankIcon className="w-3 h-3 mr-1" />
+                    {rankInfo.currentTier.name} Tier
                   </Badge>
                 </div>
 
@@ -451,12 +535,95 @@ export default function UserProfile() {
 
               <TabsContent value="activity" className="space-y-4 mt-4">
                 <Card className="sleek-card">
-                  <CardContent className="py-8 text-center">
-                    <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">Activity Timeline Coming Soon</h3>
-                    <p className="text-muted-foreground">
-                      Track transaction history and activity here
-                    </p>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <RankIcon className="w-5 h-5" />
+                      Rank Progress
+                    </CardTitle>
+                    <CardDescription>
+                      {rankInfo.nextTier 
+                        ? `Progress to ${rankInfo.nextTier.name} Tier`
+                        : "You've reached the highest tier!"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-full ${rankInfo.currentTier.color} flex items-center justify-center`}>
+                        <RankIcon className={`w-7 h-7 ${rankInfo.currentTier.textColor}`} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium">{rankInfo.currentTier.name}</span>
+                          {rankInfo.nextTier && (
+                            <span className="text-sm text-muted-foreground">{rankInfo.nextTier.name}</span>
+                          )}
+                        </div>
+                        <Progress value={rankInfo.overallProgress} className="h-2" />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {Math.round(rankInfo.overallProgress)}% to next tier
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {rankInfo.nextTier && (
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="p-3 rounded bg-background">
+                          <p className="text-muted-foreground">Deals Required</p>
+                          <p className="font-medium">
+                            {stats?.totalDealsCompleted || 0} / {rankInfo.nextTier.minDeals}
+                          </p>
+                        </div>
+                        <div className="p-3 rounded bg-background">
+                          <p className="text-muted-foreground">Volume Required</p>
+                          <p className="font-medium">
+                            {formatCurrency(stats?.totalDealsValue || 0)} / {formatCurrency(rankInfo.nextTier.minVolume)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="sleek-card">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Clock className="w-5 h-5" />
+                      Recent Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {activities.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="font-semibold mb-2">No Recent Activity</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Activity will appear here as deals are made
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {activities.slice(0, 10).map((activity) => {
+                          const ActivityIcon = getActivityIcon(activity.type);
+                          return (
+                            <div key={activity.id} className="flex gap-4 items-start" data-testid={`activity-item-${activity.id}`}>
+                              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                                <ActivityIcon className="w-5 h-5 text-muted-foreground" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm">{activity.title}</p>
+                                <p className="text-sm text-muted-foreground truncate">{activity.description}</p>
+                                {activity.amount && (
+                                  <p className="text-sm font-medium text-primary">{formatCurrency(activity.amount)}</p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {formatDate(activity.createdAt)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

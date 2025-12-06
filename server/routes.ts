@@ -2693,6 +2693,18 @@ export async function registerRoutes(
     }
   });
 
+  // Get user activity (timeline of recent actions)
+  app.get("/api/users/:userId/activity", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const activities = await storage.getUserActivity(userId);
+      return res.json(activities);
+    } catch (error) {
+      console.error("Error fetching user activity:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // =====================================================
   // Deal Negotiations Routes
   // =====================================================

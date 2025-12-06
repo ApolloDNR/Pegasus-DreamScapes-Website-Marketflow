@@ -296,6 +296,7 @@ export interface IStorage {
   // User Stats
   getUserStats(userId: string): Promise<UserStats | undefined>;
   updateUserStats(userId: string, data: Partial<UserStats>): Promise<UserStats>;
+  getUserActivity(userId: string): Promise<{ id: number; type: string; title: string; description: string; amount?: number; createdAt: Date }[]>;
 
   // Deal Negotiations
   createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation>;
@@ -1719,6 +1720,72 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  async getUserActivity(userId: string): Promise<{ id: number; type: string; title: string; description: string; amount?: number; createdAt: Date }[]> {
+    const activities: { id: number; type: string; title: string; description: string; amount?: number; createdAt: Date }[] = [];
+    
+    const reviewsGiven = await db.select().from(userReviews)
+      .where(eq(userReviews.reviewerId, userId))
+      .orderBy(desc(userReviews.createdAt))
+      .limit(5);
+    for (const review of reviewsGiven) {
+      activities.push({
+        id: review.id * 100,
+        type: "review_given",
+        title: "Gave a Review",
+        description: review.title || "Review submitted",
+        createdAt: review.createdAt,
+      });
+    }
+    
+    const reviewsReceived = await db.select().from(userReviews)
+      .where(eq(userReviews.revieweeId, userId))
+      .orderBy(desc(userReviews.createdAt))
+      .limit(5);
+    for (const review of reviewsReceived) {
+      activities.push({
+        id: review.id * 100 + 1,
+        type: "review_received",
+        title: "Received a Review",
+        description: review.title || "Review received",
+        createdAt: review.createdAt,
+      });
+    }
+    
+    const deals = await db.select().from(wholesaleDeals)
+      .where(eq(wholesaleDeals.submittedBy, userId))
+      .orderBy(desc(wholesaleDeals.createdAt))
+      .limit(5);
+    for (const deal of deals) {
+      activities.push({
+        id: deal.id * 100 + 2,
+        type: "deal_submitted",
+        title: "Deal Submitted",
+        description: deal.address || "Wholesale deal submitted",
+        amount: deal.askingPrice || undefined,
+        createdAt: deal.createdAt || new Date(),
+      });
+    }
+    
+    const negotiations = await db.select().from(dealNegotiations)
+      .where(eq(dealNegotiations.initiatorId, userId))
+      .orderBy(desc(dealNegotiations.createdAt))
+      .limit(5);
+    for (const neg of negotiations) {
+      activities.push({
+        id: neg.id * 100 + 3,
+        type: "offer_made",
+        title: "Offer Made",
+        description: `${neg.structureType} offer on ${neg.dealType}`,
+        amount: neg.proposedAmount || undefined,
+        createdAt: neg.createdAt,
+      });
+    }
+    
+    activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    return activities.slice(0, 20);
   }
 
   // Deal Negotiations
