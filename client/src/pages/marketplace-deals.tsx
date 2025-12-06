@@ -36,8 +36,30 @@ import {
   Crown
 } from "lucide-react";
 
+interface WholesalerReputation {
+  trustScore: number | null;
+  rating: number | null;
+  dealsClosedCount: number | null;
+  onTimeClosingsCount: number | null;
+}
+
+interface WholesalerBadge {
+  type: string;
+  label: string;
+  icon: string | null;
+  color: string | null;
+}
+
 interface MarketplaceDeal extends WholesaleDeal {
   isPegasusDeal?: boolean;
+  wholesalerInfo?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+  } | null;
+  wholesalerReputation?: WholesalerReputation | null;
+  wholesalerBadges?: WholesalerBadge[];
 }
 
 export default function MarketplaceDeals() {
@@ -335,7 +357,7 @@ function DealCard({ deal }: { deal: MarketplaceDeal }) {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             <Badge variant="secondary">
               <Home className="w-3 h-3 mr-1" />
               {deal.propertyType || "Residential"}
@@ -353,6 +375,49 @@ function DealCard({ deal }: { deal: MarketplaceDeal }) {
               </Badge>
             )}
           </div>
+
+          {(deal.wholesalerReputation || (deal.wholesalerBadges && deal.wholesalerBadges.length > 0)) && (
+            <div className="pt-3 border-t">
+              <p className="text-xs text-muted-foreground mb-2">Wholesaler</p>
+              <div className="flex items-center gap-3">
+                {deal.wholesalerReputation && (
+                  <div className="flex items-center gap-2">
+                    {deal.wholesalerReputation.trustScore !== null && (
+                      <div className="flex items-center gap-1">
+                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-sm font-medium">{deal.wholesalerReputation.trustScore}</span>
+                      </div>
+                    )}
+                    {deal.wholesalerReputation.rating !== null && deal.wholesalerReputation.rating !== undefined && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm font-medium">{Number(deal.wholesalerReputation.rating).toFixed(1)}</span>
+                      </div>
+                    )}
+                    {deal.wholesalerReputation.dealsClosedCount !== null && deal.wholesalerReputation.dealsClosedCount > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        ({deal.wholesalerReputation.dealsClosedCount} deals)
+                      </span>
+                    )}
+                  </div>
+                )}
+                {deal.wholesalerBadges && deal.wholesalerBadges.length > 0 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {deal.wholesalerBadges.slice(0, 3).map((badge, idx) => (
+                      <Badge 
+                        key={idx} 
+                        variant="outline" 
+                        className="text-xs py-0 px-1.5"
+                        style={badge.color ? { borderColor: badge.color, color: badge.color } : undefined}
+                      >
+                        {badge.label}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
 
         <CardFooter className="pt-4 border-t">

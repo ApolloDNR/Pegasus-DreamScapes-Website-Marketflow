@@ -49,6 +49,32 @@ interface UserActivity {
   createdAt: string;
 }
 
+interface UserReputation {
+  id: number;
+  userId: string;
+  trustScore: number | null;
+  rating: number | null;
+  dealsClosedCount: number | null;
+  onTimeClosingsCount: number | null;
+  cancellationsCount: number | null;
+  totalVolumeTransacted: number | null;
+  responseRate: number | null;
+  lastUpdatedAt: Date | null;
+}
+
+interface UserBadge {
+  id: number;
+  userId: string;
+  badgeType: string;
+  label: string;
+  description: string | null;
+  icon: string | null;
+  color: string | null;
+  isActive: boolean | null;
+  awardedBy: string | null;
+  createdAt: Date;
+}
+
 const RANK_TIERS = [
   { name: "Bronze", minDeals: 0, minVolume: 0, color: "bg-amber-700", textColor: "text-amber-100", icon: Medal },
   { name: "Silver", minDeals: 5, minVolume: 100000, color: "bg-slate-400", textColor: "text-slate-900", icon: Trophy },
@@ -208,6 +234,28 @@ export default function UserProfile() {
     enabled: !!userId,
   });
 
+  const { data: reputation } = useQuery<UserReputation | null>({
+    queryKey: ["user-reputation", validUserId],
+    queryFn: async ({ queryKey }) => {
+      const [, id] = queryKey as [string, string];
+      const res = await fetch(`/api/users/${id}/reputation`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  const { data: userBadges = [] } = useQuery<UserBadge[]>({
+    queryKey: ["user-badges", validUserId],
+    queryFn: async ({ queryKey }) => {
+      const [, id] = queryKey as [string, string];
+      const res = await fetch(`/api/users/${id}/badges`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/reviews", {
@@ -272,7 +320,8 @@ export default function UserProfile() {
     ? { icon: Shield, color: "bg-blue-100 text-blue-700", label: "Verified" }
     : { icon: CheckCircle2, color: "bg-slate-100 text-slate-700", label: "Basic Member" };
 
-  const avgRating = parseFloat(stats?.avgOverallRating || "0");
+  const parsedRating = parseFloat(stats?.avgOverallRating || "0");
+  const avgRating = !isNaN(parsedRating) ? parsedRating : 0;
   
   const rankInfo = getRankTier(
     stats?.totalDealsCompleted || 0,
@@ -427,19 +476,118 @@ export default function UserProfile() {
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4 mt-4">
+                {reputation && (
+                  <Card className="sleek-card">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-primary" />
+                        Trust Score & Reliability
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {reputation.trustScore !== null && (
+                          <div className="p-4 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950/50 dark:to-orange-950/50 text-center">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <Award className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{reputation.trustScore}</p>
+                            <p className="text-xs text-muted-foreground">Trust Score</p>
+                          </div>
+                        )}
+                        {reputation.rating !== null && reputation.rating !== undefined && (
+                          <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-950/50 dark:to-amber-950/50 text-center">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                            </div>
+                            <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">{Number(reputation.rating).toFixed(1)}</p>
+                            <p className="text-xs text-muted-foreground">Rating</p>
+                          </div>
+                        )}
+                        {reputation.dealsClosedCount !== null && (
+                          <div className="p-4 rounded-lg bg-secondary/30 text-center">
+                            <p className="text-2xl font-bold text-primary">{reputation.dealsClosedCount}</p>
+                            <p className="text-xs text-muted-foreground">Deals Closed</p>
+                          </div>
+                        )}
+                        {reputation.onTimeClosingsCount !== null && (
+                          <div className="p-4 rounded-lg bg-green-100 dark:bg-green-950/50 text-center">
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{reputation.onTimeClosingsCount}</p>
+                            <p className="text-xs text-muted-foreground">On-Time Closings</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                        {reputation.cancellationsCount !== null && (
+                          <div className="p-3 rounded bg-background flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950 flex items-center justify-center">
+                              <CheckCircle2 className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{reputation.cancellationsCount}</p>
+                              <p className="text-xs text-muted-foreground">Cancellations</p>
+                            </div>
+                          </div>
+                        )}
+                        {reputation.totalVolumeTransacted !== null && (
+                          <div className="p-3 rounded bg-background flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+                              <DollarSign className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{formatCurrency(reputation.totalVolumeTransacted)}</p>
+                              <p className="text-xs text-muted-foreground">Volume Transacted</p>
+                            </div>
+                          </div>
+                        )}
+                        {reputation.responseRate !== null && (
+                          <div className="p-3 rounded bg-background flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
+                              <MessageCircle className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{reputation.responseRate}%</p>
+                              <p className="text-xs text-muted-foreground">Response Rate</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <Card className="sleek-card">
                   <CardHeader>
-                    <CardTitle className="text-base">Achievements</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-amber-500" />
+                      Achievements & Badges
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
+                      {userBadges.filter(b => b.isActive).map((badge) => (
+                        <Badge 
+                          key={badge.id} 
+                          className="py-1.5 px-3"
+                          style={badge.color ? { 
+                            backgroundColor: `${badge.color}20`, 
+                            color: badge.color,
+                            borderColor: badge.color 
+                          } : undefined}
+                          variant={badge.color ? "outline" : "secondary"}
+                          data-testid={`badge-${badge.badgeType}`}
+                        >
+                          <Award className="w-3 h-3 mr-1.5" />
+                          {badge.label}
+                        </Badge>
+                      ))}
                       {(stats?.badges || []).map((badge, i) => (
-                        <Badge key={i} className="bg-gradient-to-r from-primary/20 to-accent/20">
+                        <Badge key={`legacy-${i}`} className="bg-gradient-to-r from-primary/20 to-accent/20">
                           <Award className="w-3 h-3 mr-1" />
                           {badge}
                         </Badge>
                       ))}
-                      {(!stats?.badges || stats.badges.length === 0) && (
+                      {userBadges.filter(b => b.isActive).length === 0 && (!stats?.badges || stats.badges.length === 0) && (
                         <p className="text-sm text-muted-foreground">No badges earned yet</p>
                       )}
                     </div>

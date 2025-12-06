@@ -2705,6 +2705,36 @@ export async function registerRoutes(
     }
   });
 
+  // Get user reputation
+  app.get("/api/users/:userId/reputation", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      if (!userId || userId.length < 1 || userId.length > 100) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      const reputation = await storage.getUserReputation(userId);
+      return res.json(reputation || null);
+    } catch (error) {
+      console.error("Error fetching user reputation:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user badges
+  app.get("/api/users/:userId/badges", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      if (!userId || userId.length < 1 || userId.length > 100) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      const badges = await storage.getUserBadges(userId);
+      return res.json(badges || []);
+    } catch (error) {
+      console.error("Error fetching user badges:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // =====================================================
   // Deal Negotiations Routes
   // =====================================================
@@ -4027,7 +4057,7 @@ export async function registerRoutes(
       const [wholesaleDeals, projects, users] = await Promise.all([
         storage.getWholesaleDeals(),
         storage.getCapitalProjects(),
-        storage.getUsers(),
+        storage.getAllUsers(),
       ]);
       
       const pendingDeals = wholesaleDeals
@@ -4067,7 +4097,7 @@ export async function registerRoutes(
   // Get recent users for admin
   app.get("/api/marketplace/admin/users", requireStaffRole, async (req: any, res) => {
     try {
-      const users = await storage.getUsers();
+      const users = await storage.getAllUsers();
       const usersWithRoles = await Promise.all(
         users.slice(0, 20).map(async (user) => {
           const roles = await storage.getUserRoles(user.id);
@@ -4227,30 +4257,74 @@ export async function registerRoutes(
   app.get("/api/marketplace/deals", async (req: any, res) => {
     try {
       const deals = await storage.getWholesaleDeals();
-      const users = await storage.getUsers();
+      
+      const filteredDeals = deals.filter(d => d.status === "listed" || d.status === "approved" || d.status === "available");
+      
+      const uniqueSubmitterIds = [...new Set(filteredDeals.map(d => d.submittedBy).filter(Boolean))] as string[];
+      
+      let userMap = new Map<string, any>();
+      let rolesMap = new Map<string, any[]>();
+      let reputationMap = new Map<string, any>();
+      let badgesMap = new Map<string, any[]>();
+      
+      try {
+        const [usersResult, roles, reputations, badges] = await Promise.all([
+          storage.getUsersByIds(uniqueSubmitterIds),
+          storage.getRolesForUsers(uniqueSubmitterIds),
+          storage.getReputationsForUsers(uniqueSubmitterIds),
+          storage.getBadgesForUsers(uniqueSubmitterIds)
+        ]);
+        userMap = usersResult;
+        rolesMap = roles;
+        reputationMap = reputations;
+        badgesMap = badges;
+      } catch (err) {
+        console.warn("Warning: Failed to fetch some user data for deals:", err);
+      }
       
       const pegasusUserIds = new Set<string>();
-      for (const user of users) {
-        const roles = await storage.getUserRoles(user.id);
-        const hasPegasusRole = roles.some(r => r.role.startsWith("pegasus_"));
-        if (hasPegasusRole) {
-          pegasusUserIds.add(user.id);
+      for (const [id, roles] of rolesMap) {
+        if (roles && Array.isArray(roles) && roles.some((r: any) => r.role?.startsWith("pegasus_"))) {
+          pegasusUserIds.add(id);
         }
       }
       
-      const publicDeals = deals
-        .filter(d => d.status === "listed" || d.status === "approved" || d.status === "available")
-        .map(d => ({
+      const publicDeals = filteredDeals.map((d) => {
+        const submitter = d.submittedBy ? userMap.get(d.submittedBy) : null;
+        const reputation = d.submittedBy ? reputationMap.get(d.submittedBy) || null : null;
+        const badges = d.submittedBy ? badgesMap.get(d.submittedBy) || [] : [];
+        
+        return {
           ...d,
           isPegasusDeal: d.submittedBy ? pegasusUserIds.has(d.submittedBy) : false,
-        }))
-        .sort((a, b) => {
-          if (a.isPegasusDeal && !b.isPegasusDeal) return -1;
-          if (!a.isPegasusDeal && b.isPegasusDeal) return 1;
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        });
+          wholesalerInfo: submitter ? {
+            id: submitter.id,
+            firstName: submitter.firstName,
+            lastName: submitter.lastName,
+            profileImageUrl: submitter.profileImageUrl,
+          } : null,
+          wholesalerReputation: reputation ? {
+            trustScore: reputation.trustScore ?? null,
+            rating: reputation.rating ?? null,
+            dealsClosedCount: reputation.dealsClosedCount ?? null,
+            onTimeClosingsCount: reputation.onTimeClosingsCount ?? null,
+          } : null,
+          wholesalerBadges: Array.isArray(badges) ? badges.filter((b: any) => b?.isActive).map((b: any) => ({
+            type: b.badgeType,
+            label: b.label,
+            icon: b.icon,
+            color: b.color,
+          })) : [],
+        };
+      });
       
-      res.json(publicDeals);
+      const sortedDeals = publicDeals.sort((a, b) => {
+        if (a.isPegasusDeal && !b.isPegasusDeal) return -1;
+        if (!a.isPegasusDeal && b.isPegasusDeal) return 1;
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      });
+      
+      res.json(sortedDeals);
     } catch (error) {
       console.error("Error fetching marketplace deals:", error);
       res.status(500).json({ message: "Failed to fetch deals" });
@@ -4326,7 +4400,7 @@ export async function registerRoutes(
   app.get("/api/marketplace/projects", async (req: any, res) => {
     try {
       const projects = await storage.getCapitalProjects();
-      const users = await storage.getUsers();
+      const users = await storage.getAllUsers();
       
       const pegasusUserIds = new Set<string>();
       for (const user of users) {

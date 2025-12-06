@@ -64,6 +64,7 @@ import MarketplaceCapital from "@/pages/marketplace-capital";
 import MarketplaceCapitalDetail from "@/pages/marketplace-capital-detail";
 import MarketplaceProperties from "@/pages/marketplace-properties";
 import MarketplacePropertyDetail from "@/pages/marketplace-property-detail";
+import SubmitDeal from "@/pages/submit-deal";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -87,6 +88,7 @@ function Router() {
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
       <Route path="/partner" component={Partner} />
+      <Route path="/submit-deal" component={SubmitDeal} />
       <Route path="/dashboard" component={Dashboard} />
       {/* Legacy HQ routes redirect to marketplace admin */}
       <Route path="/dealflow/hq">{() => <Redirect to="/marketplace/admin" />}</Route>

@@ -68,6 +68,7 @@ const megaMenuSections = {
       { href: "/wholesale", label: "Wholesale Deals", description: "Off-market properties available", icon: Briefcase },
       { href: "/sell", label: "Sell Your Property", description: "Get a cash offer", icon: DollarSign },
       { href: "/invest", label: "Invest With Us", description: "Partner on projects", icon: TrendingUp },
+      { href: "/submit-deal", label: "Submit a Deal", description: "Wholesalers submit deals", icon: FileText },
     ]
   },
   tools: {

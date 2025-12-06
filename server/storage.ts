@@ -11,6 +11,7 @@ import {
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
   leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
+  userReputation, userBadges,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -56,7 +57,9 @@ import {
   type PeggyMessage, type InsertPeggyMessage,
   type SavedAnalysis, type InsertSavedAnalysis,
   type WholesaleDealOffer, type InsertWholesaleDealOffer,
-  type JVRequest, type InsertJVRequest
+  type JVRequest, type InsertJVRequest,
+  type UserReputation, type InsertUserReputation,
+  type UserBadge, type InsertUserBadge
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -297,6 +300,18 @@ export interface IStorage {
   getUserStats(userId: string): Promise<UserStats | undefined>;
   updateUserStats(userId: string, data: Partial<UserStats>): Promise<UserStats>;
   getUserActivity(userId: string): Promise<{ id: number; type: string; title: string; description: string; amount?: number; createdAt: Date }[]>;
+
+  // User Reputation & Badges
+  getUserReputation(userId: string): Promise<UserReputation | undefined>;
+  createUserReputation(reputation: InsertUserReputation): Promise<UserReputation>;
+  updateUserReputation(userId: string, data: Partial<InsertUserReputation>): Promise<UserReputation | undefined>;
+  getUserBadges(userId: string): Promise<UserBadge[]>;
+  createUserBadge(badge: InsertUserBadge): Promise<UserBadge>;
+  deleteUserBadge(id: number): Promise<void>;
+  getReputationsForUsers(userIds: string[]): Promise<Map<string, UserReputation>>;
+  getBadgesForUsers(userIds: string[]): Promise<Map<string, UserBadge[]>>;
+  getRolesForUsers(userIds: string[]): Promise<Map<string, UserRole[]>>;
+  getUsersByIds(userIds: string[]): Promise<Map<string, User>>;
 
   // Deal Negotiations
   createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation>;
@@ -1786,6 +1801,84 @@ export class DatabaseStorage implements IStorage {
     activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
     return activities.slice(0, 20);
+  }
+
+  // User Reputation & Badges
+  async getUserReputation(userId: string): Promise<UserReputation | undefined> {
+    const [reputation] = await db.select().from(userReputation).where(eq(userReputation.userId, userId));
+    return reputation;
+  }
+
+  async createUserReputation(reputation: InsertUserReputation): Promise<UserReputation> {
+    const [created] = await db.insert(userReputation).values(reputation).returning();
+    return created;
+  }
+
+  async updateUserReputation(userId: string, data: Partial<InsertUserReputation>): Promise<UserReputation | undefined> {
+    const [updated] = await db.update(userReputation)
+      .set({ ...data, lastUpdatedAt: new Date() })
+      .where(eq(userReputation.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  async getUserBadges(userId: string): Promise<UserBadge[]> {
+    return db.select().from(userBadges)
+      .where(eq(userBadges.userId, userId))
+      .orderBy(desc(userBadges.createdAt));
+  }
+
+  async createUserBadge(badge: InsertUserBadge): Promise<UserBadge> {
+    const [created] = await db.insert(userBadges).values(badge).returning();
+    return created;
+  }
+
+  async deleteUserBadge(id: number): Promise<void> {
+    await db.delete(userBadges).where(eq(userBadges.id, id));
+  }
+
+  async getReputationsForUsers(userIds: string[]): Promise<Map<string, UserReputation>> {
+    if (userIds.length === 0) return new Map();
+    const reputations = await db.select().from(userReputation).where(inArray(userReputation.userId, userIds));
+    const map = new Map<string, UserReputation>();
+    for (const rep of reputations) {
+      map.set(rep.userId, rep);
+    }
+    return map;
+  }
+
+  async getBadgesForUsers(userIds: string[]): Promise<Map<string, UserBadge[]>> {
+    if (userIds.length === 0) return new Map();
+    const badges = await db.select().from(userBadges).where(inArray(userBadges.userId, userIds));
+    const map = new Map<string, UserBadge[]>();
+    for (const badge of badges) {
+      const existing = map.get(badge.userId) || [];
+      existing.push(badge);
+      map.set(badge.userId, existing);
+    }
+    return map;
+  }
+
+  async getRolesForUsers(userIds: string[]): Promise<Map<string, UserRole[]>> {
+    if (userIds.length === 0) return new Map();
+    const roles = await db.select().from(userRoles).where(inArray(userRoles.userId, userIds));
+    const map = new Map<string, UserRole[]>();
+    for (const role of roles) {
+      const existing = map.get(role.userId) || [];
+      existing.push(role);
+      map.set(role.userId, existing);
+    }
+    return map;
+  }
+
+  async getUsersByIds(userIds: string[]): Promise<Map<string, User>> {
+    if (userIds.length === 0) return new Map();
+    const userList = await db.select().from(users).where(inArray(users.id, userIds));
+    const map = new Map<string, User>();
+    for (const user of userList) {
+      map.set(user.id, user);
+    }
+    return map;
   }
 
   // Deal Negotiations
