@@ -223,6 +223,287 @@ CREATE POLICY "Users can delete own saved items"
   USING (auth.uid() = user_id);
 
 -- =====================================================
+-- CAPITAL PROJECTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS capital_projects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  location TEXT,
+  property_type TEXT,
+  structure TEXT CHECK (structure IN ('EQUITY', 'DEBT', 'HYBRID')),
+  funding_goal DECIMAL(12,2) NOT NULL,
+  amount_raised DECIMAL(12,2) DEFAULT 0,
+  min_investment DECIMAL(12,2),
+  projected_return TEXT,
+  hold_period TEXT,
+  photos TEXT[],
+  status TEXT DEFAULT 'ACTIVE' CHECK (status IN (
+    'ACTIVE', 
+    'FUNDED', 
+    'CLOSED', 
+    'CANCELLED'
+  )),
+  is_public BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- JV REQUESTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS jv_requests (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  deal_id UUID NOT NULL,
+  requester_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  wholesaler_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  strategy TEXT NOT NULL,
+  funding_source TEXT,
+  proposed_fee DECIMAL(12,2),
+  message TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN (
+    'pending', 
+    'accepted', 
+    'rejected', 
+    'negotiating', 
+    'closed'
+  )),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- CAPITAL COMMITMENTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS capital_commitments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID NOT NULL REFERENCES capital_projects(id) ON DELETE CASCADE,
+  investor_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount DECIMAL(12,2) NOT NULL,
+  structure_preference TEXT,
+  notes TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN (
+    'pending', 
+    'approved', 
+    'funded', 
+    'rejected', 
+    'withdrawn'
+  )),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- LISTINGS TABLE (Retail/Investment Properties)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS listings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  address TEXT NOT NULL,
+  city TEXT,
+  state TEXT,
+  zip_code TEXT,
+  property_type TEXT,
+  listing_type TEXT CHECK (listing_type IN ('retail', 'investment', 'wholesale')),
+  price DECIMAL(12,2) NOT NULL,
+  bedrooms INTEGER,
+  bathrooms DECIMAL(3,1),
+  sqft INTEGER,
+  lot_size TEXT,
+  year_built INTEGER,
+  description TEXT,
+  features TEXT[],
+  photos TEXT[],
+  status TEXT DEFAULT 'active' CHECK (status IN (
+    'active', 
+    'pending', 
+    'sold', 
+    'withdrawn'
+  )),
+  is_public BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- BUYER OFFERS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS buyer_offers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  buyer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  offer_amount DECIMAL(12,2) NOT NULL,
+  financing_type TEXT,
+  contingencies TEXT[],
+  message TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN (
+    'pending', 
+    'accepted', 
+    'rejected', 
+    'countered', 
+    'withdrawn'
+  )),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- NOTIFICATIONS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT,
+  link TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- ADDITIONAL INDEXES
+-- =====================================================
+CREATE INDEX IF NOT EXISTS idx_capital_projects_owner ON capital_projects(owner_id);
+CREATE INDEX IF NOT EXISTS idx_capital_projects_status ON capital_projects(status);
+CREATE INDEX IF NOT EXISTS idx_jv_requests_deal ON jv_requests(deal_id);
+CREATE INDEX IF NOT EXISTS idx_jv_requests_requester ON jv_requests(requester_id);
+CREATE INDEX IF NOT EXISTS idx_jv_requests_status ON jv_requests(status);
+CREATE INDEX IF NOT EXISTS idx_capital_commitments_project ON capital_commitments(project_id);
+CREATE INDEX IF NOT EXISTS idx_capital_commitments_investor ON capital_commitments(investor_id);
+CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status);
+CREATE INDEX IF NOT EXISTS idx_listings_type ON listings(listing_type);
+CREATE INDEX IF NOT EXISTS idx_buyer_offers_listing ON buyer_offers(listing_id);
+CREATE INDEX IF NOT EXISTS idx_buyer_offers_buyer ON buyer_offers(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE is_read = FALSE;
+
+-- =====================================================
+-- RLS POLICIES FOR NEW TABLES
+-- =====================================================
+
+-- Capital Projects RLS
+ALTER TABLE capital_projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public projects are viewable" 
+  ON capital_projects FOR SELECT 
+  USING (is_public = true OR auth.uid() = owner_id);
+
+CREATE POLICY "Owners can insert projects" 
+  ON capital_projects FOR INSERT 
+  WITH CHECK (auth.uid() = owner_id);
+
+CREATE POLICY "Owners can update projects" 
+  ON capital_projects FOR UPDATE 
+  USING (auth.uid() = owner_id);
+
+-- JV Requests RLS
+ALTER TABLE jv_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own JV requests" 
+  ON jv_requests FOR SELECT 
+  USING (auth.uid() = requester_id OR auth.uid() = wholesaler_id);
+
+CREATE POLICY "Users can insert JV requests" 
+  ON jv_requests FOR INSERT 
+  WITH CHECK (auth.uid() = requester_id);
+
+CREATE POLICY "Participants can update JV requests" 
+  ON jv_requests FOR UPDATE 
+  USING (auth.uid() = requester_id OR auth.uid() = wholesaler_id);
+
+-- Capital Commitments RLS
+ALTER TABLE capital_commitments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own commitments" 
+  ON capital_commitments FOR SELECT 
+  USING (auth.uid() = investor_id OR auth.uid() IN (
+    SELECT owner_id FROM capital_projects WHERE id = project_id
+  ));
+
+CREATE POLICY "Investors can insert commitments" 
+  ON capital_commitments FOR INSERT 
+  WITH CHECK (auth.uid() = investor_id);
+
+CREATE POLICY "Investors can update own commitments" 
+  ON capital_commitments FOR UPDATE 
+  USING (auth.uid() = investor_id);
+
+-- Listings RLS
+ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public listings are viewable" 
+  ON listings FOR SELECT 
+  USING (is_public = true OR auth.uid() = owner_id);
+
+CREATE POLICY "Service role can manage listings" 
+  ON listings FOR ALL 
+  USING (true);
+
+-- Buyer Offers RLS
+ALTER TABLE buyer_offers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view related offers" 
+  ON buyer_offers FOR SELECT 
+  USING (auth.uid() = buyer_id OR auth.uid() IN (
+    SELECT owner_id FROM listings WHERE id = listing_id
+  ));
+
+CREATE POLICY "Buyers can insert offers" 
+  ON buyer_offers FOR INSERT 
+  WITH CHECK (auth.uid() = buyer_id);
+
+CREATE POLICY "Buyers can update own offers" 
+  ON buyer_offers FOR UPDATE 
+  USING (auth.uid() = buyer_id);
+
+-- Notifications RLS
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own notifications" 
+  ON notifications FOR SELECT 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Service role can insert notifications" 
+  ON notifications FOR INSERT 
+  WITH CHECK (true);
+
+CREATE POLICY "Users can update own notifications" 
+  ON notifications FOR UPDATE 
+  USING (auth.uid() = user_id);
+
+-- =====================================================
+-- ADDITIONAL TRIGGERS
+-- =====================================================
+
+CREATE TRIGGER update_capital_projects_updated_at
+    BEFORE UPDATE ON capital_projects
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_jv_requests_updated_at
+    BEFORE UPDATE ON jv_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_capital_commitments_updated_at
+    BEFORE UPDATE ON capital_commitments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_listings_updated_at
+    BEFORE UPDATE ON listings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_buyer_offers_updated_at
+    BEFORE UPDATE ON buyer_offers
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
 -- FUNCTIONS AND TRIGGERS
 -- =====================================================
 
@@ -256,5 +537,5 @@ CREATE TRIGGER update_user_reputation_updated_at
 DO $$
 BEGIN
   RAISE NOTICE 'Pegasus DreamScapes Marketplace schema created successfully!';
-  RAISE NOTICE 'Tables created: user_profiles, user_badges, user_reputation, seller_leads, wholesale_deals, saved_items';
+  RAISE NOTICE 'Tables created: user_profiles, user_badges, user_reputation, seller_leads, wholesale_deals, saved_items, capital_projects, jv_requests, capital_commitments, listings, buyer_offers, notifications';
 END $$;
