@@ -56,6 +56,10 @@ import MarketplaceDreamscaper from "@/pages/marketplace-dreamscaper";
 import MarketplaceInvestor from "@/pages/marketplace-investor";
 import MarketplaceBuyer from "@/pages/marketplace-buyer";
 import MarketplaceAdmin from "@/pages/marketplace-admin";
+import Partner from "@/pages/partner";
+import Dashboard from "@/pages/dashboard";
+import MarketplaceDeals from "@/pages/marketplace-deals";
+import MarketplaceDealDetail from "@/pages/marketplace-deal-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -78,6 +82,8 @@ function Router() {
       <Route path="/buy" component={Buy} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
+      <Route path="/partner" component={Partner} />
+      <Route path="/dashboard" component={Dashboard} />
       {/* Legacy HQ routes redirect to marketplace admin */}
       <Route path="/dealflow/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
       <Route path="/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
@@ -115,6 +121,8 @@ function Router() {
       <Route path="/marketplace/discover">{() => <Redirect to="/marketplace" />}</Route>
       <Route path="/marketplace/community" component={DealflowCommunity} />
       <Route path="/marketplace/messages" component={DealflowMessages} />
+      <Route path="/marketplace/deals" component={MarketplaceDeals} />
+      <Route path="/marketplace/deals/:id" component={MarketplaceDealDetail} />
       
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />

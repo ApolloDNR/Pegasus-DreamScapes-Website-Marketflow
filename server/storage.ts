@@ -10,7 +10,7 @@ import {
   announcements, notifications,
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
-  leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers,
+  leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -55,7 +55,8 @@ import {
   type PeggyConversation, type InsertPeggyConversation,
   type PeggyMessage, type InsertPeggyMessage,
   type SavedAnalysis, type InsertSavedAnalysis,
-  type WholesaleDealOffer, type InsertWholesaleDealOffer
+  type WholesaleDealOffer, type InsertWholesaleDealOffer,
+  type JVRequest, type InsertJVRequest
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -353,6 +354,15 @@ export interface IStorage {
   getWholesaleDealOffer(id: number): Promise<WholesaleDealOffer | undefined>;
   updateWholesaleDealOfferStatus(id: number, status: string): Promise<WholesaleDealOffer | undefined>;
   counterWholesaleDealOffer(id: number, counterAmount: number, counterNotes?: string): Promise<WholesaleDealOffer | undefined>;
+  
+  // JV Requests
+  createJvRequest(request: InsertJVRequest): Promise<JVRequest>;
+  getJvRequests(): Promise<JVRequest[]>;
+  getJvRequestsByDeal(dealId: number): Promise<JVRequest[]>;
+  getJvRequestsByDreamscaper(dreamscaperId: string): Promise<JVRequest[]>;
+  getJvRequestsByWholesaler(wholesalerId: string): Promise<JVRequest[]>;
+  getJvRequest(id: number): Promise<JVRequest | undefined>;
+  updateJvRequestStatus(id: number, status: string): Promise<JVRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2060,6 +2070,53 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(wholesaleDealOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ============================================
+  // JV REQUESTS
+  // ============================================
+
+  async createJvRequest(request: InsertJVRequest): Promise<JVRequest> {
+    const [created] = await db.insert(jvRequests).values({
+      ...request,
+      status: "pending"
+    }).returning();
+    return created;
+  }
+
+  async getJvRequests(): Promise<JVRequest[]> {
+    return db.select().from(jvRequests).orderBy(desc(jvRequests.createdAt));
+  }
+
+  async getJvRequestsByDeal(dealId: number): Promise<JVRequest[]> {
+    return db.select().from(jvRequests)
+      .where(eq(jvRequests.dealId, dealId))
+      .orderBy(desc(jvRequests.createdAt));
+  }
+
+  async getJvRequestsByDreamscaper(dreamscaperId: string): Promise<JVRequest[]> {
+    return db.select().from(jvRequests)
+      .where(eq(jvRequests.dreamscaperId, dreamscaperId))
+      .orderBy(desc(jvRequests.createdAt));
+  }
+
+  async getJvRequestsByWholesaler(wholesalerId: string): Promise<JVRequest[]> {
+    return db.select().from(jvRequests)
+      .where(eq(jvRequests.wholesalerId, wholesalerId))
+      .orderBy(desc(jvRequests.createdAt));
+  }
+
+  async getJvRequest(id: number): Promise<JVRequest | undefined> {
+    const [request] = await db.select().from(jvRequests).where(eq(jvRequests.id, id));
+    return request;
+  }
+
+  async updateJvRequestStatus(id: number, status: string): Promise<JVRequest | undefined> {
+    const [updated] = await db.update(jvRequests)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(jvRequests.id, id))
       .returning();
     return updated;
   }

@@ -3551,21 +3551,21 @@ export async function registerRoutes(
       }
       
       const buffer = await generateDealPacketPDF({
-        title: deal.title,
+        title: deal.propertyAddress,
         type: "wholesale",
         propertyAddress: deal.propertyAddress,
         city: deal.city || undefined,
         state: deal.state || undefined,
         propertyType: deal.propertyType || undefined,
-        beds: deal.beds || undefined,
-        baths: deal.baths || undefined,
+        beds: deal.bedrooms || undefined,
+        baths: deal.bathrooms ? parseFloat(deal.bathrooms) : undefined,
         sqft: deal.sqft || undefined,
         arv: deal.arv || undefined,
         purchasePrice: deal.askingPrice || undefined,
         rehabCost: deal.estimatedRepairs || undefined,
         assignmentFee: deal.assignmentFee || undefined,
         description: deal.description || undefined,
-        highlights: deal.highlights || undefined,
+        highlights: deal.sellerSituation ? [deal.sellerSituation] : undefined,
       });
       
       res.setHeader("Content-Type", "application/pdf");
@@ -3641,7 +3641,7 @@ export async function registerRoutes(
       const stats = {
         totalInvested: investmentOffers
           .filter(o => o.status === "accepted")
-          .reduce((sum, o) => sum + (o.amount || 0), 0),
+          .reduce((sum, o) => sum + (o.amountOffered || 0), 0),
         activeDeals: investmentOffers.filter(o => o.status === "accepted" && o.projectId).length,
         savedDeals: savedDeals.length,
         pendingOffers: investmentOffers.filter(o => o.status === "pending").length,
@@ -3682,7 +3682,7 @@ export async function registerRoutes(
       
       const stats = {
         activeProjects: projects.filter(p => p.status === "funding" || p.status === "active").length,
-        totalRaised: projects.reduce((sum, p) => sum + (p.currentFunding || 0), 0),
+        totalRaised: projects.reduce((sum, p) => sum + (p.amountRaised || 0), 0),
         totalFundingGoal: projects.reduce((sum, p) => sum + (p.fundingGoal || 0), 0),
         projectsCompleted: projects.filter(p => p.status === "completed" || p.status === "exited").length,
       };
@@ -3777,6 +3777,111 @@ export async function registerRoutes(
   });
 
   // ========================================
+  // MARKETPLACE BROWSE API ENDPOINTS
+  // ========================================
+
+  // Get all public/listed wholesale deals for browsing
+  app.get("/api/marketplace/deals", async (req: any, res) => {
+    try {
+      const deals = await storage.getWholesaleDeals();
+      // Filter to only show public/listed/available deals
+      const publicDeals = deals.filter(d => 
+        d.status === "listed" || d.status === "approved" || d.status === "available"
+      );
+      res.json(publicDeals);
+    } catch (error) {
+      console.error("Error fetching marketplace deals:", error);
+      res.status(500).json({ message: "Failed to fetch deals" });
+    }
+  });
+
+  // Get a single wholesale deal by ID
+  app.get("/api/marketplace/deals/:id", async (req: any, res) => {
+    try {
+      const dealId = Number(req.params.id);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+      
+      const deal = await storage.getWholesaleDeal(dealId);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      res.json(deal);
+    } catch (error) {
+      console.error("Error fetching deal:", error);
+      res.status(500).json({ message: "Failed to fetch deal" });
+    }
+  });
+
+  // Submit a JV request for a deal
+  app.post("/api/marketplace/jv-requests", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { dealId, wholesalerId, message, intendedStrategy, fundingSource, proposedAssignmentFee } = req.body;
+      
+      if (!dealId) {
+        return res.status(400).json({ message: "Deal ID is required" });
+      }
+
+      const jvRequest = await storage.createJvRequest({
+        dealId,
+        dreamscaperId: userId,
+        wholesalerId: wholesalerId || "",
+        message: message || null,
+        intendedStrategy: intendedStrategy || null,
+        fundingSource: fundingSource || null,
+        proposedAssignmentFee: proposedAssignmentFee || null,
+      });
+
+      res.status(201).json(jvRequest);
+    } catch (error) {
+      console.error("Error creating JV request:", error);
+      res.status(500).json({ message: "Failed to submit JV request" });
+    }
+  });
+
+  // Get all capital projects for browsing (public)
+  app.get("/api/marketplace/projects", async (req: any, res) => {
+    try {
+      const projects = await storage.getCapitalProjects();
+      // Filter to only show active/funding projects
+      const publicProjects = projects.filter(p => 
+        p.status === "funding" || p.status === "active"
+      );
+      res.json(publicProjects);
+    } catch (error) {
+      console.error("Error fetching marketplace projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects" });
+    }
+  });
+
+  // Get a single capital project by ID
+  app.get("/api/marketplace/projects/:id", async (req: any, res) => {
+    try {
+      const projectId = Number(req.params.id);
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      const project = await storage.getCapitalProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      res.status(500).json({ message: "Failed to fetch project" });
+    }
+  });
+
+  // ========================================
   // END MARKETPLACE DASHBOARD API ENDPOINTS
   // ========================================
 
@@ -3793,18 +3898,18 @@ export async function registerRoutes(
       const buffer = await generateDealPacketPDF({
         title: project.title,
         type: "capital",
-        propertyAddress: project.location,
+        propertyAddress: project.location || "",
         propertyType: project.propertyType || undefined,
-        arv: project.arv || undefined,
+        arv: project.projectedARV || undefined,
         purchasePrice: project.purchasePrice || undefined,
-        rehabCost: project.rehabCost || undefined,
+        rehabCost: project.rehabBudget || undefined,
         expectedProfit: project.projectedReturn ? 
           (project.fundingGoal || 0) * (parseFloat(project.projectedReturn) / 100) : 
           undefined,
         description: project.description || undefined,
-        highlights: project.highlights || undefined,
+        highlights: undefined,
         timeline: project.holdPeriod || undefined,
-        operatorName: project.operatorId || "Dreamscaper Operator",
+        operatorName: project.createdBy || "Dreamscaper Operator",
       });
       
       res.setHeader("Content-Type", "application/pdf");

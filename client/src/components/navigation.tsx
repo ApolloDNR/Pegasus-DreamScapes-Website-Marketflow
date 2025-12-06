@@ -56,6 +56,8 @@ const homeLinks = [
   { href: "#contact", label: "Contact" },
 ];
 
+import { Handshake } from "lucide-react";
+
 const megaMenuSections = {
   opportunities: {
     title: "Opportunities",
@@ -86,6 +88,7 @@ const megaMenuSections = {
     items: [
       { href: "/about", label: "About Us", description: "Our story and mission", icon: Users },
       { href: "/projects", label: "Portfolio", description: "Completed projects", icon: Briefcase },
+      { href: "/partner", label: "Partner With Us", description: "Join our marketplace", icon: Handshake, badge: "New" },
       { href: "/contact", label: "Contact", description: "Get in touch", icon: Award },
     ]
   }
