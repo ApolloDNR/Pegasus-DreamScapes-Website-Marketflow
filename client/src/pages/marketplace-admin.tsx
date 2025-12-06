@@ -22,30 +22,25 @@ import {
 } from "lucide-react";
 
 interface AdminStats {
-  totalUsers: number;
-  pendingApprovals: number;
-  activeDeals: number;
-  pendingDeals: number;
-  recentLeads: number;
-  monthlyVolume: number;
+  totalSellerLeads: number;
+  pendingSellerLeads: number;
+  totalInvestorLeads: number;
+  activeWholesaleDeals: number;
+  activeCapitalProjects: number;
 }
 
 export default function MarketplaceAdminPage() {
   const { data: stats, isLoading } = useQuery<AdminStats>({
     queryKey: ["/api/marketplace/admin/stats"],
-    enabled: false,
   });
 
-  const mockStats: AdminStats = {
-    totalUsers: 156,
-    pendingApprovals: 8,
-    activeDeals: 24,
-    pendingDeals: 5,
-    recentLeads: 12,
-    monthlyVolume: 1250000,
+  const displayStats: AdminStats = stats ?? {
+    totalSellerLeads: 0,
+    pendingSellerLeads: 0,
+    totalInvestorLeads: 0,
+    activeWholesaleDeals: 0,
+    activeCapitalProjects: 0,
   };
-
-  const displayStats = stats ?? mockStats;
 
   return (
     <AuthGuard requiredRoles={["admin"]}>
@@ -71,18 +66,18 @@ export default function MarketplaceAdminPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">Seller Leads</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-total-users">
-                    {displayStats.totalUsers}
+                  <div className="text-2xl font-bold" data-testid="stat-seller-leads">
+                    {displayStats.totalSellerLeads}
                   </div>
                 )}
               </CardContent>
@@ -90,15 +85,15 @@ export default function MarketplaceAdminPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                <CardTitle className="text-sm font-medium">Pending Seller</CardTitle>
                 <Clock className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold text-amber-600" data-testid="stat-pending">
-                    {displayStats.pendingApprovals}
+                  <div className="text-2xl font-bold text-amber-600" data-testid="stat-pending-seller">
+                    {displayStats.pendingSellerLeads}
                   </div>
                 )}
               </CardContent>
@@ -106,47 +101,15 @@ export default function MarketplaceAdminPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Deals</CardTitle>
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-active-deals">
-                    {displayStats.activeDeals}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Deal Queue</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-deal-queue">
-                    {displayStats.pendingDeals}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">New Leads</CardTitle>
+                <CardTitle className="text-sm font-medium">Investor Leads</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-new-leads">
-                    {displayStats.recentLeads}
+                  <div className="text-2xl font-bold" data-testid="stat-investor-leads">
+                    {displayStats.totalInvestorLeads}
                   </div>
                 )}
               </CardContent>
@@ -154,15 +117,31 @@ export default function MarketplaceAdminPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Volume</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Wholesale Deals</CardTitle>
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-volume">
-                    ${(displayStats.monthlyVolume / 1000).toFixed(0)}k
+                  <div className="text-2xl font-bold" data-testid="stat-wholesale-deals">
+                    {displayStats.activeWholesaleDeals}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Capital Projects</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold" data-testid="stat-capital-projects">
+                    {displayStats.activeCapitalProjects}
                   </div>
                 )}
               </CardContent>

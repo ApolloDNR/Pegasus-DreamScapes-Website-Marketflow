@@ -20,12 +20,12 @@ Preferred communication style: Simple, everyday language.
 
 **Framework**: React 18 with TypeScript on Vite.
 **Routing**: Wouter for client-side SPA.
-**Key Pages**: Homepage, About, Services, Projects (individual detail pages), Calculators, Resources (blog/articles), Wholesale Deals Marketplace, Seller/Investor lead forms, Contact, protected HQ Dashboard for staff, and **Dealflow** - a unified marketplace and matching system at /dealflow with My Office dashboard, Marketplace (Deals), Community forums, and Messages.
+**Key Pages**: Homepage, About, Services, Projects (individual detail pages), Calculators, Resources (blog/articles), Wholesale Deals Marketplace, Seller/Investor lead forms, Contact, and **Marketplace** - a unified role-based platform at /marketplace with dedicated dashboards for Wholesalers, Investors, Dreamsca pers, Buyers, and Admin. Legacy /dealflow/* routes redirect to /marketplace/* for backward compatibility.
 **State Management**: TanStack Query for server state, API calls, and caching.
 **UI Component Library**: Radix UI primitives wrapped with custom styled components (shadcn/ui pattern) using Tailwind CSS.
 **Design System**: Light editorial theme with cream/white backgrounds, dark text, bronze/blood-orange accents, and a custom HSL color palette. Typography uses Playfair Display (serif) for headlines and Inter for body text. Features two-column editorial layouts and component variants with `class-variance-authority`.
 **Form Handling**: React Hook Form with Zod for client-side validation.
-**Authentication**: Replit Auth integration via `useAuth` hook.
+**Authentication**: Dual support for Replit Auth (legacy via `useAuth` hook) and Supabase Auth (new via `useSupabaseAuth` hook and `SupabaseAuthProvider`). Login/Signup pages with role selection at /login and /signup.
 
 ### Backend Architecture
 
@@ -54,9 +54,19 @@ Context-aware AI assistant powered by OpenAI (via Replit AI Integrations) that p
 - **Suggestion Chips**: Dynamic suggestions based on current page and user role
 - **Feedback System**: Users can rate responses as helpful/not helpful
 
-### Dealflow Platform (/dealflow)
-- **My Office**: Personal dashboard with deal stats, saved deals, and activity feed
-- **Marketplace**: Dating-app style swipe interface for browsing deals with Like/Skip/Save actions
+### Marketplace Platform (/marketplace)
+The new unified marketplace replaces the old /dealflow routes with role-based dashboards:
+- **/marketplace/wholesaler**: Wholesaler dashboard with deal stats, recent deals, and submission tools
+- **/marketplace/investor**: Investor dashboard with portfolio stats, saved deals, and discovery
+- **/marketplace/dreamscaper**: Dreamscaper dashboard for capital project management
+- **/marketplace/buyer**: Buyer dashboard for property search and offer tracking
+- **/marketplace/admin**: Admin dashboard for platform management (staff only)
+- **Shared Layout** (client/src/components/marketplace-layout.tsx): Sidebar with role-aware navigation
+- **Auth Guards** (client/src/components/auth-guard.tsx): AuthGuard, GuestGuard, RoleGuard components
+- **API Endpoints**: `/api/marketplace/{role}/stats` endpoints for dashboard data
+- **Legacy Redirects**: /dealflow/*, /portal/*, /hq → /marketplace/* for backward compatibility
+
+### Community & Messaging
 - **Community**: Forum discussions with categories for Market Talk, Deal Analysis, Success Stories, and Q&A
 - **Messages**: Direct messaging between users for deal negotiations
 - **Peggy AI**: Accessible via sidebar Tools section or floating chat bubble
@@ -77,14 +87,14 @@ Centralized scoring algorithm for matching deals to investor preferences:
 - **Weighted Factors**: Property type (20%), strategy alignment (20%), location preference (15%), budget fit (15%), experience level (10%), return expectations (10%), structure preference (10%)
 - Returns ScoreResult with total score, breakdown by factor, and labels for transparency
 
-### Portal System (/portal)
-- **Dreamscaper HQ** (/dealflow/hq): Staff-only dashboard with lead management, deal overview, and admin tools
-- **Dealflow** (/dealflow): Unified platform for Investors, Wholesalers, and Buyers with role-based dashboards
+### Portal System (Legacy → Marketplace)
+- **Dreamscaper HQ** (/marketplace/admin): Staff-only dashboard with lead management, deal overview, and admin tools
+- **Marketplace** (/marketplace): Unified platform for Investors, Wholesalers, and Buyers with role-based dashboards
   - Sidebar navigation: My Office, Discover, Community, Messages
   - Tools section: Calculators, Resources, Peggy AI (sidebar)
   - Staff users see HQ Dashboard link in sidebar
-- Portal routing: Staff auto-redirect to /dealflow/hq; Investors/Wholesalers/Buyers auto-redirect to /dealflow/office
-- Legacy route /hq redirects to /dealflow/hq for backwards compatibility
+- Portal routing: Staff auto-redirect to /marketplace/admin; Investors/Wholesalers/Buyers auto-redirect to /marketplace/{role}
+- Legacy route /hq redirects to /marketplace/admin for backwards compatibility
 
 ### Deal Negotiation System
 - Supports debt (interest rate) and equity (percentage) investment structures

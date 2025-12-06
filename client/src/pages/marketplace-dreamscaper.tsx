@@ -21,10 +21,10 @@ import {
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 interface ProjectStats {
-  active: number;
-  completed: number;
-  raisingCapital: number;
+  activeProjects: number;
   totalRaised: number;
+  totalFundingGoal: number;
+  projectsCompleted: number;
 }
 
 export default function MarketplaceDreamscaperPage() {
@@ -33,17 +33,14 @@ export default function MarketplaceDreamscaperPage() {
 
   const { data: stats, isLoading } = useQuery<ProjectStats>({
     queryKey: ["/api/marketplace/dreamscaper/stats"],
-    enabled: false,
   });
 
-  const mockStats: ProjectStats = {
-    active: 2,
-    completed: 8,
-    raisingCapital: 1,
-    totalRaised: 850000,
+  const displayStats: ProjectStats = stats ?? {
+    activeProjects: 0,
+    totalRaised: 0,
+    totalFundingGoal: 0,
+    projectsCompleted: 0,
   };
-
-  const displayStats = stats ?? mockStats;
 
   return (
     <AuthGuard requiredRoles={["admin", "pegasus_dreamscaper", "dreamscaper"]}>
@@ -85,7 +82,7 @@ export default function MarketplaceDreamscaperPage() {
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-active-projects">
-                    {displayStats.active}
+                    {displayStats.activeProjects}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">In progress</p>
@@ -102,7 +99,7 @@ export default function MarketplaceDreamscaperPage() {
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-completed-projects">
-                    {displayStats.completed}
+                    {displayStats.projectsCompleted}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">Total transformations</p>
@@ -119,7 +116,7 @@ export default function MarketplaceDreamscaperPage() {
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-raising-capital">
-                    {displayStats.raisingCapital}
+                    {displayStats.totalFundingGoal > 0 ? Math.round((displayStats.totalRaised / displayStats.totalFundingGoal) * 100) : 0}%
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">Open funding rounds</p>

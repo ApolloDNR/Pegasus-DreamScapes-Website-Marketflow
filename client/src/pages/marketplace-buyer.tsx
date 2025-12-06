@@ -20,9 +20,9 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 interface BuyerStats {
   savedProperties: number;
-  activeOffers: number;
-  viewedThisMonth: number;
-  pendingInquiries: number;
+  pendingOffers: number;
+  acceptedOffers: number;
+  totalPurchases: number;
 }
 
 export default function MarketplaceBuyerPage() {
@@ -31,17 +31,14 @@ export default function MarketplaceBuyerPage() {
 
   const { data: stats, isLoading } = useQuery<BuyerStats>({
     queryKey: ["/api/marketplace/buyer/stats"],
-    enabled: false,
   });
 
-  const mockStats: BuyerStats = {
-    savedProperties: 8,
-    activeOffers: 2,
-    viewedThisMonth: 24,
-    pendingInquiries: 1,
+  const displayStats: BuyerStats = stats ?? {
+    savedProperties: 0,
+    pendingOffers: 0,
+    acceptedOffers: 0,
+    totalPurchases: 0,
   };
-
-  const displayStats = stats ?? mockStats;
 
   return (
     <AuthGuard requiredRoles={["admin", "buyer_retail", "buyer_investment"]}>
@@ -91,15 +88,15 @@ export default function MarketplaceBuyerPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Offers</CardTitle>
+                <CardTitle className="text-sm font-medium">Pending Offers</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-active-offers">
-                    {displayStats.activeOffers}
+                  <div className="text-2xl font-bold" data-testid="stat-pending-offers">
+                    {displayStats.pendingOffers}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">Pending response</p>
@@ -108,35 +105,35 @@ export default function MarketplaceBuyerPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Viewed</CardTitle>
+                <CardTitle className="text-sm font-medium">Accepted Offers</CardTitle>
                 <Home className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-viewed">
-                    {displayStats.viewedThisMonth}
+                  <div className="text-2xl font-bold" data-testid="stat-accepted-offers">
+                    {displayStats.acceptedOffers}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">This month</p>
+                <p className="text-xs text-muted-foreground">In process</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Inquiries</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-inquiries">
-                    {displayStats.pendingInquiries}
+                  <div className="text-2xl font-bold" data-testid="stat-total-purchases">
+                    {displayStats.totalPurchases}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">Awaiting response</p>
+                <p className="text-xs text-muted-foreground">Lifetime</p>
               </CardContent>
             </Card>
           </div>

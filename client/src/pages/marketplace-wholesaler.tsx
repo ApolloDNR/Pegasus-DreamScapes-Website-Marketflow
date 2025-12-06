@@ -32,17 +32,14 @@ export default function MarketplaceWholesalerPage() {
 
   const { data: stats, isLoading } = useQuery<DealStats>({
     queryKey: ["/api/marketplace/wholesaler/stats"],
-    enabled: false,
   });
 
-  const mockStats: DealStats = {
-    active: 3,
-    pending: 2,
-    sold: 12,
-    totalVolume: 425000,
+  const displayStats: DealStats = stats ?? {
+    active: 0,
+    pending: 0,
+    sold: 0,
+    totalVolume: 0,
   };
-
-  const displayStats = stats ?? mockStats;
 
   return (
     <AuthGuard requiredRoles={["admin", "pegasus_wholesaler", "wholesaler"]}>

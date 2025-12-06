@@ -3580,6 +3580,206 @@ export async function registerRoutes(
     }
   });
 
+  // ========================================
+  // MARKETPLACE DASHBOARD API ENDPOINTS
+  // ========================================
+
+  // Wholesaler Dashboard Stats
+  app.get("/api/marketplace/wholesaler/stats", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const wholesaleDeals = await storage.getWholesaleDealsBySubmitter(userId);
+      
+      const stats = {
+        active: wholesaleDeals.filter(d => d.status === "listed" || d.status === "approved").length,
+        pending: wholesaleDeals.filter(d => d.status === "pending_review" || d.status === "under_review").length,
+        sold: wholesaleDeals.filter(d => d.status === "sold" || d.status === "closed").length,
+        totalVolume: wholesaleDeals
+          .filter(d => d.status === "sold" || d.status === "closed")
+          .reduce((sum, d) => sum + (d.assignmentFee || 0), 0),
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching wholesaler stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Wholesaler Recent Deals
+  app.get("/api/marketplace/wholesaler/deals", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const deals = await storage.getWholesaleDealsBySubmitter(userId);
+      res.json(deals.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching wholesaler deals:", error);
+      res.status(500).json({ message: "Failed to fetch deals" });
+    }
+  });
+
+  // Investor Dashboard Stats
+  app.get("/api/marketplace/investor/stats", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const investorProfile = await storage.getInvestorProfile(userId);
+      const investmentOffers = await storage.getInvestmentOffersByInvestor(userId);
+      const savedDeals = await storage.getUserSavedDeals(userId);
+
+      const stats = {
+        totalInvested: investmentOffers
+          .filter(o => o.status === "accepted")
+          .reduce((sum, o) => sum + (o.amount || 0), 0),
+        activeDeals: investmentOffers.filter(o => o.status === "accepted" && o.projectId).length,
+        savedDeals: savedDeals.length,
+        pendingOffers: investmentOffers.filter(o => o.status === "pending").length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching investor stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Investor Saved/Bookmarked Deals
+  app.get("/api/marketplace/investor/saved", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const bookmarks = await storage.getUserSavedDeals(userId);
+      res.json(bookmarks);
+    } catch (error) {
+      console.error("Error fetching investor saved deals:", error);
+      res.status(500).json({ message: "Failed to fetch saved deals" });
+    }
+  });
+
+  // Dreamscaper Dashboard Stats  
+  app.get("/api/marketplace/dreamscaper/stats", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const projects = await storage.getCapitalProjectsByCreator(userId);
+      
+      const stats = {
+        activeProjects: projects.filter(p => p.status === "funding" || p.status === "active").length,
+        totalRaised: projects.reduce((sum, p) => sum + (p.currentFunding || 0), 0),
+        totalFundingGoal: projects.reduce((sum, p) => sum + (p.fundingGoal || 0), 0),
+        projectsCompleted: projects.filter(p => p.status === "completed" || p.status === "exited").length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dreamscaper stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Dreamscaper Recent Projects
+  app.get("/api/marketplace/dreamscaper/projects", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const projects = await storage.getCapitalProjectsByCreator(userId);
+      res.json(projects.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching dreamscaper projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects" });
+    }
+  });
+
+  // Buyer Dashboard Stats
+  app.get("/api/marketplace/buyer/stats", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const savedProperties = await storage.getSavedProperties(userId);
+      const offers = await storage.getBuyerOffers(userId);
+
+      const stats = {
+        savedProperties: savedProperties.length,
+        pendingOffers: offers.filter(o => o.status === "pending").length,
+        acceptedOffers: offers.filter(o => o.status === "accepted").length,
+        totalPurchases: offers.filter(o => o.status === "closed").length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching buyer stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Buyer Saved Properties
+  app.get("/api/marketplace/buyer/saved", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const savedProperties = await storage.getSavedProperties(userId);
+      res.json(savedProperties);
+    } catch (error) {
+      console.error("Error fetching buyer saved properties:", error);
+      res.status(500).json({ message: "Failed to fetch saved properties" });
+    }
+  });
+
+  // Admin Dashboard Stats
+  app.get("/api/marketplace/admin/stats", requireStaffRole, async (req: any, res) => {
+    try {
+      const [sellerLeads, investorLeads, wholesaleDeals, projects] = await Promise.all([
+        storage.getSellerLeads(),
+        storage.getInvestorLeads(),
+        storage.getWholesaleDeals(),
+        storage.getCapitalProjects(),
+      ]);
+
+      const stats = {
+        totalSellerLeads: sellerLeads.length,
+        pendingSellerLeads: sellerLeads.filter(l => l.status === "new" || l.status === "pending").length,
+        totalInvestorLeads: investorLeads.length,
+        activeWholesaleDeals: wholesaleDeals.filter(d => d.status === "listed" || d.status === "approved").length,
+        activeCapitalProjects: projects.filter(p => p.status === "funding" || p.status === "active").length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // ========================================
+  // END MARKETPLACE DASHBOARD API ENDPOINTS
+  // ========================================
+
   // Generate capital project PDF
   app.get("/api/pdf/capital-project/:id", async (req, res) => {
     try {

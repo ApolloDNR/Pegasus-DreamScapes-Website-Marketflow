@@ -20,10 +20,10 @@ import {
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 interface InvestorStats {
-  activeInvestments: number;
   totalInvested: number;
+  activeDeals: number;
   savedDeals: number;
-  avgReturn: number;
+  pendingOffers: number;
 }
 
 export default function MarketplaceInvestorPage() {
@@ -31,17 +31,14 @@ export default function MarketplaceInvestorPage() {
 
   const { data: stats, isLoading } = useQuery<InvestorStats>({
     queryKey: ["/api/marketplace/investor/stats"],
-    enabled: false,
   });
 
-  const mockStats: InvestorStats = {
-    activeInvestments: 4,
-    totalInvested: 325000,
-    savedDeals: 12,
-    avgReturn: 18.5,
+  const displayStats: InvestorStats = stats ?? {
+    totalInvested: 0,
+    activeDeals: 0,
+    savedDeals: 0,
+    pendingOffers: 0,
   };
-
-  const displayStats = stats ?? mockStats;
 
   return (
     <AuthGuard requiredRoles={["admin", "investor"]}>
@@ -77,7 +74,7 @@ export default function MarketplaceInvestorPage() {
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-active-investments">
-                    {displayStats.activeInvestments}
+                    {displayStats.activeDeals}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">In your portfolio</p>
@@ -120,18 +117,18 @@ export default function MarketplaceInvestorPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Return</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Pending Offers</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-avg-return">
-                    {displayStats.avgReturn}%
+                  <div className="text-2xl font-bold" data-testid="stat-pending-offers">
+                    {displayStats.pendingOffers}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">Across investments</p>
+                <p className="text-xs text-muted-foreground">Awaiting response</p>
               </CardContent>
             </Card>
           </div>
