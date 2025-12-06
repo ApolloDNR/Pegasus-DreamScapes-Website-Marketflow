@@ -181,10 +181,10 @@ export default function UserProfile() {
           <p className="text-muted-foreground mb-8">
             The user you're looking for doesn't exist or has been removed.
           </p>
-          <Link href="/dealflow/office">
+          <Link href="/marketplace">
             <Button>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dealflow
+              Back to Marketplace
             </Button>
           </Link>
         </div>
@@ -203,7 +203,7 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen pt-20 bg-stone">
       <div className="max-w-5xl mx-auto px-6 py-12">
-        <Link href="/dealflow/office">
+        <Link href="/marketplace">
           <Button variant="ghost" className="mb-6" data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -259,7 +259,7 @@ export default function UserProfile() {
 
                 {!isOwnProfile && isAuthenticated && (
                   <div className="flex gap-2 mt-6 w-full">
-                    <Link href={`/dealflow/messages?to=${userId}`} className="flex-1">
+                    <Link href={`/marketplace/messages?to=${userId}`} className="flex-1">
                       <Button variant="outline" className="w-full" data-testid="button-message">
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Message

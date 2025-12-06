@@ -105,7 +105,8 @@ async function loadGoogleMapsApi(): Promise<void> {
     const apiKey = await fetchGoogleMapsApiKey();
     
     if (!apiKey) {
-      throw new Error('Google Maps API key not configured');
+      console.warn('Google Maps API key not configured. Address autocomplete will be disabled.');
+      return;
     }
 
     return new Promise<void>((resolve, reject) => {
@@ -186,7 +187,11 @@ export function AddressAutocomplete({
   useEffect(() => {
     loadGoogleMapsApi()
       .then(() => {
-        initAutocomplete();
+        if (window.google?.maps?.places) {
+          initAutocomplete();
+        } else {
+          setIsLoading(false);
+        }
       })
       .catch((error) => {
         console.error("Failed to load Google Maps API:", error);
@@ -195,7 +200,7 @@ export function AddressAutocomplete({
       });
 
     return () => {
-      if (autocompleteRef.current) {
+      if (autocompleteRef.current && window.google?.maps?.event) {
         google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
