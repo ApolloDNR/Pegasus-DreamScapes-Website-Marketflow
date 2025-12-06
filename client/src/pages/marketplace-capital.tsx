@@ -36,8 +36,13 @@ import {
   Percent,
   Users,
   Briefcase,
-  Sparkles
+  Sparkles,
+  Crown
 } from "lucide-react";
+
+interface MarketplaceProject extends CapitalProject {
+  isPegasusProject?: boolean;
+}
 
 export default function MarketplaceCapital() {
   return (
@@ -55,7 +60,7 @@ function CapitalPage() {
   const [propertyType, setPropertyType] = useState<string>("all");
   const [fundingRange, setFundingRange] = useState<string>("all");
 
-  const { data: projects, isLoading } = useQuery<CapitalProject[]>({
+  const { data: projects, isLoading } = useQuery<MarketplaceProject[]>({
     queryKey: ['/api/marketplace/projects'],
   });
 
@@ -222,7 +227,7 @@ function CapitalPage() {
   );
 }
 
-function ProjectCard({ project }: { project: CapitalProject }) {
+function ProjectCard({ project }: { project: MarketplaceProject }) {
   const fundingProgress = project.fundingGoal ? 
     Math.min(100, ((project.amountRaised || 0) / project.fundingGoal) * 100) : 0;
   
@@ -263,10 +268,18 @@ function ProjectCard({ project }: { project: CapitalProject }) {
     <HoverLift>
       <Card className="h-full flex flex-col border hover-elevate" data-testid={`project-card-${project.id}`}>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <Badge variant="outline" className={getStructureBadgeColor(project.structure)}>
-              {project.structure || "Equity"}
-            </Badge>
+          <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+            <div className="flex items-center gap-1">
+              {project.isPegasusProject && (
+                <Badge className="bg-primary text-primary-foreground">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Pegasus
+                </Badge>
+              )}
+              <Badge variant="outline" className={getStructureBadgeColor(project.structure)}>
+                {project.structure || "Equity"}
+              </Badge>
+            </div>
             {getStatusBadge()}
           </div>
           <CardTitle className="text-lg line-clamp-2" data-testid={`project-title-${project.id}`}>

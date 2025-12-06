@@ -32,8 +32,13 @@ import {
   Bookmark,
   CheckCircle2,
   Clock,
-  Target
+  Target,
+  Crown
 } from "lucide-react";
+
+interface MarketplaceDeal extends WholesaleDeal {
+  isPegasusDeal?: boolean;
+}
 
 export default function MarketplaceDeals() {
   return (
@@ -51,7 +56,7 @@ function DealsPage() {
   const [priceRange, setPriceRange] = useState<string>("all");
   const [strategy, setStrategy] = useState<string>("all");
 
-  const { data: deals, isLoading } = useQuery<WholesaleDeal[]>({
+  const { data: deals, isLoading } = useQuery<MarketplaceDeal[]>({
     queryKey: ['/api/marketplace/deals', { isPublic: true }],
   });
 
@@ -220,7 +225,7 @@ function DealsPage() {
   );
 }
 
-function DealCard({ deal }: { deal: WholesaleDeal }) {
+function DealCard({ deal }: { deal: MarketplaceDeal }) {
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "N/A";
     return new Intl.NumberFormat('en-US', {
@@ -255,7 +260,13 @@ function DealCard({ deal }: { deal: WholesaleDeal }) {
               </div>
             )}
             
-            <div className="absolute top-2 left-2 flex gap-1">
+            <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+              {deal.isPegasusDeal && (
+                <Badge className="bg-primary text-primary-foreground">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Pegasus
+                </Badge>
+              )}
               {deal.isHot && (
                 <Badge className="bg-red-500 text-white">
                   <TrendingUp className="w-3 h-3 mr-1" />

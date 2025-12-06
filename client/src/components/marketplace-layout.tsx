@@ -30,6 +30,7 @@ import {
   Calculator,
   ChevronUp,
   Compass,
+  Crown,
   DollarSign,
   FileText,
   Home,
@@ -39,12 +40,14 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
   Users,
   Store,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/supabase";
+import { NotificationDropdown } from "@/components/notification-dropdown";
 
 interface MarketplaceLayoutProps {
   children: React.ReactNode;
@@ -71,6 +74,12 @@ function getRoleSpecificItems(role: UserRole | null) {
         { title: "All Deals", href: "/marketplace/admin/deals", icon: Briefcase },
       ];
     case "pegasus_wholesaler":
+      return [
+        { title: "My Deals", href: "/marketplace/wholesaler/deals", icon: Briefcase },
+        { title: "Submit Deal", href: "/marketplace/wholesaler/submit", icon: Store },
+        { title: "Buyer Network", href: "/marketplace/wholesaler/buyers", icon: Users },
+        { title: "Analytics", href: "/marketplace/wholesaler/analytics", icon: TrendingUp },
+      ];
     case "wholesaler":
       return [
         { title: "My Deals", href: "/marketplace/wholesaler/deals", icon: Briefcase },
@@ -78,6 +87,12 @@ function getRoleSpecificItems(role: UserRole | null) {
         { title: "Buyer Network", href: "/marketplace/wholesaler/buyers", icon: Users },
       ];
     case "pegasus_dreamscaper":
+      return [
+        { title: "My Projects", href: "/marketplace/dreamscaper/projects", icon: Building2 },
+        { title: "Capital Raising", href: "/marketplace/dreamscaper/capital", icon: DollarSign },
+        { title: "Team", href: "/marketplace/dreamscaper/team", icon: Users },
+        { title: "Analytics", href: "/marketplace/dreamscaper/analytics", icon: TrendingUp },
+      ];
     case "dreamscaper":
       return [
         { title: "My Projects", href: "/marketplace/dreamscaper/projects", icon: Building2 },
@@ -265,9 +280,14 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
                         <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col items-start gap-0.5 group-data-[collapsible=icon]:hidden">
-                        <span className="text-sm font-medium truncate max-w-[120px]">
-                          {displayName}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-medium truncate max-w-[120px]">
+                            {displayName}
+                          </span>
+                          {userRole?.startsWith("pegasus_") && (
+                            <Crown className="h-3 w-3 text-primary" />
+                          )}
+                        </div>
                         <Badge
                           variant={getRoleBadgeVariant(userRole)}
                           className="text-[10px] px-1.5 py-0"
@@ -310,6 +330,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex-1" />
+            <NotificationDropdown />
             <Link href="/">
               <Button variant="ghost" size="sm" data-testid="link-home">
                 <Home className="h-4 w-4 mr-2" />

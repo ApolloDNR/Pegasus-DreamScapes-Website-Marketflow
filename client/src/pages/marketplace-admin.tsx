@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { AuthGuard } from "@/components/auth-guard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Link } from "wouter";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Users,
   Briefcase,
@@ -18,7 +25,9 @@ import {
   ShieldCheck,
   ArrowRight,
   Settings,
-  BarChart3,
+  XCircle,
+  Home,
+  DollarSign,
 } from "lucide-react";
 
 interface AdminStats {
@@ -29,9 +38,83 @@ interface AdminStats {
   activeCapitalProjects: number;
 }
 
+interface PendingItem {
+  id: number;
+  type: "wholesale_deal" | "capital_project";
+  title: string;
+  description: string;
+  submittedBy: string;
+  createdAt: string;
+}
+
+interface AdminUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  roles: string[];
+}
+
+interface Lead {
+  id: number;
+  type: "seller" | "investor";
+  name: string;
+  description: string;
+  status: string;
+  createdAt: string;
+}
+
 export default function MarketplaceAdminPage() {
-  const { data: stats, isLoading } = useQuery<AdminStats>({
+  const { toast } = useToast();
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<PendingItem | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ["/api/marketplace/admin/stats"],
+  });
+
+  const { data: pendingItems = [], isLoading: pendingLoading } = useQuery<PendingItem[]>({
+    queryKey: ["/api/marketplace/admin/pending"],
+  });
+
+  const { data: users = [], isLoading: usersLoading } = useQuery<AdminUser[]>({
+    queryKey: ["/api/marketplace/admin/users"],
+  });
+
+  const { data: leads = [], isLoading: leadsLoading } = useQuery<Lead[]>({
+    queryKey: ["/api/marketplace/admin/leads"],
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async ({ itemType, itemId, approved }: { itemType: string; itemId: number; approved: boolean }) => {
+      const endpoint = itemType === "wholesale_deal" 
+        ? `/api/marketplace/admin/deals/${itemId}/status`
+        : `/api/marketplace/admin/projects/${itemId}/status`;
+      return apiRequest("PATCH", endpoint, {
+        status: approved ? "listed" : "rejected",
+        rejectionReason: approved ? undefined : rejectionReason,
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.approved ? "Approved" : "Rejected",
+        description: `Item has been ${variables.approved ? "approved and listed" : "rejected"}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/stats"] });
+      setReviewDialogOpen(false);
+      setSelectedItem(null);
+      setRejectionReason("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update item status.",
+        variant: "destructive",
+      });
+    },
   });
 
   const displayStats: AdminStats = stats ?? {
@@ -40,6 +123,35 @@ export default function MarketplaceAdminPage() {
     totalInvestorLeads: 0,
     activeWholesaleDeals: 0,
     activeCapitalProjects: 0,
+  };
+
+  const handleReview = (item: PendingItem) => {
+    setSelectedItem(item);
+    setReviewDialogOpen(true);
+  };
+
+  const handleApprove = () => {
+    if (!selectedItem) return;
+    approveMutation.mutate({ itemType: selectedItem.type, itemId: selectedItem.id, approved: true });
+  };
+
+  const handleReject = () => {
+    if (!selectedItem) return;
+    approveMutation.mutate({ itemType: selectedItem.type, itemId: selectedItem.id, approved: false });
+  };
+
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+    const first = firstName?.[0] || "";
+    const last = lastName?.[0] || "";
+    return (first + last).toUpperCase() || "U";
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   return (
@@ -73,7 +185,7 @@ export default function MarketplaceAdminPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-seller-leads">
@@ -85,15 +197,15 @@ export default function MarketplaceAdminPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Seller</CardTitle>
+                <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
                 <Clock className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
-                  <div className="text-2xl font-bold text-amber-600" data-testid="stat-pending-seller">
-                    {displayStats.pendingSellerLeads}
+                  <div className="text-2xl font-bold text-amber-600" data-testid="stat-pending">
+                    {pendingItems.length}
                   </div>
                 )}
               </CardContent>
@@ -105,7 +217,7 @@ export default function MarketplaceAdminPage() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-investor-leads">
@@ -121,7 +233,7 @@ export default function MarketplaceAdminPage() {
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-wholesale-deals">
@@ -137,7 +249,7 @@ export default function MarketplaceAdminPage() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-capital-projects">
@@ -150,10 +262,15 @@ export default function MarketplaceAdminPage() {
 
           <Tabs defaultValue="pending" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="pending">Pending Actions</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="deals">Deals</TabsTrigger>
-              <TabsTrigger value="leads">Leads</TabsTrigger>
+              <TabsTrigger value="pending" data-testid="tab-pending">
+                Pending Actions
+                {pendingItems.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">{pendingItems.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
+              <TabsTrigger value="deals" data-testid="tab-deals">Deals</TabsTrigger>
+              <TabsTrigger value="leads" data-testid="tab-leads">Leads</TabsTrigger>
             </TabsList>
 
             <TabsContent value="pending" className="space-y-4">
@@ -163,55 +280,55 @@ export default function MarketplaceAdminPage() {
                   <CardDescription>Review and approve pending submissions</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                          <AlertCircle className="h-5 w-5 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">New Wholesale Deal Submission</p>
-                          <p className="text-sm text-muted-foreground">123 Oak Street by John Smith</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Pending Review</Badge>
-                        <Button size="sm">Review</Button>
-                      </div>
+                  {pendingLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
                     </div>
-
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                          <Users className="h-5 w-5 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Pegasus Wholesaler Application</p>
-                          <p className="text-sm text-muted-foreground">Jane Doe requesting upgrade</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Pending Review</Badge>
-                        <Button size="sm">Review</Button>
-                      </div>
+                  ) : pendingItems.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                      <h3 className="font-medium mb-2">All Caught Up!</h3>
+                      <p className="text-sm text-muted-foreground">
+                        No pending items require your attention.
+                      </p>
                     </div>
-
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                          <FileText className="h-5 w-5 text-amber-600" />
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingItems.map((item) => (
+                        <div 
+                          key={`${item.type}-${item.id}`} 
+                          className="flex items-center justify-between p-3 rounded-lg border"
+                          data-testid={`pending-item-${item.type}-${item.id}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                              {item.type === "wholesale_deal" ? (
+                                <Briefcase className="h-5 w-5 text-amber-600" />
+                              ) : (
+                                <FileText className="h-5 w-5 text-amber-600" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium">{item.title}</p>
+                              <p className="text-sm text-muted-foreground">{item.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">Pending Review</Badge>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleReview(item)}
+                              data-testid={`button-review-${item.id}`}
+                            >
+                              Review
+                            </Button>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">Capital Project Submission</p>
-                          <p className="text-sm text-muted-foreground">Victorian Revival by DreamScaper Pro</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Pending Review</Badge>
-                        <Button size="sm">Review</Button>
-                      </div>
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -223,34 +340,49 @@ export default function MarketplaceAdminPage() {
                   <CardDescription>Latest platform registrations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="font-medium">John Smith</p>
-                        <p className="text-sm text-muted-foreground">john@example.com</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge>Wholesaler</Badge>
-                        <Badge variant="outline">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                      </div>
+                  {usersLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="font-medium">Jane Doe</p>
-                        <p className="text-sm text-muted-foreground">jane@example.com</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge>Investor</Badge>
-                        <Badge variant="outline">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                      </div>
+                  ) : users.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No users found
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {users.slice(0, 10).map((user) => (
+                        <div 
+                          key={user.id} 
+                          className="flex items-center justify-between p-3 rounded-lg border"
+                          data-testid={`user-row-${user.id}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage src={user.profileImageUrl || undefined} />
+                              <AvatarFallback>
+                                {getInitials(user.firstName, user.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">
+                                {user.firstName} {user.lastName}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {user.roles.map((role) => (
+                              <Badge key={role} variant="outline" className="text-xs capitalize">
+                                {role.replace("_", " ")}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Link href="/marketplace/admin/users">
                     <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-users">
                       Manage All Users
@@ -270,36 +402,38 @@ export default function MarketplaceAdminPage() {
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="p-4 rounded-lg border">
-                      <h4 className="font-medium mb-2">Wholesale Deals</h4>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Briefcase className="h-5 w-5 text-primary" />
+                        <h4 className="font-medium">Wholesale Deals</h4>
+                      </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Active</span>
-                          <span className="font-medium">18</span>
+                          <span className="font-medium">{displayStats.activeWholesaleDeals}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Pending Review</span>
-                          <span className="font-medium text-amber-600">3</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Closed This Month</span>
-                          <span className="font-medium">7</span>
+                          <span className="font-medium text-amber-600">
+                            {pendingItems.filter(i => i.type === "wholesale_deal").length}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="p-4 rounded-lg border">
-                      <h4 className="font-medium mb-2">Capital Projects</h4>
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <h4 className="font-medium">Capital Projects</h4>
+                      </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Active</span>
-                          <span className="font-medium">6</span>
+                          <span className="font-medium">{displayStats.activeCapitalProjects}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Pending Review</span>
-                          <span className="font-medium text-amber-600">2</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Funded This Month</span>
-                          <span className="font-medium">3</span>
+                          <span className="font-medium text-amber-600">
+                            {pendingItems.filter(i => i.type === "capital_project").length}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -321,28 +455,49 @@ export default function MarketplaceAdminPage() {
                   <CardDescription>Seller and investor leads from funnels</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="font-medium">Property Owner - 456 Elm St</p>
-                        <p className="text-sm text-muted-foreground">Seller lead | Motivated</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">New</Badge>
-                        <Button size="sm" variant="outline">Contact</Button>
-                      </div>
+                  {leadsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="font-medium">Investor - $500k budget</p>
-                        <p className="text-sm text-muted-foreground">Investor lead | Fix & Flip focus</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">New</Badge>
-                        <Button size="sm" variant="outline">Contact</Button>
-                      </div>
+                  ) : leads.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No leads found
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {leads.map((lead) => (
+                        <div 
+                          key={`${lead.type}-${lead.id}`} 
+                          className="flex items-center justify-between p-3 rounded-lg border"
+                          data-testid={`lead-row-${lead.type}-${lead.id}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                              lead.type === "seller" ? "bg-blue-100" : "bg-green-100"
+                            }`}>
+                              {lead.type === "seller" ? (
+                                <Home className="h-5 w-5 text-blue-600" />
+                              ) : (
+                                <DollarSign className="h-5 w-5 text-green-600" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium">{lead.name}</p>
+                              <p className="text-sm text-muted-foreground">{lead.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={lead.status === "new" ? "default" : "secondary"} className="capitalize">
+                              {lead.status}
+                            </Badge>
+                            <Button size="sm" variant="outline">Contact</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Link href="/marketplace/admin/leads">
                     <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-leads">
                       View All Leads
@@ -354,6 +509,63 @@ export default function MarketplaceAdminPage() {
             </TabsContent>
           </Tabs>
         </div>
+
+        <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Review Submission</DialogTitle>
+              <DialogDescription>
+                Approve or reject this {selectedItem?.type === "wholesale_deal" ? "wholesale deal" : "capital project"} submission.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedItem && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-secondary/30">
+                  <h4 className="font-medium">{selectedItem.title}</h4>
+                  <p className="text-sm text-muted-foreground mt-1">{selectedItem.description}</p>
+                  {selectedItem.createdAt && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Submitted on {formatDate(selectedItem.createdAt)}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="rejection-reason">Rejection Reason (optional)</Label>
+                  <Textarea
+                    id="rejection-reason"
+                    placeholder="Provide a reason if rejecting..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    className="mt-1"
+                    data-testid="textarea-rejection-reason"
+                  />
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="destructive"
+                onClick={handleReject}
+                disabled={approveMutation.isPending}
+                data-testid="button-reject"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Reject
+              </Button>
+              <Button
+                onClick={handleApprove}
+                disabled={approveMutation.isPending}
+                data-testid="button-approve"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Approve
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </MarketplaceLayout>
     </AuthGuard>
   );

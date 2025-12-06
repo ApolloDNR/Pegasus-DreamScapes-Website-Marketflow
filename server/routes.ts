@@ -4021,6 +4021,204 @@ export async function registerRoutes(
     }
   });
 
+  // Get pending items requiring admin action
+  app.get("/api/marketplace/admin/pending", requireStaffRole, async (req: any, res) => {
+    try {
+      const [wholesaleDeals, projects, users] = await Promise.all([
+        storage.getWholesaleDeals(),
+        storage.getCapitalProjects(),
+        storage.getUsers(),
+      ]);
+      
+      const pendingDeals = wholesaleDeals
+        .filter(d => d.status === "pending_review" || d.status === "under_review" || d.status === "submitted")
+        .slice(0, 10);
+      
+      const pendingProjects = projects
+        .filter(p => p.status === "pending_approval" || p.status === "submitted")
+        .slice(0, 10);
+      
+      const pendingItems = [
+        ...pendingDeals.map(d => ({
+          id: d.id,
+          type: "wholesale_deal" as const,
+          title: "Wholesale Deal Submission",
+          description: d.address || "New deal submission",
+          submittedBy: d.submittedBy,
+          createdAt: d.createdAt,
+        })),
+        ...pendingProjects.map(p => ({
+          id: p.id,
+          type: "capital_project" as const,
+          title: "Capital Project Submission",
+          description: p.title || "New project submission",
+          submittedBy: p.operatorId,
+          createdAt: p.createdAt,
+        })),
+      ].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      
+      res.json(pendingItems);
+    } catch (error) {
+      console.error("Error fetching pending items:", error);
+      res.status(500).json({ message: "Failed to fetch pending items" });
+    }
+  });
+
+  // Get recent users for admin
+  app.get("/api/marketplace/admin/users", requireStaffRole, async (req: any, res) => {
+    try {
+      const users = await storage.getUsers();
+      const usersWithRoles = await Promise.all(
+        users.slice(0, 20).map(async (user) => {
+          const roles = await storage.getUserRoles(user.id);
+          return {
+            ...user,
+            roles: roles.map(r => r.role),
+          };
+        })
+      );
+      res.json(usersWithRoles);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Get recent leads for admin
+  app.get("/api/marketplace/admin/leads", requireStaffRole, async (req: any, res) => {
+    try {
+      const [sellerLeads, investorLeads] = await Promise.all([
+        storage.getSellerLeads(),
+        storage.getInvestorLeads(),
+      ]);
+      
+      const leads = [
+        ...sellerLeads.slice(0, 10).map(l => ({
+          id: l.id,
+          type: "seller" as const,
+          name: `${l.firstName || ""} ${l.lastName || ""}`.trim() || "Property Owner",
+          description: `${l.propertyAddress || "Property"} | ${l.motivation || "Inquiry"}`,
+          status: l.status,
+          createdAt: l.createdAt,
+        })),
+        ...investorLeads.slice(0, 10).map(l => ({
+          id: l.id,
+          type: "investor" as const,
+          name: `${l.firstName || ""} ${l.lastName || ""}`.trim() || "Investor",
+          description: `Budget: ${l.capitalAvailable ? "$" + l.capitalAvailable : "TBD"} | ${l.investmentTypes?.join(", ") || "Various"}`,
+          status: l.status,
+          createdAt: l.createdAt,
+        })),
+      ].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      
+      res.json(leads.slice(0, 15));
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      res.status(500).json({ message: "Failed to fetch leads" });
+    }
+  });
+
+  // Approve or reject a wholesale deal
+  app.patch("/api/marketplace/admin/deals/:id/status", requireStaffRole, async (req: any, res) => {
+    try {
+      const dealId = Number(req.params.id);
+      const { status, rejectionReason } = req.body;
+      
+      if (!["approved", "listed", "rejected", "under_review"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const deal = await storage.getWholesaleDeal(dealId);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      const updated = await storage.updateWholesaleDeal(dealId, { 
+        status,
+        ...(rejectionReason && { notes: rejectionReason })
+      });
+      
+      if (deal.submittedBy) {
+        const notificationType = status === "approved" || status === "listed" ? "deal_update" : "deal_update";
+        const notificationTitle = status === "approved" || status === "listed" 
+          ? `Your deal at ${deal.propertyAddress || "property"} has been approved!`
+          : status === "rejected"
+          ? `Your deal submission requires attention`
+          : `Your deal status has been updated`;
+        const notificationMessage = status === "rejected" && rejectionReason
+          ? `Reason: ${rejectionReason}`
+          : status === "approved" || status === "listed"
+          ? "Your deal is now live on the marketplace."
+          : undefined;
+        
+        await storage.createNotification({
+          userId: deal.submittedBy,
+          type: notificationType,
+          title: notificationTitle,
+          message: notificationMessage,
+          relatedType: "deal",
+          relatedId: dealId,
+          link: `/marketplace/wholesaler/deals`,
+        });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating deal status:", error);
+      res.status(500).json({ message: "Failed to update deal status" });
+    }
+  });
+
+  // Approve or reject a capital project
+  app.patch("/api/marketplace/admin/projects/:id/status", requireStaffRole, async (req: any, res) => {
+    try {
+      const projectId = Number(req.params.id);
+      const { status, rejectionReason } = req.body;
+      
+      if (!["approved", "funding", "rejected", "under_review"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const project = await storage.getCapitalProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      const updated = await storage.updateCapitalProject(projectId, { 
+        status,
+        ...(rejectionReason && { notes: rejectionReason })
+      });
+      
+      if (project.operatorId) {
+        const notificationTitle = status === "approved" || status === "funding" 
+          ? `Your project "${project.title}" has been approved!`
+          : status === "rejected"
+          ? `Your project submission requires attention`
+          : `Your project status has been updated`;
+        const notificationMessage = status === "rejected" && rejectionReason
+          ? `Reason: ${rejectionReason}`
+          : status === "approved" || status === "funding"
+          ? "Your project is now open for investment."
+          : undefined;
+        
+        await storage.createNotification({
+          userId: project.operatorId,
+          type: "deal_update",
+          title: notificationTitle,
+          message: notificationMessage,
+          relatedType: "project",
+          relatedId: projectId,
+          link: `/marketplace/dreamscaper/projects`,
+        });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating project status:", error);
+      res.status(500).json({ message: "Failed to update project status" });
+    }
+  });
+
   // ========================================
   // MARKETPLACE BROWSE API ENDPOINTS
   // ========================================
@@ -4029,10 +4227,29 @@ export async function registerRoutes(
   app.get("/api/marketplace/deals", async (req: any, res) => {
     try {
       const deals = await storage.getWholesaleDeals();
-      // Filter to only show public/listed/available deals
-      const publicDeals = deals.filter(d => 
-        d.status === "listed" || d.status === "approved" || d.status === "available"
-      );
+      const users = await storage.getUsers();
+      
+      const pegasusUserIds = new Set<string>();
+      for (const user of users) {
+        const roles = await storage.getUserRoles(user.id);
+        const hasPegasusRole = roles.some(r => r.role.startsWith("pegasus_"));
+        if (hasPegasusRole) {
+          pegasusUserIds.add(user.id);
+        }
+      }
+      
+      const publicDeals = deals
+        .filter(d => d.status === "listed" || d.status === "approved" || d.status === "available")
+        .map(d => ({
+          ...d,
+          isPegasusDeal: d.submittedBy ? pegasusUserIds.has(d.submittedBy) : false,
+        }))
+        .sort((a, b) => {
+          if (a.isPegasusDeal && !b.isPegasusDeal) return -1;
+          if (!a.isPegasusDeal && b.isPegasusDeal) return 1;
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        });
+      
       res.json(publicDeals);
     } catch (error) {
       console.error("Error fetching marketplace deals:", error);
@@ -4074,6 +4291,8 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Deal ID is required" });
       }
 
+      const deal = await storage.getWholesaleDeal(dealId);
+      
       const jvRequest = await storage.createJvRequest({
         dealId,
         dreamscaperId: userId,
@@ -4083,6 +4302,18 @@ export async function registerRoutes(
         fundingSource: fundingSource || null,
         proposedAssignmentFee: proposedAssignmentFee || null,
       });
+
+      if (deal && deal.submittedBy) {
+        await storage.createNotification({
+          userId: deal.submittedBy,
+          type: "deal_interest",
+          title: `New JV request on your deal`,
+          message: deal.propertyAddress ? `A dreamscaper is interested in ${deal.propertyAddress}` : "Someone is interested in your wholesale deal",
+          relatedType: "deal",
+          relatedId: dealId,
+          link: `/marketplace/wholesaler/deals`,
+        });
+      }
 
       res.status(201).json(jvRequest);
     } catch (error) {
@@ -4095,13 +4326,34 @@ export async function registerRoutes(
   app.get("/api/marketplace/projects", async (req: any, res) => {
     try {
       const projects = await storage.getCapitalProjects();
-      // Filter to only show open/active/funding projects
-      const publicProjects = projects.filter(p => 
-        p.status === "OPEN_FOR_INVESTMENT" || 
-        p.status === "funding" || 
-        p.status === "active" ||
-        p.status === "FUNDED"
-      );
+      const users = await storage.getUsers();
+      
+      const pegasusUserIds = new Set<string>();
+      for (const user of users) {
+        const roles = await storage.getUserRoles(user.id);
+        const hasPegasusRole = roles.some(r => r.role.startsWith("pegasus_"));
+        if (hasPegasusRole) {
+          pegasusUserIds.add(user.id);
+        }
+      }
+      
+      const publicProjects = projects
+        .filter(p => 
+          p.status === "OPEN_FOR_INVESTMENT" || 
+          p.status === "funding" || 
+          p.status === "active" ||
+          p.status === "FUNDED"
+        )
+        .map(p => ({
+          ...p,
+          isPegasusProject: p.operatorId ? pegasusUserIds.has(p.operatorId) : false,
+        }))
+        .sort((a, b) => {
+          if (a.isPegasusProject && !b.isPegasusProject) return -1;
+          if (!a.isPegasusProject && b.isPegasusProject) return 1;
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        });
+      
       res.json(publicProjects);
     } catch (error) {
       console.error("Error fetching marketplace projects:", error);
@@ -4173,6 +4425,18 @@ export async function registerRoutes(
         counterOfferNotes: null,
         negotiationHistory: null,
       });
+
+      if (project.operatorId) {
+        await storage.createNotification({
+          userId: project.operatorId,
+          type: "investment_offer",
+          title: `New investment interest in "${project.title}"`,
+          message: `An investor is interested in investing $${Number(amount).toLocaleString()}`,
+          relatedType: "project",
+          relatedId: Number(projectId),
+          link: `/marketplace/dreamscaper/projects`,
+        });
+      }
 
       res.status(201).json({ 
         message: "Investment interest submitted successfully",
