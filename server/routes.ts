@@ -30,6 +30,7 @@ import {
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF } from "./pdf";
 import peggy from "./peggy";
@@ -84,13 +85,36 @@ const requireRole = (...roles: string[]) => async (req: any, res: Response, next
   }
 };
 
+const isHybridAuthenticated = async (req: any, res: Response, next: NextFunction) => {
+  if (req.user?.claims?.sub) {
+    return next();
+  }
+  
+  if (req.supabaseUser) {
+    req.user = { claims: req.supabaseUser.claims };
+    return next();
+  }
+  
+  const supabaseUser = await extractSupabaseUser(req);
+  if (supabaseUser) {
+    req.user = { claims: supabaseUser.claims };
+    req.supabaseUser = supabaseUser;
+    return next();
+  }
+  
+  return res.status(401).json({ message: "Unauthorized" });
+};
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  // Setup Replit Auth
+  // Setup Replit Auth (legacy - for session-based auth)
   await setupAuth(app);
+  
+  // Add Supabase auth middleware to extract user from JWT tokens
+  app.use(supabaseAuthMiddleware);
 
   // Public config endpoint - exposes only public/safe configuration
   app.get('/api/config/supabase', (_req, res) => {
@@ -177,9 +201,35 @@ export async function registerRoutes(
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      const supabaseProfile = await getUserProfile(userId);
+      
+      if (supabaseProfile) {
+        const role = supabaseProfile.primary_role;
+        const isPegasus = supabaseProfile.is_pegasus_badged || role?.startsWith('pegasus_');
+        
+        return res.json({
+          id: userId,
+          email: req.user.claims.email || supabaseProfile.display_name,
+          firstName: supabaseProfile.display_name?.split(' ')[0] || '',
+          lastName: supabaseProfile.display_name?.split(' ').slice(1).join(' ') || '',
+          profileImageUrl: supabaseProfile.avatar_url,
+          displayName: supabaseProfile.display_name,
+          primaryRole: role,
+          isPegasusBadged: isPegasus,
+          roles: [role],
+          isStaff: role === 'admin' || isPegasus,
+          isInvestor: role === 'investor',
+          isWholesaler: role === 'wholesaler' || role === 'pegasus_wholesaler',
+          isBuyer: role === 'buyer_retail' || role === 'buyer_investment',
+          isDreamscaper: role === 'dreamscaper' || role === 'pegasus_dreamscaper',
+          supabaseAuth: true
+        });
+      }
+      
       const user = await storage.getUser(userId);
       const roles = await storage.getUserRoles(userId);
       const roleNames = roles.map(r => r.role);
@@ -193,7 +243,8 @@ export async function registerRoutes(
         isInvestor: roleNames.includes("investor"),
         isWholesaler: roleNames.includes("wholesaler"),
         isBuyer: roleNames.includes("buyer"),
-        isDreamscaper
+        isDreamscaper,
+        supabaseAuth: false
       });
     } catch (error) {
       console.error("Error fetching user:", error);
