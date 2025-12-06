@@ -78,21 +78,27 @@ function Router() {
       <Route path="/buy" component={Buy} />
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
-      <Route path="/dealflow/hq" component={HQ} />
-      <Route path="/hq">{() => <Redirect to="/dealflow/hq" />}</Route>
-      <Route path="/portal" component={PortalSelect} />
-      <Route path="/portal/investor">{() => <Redirect to="/dealflow/office" />}</Route>
-      <Route path="/portal/wholesaler">{() => <Redirect to="/dealflow/office" />}</Route>
-      <Route path="/portal/buyer">{() => <Redirect to="/dealflow/office" />}</Route>
-      <Route path="/portal/dreamscaper" component={DreamscaperPortal} />
+      {/* Legacy HQ routes redirect to marketplace admin */}
+      <Route path="/dealflow/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
+      <Route path="/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
+      
+      {/* Legacy portal routes redirect to marketplace */}
+      <Route path="/portal">{() => <Redirect to="/marketplace" />}</Route>
+      <Route path="/portal/investor">{() => <Redirect to="/marketplace/investor" />}</Route>
+      <Route path="/portal/wholesaler">{() => <Redirect to="/marketplace/wholesaler" />}</Route>
+      <Route path="/portal/buyer">{() => <Redirect to="/marketplace/buyer" />}</Route>
+      <Route path="/portal/dreamscaper">{() => <Redirect to="/marketplace/dreamscaper" />}</Route>
       <Route path="/capital-raising" component={CapitalRaising} />
-      <Route path="/community">{() => <Redirect to="/dealflow/community" />}</Route>
-      <Route path="/dealflow">{() => <Redirect to="/dealflow/office" />}</Route>
-      <Route path="/dealflow/office" component={DealflowOffice} />
-      <Route path="/dealflow/deals" component={DealflowDeals} />
+      <Route path="/community">{() => <Redirect to="/marketplace/community" />}</Route>
+      
+      {/* Legacy /dealflow routes redirect to /marketplace */}
+      <Route path="/dealflow">{() => <Redirect to="/marketplace" />}</Route>
+      <Route path="/dealflow/office">{() => <Redirect to="/marketplace" />}</Route>
+      <Route path="/dealflow/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
+      <Route path="/dealflow/deals">{() => <Redirect to="/marketplace/discover" />}</Route>
       <Route path="/dealflow/project/:id" component={DealflowProject} />
-      <Route path="/dealflow/community" component={DealflowCommunity} />
-      <Route path="/dealflow/messages" component={DealflowMessages} />
+      <Route path="/dealflow/community">{() => <Redirect to="/marketplace/community" />}</Route>
+      <Route path="/dealflow/messages">{() => <Redirect to="/marketplace/messages" />}</Route>
       
       {/* New Marketplace Routes with Supabase Auth */}
       <Route path="/marketplace" component={Marketplace} />

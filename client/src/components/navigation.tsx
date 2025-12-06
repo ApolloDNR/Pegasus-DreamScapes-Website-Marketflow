@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import logoImage from "@assets/image_1764616120774.png";
 import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { CommandTrigger, CommandPalette } from "./command-palette";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -74,7 +75,7 @@ const megaMenuSections = {
     items: [
       { href: "/calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator, badge: "Pro" },
       { href: "/resources", label: "Investment Guides", description: "Learn the fundamentals", icon: FileText },
-      { href: "/dealflow/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
+      { href: "/marketplace/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
       { href: "/projects", label: "Case Studies", description: "Real project examples", icon: Target },
     ]
   },
@@ -231,22 +232,22 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
         
         <DropdownMenuSeparator />
         
-        <Link href="/dealflow">
+        <Link href="/marketplace">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span>Dealflow Hub</span>
+            <span>Marketplace Hub</span>
             <Badge variant="secondary" className="ml-auto text-[10px] px-1.5">New</Badge>
           </DropdownMenuItem>
         </Link>
         
-        <Link href="/dealflow/office">
+        <Link href="/marketplace">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <BarChart3 className="w-4 h-4" />
-            <span>My Office</span>
+            <span>My Dashboard</span>
           </DropdownMenuItem>
         </Link>
         
-        <Link href="/dealflow/messages">
+        <Link href="/marketplace/messages">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <MessageSquare className="w-4 h-4" />
             <span>Messages</span>
@@ -257,10 +258,10 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
         {user?.isStaff && (
           <>
             <DropdownMenuSeparator />
-            <Link href="/dealflow/hq">
+            <Link href="/marketplace/admin">
               <DropdownMenuItem className="cursor-pointer gap-2 text-blue-600">
                 <Shield className="w-4 h-4" />
-                <span>HQ Dashboard</span>
+                <span>Admin Dashboard</span>
                 <Badge variant="outline" className="ml-auto text-[10px] px-1.5 border-blue-500/50 text-blue-500">Staff</Badge>
               </DropdownMenuItem>
             </Link>
@@ -269,7 +270,7 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
         
         <DropdownMenuSeparator />
         
-        <Link href="/portal">
+        <Link href="/marketplace/settings">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <Settings className="w-4 h-4" />
             <span>Settings</span>
