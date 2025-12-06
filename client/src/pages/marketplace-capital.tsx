@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -56,6 +58,25 @@ function CapitalPage() {
   const [structureType, setStructureType] = useState<string>("all");
   const [propertyType, setPropertyType] = useState<string>("all");
   const [fundingRange, setFundingRange] = useState<string>("all");
+  const { isAuthenticated } = useSupabaseAuth();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  const handleProtectedAction = (action: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: `Please sign in to ${action}. Create a free account to save projects and commit capital.`,
+        variant: "default",
+        duration: 3000,
+      });
+      setTimeout(() => {
+        setLocation("/login");
+      }, 1500);
+      return false;
+    }
+    return true;
+  };
 
   const { data: projects, isLoading } = useQuery<MarketplaceProject[]>({
     queryKey: ['/api/marketplace/projects'],
@@ -211,7 +232,7 @@ function CapitalPage() {
         <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.05}>
           {filteredProjects.map((project) => (
             <StaggerItem key={project.id}>
-              <ProjectCard project={project} />
+              <ProjectCard project={project} onProtectedAction={handleProtectedAction} />
             </StaggerItem>
           ))}
         </StaggerChildren>
@@ -224,12 +245,23 @@ function CapitalPage() {
   );
 }
 
-function ProjectCard({ project }: { project: MarketplaceProject }) {
+interface ProjectCardProps {
+  project: MarketplaceProject;
+  onProtectedAction: (action: string) => boolean;
+}
+
+function ProjectCard({ project, onProtectedAction }: ProjectCardProps) {
   const fundingProgress = project.fundingGoal ? 
     Math.min(100, ((project.amountRaised || 0) / project.fundingGoal) * 100) : 0;
   
   const isFunded = project.status === "FUNDED";
   const amountRemaining = (project.fundingGoal || 0) - (project.amountRaised || 0);
+
+  const handleSaveProject = () => {
+    if (onProtectedAction("save this project")) {
+      console.log("Saving project:", project.id);
+    }
+  };
 
   const getStructureBadgeColor = (structure: string | null) => {
     switch (structure?.toUpperCase()) {
@@ -352,7 +384,16 @@ function ProjectCard({ project }: { project: MarketplaceProject }) {
 
         <CardFooter className="pt-4 border-t">
           <div className="flex items-center justify-between w-full gap-2">
-            <Button variant="ghost" size="sm" data-testid={`button-bookmark-${project.id}`}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSaveProject();
+              }}
+              data-testid={`button-bookmark-${project.id}`}
+            >
               <Bookmark className="w-4 h-4" />
             </Button>
             <Link href={`/marketplace/capital/${project.id}`}>

@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -74,6 +76,25 @@ function DealsPage() {
   const [propertyType, setPropertyType] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<string>("all");
   const [strategy, setStrategy] = useState<string>("all");
+  const { isAuthenticated } = useSupabaseAuth();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  const handleProtectedAction = (action: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: `Please sign in to ${action}. Create a free account to save deals and submit JV requests.`,
+        variant: "default",
+        duration: 3000,
+      });
+      setTimeout(() => {
+        setLocation("/login");
+      }, 1500);
+      return false;
+    }
+    return true;
+  };
 
   const { data: deals, isLoading } = useQuery<MarketplaceDeal[]>({
     queryKey: ['/api/marketplace/deals', { isPublic: true }],
@@ -231,7 +252,7 @@ function DealsPage() {
         <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.05}>
           {filteredDeals.map((deal) => (
             <StaggerItem key={deal.id}>
-              <DealCard deal={deal} />
+              <DealCard deal={deal} onProtectedAction={handleProtectedAction} />
             </StaggerItem>
           ))}
         </StaggerChildren>
@@ -244,7 +265,18 @@ function DealsPage() {
   );
 }
 
-function DealCard({ deal }: { deal: MarketplaceDeal }) {
+interface DealCardProps {
+  deal: MarketplaceDeal;
+  onProtectedAction: (action: string) => boolean;
+}
+
+function DealCard({ deal, onProtectedAction }: DealCardProps) {
+  const handleSaveDeal = () => {
+    if (onProtectedAction("save this deal")) {
+      console.log("Saving deal:", deal.id);
+    }
+  };
+
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "N/A";
     return new Intl.NumberFormat('en-US', {
@@ -303,6 +335,11 @@ function DealCard({ deal }: { deal: MarketplaceDeal }) {
             <div className="absolute top-2 right-2">
               <button 
                 className="p-2 rounded-full bg-white/90 hover:bg-white shadow-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSaveDeal();
+                }}
                 data-testid={`button-save-deal-${deal.id}`}
               >
                 <Bookmark className="w-4 h-4 text-muted-foreground" />
