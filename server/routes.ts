@@ -84,6 +84,21 @@ export async function registerRoutes(
   // Setup Replit Auth
   await setupAuth(app);
 
+  // Public config endpoint - exposes only public/safe configuration
+  app.get('/api/config/supabase', (_req, res) => {
+    res.json({
+      url: process.env.SUPABASE_URL || '',
+      anonKey: process.env.SUPABASE_ANON_KEY || ''
+    });
+  });
+
+  // Google Maps API key for address autocomplete (public key)
+  app.get('/api/config/google-maps', (_req, res) => {
+    res.json({
+      apiKey: process.env.GOOGLE_MAPS_API_KEY || ''
+    });
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
