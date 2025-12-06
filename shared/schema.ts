@@ -1649,3 +1649,260 @@ export const insertWholesaleDealOfferSchema = createInsertSchema(wholesaleDealOf
 });
 export type InsertWholesaleDealOffer = z.infer<typeof insertWholesaleDealOfferSchema>;
 export type WholesaleDealOffer = typeof wholesaleDealOffers.$inferSelect;
+
+// ============================================
+// USER BADGES & REPUTATION SYSTEM
+// ============================================
+
+// User Badges - verification and achievement badges
+export const userBadges = pgTable("user_badges", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  badgeType: varchar("badge_type", { length: 100 }).notNull(), // pegasus_wholesaler, pegasus_dreamscaper, verified_investor, trusted_buyer, etc.
+  label: varchar("label", { length: 255 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 100 }),
+  color: varchar("color", { length: 50 }),
+  isActive: boolean("is_active").default(true),
+  awardedBy: varchar("awarded_by", { length: 255 }), // Admin who awarded
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserBadgeSchema = createInsertSchema(userBadges).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
+export type UserBadge = typeof userBadges.$inferSelect;
+
+// User Reputation - trust scores and metrics
+export const userReputation = pgTable("user_reputation", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  trustScore: integer("trust_score").default(50), // 0-100 scale
+  rating: varchar("rating", { length: 10 }).default("0"), // 1-5 average rating
+  dealsClosedCount: integer("deals_closed_count").default(0),
+  onTimeClosingsCount: integer("on_time_closings_count").default(0),
+  cancellationsCount: integer("cancellations_count").default(0),
+  totalVolumeTransacted: integer("total_volume_transacted").default(0),
+  responseRate: integer("response_rate").default(100), // percentage
+  avgResponseTimeHours: integer("avg_response_time_hours"),
+  lastUpdatedAt: timestamp("last_updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserReputationSchema = createInsertSchema(userReputation).omit({ 
+  id: true, 
+  createdAt: true,
+  lastUpdatedAt: true
+});
+export type InsertUserReputation = z.infer<typeof insertUserReputationSchema>;
+export type UserReputation = typeof userReputation.$inferSelect;
+
+// User Rank History - tracking rank tier changes over time
+export const RANK_TIERS = ["bronze", "silver", "gold", "pegasus"] as const;
+export type RankTier = typeof RANK_TIERS[number];
+
+export const userRankHistory = pgTable("user_rank_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  previousRank: varchar("previous_rank", { length: 50 }),
+  newRank: varchar("new_rank", { length: 50 }).notNull(), // bronze, silver, gold, pegasus
+  reason: text("reason"), // Why rank changed
+  triggeredBy: varchar("triggered_by", { length: 255 }), // system, admin, deal_completion
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserRankHistorySchema = createInsertSchema(userRankHistory).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertUserRankHistory = z.infer<typeof insertUserRankHistorySchema>;
+export type UserRankHistory = typeof userRankHistory.$inferSelect;
+
+// ============================================
+// JV REQUESTS - Dreamscapers requesting deals from Wholesalers
+// ============================================
+
+export const JV_REQUEST_STATUS = ["pending", "approved", "rejected", "negotiating", "under_contract", "completed", "cancelled"] as const;
+export type JVRequestStatus = typeof JV_REQUEST_STATUS[number];
+
+export const jvRequests = pgTable("jv_requests", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(), // wholesale_deals.id
+  dreamscaperId: varchar("dreamscaper_id", { length: 255 }).notNull(), // User making the request
+  wholesalerId: varchar("wholesaler_id", { length: 255 }).notNull(), // Owner of the deal
+  
+  // === REQUEST DETAILS ===
+  message: text("message"), // Initial interest message
+  intendedStrategy: varchar("intended_strategy", { length: 100 }), // fix-flip, rental, development
+  estimatedBudget: integer("estimated_budget"),
+  experienceNotes: text("experience_notes"),
+  fundingSource: varchar("funding_source", { length: 100 }), // cash, private_money, hard_money
+  
+  // === PROPOSED TERMS ===
+  proposedAssignmentFee: integer("proposed_assignment_fee"),
+  proposedJVSplit: varchar("proposed_jv_split", { length: 50 }), // e.g. "70/30"
+  proposedTimeline: varchar("proposed_timeline", { length: 100 }),
+  
+  // === STATUS ===
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  
+  // === RESPONSE FROM WHOLESALER ===
+  responseMessage: text("response_message"),
+  responseAt: timestamp("response_at"),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertJVRequestSchema = createInsertSchema(jvRequests).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  status: true,
+  responseMessage: true,
+  responseAt: true
+});
+export type InsertJVRequest = z.infer<typeof insertJVRequestSchema>;
+export type JVRequest = typeof jvRequests.$inferSelect;
+
+// ============================================
+// SHOWING REQUESTS - Buyers requesting property showings
+// ============================================
+
+export const SHOWING_REQUEST_STATUS = ["pending", "scheduled", "completed", "cancelled", "no_show"] as const;
+export type ShowingRequestStatus = typeof SHOWING_REQUEST_STATUS[number];
+
+export const showingRequests = pgTable("showing_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(), // Buyer requesting
+  propertyType: varchar("property_type", { length: 50 }).notNull(), // retail_listing, wholesale_deal
+  propertyId: integer("property_id").notNull(),
+  
+  // === REQUEST DETAILS ===
+  preferredDate1: timestamp("preferred_date_1"),
+  preferredDate2: timestamp("preferred_date_2"),
+  preferredDate3: timestamp("preferred_date_3"),
+  preferredTimeOfDay: varchar("preferred_time_of_day", { length: 50 }), // morning, afternoon, evening
+  notes: text("notes"),
+  
+  // === SCHEDULING ===
+  scheduledDate: timestamp("scheduled_date"),
+  confirmationSent: boolean("confirmation_sent").default(false),
+  reminderSent: boolean("reminder_sent").default(false),
+  
+  // === STATUS ===
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  
+  // === ASSIGNMENT ===
+  assignedTo: varchar("assigned_to", { length: 255 }), // Staff member handling
+  
+  // === FEEDBACK (after showing) ===
+  buyerFeedback: text("buyer_feedback"),
+  buyerInterestLevel: integer("buyer_interest_level"), // 1-10
+  staffNotes: text("staff_notes"),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertShowingRequestSchema = createInsertSchema(showingRequests).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  status: true,
+  confirmationSent: true,
+  reminderSent: true,
+  scheduledDate: true,
+  assignedTo: true,
+  buyerFeedback: true,
+  buyerInterestLevel: true,
+  staffNotes: true
+});
+export type InsertShowingRequest = z.infer<typeof insertShowingRequestSchema>;
+export type ShowingRequest = typeof showingRequests.$inferSelect;
+
+// ============================================
+// SAVED ITEMS - Generic saved items for users
+// ============================================
+
+export const savedItems = pgTable("saved_items", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  entityType: varchar("entity_type", { length: 50 }).notNull(), // wholesale_deal, capital_project, retail_listing, user
+  entityId: integer("entity_id").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSavedItemSchema = createInsertSchema(savedItems).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertSavedItem = z.infer<typeof insertSavedItemSchema>;
+export type SavedItem = typeof savedItems.$inferSelect;
+
+// ============================================
+// USER PROFILES - Extended marketplace profile
+// ============================================
+
+// User Profiles for marketplace - extends the basic users table
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  
+  // === BASIC INFO ===
+  displayName: varchar("display_name", { length: 255 }),
+  companyName: varchar("company_name", { length: 255 }),
+  location: varchar("location", { length: 255 }),
+  avatarUrl: text("avatar_url"),
+  bio: text("bio"),
+  
+  // === PRIMARY ROLE ===
+  primaryRole: varchar("primary_role", { length: 50 }).notNull(), // admin, pegasus_wholesaler, wholesaler, pegasus_dreamscaper, dreamscaper, investor, buyer_retail, buyer_investment
+  
+  // === PEGASUS STATUS ===
+  isPegasusBadged: boolean("is_pegasus_badged").default(false),
+  pegasusRoleType: varchar("pegasus_role_type", { length: 100 }), // "Pegasus Wholesaler", "Pegasus Dreamscaper"
+  
+  // === RANK ===
+  currentRank: varchar("current_rank", { length: 50 }).default("bronze"), // bronze, silver, gold, pegasus
+  
+  // === CONTACT ===
+  phone: varchar("phone", { length: 50 }),
+  website: varchar("website", { length: 255 }),
+  linkedIn: varchar("linkedin", { length: 255 }),
+  
+  // === VERIFICATION ===
+  emailVerified: boolean("email_verified").default(false),
+  phoneVerified: boolean("phone_verified").default(false),
+  identityVerified: boolean("identity_verified").default(false),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true
+});
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type UserProfile = typeof userProfiles.$inferSelect;
+
+// Marketplace Role Constants
+export const MARKETPLACE_ROLES = [
+  "admin",
+  "pegasus_wholesaler",
+  "wholesaler", 
+  "pegasus_dreamscaper",
+  "dreamscaper",
+  "investor",
+  "buyer_retail",
+  "buyer_investment"
+] as const;
+export type MarketplaceRole = typeof MARKETPLACE_ROLES[number];
