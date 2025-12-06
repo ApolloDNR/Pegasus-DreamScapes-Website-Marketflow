@@ -40,6 +40,7 @@ import {
   getUserReputation, 
   getUserBadges 
 } from "./lib/supabase";
+import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification } from "./email";
 
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
@@ -944,6 +945,18 @@ export async function registerRoutes(
       
       const deal = await storage.createWholesaleDeal(result.data);
       console.log("New wholesale deal submitted by wholesaler:", deal.propertyAddress);
+      
+      // Send email notification (non-blocking)
+      sendDealSubmissionNotification({
+        propertyAddress: deal.propertyAddress,
+        city: deal.city,
+        state: deal.state,
+        contractPrice: deal.contractPrice,
+        assignmentFee: deal.assignmentFee,
+        arv: deal.arv || undefined,
+        submittedBy: profile.companyName || profile.contactName || userId,
+      }).catch(err => console.error('Failed to send deal submission notification:', err));
+      
       return res.status(201).json(deal);
     } catch (error) {
       console.error("Error submitting wholesale deal:", error);
@@ -3139,6 +3152,43 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createLead(parseResult.data);
+      
+      // Send email notification based on lead type (non-blocking)
+      const leadData = parseResult.data;
+      const fullName = `${leadData.firstName || ''} ${leadData.lastName || ''}`.trim() || 'Unknown';
+      
+      if (leadData.leadType === 'seller') {
+        sendSellerLeadNotification({
+          name: fullName,
+          email: leadData.email || '',
+          phone: leadData.phone || '',
+          address: leadData.address || '',
+          propertyType: (leadData.leadData as any)?.propertyType || 'Unknown',
+          condition: (leadData.leadData as any)?.condition || 'Unknown',
+          timeline: (leadData.leadData as any)?.timeline || 'Unknown',
+          notes: leadData.notes || undefined,
+        }).catch(err => console.error('Failed to send seller lead notification:', err));
+      } else if (leadData.leadType === 'investor') {
+        sendInvestorLeadNotification({
+          name: fullName,
+          email: leadData.email || '',
+          phone: leadData.phone || '',
+          investmentRange: (leadData.leadData as any)?.investmentRange || 'Unknown',
+          strategy: (leadData.leadData as any)?.strategy || 'Unknown',
+          notes: leadData.notes || undefined,
+        }).catch(err => console.error('Failed to send investor lead notification:', err));
+      } else if (leadData.leadType === 'buyer') {
+        sendBuyerLeadNotification({
+          name: fullName,
+          email: leadData.email || '',
+          phone: leadData.phone || '',
+          buyerType: (leadData.leadData as any)?.buyerType || 'Unknown',
+          priceRange: (leadData.leadData as any)?.priceRange || 'Unknown',
+          locations: (leadData.leadData as any)?.locations,
+          notes: leadData.notes || undefined,
+        }).catch(err => console.error('Failed to send buyer lead notification:', err));
+      }
+      
       res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating lead:", error);

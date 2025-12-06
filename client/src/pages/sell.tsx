@@ -42,6 +42,7 @@ import {
   ArrowRight,
   Loader2
 } from "lucide-react";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
 
 export default function Sell() {
   return (
@@ -305,7 +306,12 @@ function LeadFormSection() {
                     <FormItem>
                       <FormLabel>Property Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="123 Main St, City, State ZIP" {...field} data-testid="input-seller-address" />
+                        <AddressAutocomplete
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Start typing an address..."
+                          data-testid="input-seller-address"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -395,6 +401,7 @@ function LeadFormSection() {
                           placeholder="Tell us more about the property, your situation, or any questions you have..."
                           className="min-h-32 resize-none"
                           {...field}
+                          value={field.value ?? ""}
                           data-testid="textarea-seller-notes"
                         />
                       </FormControl>

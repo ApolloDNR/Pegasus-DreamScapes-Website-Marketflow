@@ -30,6 +30,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { AddressAutocomplete, parseAddressComponents } from "@/components/address-autocomplete";
 
 const optionalNumber = z.preprocess(
   (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
@@ -377,7 +378,20 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                       <FormItem>
                         <FormLabel>Property Address *</FormLabel>
                         <FormControl>
-                          <Input placeholder="123 Main Street" {...field} data-testid="input-deal-address" />
+                          <AddressAutocomplete
+                            value={field.value}
+                            onChange={field.onChange}
+                            onPlaceSelect={(place) => {
+                              const parsed = parseAddressComponents(place);
+                              form.setValue("propertyAddress", `${parsed.streetNumber} ${parsed.streetName}`.trim());
+                              form.setValue("city", parsed.city);
+                              form.setValue("state", parsed.state);
+                              form.setValue("zipCode", parsed.zip);
+                              form.setValue("county", parsed.county);
+                            }}
+                            placeholder="Start typing an address..."
+                            data-testid="input-deal-address"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
