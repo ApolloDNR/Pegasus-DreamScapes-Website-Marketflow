@@ -1,0 +1,324 @@
+You are working on the Pegasus DreamScapes Website + Pegasus Marketplace app.
+
+This Replit project = PUBLIC WEBSITE (Sell / Invest / Buy / Submit Deal) + MARKETPLACE (role-based dashboards).  
+Pegasus HQ (internal OS) is a separate app. Do NOT touch HQ code here.  
+Both apps share the SAME Supabase backend.
+
+==================================================
+PHASE 1 — SUPABASE SETUP (DO THIS FIRST)
+==================================================
+1. Prompt me for missing secrets:
+If SUPABASE_URL or SUPABASE_ANON_KEY are missing:
+- Tell me where to add secrets in Replit.
+- Ask me to paste:
+  SUPABASE_URL
+  SUPABASE_ANON_KEY
+Wait/assume I will add them.
+
+2. Install & configure Supabase client:
+- Install @supabase/supabase-js
+- Create supabase client file (e.g., src/lib/supabaseClient.ts):
+
+import { createClient } from '@supabase/supabase-js';
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+3. Basic connection test:
+Call supabase.auth.getSession() or select from a placeholder table and log result.
+
+==================================================
+PHASE 2 — ROLES & AUTH STRUCTURE
+==================================================
+Use Supabase Auth. Marketplace requires login.
+
+Define user roles:
+- admin
+- pegasus_wholesaler
+- wholesaler (external)
+- pegasus_dreamscaper
+- dreamscaper (external)
+- investor
+- buyer_retail
+- buyer_investment
+
+Create user_profiles table:
+- user_id (ref to auth.users)
+- primary_role
+- display_name
+- company_name
+- location
+- avatar_url
+- bio
+- is_pegasus_badged
+- pegasus_role_type (optional)
+
+Create user_badges table:
+- id
+- user_id
+- badge_type
+- label
+- description
+- created_at
+
+Create user_reputation table:
+- user_id
+- trust_score
+- rating
+- deals_closed_count
+- on_time_closings_count
+- cancellations_count
+- last_updated_at
+
+Signup flow:
+- User selects role at signup.
+- Post-login redirect to correct dashboard.
+
+==================================================
+PHASE 3 — WEBSITE + MARKETPLACE ROUTING
+==================================================
+Create clear separation between public pages and marketplace dashboards.
+
+Public routes:
+- / (Home)
+- /sell
+- /invest
+- /buy
+- /submit-deal
+- /about
+- /login
+- /marketplace (teaser page)
+
+Marketplace routes (requires login):
+- /dashboard → auto-redirect by role:
+    wholesaler → /marketplace/wholesaler
+    dreamscaper → /marketplace/dreamscaper
+    investor → /marketplace/investor
+    buyers → /marketplace/buyer
+    admin → /marketplace/admin
+- /marketplace/wholesaler
+- /marketplace/dreamscaper
+- /marketplace/investor
+- /marketplace/buyer
+- /marketplace/admin
+
+Auth guards:
+- Redirect unauthenticated users to /login.
+- Redirect users away from dashboards not belonging to their role.
+
+==================================================
+PHASE 4 — PUBLIC FUNNELS
+==================================================
+4.1 /sell (seller lead form)
+Fields:
+- Name, phone, email
+- Address
+- Property type
+- Reason
+- Best time
+- Notes
+On submit → seller_leads table:
+- source = 'Website - Seller'
+- status = 'New'
+
+4.2 /invest
+Explains investing process: debt vs equity, returns, timeline, safety, Dreamscaper model.
+CTAs:
+- Create Investor Account
+- Log in as Investor
+
+4.3 /buy
+Two buyer types:
+- Retail buyers of finished homes
+- Investment buyers (wholesale deals)
+Each CTA → login/signup with correct role.
+
+4.4 /submit-deal (wholesalers)
+Not logged in → explanation + CTA to login.
+Logged in (wholesaler roles) → deal submission form:
+- Address
+- ARV
+- Asking price
+- Repair estimate
+- Assignment fee
+- Photos
+- Occupancy
+- Close timeline
+- Notes
+Save to wholesale_deals table:
+- wholesaler_id
+- status = 'Under Review'
+- is_public = false
+
+==================================================
+PHASE 5 — MARKETPLACE DASHBOARDS
+==================================================
+
+5.1 WHOLESALER DASHBOARD
+Show:
+- Submitted deals
+- Status tabs (Under Review / Approved / Listed)
+- JV Requests (placeholder)
+Actions:
+- Submit New Deal
+- View Deal Details
+
+5.2 DREAMSCAPER DASHBOARD
+Sections:
+- Browse Wholesale Deals (Approved + public)
+- My Deals (interested, claimed, raising capital, completed)
+Show wholesaler badges & trust.
+CTAs:
+- View Deal
+- Start Underwriting (placeholder)
+
+5.3 INVESTOR DASHBOARD
+Summary:
+- Active Commitments
+- Total Capital Committed
+- Active Projects
+- Completed Investments
+
+Available Deals:
+- Deals flagged raising_capital = true
+Show:
+- Address
+- Dreamscaper info w/ badges
+- Structure: debt vs equity
+- Target returns
+- Capital progress bar
+- CTA: View / Express Interest
+
+My Commitments:
+- Deals investor is attached to (simple list for now).
+
+5.4 BUYER DASHBOARD
+If buyer_retail:
+- Saved Homes
+- Inquiries/Tours
+- Offers Submitted
+
+If buyer_investment:
+- Saved Deals
+- Active LOIs
+- Closed Deals
+
+==================================================
+PHASE 6 — PROFILE, BADGES, REPUTATION, NAVIGATION
+==================================================
+
+Profile page:
+- Avatar
+- Display name
+- Role
+- Company
+- Location
+- Bio
+- Badges (Pegasus Wholesaler / Pegasus Dreamscaper / Verified Investor)
+- Reputation stats:
+  - Trust score
+  - Rating
+  - Deals closed
+  - On-time closings
+
+Show small badge icons on all deal cards.
+
+Navigation:
+Public:
+- Home, Sell, Invest, Buy, Submit Deal, About, Login
+
+Logged in:
+- Profile menu: Dashboard, Profile, Logout
+
+Dashboard layout = role-based sidebar:
+Wholesaler:
+- Overview
+- Submitted Deals
+- JV Requests
+- Profile
+
+Dreamscaper:
+- Overview
+- Browse Deals
+- My Deals
+- Capital Raising (placeholder)
+- Profile
+
+Investor:
+- Overview
+- Available Deals
+- Commitments
+- Profile
+
+Buyer:
+- Overview
+- Saved
+- Offers
+- Profile
+
+==================================================
+PHASE 7 — EXTERNAL API SETUP & RECOMMENDATIONS
+==================================================
+
+Required / Recommended APIs:
+
+1. Google Maps / Places API  
+For:
+- Address autocomplete (/sell, /submit-deal)
+- Map previews
+- Geocoding
+Env vars:
+- GOOGLE_MAPS_API_KEY
+
+2. Email Provider (SendGrid recommended)  
+For:
+- Seller lead confirmations
+- Wholesale submission confirmations
+- Admin notifications
+Env vars:
+- SENDGRID_API_KEY
+Scaffold email service module; fallback to console.log if key missing.
+
+3. Supabase Storage  
+For:
+- Property photos
+- Document uploads
+Scaffold storage upload utilities.
+
+4. Optional future APIs:  
+Twilio — SMS notifications  
+DocuSign — contracts / assignments  
+Stripe — payment flows (future)  
+Add TODO placeholders only.
+
+Integrations behavior:
+- Create utility modules
+- Wrap API calls in checks so app never breaks if key missing
+- Prompt me clearly for adding required env vars
+
+==================================================
+FINAL SUMMARY EXPECTED FROM YOU AFTER IMPLEMENTATION
+==================================================
+Summarize:
+1. Supabase configuration (file path, env vars).
+2. All tables/columns expected:
+   - user_profiles
+   - user_badges
+   - user_reputation
+   - seller_leads
+   - wholesale_deals
+   - saved_items
+   - more as scaffolded
+3. Full route map + purpose of each page.
+4. Role-based dashboard routing logic.
+5. Dashboard content and which tables they read from.
+6. External API recommendations + env vars + integration points.
+7. What is placeholder for later phases (capital raising engine, JV system, file upload UI enhancements, e-sign, SMS, etc.).
+
+==================================================
+IMPORTANT IMPLEMENTATION NOTES
+==================================================
+- Preserve current visual style (colors, spacing, typography).
+- Reorganize pages, flows, and components to match this blueprint.
+- Keep everything modular, clean, scalable.
+- After implementing each section, show me the updated structure & code changes summary.
