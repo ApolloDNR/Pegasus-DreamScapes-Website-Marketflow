@@ -1,0 +1,349 @@
+You are improving and restructuring my WEBSITE + MARKETPLACE application for Pegasus Dreamscapes. 
+This prompt defines the ENTIRE architecture, workflow, database integration, routing, features, and UI/UX 
+for the public website and the Pegasus Marketplace.
+
+====================================================================
+PEGASUS WEBSITE + MARKETPLACE — FULL BLUEPRINT IMPLEMENTATION PROMPT
+====================================================================
+
+GOAL:
+Transform the current website and “dealflow” system into the official 
+PEGASUS MARKETPLACE — the external-facing platform where sellers, wholesalers, 
+dreamscapers (flippers/developers), buyers, and investors interact.
+
+This app must integrate with Supabase (same database as Pegasus HQ app) but is 
+its own frontend.
+
+STRUCTURE OF THIS PROJECT:
+1. PUBLIC WEBSITE (marketing face)
+2. PEGASUS MARKETPLACE (login-only ecosystem)
+3. REPUTATION + PROFILE SYSTEM
+4. API CONNECTIONS (Supabase + 3rd party)
+5. ROLE-BASED DASHBOARDS
+6. OPERATIONAL FLOWS BETWEEN ALL USER TYPES
+7. SYNC WITH PEGASUS HQ APP (shared Supabase tables)
+
+====================================================================
+SECTION 1 — ADD & VERIFY SUPABASE CONNECTION
+====================================================================
+Before building anything else:
+
+1. Add secrets prompt flow:
+   - SUPABASE_URL
+   - SUPABASE_ANON_KEY
+   - SUPABASE_SERVICE_ROLE_KEY (server)
+   - GOOGLE_MAPS_API_KEY (for address autocomplete)
+   - SENDGRID_API_KEY (optional, notifications)
+
+2. If any secret is missing, pause and ask me to provide it.
+
+3. Create a Supabase client and server route wrappers.
+
+4. Verify connectivity by:
+   - Running `supabase.auth.getSession()`
+   - Querying a placeholder table
+   - Logging confirmation
+
+====================================================================
+SECTION 2 — USER ROLES, ACCOUNTS & AUTH
+====================================================================
+Define and implement the following roles:
+
+• seller (property owners submitting homes)
+• wholesaler_internal (Pegasus wholesalers)
+• wholesaler_external (public investors who submit wholesale deals)
+• dreamscaper_internal (Pegasus flippers)
+• dreamscaper_external (outside flippers using marketplace)
+• investor (capital raisers / private lenders)
+• buyer (homebuyers and contract buyers)
+• admin
+
+Every user MUST have:
+- Profile
+- Mobile/email verification
+- Rank/credibility score
+- Review system
+- Verification badges
+
+====================================================================
+SECTION 3 — WEBSITE PUBLIC PAGES
+====================================================================
+
+1. Homepage
+   - Hero section (Designed Profits. Elevated Communities.)
+   - CTA buttons:
+        SELL YOUR PROPERTY
+        PARTNER WITH US
+   - Explanation of Dreamscapers vs Wholesalers vs Investors
+
+2. “Sell Your Property” Form
+   - Save form data into Supabase table: seller_leads
+   - Auto-route seller leads to HQ Acquisitions
+
+3. “Buy a Pegasus Home”
+   - Public listing page (only Dreamscaper-finished properties)
+   - Filter by price, location, status
+   - Clicking a property prompts user to sign up as **buyer**
+
+4. “Invest With Pegasus”
+   - Educate users on debt vs equity structures
+   - Show benefits and risks
+   - CTA → signup as investor
+
+5. "Partner with Us"
+   - Explains roles: wholesaler, dreamscaper, investor
+   - Role-specific CTAs
+
+6. Content Management
+   - All public content pulled from Supabase tables:
+       website_content
+       featured_projects
+       testimonials
+       media_assets
+
+====================================================================
+SECTION 4 — PEGASUS MARKETPLACE (LOGIN REQUIRED)
+====================================================================
+This is the core marketplace where all users interact.
+
+MAIN MODULES:
+• Seller Submissions
+• Wholesale Marketplace
+• Dreamscaper Projects
+• Investor Capital Marketplace
+• Buyer Marketplace
+• JV Opportunities
+• Profile & Ranking System
+
+-------------------------------------------------------------
+A. WHOLESALER WORKFLOW
+-------------------------------------------------------------
+Wholesalers (internal + external) can:
+
+1. Submit Deals
+    Fields:
+     - property address
+     - ARV
+     - asking price
+     - repair estimate
+     - photos/docs
+     - assignment fee request
+     - property status
+
+   Save to table: wholesale_deals
+
+2. See their active deals
+3. Edit/update deals
+4. Receive offers from dreamscapers
+
+Internal Pegasus Wholesalers get:
+- Trusted badge
+- Higher ranking authority
+- Better visibility in marketplace
+
+-------------------------------------------------------------
+B. DREAMSCAPER WORKFLOW
+-------------------------------------------------------------
+Dreamscapers (flippers) can:
+
+1. Browse wholesale deals
+2. Submit offers / JV requests
+3. Post their own projects (if they seek capital)
+4. Publish deal structure:
+   - debt deal (interest rate, term)
+   - equity deal (profit split)
+   - total raise needed
+   - minimum check size
+   - timeline
+
+5. When funded → move project stage to active
+6. Auto-sync this deal to Pegasus HQ
+
+Table: dreamscaper_projects, capital_raise_posts
+
+-------------------------------------------------------------
+C. INVESTOR WORKFLOW
+-------------------------------------------------------------
+Investors can:
+
+1. Browse all active capital raises
+2. Filter:
+   - debt / equity
+   - location
+   - operator (dreamscaper)
+   - raise type
+   - risk score
+
+3. View:
+   - deal deck
+   - operator reputation score
+   - historical performance
+   - legal docs
+
+4. Commit capital:
+   - amount
+   - terms accepted
+   - counteroffer (optional)
+
+Save to table: investor_commitments
+
+Investor sees a dashboard of:
+- active commitments
+- interest schedule
+- updates provided by flipper
+- completed deals
+
+-------------------------------------------------------------
+D. BUYER WORKFLOW
+-------------------------------------------------------------
+Buyers can browse:
+1. Pegasus renovated flips (Dreamscaper-finished)
+2. Wholesale assignments (if they want contracts)
+
+Buyers can:
+- Save favorites
+- Submit offers
+- Request showings
+- Download disclosures
+
+-------------------------------------------------------------
+E. PROFILE & REPUTATION SYSTEM
+-------------------------------------------------------------
+Every user must have:
+
+• Profile page with:
+  - role
+  - join date
+  - number of deals done
+  - verified badge (if internal Pegasus)
+  - rating (1–5)
+  - reviews
+  - rank tier (Bronze → Silver → Gold → Pegasus)
+
+• Activity feed
+• Completed deal history
+• Standing in the community
+
+Tables:
+user_profiles
+user_reviews
+user_badges
+user_rank_history
+
+====================================================================
+SECTION 5 — ROLE-BASED DASHBOARDS
+====================================================================
+
+Each user type needs a dashboard reflecting THEIR workflow:
+
+1. Seller Dashboard
+   - status of their submitted property
+   - assigned acquisitions rep
+   - communication feed
+
+2. Wholesaler Dashboard
+   - active deals
+   - pending offers
+   - approved buyers
+   - ranking score
+
+3. Dreamscaper Dashboard
+   - deals they want to flip
+   - active capital raises
+   - investor negotiations
+   - project status after funding
+
+4. Investor Dashboard
+   - active investments
+   - return projections
+   - payment history
+   - operator messages
+
+5. Buyer Dashboard
+   - saved properties
+   - offers
+   - disclosures
+
+====================================================================
+SECTION 6 — SEARCH + FILTER SYSTEM
+====================================================================
+
+Implement global search across:
+- Deals
+- Projects
+- Properties
+- Dreamscapers
+- Wholesalers
+- Investors
+
+Filters by:
+- price
+- location
+- role
+- deal type
+- ARV
+- return expectation
+
+====================================================================
+SECTION 7 — SUPABASE SYNC WITH PEGASUS HQ
+====================================================================
+
+Important:
+
+• Seller submissions → go to HQ.Acquisitions
+• Wholesale deals → appear in HQ.Acquisitions
+• Dreamscaper projects → appear in HQ.Development
+• Capital raise commitments → sync to HQ.Investor Relations
+• Completed flips → auto-sync to Marketplace “Buy”
+
+This app **shares tables** with HQ.
+
+====================================================================
+SECTION 8 — REQUIRED APIS & TOOLS
+====================================================================
+
+Use:
+• Supabase (auth, DB)
+• Google Maps API (address autocomplete)
+• SendGrid (email notifications)
+• Stripe (future: investor payments)
+• Twilio (optional SMS)
+• OpenAI API (Peggy-lite suggestions and autofill)
+
+====================================================================
+SECTION 9 — CLEAN ROUTING STRUCTURE
+====================================================================
+
+Update routes:
+
+/sell
+/invest
+/buy
+/partner
+/marketplace
+   /wholesale
+   /dreamscaper
+   /investor
+   /buyer
+   /account
+      /profile
+      /dashboard
+      /settings
+
+Redirect old /dealflow routes into /marketplace.
+
+====================================================================
+SECTION 10 — WHAT TO DO NOW
+====================================================================
+
+1. Implement Supabase integration
+2. Create all tables needed
+3. Migrate existing dealflow pages to new marketplace structure
+4. Add dashboards per role
+5. Build profile/reputation system
+6. Add data submission forms (seller, wholesaler, projects)
+7. Build investor marketplace
+8. Update UI/UX to match premium design
+9. Test full workflow (seller → acquisitions, wholesaler → dreamscaper → investor → buyer)
+
+END OF BLUEPRINT.
