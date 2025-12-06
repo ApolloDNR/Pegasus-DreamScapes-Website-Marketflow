@@ -168,6 +168,7 @@ export interface IStorage {
   getActiveRetailListings(): Promise<RetailListing[]>;
   getRetailListingBySlug(slug: string): Promise<RetailListing | undefined>;
   getRetailListingById(id: number): Promise<RetailListing | undefined>;
+  getRetailListing(id: number): Promise<RetailListing | undefined>;
   updateRetailListing(id: number, data: Partial<InsertRetailListing>): Promise<RetailListing | undefined>;
   updateRetailListingStatus(id: number, status: string): Promise<RetailListing | undefined>;
 
@@ -188,6 +189,7 @@ export interface IStorage {
   getSavedProperties(userId: string): Promise<SavedProperty[]>;
   removeSavedProperty(userId: string, propertyType: string, propertyId: number): Promise<void>;
   isPropertySaved(userId: string, propertyType: string, propertyId: number): Promise<boolean>;
+  toggleSavedProperty(userId: string, propertyType: string, propertyId: number): Promise<boolean>;
 
   // Buyer Offers
   createBuyerOffer(offer: InsertBuyerOffer): Promise<BuyerOffer>;
@@ -879,6 +881,10 @@ export class DatabaseStorage implements IStorage {
     return listing;
   }
 
+  async getRetailListing(id: number): Promise<RetailListing | undefined> {
+    return this.getRetailListingById(id);
+  }
+
   async updateRetailListing(id: number, data: Partial<InsertRetailListing>): Promise<RetailListing | undefined> {
     const [updated] = await db.update(retailListings)
       .set({ ...data, updatedAt: new Date() })
@@ -988,6 +994,17 @@ export class DatabaseStorage implements IStorage {
         eq(savedProperties.propertyId, propertyId)
       ));
     return !!found;
+  }
+
+  async toggleSavedProperty(userId: string, propertyType: string, propertyId: number): Promise<boolean> {
+    const isSaved = await this.isPropertySaved(userId, propertyType, propertyId);
+    if (isSaved) {
+      await this.removeSavedProperty(userId, propertyType, propertyId);
+      return false;
+    } else {
+      await this.saveProperty({ userId, propertyType, propertyId });
+      return true;
+    }
   }
 
   // Buyer Offers

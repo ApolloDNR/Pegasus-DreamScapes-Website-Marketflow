@@ -62,6 +62,8 @@ import MarketplaceDeals from "@/pages/marketplace-deals";
 import MarketplaceDealDetail from "@/pages/marketplace-deal-detail";
 import MarketplaceCapital from "@/pages/marketplace-capital";
 import MarketplaceCapitalDetail from "@/pages/marketplace-capital-detail";
+import MarketplaceProperties from "@/pages/marketplace-properties";
+import MarketplacePropertyDetail from "@/pages/marketplace-property-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -127,6 +129,8 @@ function Router() {
       <Route path="/marketplace/deals/:id" component={MarketplaceDealDetail} />
       <Route path="/marketplace/capital" component={MarketplaceCapital} />
       <Route path="/marketplace/capital/:id" component={MarketplaceCapitalDetail} />
+      <Route path="/marketplace/properties" component={MarketplaceProperties} />
+      <Route path="/marketplace/properties/:id" component={MarketplacePropertyDetail} />
       
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />

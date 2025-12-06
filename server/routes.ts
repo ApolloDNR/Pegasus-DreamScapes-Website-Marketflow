@@ -3818,10 +3818,169 @@ export async function registerRoutes(
       }
 
       const savedProperties = await storage.getSavedProperties(userId);
-      res.json(savedProperties);
+      // Enrich with property details
+      const enrichedProperties = await Promise.all(
+        savedProperties.map(async (saved) => {
+          if (saved.propertyType === "retail") {
+            const listing = await storage.getRetailListing(saved.propertyId);
+            return { ...saved, listing };
+          } else if (saved.propertyType === "wholesale") {
+            const deal = await storage.getWholesaleDeal(saved.propertyId);
+            return { ...saved, deal };
+          }
+          return saved;
+        })
+      );
+      res.json(enrichedProperties);
     } catch (error) {
       console.error("Error fetching buyer saved properties:", error);
       res.status(500).json({ message: "Failed to fetch saved properties" });
+    }
+  });
+
+  // Buyer Offers - get user's offers
+  app.get("/api/marketplace/buyer/offers", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const offers = await storage.getBuyerOffers(userId);
+      // Enrich with property details
+      const enrichedOffers = await Promise.all(
+        offers.map(async (offer) => {
+          if (offer.propertyType === "retail") {
+            const listing = await storage.getRetailListing(offer.propertyId);
+            return { ...offer, listing };
+          } else if (offer.propertyType === "wholesale") {
+            const deal = await storage.getWholesaleDeal(offer.propertyId);
+            return { ...offer, deal };
+          }
+          return offer;
+        })
+      );
+      res.json(enrichedOffers);
+    } catch (error) {
+      console.error("Error fetching buyer offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Submit a buyer offer
+  app.post("/api/marketplace/buyer/offers", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { propertyType, propertyId, offerAmount, fundingType, closingTimeline, message } = req.body;
+      
+      if (!propertyType || !propertyId || !offerAmount || !fundingType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const offer = await storage.createBuyerOffer({
+        userId,
+        propertyType,
+        propertyId: Number(propertyId),
+        offerAmount: Number(offerAmount),
+        fundingType,
+        closingTimeline: closingTimeline || null,
+        message: message || null,
+        proofOfFunds: null,
+      });
+
+      res.status(201).json(offer);
+    } catch (error) {
+      console.error("Error creating buyer offer:", error);
+      res.status(500).json({ message: "Failed to submit offer" });
+    }
+  });
+
+  // Toggle save/unsave a property
+  app.post("/api/marketplace/buyer/save", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { propertyType, propertyId } = req.body;
+      
+      if (!propertyType || !propertyId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const saved = await storage.toggleSavedProperty(userId, propertyType, Number(propertyId));
+      res.json({ saved });
+    } catch (error) {
+      console.error("Error toggling saved property:", error);
+      res.status(500).json({ message: "Failed to toggle saved property" });
+    }
+  });
+
+  // Submit buyer inquiry (schedule showing, ask question)
+  app.post("/api/marketplace/buyer/inquiries", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { propertyType, propertyId, name, email, phone, message, requestType } = req.body;
+
+      if (!propertyType || !propertyId || !name || !email || !requestType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const inquiry = await storage.createBuyerInquiry({
+        userId: userId || null,
+        propertyType,
+        propertyId: Number(propertyId),
+        name,
+        email,
+        phone: phone || null,
+        message: message || null,
+        requestType,
+      });
+
+      res.json(inquiry);
+    } catch (error) {
+      console.error("Error creating buyer inquiry:", error);
+      res.status(500).json({ message: "Failed to submit inquiry" });
+    }
+  });
+
+  // Get retail listings (public browse)
+  app.get("/api/marketplace/properties", async (req: any, res) => {
+    try {
+      const listings = await storage.getRetailListings();
+      // Filter to only show active listings
+      const activeListings = listings.filter(l => 
+        l.status === "active" || l.status === "coming_soon" || l.status === "pending"
+      );
+      res.json(activeListings);
+    } catch (error) {
+      console.error("Error fetching retail listings:", error);
+      res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  });
+
+  // Get single retail listing
+  app.get("/api/marketplace/properties/:id", async (req: any, res) => {
+    try {
+      const listingId = Number(req.params.id);
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+      
+      const listing = await storage.getRetailListing(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      res.json(listing);
+    } catch (error) {
+      console.error("Error fetching retail listing:", error);
+      res.status(500).json({ message: "Failed to fetch property" });
     }
   });
 
