@@ -3850,9 +3850,12 @@ export async function registerRoutes(
   app.get("/api/marketplace/projects", async (req: any, res) => {
     try {
       const projects = await storage.getCapitalProjects();
-      // Filter to only show active/funding projects
+      // Filter to only show open/active/funding projects
       const publicProjects = projects.filter(p => 
-        p.status === "funding" || p.status === "active"
+        p.status === "OPEN_FOR_INVESTMENT" || 
+        p.status === "funding" || 
+        p.status === "active" ||
+        p.status === "FUNDED"
       );
       res.json(publicProjects);
     } catch (error) {
@@ -3878,6 +3881,61 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching project:", error);
       res.status(500).json({ message: "Failed to fetch project" });
+    }
+  });
+
+  // Submit investment interest for a capital project
+  app.post("/api/marketplace/investment-interest", async (req: any, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { projectId, amount, structurePreference, notes } = req.body;
+      
+      if (!projectId || !amount) {
+        return res.status(400).json({ message: "Project ID and amount are required" });
+      }
+
+      const project = await storage.getCapitalProject(Number(projectId));
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      if (amount < (project.minInvestment || 0)) {
+        return res.status(400).json({ 
+          message: `Minimum investment is $${project.minInvestment?.toLocaleString()}` 
+        });
+      }
+
+      // Create an investment offer
+      const offer = await storage.createInvestmentOffer({
+        projectId: Number(projectId),
+        investorId: req.user.id,
+        amountOffered: Number(amount),
+        structureType: structurePreference || project.structure,
+        notes: notes || null,
+        status: "pending",
+        role: "LP",
+        requestedInterestRate: null,
+        requestedEquityPercent: null,
+        requestedProfitSplit: null,
+        requestedPreferredReturn: null,
+        requestedPoints: null,
+        requestedDuration: null,
+        counterOfferRate: null,
+        counterOfferEquity: null,
+        counterOfferNotes: null,
+        negotiationHistory: null,
+      });
+
+      res.status(201).json({ 
+        message: "Investment interest submitted successfully",
+        offerId: offer.id 
+      });
+    } catch (error) {
+      console.error("Error submitting investment interest:", error);
+      res.status(500).json({ message: "Failed to submit investment interest" });
     }
   });
 

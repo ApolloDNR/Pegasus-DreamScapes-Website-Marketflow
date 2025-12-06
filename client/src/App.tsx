@@ -60,6 +60,8 @@ import Partner from "@/pages/partner";
 import Dashboard from "@/pages/dashboard";
 import MarketplaceDeals from "@/pages/marketplace-deals";
 import MarketplaceDealDetail from "@/pages/marketplace-deal-detail";
+import MarketplaceCapital from "@/pages/marketplace-capital";
+import MarketplaceCapitalDetail from "@/pages/marketplace-capital-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -123,6 +125,8 @@ function Router() {
       <Route path="/marketplace/messages" component={DealflowMessages} />
       <Route path="/marketplace/deals" component={MarketplaceDeals} />
       <Route path="/marketplace/deals/:id" component={MarketplaceDealDetail} />
+      <Route path="/marketplace/capital" component={MarketplaceCapital} />
+      <Route path="/marketplace/capital/:id" component={MarketplaceCapitalDetail} />
       
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />
