@@ -202,15 +202,44 @@ export async function registerRoutes(
 
   // ========== SUPABASE MARKETPLACE ROUTES ==========
   // These routes use Supabase for data persistence
+  // Import case transformation utilities
+  const getSupabaseStorage = async () => {
+    const module = await import('./supabase-storage');
+    return {
+      storage: module.supabaseStorage,
+      toCamelCase: module.toCamelCase,
+      toSnakeCase: module.toSnakeCase
+    };
+  };
+
+  // Helper to extract authenticated user ID from either Replit or Supabase auth
+  const getAuthUserId = (req: any): string | null => {
+    // Try Replit Auth first
+    if (req.user?.claims?.sub) {
+      return req.user.claims.sub;
+    }
+    // Try Supabase Auth
+    if (req.supabaseUser?.id) {
+      return req.supabaseUser.id;
+    }
+    // Check for session-based user
+    if (req.session?.user?.id) {
+      return req.session.user.id;
+    }
+    return null;
+  };
 
   // --- Saved Items ---
   app.get('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { type } = req.query;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const items = await supabaseStorage.getSavedItems(userId, type as any);
-      res.json(items);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const items = await storage.getSavedItems(userId, type as any);
+      res.json(toCamelCase(items));
     } catch (error) {
       console.error('Error fetching saved items:', error);
       res.status(500).json({ message: 'Failed to fetch saved items' });
@@ -219,16 +248,19 @@ export async function registerRoutes(
 
   app.post('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { itemType, itemId } = req.body;
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const item = await supabaseStorage.saveItem(userId, itemType, itemId);
-      res.status(201).json(item);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const item = await storage.saveItem(userId, itemType, itemId);
+      res.status(201).json(toCamelCase(item));
     } catch (error) {
       console.error('Error saving item:', error);
       res.status(500).json({ message: 'Failed to save item' });
@@ -237,15 +269,18 @@ export async function registerRoutes(
 
   app.delete('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { itemType, itemId } = req.body;
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const success = await supabaseStorage.unsaveItem(userId, itemType, itemId);
+      const { storage } = await getSupabaseStorage();
+      const success = await storage.unsaveItem(userId, itemType, itemId);
       res.json({ success });
     } catch (error) {
       console.error('Error unsaving item:', error);
@@ -255,15 +290,18 @@ export async function registerRoutes(
 
   app.get('/api/supabase/saved-items/check', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { itemType, itemId } = req.query;
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const isSaved = await supabaseStorage.isItemSaved(userId, itemType as any, itemId as string);
+      const { storage } = await getSupabaseStorage();
+      const isSaved = await storage.isItemSaved(userId, itemType as any, itemId as string);
       res.json({ isSaved });
     } catch (error) {
       console.error('Error checking saved status:', error);
@@ -274,15 +312,18 @@ export async function registerRoutes(
   // --- JV Requests (Supabase) ---
   app.post('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { dealId, wholesalerId, strategy, fundingSource, proposedFee, message } = req.body;
       
       if (!dealId || !wholesalerId || !strategy) {
         return res.status(400).json({ message: 'Missing required fields' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const request = await supabaseStorage.createJVRequest({
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const request = await storage.createJVRequest({
         deal_id: dealId,
         requester_id: userId,
         wholesaler_id: wholesalerId,
@@ -294,7 +335,7 @@ export async function registerRoutes(
       });
       
       if (request) {
-        await supabaseStorage.createNotification({
+        await storage.createNotification({
           user_id: wholesalerId,
           type: 'jv_request',
           title: 'New JV Request',
@@ -303,7 +344,7 @@ export async function registerRoutes(
         });
       }
       
-      res.status(201).json(request);
+      res.status(201).json(toCamelCase(request));
     } catch (error) {
       console.error('Error creating JV request:', error);
       res.status(500).json({ message: 'Failed to create JV request' });
@@ -312,10 +353,13 @@ export async function registerRoutes(
 
   app.get('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const requests = await supabaseStorage.getJVRequestsByUser(userId);
-      res.json(requests);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const requests = await storage.getJVRequestsByUser(userId);
+      res.json(toCamelCase(requests));
     } catch (error) {
       console.error('Error fetching JV requests:', error);
       res.status(500).json({ message: 'Failed to fetch JV requests' });
@@ -331,9 +375,9 @@ export async function registerRoutes(
         return res.status(400).json({ message: 'Missing status' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const updated = await supabaseStorage.updateJVRequestStatus(id, status);
-      res.json(updated);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const updated = await storage.updateJVRequestStatus(id, status);
+      res.json(toCamelCase(updated));
     } catch (error) {
       console.error('Error updating JV request:', error);
       res.status(500).json({ message: 'Failed to update JV request' });
@@ -343,9 +387,9 @@ export async function registerRoutes(
   // --- Capital Projects (Supabase) ---
   app.get('/api/supabase/capital-projects', async (req: any, res) => {
     try {
-      const { supabaseStorage } = await import('./supabase-storage');
-      const projects = await supabaseStorage.getPublicCapitalProjects();
-      res.json(projects);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const projects = await storage.getPublicCapitalProjects();
+      res.json(toCamelCase(projects));
     } catch (error) {
       console.error('Error fetching capital projects:', error);
       res.status(500).json({ message: 'Failed to fetch capital projects' });
@@ -354,10 +398,13 @@ export async function registerRoutes(
 
   app.get('/api/supabase/capital-projects/my', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const projects = await supabaseStorage.getCapitalProjectsByUser(userId);
-      res.json(projects);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const projects = await storage.getCapitalProjectsByUser(userId);
+      res.json(toCamelCase(projects));
     } catch (error) {
       console.error('Error fetching user projects:', error);
       res.status(500).json({ message: 'Failed to fetch user projects' });
@@ -367,14 +414,14 @@ export async function registerRoutes(
   app.get('/api/supabase/capital-projects/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const project = await supabaseStorage.getCapitalProject(id);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const project = await storage.getCapitalProject(id);
       
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
       }
       
-      res.json(project);
+      res.json(toCamelCase(project));
     } catch (error) {
       console.error('Error fetching capital project:', error);
       res.status(500).json({ message: 'Failed to fetch capital project' });
@@ -383,16 +430,19 @@ export async function registerRoutes(
 
   app.post('/api/supabase/capital-projects', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const projectData = req.body;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
+      const projectData = toSnakeCase(req.body);
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const project = await supabaseStorage.createCapitalProject({
+      const project = await storage.createCapitalProject({
         ...projectData,
         owner_id: userId
       });
       
-      res.status(201).json(project);
+      res.status(201).json(toCamelCase(project));
     } catch (error) {
       console.error('Error creating capital project:', error);
       res.status(500).json({ message: 'Failed to create capital project' });
@@ -402,21 +452,24 @@ export async function registerRoutes(
   // --- Capital Commitments (Supabase) ---
   app.post('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { projectId, amount, structurePreference, notes } = req.body;
       
       if (!projectId || !amount) {
         return res.status(400).json({ message: 'Missing projectId or amount' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
+      const { storage, toCamelCase } = await getSupabaseStorage();
       
-      const project = await supabaseStorage.getCapitalProject(projectId);
+      const project = await storage.getCapitalProject(projectId);
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
       }
       
-      const commitment = await supabaseStorage.createCapitalCommitment({
+      const commitment = await storage.createCapitalCommitment({
         project_id: projectId,
         investor_id: userId,
         amount,
@@ -426,7 +479,7 @@ export async function registerRoutes(
       });
       
       if (commitment) {
-        await supabaseStorage.createNotification({
+        await storage.createNotification({
           user_id: project.owner_id,
           type: 'capital_commitment',
           title: 'New Investment Commitment',
@@ -435,7 +488,7 @@ export async function registerRoutes(
         });
       }
       
-      res.status(201).json(commitment);
+      res.status(201).json(toCamelCase(commitment));
     } catch (error) {
       console.error('Error creating capital commitment:', error);
       res.status(500).json({ message: 'Failed to create commitment' });
@@ -444,10 +497,13 @@ export async function registerRoutes(
 
   app.get('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const commitments = await supabaseStorage.getCapitalCommitmentsByUser(userId);
-      res.json(commitments);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const commitments = await storage.getCapitalCommitmentsByUser(userId);
+      res.json(toCamelCase(commitments));
     } catch (error) {
       console.error('Error fetching commitments:', error);
       res.status(500).json({ message: 'Failed to fetch commitments' });
@@ -457,9 +513,9 @@ export async function registerRoutes(
   app.get('/api/supabase/capital-projects/:id/commitments', async (req, res) => {
     try {
       const { id } = req.params;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const commitments = await supabaseStorage.getCapitalCommitmentsByProject(id);
-      res.json(commitments);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const commitments = await storage.getCapitalCommitmentsByProject(id);
+      res.json(toCamelCase(commitments));
     } catch (error) {
       console.error('Error fetching project commitments:', error);
       res.status(500).json({ message: 'Failed to fetch commitments' });
@@ -469,9 +525,9 @@ export async function registerRoutes(
   // --- Wholesale Deals (Supabase) ---
   app.get('/api/supabase/wholesale-deals', async (req: any, res) => {
     try {
-      const { supabaseStorage } = await import('./supabase-storage');
-      const deals = await supabaseStorage.getPublicWholesaleDeals();
-      res.json(deals);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const deals = await storage.getPublicWholesaleDeals();
+      res.json(toCamelCase(deals));
     } catch (error) {
       console.error('Error fetching wholesale deals:', error);
       res.status(500).json({ message: 'Failed to fetch wholesale deals' });
@@ -480,10 +536,13 @@ export async function registerRoutes(
 
   app.get('/api/supabase/wholesale-deals/my', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const deals = await supabaseStorage.getWholesaleDealsByUser(userId);
-      res.json(deals);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const deals = await storage.getWholesaleDealsByUser(userId);
+      res.json(toCamelCase(deals));
     } catch (error) {
       console.error('Error fetching user deals:', error);
       res.status(500).json({ message: 'Failed to fetch user deals' });
@@ -493,14 +552,14 @@ export async function registerRoutes(
   app.get('/api/supabase/wholesale-deals/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const deal = await supabaseStorage.getWholesaleDeal(id);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const deal = await storage.getWholesaleDeal(id);
       
       if (!deal) {
         return res.status(404).json({ message: 'Deal not found' });
       }
       
-      res.json(deal);
+      res.json(toCamelCase(deal));
     } catch (error) {
       console.error('Error fetching wholesale deal:', error);
       res.status(500).json({ message: 'Failed to fetch wholesale deal' });
@@ -509,11 +568,14 @@ export async function registerRoutes(
 
   app.post('/api/supabase/wholesale-deals', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const dealData = req.body;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
+      const dealData = toSnakeCase(req.body);
       
-      const { supabaseStorage } = await import('./supabase-storage');
-      const deal = await supabaseStorage.createWholesaleDeal({
+      const deal = await storage.createWholesaleDeal({
         ...dealData,
         wholesaler_id: userId,
         status: 'Under Review',
@@ -521,7 +583,7 @@ export async function registerRoutes(
         raising_capital: false
       });
       
-      res.status(201).json(deal);
+      res.status(201).json(toCamelCase(deal));
     } catch (error) {
       console.error('Error creating wholesale deal:', error);
       res.status(500).json({ message: 'Failed to create wholesale deal' });
@@ -531,9 +593,9 @@ export async function registerRoutes(
   // --- Listings (Supabase) ---
   app.get('/api/supabase/listings', async (req: any, res) => {
     try {
-      const { supabaseStorage } = await import('./supabase-storage');
-      const listings = await supabaseStorage.getPublicListings();
-      res.json(listings);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const listings = await storage.getPublicListings();
+      res.json(toCamelCase(listings));
     } catch (error) {
       console.error('Error fetching listings:', error);
       res.status(500).json({ message: 'Failed to fetch listings' });
@@ -543,14 +605,14 @@ export async function registerRoutes(
   app.get('/api/supabase/listings/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const listing = await supabaseStorage.getListing(id);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const listing = await storage.getListing(id);
       
       if (!listing) {
         return res.status(404).json({ message: 'Listing not found' });
       }
       
-      res.json(listing);
+      res.json(toCamelCase(listing));
     } catch (error) {
       console.error('Error fetching listing:', error);
       res.status(500).json({ message: 'Failed to fetch listing' });
@@ -560,21 +622,24 @@ export async function registerRoutes(
   // --- Buyer Offers (Supabase) ---
   app.post('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { listingId, offerAmount, financingType, contingencies, message } = req.body;
       
       if (!listingId || !offerAmount) {
         return res.status(400).json({ message: 'Missing listingId or offerAmount' });
       }
       
-      const { supabaseStorage } = await import('./supabase-storage');
+      const { storage, toCamelCase } = await getSupabaseStorage();
       
-      const listing = await supabaseStorage.getListing(listingId);
+      const listing = await storage.getListing(listingId);
       if (!listing) {
         return res.status(404).json({ message: 'Listing not found' });
       }
       
-      const offer = await supabaseStorage.createBuyerOffer({
+      const offer = await storage.createBuyerOffer({
         listing_id: listingId,
         buyer_id: userId,
         offer_amount: offerAmount,
@@ -585,7 +650,7 @@ export async function registerRoutes(
       });
       
       if (offer && listing.owner_id) {
-        await supabaseStorage.createNotification({
+        await storage.createNotification({
           user_id: listing.owner_id,
           type: 'buyer_offer',
           title: 'New Offer Received',
@@ -594,7 +659,7 @@ export async function registerRoutes(
         });
       }
       
-      res.status(201).json(offer);
+      res.status(201).json(toCamelCase(offer));
     } catch (error) {
       console.error('Error creating buyer offer:', error);
       res.status(500).json({ message: 'Failed to create offer' });
@@ -603,10 +668,13 @@ export async function registerRoutes(
 
   app.get('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const offers = await supabaseStorage.getBuyerOffersByUser(userId);
-      res.json(offers);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const offers = await storage.getBuyerOffersByUser(userId);
+      res.json(toCamelCase(offers));
     } catch (error) {
       console.error('Error fetching buyer offers:', error);
       res.status(500).json({ message: 'Failed to fetch offers' });
@@ -616,11 +684,14 @@ export async function registerRoutes(
   // --- Notifications (Supabase) ---
   app.get('/api/supabase/notifications', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { unreadOnly } = req.query;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const notifications = await supabaseStorage.getNotifications(userId, unreadOnly === 'true');
-      res.json(notifications);
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const notifications = await storage.getNotifications(userId, unreadOnly === 'true');
+      res.json(toCamelCase(notifications));
     } catch (error) {
       console.error('Error fetching notifications:', error);
       res.status(500).json({ message: 'Failed to fetch notifications' });
@@ -630,8 +701,8 @@ export async function registerRoutes(
   app.patch('/api/supabase/notifications/:id/read', isHybridAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const success = await supabaseStorage.markNotificationRead(id);
+      const { storage } = await getSupabaseStorage();
+      const success = await storage.markNotificationRead(id);
       res.json({ success });
     } catch (error) {
       console.error('Error marking notification read:', error);
@@ -641,9 +712,12 @@ export async function registerRoutes(
 
   app.post('/api/supabase/notifications/mark-all-read', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { supabaseStorage } = await import('./supabase-storage');
-      const success = await supabaseStorage.markAllNotificationsRead(userId);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { storage } = await getSupabaseStorage();
+      const success = await storage.markAllNotificationsRead(userId);
       res.json({ success });
     } catch (error) {
       console.error('Error marking all notifications read:', error);

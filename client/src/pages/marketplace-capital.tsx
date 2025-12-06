@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -61,6 +62,7 @@ function CapitalPage() {
   const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { isItemSaved, toggleSaveItem, isSaving, createCapitalCommitment, isCreatingCommitment } = useSupabaseMarketplace();
 
   const handleProtectedAction = (action: string) => {
     if (!isAuthenticated) {
@@ -76,6 +78,11 @@ function CapitalPage() {
       return false;
     }
     return true;
+  };
+
+  const handleSaveProject = async (projectId: string) => {
+    if (!handleProtectedAction("save this project")) return;
+    await toggleSaveItem('capital_project', projectId);
   };
 
   const { data: projects, isLoading } = useQuery<MarketplaceProject[]>({
@@ -232,7 +239,13 @@ function CapitalPage() {
         <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.05}>
           {filteredProjects.map((project) => (
             <StaggerItem key={project.id}>
-              <ProjectCard project={project} onProtectedAction={handleProtectedAction} />
+              <ProjectCard 
+                project={project} 
+                onProtectedAction={handleProtectedAction}
+                onSave={handleSaveProject}
+                isSaved={isItemSaved('capital_project', String(project.id))}
+                isSaving={isSaving}
+              />
             </StaggerItem>
           ))}
         </StaggerChildren>
@@ -248,9 +261,12 @@ function CapitalPage() {
 interface ProjectCardProps {
   project: MarketplaceProject;
   onProtectedAction: (action: string) => boolean;
+  onSave: (projectId: string) => void;
+  isSaved: boolean;
+  isSaving: boolean;
 }
 
-function ProjectCard({ project, onProtectedAction }: ProjectCardProps) {
+function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: ProjectCardProps) {
   const fundingProgress = project.fundingGoal ? 
     Math.min(100, ((project.amountRaised || 0) / project.fundingGoal) * 100) : 0;
   
@@ -258,9 +274,7 @@ function ProjectCard({ project, onProtectedAction }: ProjectCardProps) {
   const amountRemaining = (project.fundingGoal || 0) - (project.amountRaised || 0);
 
   const handleSaveProject = () => {
-    if (onProtectedAction("save this project")) {
-      console.log("Saving project:", project.id);
-    }
+    onSave(String(project.id));
   };
 
   const getStructureBadgeColor = (structure: string | null) => {
@@ -385,16 +399,17 @@ function ProjectCard({ project, onProtectedAction }: ProjectCardProps) {
         <CardFooter className="pt-4 border-t">
           <div className="flex items-center justify-between w-full gap-2">
             <Button 
-              variant="ghost" 
+              variant={isSaved ? "default" : "ghost"} 
               size="sm" 
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleSaveProject();
               }}
+              disabled={isSaving}
               data-testid={`button-bookmark-${project.id}`}
             >
-              <Bookmark className="w-4 h-4" />
+              <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
             </Button>
             <Link href={`/marketplace/capital/${project.id}`}>
               <Button 

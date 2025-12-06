@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -79,6 +80,7 @@ function DealsPage() {
   const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { isItemSaved, toggleSaveItem, isSaving, createJVRequest, isCreatingJVRequest } = useSupabaseMarketplace();
 
   const handleProtectedAction = (action: string) => {
     if (!isAuthenticated) {
@@ -94,6 +96,11 @@ function DealsPage() {
       return false;
     }
     return true;
+  };
+
+  const handleSaveDeal = async (dealId: string) => {
+    if (!handleProtectedAction("save this deal")) return;
+    await toggleSaveItem('wholesale_deal', dealId);
   };
 
   const { data: deals, isLoading } = useQuery<MarketplaceDeal[]>({
@@ -252,7 +259,13 @@ function DealsPage() {
         <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.05}>
           {filteredDeals.map((deal) => (
             <StaggerItem key={deal.id}>
-              <DealCard deal={deal} onProtectedAction={handleProtectedAction} />
+              <DealCard 
+                deal={deal} 
+                onProtectedAction={handleProtectedAction}
+                onSave={handleSaveDeal}
+                isSaved={isItemSaved('wholesale_deal', String(deal.id))}
+                isSaving={isSaving}
+              />
             </StaggerItem>
           ))}
         </StaggerChildren>
@@ -268,13 +281,14 @@ function DealsPage() {
 interface DealCardProps {
   deal: MarketplaceDeal;
   onProtectedAction: (action: string) => boolean;
+  onSave: (dealId: string) => void;
+  isSaved: boolean;
+  isSaving: boolean;
 }
 
-function DealCard({ deal, onProtectedAction }: DealCardProps) {
+function DealCard({ deal, onProtectedAction, onSave, isSaved, isSaving }: DealCardProps) {
   const handleSaveDeal = () => {
-    if (onProtectedAction("save this deal")) {
-      console.log("Saving deal:", deal.id);
-    }
+    onSave(String(deal.id));
   };
 
   const formatCurrency = (amount: number | null | undefined) => {
@@ -334,15 +348,20 @@ function DealCard({ deal, onProtectedAction }: DealCardProps) {
 
             <div className="absolute top-2 right-2">
               <button 
-                className="p-2 rounded-full bg-white/90 hover:bg-white shadow-sm"
+                className={`p-2 rounded-full shadow-sm transition-colors ${
+                  isSaved 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-white/90 hover:bg-white text-muted-foreground'
+                }`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleSaveDeal();
                 }}
+                disabled={isSaving}
                 data-testid={`button-save-deal-${deal.id}`}
               >
-                <Bookmark className="w-4 h-4 text-muted-foreground" />
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
               </button>
             </div>
           </div>

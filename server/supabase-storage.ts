@@ -1,5 +1,41 @@
 import { supabaseAdmin } from './lib/supabase';
 
+function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function camelToSnake(str: string): string {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+function transformKeys<T extends Record<string, any>>(
+  obj: T,
+  transformer: (key: string) => string
+): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => transformKeys(item, transformer));
+  }
+  if (typeof obj !== 'object') return obj;
+  
+  const result: Record<string, any> = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const newKey = transformer(key);
+      result[newKey] = transformKeys(obj[key], transformer);
+    }
+  }
+  return result;
+}
+
+export function toCamelCase<T>(obj: T): any {
+  return transformKeys(obj as any, snakeToCamel);
+}
+
+export function toSnakeCase<T>(obj: T): any {
+  return transformKeys(obj as any, camelToSnake);
+}
+
 export interface SupabaseUserProfile {
   id: string;
   user_id: string;
