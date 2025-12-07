@@ -57,7 +57,7 @@ export default function MarketplacePropertyDetailPage() {
 
 function PropertyDetailContent() {
   const [, params] = useRoute("/marketplace/properties/:id");
-  const propertyId = params?.id ? parseInt(params.id) : null;
+  const propertyId = params?.id || null;
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -65,20 +65,19 @@ function PropertyDetailContent() {
   const [showContactModal, setShowContactModal] = useState(false);
 
   const { data: listing, isLoading, error } = useQuery<RetailListing>({
-    queryKey: ["/api/marketplace/properties", propertyId],
+    queryKey: ["/api/supabase/listings", propertyId],
     enabled: !!propertyId,
   });
 
   const toggleSaveMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/marketplace/buyer/save", {
-        propertyType: "retail",
-        propertyId,
+      return apiRequest("POST", "/api/supabase/saved-items", {
+        itemType: "listing",
+        itemId: propertyId,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/buyer/saved"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/buyer/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/saved-items"] });
       toast({
         title: "Saved",
         description: "Property added to your favorites",

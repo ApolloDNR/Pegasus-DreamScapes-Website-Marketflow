@@ -40,7 +40,7 @@ export default function MarketplaceDreamscaperPage() {
   });
 
   const { data: myProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
-    queryKey: ["/api/marketplace/dreamscaper/projects"],
+    queryKey: ["/api/supabase/capital-projects/my"],
   });
 
   const displayStats: ProjectStats = stats ?? {

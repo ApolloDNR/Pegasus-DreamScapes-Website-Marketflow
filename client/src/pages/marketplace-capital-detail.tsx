@@ -71,16 +71,16 @@ export default function MarketplaceCapitalDetail() {
 }
 
 function CapitalDetailPage() {
-  const params = useParams();
-  const projectId = Number(params.id);
+  const params = useParams<{ id: string }>();
+  const projectId = params.id;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [isCommitDialogOpen, setIsCommitDialogOpen] = useState(false);
 
   const { data: project, isLoading, error } = useQuery<CapitalProject>({
-    queryKey: ['/api/marketplace/projects', projectId],
-    enabled: !!projectId && !isNaN(projectId),
+    queryKey: ['/api/supabase/capital-projects', projectId],
+    enabled: !!projectId,
   });
 
   if (isLoading) {

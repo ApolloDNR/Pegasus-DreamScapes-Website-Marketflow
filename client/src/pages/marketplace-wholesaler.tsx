@@ -45,19 +45,19 @@ export default function MarketplaceWholesalerPage() {
   });
 
   const { data: myDeals, isLoading: isDealsLoading } = useQuery<WholesaleDeal[]>({
-    queryKey: ["/api/marketplace/wholesaler/deals"],
+    queryKey: ["/api/supabase/wholesale-deals/my"],
   });
 
   const { data: jvRequests, isLoading: isJVLoading } = useQuery<JVRequest[]>({
-    queryKey: ["/api/marketplace/wholesaler/jv-requests"],
+    queryKey: ["/api/supabase/jv-requests"],
   });
 
   const updateJVMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return apiRequest("PATCH", `/api/marketplace/jv-requests/${id}`, { status });
+      return apiRequest("PATCH", `/api/supabase/jv-requests/${id}`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/wholesaler/jv-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/jv-requests"] });
       toast({ title: "Request Updated", description: "JV request status has been updated." });
     },
     onError: () => {

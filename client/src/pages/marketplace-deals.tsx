@@ -104,7 +104,7 @@ function DealsPage() {
   };
 
   const { data: deals, isLoading } = useQuery<MarketplaceDeal[]>({
-    queryKey: ['/api/marketplace/deals', { isPublic: true }],
+    queryKey: ['/api/supabase/wholesale-deals'],
   });
 
   const filteredDeals = deals?.filter(deal => {

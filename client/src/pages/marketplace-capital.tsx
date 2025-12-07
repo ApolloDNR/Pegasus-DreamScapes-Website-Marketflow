@@ -86,7 +86,7 @@ function CapitalPage() {
   };
 
   const { data: projects, isLoading } = useQuery<MarketplaceProject[]>({
-    queryKey: ['/api/marketplace/projects'],
+    queryKey: ['/api/supabase/capital-projects'],
   });
 
   const filteredProjects = projects?.filter(project => {

@@ -77,11 +77,11 @@ function BuyerDashboard() {
   });
 
   const { data: savedProperties, isLoading: savedLoading } = useQuery<EnrichedSavedProperty[]>({
-    queryKey: ["/api/marketplace/buyer/saved"],
+    queryKey: ["/api/supabase/saved-items"],
   });
 
   const { data: offers, isLoading: offersLoading } = useQuery<EnrichedOffer[]>({
-    queryKey: ["/api/marketplace/buyer/offers"],
+    queryKey: ["/api/supabase/buyer-offers"],
   });
 
   const displayStats: BuyerStats = stats ?? {

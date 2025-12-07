@@ -52,19 +52,18 @@ function PropertiesBrowsePage() {
   const [bedsFilter, setBedsFilter] = useState<string>("all");
 
   const { data: listings, isLoading } = useQuery<RetailListing[]>({
-    queryKey: ["/api/marketplace/properties"],
+    queryKey: ["/api/supabase/listings"],
   });
 
   const toggleSaveMutation = useMutation({
-    mutationFn: async ({ propertyId }: { propertyId: number }) => {
-      return apiRequest("POST", "/api/marketplace/buyer/save", {
-        propertyType: "retail",
-        propertyId,
+    mutationFn: async ({ propertyId }: { propertyId: string }) => {
+      return apiRequest("POST", "/api/supabase/saved-items", {
+        itemType: "listing",
+        itemId: propertyId,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/buyer/saved"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/buyer/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/saved-items"] });
       toast({
         title: "Saved",
         description: "Property added to favorites",
@@ -79,7 +78,7 @@ function PropertiesBrowsePage() {
     },
   });
 
-  const handleSave = (propertyId: number) => {
+  const handleSave = (propertyId: string) => {
     if (!isAuthenticated) {
       toast({
         title: "Login Required",
@@ -279,7 +278,7 @@ function PropertiesBrowsePage() {
               listing={listing}
               formatCurrency={formatCurrency}
               getStatusBadge={getStatusBadge}
-              onSave={() => handleSave(listing.id)}
+              onSave={() => handleSave(String(listing.id))}
               isAuthenticated={isAuthenticated}
             />
           ))}
@@ -292,7 +291,7 @@ function PropertiesBrowsePage() {
               listing={listing}
               formatCurrency={formatCurrency}
               getStatusBadge={getStatusBadge}
-              onSave={() => handleSave(listing.id)}
+              onSave={() => handleSave(String(listing.id))}
               isAuthenticated={isAuthenticated}
             />
           ))}

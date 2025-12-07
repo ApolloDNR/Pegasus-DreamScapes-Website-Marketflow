@@ -41,11 +41,11 @@ export default function MarketplaceInvestorPage() {
   });
 
   const { data: myCommitments, isLoading: isCommitmentsLoading } = useQuery<CommitmentWithProject[]>({
-    queryKey: ["/api/marketplace/investor/commitments"],
+    queryKey: ["/api/supabase/capital-commitments"],
   });
 
   const { data: availableProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
-    queryKey: ["/api/capital-projects"],
+    queryKey: ["/api/supabase/capital-projects"],
   });
 
   const displayStats: InvestorStats = stats ?? {

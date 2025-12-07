@@ -75,7 +75,7 @@ function DealDetailPage() {
   const [jvDialogOpen, setJvDialogOpen] = useState(false);
 
   const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
-    queryKey: ['/api/marketplace/deals', dealId],
+    queryKey: ['/api/supabase/wholesale-deals', dealId],
   });
 
   if (isLoading) {
@@ -451,13 +451,13 @@ function JVRequestDialog({
 
   const submitJVRequest = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', '/api/marketplace/jv-requests', {
-        dealId: deal.id,
+      return apiRequest('POST', '/api/supabase/jv-requests', {
+        dealId: String(deal.id),
         wholesalerId: deal.submittedBy,
         message,
-        intendedStrategy: strategy,
+        strategy,
         fundingSource,
-        proposedAssignmentFee: proposedFee ? parseInt(proposedFee) : null,
+        proposedFee: proposedFee ? parseInt(proposedFee) : undefined,
       });
     },
     onSuccess: () => {
@@ -466,7 +466,8 @@ function JVRequestDialog({
         description: "The wholesaler will be notified of your interest.",
       });
       onOpenChange(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/jv-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supabase/jv-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supabase/wholesale-deals'] });
     },
     onError: () => {
       toast({
