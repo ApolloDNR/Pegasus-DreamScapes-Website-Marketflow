@@ -434,18 +434,18 @@ function OfferModal({ open, onClose, listing, formatCurrency }: OfferModalProps)
 
   const submitOfferMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/marketplace/buyer/offers", {
-        propertyType: "retail",
-        propertyId: listing.id,
+      return apiRequest("POST", "/api/supabase/buyer-offers", {
+        listingId: String(listing.id),
+        listingType: "retail",
         offerAmount: parseInt(offerAmount),
-        fundingType,
-        closingTimeline,
+        financingType: fundingType,
+        contingencies: [closingTimeline],
         message: message || null,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/buyer/offers"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/buyer/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/buyer-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/listings"] });
       toast({
         title: "Offer Submitted",
         description: "Your offer has been submitted successfully. We'll be in touch soon.",

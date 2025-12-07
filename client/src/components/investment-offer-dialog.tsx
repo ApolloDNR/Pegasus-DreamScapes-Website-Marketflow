@@ -258,23 +258,28 @@ export function InvestmentOfferDialog({
 
   const submitOfferMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/investment-offers", {
-        projectId: project.id,
-        amountOffered: parseInt(investAmount),
-        structureType: investStructure,
-        requestedRole: investRole,
-        proposedEquityPercent: proposedEquity || undefined,
-        proposedProfitSplit: proposedProfitSplit || undefined,
-        proposedInterestRate: proposedInterest || undefined,
-        proposedLoanDuration: proposedLoanDuration || undefined,
-        notes: investNotes || undefined,
-        isAcceptingOperatorTerms: isAcceptingTerms,
+      const notesText = [
+        investNotes,
+        `Role: ${investRole}`,
+        `Structure: ${investStructure}`,
+        proposedEquity ? `Equity: ${proposedEquity}%` : null,
+        proposedProfitSplit ? `Profit Split: ${proposedProfitSplit}` : null,
+        proposedInterest ? `Interest: ${proposedInterest}%` : null,
+        proposedLoanDuration ? `Duration: ${proposedLoanDuration}` : null,
+        isAcceptingTerms ? "Accepting operator terms" : "Counter-offer",
+      ].filter(Boolean).join(". ");
+      
+      const res = await apiRequest("POST", "/api/supabase/capital-commitments", {
+        projectId: String(project.id),
+        amount: parseInt(investAmount),
+        structurePreference: investStructure,
+        notes: notesText,
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects", project.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/my-investment-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/capital-projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/capital-commitments"] });
       toast({
         title: isAcceptingTerms ? "Terms Accepted" : "Offer Submitted",
         description: isAcceptingTerms 

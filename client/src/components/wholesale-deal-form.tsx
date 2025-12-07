@@ -258,7 +258,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
 
   const submitMutation = useMutation({
     mutationFn: async (data: WholesaleDealFormData) => {
-      return apiRequest("POST", "/api/wholesale-deals", {
+      return apiRequest("POST", "/api/supabase/wholesale-deals", {
         ...data,
         highlights,
         images: imageUrls,
@@ -273,8 +273,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
       setHighlights([]);
       setImageUrls([]);
       setStep(1);
-      queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/portal/wholesaler/my-deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-deals"] });
       onSuccess?.();
     },
     onError: () => {

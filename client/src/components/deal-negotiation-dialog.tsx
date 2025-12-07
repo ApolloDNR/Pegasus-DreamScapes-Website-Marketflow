@@ -90,29 +90,29 @@ export function DealNegotiationDialog({
   const [notes, setNotes] = useState("");
 
   const { data: negotiations = [], isLoading: loadingNegotiations } = useQuery<DealNegotiation[]>({
-    queryKey: ["/api/negotiations", dealType, dealId],
+    queryKey: ["/api/supabase/jv-requests"],
     enabled: open,
   });
 
   const createNegotiationMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/negotiations", data);
+      const res = await apiRequest("POST", "/api/supabase/jv-requests", data);
       return res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Offer Submitted",
-        description: "Your investment offer has been sent for review.",
+        title: "JV Request Submitted",
+        description: "Your JV request has been sent to the wholesaler.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/negotiations", dealType, dealId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/my-negotiations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/jv-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-deals"] });
       resetForm();
       onSuccess?.();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit offer",
+        description: error.message || "Failed to submit JV request",
         variant: "destructive",
       });
     },
@@ -120,7 +120,7 @@ export function DealNegotiationDialog({
 
   const respondMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const res = await apiRequest("POST", `/api/negotiations/${id}/respond`, { status });
+      const res = await apiRequest("PATCH", `/api/supabase/jv-requests/${id}`, { status });
       return res.json();
     },
     onSuccess: () => {
@@ -128,7 +128,7 @@ export function DealNegotiationDialog({
         title: "Response Recorded",
         description: "Your response has been saved.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/negotiations", dealType, dealId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/jv-requests"] });
     },
   });
 
@@ -145,28 +145,36 @@ export function DealNegotiationDialog({
   };
 
   const handleSubmit = () => {
-    const data: any = {
-      dealType,
-      dealId,
-      responderId,
-      structureType,
+    if (dealType === "capital_project") {
+      toast({
+        title: "Use Investment Dialog",
+        description: "For capital project investments, please use the Investment dialog instead.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const messageText = [
       notes,
+      `Structure: ${structureType}`,
+      amount ? `Amount: $${amount}` : null,
+      equityPercent ? `Equity: ${equityPercent}%` : null,
+      interestRate ? `Interest: ${interestRate}%` : null,
+      loanTerm ? `Term: ${loanTerm}` : null,
+      preferredReturn ? `Preferred Return: ${preferredReturn}` : null,
+      profitSplit ? `Profit Split: ${profitSplit}` : null,
+      holdPeriod ? `Hold Period: ${holdPeriod}` : null,
+      exitStrategy ? `Exit: ${exitStrategy}` : null,
+    ].filter(Boolean).join(". ");
+
+    const data = {
+      dealId: String(dealId),
+      wholesalerId: responderId,
+      strategy: structureType,
+      fundingSource: structureType === "debt" ? "private_lender" : "self_funded",
+      proposedFee: amount ? parseInt(amount) : undefined,
+      message: messageText,
     };
-
-    if (structureType === "equity" || structureType === "hybrid") {
-      if (equityPercent) data.proposedEquityPercent = parseInt(equityPercent);
-      if (preferredReturn) data.proposedPreferredReturn = preferredReturn;
-      if (profitSplit) data.proposedProfitSplit = profitSplit;
-    }
-
-    if (structureType === "debt" || structureType === "hybrid") {
-      if (interestRate) data.proposedInterestRate = interestRate;
-      if (loanTerm) data.proposedLoanTerm = loanTerm;
-    }
-
-    if (amount) data.proposedAmount = parseInt(amount);
-    if (holdPeriod) data.proposedHoldPeriod = holdPeriod;
-    if (exitStrategy) data.exitStrategy = exitStrategy;
 
     createNegotiationMutation.mutate(data);
   };
