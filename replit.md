@@ -2,11 +2,31 @@
 
 ## Overview
 
-Pegasus Dreamscapes Corp is a real estate investment platform connecting property sellers with investors, focusing on distressed properties for fix-and-flip or rental opportunities. Its mission is to transform distressed properties into thriving environments, creating profitable outcomes for all stakeholders. The platform features a premium design aesthetic, a four-role portal system (Staff/Dreamscaper, Investors, Wholesalers, Buyers), community features, direct messaging, and a wholesale deals marketplace.
+Pegasus Dreamscapes Corp is a real estate investment platform connecting property sellers with investors, focusing on distressed properties for fix-and-flip or rental opportunities. Its mission is to transform distressed properties into thriving environments, creating profitable outcomes for all stakeholders. The platform features a premium design aesthetic, an 8-tier role system, community features, direct messaging, and a wholesale deals marketplace.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Supabase Migration Status
+
+The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Auth, Database, Storage).
+
+### Completed Migration Steps
+- **Phase 1: Role System Consolidation** - 8-tier MARKETPLACE_ROLES enum (admin, pegasus_wholesaler, wholesaler, pegasus_dreamscaper, dreamscaper, investor, buyer_retail, buyer_investment)
+- **Phase 2: Action Mutations** - All marketplace actions (deal submission, JV requests, capital commitments, buyer offers) updated to POST to Supabase endpoints
+- **Phase 3A: Data Fetching** - Marketplace pages updated to fetch from Supabase endpoints with UUID-compatible ID handling
+
+### Pending Steps
+- **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
+- **Data Migration** - Migrate existing PostgreSQL data to Supabase with UUID transformation
+- **Stats Endpoints** - Create Supabase equivalents for investor/buyer/wholesaler/dreamscaper stats
+
+### Important Files
+- `supabase-schema.sql` - Complete database schema for Supabase
+- `SUPABASE_SETUP.md` - Setup instructions for Supabase tables
+- `server/lib/supabase.ts` - Supabase client configuration
+- `client/src/hooks/use-supabase-auth.tsx` - Supabase authentication context
 
 ## System Architecture
 
@@ -16,11 +36,15 @@ The frontend is built with **React 18, TypeScript, and Vite**, utilizing **Woute
 
 ### Backend
 
-The backend uses **Express.js on Node.js with TypeScript**, providing RESTful API endpoints under `/api`. **Zod schemas** are shared for consistent validation. Authentication is managed via **Replit Auth (OpenID Connect)** using Passport.js, with session storage in PostgreSQL via `connect-pg-simple`.
+The backend uses **Express.js on Node.js with TypeScript**, providing RESTful API endpoints under `/api`. **Zod schemas** are shared for consistent validation. Authentication is managed via both **Replit Auth (OpenID Connect)** using Passport.js and **Supabase Auth**, with session storage in PostgreSQL via `connect-pg-simple`.
 
 ### Data Storage
 
-**PostgreSQL** is the chosen database, with **Drizzle ORM** providing type-safe operations. The database schema includes comprehensive tables for sessions, users, leads, projects, deals, community features, and more, managed via `npm run db:push` for migrations.
+**Dual database system during migration:**
+- **PostgreSQL/Drizzle** (Legacy) - Existing data with numeric IDs
+- **Supabase** (Target) - New tables with UUID IDs, RLS policies
+
+Schema managed via `npm run db:push` for Drizzle and `supabase-schema.sql` for Supabase.
 
 ### Key Features
 
