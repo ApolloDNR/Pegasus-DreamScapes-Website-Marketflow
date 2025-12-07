@@ -51,6 +51,168 @@ export type StaffRole = typeof STAFF_ROLES[number];
 export type PortalRole = typeof PORTAL_ROLES[number];
 export type Role = typeof ALL_ROLES[number];
 
+// =====================================================
+// CONSOLIDATED 8-TIER MARKETPLACE ROLE SYSTEM (Supabase)
+// =====================================================
+// This is the unified role system used across the marketplace platform
+// Each role has specific capabilities and access levels
+
+export const MARKETPLACE_ROLES = [
+  "admin",              // Full platform admin - can manage all users, deals, projects
+  "pegasus_wholesaler", // Internal Pegasus team wholesaler - enhanced features, trusted status
+  "wholesaler",         // External wholesaler - submit deals, track status
+  "pegasus_dreamscaper", // Internal Pegasus project operator - enhanced capital raising
+  "dreamscaper",        // External operator - post projects, raise capital
+  "investor",           // Capital provider - browse projects, commit funds
+  "buyer_retail",       // Retail homebuyer - browse listings, make offers
+  "buyer_investment",   // Investment buyer - browse wholesale deals, make offers
+] as const;
+
+export type MarketplaceRole = typeof MARKETPLACE_ROLES[number];
+
+// Role metadata with labels, descriptions, and dashboard paths
+export const MARKETPLACE_ROLE_CONFIG = {
+  admin: {
+    label: "Administrator",
+    description: "Full platform access with all administrative permissions",
+    dashboardPath: "/marketplace/admin",
+    isPegasus: true,
+    permissions: ["manage_users", "manage_deals", "manage_projects", "manage_capital", "view_analytics", "approve_submissions"],
+  },
+  pegasus_wholesaler: {
+    label: "Pegasus Wholesaler",
+    description: "Internal team member handling wholesale acquisitions",
+    dashboardPath: "/marketplace/wholesaler",
+    isPegasus: true,
+    permissions: ["submit_deals", "view_all_deals", "manage_own_deals", "view_analytics"],
+  },
+  wholesaler: {
+    label: "Wholesaler",
+    description: "External wholesaler submitting deals to the marketplace",
+    dashboardPath: "/marketplace/wholesaler",
+    isPegasus: false,
+    permissions: ["submit_deals", "manage_own_deals", "view_public_deals"],
+  },
+  pegasus_dreamscaper: {
+    label: "Pegasus Dreamscaper",
+    description: "Internal team member managing capital raising projects",
+    dashboardPath: "/marketplace/dreamscaper",
+    isPegasus: true,
+    permissions: ["create_projects", "view_all_projects", "manage_investors", "view_analytics"],
+  },
+  dreamscaper: {
+    label: "Dreamscaper",
+    description: "Property operator raising capital for projects",
+    dashboardPath: "/marketplace/dreamscaper",
+    isPegasus: false,
+    permissions: ["create_projects", "manage_own_projects", "view_investors"],
+  },
+  investor: {
+    label: "Investor",
+    description: "Capital provider investing in real estate projects",
+    dashboardPath: "/marketplace/investor",
+    isPegasus: false,
+    permissions: ["browse_projects", "commit_capital", "view_commitments", "submit_jv_requests"],
+  },
+  buyer_retail: {
+    label: "Retail Buyer",
+    description: "Homebuyer looking for renovated properties",
+    dashboardPath: "/marketplace/buyer",
+    isPegasus: false,
+    permissions: ["browse_listings", "save_properties", "make_offers"],
+  },
+  buyer_investment: {
+    label: "Investment Buyer",
+    description: "Investor buying wholesale or distressed properties",
+    dashboardPath: "/marketplace/buyer",
+    isPegasus: false,
+    permissions: ["browse_deals", "browse_listings", "save_properties", "make_offers"],
+  },
+} as const;
+
+export type MarketplacePermission = 
+  | "manage_users"
+  | "manage_deals"
+  | "manage_projects"
+  | "manage_capital"
+  | "view_analytics"
+  | "approve_submissions"
+  | "submit_deals"
+  | "view_all_deals"
+  | "manage_own_deals"
+  | "view_public_deals"
+  | "create_projects"
+  | "view_all_projects"
+  | "manage_own_projects"
+  | "manage_investors"
+  | "view_investors"
+  | "browse_projects"
+  | "commit_capital"
+  | "view_commitments"
+  | "submit_jv_requests"
+  | "browse_listings"
+  | "browse_deals"
+  | "save_properties"
+  | "make_offers";
+
+// Helper functions for role system
+export function isValidMarketplaceRole(role: string): role is MarketplaceRole {
+  return MARKETPLACE_ROLES.includes(role as MarketplaceRole);
+}
+
+export function isPegasusRole(role: MarketplaceRole): boolean {
+  return MARKETPLACE_ROLE_CONFIG[role].isPegasus;
+}
+
+export function getRoleDashboard(role: MarketplaceRole): string {
+  return MARKETPLACE_ROLE_CONFIG[role].dashboardPath;
+}
+
+export function getRoleLabel(role: MarketplaceRole): string {
+  return MARKETPLACE_ROLE_CONFIG[role].label;
+}
+
+export function hasMarketplacePermission(role: MarketplaceRole, permission: MarketplacePermission): boolean {
+  return (MARKETPLACE_ROLE_CONFIG[role].permissions as readonly string[]).includes(permission);
+}
+
+// Role category helpers
+export function isAdminRole(role: string): boolean {
+  return role === "admin";
+}
+
+export function isWholesalerRole(role: string): boolean {
+  return role === "wholesaler" || role === "pegasus_wholesaler";
+}
+
+export function isDreamscaperRole(role: string): boolean {
+  return role === "dreamscaper" || role === "pegasus_dreamscaper";
+}
+
+export function isInvestorRole(role: string): boolean {
+  return role === "investor";
+}
+
+export function isBuyerRole(role: string): boolean {
+  return role === "buyer_retail" || role === "buyer_investment";
+}
+
+// Supabase user profile type (matches supabase-schema.sql)
+export interface SupabaseUserProfile {
+  id: string;
+  userId: string;
+  primaryRole: MarketplaceRole;
+  displayName: string;
+  companyName?: string | null;
+  location?: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  isPegasusBadged: boolean;
+  pegasusRoleType?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Staff Role Permissions - defines what each role can access/do
 export const STAFF_PERMISSIONS = {
   admin: {
@@ -1893,16 +2055,3 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
 });
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
-
-// Marketplace Role Constants
-export const MARKETPLACE_ROLES = [
-  "admin",
-  "pegasus_wholesaler",
-  "wholesaler", 
-  "pegasus_dreamscaper",
-  "dreamscaper",
-  "investor",
-  "buyer_retail",
-  "buyer_investment"
-] as const;
-export type MarketplaceRole = typeof MARKETPLACE_ROLES[number];

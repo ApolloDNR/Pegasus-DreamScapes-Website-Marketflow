@@ -1,6 +1,7 @@
 import { useLocation, Redirect } from "wouter";
 import { useSupabaseAuth, canAccessRoute, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { Loader2 } from "lucide-react";
+import type { MarketplacePermission } from "@shared/schema";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -91,6 +92,96 @@ export function RoleGuard({ children, allowedRoles, redirectTo }: RoleGuardProps
   if (!userRole || !allowedRoles.includes(userRole)) {
     const fallback = redirectTo ?? getRoleDashboardPath(userRole);
     return <Redirect to={fallback} />;
+  }
+
+  return <>{children}</>;
+}
+
+interface PermissionGuardProps {
+  children: React.ReactNode;
+  requiredPermission: MarketplacePermission;
+  fallback?: React.ReactNode;
+  redirectTo?: string;
+}
+
+export function PermissionGuard({ children, requiredPermission, fallback, redirectTo }: PermissionGuardProps) {
+  const { hasPermission, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect to="/login" />;
+  }
+
+  if (!hasPermission(requiredPermission)) {
+    if (fallback) {
+      return <>{fallback}</>;
+    }
+    const path = redirectTo ?? getRoleDashboardPath(userRole);
+    return <Redirect to={path} />;
+  }
+
+  return <>{children}</>;
+}
+
+interface RoleCategoryGuardProps {
+  children: React.ReactNode;
+  category: 'admin' | 'wholesaler' | 'dreamscaper' | 'investor' | 'buyer' | 'pegasus';
+  redirectTo?: string;
+}
+
+export function RoleCategoryGuard({ children, category, redirectTo }: RoleCategoryGuardProps) {
+  const { 
+    isAdmin, 
+    isWholesaler, 
+    isDreamscaper, 
+    isInvestor, 
+    isBuyer, 
+    isPegasus, 
+    isLoading, 
+    isAuthenticated, 
+    userRole 
+  } = useSupabaseAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect to="/login" />;
+  }
+
+  const hasAccess = (() => {
+    switch (category) {
+      case 'admin': return isAdmin;
+      case 'wholesaler': return isWholesaler;
+      case 'dreamscaper': return isDreamscaper;
+      case 'investor': return isInvestor;
+      case 'buyer': return isBuyer;
+      case 'pegasus': return isPegasus;
+      default: return false;
+    }
+  })();
+
+  if (!hasAccess) {
+    const path = redirectTo ?? getRoleDashboardPath(userRole);
+    return <Redirect to={path} />;
   }
 
   return <>{children}</>;

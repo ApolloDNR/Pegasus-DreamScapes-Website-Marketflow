@@ -39,7 +39,8 @@ import {
   createUserReputation, 
   getUserProfile, 
   getUserReputation, 
-  getUserBadges 
+  getUserBadges,
+  updateUserProfile
 } from "./lib/supabase";
 import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification } from "./email";
 
@@ -168,6 +169,71 @@ export async function registerRoutes(
     } catch (error) {
       console.error('Error fetching profile:', error);
       res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+  });
+
+  // Update user profile (own profile only)
+  app.patch('/api/supabase/profile', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const { displayName, companyName, location, bio, avatarUrl } = req.body;
+      
+      const updates: Record<string, any> = {};
+      if (displayName !== undefined) updates.display_name = displayName;
+      if (companyName !== undefined) updates.company_name = companyName;
+      if (location !== undefined) updates.location = location;
+      if (bio !== undefined) updates.bio = bio;
+      if (avatarUrl !== undefined) updates.avatar_url = avatarUrl;
+      
+      const profile = await updateUserProfile(userId, updates);
+      res.json(profile);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Failed to update profile' });
+    }
+  });
+
+  // Admin: Assign/update user role
+  app.patch('/api/supabase/assign-role/:userId', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const adminUserId = getAuthUserId(req);
+      if (!adminUserId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      // Check if requester is admin
+      const adminProfile = await getUserProfile(adminUserId);
+      if (!adminProfile || adminProfile.primary_role !== 'admin') {
+        return res.status(403).json({ message: 'Forbidden: Admin access required' });
+      }
+      
+      const { userId } = req.params;
+      const { role, isPegasusBadged, pegasusRoleType } = req.body;
+      
+      const validRoles = [
+        'admin', 'pegasus_wholesaler', 'wholesaler', 
+        'pegasus_dreamscaper', 'dreamscaper', 
+        'investor', 'buyer_retail', 'buyer_investment'
+      ];
+      
+      if (role && !validRoles.includes(role)) {
+        return res.status(400).json({ message: 'Invalid role' });
+      }
+      
+      const updates: Record<string, any> = {};
+      if (role) updates.primary_role = role;
+      if (isPegasusBadged !== undefined) updates.is_pegasus_badged = isPegasusBadged;
+      if (pegasusRoleType !== undefined) updates.pegasus_role_type = pegasusRoleType;
+      
+      const profile = await updateUserProfile(userId, updates);
+      res.json(profile);
+    } catch (error) {
+      console.error('Error assigning role:', error);
+      res.status(500).json({ message: 'Failed to assign role' });
     }
   });
 

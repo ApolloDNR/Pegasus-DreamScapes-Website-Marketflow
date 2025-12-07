@@ -1,6 +1,17 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { getSupabase, type UserRole, type UserProfile } from '@/lib/supabase';
+import { 
+  isAdminRole, 
+  isWholesalerRole, 
+  isDreamscaperRole, 
+  isInvestorRole, 
+  isBuyerRole,
+  isPegasusRole,
+  hasMarketplacePermission,
+  type MarketplaceRole,
+  type MarketplacePermission
+} from '@shared/schema';
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -9,6 +20,13 @@ interface SupabaseAuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   userRole: UserRole | null;
+  isAdmin: boolean;
+  isWholesaler: boolean;
+  isDreamscaper: boolean;
+  isInvestor: boolean;
+  isBuyer: boolean;
+  isPegasus: boolean;
+  hasPermission: (permission: MarketplacePermission) => boolean;
   signUp: (email: string, password: string, role: UserRole, displayName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -169,13 +187,27 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  const currentRole = profile?.primary_role ?? null;
+  
+  const hasPermission = useCallback((permission: MarketplacePermission): boolean => {
+    if (!currentRole) return false;
+    return hasMarketplacePermission(currentRole as MarketplaceRole, permission);
+  }, [currentRole]);
+
   const value: SupabaseAuthContextType = {
     user,
     session,
     profile,
     isLoading,
     isAuthenticated: !!user,
-    userRole: profile?.primary_role ?? null,
+    userRole: currentRole,
+    isAdmin: currentRole ? isAdminRole(currentRole) : false,
+    isWholesaler: currentRole ? isWholesalerRole(currentRole) : false,
+    isDreamscaper: currentRole ? isDreamscaperRole(currentRole) : false,
+    isInvestor: currentRole ? isInvestorRole(currentRole) : false,
+    isBuyer: currentRole ? isBuyerRole(currentRole) : false,
+    isPegasus: currentRole ? isPegasusRole(currentRole as MarketplaceRole) : false,
+    hasPermission,
     signUp,
     signIn,
     signOut,

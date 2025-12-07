@@ -120,3 +120,58 @@ export async function getUserBadges(userId: string) {
   
   return data || [];
 }
+
+export async function updateUserProfile(userId: string, updates: Record<string, any>) {
+  const { data, error } = await supabaseAdmin
+    .from('user_profiles')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function addUserBadge(userId: string, badge: {
+  badge_type: string;
+  label: string;
+  description?: string;
+}) {
+  const { data, error } = await supabaseAdmin
+    .from('user_badges')
+    .insert({
+      user_id: userId,
+      ...badge
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error adding user badge:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function getAllUsers() {
+  const { data, error } = await supabaseAdmin
+    .from('user_profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching all users:', error);
+    return [];
+  }
+  
+  return data || [];
+}
