@@ -36,7 +36,7 @@ export async function testSupabaseConnection(): Promise<boolean> {
   }
 }
 
-export async function createUserProfile(userId: string, data: {
+export async function createUserProfile(externalUserId: string, data: {
   primary_role: string;
   display_name: string;
   company_name?: string;
@@ -48,7 +48,7 @@ export async function createUserProfile(userId: string, data: {
   const { error } = await supabaseAdmin
     .from('user_profiles')
     .insert({
-      user_id: userId,
+      external_user_id: externalUserId,
       ...data,
       is_pegasus_badged: data.is_pegasus_badged ?? data.primary_role.startsWith('pegasus_')
     });
@@ -59,11 +59,11 @@ export async function createUserProfile(userId: string, data: {
   }
 }
 
-export async function createUserReputation(userId: string) {
+export async function createUserReputation(externalUserId: string) {
   const { error } = await supabaseAdmin
     .from('user_reputation')
     .insert({
-      user_id: userId,
+      external_user_id: externalUserId,
       trust_score: 50,
       rating: 0,
       deals_closed_count: 0,
@@ -77,14 +77,14 @@ export async function createUserReputation(userId: string) {
   }
 }
 
-export async function getUserProfile(userId: string) {
+export async function getUserProfile(externalUserId: string) {
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
     .select('*')
-    .eq('user_id', userId)
+    .eq('external_user_id', externalUserId)
     .single();
   
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     console.error('Error fetching user profile:', error);
     return null;
   }
@@ -92,14 +92,14 @@ export async function getUserProfile(userId: string) {
   return data;
 }
 
-export async function getUserReputation(userId: string) {
+export async function getUserReputation(externalUserId: string) {
   const { data, error } = await supabaseAdmin
     .from('user_reputation')
     .select('*')
-    .eq('user_id', userId)
+    .eq('external_user_id', externalUserId)
     .single();
   
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     console.error('Error fetching user reputation:', error);
     return null;
   }
@@ -107,11 +107,11 @@ export async function getUserReputation(userId: string) {
   return data;
 }
 
-export async function getUserBadges(userId: string) {
+export async function getUserBadges(externalUserId: string) {
   const { data, error } = await supabaseAdmin
     .from('user_badges')
     .select('*')
-    .eq('user_id', userId);
+    .eq('external_user_id', externalUserId);
   
   if (error) {
     console.error('Error fetching user badges:', error);
@@ -121,14 +121,14 @@ export async function getUserBadges(userId: string) {
   return data || [];
 }
 
-export async function updateUserProfile(userId: string, updates: Record<string, any>) {
+export async function updateUserProfile(externalUserId: string, updates: Record<string, any>) {
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
     .update({
       ...updates,
       updated_at: new Date().toISOString()
     })
-    .eq('user_id', userId)
+    .eq('external_user_id', externalUserId)
     .select()
     .single();
   
@@ -140,7 +140,7 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
   return data;
 }
 
-export async function addUserBadge(userId: string, badge: {
+export async function addUserBadge(externalUserId: string, badge: {
   badge_type: string;
   label: string;
   description?: string;
@@ -148,7 +148,7 @@ export async function addUserBadge(userId: string, badge: {
   const { data, error } = await supabaseAdmin
     .from('user_badges')
     .insert({
-      user_id: userId,
+      external_user_id: externalUserId,
       ...badge
     })
     .select()
@@ -160,6 +160,39 @@ export async function addUserBadge(userId: string, badge: {
   }
   
   return data;
+}
+
+export async function ensureUserProfileExists(externalUserId: string, userData: {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
+}) {
+  const existingProfile = await getUserProfile(externalUserId);
+  
+  if (existingProfile) {
+    return existingProfile;
+  }
+  
+  const displayName = userData.firstName && userData.lastName 
+    ? `${userData.firstName} ${userData.lastName}`.trim()
+    : userData.email?.split('@')[0] || 'User';
+  
+  try {
+    await createUserProfile(externalUserId, {
+      primary_role: 'investor',
+      display_name: displayName,
+    });
+    
+    await createUserReputation(externalUserId);
+    
+    console.log(`Created Supabase profile for Replit user: ${externalUserId}`);
+    
+    return await getUserProfile(externalUserId);
+  } catch (error) {
+    console.error('Error ensuring user profile exists:', error);
+    return null;
+  }
 }
 
 export async function getAllUsers() {

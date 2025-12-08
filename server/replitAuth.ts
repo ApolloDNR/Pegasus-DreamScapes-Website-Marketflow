@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { ensureUserProfileExists } from "./lib/supabase";
 
 const getOidcConfig = memoize(
   async () => {
@@ -64,6 +65,17 @@ async function upsertUser(
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
   });
+  
+  try {
+    await ensureUserProfileExists(claims["sub"], {
+      email: claims["email"],
+      firstName: claims["first_name"],
+      lastName: claims["last_name"],
+      profileImageUrl: claims["profile_image_url"],
+    });
+  } catch (error) {
+    console.error('Failed to ensure Supabase profile exists:', error);
+  }
 }
 
 export async function setupAuth(app: Express) {
