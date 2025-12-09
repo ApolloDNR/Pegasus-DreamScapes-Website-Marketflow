@@ -66,8 +66,25 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
     const initAuth = async () => {
       try {
+        // First, check for Replit Auth user (primary auth method)
+        const replitAuthResponse = await fetch('/api/auth/user');
+        if (replitAuthResponse.ok) {
+          const replitUser = await replitAuthResponse.json();
+          if (replitUser?.id) {
+            // Fetch profile using Replit Auth user ID (external_user_id)
+            const profileData = await fetchProfile(replitUser.id);
+            if (mounted) {
+              if (profileData) {
+                setProfile(profileData);
+              }
+              setIsLoading(false);
+            }
+            return;
+          }
+        }
+
+        // Fallback to Supabase Auth if no Replit Auth session
         const supabase = await getSupabase();
-        
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (mounted) {
@@ -219,7 +236,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     session,
     profile,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!profile,
     userRole: currentRole,
     isAdmin: currentRole ? isAdminRole(currentRole) : false,
     isWholesaler: currentRole ? isWholesalerRole(currentRole) : false,
