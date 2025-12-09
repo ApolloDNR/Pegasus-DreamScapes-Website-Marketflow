@@ -16,7 +16,7 @@ INSERT INTO wholesale_deals (
   725000, 485000, 115000, 18000,
   'Vacant', '30 days', 'Motivated seller estate sale. Original hardwood floors under carpet, good bones. Large backyard with ADU potential.',
   'Approved', true,
-  ARRAY['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800']
+  ARRAY['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=-800']
 ),
 (
   '50383971',
