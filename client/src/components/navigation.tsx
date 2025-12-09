@@ -533,7 +533,7 @@ export function Navigation() {
                     data-testid="link-nav-dealflow"
                   >
                     <Sparkles className="w-4 h-4" />
-                    <span>Dealflow</span>
+                    <span>Marketplace</span>
                   </Link>
                   
                   <NotificationBell scrolled={scrolled} isHomePage={isHomePage} />
@@ -658,7 +658,7 @@ export function Navigation() {
                         data-testid="link-mobile-dealflow"
                       >
                         <Sparkles className="w-4 h-4" />
-                        Dealflow Hub
+                        Marketplace
                         <Badge variant="secondary" className="ml-auto text-[10px]">New</Badge>
                       </Link>
                       <Link 
