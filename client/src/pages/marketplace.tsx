@@ -26,7 +26,7 @@ export default function MarketplacePage() {
   const { isLoading, isAuthenticated, userRole } = useSupabaseAuth();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && userRole) {
       const dashboardPath = getRoleDashboardPath(userRole);
       if (dashboardPath !== "/marketplace") {
         setLocation(dashboardPath);
@@ -45,7 +45,7 @@ export default function MarketplacePage() {
     );
   }
 
-  if (isAuthenticated) {
+  if (isAuthenticated && userRole) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

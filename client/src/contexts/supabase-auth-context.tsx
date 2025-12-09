@@ -71,12 +71,24 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (mounted) {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          
           if (currentSession?.user) {
             const profileData = await fetchProfile(currentSession.user.id);
-            setProfile(profileData);
+            
+            if (profileData) {
+              setSession(currentSession);
+              setUser(currentSession.user);
+              setProfile(profileData);
+            } else {
+              console.log('No profile found for Supabase session, signing out stale session');
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setProfile(null);
+            }
+          } else {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
           }
           
           setIsLoading(false);
@@ -85,13 +97,21 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, newSession) => {
             if (mounted) {
-              setSession(newSession);
-              setUser(newSession?.user ?? null);
-              
               if (newSession?.user) {
                 const profileData = await fetchProfile(newSession.user.id);
-                setProfile(profileData);
+                if (profileData) {
+                  setSession(newSession);
+                  setUser(newSession.user);
+                  setProfile(profileData);
+                } else {
+                  console.log('No profile found for new session, clearing auth state');
+                  setSession(null);
+                  setUser(null);
+                  setProfile(null);
+                }
               } else {
+                setSession(null);
+                setUser(null);
                 setProfile(null);
               }
             }
