@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { ScrollReveal, FadeIn } from "@/components/animations";
+import { PropertyMap } from "@/components/property-map";
 import type { CapitalProject } from "@shared/schema";
 import {
   ArrowLeft,
@@ -157,6 +158,16 @@ function CapitalDetailPage() {
               </CardContent>
             </Card>
           </ScrollReveal>
+
+          {project.location && (
+            <PropertyMap
+              address={project.location}
+              showCard={true}
+              title="Project Location"
+              height="300px"
+              data-testid="project-map"
+            />
+          )}
 
           <ScrollReveal delay={0.1}>
             <Card data-testid="card-funding-progress">

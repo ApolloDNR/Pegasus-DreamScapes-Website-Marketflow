@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollReveal } from "@/components/animations";
+import { PropertyMap } from "@/components/property-map";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -234,6 +235,17 @@ function DealDetailPage() {
               </CardContent>
             </Card>
           </ScrollReveal>
+
+          <PropertyMap
+            address={deal.propertyAddress || ''}
+            city={deal.city}
+            state={deal.state}
+            zipCode={deal.zipCode}
+            showCard={true}
+            title="Property Location"
+            height="300px"
+            data-testid="property-map"
+          />
 
           <Card>
             <CardHeader>
