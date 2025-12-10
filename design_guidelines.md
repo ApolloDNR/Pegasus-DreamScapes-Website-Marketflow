@@ -1,9 +1,13 @@
-# Pegasus Dreamscapes - Design Guidelines (Light Luxury Edition)
+# Pegasus Dreamscapes - Design Guidelines (Brand Edition)
 
 ## Design Approach: Premium Light Theme
 Drawing inspiration from luxury real estate brands with a **clean, editorial aesthetic**. The design conveys **designed profits, disciplined execution, and community elevation** through sophisticated, professional visual treatment.
 
-**Color Palette**: Light cream/white backgrounds (#FDFCFB / HSL 40, 20%, 98%) with bronze/blood-orange accents (#D4702C / HSL 25, 75%, 50%) and dark navy text (#1E2430 / HSL 220, 20%, 15%).
+**Brand Color Palette** (from Pegasus logo):
+- **Copper/Bronze (Primary)**: HSL 22, 78%, 48% - warm, rich copper for CTAs and accents
+- **Navy Blue (Secondary)**: HSL 215, 65%, 25% - deep navy for sophisticated accents
+- **Cream Background**: HSL 38, 28%, 97% - warm cream for backgrounds
+- **Navy Text**: HSL 215, 55%, 18% - deep navy for readable text
 
 ---
 
@@ -58,22 +62,29 @@ Drawing inspiration from luxury real estate brands with a **clean, editorial aes
 
 ## Color System
 
-**Primary (Bronze/Blood-Orange)**: HSL 25, 75%, 50%
-- Used for: CTAs, accents, highlights, icons
+**Primary (Copper/Bronze)**: HSL 22, 78%, 48%
+- Used for: CTAs, primary buttons, progress indicators, highlights
+- Derived from the horse in the Pegasus logo
 - High contrast against light backgrounds
 
-**Secondary (Tan/Beige)**: HSL 38, 35%, 75%
-- Used for: Section backgrounds, subtle accents, editorial highlights
+**Secondary (Navy Blue)**: HSL 215, 65%, 25%
+- Used for: Secondary buttons, text accents, sophisticated highlights
+- Derived from the wings in the Pegasus logo
+- Adds depth and professionalism
+
+**Accent Colors**:
+- Tan: HSL 35, 35%, 70% - subtle accents and backgrounds
+- Champagne: HSL 38, 40%, 88% - soft highlights
 
 **Background Hierarchy**:
-- Main: HSL 40, 20%, 98% (warm cream/white)
+- Main: HSL 38, 28%, 97% (warm cream)
 - Card: HSL 0, 0%, 100% (pure white)
-- Border: HSL 38, 25%, 85% (tan-tinted borders)
-- Section Alternate: bg-tan/10 (subtle tan wash)
+- Border: HSL 35, 18%, 86% (warm border)
+- Section Alternate: bg-muted (subtle wash)
 
 **Text Colors**:
-- Foreground: HSL 220, 20%, 15% (dark navy)
-- Muted: HSL 220, 12%, 45% (secondary text)
+- Foreground: HSL 215, 55%, 18% (navy)
+- Muted: HSL 215, 30%, 40% (secondary text)
 
 ---
 

@@ -431,6 +431,29 @@ html {
   background-clip: text;
 }
 
+/* Brand gradient - copper to navy */
+.text-gradient-brand {
+  background: linear-gradient(135deg, hsl(var(--copper)) 0%, hsl(var(--navy)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Navy accent border */
+.border-navy-accent {
+  border-left: 3px solid hsl(var(--navy));
+}
+
+/* Brand badge glow effect */
+.brand-glow {
+  box-shadow: 0 0 20px hsl(var(--copper) / 0.3);
+}
+
+/* Copper highlight */
+.copper-highlight {
+  background: linear-gradient(90deg, hsl(var(--copper) / 0.1), transparent);
+}
+
 /* Luxury card - refined with subtle shadow and accent line */
 .luxury-card {
   position: relative;
@@ -447,7 +470,7 @@ html {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--tan)));
+  background: linear-gradient(90deg, hsl(var(--copper)), hsl(var(--navy)));
   opacity: 0;
   transition: opacity 0.4s ease;
 }
@@ -538,7 +561,7 @@ html {
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, hsl(var(--tan)), hsl(var(--primary)));
+  background: linear-gradient(90deg, hsl(var(--copper)), hsl(var(--navy)));
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
