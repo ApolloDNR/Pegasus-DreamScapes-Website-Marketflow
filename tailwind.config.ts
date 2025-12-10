@@ -63,6 +63,14 @@ export default {
           DEFAULT: "hsl(var(--stone) / <alpha-value>)",
           foreground: "hsl(var(--stone-foreground) / <alpha-value>)",
         },
+        navy: {
+          DEFAULT: "hsl(var(--navy) / <alpha-value>)",
+          foreground: "hsl(var(--navy-foreground) / <alpha-value>)",
+        },
+        copper: {
+          DEFAULT: "hsl(var(--copper) / <alpha-value>)",
+          foreground: "hsl(var(--copper-foreground) / <alpha-value>)",
+        },
         "warm-glow": "hsl(var(--warm-glow) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
         chart: {

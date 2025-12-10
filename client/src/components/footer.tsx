@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Mail, Phone, MapPin } from "lucide-react";
-import logoImage from "@assets/image_1764616120774.png";
+import logoImage from "@assets/image_1765405939117.png";
 
 const quickLinks = [
   { href: "/", label: "Home", isAnchor: false },

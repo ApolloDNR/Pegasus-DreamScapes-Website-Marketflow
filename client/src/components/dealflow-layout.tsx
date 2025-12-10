@@ -55,7 +55,7 @@ import {
   PanelLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImage from "@assets/image_1764616120774.png";
+import logoImage from "@assets/image_1765405939117.png";
 
 interface DealflowLayoutProps {
   children: React.ReactNode;

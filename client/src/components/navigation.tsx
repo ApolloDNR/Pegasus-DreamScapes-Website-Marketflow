@@ -41,7 +41,7 @@ import {
   Command,
   Search
 } from "lucide-react";
-import logoImage from "@assets/image_1764616120774.png";
+import logoImage from "@assets/image_1765405939117.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { CommandTrigger, CommandPalette } from "./command-palette";

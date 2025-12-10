@@ -50,7 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import logoImage from "@assets/image_1764616120774.png";
+import logoImage from "@assets/image_1765405939117.png";
 import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
 import serviceImage1 from "@assets/generated_images/real_estate_investor_consultation.png";
 import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
