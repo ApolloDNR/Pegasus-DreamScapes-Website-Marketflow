@@ -422,7 +422,7 @@ export class SupabaseStorage {
     const { data, error } = await supabaseAdmin
       .from('capital_commitments')
       .select('*')
-      .eq('investor_id', userId)
+      .eq('external_investor_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -493,7 +493,7 @@ export class SupabaseStorage {
     const { data, error } = await supabaseAdmin
       .from('buyer_offers')
       .select('*')
-      .eq('buyer_id', userId)
+      .eq('external_buyer_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -507,11 +507,11 @@ export class SupabaseStorage {
     const { data, error } = await supabaseAdmin
       .from('saved_items')
       .upsert({
-        user_id: userId,
+        external_user_id: userId,
         item_type: itemType,
         item_id: itemId
       }, {
-        onConflict: 'user_id,item_type,item_id'
+        onConflict: 'external_user_id,item_type,item_id'
       })
       .select()
       .single();
@@ -527,7 +527,7 @@ export class SupabaseStorage {
     const { error } = await supabaseAdmin
       .from('saved_items')
       .delete()
-      .eq('user_id', userId)
+      .eq('external_user_id', userId)
       .eq('item_type', itemType)
       .eq('item_id', itemId);
     
@@ -542,7 +542,7 @@ export class SupabaseStorage {
     let query = supabaseAdmin
       .from('saved_items')
       .select('*')
-      .eq('user_id', userId);
+      .eq('external_user_id', userId);
     
     if (itemType) {
       query = query.eq('item_type', itemType);
@@ -561,7 +561,7 @@ export class SupabaseStorage {
     const { data, error } = await supabaseAdmin
       .from('saved_items')
       .select('id')
-      .eq('user_id', userId)
+      .eq('external_user_id', userId)
       .eq('item_type', itemType)
       .eq('item_id', itemId)
       .single();

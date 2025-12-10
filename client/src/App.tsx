@@ -64,6 +64,7 @@ import MarketplaceCapital from "@/pages/marketplace-capital";
 import MarketplaceCapitalDetail from "@/pages/marketplace-capital-detail";
 import MarketplaceProperties from "@/pages/marketplace-properties";
 import MarketplacePropertyDetail from "@/pages/marketplace-property-detail";
+import MarketplaceDiscover from "@/pages/marketplace-discover";
 import SubmitDeal from "@/pages/submit-deal";
 import NotFound from "@/pages/not-found";
 
@@ -124,7 +125,7 @@ function Router() {
       <Route path="/marketplace/buyer" component={MarketplaceBuyer} />
       <Route path="/marketplace/admin/:rest*" component={MarketplaceAdmin} />
       <Route path="/marketplace/admin" component={MarketplaceAdmin} />
-      <Route path="/marketplace/discover">{() => <Redirect to="/marketplace" />}</Route>
+      <Route path="/marketplace/discover" component={MarketplaceDiscover} />
       <Route path="/marketplace/community" component={DealflowCommunity} />
       <Route path="/marketplace/messages" component={DealflowMessages} />
       <Route path="/marketplace/deals" component={MarketplaceDeals} />

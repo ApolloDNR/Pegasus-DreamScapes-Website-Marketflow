@@ -539,7 +539,7 @@ export async function registerRoutes(
       
       const commitment = await storage.createCapitalCommitment({
         project_id: projectId,
-        investor_id: userId,
+        external_investor_id: userId,
         amount,
         structure_preference: structurePreference,
         notes,
