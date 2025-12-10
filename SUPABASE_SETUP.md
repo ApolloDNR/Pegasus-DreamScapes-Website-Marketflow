@@ -72,10 +72,19 @@ Until the tables are created by running `supabase-schema.sql`:
 - User profiles won't save to Supabase
 
 ### Data Migration
-After creating tables, you may want to migrate existing data:
-1. Export data from PostgreSQL/Drizzle tables
-2. Transform IDs to UUIDs
-3. Import into Supabase tables
+After creating tables, run the migration script:
+```bash
+npx tsx scripts/migrate-to-supabase.ts
+```
+
+This will migrate:
+- Seller leads
+- Wholesale deals  
+- Capital projects
+- Retail listings
+- Notifications
+
+The script transforms numeric IDs to external_user_id references for Replit Auth compatibility.
 
 ## Troubleshooting
 
