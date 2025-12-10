@@ -213,9 +213,14 @@ export function PropertyMap({
       )}
       
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/50 rounded-lg">
-          <AlertCircle className="w-8 h-8 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">{error}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-border">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+            <MapPin className="w-8 h-8 text-primary" />
+          </div>
+          <p className="text-sm font-medium text-foreground mb-1">Property Location</p>
+          <p className="text-xs text-muted-foreground text-center px-4 max-w-xs">
+            {fullAddress}
+          </p>
         </div>
       )}
       

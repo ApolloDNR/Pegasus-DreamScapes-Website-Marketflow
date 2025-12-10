@@ -91,13 +91,23 @@ export interface WholesaleDeal {
 }
 
 // Utility functions
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined) return "—";
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+export function formatNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+  return value.toLocaleString();
+}
+
+export function hasValue(value: any): boolean {
+  return value !== null && value !== undefined && value !== 0 && value !== "";
 }
 
 function getChemistryLabel(value: number): { label: string; color: string; bgColor: string } {
@@ -665,23 +675,34 @@ export function WholesaleDealMatchCard({
       </div>
 
       <CardContent className="p-5">
-        <div className="flex items-center gap-4 text-sm mb-4 p-3 bg-secondary/30 rounded-lg">
-          <span className="flex items-center gap-1">
-            <Bed className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.bedrooms}</span> bd
-          </span>
-          <span className="flex items-center gap-1">
-            <Bath className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.bathrooms}</span> ba
-          </span>
-          <span className="flex items-center gap-1">
-            <Square className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.sqft?.toLocaleString()}</span> sqft
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{deal.yearBuilt}</span>
-          </span>
+        <div className="flex items-center gap-4 text-sm mb-4 p-3 bg-secondary/30 rounded-lg flex-wrap">
+          {hasValue(deal.bedrooms) && (
+            <span className="flex items-center gap-1">
+              <Bed className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">{deal.bedrooms}</span> bd
+            </span>
+          )}
+          {hasValue(deal.bathrooms) && (
+            <span className="flex items-center gap-1">
+              <Bath className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">{deal.bathrooms}</span> ba
+            </span>
+          )}
+          {hasValue(deal.sqft) && (
+            <span className="flex items-center gap-1">
+              <Square className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">{formatNumber(deal.sqft)}</span> sqft
+            </span>
+          )}
+          {hasValue(deal.yearBuilt) && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">{deal.yearBuilt}</span>
+            </span>
+          )}
+          {!hasValue(deal.bedrooms) && !hasValue(deal.bathrooms) && !hasValue(deal.sqft) && (
+            <span className="text-muted-foreground italic">Property details not available</span>
+          )}
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
@@ -802,10 +823,13 @@ export function WholesaleDealGridCard({
           {deal.city}, {deal.state}
         </p>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-          <span>{deal.bedrooms} bd</span>
-          <span>{deal.bathrooms} ba</span>
-          <span>{deal.sqft?.toLocaleString()} sqft</span>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 flex-wrap">
+          {hasValue(deal.bedrooms) && <span>{deal.bedrooms} bd</span>}
+          {hasValue(deal.bathrooms) && <span>{deal.bathrooms} ba</span>}
+          {hasValue(deal.sqft) && <span>{formatNumber(deal.sqft)} sqft</span>}
+          {!hasValue(deal.bedrooms) && !hasValue(deal.bathrooms) && !hasValue(deal.sqft) && (
+            <span className="italic">Details pending</span>
+          )}
         </div>
 
         <div className="flex justify-between items-center mb-3 p-2 bg-green-50 dark:bg-green-950/30 rounded">

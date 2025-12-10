@@ -106,12 +106,17 @@ function DealDetailPage() {
   }
 
   const formatCurrency = (amount: number | null | undefined) => {
-    if (!amount) return "N/A";
+    if (amount === null || amount === undefined) return "—";
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatValue = (value: any) => {
+    if (value === null || value === undefined || value === 0 || value === "") return "—";
+    return value;
   };
 
   const calculateSpread = () => {
@@ -207,17 +212,17 @@ function DealDetailPage() {
                   <div className="text-center p-4 rounded-lg bg-muted/50">
                     <Bed className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Beds</p>
-                    <p className="font-semibold">{deal.bedrooms || "N/A"}</p>
+                    <p className="font-semibold">{formatValue(deal.bedrooms)}</p>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-muted/50">
                     <Bath className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Baths</p>
-                    <p className="font-semibold">{deal.bathrooms || "N/A"}</p>
+                    <p className="font-semibold">{formatValue(deal.bathrooms)}</p>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-muted/50">
                     <Ruler className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Sq Ft</p>
-                    <p className="font-semibold">{deal.sqft?.toLocaleString() || "N/A"}</p>
+                    <p className="font-semibold">{deal.sqft ? deal.sqft.toLocaleString() : "—"}</p>
                   </div>
                 </div>
 
@@ -297,7 +302,7 @@ function DealDetailPage() {
                   <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
                     <span className="text-muted-foreground">Deal Score</span>
                     <Badge variant={deal.dealScore && deal.dealScore >= 70 ? "default" : "secondary"}>
-                      {deal.dealScore || "N/A"}/100
+                      {deal.dealScore || "—"}/100
                     </Badge>
                   </div>
                 </div>
@@ -402,7 +407,7 @@ function DealDetailPage() {
                   <User className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">Wholesaler #{((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "N/A"}</p>
+                  <p className="font-semibold">Wholesaler #{((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}</p>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                     <span>4.8 rating</span>
@@ -582,7 +587,7 @@ function JVRequestDialog({
                 data-testid="input-jv-fee"
               />
             </div>
-            <p className="text-xs text-muted-foreground">Current asking fee: ${deal.assignmentFee?.toLocaleString() || "N/A"}</p>
+            <p className="text-xs text-muted-foreground">Current asking fee: {deal.assignmentFee ? `$${deal.assignmentFee.toLocaleString()}` : "—"}</p>
           </div>
 
           <div className="space-y-2">
