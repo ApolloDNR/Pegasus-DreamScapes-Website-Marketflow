@@ -57,7 +57,7 @@ interface DealNegotiationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dealType: "capital_project" | "wholesale_deal";
-  dealId: number;
+  dealId: string | number;
   dealTitle: string;
   responderId: string;
   existingStructure?: string;
@@ -154,8 +154,7 @@ export function DealNegotiationDialog({
       return;
     }
     
-    const messageText = [
-      notes,
+    const messageParts = [
       `Structure: ${structureType}`,
       amount ? `Amount: $${amount}` : null,
       equityPercent ? `Equity: ${equityPercent}%` : null,
@@ -165,7 +164,10 @@ export function DealNegotiationDialog({
       profitSplit ? `Profit Split: ${profitSplit}` : null,
       holdPeriod ? `Hold Period: ${holdPeriod}` : null,
       exitStrategy ? `Exit: ${exitStrategy}` : null,
-    ].filter(Boolean).join(". ");
+      notes ? `Notes: ${notes}` : null,
+    ].filter(Boolean);
+    
+    const messageText = messageParts.join(". ") || `Investment offer: ${structureType} structure`;
 
     const data = {
       dealId: String(dealId),

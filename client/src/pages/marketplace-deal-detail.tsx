@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
+import { DealNegotiationDialog } from "@/components/deal-negotiation-dialog";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -74,6 +75,7 @@ function DealDetailPage() {
   const { toast } = useToast();
   const { user } = useSupabaseAuth();
   const [jvDialogOpen, setJvDialogOpen] = useState(false);
+  const [negotiationDialogOpen, setNegotiationDialogOpen] = useState(false);
 
   const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
     queryKey: ['/api/supabase/wholesale-deals', dealId],
@@ -350,6 +352,26 @@ function DealDetailPage() {
               <Button 
                 variant="outline" 
                 className="w-full"
+                onClick={() => setNegotiationDialogOpen(true)}
+                data-testid="button-make-offer"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Make Investment Offer
+              </Button>
+
+              <DealNegotiationDialog
+                open={negotiationDialogOpen}
+                onOpenChange={setNegotiationDialogOpen}
+                dealType="wholesale_deal"
+                dealId={String(deal.id)}
+                dealTitle={deal.propertyAddress || 'Deal'}
+                responderId={(deal as any).externalWholesalerId || deal.submittedBy || ''}
+                onSuccess={() => setNegotiationDialogOpen(false)}
+              />
+
+              <Button 
+                variant="outline" 
+                className="w-full"
                 data-testid="button-analyze-deal"
               >
                 <Calculator className="w-4 h-4 mr-2" />
@@ -380,7 +402,7 @@ function DealDetailPage() {
                   <User className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">Wholesaler #{deal.submittedBy?.slice(-6) || "N/A"}</p>
+                  <p className="font-semibold">Wholesaler #{((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "N/A"}</p>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                     <span>4.8 rating</span>
@@ -399,7 +421,7 @@ function DealDetailPage() {
                   95% on-time
                 </Badge>
               </div>
-              <Link href={`/profile/${deal.submittedBy}`}>
+              <Link href={`/profile/${(deal as any).externalWholesalerId || deal.submittedBy}`}>
                 <Button variant="outline" className="w-full" size="sm">
                   View Profile
                 </Button>
@@ -467,7 +489,7 @@ function JVRequestDialog({
     mutationFn: async () => {
       return apiRequest('POST', '/api/supabase/jv-requests', {
         dealId: String(deal.id),
-        wholesalerId: deal.submittedBy,
+        wholesalerId: (deal as any).externalWholesalerId || deal.submittedBy || '',
         message,
         strategy,
         fundingSource,
