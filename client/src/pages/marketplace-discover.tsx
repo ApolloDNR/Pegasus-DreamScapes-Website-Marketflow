@@ -381,7 +381,7 @@ function DealCard({
           </div>
         </div>
         <div className="mt-auto">
-          <Link href={`/wholesale/${deal.id}`}>
+          <Link href={`/marketplace/deals/${deal.id}`}>
             <Button className="w-full" variant="default" data-testid={`button-view-deal-${deal.id}`}>
               View Details
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -496,7 +496,7 @@ function ProjectCard({
         </div>
 
         <div className="mt-auto">
-          <Link href={`/projects/${project.id}`}>
+          <Link href={`/marketplace/capital/${project.id}`}>
             <Button className="w-full" variant="default" data-testid={`button-view-project-${project.id}`}>
               View Project
               <ArrowRight className="w-4 h-4 ml-2" />
