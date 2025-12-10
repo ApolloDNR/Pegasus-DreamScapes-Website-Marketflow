@@ -107,7 +107,7 @@ export function formatNumber(value: number | null | undefined): string {
 }
 
 export function hasValue(value: any): boolean {
-  return value !== null && value !== undefined && value !== 0 && value !== "";
+  return value !== null && value !== undefined && value !== "";
 }
 
 function getChemistryLabel(value: number): { label: string; color: string; bgColor: string } {

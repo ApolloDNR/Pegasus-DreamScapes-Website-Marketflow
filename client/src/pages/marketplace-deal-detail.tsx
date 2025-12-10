@@ -115,7 +115,7 @@ function DealDetailPage() {
   };
 
   const formatValue = (value: any) => {
-    if (value === null || value === undefined || value === 0 || value === "") return "—";
+    if (value === null || value === undefined || value === "") return "—";
     return value;
   };
 
@@ -355,12 +355,12 @@ function DealDetailPage() {
               />
 
               <Button 
-                variant="outline" 
+                size="lg"
                 className="w-full"
                 onClick={() => setNegotiationDialogOpen(true)}
                 data-testid="button-make-offer"
               >
-                <DollarSign className="w-4 h-4 mr-2" />
+                <DollarSign className="w-5 h-5 mr-2" />
                 Make Investment Offer
               </Button>
 

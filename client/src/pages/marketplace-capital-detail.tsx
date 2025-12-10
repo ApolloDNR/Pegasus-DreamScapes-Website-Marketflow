@@ -179,21 +179,51 @@ function CapitalDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-2xl font-bold">
-                      ${((project.amountRaised || 0) / 1000).toFixed(0)}K
-                    </span>
-                    <span className="text-muted-foreground">
-                      of ${((project.fundingGoal || 0) / 1000).toFixed(0)}K goal
-                    </span>
-                  </div>
-                  <Progress value={fundingProgress} className="h-3" />
-                  <div className="flex items-center justify-between mt-2 text-sm">
-                    <span className="text-muted-foreground">{fundingProgress.toFixed(1)}% funded</span>
-                    {!isFunded && (
-                      <span className="font-medium text-primary">
-                        ${(amountRemaining / 1000).toFixed(0)}K remaining
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="text-3xl font-bold text-primary">
+                        ${((project.amountRaised || 0) / 1000).toFixed(0)}K
                       </span>
+                      <span className="text-lg text-muted-foreground ml-1">raised</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-semibold">
+                        ${((project.fundingGoal || 0) / 1000).toFixed(0)}K
+                      </span>
+                      <span className="text-sm text-muted-foreground ml-1">goal</span>
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced Progress Bar with Milestones */}
+                  <div className="relative">
+                    <Progress value={fundingProgress} className="h-4" />
+                    {/* Milestone markers below progress bar */}
+                    <div className="flex justify-between mt-1 px-1">
+                      <span className="text-[10px] text-muted-foreground">0%</span>
+                      <span className={`text-[10px] ${fundingProgress >= 25 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>25%</span>
+                      <span className={`text-[10px] ${fundingProgress >= 50 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>50%</span>
+                      <span className={`text-[10px] ${fundingProgress >= 75 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>75%</span>
+                      <span className={`text-[10px] ${fundingProgress >= 100 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>100%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-6 text-sm">
+                    <Badge 
+                      variant={isFunded ? "default" : "secondary"} 
+                      className={isFunded ? "bg-green-600" : ""}
+                    >
+                      {fundingProgress.toFixed(0)}% funded
+                    </Badge>
+                    {!isFunded && (
+                      <span className="font-medium text-muted-foreground">
+                        ${(amountRemaining / 1000).toFixed(0)}K remaining to goal
+                      </span>
+                    )}
+                    {isFunded && (
+                      <Badge className="bg-green-600 text-white">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Fully Funded
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -392,8 +422,12 @@ function CapitalDetailPage() {
                   <>
                     <Dialog open={isCommitDialogOpen} onOpenChange={setIsCommitDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button className="w-full" size="lg" data-testid="button-commit-capital">
-                          <Send className="w-4 h-4 mr-2" />
+                        <Button 
+                          className="w-full" 
+                          size="lg" 
+                          data-testid="button-commit-capital"
+                        >
+                          <Send className="w-5 h-5 mr-2" />
                           Express Interest
                         </Button>
                       </DialogTrigger>
