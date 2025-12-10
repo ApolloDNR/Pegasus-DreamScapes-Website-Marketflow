@@ -23,6 +23,7 @@ import {
   insertDealMatchSchema,
   insertAnnouncementSchema,
   insertNotificationSchema,
+  insertAdminAuditLogSchema,
   insertLeadSchema,
   insertSavedAnalysisSchema,
   insertWholesaleDealOfferSchema,
@@ -5428,6 +5429,124 @@ export async function registerRoutes(
 
   // ========================================
   // END MARKETPLACE DASHBOARD API ENDPOINTS
+  // ========================================
+
+  // ========================================
+  // ADMIN AUDIT LOG ENDPOINTS
+  // ========================================
+
+  // Get audit logs (admin only)
+  app.get("/api/audit-logs", async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Check admin permission via Supabase profile
+      const profile = await getUserProfile(user.id);
+      if (!profile || profile.primary_role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { limit = "50", offset = "0", actionType, adminUserId } = req.query;
+      
+      // Validate pagination with reasonable bounds
+      const parsedLimit = Math.min(Math.max(1, Number(limit) || 50), 100);
+      const parsedOffset = Math.max(0, Number(offset) || 0);
+      
+      const logs = await storage.getAuditLogs({
+        limit: parsedLimit,
+        offset: parsedOffset,
+        actionType: actionType as string | undefined,
+        adminUserId: adminUserId as string | undefined,
+      });
+
+      const total = await storage.getAuditLogCount({
+        actionType: actionType as string | undefined,
+        adminUserId: adminUserId as string | undefined,
+      });
+
+      res.json({ logs, total, limit: parsedLimit, offset: parsedOffset });
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Get single audit log entry (admin only)
+  app.get("/api/audit-logs/:id", async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const profile = await getUserProfile(user.id);
+      if (!profile || profile.primary_role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const id = Number(req.params.id);
+      const log = await storage.getAuditLogById(id);
+
+      if (!log) {
+        return res.status(404).json({ message: "Audit log not found" });
+      }
+
+      res.json(log);
+    } catch (error) {
+      console.error("Error fetching audit log:", error);
+      res.status(500).json({ message: "Failed to fetch audit log" });
+    }
+  });
+
+  // Create audit log entry (internal use, admin-triggered actions)
+  app.post("/api/audit-logs", async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const profile = await getUserProfile(user.id);
+      if (!profile || profile.primary_role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const auditLogData = {
+        adminUserId: user.id,
+        adminEmail: user.email || null,
+        adminName: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || null,
+        actionType: req.body.actionType,
+        resourceType: req.body.resourceType || null,
+        resourceId: req.body.resourceId || null,
+        description: req.body.description,
+        previousValue: req.body.previousValue ? JSON.stringify(req.body.previousValue) : null,
+        newValue: req.body.newValue ? JSON.stringify(req.body.newValue) : null,
+        ipAddress: req.ip || null,
+        userAgent: req.headers["user-agent"] || null,
+      };
+
+      const validation = insertAdminAuditLogSchema.safeParse(auditLogData);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid audit log data", 
+          errors: fromError(validation.error).toString() 
+        });
+      }
+
+      const log = await storage.createAuditLog(validation.data);
+
+      res.status(201).json(log);
+    } catch (error) {
+      console.error("Error creating audit log:", error);
+      res.status(500).json({ message: "Failed to create audit log" });
+    }
+  });
+
+  // ========================================
+  // END ADMIN AUDIT LOG ENDPOINTS
   // ========================================
 
   // Generate capital project PDF

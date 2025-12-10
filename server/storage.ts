@@ -11,7 +11,7 @@ import {
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
   leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
-  userReputation, userBadges,
+  userReputation, userBadges, adminAuditLog,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -59,7 +59,8 @@ import {
   type WholesaleDealOffer, type InsertWholesaleDealOffer,
   type JVRequest, type InsertJVRequest,
   type UserReputation, type InsertUserReputation,
-  type UserBadge, type InsertUserBadge
+  type UserBadge, type InsertUserBadge,
+  type AdminAuditLog, type InsertAdminAuditLog
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -312,6 +313,12 @@ export interface IStorage {
   getBadgesForUsers(userIds: string[]): Promise<Map<string, UserBadge[]>>;
   getRolesForUsers(userIds: string[]): Promise<Map<string, UserRole[]>>;
   getUsersByIds(userIds: string[]): Promise<Map<string, User>>;
+
+  // Admin Audit Log
+  createAuditLog(entry: InsertAdminAuditLog): Promise<AdminAuditLog>;
+  getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; adminUserId?: string }): Promise<AdminAuditLog[]>;
+  getAuditLogById(id: number): Promise<AdminAuditLog | undefined>;
+  getAuditLogCount(options?: { actionType?: string; adminUserId?: string }): Promise<number>;
 
   // Deal Negotiations
   createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation>;
@@ -1879,6 +1886,55 @@ export class DatabaseStorage implements IStorage {
       map.set(user.id, user);
     }
     return map;
+  }
+
+  // Admin Audit Log
+  async createAuditLog(entry: InsertAdminAuditLog): Promise<AdminAuditLog> {
+    const [created] = await db.insert(adminAuditLog).values(entry).returning();
+    return created;
+  }
+
+  async getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; adminUserId?: string }): Promise<AdminAuditLog[]> {
+    const conditions = [];
+    if (options?.actionType) {
+      conditions.push(eq(adminAuditLog.actionType, options.actionType));
+    }
+    if (options?.adminUserId) {
+      conditions.push(eq(adminAuditLog.adminUserId, options.adminUserId));
+    }
+    
+    let query = db.select().from(adminAuditLog);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+    
+    return query
+      .orderBy(desc(adminAuditLog.createdAt))
+      .limit(options?.limit || 100)
+      .offset(options?.offset || 0);
+  }
+
+  async getAuditLogById(id: number): Promise<AdminAuditLog | undefined> {
+    const [log] = await db.select().from(adminAuditLog).where(eq(adminAuditLog.id, id));
+    return log;
+  }
+
+  async getAuditLogCount(options?: { actionType?: string; adminUserId?: string }): Promise<number> {
+    const conditions = [];
+    if (options?.actionType) {
+      conditions.push(eq(adminAuditLog.actionType, options.actionType));
+    }
+    if (options?.adminUserId) {
+      conditions.push(eq(adminAuditLog.adminUserId, options.adminUserId));
+    }
+    
+    let query = db.select({ count: sql<number>`count(*)` }).from(adminAuditLog);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+    
+    const [result] = await query;
+    return Number(result.count);
   }
 
   // Deal Negotiations

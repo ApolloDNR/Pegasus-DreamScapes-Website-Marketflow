@@ -2055,3 +2055,63 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
 });
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
+
+// ============================================
+// ADMIN AUDIT LOG - Tracking all admin actions
+// ============================================
+
+export const AUDIT_ACTION_TYPES = [
+  "user_created",
+  "user_updated", 
+  "user_deleted",
+  "role_assigned",
+  "role_removed",
+  "deal_approved",
+  "deal_rejected",
+  "deal_deleted",
+  "project_approved",
+  "project_rejected",
+  "badge_awarded",
+  "badge_revoked",
+  "setting_changed",
+  "announcement_created",
+  "announcement_deleted",
+  "login",
+  "logout",
+  "permission_changed",
+] as const;
+
+export type AuditActionType = typeof AUDIT_ACTION_TYPES[number];
+
+export const adminAuditLog = pgTable("admin_audit_log", {
+  id: serial("id").primaryKey(),
+  
+  // === ACTOR INFO ===
+  adminUserId: varchar("admin_user_id", { length: 255 }).notNull(),
+  adminEmail: varchar("admin_email", { length: 255 }),
+  adminName: varchar("admin_name", { length: 255 }),
+  
+  // === ACTION DETAILS ===
+  actionType: varchar("action_type", { length: 100 }).notNull(),
+  resourceType: varchar("resource_type", { length: 100 }), // user, deal, project, badge, setting
+  resourceId: varchar("resource_id", { length: 255 }), // ID of affected resource
+  
+  // === CHANGE DETAILS ===
+  description: text("description").notNull(),
+  previousValue: text("previous_value"), // JSON stringified
+  newValue: text("new_value"), // JSON stringified
+  
+  // === METADATA ===
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  
+  // === TIMESTAMP ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLog).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertAdminAuditLog = z.infer<typeof insertAdminAuditLogSchema>;
+export type AdminAuditLog = typeof adminAuditLog.$inferSelect;

@@ -28,7 +28,12 @@ import {
   XCircle,
   Home,
   DollarSign,
+  History,
+  Search,
+  User,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AdminStats {
   totalSellerLeads: number;
@@ -65,11 +70,35 @@ interface Lead {
   createdAt: string;
 }
 
+interface AuditLogEntry {
+  id: number;
+  adminUserId: string;
+  adminEmail: string | null;
+  adminName: string | null;
+  actionType: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  description: string;
+  previousValue: string | null;
+  newValue: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+interface AuditLogsResponse {
+  logs: AuditLogEntry[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export default function MarketplaceAdminPage() {
   const { toast } = useToast();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PendingItem | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [auditLogFilter, setAuditLogFilter] = useState<string>("all");
 
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ["/api/marketplace/admin/stats"],
@@ -85,6 +114,14 @@ export default function MarketplaceAdminPage() {
 
   const { data: leads = [], isLoading: leadsLoading } = useQuery<Lead[]>({
     queryKey: ["/api/marketplace/admin/leads"],
+  });
+
+  const auditLogQueryKey = auditLogFilter === "all" 
+    ? "/api/audit-logs?limit=50" 
+    : `/api/audit-logs?limit=50&actionType=${auditLogFilter}`;
+  
+  const { data: auditLogsData, isLoading: auditLogsLoading } = useQuery<AuditLogsResponse>({
+    queryKey: [auditLogQueryKey],
   });
 
   const approveMutation = useMutation({
@@ -271,6 +308,10 @@ export default function MarketplaceAdminPage() {
               <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
               <TabsTrigger value="deals" data-testid="tab-deals">Deals</TabsTrigger>
               <TabsTrigger value="leads" data-testid="tab-leads">Leads</TabsTrigger>
+              <TabsTrigger value="audit-log" data-testid="tab-audit-log">
+                <History className="h-4 w-4 mr-1" />
+                Audit Log
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="pending" className="space-y-4">
@@ -504,6 +545,93 @@ export default function MarketplaceAdminPage() {
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </Link>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="audit-log" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <History className="h-5 w-5" />
+                        Admin Activity Log
+                      </CardTitle>
+                      <CardDescription>Track all administrative actions on the platform</CardDescription>
+                    </div>
+                    <Select value={auditLogFilter} onValueChange={setAuditLogFilter}>
+                      <SelectTrigger className="w-[180px]" data-testid="select-audit-filter">
+                        <SelectValue placeholder="Filter by action" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Actions</SelectItem>
+                        <SelectItem value="user_created">User Created</SelectItem>
+                        <SelectItem value="user_updated">User Updated</SelectItem>
+                        <SelectItem value="role_assigned">Role Assigned</SelectItem>
+                        <SelectItem value="deal_approved">Deal Approved</SelectItem>
+                        <SelectItem value="deal_rejected">Deal Rejected</SelectItem>
+                        <SelectItem value="project_approved">Project Approved</SelectItem>
+                        <SelectItem value="badge_awarded">Badge Awarded</SelectItem>
+                        <SelectItem value="setting_changed">Setting Changed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {auditLogsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : !auditLogsData?.logs?.length ? (
+                    <div className="text-center py-8">
+                      <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-medium mb-2">No Activity Yet</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Admin actions will appear here once they occur.
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[500px]">
+                      <div className="space-y-3 pr-4">
+                        {auditLogsData.logs.map((log) => (
+                          <div 
+                            key={log.id} 
+                            className="flex items-start gap-3 p-3 rounded-lg border"
+                            data-testid={`audit-log-${log.id}`}
+                          >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                              <User className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium">{log.adminName || log.adminEmail || "Admin"}</p>
+                                <Badge variant="outline" className="text-xs">
+                                  {log.actionType.replace(/_/g, " ")}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">{log.description}</p>
+                              {log.resourceType && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {log.resourceType}: {log.resourceId}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {new Date(log.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                  {auditLogsData && auditLogsData.total > 50 && (
+                    <p className="text-center text-sm text-muted-foreground mt-4">
+                      Showing 50 of {auditLogsData.total} entries
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
