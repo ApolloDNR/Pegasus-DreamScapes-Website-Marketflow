@@ -41,7 +41,7 @@ export default function MarketplaceWholesalerPage() {
   const isPegasus = profile?.is_pegasus_badged;
 
   const { data: stats, isLoading } = useQuery<DealStats>({
-    queryKey: ["/api/marketplace/wholesaler/stats"],
+    queryKey: ["/api/supabase/marketplace/wholesaler/stats"],
   });
 
   const { data: myDeals, isLoading: isDealsLoading } = useQuery<WholesaleDeal[]>({

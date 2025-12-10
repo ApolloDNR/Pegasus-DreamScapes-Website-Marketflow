@@ -36,7 +36,7 @@ export default function MarketplaceDreamscaperPage() {
   const isPegasus = profile?.is_pegasus_badged;
 
   const { data: stats, isLoading } = useQuery<ProjectStats>({
-    queryKey: ["/api/marketplace/dreamscaper/stats"],
+    queryKey: ["/api/supabase/marketplace/dreamscaper/stats"],
   });
 
   const { data: myProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({

@@ -43,6 +43,7 @@ import {
   updateUserProfile
 } from "./lib/supabase";
 import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification } from "./email";
+import { supabaseStorage } from "./supabase-storage";
 
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
@@ -4888,6 +4889,267 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating project status:", error);
       res.status(500).json({ message: "Failed to update project status" });
+    }
+  });
+
+  // ========================================
+  // SUPABASE-BASED STATS ENDPOINTS (with hybrid auth support)
+  // ========================================
+
+  // Helper to check if user authenticated via Replit Auth (uses external_user_id columns)
+  const isReplitAuthUser = (req: any): boolean => {
+    return !!req.user?.claims?.sub && !req.supabaseUser;
+  };
+
+  // Supabase Wholesaler Stats
+  app.get("/api/supabase/marketplace/wholesaler/stats", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage } = await getSupabaseStorage();
+      
+      // For Replit Auth users, try external_user_id columns first, then fall back to regular
+      // For Supabase Auth users, use regular columns
+      let deals = await storage.getWholesaleDealsByUser(userId);
+      if (deals.length === 0 && isReplitAuthUser(req)) {
+        deals = await supabaseStorage.getWholesaleDealsByExternalUser(userId);
+      }
+      
+      let jvRequests = await storage.getJVRequestsByUser(userId);
+      if (jvRequests.length === 0 && isReplitAuthUser(req)) {
+        jvRequests = await supabaseStorage.getJVRequestsForWholesalerByExternalId(userId);
+      }
+
+      const stats = {
+        active: deals.filter(d => d.status === "listed" || d.status === "approved" || d.status === "ACTIVE" || d.status === "Available").length,
+        pending: deals.filter(d => d.status === "pending_review" || d.status === "under_review" || d.status === "PENDING" || d.status === "Under Review").length,
+        sold: deals.filter(d => d.status === "sold" || d.status === "closed" || d.status === "CLOSED" || d.status === "Sold").length,
+        totalVolume: deals
+          .filter(d => d.status === "sold" || d.status === "closed" || d.status === "CLOSED" || d.status === "Sold")
+          .reduce((sum, d) => sum + (d.assignment_fee || 0), 0),
+        jvRequestsReceived: jvRequests.length,
+        jvRequestsPending: jvRequests.filter(r => r.status === "pending" || r.status === "PENDING").length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching Supabase wholesaler stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Supabase Wholesaler Deals
+  app.get("/api/supabase/marketplace/wholesaler/deals", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      let deals = await storage.getWholesaleDealsByUser(userId);
+      if (deals.length === 0 && isReplitAuthUser(req)) {
+        deals = await supabaseStorage.getWholesaleDealsByExternalUser(userId);
+      }
+      res.json(toCamelCase(deals));
+    } catch (error) {
+      console.error("Error fetching Supabase wholesaler deals:", error);
+      res.status(500).json({ message: "Failed to fetch deals" });
+    }
+  });
+
+  // Supabase Investor Stats
+  app.get("/api/supabase/marketplace/investor/stats", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage } = await getSupabaseStorage();
+      let commitments = await storage.getCapitalCommitmentsByUser(userId);
+      if (commitments.length === 0 && isReplitAuthUser(req)) {
+        commitments = await supabaseStorage.getCapitalCommitmentsByExternalUser(userId);
+      }
+      
+      let savedItems = await storage.getSavedItems(userId);
+      if (savedItems.length === 0 && isReplitAuthUser(req)) {
+        savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
+      }
+
+      const stats = {
+        totalInvested: commitments
+          .filter(c => c.status === "accepted" || c.status === "ACCEPTED" || c.status === "committed" || c.status === "Accepted")
+          .reduce((sum, c) => sum + (c.amount || 0), 0),
+        activeDeals: commitments.filter(c => 
+          c.status === "accepted" || c.status === "ACCEPTED" || c.status === "committed" || c.status === "Accepted"
+        ).length,
+        savedDeals: savedItems.length,
+        pendingOffers: commitments.filter(c => 
+          c.status === "pending" || c.status === "PENDING" || c.status === "Pending"
+        ).length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching Supabase investor stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Supabase Investor Commitments
+  app.get("/api/supabase/marketplace/investor/commitments", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      let commitments = await storage.getCapitalCommitmentsByUser(userId);
+      if (commitments.length === 0 && isReplitAuthUser(req)) {
+        commitments = await supabaseStorage.getCapitalCommitmentsByExternalUser(userId);
+      }
+      res.json(toCamelCase(commitments));
+    } catch (error) {
+      console.error("Error fetching Supabase investor commitments:", error);
+      res.status(500).json({ message: "Failed to fetch commitments" });
+    }
+  });
+
+  // Supabase Dreamscaper Stats
+  app.get("/api/supabase/marketplace/dreamscaper/stats", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage } = await getSupabaseStorage();
+      let projects = await storage.getCapitalProjectsByUser(userId);
+      if (projects.length === 0 && isReplitAuthUser(req)) {
+        projects = await supabaseStorage.getCapitalProjectsByExternalUser(userId);
+      }
+      
+      let jvRequests = await storage.getJVRequestsByUser(userId);
+      if (jvRequests.length === 0 && isReplitAuthUser(req)) {
+        jvRequests = await supabaseStorage.getJVRequestsByExternalUser(userId);
+      }
+
+      const stats = {
+        activeProjects: projects.filter(p => 
+          p.status === "funding" || p.status === "active" || p.status === "ACTIVE" || p.status === "FUNDING" || p.status === "Funding"
+        ).length,
+        totalRaised: projects.reduce((sum, p) => sum + (p.amount_raised || 0), 0),
+        totalFundingGoal: projects.reduce((sum, p) => sum + (p.funding_goal || 0), 0),
+        projectsCompleted: projects.filter(p => 
+          p.status === "completed" || p.status === "exited" || p.status === "COMPLETED" || p.status === "Completed"
+        ).length,
+        jvRequestsSent: jvRequests.length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching Supabase dreamscaper stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Supabase Dreamscaper Projects
+  app.get("/api/supabase/marketplace/dreamscaper/projects", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      let projects = await storage.getCapitalProjectsByUser(userId);
+      if (projects.length === 0 && isReplitAuthUser(req)) {
+        projects = await supabaseStorage.getCapitalProjectsByExternalUser(userId);
+      }
+      res.json(toCamelCase(projects));
+    } catch (error) {
+      console.error("Error fetching Supabase dreamscaper projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects" });
+    }
+  });
+
+  // Supabase Buyer Stats
+  app.get("/api/supabase/marketplace/buyer/stats", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage } = await getSupabaseStorage();
+      let offers = await storage.getBuyerOffersByUser(userId);
+      if (offers.length === 0 && isReplitAuthUser(req)) {
+        offers = await supabaseStorage.getBuyerOffersByExternalUser(userId);
+      }
+      
+      let savedItems = await storage.getSavedItems(userId);
+      if (savedItems.length === 0 && isReplitAuthUser(req)) {
+        savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
+      }
+
+      const stats = {
+        savedProperties: savedItems.filter(s => 
+          s.item_type === "listing" || s.item_type === "wholesale_deal"
+        ).length,
+        pendingOffers: offers.filter(o => o.status === "pending" || o.status === "PENDING" || o.status === "Pending").length,
+        acceptedOffers: offers.filter(o => o.status === "accepted" || o.status === "ACCEPTED" || o.status === "Accepted").length,
+        totalPurchases: offers.filter(o => o.status === "closed" || o.status === "CLOSED" || o.status === "Closed").length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching Supabase buyer stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Supabase Buyer Offers
+  app.get("/api/supabase/marketplace/buyer/offers", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      let offers = await storage.getBuyerOffersByUser(userId);
+      if (offers.length === 0 && isReplitAuthUser(req)) {
+        offers = await supabaseStorage.getBuyerOffersByExternalUser(userId);
+      }
+      res.json(toCamelCase(offers));
+    } catch (error) {
+      console.error("Error fetching Supabase buyer offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Supabase Saved Items
+  app.get("/api/supabase/marketplace/saved", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      let savedItems = await storage.getSavedItems(userId);
+      if (savedItems.length === 0 && isReplitAuthUser(req)) {
+        savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
+      }
+      res.json(toCamelCase(savedItems));
+    } catch (error) {
+      console.error("Error fetching saved items:", error);
+      res.status(500).json({ message: "Failed to fetch saved items" });
     }
   });
 

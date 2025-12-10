@@ -73,7 +73,7 @@ function BuyerDashboard() {
   const isInvestmentBuyer = userRole === "buyer_investment";
 
   const { data: stats, isLoading: statsLoading } = useQuery<BuyerStats>({
-    queryKey: ["/api/marketplace/buyer/stats"],
+    queryKey: ["/api/supabase/marketplace/buyer/stats"],
   });
 
   const { data: savedProperties, isLoading: savedLoading } = useQuery<EnrichedSavedProperty[]>({

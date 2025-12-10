@@ -16,11 +16,11 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
 - **Phase 1: Role System Consolidation** - 8-tier MARKETPLACE_ROLES enum (admin, pegasus_wholesaler, wholesaler, pegasus_dreamscaper, dreamscaper, investor, buyer_retail, buyer_investment)
 - **Phase 2: Action Mutations** - All marketplace actions (deal submission, JV requests, capital commitments, buyer offers) updated to POST to Supabase endpoints
 - **Phase 3A: Data Fetching** - Marketplace pages updated to fetch from Supabase endpoints with UUID-compatible ID handling
+- **Phase 3B: Stats Endpoints** - Created Supabase stats endpoints (`/api/supabase/marketplace/{role}/stats`) using `external_user_id` lookups for wholesaler, investor, dreamscaper, and buyer dashboards
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
 - **Data Migration** - Migrate existing PostgreSQL data to Supabase with UUID transformation
-- **Stats Endpoints** - Create Supabase equivalents for investor/buyer/wholesaler/dreamscaper stats
 
 ### Important Files
 - `supabase-schema.sql` - Complete database schema for Supabase

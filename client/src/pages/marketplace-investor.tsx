@@ -37,7 +37,7 @@ export default function MarketplaceInvestorPage() {
   const { profile } = useSupabaseAuth();
 
   const { data: stats, isLoading } = useQuery<InvestorStats>({
-    queryKey: ["/api/marketplace/investor/stats"],
+    queryKey: ["/api/supabase/marketplace/investor/stats"],
   });
 
   const { data: myCommitments, isLoading: isCommitmentsLoading } = useQuery<CommitmentWithProject[]>({

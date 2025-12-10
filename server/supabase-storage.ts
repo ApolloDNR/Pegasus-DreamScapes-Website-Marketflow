@@ -631,6 +631,110 @@ export class SupabaseStorage {
     }
     return true;
   }
+
+  // Methods that query by external_user_id (Replit Auth ID)
+  async getWholesaleDealsByExternalUser(externalUserId: string): Promise<SupabaseWholesaleDeal[]> {
+    const { data, error } = await supabaseAdmin
+      .from('wholesale_deals')
+      .select('*')
+      .eq('external_wholesaler_id', externalUserId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching wholesale deals by external user:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  async getCapitalProjectsByExternalUser(externalUserId: string): Promise<SupabaseCapitalProject[]> {
+    const { data, error } = await supabaseAdmin
+      .from('capital_projects')
+      .select('*')
+      .eq('external_owner_id', externalUserId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching capital projects by external user:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  async getCapitalCommitmentsByExternalUser(externalUserId: string): Promise<SupabaseCapitalCommitment[]> {
+    const { data, error } = await supabaseAdmin
+      .from('capital_commitments')
+      .select('*')
+      .eq('external_investor_id', externalUserId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching commitments by external user:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  async getBuyerOffersByExternalUser(externalUserId: string): Promise<SupabaseBuyerOffer[]> {
+    const { data, error } = await supabaseAdmin
+      .from('buyer_offers')
+      .select('*')
+      .eq('external_buyer_id', externalUserId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching buyer offers by external user:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  async getSavedItemsByExternalUser(externalUserId: string, itemType?: SupabaseSavedItem['item_type']): Promise<SupabaseSavedItem[]> {
+    let query = supabaseAdmin
+      .from('saved_items')
+      .select('*')
+      .eq('external_user_id', externalUserId);
+    
+    if (itemType) {
+      query = query.eq('item_type', itemType);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching saved items by external user:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  async getJVRequestsByExternalUser(externalUserId: string): Promise<SupabaseJVRequest[]> {
+    const { data, error } = await supabaseAdmin
+      .from('jv_requests')
+      .select('*')
+      .or(`external_requester_id.eq.${externalUserId},external_wholesaler_id.eq.${externalUserId}`)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching JV requests by external user:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  async getJVRequestsForWholesalerByExternalId(externalUserId: string): Promise<SupabaseJVRequest[]> {
+    const { data, error } = await supabaseAdmin
+      .from('jv_requests')
+      .select('*')
+      .eq('external_wholesaler_id', externalUserId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching JV requests for wholesaler:', error);
+      return [];
+    }
+    return data || [];
+  }
 }
 
 export const supabaseStorage = new SupabaseStorage();
