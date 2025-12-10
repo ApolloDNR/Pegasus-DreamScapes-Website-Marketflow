@@ -236,16 +236,18 @@ function DealDetailPage() {
             </Card>
           </ScrollReveal>
 
-          <PropertyMap
-            address={deal.propertyAddress || ''}
-            city={deal.city}
-            state={deal.state}
-            zipCode={deal.zipCode}
-            showCard={true}
-            title="Property Location"
-            height="300px"
-            data-testid="property-map"
-          />
+          {deal.propertyAddress && (
+            <PropertyMap
+              address={deal.propertyAddress}
+              city={deal.city}
+              state={deal.state}
+              zipCode={deal.zipCode}
+              showCard={true}
+              title="Property Location"
+              height="300px"
+              data-testid="property-map"
+            />
+          )}
 
           <Card>
             <CardHeader>
