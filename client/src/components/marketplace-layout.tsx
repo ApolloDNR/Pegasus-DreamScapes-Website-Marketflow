@@ -61,8 +61,8 @@ const baseNavItems = [
 ];
 
 const toolItems = [
-  { title: "Calculators", href: "/calculators", icon: Calculator },
-  { title: "Resources", href: "/resources", icon: FileText },
+  { title: "Calculators", href: "/marketplace/calculators", icon: Calculator },
+  { title: "Resources", href: "/marketplace/resources", icon: FileText },
 ];
 
 function getRoleSpecificItems(role: UserRole | null) {
