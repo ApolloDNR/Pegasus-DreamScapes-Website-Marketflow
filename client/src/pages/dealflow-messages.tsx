@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { DealflowLayout } from "@/components/dealflow-layout";
+import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,7 @@ export default function DealflowMessages() {
   };
 
   return (
-    <DealflowLayout>
+    <MarketplaceLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-serif font-bold mb-2">Messages</h1>
@@ -252,6 +252,6 @@ export default function DealflowMessages() {
           </Card>
         </div>
       </div>
-    </DealflowLayout>
+    </MarketplaceLayout>
   );
 }

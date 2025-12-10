@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { DealflowLayout } from "@/components/dealflow-layout";
+import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -465,7 +465,7 @@ export default function DealflowCommunity() {
   );
 
   return (
-    <DealflowLayout>
+    <MarketplaceLayout>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Feed Column */}
@@ -919,6 +919,6 @@ export default function DealflowCommunity() {
           )}
         </DialogContent>
       </Dialog>
-    </DealflowLayout>
+    </MarketplaceLayout>
   );
 }
