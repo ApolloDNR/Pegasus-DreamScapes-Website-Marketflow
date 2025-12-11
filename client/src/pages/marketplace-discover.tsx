@@ -20,6 +20,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
+import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
 import {
   Search,
   Filter,
@@ -37,7 +38,8 @@ import {
   ArrowRight,
   Percent,
   Clock,
-  Zap
+  Zap,
+  Users
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -90,7 +92,10 @@ function DiscoverPage() {
   const [propertyType, setPropertyType] = useState<string>("all");
   const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
-  const { isAuthenticated } = useSupabaseAuth();
+  const [selectedDeal, setSelectedDeal] = useState<WholesaleDeal | null>(null);
+  const [dealActionType, setDealActionType] = useState<"jv_request" | "invest">("invest");
+  const [dealActionDialogOpen, setDealActionDialogOpen] = useState(false);
+  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
 
@@ -105,6 +110,12 @@ function DiscoverPage() {
   const handleInvest = (project: CapitalProject) => {
     setSelectedProject(project);
     setInvestDialogOpen(true);
+  };
+
+  const handleDealAction = (deal: WholesaleDeal, actionType: "jv_request" | "invest") => {
+    setSelectedDeal(deal);
+    setDealActionType(actionType);
+    setDealActionDialogOpen(true);
   };
 
   const handleSaveDeal = async (dealId: string) => {
@@ -253,8 +264,12 @@ function DiscoverPage() {
                     <DealCard 
                       deal={deal} 
                       onSave={() => handleSaveDeal(deal.id)}
+                      onInvest={() => handleDealAction(deal, "invest")}
+                      onRequestJV={() => handleDealAction(deal, "jv_request")}
                       isSaved={isItemSaved('wholesale_deal', deal.id)}
                       isSaving={isSaving}
+                      showInvest={isDreamscaper || isInvestor || isAdmin}
+                      showJVRequest={isWholesaler || isAdmin}
                     />
                   </HoverLift>
                 </StaggerItem>
@@ -305,7 +320,7 @@ function DiscoverPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Investment Dialog */}
+      {/* Capital Project Investment Dialog */}
       {selectedProject && (
         <InvestmentOfferDialog
           open={investDialogOpen}
@@ -331,6 +346,35 @@ function DiscoverPage() {
           }}
         />
       )}
+
+      {/* Wholesale Deal Action Dialog */}
+      {selectedDeal && (
+        <WholesaleDealActionDialog
+          open={dealActionDialogOpen}
+          onOpenChange={setDealActionDialogOpen}
+          deal={{
+            id: selectedDeal.id,
+            propertyAddress: selectedDeal.propertyAddress || selectedDeal.address || "Unknown",
+            city: selectedDeal.city,
+            state: selectedDeal.state,
+            askingPrice: selectedDeal.askingPrice || selectedDeal.contractPrice,
+            arv: selectedDeal.arv,
+            estimatedRepairs: selectedDeal.repairEstimate || selectedDeal.estimatedRepairs,
+            assignmentFee: selectedDeal.assignmentFee,
+            contractPrice: selectedDeal.contractPrice,
+            propertyType: selectedDeal.propertyType,
+          }}
+          actionType={dealActionType}
+          onSuccess={() => {
+            toast({
+              title: dealActionType === "jv_request" ? "JV Request Sent" : "Offer Submitted",
+              description: dealActionType === "jv_request" 
+                ? "Your partnership request has been sent."
+                : "Your offer has been submitted for review.",
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -338,13 +382,21 @@ function DiscoverPage() {
 function DealCard({ 
   deal, 
   onSave, 
+  onInvest,
+  onRequestJV,
   isSaved, 
-  isSaving 
+  isSaving,
+  showInvest,
+  showJVRequest
 }: { 
   deal: WholesaleDeal; 
   onSave: () => void;
+  onInvest?: () => void;
+  onRequestJV?: () => void;
   isSaved: boolean;
   isSaving: boolean;
+  showInvest?: boolean;
+  showJVRequest?: boolean;
 }) {
   const address = deal.propertyAddress || deal.address || 'Unknown Address';
   const price = deal.askingPrice || deal.contractPrice || 0;
@@ -417,13 +469,42 @@ function DealCard({
             <p className="font-medium">${(deal.assignmentFee || 0).toLocaleString()}</p>
           </div>
         </div>
-        <div className="mt-auto">
+        <div className="mt-auto space-y-2">
           <Link href={`/marketplace/deals/${deal.id}`}>
-            <Button className="w-full" variant="default" data-testid={`button-view-deal-${deal.id}`}>
+            <Button className="w-full" variant="outline" data-testid={`button-view-deal-${deal.id}`}>
               View Details
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
+          <div className="flex gap-2">
+            {showInvest && onInvest && (
+              <Button 
+                className="flex-1 bg-green-600 hover:bg-green-700" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  onInvest();
+                }}
+                data-testid={`button-invest-deal-${deal.id}`}
+              >
+                <DollarSign className="w-4 h-4 mr-1" />
+                Invest
+              </Button>
+            )}
+            {showJVRequest && onRequestJV && (
+              <Button 
+                className="flex-1" 
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onRequestJV();
+                }}
+                data-testid={`button-jv-deal-${deal.id}`}
+              >
+                <Users className="w-4 h-4 mr-1" />
+                Request JV
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
