@@ -28,6 +28,42 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
 - `server/lib/supabase.ts` - Supabase client configuration
 - `client/src/hooks/use-supabase-auth.tsx` - Supabase authentication context
 
+## Code Quality Patterns
+
+### React Query Configuration
+- **Stale Time**: 2 minutes for data freshness balance
+- **GC Time**: 10 minutes for memory management  
+- **Refetch**: Enabled on window focus and reconnect
+- **Retry Logic**: Smart retry with exponential backoff, skips auth/permission errors
+
+### Query Hooks
+- `useAuthQuery` - Auth-aware queries that wait for authentication, returns `T | null`
+- `usePublicQuery` - Public queries that don't require auth
+- Query keys accept readonly tuples for type safety with `QUERY_KEYS` constants
+
+### Cache Invalidation Helpers
+Located in `client/src/lib/queryClient.ts`:
+- `QUERY_KEYS` - Centralized query key constants
+- `invalidateMarketplaceData()` - Refresh deals, projects, saved items
+- `invalidateDealData(dealId?)` - Refresh wholesale deals
+- `invalidateProjectData(projectId?)` - Refresh capital projects
+- `invalidateSocialData()` - Refresh messages, community, notifications
+- `invalidateUserStats(role)` - Refresh role-specific stats
+
+### Route Configuration
+Centralized in `client/src/lib/marketplace-routes.ts`:
+- `BASE_NAV_ITEMS` - Common navigation items
+- `TOOL_ITEMS` - Tools section items
+- `getRoleNavItems(role)` - Role-specific navigation
+- `getRoleLabel(role)` - Human-readable role names
+- `isPegasusRole(role)` - Check for internal roles
+
+### Error Handling
+- `ErrorBoundary` wraps Router in App.tsx
+- `QueryErrorFallback` - Handles 404, 401, and general errors
+- `PageLoader` / `LoadingSpinner` - Loading state components
+- `EmptyState` - Empty data state component
+
 ## System Architecture
 
 ### Frontend
