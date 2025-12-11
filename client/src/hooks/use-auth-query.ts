@@ -2,12 +2,12 @@ import { useQuery, type UseQueryOptions, type QueryKey } from "@tanstack/react-q
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { getQueryFn } from "@/lib/queryClient";
 
-type AuthQueryOptions<T> = Omit<UseQueryOptions<T, Error, T, QueryKey>, "queryFn" | "queryKey"> & {
+type AuthQueryOptions<T> = Omit<UseQueryOptions<T | null, Error, T | null, QueryKey>, "queryFn" | "queryKey"> & {
   requireAuth?: boolean;
 };
 
 export function useAuthQuery<T>(
-  queryKey: string[],
+  queryKey: readonly (string | number)[],
   options: AuthQueryOptions<T> = {}
 ) {
   const { isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
@@ -17,17 +17,17 @@ export function useAuthQuery<T>(
     ? enabled && isAuthenticated && !authLoading
     : enabled && !authLoading;
 
-  return useQuery<T, Error>({
-    queryKey,
-    queryFn: getQueryFn<T>({ on401: requireAuth ? "throw" : "returnNull" }),
+  return useQuery<T | null, Error>({
+    queryKey: queryKey as QueryKey,
+    queryFn: getQueryFn<T | null>({ on401: requireAuth ? "throw" : "returnNull" }),
     enabled: shouldBeEnabled,
     ...restOptions,
   });
 }
 
 export function usePublicQuery<T>(
-  queryKey: string[],
-  options: Omit<UseQueryOptions<T, Error>, "queryFn" | "queryKey"> = {}
+  queryKey: readonly (string | number)[],
+  options: Omit<UseQueryOptions<T, Error, T, QueryKey>, "queryFn" | "queryKey"> = {}
 ) {
   return useQuery<T, Error>({
     queryKey,
