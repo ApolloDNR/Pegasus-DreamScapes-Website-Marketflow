@@ -170,10 +170,14 @@ function NotificationBell({ scrolled, isHomePage }: { scrolled: boolean; isHomeP
   );
 }
 
-function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean; isHomePage: boolean }) {
+function UserMenu({ profile, userEmail, scrolled, isHomePage, isAdmin }: { profile: any; userEmail: string; scrolled: boolean; isHomePage: boolean; isAdmin: boolean }) {
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
   };
+
+  const displayName = profile?.display_name || 'User';
+  const avatarUrl = profile?.avatar_url;
+  const email = userEmail || '';
 
   return (
     <DropdownMenu>
@@ -187,14 +191,14 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
           data-testid="button-user-menu"
         >
           <Avatar className="w-7 h-7 border-2 border-primary/20">
-            <AvatarImage src={user?.profileImageUrl} />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-              {getInitials(user?.firstName || user?.email || 'User')}
+              {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
           <div className="hidden sm:block text-left">
             <p className={`text-xs font-medium leading-tight ${(scrolled || !isHomePage) ? 'text-foreground' : 'text-white'}`}>
-              {user?.firstName || 'User'}
+              {displayName}
             </p>
             <div className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -210,14 +214,14 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
         <DropdownMenuLabel>
           <div className="flex items-center gap-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.profileImageUrl} />
+              <AvatarImage src={avatarUrl} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {getInitials(user?.firstName || user?.email || 'User')}
+                {getInitials(displayName)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <p className="font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground truncate">{email}</p>
             </div>
           </div>
         </DropdownMenuLabel>
@@ -297,7 +301,7 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
+  const { user, profile, isAuthenticated, isAdmin } = useSupabaseAuth();
 
   const isHomePage = location === "/";
 
@@ -536,7 +540,7 @@ export function Navigation() {
                   </Link>
                   
                   <NotificationBell scrolled={scrolled} isHomePage={isHomePage} />
-                  <UserMenu user={user} scrolled={scrolled} isHomePage={isHomePage} />
+                  <UserMenu profile={profile} userEmail={user?.email || ''} scrolled={scrolled} isHomePage={isHomePage} isAdmin={isAdmin} />
                 </>
               ) : (
                 <>
