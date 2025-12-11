@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +102,7 @@ interface CommunityReply {
 }
 
 export default function DealflowCommunity() {
-  const { user } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("feed");
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
@@ -476,7 +476,7 @@ export default function DealflowCommunity() {
                 <div className="flex gap-3">
                   <Avatar className="w-10 h-10">
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {user?.firstName?.[0] || "U"}
+                      {profile?.display_name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div 
@@ -701,11 +701,11 @@ export default function DealflowCommunity() {
             <div className="flex gap-3">
               <Avatar className="w-10 h-10">
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {user?.firstName?.[0] || "U"}
+                  {profile?.display_name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
+                <p className="font-medium text-sm">{profile?.display_name || user?.email?.split("@")[0] || "User"}</p>
                 <Badge variant="secondary" className="text-xs">Public</Badge>
               </div>
             </div>
@@ -847,7 +847,7 @@ export default function DealflowCommunity() {
                 <div className="flex gap-3">
                   <Avatar className="w-10 h-10">
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {user?.firstName?.[0] || "U"}
+                      {profile?.display_name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 flex gap-2">
