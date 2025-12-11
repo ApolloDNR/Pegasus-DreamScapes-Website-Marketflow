@@ -658,6 +658,96 @@ export async function registerRoutes(
     }
   });
 
+  // --- Wholesale Deal Offers (Supabase) ---
+  app.post('/api/supabase/wholesale-offers', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { dealId, type, isCounter, parentOfferId, partnershipType, offerAmount, equityPercent, profitSplit, notes } = req.body;
+      
+      if (!dealId) {
+        return res.status(400).json({ message: 'Missing dealId' });
+      }
+      
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      
+      const deal = await storage.getWholesaleDeal(dealId);
+      if (!deal) {
+        return res.status(404).json({ message: 'Deal not found' });
+      }
+      
+      const offer = await storage.createWholesaleDealOffer({
+        deal_id: dealId,
+        buyer_id: userId,
+        offer_amount: offerAmount || 0,
+        equity_percent: equityPercent,
+        profit_split: profitSplit,
+        notes,
+        is_counter: isCounter || false,
+        parent_offer_id: parentOfferId,
+        status: 'pending'
+      });
+      
+      if (offer && deal.wholesaler_id) {
+        await storage.createNotification({
+          user_id: deal.wholesaler_id,
+          type: isCounter ? 'counter_offer' : 'investment_offer',
+          title: isCounter ? 'Counter-Offer Received' : 'New Investment Offer',
+          message: isCounter 
+            ? `A counter-offer of $${(offerAmount || 0).toLocaleString()} was submitted on your deal`
+            : `An offer of $${(offerAmount || 0).toLocaleString()} was submitted on your deal`,
+          link: `/marketplace/wholesaler/deals/${dealId}`
+        });
+      }
+      
+      res.status(201).json(toCamelCase(offer));
+    } catch (error) {
+      console.error('Error creating wholesale offer:', error);
+      res.status(500).json({ message: 'Failed to create offer' });
+    }
+  });
+
+  app.get('/api/supabase/wholesale-deals/:dealId/negotiations', async (req: any, res) => {
+    try {
+      const { dealId } = req.params;
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const negotiations = await storage.getWholesaleDealNegotiations(dealId);
+      res.json(toCamelCase(negotiations || []));
+    } catch (error) {
+      console.error('Error fetching negotiations:', error);
+      res.json([]);
+    }
+  });
+
+  app.patch('/api/supabase/wholesale-offers/:id/status', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status || !['accepted', 'declined', 'expired', 'withdrawn'].includes(status)) {
+        return res.status(400).json({ message: 'Valid status is required' });
+      }
+      
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const offer = await storage.updateWholesaleOfferStatus(id, status);
+      
+      if (!offer) {
+        return res.status(404).json({ message: 'Offer not found' });
+      }
+      
+      res.json(toCamelCase(offer));
+    } catch (error) {
+      console.error('Error updating offer status:', error);
+      res.status(500).json({ message: 'Failed to update offer status' });
+    }
+  });
+
   // --- Listings (Supabase) ---
   app.get('/api/supabase/listings', async (req: any, res) => {
     try {
