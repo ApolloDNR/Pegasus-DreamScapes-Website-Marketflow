@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -79,7 +79,7 @@ function formatTimeAgo(date: Date): string {
 }
 
 export default function CommunityPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);

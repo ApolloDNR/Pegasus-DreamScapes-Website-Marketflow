@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { DealflowLayout } from "@/components/dealflow-layout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -103,7 +103,7 @@ const MATCH_SCORES = [
 ];
 
 export default function DealflowDeals() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
@@ -726,6 +726,12 @@ function DeckView<T extends { id: number }>({
   emptyMessage: string;
   emptyIcon: JSX.Element;
 }) {
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const SWIPE_THRESHOLD = 120;
+  const MAX_ROTATION = 15;
+
   if (items.length === 0) {
     return (
       <Card className="max-w-2xl mx-auto">
@@ -743,7 +749,6 @@ function DeckView<T extends { id: number }>({
   const hasPrev = currentIndex > 0;
   const isEndOfDeck = currentIndex >= items.length;
 
-  // Show end of deck message when user has swiped through all items
   if (isEndOfDeck) {
     return (
       <Card className="max-w-2xl mx-auto">
@@ -771,6 +776,20 @@ function DeckView<T extends { id: number }>({
       </Card>
     );
   }
+
+  const rotation = Math.min(Math.max((dragX / 300) * MAX_ROTATION, -MAX_ROTATION), MAX_ROTATION);
+  const likeOpacity = Math.min(Math.max(dragX / SWIPE_THRESHOLD, 0), 1);
+  const passOpacity = Math.min(Math.max(-dragX / SWIPE_THRESHOLD, 0), 1);
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    if (dragX > SWIPE_THRESHOLD) {
+      onSwipe("like");
+    } else if (dragX < -SWIPE_THRESHOLD) {
+      onSwipe("pass");
+    }
+    setDragX(0);
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -800,32 +819,79 @@ function DeckView<T extends { id: number }>({
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentItem.id}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ 
-            opacity: 1, 
-            scale: 1,
-            x: swipeDirection === "right" ? 100 : swipeDirection === "left" ? -100 : 0,
-          }}
-          exit={{ 
-            opacity: 0, 
-            x: swipeDirection === "right" ? 300 : swipeDirection === "left" ? -300 : 0 
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderCard(currentItem)}
-        </motion.div>
-      </AnimatePresence>
+      <div className="relative">
+        {isDragging && (
+          <>
+            <motion.div
+              className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-16 h-16 rounded-full bg-red-500 shadow-lg"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: passOpacity, scale: 0.8 + passOpacity * 0.2 }}
+              data-testid="swipe-indicator-pass"
+            >
+              <X className="w-8 h-8 text-white" />
+            </motion.div>
+            <motion.div
+              className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-16 h-16 rounded-full bg-green-500 shadow-lg"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: likeOpacity, scale: 0.8 + likeOpacity * 0.2 }}
+              data-testid="swipe-indicator-like"
+            >
+              <Heart className="w-8 h-8 text-white" />
+            </motion.div>
+          </>
+        )}
 
-      <div className="flex items-center justify-center gap-4 mt-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentItem.id}
+            className="cursor-grab active:cursor-grabbing touch-none select-none"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.9}
+            onDragStart={() => setIsDragging(true)}
+            onDrag={(_, info) => setDragX(info.offset.x)}
+            onDragEnd={handleDragEnd}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              rotate: isDragging ? rotation : 0,
+              x: swipeDirection === "right" ? 400 : swipeDirection === "left" ? -400 : 0,
+            }}
+            exit={{ 
+              opacity: 0, 
+              x: swipeDirection === "right" ? 400 : swipeDirection === "left" ? -400 : 0,
+              rotate: swipeDirection === "right" ? 15 : swipeDirection === "left" ? -15 : 0,
+            }}
+            transition={{ duration: 0.3 }}
+            whileDrag={{ scale: 1.02 }}
+            data-testid="swipeable-card"
+          >
+            <div 
+              className={`transition-shadow duration-200 rounded-lg ${
+                likeOpacity > 0.3 ? "ring-4 ring-green-400/50 shadow-green-200/50 shadow-xl" :
+                passOpacity > 0.3 ? "ring-4 ring-red-400/50 shadow-red-200/50 shadow-xl" : ""
+              }`}
+            >
+              {renderCard(currentItem)}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="text-center mt-3 mb-2">
+        <span className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+          <span>Drag card to swipe or use buttons below</span>
+        </span>
+      </div>
+
+      <div className="flex items-center justify-center gap-4 mt-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button 
               variant="outline" 
               size="lg"
-              className="rounded-full w-14 h-14 border-red-200 hover:border-red-400 hover:bg-red-50"
+              className="rounded-full w-14 h-14 border-red-200 hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
               onClick={() => onSwipe("pass")}
               data-testid="button-pass-deal"
             >
@@ -840,7 +906,7 @@ function DeckView<T extends { id: number }>({
             <Button 
               variant="outline" 
               size="lg"
-              className="rounded-full w-14 h-14 border-amber-200 hover:border-amber-400 hover:bg-amber-50"
+              className="rounded-full w-14 h-14 border-amber-200 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30"
               onClick={() => onSwipe("save")}
               data-testid="button-save-deal"
             >
@@ -870,7 +936,7 @@ function DeckView<T extends { id: number }>({
               <Button 
                 variant="outline" 
                 size="lg"
-                className="rounded-full w-14 h-14 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
+                className="rounded-full w-14 h-14 border-blue-200 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30"
                 data-testid="button-message-deal"
               >
                 <MessageCircle className="w-6 h-6 text-blue-500" />

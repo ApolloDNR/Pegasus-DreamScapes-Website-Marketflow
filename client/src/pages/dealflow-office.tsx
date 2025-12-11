@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { DealflowLayout } from "@/components/dealflow-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +102,7 @@ interface DealNegotiation {
 }
 
 export default function DealflowOffice() {
-  const { user } = useAuth();
+  const { user, profile, isAdmin, isInvestor, isWholesaler, isBuyer, isDreamscaper } = useSupabaseAuth();
   const [selectedNegotiationId, setSelectedNegotiationId] = useState<number | null>(null);
   const [negotiationHistoryOpen, setNegotiationHistoryOpen] = useState(false);
 
@@ -225,10 +225,10 @@ export default function DealflowOffice() {
 
   const getUserRoles = () => {
     const roles: string[] = [];
-    if (user?.isStaff) roles.push("Dreamscaper");
-    if (user?.isInvestor) roles.push("Investor");
-    if (user?.isWholesaler) roles.push("Wholesaler");
-    if (user?.isBuyer) roles.push("Buyer");
+    if (isAdmin || isDreamscaper) roles.push("Dreamscaper");
+    if (isInvestor) roles.push("Investor");
+    if (isWholesaler) roles.push("Wholesaler");
+    if (isBuyer) roles.push("Buyer");
     return roles.length > 0 ? roles : ["Member"];
   };
 
@@ -260,14 +260,14 @@ export default function DealflowOffice() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-start gap-4">
               <Avatar className="h-14 w-14 border-2 border-primary/20">
-                <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || "User"} />
+                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || "User"} />
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
-                  {user?.firstName?.[0] || "U"}{user?.lastName?.[0] || ""}
+                  {profile?.display_name?.slice(0, 2).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-serif font-bold mb-1" data-testid="text-greeting">
-                  {getGreetingTime()}, {user?.firstName || "there"}
+                  {getGreetingTime()}, {profile?.display_name || "there"}
                 </h1>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   {getUserRoles().map((role, index) => (
@@ -1031,7 +1031,7 @@ export default function DealflowOffice() {
               <CardContent>
                 <div className="space-y-2">
                   {/* Pending Counter-Offers */}
-                  {myNegotiations.filter(n => n.status === "countered" || (n.status === "pending" && user && n.responderId === user.id)).slice(0, 2).map((neg) => (
+                  {myNegotiations.filter(n => n.status === "countered" || (n.status === "pending" && user && n.responderId === user?.id)).slice(0, 2).map((neg) => (
                     <div 
                       key={neg.id}
                       className="flex items-center gap-3 p-2 rounded-lg bg-amber-100/50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
@@ -1102,7 +1102,7 @@ export default function DealflowOffice() {
                   <ScrollArea className="h-[200px]">
                     <div className="space-y-2">
                       {myNegotiations.slice(0, 5).map((negotiation) => {
-                        const isFromMe = user && negotiation.initiatorId === user.id;
+                        const isFromMe = user && negotiation.initiatorId === user?.id;
                         const needsAction = negotiation.status === "pending" && !isFromMe;
 
                         return (

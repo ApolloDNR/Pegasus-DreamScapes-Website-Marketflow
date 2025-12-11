@@ -48,7 +48,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { CapitalProject, ProjectMilestone, InvestmentOffer, CommittedInvestment } from "@shared/schema";
 
 const formatCurrency = (value: number | null | undefined) => {
@@ -69,7 +69,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
 };
 
 export default function DreamscaperPortal() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { profile, isLoading: authLoading, isAuthenticated, isDreamscaper } = useSupabaseAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -119,7 +119,7 @@ export default function DreamscaperPortal() {
     );
   }
 
-  if (!user?.isDreamscaper) {
+  if (!isDreamscaper) {
     return (
       <div className="min-h-screen pt-20">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
@@ -143,12 +143,12 @@ export default function DreamscaperPortal() {
 
   return (
     <div className="min-h-screen pt-20 bg-stone">
-      <AnnouncementsBanner audience="DREAMSKAPERS" />
+      <AnnouncementsBanner audience="DREAMSCAPERS" />
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold" data-testid="text-dreamscaper-welcome">
-              Welcome, {user?.firstName || "Dreamscaper"}
+              Welcome, {profile?.display_name || "Dreamscaper"}
             </h1>
             <p className="text-muted-foreground">
               Manage your capital projects and investor relationships

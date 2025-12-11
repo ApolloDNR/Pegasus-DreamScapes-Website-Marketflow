@@ -21,7 +21,7 @@ import {
   Repeat,
   Hammer
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { NotificationBell } from "@/components/notification-bell";
 
 interface PortalHeaderProps {
@@ -29,7 +29,7 @@ interface PortalHeaderProps {
 }
 
 export function PortalHeader({ currentPortal }: PortalHeaderProps) {
-  const { user } = useAuth();
+  const { isAdmin, isInvestor, isWholesaler, isBuyer, isDreamscaper } = useSupabaseAuth();
   const [, setLocation] = useLocation();
 
   const portals = [
@@ -38,7 +38,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       title: "Dreamscaper HQ",
       icon: Shield,
       href: "/dealflow/hq",
-      available: user?.isStaff,
+      available: isAdmin,
       badge: "Staff",
       color: "bg-blue-600",
     },
@@ -47,7 +47,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       title: "Investor Dealflow",
       icon: TrendingUp,
       href: "/dealflow/office",
-      available: user?.isInvestor,
+      available: isInvestor,
       badge: "Investor",
       color: "bg-green-600",
     },
@@ -56,7 +56,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       title: "Wholesaler Dealflow",
       icon: Building2,
       href: "/dealflow/office",
-      available: user?.isWholesaler,
+      available: isWholesaler,
       badge: "Wholesaler",
       color: "bg-purple-600",
     },
@@ -65,7 +65,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       title: "Buyer Dealflow",
       icon: ShoppingBag,
       href: "/dealflow/office",
-      available: user?.isBuyer,
+      available: isBuyer,
       badge: "Buyer",
       color: "bg-orange-600",
     },
@@ -74,7 +74,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       title: "Dreamscaper Portal",
       icon: Hammer,
       href: "/portal/dreamscaper",
-      available: user?.isDreamscaper,
+      available: isDreamscaper,
       badge: "Operator",
       color: "bg-amber-600",
     },

@@ -35,7 +35,7 @@ import {
   History
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SellerLead, InvestorLead, Contact, LeadActivity, WholesaleDeal, WholesaleRequest, Lead } from "@shared/schema";
@@ -89,7 +89,7 @@ const ACTIVITY_TYPES = [
 ];
 
 export default function HQ() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { profile, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function HQ() {
     <div className="min-h-screen pt-20">
       <AnnouncementsBanner audience="STAFF" />
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <DashboardHeader user={user} />
+        <DashboardHeader profile={profile} />
         <QuickActions />
         <StatsCards />
         <LeadsTabs />
@@ -130,20 +130,17 @@ export default function HQ() {
   );
 }
 
-function DashboardHeader({ user }: { user: any }) {
-  const displayName = user?.firstName 
-    ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`
-    : user?.email?.split('@')[0] || 'User';
+function DashboardHeader({ profile }: { profile: any }) {
+  const displayName = profile?.display_name || 'User';
+  const avatarUrl = profile?.avatar_url;
 
-  const initials = user?.firstName && user?.lastName
-    ? `${user.firstName[0]}${user.lastName[0]}`
-    : displayName.slice(0, 2).toUpperCase();
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
       <div className="flex items-center gap-4">
         <Avatar>
-          <AvatarImage src={user?.profileImageUrl} alt={displayName} className="object-cover" />
+          <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div>

@@ -41,7 +41,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { WholesaleDeal, WholesalerProfile } from "@shared/schema";
 
 const profileFormSchema = z.object({
@@ -58,7 +58,7 @@ const profileFormSchema = z.object({
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function WholesalerPortal() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { profile: authProfile, isLoading: authLoading, isAuthenticated } = useSupabaseAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -112,7 +112,7 @@ export default function WholesalerPortal() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold" data-testid="text-wholesaler-welcome">
-              Welcome, {user?.firstName || "Wholesaler"}
+              Welcome, {authProfile?.display_name || "Wholesaler"}
             </h1>
             <p className="text-muted-foreground">
               {hasProfile ? "Browse assignments and submit deals" : "Complete your profile to get started"}

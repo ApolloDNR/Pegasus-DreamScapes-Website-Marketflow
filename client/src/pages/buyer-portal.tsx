@@ -39,7 +39,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { WholesaleDeal, RetailListing, BuyerProfile, SavedProperty, BuyerOffer } from "@shared/schema";
 
 const profileFormSchema = z.object({
@@ -66,7 +66,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function BuyerPortal() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { profile: authProfile, isLoading: authLoading, isAuthenticated } = useSupabaseAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -135,7 +135,7 @@ export default function BuyerPortal() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold" data-testid="text-buyer-welcome">
-              Welcome, {user?.firstName || "Buyer"}
+              Welcome, {authProfile?.display_name || "Buyer"}
             </h1>
             <p className="text-muted-foreground">
               {hasProfile ? "Browse properties and track your offers" : "Complete your profile to get started"}

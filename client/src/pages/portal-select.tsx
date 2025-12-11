@@ -14,29 +14,29 @@ import {
   ShoppingBag,
   Hammer
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 export default function PortalSelect() {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { profile, isLoading, isAuthenticated, isAdmin, isInvestor, isWholesaler, isBuyer, isDreamscaper } = useSupabaseAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
+    if (!isLoading && isAuthenticated) {
       // Only auto-redirect if user has exactly one portal role
-      const portalRoles = [user.isStaff, user.isInvestor, user.isWholesaler, user.isBuyer].filter(Boolean);
+      const portalRoles = [isAdmin, isInvestor, isWholesaler, isBuyer].filter(Boolean);
       if (portalRoles.length === 1) {
-        if (user.isStaff) {
+        if (isAdmin) {
           setLocation("/dealflow/hq");
-        } else if (user.isInvestor || user.isWholesaler || user.isBuyer) {
+        } else if (isInvestor || isWholesaler || isBuyer) {
           // Non-staff users go to Dealflow
           setLocation("/dealflow/office");
         }
-      } else if (portalRoles.length > 1 && !user.isStaff) {
+      } else if (portalRoles.length > 1 && !isAdmin) {
         // Multiple roles but not staff - go to Dealflow
         setLocation("/dealflow/office");
       }
     }
-  }, [isLoading, isAuthenticated, user, setLocation]);
+  }, [isLoading, isAuthenticated, isAdmin, isInvestor, isWholesaler, isBuyer, setLocation]);
 
   if (isLoading) {
     return (
@@ -77,7 +77,7 @@ export default function PortalSelect() {
       href: "/dealflow/hq",
       badge: "Staff Only",
       badgeColor: "bg-blue-600",
-      available: user?.isStaff,
+      available: isAdmin,
       registerHref: null,
     },
     {
@@ -88,7 +88,7 @@ export default function PortalSelect() {
       href: "/dealflow/office",
       badge: "Investors",
       badgeColor: "bg-green-600",
-      available: user?.isInvestor,
+      available: isInvestor,
       registerHref: "/invest",
     },
     {
@@ -99,7 +99,7 @@ export default function PortalSelect() {
       href: "/dealflow/office",
       badge: "Wholesalers",
       badgeColor: "bg-purple-600",
-      available: user?.isWholesaler,
+      available: isWholesaler,
       registerHref: "/dealflow/office",
     },
     {
@@ -110,7 +110,7 @@ export default function PortalSelect() {
       href: "/dealflow/office",
       badge: "Buyers",
       badgeColor: "bg-orange-600",
-      available: user?.isBuyer,
+      available: isBuyer,
       registerHref: "/buyers",
     },
     {
@@ -121,7 +121,7 @@ export default function PortalSelect() {
       href: "/portal/dreamscaper",
       badge: "Operators",
       badgeColor: "bg-amber-600",
-      available: user?.isDreamscaper,
+      available: isDreamscaper,
       registerHref: "/dreamspace",
     },
   ];
@@ -139,7 +139,7 @@ export default function PortalSelect() {
               Select Your Portal
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Welcome back, {user?.firstName || "Member"}. Choose your dashboard to continue.
+              Welcome back, {profile?.display_name || "Member"}. Choose your dashboard to continue.
             </p>
           </div>
 
@@ -189,7 +189,7 @@ export default function PortalSelect() {
             ))}
           </div>
 
-          {!user?.isInvestor && !user?.isWholesaler && !user?.isBuyer && !user?.isStaff && (
+          {!isInvestor && !isWholesaler && !isBuyer && !isAdmin && (
             <div className="mt-12 text-center">
               <p className="text-muted-foreground mb-4">
                 Don't have a portal account yet? Choose your role to get started.

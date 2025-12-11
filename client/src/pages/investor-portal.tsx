@@ -44,7 +44,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { WholesaleDeal, InvestorProfile, InvestorWantedDeal, CapitalProject, CommittedInvestment, InvestmentOffer } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -62,7 +62,7 @@ const profileFormSchema = z.object({
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function InvestorPortal() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { profile: authProfile, isLoading: authLoading, isAuthenticated } = useSupabaseAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -116,7 +116,7 @@ export default function InvestorPortal() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold" data-testid="text-investor-welcome">
-              Welcome, {user?.firstName || "Investor"}
+              Welcome, {authProfile?.display_name || "Investor"}
             </h1>
             <p className="text-muted-foreground">
               {hasProfile ? "View your investment opportunities" : "Complete your profile to get started"}

@@ -31,7 +31,7 @@ import {
   Milestone
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CapitalProject, ProjectMilestone, InvestmentOffer, CommittedInvestment } from "@shared/schema";
@@ -61,7 +61,7 @@ const OFFER_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
 };
 
 export default function CapitalRaising() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { profile, isLoading: authLoading, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("opportunities");
   const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
