@@ -25,120 +25,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Briefcase,
-  Building2,
-  Calculator,
   ChevronUp,
-  Compass,
   Crown,
-  DollarSign,
-  FileText,
   Home,
-  LayoutDashboard,
   LogOut,
-  MessageSquare,
   Settings,
-  ShieldCheck,
   Sparkles,
-  TrendingUp,
-  Users,
-  Store,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { UserRole } from "@/lib/supabase";
 import { NotificationDropdown } from "@/components/notification-dropdown";
+import { 
+  BASE_NAV_ITEMS, 
+  TOOL_ITEMS, 
+  getRoleNavItems, 
+  getRoleLabel 
+} from "@/lib/marketplace-routes";
 
 interface MarketplaceLayoutProps {
   children: React.ReactNode;
 }
 
-const baseNavItems = [
-  { title: "Dashboard", href: "/marketplace", icon: LayoutDashboard },
-  { title: "Discover", href: "/marketplace/discover", icon: Compass },
-  { title: "Community", href: "/marketplace/community", icon: Users },
-  { title: "Messages", href: "/marketplace/messages", icon: MessageSquare },
-];
-
-const toolItems = [
-  { title: "Calculators", href: "/marketplace/calculators", icon: Calculator },
-  { title: "Resources", href: "/marketplace/resources", icon: FileText },
-];
-
-function getRoleSpecificItems(role: UserRole | null) {
-  switch (role) {
-    case "admin":
-      return [
-        { title: "Admin Panel", href: "/marketplace/admin", icon: ShieldCheck },
-      ];
-    case "pegasus_wholesaler":
-      return [
-        { title: "My Deals", href: "/marketplace/wholesaler/deals", icon: Briefcase },
-        { title: "Submit Deal", href: "/marketplace/wholesaler/submit", icon: Store },
-        { title: "Buyer Network", href: "/marketplace/wholesaler/buyers", icon: Users },
-        { title: "Analytics", href: "/marketplace/wholesaler/analytics", icon: TrendingUp },
-      ];
-    case "wholesaler":
-      return [
-        { title: "My Deals", href: "/marketplace/wholesaler/deals", icon: Briefcase },
-        { title: "Submit Deal", href: "/marketplace/wholesaler/submit", icon: Store },
-        { title: "Buyer Network", href: "/marketplace/wholesaler/buyers", icon: Users },
-      ];
-    case "pegasus_dreamscaper":
-      return [
-        { title: "My Projects", href: "/marketplace/dreamscaper/projects", icon: Building2 },
-        { title: "Capital Raising", href: "/marketplace/dreamscaper/capital", icon: DollarSign },
-        { title: "Team", href: "/marketplace/dreamscaper/team", icon: Users },
-        { title: "Analytics", href: "/marketplace/dreamscaper/analytics", icon: TrendingUp },
-      ];
-    case "dreamscaper":
-      return [
-        { title: "My Projects", href: "/marketplace/dreamscaper/projects", icon: Building2 },
-        { title: "Capital Raising", href: "/marketplace/dreamscaper/capital", icon: DollarSign },
-        { title: "Team", href: "/marketplace/dreamscaper/team", icon: Users },
-      ];
-    case "investor":
-      return [
-        { title: "My Investments", href: "/marketplace/investor/portfolio", icon: DollarSign },
-        { title: "Saved Deals", href: "/marketplace/investor/saved", icon: Sparkles },
-        { title: "Watch List", href: "/marketplace/investor/watchlist", icon: Compass },
-      ];
-    case "buyer_retail":
-    case "buyer_investment":
-      return [
-        { title: "Saved Properties", href: "/marketplace/buyer/saved", icon: Home },
-        { title: "My Offers", href: "/marketplace/buyer/offers", icon: FileText },
-        { title: "Search", href: "/marketplace/buyer/search", icon: Compass },
-      ];
-    default:
-      return [];
-  }
-}
-
-function getRoleLabel(role: UserRole | null): string {
-  switch (role) {
-    case "admin":
-      return "Administrator";
-    case "pegasus_wholesaler":
-      return "Pegasus Wholesaler";
-    case "wholesaler":
-      return "Wholesaler";
-    case "pegasus_dreamscaper":
-      return "Pegasus DreamScaper";
-    case "dreamscaper":
-      return "DreamScaper";
-    case "investor":
-      return "Investor";
-    case "buyer_retail":
-      return "Retail Buyer";
-    case "buyer_investment":
-      return "Investment Buyer";
-    default:
-      return "Member";
-  }
-}
-
-function getRoleBadgeVariant(role: UserRole | null): "default" | "secondary" | "outline" {
+function getRoleBadgeVariant(role: string | null): "default" | "secondary" | "outline" {
   if (role?.startsWith("pegasus_") || role === "admin") {
     return "default";
   }
@@ -149,7 +57,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
   const [location] = useLocation();
   const { profile, user, signOut, userRole } = useSupabaseAuth();
 
-  const roleItems = getRoleSpecificItems(userRole);
+  const roleItems = getRoleNavItems(userRole);
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
@@ -188,7 +96,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {baseNavItems.map((item) => {
+                  {BASE_NAV_ITEMS.map((item) => {
                     const dashboardPath = getRoleDashboardPath(userRole);
                     const isActive =
                       item.href === "/marketplace"
@@ -245,7 +153,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
               <SidebarGroupLabel>Tools</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {toolItems.map((item) => {
+                  {TOOL_ITEMS.map((item) => {
                     const isActive = location.startsWith(item.href);
                     return (
                       <SidebarMenuItem key={item.title}>
