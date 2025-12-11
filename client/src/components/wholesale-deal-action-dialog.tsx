@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +15,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { NegotiationTimeline, NegotiationEvent, NegotiationStatus } from "./negotiation-timeline";
 import {
   Handshake,
   DollarSign,
@@ -32,6 +34,8 @@ import {
   FileText,
   Percent,
   Calculator,
+  History,
+  MessageCircle,
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -55,34 +59,48 @@ interface WholesaleDealActionDialogProps {
   onOpenChange: (open: boolean) => void;
   deal: WholesaleDeal;
   actionType: "jv_request" | "invest";
+  existingOfferId?: string;
   onSuccess?: () => void;
 }
 
-type DialogStep = "overview" | "form";
+type DialogStep = "overview" | "form" | "history";
 
 export function WholesaleDealActionDialog({
   open,
   onOpenChange,
   deal,
   actionType,
+  existingOfferId,
   onSuccess,
 }: WholesaleDealActionDialogProps) {
   const { toast } = useToast();
-  const { isAuthenticated, user } = useSupabaseAuth();
+  const { isAuthenticated, user, profile } = useSupabaseAuth();
   const [step, setStep] = useState<DialogStep>("overview");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCounterMode, setIsCounterMode] = useState(false);
 
   const [partnershipType, setPartnershipType] = useState<"acquisition" | "funding" | "disposition">("acquisition");
-  const [investAmount, setInvestAmount] = useState("");
+  const [offerAmount, setOfferAmount] = useState("");
   const [equityPercent, setEquityPercent] = useState("");
   const [profitSplit, setProfitSplit] = useState("70/30");
   const [notes, setNotes] = useState("");
 
+  const { data: negotiationHistory = [] } = useQuery<NegotiationEvent[]>({
+    queryKey: ["/api/supabase/wholesale-deals", deal.id, "negotiations"],
+    enabled: open && !!deal.id,
+  });
+
+  const { data: existingOffer } = useQuery<{ status?: NegotiationStatus } | null>({
+    queryKey: ["/api/supabase/wholesale-offers", existingOfferId],
+    enabled: open && !!existingOfferId,
+  });
+
   useEffect(() => {
     if (open) {
       setStep("overview");
+      setIsCounterMode(false);
       setPartnershipType("acquisition");
-      setInvestAmount("");
+      setOfferAmount("");
       setEquityPercent("");
       setProfitSplit("70/30");
       setNotes("");
@@ -126,14 +144,21 @@ export function WholesaleDealActionDialog({
       return res.json();
     },
     onSuccess: () => {
-      const title = actionType === "jv_request" ? "JV Request Sent" : "Offer Submitted";
-      const description = actionType === "jv_request"
-        ? "Your partnership request has been sent to the wholesaler."
-        : "Your investment offer has been submitted for review.";
+      const title = isCounterMode 
+        ? "Counter-Offer Sent" 
+        : actionType === "jv_request" 
+          ? "JV Request Sent" 
+          : "Offer Submitted";
+      const description = isCounterMode
+        ? "Your counter-offer has been sent for review."
+        : actionType === "jv_request"
+          ? "Your partnership request has been sent to the wholesaler."
+          : "Your investment offer has been submitted for review.";
       
       toast({ title, description });
       queryClient.invalidateQueries({ queryKey: ["/api/supabase/jv-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
       onOpenChange(false);
       onSuccess?.();
     },
@@ -156,13 +181,24 @@ export function WholesaleDealActionDialog({
       return;
     }
 
+    if (actionType === "invest" && !offerAmount) {
+      toast({
+        title: "Amount required",
+        description: "Please enter an offer amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const payload = {
       dealId: deal.id,
       type: actionType,
+      isCounter: isCounterMode,
+      parentOfferId: existingOfferId,
       partnershipType: actionType === "jv_request" ? partnershipType : undefined,
-      proposedAmount: investAmount ? parseFloat(investAmount) : undefined,
+      offerAmount: offerAmount ? parseFloat(offerAmount) : undefined,
       equityPercent: equityPercent ? parseFloat(equityPercent) : undefined,
       profitSplit,
       notes,
@@ -173,15 +209,29 @@ export function WholesaleDealActionDialog({
     });
   };
 
+  const handleCounterOffer = () => {
+    setIsCounterMode(true);
+    setStep("form");
+  };
+
   const isJVRequest = actionType === "jv_request";
-  const dialogTitle = isJVRequest ? "Request JV Partnership" : "Make Investment Offer";
-  const dialogDescription = isJVRequest
-    ? `Partner with the wholesaler on ${deal.propertyAddress}`
-    : `Submit an offer on ${deal.propertyAddress}`;
+  const dialogTitle = isCounterMode 
+    ? "Counter-Offer" 
+    : isJVRequest 
+      ? "Request JV Partnership" 
+      : "Make Investment Offer";
+  const dialogDescription = isCounterMode
+    ? `Submit a counter-offer on ${deal.propertyAddress}`
+    : isJVRequest
+      ? `Partner with the wholesaler on ${deal.propertyAddress}`
+      : `Submit an offer on ${deal.propertyAddress}`;
+
+  const hasNegotiationHistory = negotiationHistory.length > 0;
+  const currentStatus: NegotiationStatus = existingOffer?.status || "pending";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isJVRequest ? (
@@ -194,86 +244,62 @@ export function WholesaleDealActionDialog({
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
 
-        {step === "overview" ? (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
-                  Deal Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-sm">
-                  <span className="font-semibold">{deal.propertyAddress}</span>
-                  {deal.city && deal.state && (
-                    <span className="text-muted-foreground ml-1">
-                      {deal.city}, {deal.state}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Asking Price</span>
-                    <div className="font-semibold">{formatCurrency(deal.askingPrice)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">ARV</span>
-                    <div className="font-semibold">{formatCurrency(deal.arv)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Est. Repairs</span>
-                    <div className="font-semibold">{formatCurrency(deal.estimatedRepairs)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Assignment Fee</span>
-                    <div className="font-semibold">{formatCurrency(deal.assignmentFee)}</div>
-                  </div>
-                </div>
+        {hasNegotiationHistory && step === "overview" ? (
+          <Tabs defaultValue="deal" className="w-full">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="deal" className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Deal Details
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-2">
+                <History className="w-4 h-4" />
+                Negotiation ({negotiationHistory.length})
+              </TabsTrigger>
+            </TabsList>
 
-                <Separator />
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Total Investment</span>
-                    <div className="font-semibold text-primary">
-                      {formatCurrency(dealMetrics.totalInvestment)}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Potential Profit</span>
-                    <div className="font-semibold text-green-600">
-                      {formatCurrency(dealMetrics.potentialProfit)}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Spread</span>
-                    <div className="font-semibold">{dealMetrics.spreadPercent.toFixed(0)}%</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Est. ROI</span>
-                    <div className="font-semibold">{dealMetrics.roi.toFixed(0)}%</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {isJVRequest && (
-              <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Users className="w-4 h-4 text-primary" />
-                  Partnership Benefits
-                </div>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>Access to off-market opportunities</li>
-                  <li>Split acquisition costs and risks</li>
-                  <li>Leverage combined expertise</li>
-                  <li>Build long-term deal flow relationships</li>
-                </ul>
+            <TabsContent value="deal" className="mt-4">
+              <DealOverview 
+                deal={deal} 
+                metrics={dealMetrics} 
+                isJVRequest={isJVRequest}
+                formatCurrency={formatCurrency}
+              />
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleCounterOffer}
+                  data-testid="button-counter-offer"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Counter-Offer
+                </Button>
               </div>
-            )}
+            </TabsContent>
 
+            <TabsContent value="history" className="mt-4">
+              <NegotiationTimeline
+                events={negotiationHistory}
+                currentStatus={currentStatus}
+                canCounter={currentStatus === "counter_offered" || currentStatus === "pending"}
+                onCounter={handleCounterOffer}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : step === "overview" ? (
+          <div className="space-y-4">
+            <DealOverview 
+              deal={deal} 
+              metrics={dealMetrics} 
+              isJVRequest={isJVRequest}
+              formatCurrency={formatCurrency}
+            />
             <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"
@@ -297,7 +323,10 @@ export function WholesaleDealActionDialog({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setStep("overview")}
+              onClick={() => {
+                setStep("overview");
+                setIsCounterMode(false);
+              }}
               className="mb-2"
               data-testid="button-back-to-overview"
             >
@@ -305,120 +334,49 @@ export function WholesaleDealActionDialog({
               Back to Overview
             </Button>
 
-            {isJVRequest ? (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Partnership Type</Label>
-                  <RadioGroup
-                    value={partnershipType}
-                    onValueChange={(v) => setPartnershipType(v as any)}
-                    className="mt-2 space-y-2"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="acquisition" id="acquisition" />
-                      <Label htmlFor="acquisition" className="text-sm cursor-pointer">
-                        Co-Acquisition Partner
-                        <span className="block text-xs text-muted-foreground">
-                          Split the acquisition and share the deal
-                        </span>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="funding" id="funding" />
-                      <Label htmlFor="funding" className="text-sm cursor-pointer">
-                        Funding Partner
-                        <span className="block text-xs text-muted-foreground">
-                          Provide capital for a share of profits
-                        </span>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="disposition" id="disposition" />
-                      <Label htmlFor="disposition" className="text-sm cursor-pointer">
-                        Disposition Partner
-                        <span className="block text-xs text-muted-foreground">
-                          Help market and sell the property
-                        </span>
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="equity">Equity Stake (%)</Label>
-                    <Input
-                      id="equity"
-                      type="number"
-                      placeholder="e.g. 50"
-                      value={equityPercent}
-                      onChange={(e) => setEquityPercent(e.target.value)}
-                      data-testid="input-equity-percent"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="split">Profit Split</Label>
-                    <Input
-                      id="split"
-                      placeholder="e.g. 50/50"
-                      value={profitSplit}
-                      onChange={(e) => setProfitSplit(e.target.value)}
-                      data-testid="input-profit-split"
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="amount">Offer Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="Enter your offer amount"
-                    value={investAmount}
-                    onChange={(e) => setInvestAmount(e.target.value)}
-                    data-testid="input-offer-amount"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Current asking: {formatCurrency(deal.askingPrice)}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="equity-offer">Equity Stake (%)</Label>
-                    <Input
-                      id="equity-offer"
-                      type="number"
-                      placeholder="Optional"
-                      value={equityPercent}
-                      onChange={(e) => setEquityPercent(e.target.value)}
-                      data-testid="input-equity-percent"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="split-offer">Proposed Split</Label>
-                    <Input
-                      id="split-offer"
-                      placeholder="e.g. 70/30"
-                      value={profitSplit}
-                      onChange={(e) => setProfitSplit(e.target.value)}
-                      data-testid="input-profit-split"
-                    />
-                  </div>
-                </div>
+            {isCounterMode && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 mb-4">
+                <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  You're submitting a counter-offer. Enter your proposed terms below.
+                </p>
               </div>
             )}
 
+            {isJVRequest ? (
+              <JVRequestForm
+                partnershipType={partnershipType}
+                setPartnershipType={setPartnershipType}
+                equityPercent={equityPercent}
+                setEquityPercent={setEquityPercent}
+                profitSplit={profitSplit}
+                setProfitSplit={setProfitSplit}
+              />
+            ) : (
+              <InvestOfferForm
+                offerAmount={offerAmount}
+                setOfferAmount={setOfferAmount}
+                equityPercent={equityPercent}
+                setEquityPercent={setEquityPercent}
+                profitSplit={profitSplit}
+                setProfitSplit={setProfitSplit}
+                askingPrice={deal.askingPrice}
+                formatCurrency={formatCurrency}
+              />
+            )}
+
             <div>
-              <Label htmlFor="notes">Additional Notes</Label>
+              <Label htmlFor="notes">
+                {isCounterMode ? "Counter-Offer Notes" : "Additional Notes"}
+              </Label>
               <Textarea
                 id="notes"
                 placeholder={
-                  isJVRequest
-                    ? "Describe your experience, what you bring to the partnership..."
-                    : "Contingencies, timeline preferences, financing details..."
+                  isCounterMode
+                    ? "Explain your counter-offer terms, timeline, or conditions..."
+                    : isJVRequest
+                      ? "Describe your experience, what you bring to the partnership..."
+                      : "Contingencies, timeline preferences, financing details..."
                 }
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -427,11 +385,16 @@ export function WholesaleDealActionDialog({
               />
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <Separator />
+
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => setStep("overview")}
+                onClick={() => {
+                  setStep("overview");
+                  setIsCounterMode(false);
+                }}
                 disabled={isSubmitting}
               >
                 Back
@@ -447,12 +410,258 @@ export function WholesaleDealActionDialog({
                 ) : (
                   <Send className="w-4 h-4 mr-2" />
                 )}
-                {isJVRequest ? "Send JV Request" : "Submit Offer"}
+                {isCounterMode 
+                  ? "Send Counter-Offer" 
+                  : isJVRequest 
+                    ? "Send JV Request" 
+                    : "Submit Offer"}
               </Button>
             </div>
           </div>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function DealOverview({ 
+  deal, 
+  metrics, 
+  isJVRequest, 
+  formatCurrency 
+}: { 
+  deal: WholesaleDeal; 
+  metrics: { totalInvestment: number; potentialProfit: number; spreadPercent: number; roi: number };
+  isJVRequest: boolean;
+  formatCurrency: (amount: number | undefined | null) => string;
+}) {
+  return (
+    <>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Building2 className="w-4 h-4" />
+            Deal Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="text-sm">
+            <span className="font-semibold">{deal.propertyAddress}</span>
+            {deal.city && deal.state && (
+              <span className="text-muted-foreground ml-1">
+                {deal.city}, {deal.state}
+              </span>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Asking Price</span>
+              <div className="font-semibold">{formatCurrency(deal.askingPrice)}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">ARV</span>
+              <div className="font-semibold">{formatCurrency(deal.arv)}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Est. Repairs</span>
+              <div className="font-semibold">{formatCurrency(deal.estimatedRepairs)}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Assignment Fee</span>
+              <div className="font-semibold">{formatCurrency(deal.assignmentFee)}</div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Total Investment</span>
+              <div className="font-semibold text-primary">
+                {formatCurrency(metrics.totalInvestment)}
+              </div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Potential Profit</span>
+              <div className="font-semibold text-green-600">
+                {formatCurrency(metrics.potentialProfit)}
+              </div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Spread</span>
+              <div className="font-semibold">{metrics.spreadPercent.toFixed(0)}%</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Est. ROI</span>
+              <div className="font-semibold">{metrics.roi.toFixed(0)}%</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isJVRequest && (
+        <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Users className="w-4 h-4 text-primary" />
+            Partnership Benefits
+          </div>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>Access to off-market opportunities</li>
+            <li>Split acquisition costs and risks</li>
+            <li>Leverage combined expertise</li>
+            <li>Build long-term deal flow relationships</li>
+          </ul>
+        </div>
+      )}
+    </>
+  );
+}
+
+function JVRequestForm({
+  partnershipType,
+  setPartnershipType,
+  equityPercent,
+  setEquityPercent,
+  profitSplit,
+  setProfitSplit,
+}: {
+  partnershipType: "acquisition" | "funding" | "disposition";
+  setPartnershipType: (v: "acquisition" | "funding" | "disposition") => void;
+  equityPercent: string;
+  setEquityPercent: (v: string) => void;
+  profitSplit: string;
+  setProfitSplit: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label className="text-sm font-medium">Partnership Type</Label>
+        <RadioGroup
+          value={partnershipType}
+          onValueChange={(v) => setPartnershipType(v as any)}
+          className="mt-2 space-y-2"
+        >
+          <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer">
+            <RadioGroupItem value="acquisition" id="acquisition" />
+            <Label htmlFor="acquisition" className="text-sm cursor-pointer flex-1">
+              <span className="font-medium">Co-Acquisition Partner</span>
+              <span className="block text-xs text-muted-foreground">
+                Split the acquisition and share the deal
+              </span>
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer">
+            <RadioGroupItem value="funding" id="funding" />
+            <Label htmlFor="funding" className="text-sm cursor-pointer flex-1">
+              <span className="font-medium">Funding Partner</span>
+              <span className="block text-xs text-muted-foreground">
+                Provide capital for a share of profits
+              </span>
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer">
+            <RadioGroupItem value="disposition" id="disposition" />
+            <Label htmlFor="disposition" className="text-sm cursor-pointer flex-1">
+              <span className="font-medium">Disposition Partner</span>
+              <span className="block text-xs text-muted-foreground">
+                Help market and sell the property
+              </span>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="equity">Equity Stake (%)</Label>
+          <Input
+            id="equity"
+            type="number"
+            placeholder="e.g. 50"
+            value={equityPercent}
+            onChange={(e) => setEquityPercent(e.target.value)}
+            data-testid="input-equity-percent"
+          />
+        </div>
+        <div>
+          <Label htmlFor="split">Profit Split</Label>
+          <Input
+            id="split"
+            placeholder="e.g. 50/50"
+            value={profitSplit}
+            onChange={(e) => setProfitSplit(e.target.value)}
+            data-testid="input-profit-split"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InvestOfferForm({
+  offerAmount,
+  setOfferAmount,
+  equityPercent,
+  setEquityPercent,
+  profitSplit,
+  setProfitSplit,
+  askingPrice,
+  formatCurrency,
+}: {
+  offerAmount: string;
+  setOfferAmount: (v: string) => void;
+  equityPercent: string;
+  setEquityPercent: (v: string) => void;
+  profitSplit: string;
+  setProfitSplit: (v: string) => void;
+  askingPrice: number | undefined;
+  formatCurrency: (amount: number | undefined | null) => string;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="amount">Offer Amount ($)</Label>
+        <div className="relative">
+          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            id="amount"
+            type="number"
+            placeholder="Enter your offer amount"
+            value={offerAmount}
+            onChange={(e) => setOfferAmount(e.target.value)}
+            className="pl-10"
+            data-testid="input-offer-amount"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Current asking: {formatCurrency(askingPrice)}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="equity-offer">Equity Stake (%)</Label>
+          <Input
+            id="equity-offer"
+            type="number"
+            placeholder="Optional"
+            value={equityPercent}
+            onChange={(e) => setEquityPercent(e.target.value)}
+            data-testid="input-equity-percent"
+          />
+        </div>
+        <div>
+          <Label htmlFor="split-offer">Proposed Split</Label>
+          <Input
+            id="split-offer"
+            placeholder="e.g. 70/30"
+            value={profitSplit}
+            onChange={(e) => setProfitSplit(e.target.value)}
+            data-testid="input-profit-split"
+          />
+        </div>
+      </div>
+    </div>
   );
 }
