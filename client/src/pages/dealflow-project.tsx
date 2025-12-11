@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useRoute } from "wouter";
 import { DealflowLayout } from "@/components/dealflow-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -117,7 +117,7 @@ interface CapitalProject {
 }
 
 export default function DealflowProject() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
   const { toast } = useToast();
   const [, params] = useRoute("/dealflow/project/:id");
   const projectId = params?.id ? parseInt(params.id) : null;
@@ -279,7 +279,7 @@ export default function DealflowProject() {
           </Link>
           <div className="flex items-center gap-2">
             {/* Staff Admin Edit Controls */}
-            {user?.isStaff && (
+            {isAdmin && (
               <>
                 {isEditMode ? (
                   <>

@@ -40,7 +40,7 @@ import {
   Mail,
   Clock,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RetailListing, InsertBuyerOffer } from "@shared/schema";
@@ -58,7 +58,7 @@ export default function MarketplacePropertyDetailPage() {
 function PropertyDetailContent() {
   const [, params] = useRoute("/marketplace/properties/:id");
   const propertyId = params?.id || null;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [showOfferModal, setShowOfferModal] = useState(false);

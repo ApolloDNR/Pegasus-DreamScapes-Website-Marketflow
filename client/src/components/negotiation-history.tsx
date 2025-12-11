@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Dialog,
@@ -76,7 +76,7 @@ export function NegotiationHistoryDialog({
   negotiationId,
   dealTitle,
 }: NegotiationHistoryProps) {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [counterOfferOpen, setCounterOfferOpen] = useState(false);
   const [counterOfferType, setCounterOfferType] = useState<"debt" | "equity">("debt");
@@ -632,7 +632,7 @@ export function NegotiationCard({
   negotiation: DealNegotiation;
   onViewHistory: (id: number) => void;
 }) {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const isFromMe = user && negotiation.initiatorId === user.id;
   const isPending = negotiation.status === "pending";
   const canRespond = isPending && !isFromMe;

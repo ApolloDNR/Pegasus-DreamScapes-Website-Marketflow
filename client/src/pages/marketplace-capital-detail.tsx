@@ -29,7 +29,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { ScrollReveal, FadeIn } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
 import type { CapitalProject } from "@shared/schema";
@@ -76,7 +76,7 @@ function CapitalDetailPage() {
   const projectId = params.id;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [isCommitDialogOpen, setIsCommitDialogOpen] = useState(false);
 
   const { data: project, isLoading, error } = useQuery<CapitalProject>({
@@ -531,7 +531,7 @@ function CapitalDetailPage() {
 
 function CommitCapitalForm({ project, onClose }: { project: CapitalProject; onClose: () => void }) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [amount, setAmount] = useState("");
   const [structurePreference, setStructurePreference] = useState(project.structure || "EQUITY");
   const [notes, setNotes] = useState("");

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 export interface PeggyContextData {
   page?: string;
@@ -67,14 +67,23 @@ function getPageFromPath(pathname: string): string {
   return 'general';
 }
 
-function getUserRole(user: any): string {
-  if (!user) return 'guest';
+interface RoleFlags {
+  isAdmin: boolean;
+  isDreamscaper: boolean;
+  isInvestor: boolean;
+  isWholesaler: boolean;
+  isBuyer: boolean;
+  isAuthenticated: boolean;
+}
+
+function getUserRole(flags: RoleFlags): string {
+  if (!flags.isAuthenticated) return 'guest';
   
-  if (user.isStaff) return 'staff';
-  if (user.roles?.includes('dreamscaper') || user.roles?.includes('operator')) return 'dreamscaper';
-  if (user.roles?.includes('investor')) return 'investor';
-  if (user.roles?.includes('wholesaler')) return 'wholesaler';
-  if (user.roles?.includes('buyer')) return 'buyer';
+  if (flags.isAdmin) return 'staff';
+  if (flags.isDreamscaper) return 'dreamscaper';
+  if (flags.isInvestor) return 'investor';
+  if (flags.isWholesaler) return 'wholesaler';
+  if (flags.isBuyer) return 'buyer';
   
   return 'member';
 }
@@ -94,13 +103,15 @@ interface PeggyProviderProps {
 
 export function PeggyProvider({ children }: PeggyProviderProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer } = useSupabaseAuth();
   const [sessionId] = useState(generateSessionId);
   const [isOpen, setIsOpen] = useState(false);
   
+  const roleFlags: RoleFlags = { isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer };
+  
   const [context, setContext] = useState<PeggyContextData>({
     page: getPageFromPath(location),
-    userRole: getUserRole(user)
+    userRole: getUserRole(roleFlags)
   });
   
   const openChat = useCallback(() => setIsOpen(true), []);
@@ -117,9 +128,9 @@ export function PeggyProvider({ children }: PeggyProviderProps) {
   useEffect(() => {
     setContext(prev => ({
       ...prev,
-      userRole: getUserRole(user)
+      userRole: getUserRole(roleFlags)
     }));
-  }, [user]);
+  }, [isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer]);
   
   const updateContext = useCallback((updates: Partial<PeggyContextData>) => {
     setContext(prev => ({ ...prev, ...updates }));
@@ -160,9 +171,9 @@ export function PeggyProvider({ children }: PeggyProviderProps) {
   const clearContext = useCallback(() => {
     setContext({
       page: getPageFromPath(location),
-      userRole: getUserRole(user)
+      userRole: getUserRole(roleFlags)
     });
-  }, [location, user]);
+  }, [location, isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer]);
   
   const value: PeggyContextValue = {
     context,

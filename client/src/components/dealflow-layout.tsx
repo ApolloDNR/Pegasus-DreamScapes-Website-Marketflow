@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { usePeggyContext } from "@/contexts/peggy-context";
 import { NotificationBell } from "./notification-bell";
@@ -114,7 +114,7 @@ function ActivityPulse() {
 }
 
 export function DealflowLayout({ children }: DealflowLayoutProps) {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, isAdmin, isInvestor, isWholesaler, isBuyer, isDreamscaper, profile } = useSupabaseAuth();
   const [location] = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -154,10 +154,10 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   }
 
   const getUserRole = () => {
-    if (user?.isStaff) return { name: "Dreamscaper", color: "text-purple-500", bgColor: "bg-purple-500/10" };
-    if (user?.isInvestor) return { name: "Investor", color: "text-green-500", bgColor: "bg-green-500/10" };
-    if (user?.isWholesaler) return { name: "Wholesaler", color: "text-blue-500", bgColor: "bg-blue-500/10" };
-    if (user?.isBuyer) return { name: "Buyer", color: "text-amber-500", bgColor: "bg-amber-500/10" };
+    if (isAdmin || isDreamscaper) return { name: "Dreamscaper", color: "text-purple-500", bgColor: "bg-purple-500/10" };
+    if (isInvestor) return { name: "Investor", color: "text-green-500", bgColor: "bg-green-500/10" };
+    if (isWholesaler) return { name: "Wholesaler", color: "text-blue-500", bgColor: "bg-blue-500/10" };
+    if (isBuyer) return { name: "Buyer", color: "text-amber-500", bgColor: "bg-amber-500/10" };
     return { name: "Member", color: "text-muted-foreground", bgColor: "bg-secondary" };
   };
   
@@ -184,18 +184,22 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   ];
 
   const getUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (profile?.display_name) {
+      const names = profile.display_name.split(' ');
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[1][0]}`.toUpperCase();
+      }
+      return names[0][0]?.toUpperCase() || "U";
     }
     return user?.email?.[0]?.toUpperCase() || "U";
   };
 
   const getUserRoles = () => {
     const roles = [];
-    if (user?.isStaff) roles.push({ name: "Dreamscaper", color: "bg-purple-500" });
-    if (user?.isInvestor) roles.push({ name: "Investor", color: "bg-blue-500" });
-    if (user?.isWholesaler) roles.push({ name: "Wholesaler", color: "bg-green-500" });
-    if (user?.isBuyer) roles.push({ name: "Buyer", color: "bg-amber-500" });
+    if (isAdmin || isDreamscaper) roles.push({ name: "Dreamscaper", color: "bg-purple-500" });
+    if (isInvestor) roles.push({ name: "Investor", color: "bg-blue-500" });
+    if (isWholesaler) roles.push({ name: "Wholesaler", color: "bg-green-500" });
+    if (isBuyer) roles.push({ name: "Buyer", color: "bg-amber-500" });
     return roles;
   };
 
@@ -341,7 +345,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
               );
             })}
 
-            {user?.isStaff && (
+            {isAdmin && (
               <>
                 <div className={`my-3 border-t border-border/50 ${sidebarCollapsed ? '' : 'mx-3'}`} />
                 <Tooltip delayDuration={0}>
@@ -383,7 +387,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   data-testid="button-sidebar-user"
                 >
                   <Avatar className="h-10 w-10 border-2 border-primary/20">
-                    <AvatarImage src={user?.profileImageUrl || undefined} />
+                    <AvatarImage src={profile?.avatar_url || undefined} />
                     <AvatarFallback className="bg-primary/10 text-primary font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
@@ -391,7 +395,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   {!sidebarCollapsed && (
                     <>
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm font-medium truncate">{user?.firstName || "User"}</p>
+                        <p className="text-sm font-medium truncate">{profile?.display_name || "User"}</p>
                         <div className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                           <span className="text-[10px] text-muted-foreground">Online</span>
@@ -406,13 +410,13 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                 <div className="p-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={user?.profileImageUrl || undefined} />
+                      <AvatarImage src={profile?.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                      <p className="font-medium">{profile?.display_name || "User"}</p>
                       <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     </div>
                   </div>
@@ -469,7 +473,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
               <div className="flex items-center gap-2">
                 <NotificationBell />
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profileImageUrl || undefined} />
+                  <AvatarImage src={profile?.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
                     {getUserInitials()}
                   </AvatarFallback>
@@ -529,7 +533,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                         );
                       })}
                     </div>
-                    {user?.isStaff && (
+                    {isAdmin && (
                       <Link
                         href="/dealflow/hq"
                         onClick={() => setMobileMenuOpen(false)}

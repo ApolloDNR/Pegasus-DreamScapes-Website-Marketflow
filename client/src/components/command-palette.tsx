@@ -32,7 +32,7 @@ import {
   Heart,
   BookOpen
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { Badge } from "@/components/ui/badge";
 
 interface CommandItem {
@@ -50,7 +50,7 @@ interface CommandItem {
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -94,7 +94,7 @@ export function CommandPalette() {
     { id: "office", label: "My Office", description: "Saved deals and analytics", icon: BarChart3, href: "/dealflow/office", keywords: ["saved", "dashboard"] },
   ] : [];
 
-  const staffItems: CommandItem[] = user?.isStaff ? [
+  const staffItems: CommandItem[] = isAdmin ? [
     { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/dealflow/hq", keywords: ["admin", "staff"], badge: "Staff" },
   ] : [];
 

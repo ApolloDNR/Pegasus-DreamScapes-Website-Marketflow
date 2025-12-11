@@ -26,7 +26,7 @@ import {
   List,
   LogIn,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RetailListing } from "@shared/schema";
@@ -42,7 +42,7 @@ export default function MarketplacePropertiesPage() {
 }
 
 function PropertiesBrowsePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");

@@ -35,7 +35,7 @@ import {
   Gavel
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User, UserReview } from "@shared/schema";
@@ -180,7 +180,7 @@ const getRatingStars = (rating: number) => {
 
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
-  const { user: currentUser, isAuthenticated } = useAuth();
+  const { user: currentUser, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [writeReviewOpen, setWriteReviewOpen] = useState(false);

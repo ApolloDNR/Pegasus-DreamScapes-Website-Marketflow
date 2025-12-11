@@ -42,7 +42,6 @@ import {
   Search
 } from "lucide-react";
 import logoImage from "@assets/image_1765405939117.png";
-import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { CommandTrigger, CommandPalette } from "./command-palette";
 import { motion, AnimatePresence } from "framer-motion";
@@ -259,7 +258,7 @@ function UserMenu({ user, scrolled, isHomePage }: { user: any; scrolled: boolean
           </DropdownMenuItem>
         </Link>
         
-        {user?.isStaff && (
+        {isAdmin && (
           <>
             <DropdownMenuSeparator />
             <Link href="/marketplace/admin">
@@ -298,7 +297,7 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
 
   const isHomePage = location === "/";
 
@@ -670,7 +669,7 @@ export function Navigation() {
                         <BarChart3 className="w-4 h-4 text-muted-foreground" />
                         My Office
                       </Link>
-                      {user?.isStaff && (
+                      {isAdmin && (
                         <Link 
                           href="/dealflow/hq"
                           className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-blue-600 bg-blue-500/5 transition-all"

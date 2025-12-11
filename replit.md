@@ -17,6 +17,11 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
 - **Phase 2: Action Mutations** - All marketplace actions (deal submission, JV requests, capital commitments, buyer offers) updated to POST to Supabase endpoints
 - **Phase 3A: Data Fetching** - Marketplace pages updated to fetch from Supabase endpoints with UUID-compatible ID handling
 - **Phase 3B: Stats Endpoints** - Created Supabase stats endpoints (`/api/supabase/marketplace/{role}/stats`) using `external_user_id` lookups for wholesaler, investor, dreamscaper, and buyer dashboards
+- **Phase 4: Auth Hook Migration** - Critical marketplace components migrated from legacy `useAuth` to `useSupabaseAuth`:
+  - Core: `navigation.tsx`, `command-palette.tsx`, `dealflow-layout.tsx`, `negotiation-history.tsx`
+  - Pages: `dealflow-project.tsx`, `user-profile.tsx`, marketplace pages
+  - Context: `peggy-context.tsx` updated to use role flags from auth context
+  - Property access pattern: `user.isStaff` → `isAdmin` from context, `user.firstName` → `profile?.display_name`
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
@@ -26,7 +31,20 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
 - `supabase-schema.sql` - Complete database schema for Supabase
 - `SUPABASE_SETUP.md` - Setup instructions for Supabase tables
 - `server/lib/supabase.ts` - Supabase client configuration
-- `client/src/hooks/use-supabase-auth.tsx` - Supabase authentication context
+- `client/src/contexts/supabase-auth-context.tsx` - Supabase authentication context with role flags
+
+### Auth Context Pattern
+The `useSupabaseAuth` hook provides:
+- `user` - Supabase User object (email, id)
+- `profile` - UserProfile with `display_name`, `avatar_url`, `role`
+- Boolean flags: `isAdmin`, `isWholesaler`, `isDreamscaper`, `isInvestor`, `isBuyer`, `isPegasus`
+- `isAuthenticated`, `isLoading` for auth state
+- Methods: `signIn`, `signUp`, `signOut`, `refreshProfile`
+
+**Important**: Use context boolean flags instead of user properties:
+- ❌ `user?.isStaff` → ✅ `isAdmin`
+- ❌ `user?.firstName` → ✅ `profile?.display_name`
+- ❌ `user?.profileImageUrl` → ✅ `profile?.avatar_url`
 
 ## Code Quality Patterns
 
