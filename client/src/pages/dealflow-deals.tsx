@@ -103,7 +103,18 @@ const MATCH_SCORES = [
 ];
 
 export default function DealflowDeals() {
-  const { user } = useSupabaseAuth();
+  const { user, profile, isAdmin, isWholesaler, isDreamscaper, isInvestor, isBuyer } = useSupabaseAuth();
+  
+  // Determine user role for role-specific CTAs
+  const getUserRole = (): "dreamscaper" | "wholesaler" | "investor" | "buyer" | "admin" | undefined => {
+    if (isAdmin) return "admin";
+    if (isDreamscaper) return "dreamscaper";
+    if (isWholesaler) return "wholesaler";
+    if (isInvestor) return "investor";
+    if (isBuyer) return "buyer";
+    return undefined;
+  };
+  const userRole = getUserRole();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
@@ -122,6 +133,8 @@ export default function DealflowDeals() {
     structure?: string;
   } | null>(null);
   const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
+  const [selectedWholesaleDeal, setSelectedWholesaleDeal] = useState<WholesaleDeal | null>(null);
+  const [jvRequestOpen, setJvRequestOpen] = useState(false);
 
   const { data: capitalProjects = [], isLoading: loadingProjects } = useQuery<CapitalProject[]>({
     queryKey: ["/api/capital-projects"],
@@ -352,6 +365,38 @@ export default function DealflowDeals() {
       });
       setNegotiationOpen(true);
     }
+  };
+
+  // Handler for Dreamscaper/Investor to invest in a wholesale deal
+  const handleInvestInDeal = (deal: WholesaleDeal) => {
+    setSelectedDeal({
+      type: "wholesale_deal",
+      id: deal.id,
+      title: `${deal.propertyAddress}, ${deal.city}`,
+      responderId: deal.submittedBy || "staff",
+      structure: "investment",
+    });
+    setNegotiationOpen(true);
+    toast({
+      title: "Investment Offer",
+      description: `Opening investment dialog for ${deal.propertyAddress}`,
+    });
+  };
+
+  // Handler for Wholesaler to request JV partner
+  const handleRequestJV = (deal: WholesaleDeal) => {
+    setSelectedDeal({
+      type: "wholesale_deal",
+      id: deal.id,
+      title: `${deal.propertyAddress}, ${deal.city}`,
+      responderId: deal.submittedBy || "staff",
+      structure: "jv_partnership",
+    });
+    setNegotiationOpen(true);
+    toast({
+      title: "JV Partner Request",
+      description: `You're requesting a JV partnership for this deal. The other wholesaler may have a buyer ready.`,
+    });
   };
 
   return (
@@ -653,7 +698,10 @@ export default function DealflowDeals() {
                         deal={deal}
                         matchScore={scoreResult.total}
                         scoreBreakdown={scoreResult}
+                        userRole={userRole}
                         onNegotiate={() => openNegotiation("wholesale_deal", deal)}
+                        onInvest={() => handleInvestInDeal(deal)}
+                        onRequestJV={() => handleRequestJV(deal)}
                       />
                     );
                   }}
@@ -670,7 +718,10 @@ export default function DealflowDeals() {
                         deal={deal}
                         matchScore={scoreResult.total}
                         scoreBreakdown={scoreResult}
+                        userRole={userRole}
                         onNegotiate={() => openNegotiation("wholesale_deal", deal)}
+                        onInvest={() => handleInvestInDeal(deal)}
+                        onRequestJV={() => handleRequestJV(deal)}
                       />
                     );
                   }}

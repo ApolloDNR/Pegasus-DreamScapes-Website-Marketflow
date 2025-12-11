@@ -88,6 +88,9 @@ export interface WholesaleDeal {
   isFeatured?: boolean;
   isHot?: boolean;
   viewCount?: number;
+  submittedBy?: string;
+  closingDate?: string;
+  buyerAvailable?: boolean;
 }
 
 // Utility functions
@@ -616,12 +619,18 @@ export function WholesaleDealMatchCard({
   deal, 
   matchScore,
   scoreBreakdown,
-  onNegotiate 
+  onNegotiate,
+  onInvest,
+  onRequestJV,
+  userRole
 }: { 
   deal: WholesaleDeal; 
   matchScore?: number;
   scoreBreakdown?: ScoreBreakdown;
   onNegotiate?: () => void;
+  onInvest?: () => void;
+  onRequestJV?: () => void;
+  userRole?: "dreamscaper" | "wholesaler" | "investor" | "buyer" | "admin";
 }) {
   const totalCost = deal.contractPrice + deal.assignmentFee + deal.estimatedRepairs;
   const spread = deal.arv - totalCost;
@@ -741,14 +750,60 @@ export function WholesaleDealMatchCard({
           )}
         </div>
 
-        <div className="flex gap-2">
+        {/* Assignment Fee & Timeline Details */}
+        <div className="p-3 mb-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="w-4 h-4 text-amber-600" />
+            <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Assignment Details</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-muted-foreground">Assignment Fee:</span>
+              <span className="ml-1 font-semibold text-amber-700 dark:text-amber-400">{formatCurrency(deal.assignmentFee)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Contract Price:</span>
+              <span className="ml-1 font-semibold">{formatCurrency(deal.contractPrice)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Role-Specific CTAs */}
+        <div className="flex gap-2 flex-wrap">
           <Link href={`/dealflow/deal/${deal.id}`} className="flex-1">
             <Button variant="outline" className="w-full" data-testid={`button-view-deal-${deal.id}`}>
               <Eye className="w-4 h-4 mr-2" />
               View Details
             </Button>
           </Link>
-          {onNegotiate && (
+          
+          {/* Dreamscaper/Investor: Investment Offer */}
+          {(userRole === "dreamscaper" || userRole === "investor" || userRole === "admin") && onInvest && (
+            <Button 
+              onClick={onInvest}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid={`button-invest-deal-${deal.id}`}
+            >
+              <DollarSign className="w-4 h-4 mr-1" />
+              Invest
+            </Button>
+          )}
+          
+          {/* Wholesaler: Request JV Partner */}
+          {(userRole === "wholesaler" || userRole === "admin") && onRequestJV && (
+            <Button 
+              variant="outline"
+              onClick={onRequestJV}
+              className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+              data-testid={`button-jv-request-deal-${deal.id}`}
+            >
+              <Users className="w-4 h-4 mr-1" />
+              Request JV
+            </Button>
+          )}
+          
+          {/* General Negotiate/Offer for other roles */}
+          {!userRole && onNegotiate && (
             <Button 
               variant="outline"
               onClick={onNegotiate}
@@ -758,12 +813,16 @@ export function WholesaleDealMatchCard({
               Offer
             </Button>
           )}
-          <Link href={`/dealflow/deal/${deal.id}?inquire=true`}>
-            <Button data-testid={`button-inquire-deal-${deal.id}`}>
-              <TrendingUp className="w-4 h-4 mr-1" />
-              Inquire
-            </Button>
-          </Link>
+          
+          {/* Buyer role: Inquire */}
+          {(userRole === "buyer" || !userRole) && (
+            <Link href={`/dealflow/deal/${deal.id}?inquire=true`}>
+              <Button data-testid={`button-inquire-deal-${deal.id}`}>
+                <TrendingUp className="w-4 h-4 mr-1" />
+                Inquire
+              </Button>
+            </Link>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -775,12 +834,18 @@ export function WholesaleDealGridCard({
   deal, 
   matchScore,
   scoreBreakdown,
-  onNegotiate 
+  onNegotiate,
+  onInvest,
+  onRequestJV,
+  userRole
 }: { 
   deal: WholesaleDeal; 
   matchScore?: number;
   scoreBreakdown?: ScoreBreakdown;
   onNegotiate?: () => void;
+  onInvest?: () => void;
+  onRequestJV?: () => void;
+  userRole?: "dreamscaper" | "wholesaler" | "investor" | "buyer" | "admin";
 }) {
   const totalCost = deal.contractPrice + deal.assignmentFee + deal.estimatedRepairs;
   const spread = deal.arv - totalCost;
@@ -839,14 +904,47 @@ export function WholesaleDealGridCard({
           </span>
         </div>
 
-        <div className="flex gap-2">
+        {/* Assignment Fee badge */}
+        <div className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400 mb-3">
+          <DollarSign className="w-3 h-3" />
+          <span>Fee: {formatCurrency(deal.assignmentFee)}</span>
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
           <Link href={`/dealflow/deal/${deal.id}`} className="flex-1">
             <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-deal-grid-${deal.id}`}>
-              View Details
+              View
               <ArrowUpRight className="w-3 h-3 ml-1" />
             </Button>
           </Link>
-          {onNegotiate && (
+          
+          {/* Dreamscaper/Investor: Invest */}
+          {(userRole === "dreamscaper" || userRole === "investor" || userRole === "admin") && onInvest && (
+            <Button 
+              size="sm"
+              onClick={onInvest}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid={`button-invest-deal-grid-${deal.id}`}
+            >
+              <DollarSign className="w-3 h-3" />
+            </Button>
+          )}
+          
+          {/* Wholesaler: Request JV */}
+          {(userRole === "wholesaler" || userRole === "admin") && onRequestJV && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={onRequestJV}
+              className="border-blue-300 text-blue-700"
+              data-testid={`button-jv-request-deal-grid-${deal.id}`}
+            >
+              <Users className="w-3 h-3" />
+            </Button>
+          )}
+          
+          {/* Fallback negotiate */}
+          {!userRole && onNegotiate && (
             <Button 
               variant="outline"
               size="sm"
