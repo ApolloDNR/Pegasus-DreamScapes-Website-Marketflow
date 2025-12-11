@@ -500,22 +500,23 @@ export function CapitalProjectMatchCard({
               View Details
             </Button>
           </Link>
-          {onNegotiate && (
+          {onNegotiate ? (
             <Button 
-              variant="outline"
               onClick={onNegotiate}
-              data-testid={`button-negotiate-project-${project.id}`}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+              data-testid={`button-invest-project-${project.id}`}
             >
-              <Scale className="w-4 h-4 mr-1" />
-              Offer
-            </Button>
-          )}
-          <Link href={`/dealflow/project/${project.id}?invest=true`}>
-            <Button data-testid={`button-invest-${project.id}`}>
               <DollarSign className="w-4 h-4 mr-1" />
               Invest
             </Button>
-          </Link>
+          ) : (
+            <Link href={`/dealflow/project/${project.id}?invest=true`}>
+              <Button data-testid={`button-invest-project-${project.id}`}>
+                <DollarSign className="w-4 h-4 mr-1" />
+                Invest
+              </Button>
+            </Link>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -591,21 +592,21 @@ export function CapitalProjectGridCard({
           <Badge variant="secondary" className="text-xs">{project.holdPeriod}</Badge>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link href={`/dealflow/project/${project.id}`} className="flex-1">
             <Button variant="outline" size="sm" className="w-full" data-testid={`button-view-project-grid-${project.id}`}>
-              View Details
+              View
               <ArrowUpRight className="w-3 h-3 ml-1" />
             </Button>
           </Link>
           {onNegotiate && (
             <Button 
-              variant="outline"
               size="sm"
               onClick={onNegotiate}
-              data-testid={`button-negotiate-project-grid-${project.id}`}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid={`button-invest-project-grid-${project.id}`}
             >
-              <Scale className="w-3 h-3" />
+              <DollarSign className="w-3 h-3" />
             </Button>
           )}
         </div>

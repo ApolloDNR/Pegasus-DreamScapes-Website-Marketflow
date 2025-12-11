@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
 import {
   Search,
   Filter,
@@ -35,7 +36,8 @@ import {
   Sparkles,
   ArrowRight,
   Percent,
-  Clock
+  Clock,
+  Zap
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -86,6 +88,8 @@ function DiscoverPage() {
   const [activeTab, setActiveTab] = useState("deals");
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState<string>("all");
+  const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
+  const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
@@ -97,6 +101,11 @@ function DiscoverPage() {
   const { data: projects, isLoading: projectsLoading } = useQuery<CapitalProject[]>({
     queryKey: ['/api/supabase/capital-projects'],
   });
+
+  const handleInvest = (project: CapitalProject) => {
+    setSelectedProject(project);
+    setInvestDialogOpen(true);
+  };
 
   const handleSaveDeal = async (dealId: string) => {
     if (!isAuthenticated) {
@@ -284,6 +293,7 @@ function DiscoverPage() {
                     <ProjectCard 
                       project={project} 
                       onSave={() => handleSaveProject(project.id)}
+                      onInvest={() => handleInvest(project)}
                       isSaved={isItemSaved('capital_project', project.id)}
                       isSaving={isSaving}
                     />
@@ -294,6 +304,33 @@ function DiscoverPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Investment Dialog */}
+      {selectedProject && (
+        <InvestmentOfferDialog
+          open={investDialogOpen}
+          onOpenChange={setInvestDialogOpen}
+          project={{
+            id: selectedProject.id as any,
+            title: selectedProject.title,
+            description: selectedProject.description,
+            location: selectedProject.location,
+            fundingGoal: selectedProject.fundingGoal || 0,
+            amountRaised: selectedProject.amountRaised || 0,
+            minInvestment: selectedProject.minInvestment || 0,
+            projectedReturn: selectedProject.projectedReturn,
+            holdPeriod: selectedProject.holdPeriod,
+            structure: selectedProject.structure,
+            status: selectedProject.status || "ACTIVE",
+          }}
+          onSuccess={() => {
+            toast({
+              title: "Investment submitted",
+              description: "Your investment offer has been sent to the operator.",
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -396,11 +433,13 @@ function DealCard({
 function ProjectCard({ 
   project, 
   onSave, 
+  onInvest,
   isSaved, 
   isSaving 
 }: { 
   project: CapitalProject; 
   onSave: () => void;
+  onInvest: () => void;
   isSaved: boolean;
   isSaving: boolean;
 }) {
@@ -495,13 +534,24 @@ function ProjectCard({
           </div>
         </div>
 
-        <div className="mt-auto">
-          <Link href={`/marketplace/capital/${project.id}`}>
-            <Button className="w-full" variant="default" data-testid={`button-view-project-${project.id}`}>
+        <div className="mt-auto flex gap-2">
+          <Link href={`/marketplace/capital/${project.id}`} className="flex-1">
+            <Button className="w-full" variant="outline" data-testid={`button-view-project-${project.id}`}>
               View Project
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
+          <Button 
+            onClick={(e) => {
+              e.preventDefault();
+              onInvest();
+            }}
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+            data-testid={`button-invest-project-${project.id}`}
+          >
+            <Zap className="w-4 h-4 mr-1" />
+            Invest
+          </Button>
         </div>
       </CardContent>
     </Card>

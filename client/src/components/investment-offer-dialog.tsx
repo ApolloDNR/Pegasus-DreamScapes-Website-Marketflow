@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -167,6 +167,13 @@ export function InvestmentOfferDialog({
     setStep("choose");
     setIsAcceptingTerms(false);
   };
+
+  // Reset dialog state when opened or project changes
+  useEffect(() => {
+    if (open) {
+      resetForm();
+    }
+  }, [open, project.id]);
 
   const handleAcceptTerms = () => {
     setIsAcceptingTerms(true);
