@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer";
 import { PeggyProvider } from "@/contexts/peggy-context";
 import { PeggyChatBubble } from "@/components/peggy-chat";
 import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
+import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -155,7 +156,9 @@ function App() {
             <div className="min-h-screen flex flex-col">
               <Navigation />
               <main className="flex-1">
-                <Router />
+                <ErrorBoundary>
+                  <Router />
+                </ErrorBoundary>
               </main>
               <Footer />
             </div>

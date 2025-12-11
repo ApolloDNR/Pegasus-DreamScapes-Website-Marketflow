@@ -1,4 +1,4 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient, QueryFunction, InvalidateQueryFilters } from "@tanstack/react-query";
 
 export class ApiError extends Error {
   status: number;
@@ -90,3 +90,55 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export const QUERY_KEYS = {
+  wholesaleDeals: ['/api/supabase/wholesale-deals'] as const,
+  capitalProjects: ['/api/supabase/capital-projects'] as const,
+  savedItems: ['/api/supabase/marketplace/saved-items'] as const,
+  notifications: ['/api/supabase/notifications'] as const,
+  messages: ['/api/supabase/messages'] as const,
+  community: ['/api/supabase/community'] as const,
+  userStats: (role: string) => ['/api/supabase/marketplace', role, 'stats'] as const,
+  dealDetail: (id: string) => ['/api/supabase/wholesale-deals', id] as const,
+  projectDetail: (id: string) => ['/api/supabase/capital-projects', id] as const,
+};
+
+export function invalidateMarketplaceData() {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.wholesaleDeals }),
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.capitalProjects }),
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.savedItems }),
+  ]);
+}
+
+export function invalidateDealData(dealId?: string) {
+  const promises = [
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.wholesaleDeals }),
+  ];
+  if (dealId) {
+    promises.push(queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dealDetail(dealId) }));
+  }
+  return Promise.all(promises);
+}
+
+export function invalidateProjectData(projectId?: string) {
+  const promises = [
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.capitalProjects }),
+  ];
+  if (projectId) {
+    promises.push(queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projectDetail(projectId) }));
+  }
+  return Promise.all(promises);
+}
+
+export function invalidateSocialData() {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.messages }),
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community }),
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications }),
+  ]);
+}
+
+export function invalidateUserStats(role: string) {
+  return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats(role) });
+}
