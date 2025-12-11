@@ -17,11 +17,20 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
 - **Phase 2: Action Mutations** - All marketplace actions (deal submission, JV requests, capital commitments, buyer offers) updated to POST to Supabase endpoints
 - **Phase 3A: Data Fetching** - Marketplace pages updated to fetch from Supabase endpoints with UUID-compatible ID handling
 - **Phase 3B: Stats Endpoints** - Created Supabase stats endpoints (`/api/supabase/marketplace/{role}/stats`) using `external_user_id` lookups for wholesaler, investor, dreamscaper, and buyer dashboards
-- **Phase 4: Auth Hook Migration** - Critical marketplace components migrated from legacy `useAuth` to `useSupabaseAuth`:
+- **Phase 4: Auth Hook Migration** - ALL marketplace components migrated from legacy `useAuth` to `useSupabaseAuth`:
   - Core: `navigation.tsx`, `command-palette.tsx`, `dealflow-layout.tsx`, `negotiation-history.tsx`
-  - Pages: `dealflow-project.tsx`, `user-profile.tsx`, marketplace pages
+  - Pages: `dealflow-project.tsx`, `user-profile.tsx`, ALL marketplace and portal pages
+  - Portal pages: `investor-portal.tsx`, `wholesaler-portal.tsx`, `buyer-portal.tsx`, `dreamscaper-portal.tsx`, `hq.tsx`
+  - Dealflow: `dealflow-deals.tsx`, `dealflow-office.tsx`, `capital-raising.tsx`, `community.tsx`
+  - Layout: `portal-header.tsx`, `portal-select.tsx`
   - Context: `peggy-context.tsx` updated to use role flags from auth context
   - Property access pattern: `user.isStaff` → `isAdmin` from context, `user.firstName` → `profile?.display_name`
+- **Phase 5: Swipe Feature Enhancement** - DeckView component enhanced with dating-app style touch/drag gestures:
+  - Framer-motion drag detection with 120px swipe threshold
+  - Visual rotation feedback up to 15 degrees while dragging
+  - Like/Pass indicators that appear and scale based on drag direction
+  - Ring/shadow effects showing intent (green for like, red for pass)
+  - Helper text and preserved button controls for accessibility
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
