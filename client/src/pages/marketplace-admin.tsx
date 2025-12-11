@@ -424,12 +424,6 @@ export default function MarketplaceAdminPage() {
                       ))}
                     </div>
                   )}
-                  <Link href="/marketplace/admin/users">
-                    <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-users">
-                      Manage All Users
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -479,12 +473,6 @@ export default function MarketplaceAdminPage() {
                       </div>
                     </div>
                   </div>
-                  <Link href="/marketplace/admin/deals">
-                    <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-deals">
-                      Manage All Deals
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </TabsContent>

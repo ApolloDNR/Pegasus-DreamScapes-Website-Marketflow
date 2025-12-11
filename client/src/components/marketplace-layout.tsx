@@ -70,8 +70,6 @@ function getRoleSpecificItems(role: UserRole | null) {
     case "admin":
       return [
         { title: "Admin Panel", href: "/marketplace/admin", icon: ShieldCheck },
-        { title: "All Users", href: "/marketplace/admin/users", icon: Users },
-        { title: "All Deals", href: "/marketplace/admin/deals", icon: Briefcase },
       ];
     case "pegasus_wholesaler":
       return [
