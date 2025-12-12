@@ -735,6 +735,83 @@ export class SupabaseStorage {
     }
     return data || [];
   }
+
+  // --- Wholesale Deal Offers ---
+  async createWholesaleDealOffer(data: {
+    deal_id: string;
+    buyer_id: string;
+    offer_amount: number;
+    equity_percent?: number;
+    profit_split?: string;
+    notes?: string;
+    is_counter?: boolean;
+    parent_offer_id?: string;
+    status: string;
+  }): Promise<any> {
+    const { data: offer, error } = await supabaseAdmin
+      .from('wholesale_deal_offers')
+      .insert({
+        deal_id: data.deal_id,
+        external_buyer_id: data.buyer_id,
+        offer_amount: data.offer_amount,
+        equity_percent: data.equity_percent,
+        profit_split: data.profit_split,
+        notes: data.notes,
+        is_counter_offer: data.is_counter || false,
+        parent_offer_id: data.parent_offer_id,
+        status: data.status
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating wholesale deal offer:', error);
+      return null;
+    }
+    return offer;
+  }
+
+  async getWholesaleDealNegotiations(dealId: string): Promise<any[]> {
+    const { data, error } = await supabaseAdmin
+      .from('wholesale_deal_offers')
+      .select('*')
+      .eq('deal_id', dealId)
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching wholesale deal negotiations:', error);
+      return [];
+    }
+    
+    return (data || []).map(offer => ({
+      id: offer.id,
+      type: offer.is_counter_offer ? 'counter' : 'offer',
+      timestamp: offer.created_at,
+      actor: 'User',
+      actorRole: 'Investor',
+      details: {
+        amount: offer.offer_amount,
+        equityPercent: offer.equity_percent,
+        profitSplit: offer.profit_split,
+        message: offer.notes
+      }
+    }));
+  }
+
+  async updateWholesaleOfferStatus(offerId: string, status: string): Promise<any> {
+    const { data, error } = await supabaseAdmin
+      .from('wholesale_deal_offers')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', offerId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating wholesale offer status:', error);
+      return null;
+    }
+    return data;
+  }
 }
 
 export const supabaseStorage = new SupabaseStorage();

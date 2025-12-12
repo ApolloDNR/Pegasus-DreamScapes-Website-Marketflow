@@ -384,30 +384,36 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { dealId, wholesalerId, strategy, fundingSource, proposedFee, message } = req.body;
+      const { dealId, partnershipType, equityPercent, profitSplit, notes } = req.body;
       
-      if (!dealId || !wholesalerId || !strategy) {
-        return res.status(400).json({ message: 'Missing required fields' });
+      if (!dealId) {
+        return res.status(400).json({ message: 'Missing dealId' });
       }
       
       const { storage, toCamelCase } = await getSupabaseStorage();
+      
+      const deal = await storage.getWholesaleDeal(dealId);
+      if (!deal) {
+        return res.status(404).json({ message: 'Deal not found' });
+      }
+      
       const request = await storage.createJVRequest({
         deal_id: dealId,
         requester_id: userId,
-        wholesaler_id: wholesalerId,
-        strategy,
-        funding_source: fundingSource,
-        proposed_fee: proposedFee,
-        message,
+        wholesaler_id: deal.wholesaler_id,
+        strategy: partnershipType || 'acquisition',
+        funding_source: equityPercent ? `${equityPercent}% equity` : undefined,
+        proposed_fee: profitSplit,
+        message: notes,
         status: 'pending'
       });
       
-      if (request) {
+      if (request && deal.wholesaler_id) {
         await storage.createNotification({
-          user_id: wholesalerId,
+          user_id: deal.wholesaler_id,
           type: 'jv_request',
-          title: 'New JV Request',
-          message: `You have a new JV request on your deal`,
+          title: 'New JV Partnership Request',
+          message: `Someone wants to partner on your deal at ${deal.address || deal.city || 'your property'}`,
           link: `/marketplace/wholesaler/requests`
         });
       }
