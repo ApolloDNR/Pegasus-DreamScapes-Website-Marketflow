@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { WholesaleDeal, RetailListing, BuyerProfile, SavedProperty, BuyerOffer } from "@shared/schema";
+import { sampleWholesaleDeals, sampleRetailListings, sampleBuyerStats } from "@/lib/sample-data";
 
 const profileFormSchema = z.object({
   company: z.string().optional(),
@@ -76,12 +77,12 @@ export default function BuyerPortal() {
     enabled: isAuthenticated,
   });
 
-  const { data: wholesaleDeals } = useQuery<WholesaleDeal[]>({
+  const { data: apiWholesaleDeals } = useQuery<WholesaleDeal[]>({
     queryKey: ["/api/wholesale-deals"],
     enabled: isAuthenticated,
   });
 
-  const { data: retailListings } = useQuery<RetailListing[]>({
+  const { data: apiRetailListings } = useQuery<RetailListing[]>({
     queryKey: ["/api/retail-listings"],
     enabled: isAuthenticated,
   });
@@ -95,6 +96,9 @@ export default function BuyerPortal() {
     queryKey: ["/api/portal/buyer/offers"],
     enabled: isAuthenticated,
   });
+
+  const wholesaleDeals = isGuestMode ? sampleWholesaleDeals as unknown as WholesaleDeal[] : apiWholesaleDeals;
+  const retailListings = isGuestMode ? sampleRetailListings as unknown as RetailListing[] : apiRetailListings;
 
   const hasProfile = !!profile || isGuestMode;
 

@@ -50,6 +50,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { CapitalProject, ProjectMilestone, InvestmentOffer, CommittedInvestment } from "@shared/schema";
+import { sampleCapitalProjects, sampleDreamscaperStats, sampleCommittedInvestments, samplePendingOffers } from "@/lib/sample-data";
 
 const formatCurrency = (value: number | null | undefined) => {
   if (!value) return "$0";
@@ -74,20 +75,24 @@ export default function DreamscaperPortal() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const { data: myProjects = [], isLoading: projectsLoading } = useQuery<CapitalProject[]>({
+  const { data: apiProjects = [], isLoading: projectsLoading } = useQuery<CapitalProject[]>({
     queryKey: ["/api/portal/dreamscaper/my-projects"],
     enabled: isAuthenticated,
   });
 
-  const { data: pendingOffers = [] } = useQuery<InvestmentOffer[]>({
+  const { data: apiPendingOffers = [] } = useQuery<InvestmentOffer[]>({
     queryKey: ["/api/portal/dreamscaper/pending-offers"],
     enabled: isAuthenticated,
   });
 
-  const { data: allInvestments = [] } = useQuery<CommittedInvestment[]>({
+  const { data: apiInvestments = [] } = useQuery<CommittedInvestment[]>({
     queryKey: ["/api/portal/dreamscaper/all-investments"],
     enabled: isAuthenticated,
   });
+
+  const myProjects = isGuestMode ? sampleCapitalProjects as unknown as CapitalProject[] : apiProjects;
+  const pendingOffers = isGuestMode ? samplePendingOffers as unknown as InvestmentOffer[] : apiPendingOffers;
+  const allInvestments = isGuestMode ? sampleCommittedInvestments as unknown as CommittedInvestment[] : apiInvestments;
 
   if (authLoading) {
     return (
@@ -163,7 +168,7 @@ export default function DreamscaperPortal() {
           </div>
         </div>
       )}
-      <AnnouncementsBanner audience="DREAMSCAPERS" />
+      <AnnouncementsBanner audience="ALL" />
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>

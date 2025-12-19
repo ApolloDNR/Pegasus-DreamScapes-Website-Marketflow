@@ -47,6 +47,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import type { WholesaleDeal, InvestorProfile, InvestorWantedDeal, CapitalProject, CommittedInvestment, InvestmentOffer } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
+import { sampleWholesaleDeals, sampleCapitalProjects, sampleInvestorStats } from "@/lib/sample-data";
 
 const profileFormSchema = z.object({
   company: z.string().optional(),
@@ -72,10 +73,12 @@ export default function InvestorPortal() {
     enabled: isAuthenticated,
   });
 
-  const { data: deals } = useQuery<WholesaleDeal[]>({
+  const { data: apiDeals } = useQuery<WholesaleDeal[]>({
     queryKey: ["/api/wholesale-deals"],
     enabled: isAuthenticated,
   });
+
+  const deals = isGuestMode ? sampleWholesaleDeals as unknown as WholesaleDeal[] : apiDeals;
 
   const hasProfile = !!profile || isGuestMode;
 
