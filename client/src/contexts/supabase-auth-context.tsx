@@ -19,6 +19,8 @@ interface SupabaseAuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isGuestMode: boolean;
+  guestRole: UserRole | null;
   userRole: UserRole | null;
   isAdmin: boolean;
   isWholesaler: boolean;
@@ -31,6 +33,8 @@ interface SupabaseAuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  enterGuestMode: (role: UserRole) => void;
+  exitGuestMode: () => void;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
@@ -40,6 +44,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [guestRole, setGuestRole] = useState<UserRole | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -225,11 +231,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const currentRole = profile?.primary_role ?? null;
+  const effectiveRole = isGuestMode ? guestRole : currentRole;
   
   const hasPermission = useCallback((permission: MarketplacePermission): boolean => {
-    if (!currentRole) return false;
-    return hasMarketplacePermission(currentRole as MarketplaceRole, permission);
-  }, [currentRole]);
+    if (!effectiveRole) return false;
+    return hasMarketplacePermission(effectiveRole as MarketplaceRole, permission);
+  }, [effectiveRole]);
+
+  const enterGuestMode = useCallback((role: UserRole) => {
+    setIsGuestMode(true);
+    setGuestRole(role);
+  }, []);
+
+  const exitGuestMode = useCallback(() => {
+    setIsGuestMode(false);
+    setGuestRole(null);
+  }, []);
 
   const value: SupabaseAuthContextType = {
     user,
@@ -237,18 +254,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     profile,
     isLoading,
     isAuthenticated: !!profile,
-    userRole: currentRole,
-    isAdmin: currentRole ? isAdminRole(currentRole) : false,
-    isWholesaler: currentRole ? isWholesalerRole(currentRole) : false,
-    isDreamscaper: currentRole ? isDreamscaperRole(currentRole) : false,
-    isInvestor: currentRole ? isInvestorRole(currentRole) : false,
-    isBuyer: currentRole ? isBuyerRole(currentRole) : false,
-    isPegasus: currentRole ? isPegasusRole(currentRole as MarketplaceRole) : false,
+    isGuestMode,
+    guestRole,
+    userRole: effectiveRole,
+    isAdmin: effectiveRole ? isAdminRole(effectiveRole) : false,
+    isWholesaler: effectiveRole ? isWholesalerRole(effectiveRole) : false,
+    isDreamscaper: effectiveRole ? isDreamscaperRole(effectiveRole) : false,
+    isInvestor: effectiveRole ? isInvestorRole(effectiveRole) : false,
+    isBuyer: effectiveRole ? isBuyerRole(effectiveRole) : false,
+    isPegasus: effectiveRole ? isPegasusRole(effectiveRole as MarketplaceRole) : false,
     hasPermission,
     signUp,
     signIn,
     signOut,
-    refreshProfile
+    refreshProfile,
+    enterGuestMode,
+    exitGuestMode
   };
 
   return (
@@ -288,8 +309,8 @@ export function getRoleDashboardPath(role: UserRole | null): string {
   }
 }
 
-export function canAccessRoute(userRole: UserRole | null, path: string): boolean {
-  if (!userRole) return false;
+export function canAccessRoute(userRole: UserRole | null, path: string, isGuestMode: boolean = false): boolean {
+  if (!userRole && !isGuestMode) return false;
   
   if (userRole === 'admin') return true;
   
@@ -297,20 +318,22 @@ export function canAccessRoute(userRole: UserRole | null, path: string): boolean
     return false;
   }
   
+  const effectiveRole = userRole;
+  
   if (path.startsWith('/marketplace/wholesaler')) {
-    return userRole === 'pegasus_wholesaler' || userRole === 'wholesaler';
+    return effectiveRole === 'pegasus_wholesaler' || effectiveRole === 'wholesaler' || isGuestMode;
   }
   
   if (path.startsWith('/marketplace/dreamscaper')) {
-    return userRole === 'pegasus_dreamscaper' || userRole === 'dreamscaper';
+    return effectiveRole === 'pegasus_dreamscaper' || effectiveRole === 'dreamscaper' || isGuestMode;
   }
   
   if (path.startsWith('/marketplace/investor')) {
-    return userRole === 'investor';
+    return effectiveRole === 'investor' || isGuestMode;
   }
   
   if (path.startsWith('/marketplace/buyer')) {
-    return userRole === 'buyer_retail' || userRole === 'buyer_investment';
+    return effectiveRole === 'buyer_retail' || effectiveRole === 'buyer_investment' || isGuestMode;
   }
   
   return true;

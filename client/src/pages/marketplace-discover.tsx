@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
 import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
+import { type UserRole } from "@/lib/supabase";
 import {
   Search,
   Filter,
@@ -39,7 +40,9 @@ import {
   Percent,
   Clock,
   Zap,
-  Users
+  Users,
+  Eye,
+  LogIn
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -95,9 +98,26 @@ function DiscoverPage() {
   const [selectedDeal, setSelectedDeal] = useState<WholesaleDeal | null>(null);
   const [dealActionType, setDealActionType] = useState<"jv_request" | "invest">("invest");
   const [dealActionDialogOpen, setDealActionDialogOpen] = useState(false);
-  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin } = useSupabaseAuth();
+  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
+  const [, setLocation] = useLocation();
+
+  const handleGuestPreview = (role: UserRole) => {
+    enterGuestMode(role);
+    toast({
+      title: "Guest Preview Mode",
+      description: `Previewing as ${role.replace(/_/g, ' ')}. Sign in to take actions.`,
+    });
+    const dashboardPath = {
+      wholesaler: '/marketplace/wholesaler',
+      investor: '/marketplace/investor',
+      dreamscaper: '/marketplace/dreamscaper',
+      buyer_investment: '/marketplace/buyer',
+      buyer_retail: '/marketplace/buyer',
+    }[role] || '/marketplace';
+    setLocation(dashboardPath);
+  };
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/supabase/wholesale-deals'],
@@ -194,6 +214,87 @@ function DiscoverPage() {
           </p>
         </div>
       </ScrollReveal>
+
+      {!isAuthenticated && !isGuestMode && (
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Eye className="w-5 h-5 text-primary" />
+                <div>
+                  <h3 className="font-medium">Preview Portal Dashboards</h3>
+                  <p className="text-sm text-muted-foreground">Explore what each role sees without signing up</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleGuestPreview('investor')}
+                  data-testid="button-preview-investor"
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Investor
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleGuestPreview('wholesaler')}
+                  data-testid="button-preview-wholesaler"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Wholesaler
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleGuestPreview('dreamscaper')}
+                  data-testid="button-preview-dreamscaper"
+                >
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Dreamscaper
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleGuestPreview('buyer_investment')}
+                  data-testid="button-preview-buyer"
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Buyer
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isGuestMode && (
+        <Card className="mb-6 border-amber-500/30 bg-amber-500/10">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Eye className="w-5 h-5 text-amber-600" />
+                <div>
+                  <h3 className="font-medium">Guest Preview Mode: {guestRole?.replace(/_/g, ' ')}</h3>
+                  <p className="text-sm text-muted-foreground">You're viewing as a guest. Sign in to take actions.</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={exitGuestMode} data-testid="button-exit-guest">
+                  Exit Preview
+                </Button>
+                <Link href="/auth/login">
+                  <Button size="sm" data-testid="button-sign-in-guest">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-4 mb-6">
         <div className="relative flex-1">

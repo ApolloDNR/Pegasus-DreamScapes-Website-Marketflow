@@ -69,7 +69,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
 };
 
 export default function DreamscaperPortal() {
-  const { profile, isLoading: authLoading, isAuthenticated, isDreamscaper } = useSupabaseAuth();
+  const { profile, isLoading: authLoading, isAuthenticated, isDreamscaper, isGuestMode, exitGuestMode } = useSupabaseAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -97,7 +97,7 @@ export default function DreamscaperPortal() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isGuestMode) {
     return (
       <div className="min-h-screen pt-20">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
@@ -119,7 +119,7 @@ export default function DreamscaperPortal() {
     );
   }
 
-  if (!isDreamscaper) {
+  if (!isDreamscaper && !isGuestMode) {
     return (
       <div className="min-h-screen pt-20">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
@@ -143,15 +143,35 @@ export default function DreamscaperPortal() {
 
   return (
     <div className="min-h-screen pt-20 bg-stone">
+      {isGuestMode && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-amber-600" />
+              <span className="text-sm font-medium">Guest Preview Mode - Viewing as Dreamscaper</span>
+              <span className="text-sm text-muted-foreground">Sign in to take actions</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={exitGuestMode}>Exit Preview</Button>
+              <Link href="/auth/login">
+                <Button size="sm">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
       <AnnouncementsBanner audience="DREAMSCAPERS" />
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold" data-testid="text-dreamscaper-welcome">
-              Welcome, {profile?.display_name || "Dreamscaper"}
+              Welcome, {isGuestMode ? "Guest Dreamscaper" : (profile?.display_name || "Dreamscaper")}
             </h1>
             <p className="text-muted-foreground">
-              Manage your capital projects and investor relationships
+              {isGuestMode ? "Preview project management and investor features" : "Manage your capital projects and investor relationships"}
             </p>
           </div>
           <PortalHeader currentPortal="dreamscaper" />

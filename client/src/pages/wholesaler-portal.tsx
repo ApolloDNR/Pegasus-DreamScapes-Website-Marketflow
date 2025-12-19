@@ -58,7 +58,7 @@ const profileFormSchema = z.object({
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function WholesalerPortal() {
-  const { profile: authProfile, isLoading: authLoading, isAuthenticated } = useSupabaseAuth();
+  const { profile: authProfile, isLoading: authLoading, isAuthenticated, isGuestMode, exitGuestMode } = useSupabaseAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -73,7 +73,7 @@ export default function WholesalerPortal() {
     enabled: isAuthenticated,
   });
 
-  const hasProfile = !!profile;
+  const hasProfile = !!profile || isGuestMode;
 
   if (authLoading) {
     return (
@@ -83,7 +83,7 @@ export default function WholesalerPortal() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isGuestMode) {
     return (
       <div className="min-h-screen pt-20">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
@@ -107,15 +107,35 @@ export default function WholesalerPortal() {
 
   return (
     <div className="min-h-screen pt-20 bg-stone">
+      {isGuestMode && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-amber-600" />
+              <span className="text-sm font-medium">Guest Preview Mode - Viewing as Wholesaler</span>
+              <span className="text-sm text-muted-foreground">Sign in to take actions</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={exitGuestMode}>Exit Preview</Button>
+              <Link href="/auth/login">
+                <Button size="sm">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
       <AnnouncementsBanner audience="WHOLESALERS" />
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold" data-testid="text-wholesaler-welcome">
-              Welcome, {authProfile?.display_name || "Wholesaler"}
+              Welcome, {isGuestMode ? "Guest Wholesaler" : (authProfile?.display_name || "Wholesaler")}
             </h1>
             <p className="text-muted-foreground">
-              {hasProfile ? "Browse assignments and submit deals" : "Complete your profile to get started"}
+              {isGuestMode ? "Preview deal submissions and partner opportunities" : (hasProfile ? "Browse assignments and submit deals" : "Complete your profile to get started")}
             </p>
           </div>
           <PortalHeader currentPortal="wholesaler" />
