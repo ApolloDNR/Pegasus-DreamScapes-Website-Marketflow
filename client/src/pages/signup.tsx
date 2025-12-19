@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, Building2, Home, DollarSign, Briefcase, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Lock, User, Building2, Home, DollarSign, Briefcase, CheckCircle2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const signupSchema = z.object({
@@ -388,6 +388,22 @@ export default function SignupPage() {
               data-testid="link-login"
             >
               Sign in
+            </Link>
+          </div>
+
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm text-muted-foreground text-center mb-3">
+              Want to explore first?
+            </p>
+            <Link href="/marketplace/discover">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                data-testid="button-explore-guest"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Explore as Guest
+              </Button>
             </Link>
           </div>
 

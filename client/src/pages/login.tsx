@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Eye } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -161,6 +161,22 @@ export default function LoginPage() {
               data-testid="link-signup"
             >
               Create one
+            </Link>
+          </div>
+
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm text-muted-foreground text-center mb-3">
+              Want to explore first?
+            </p>
+            <Link href="/marketplace/discover">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                data-testid="button-explore-guest"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Explore as Guest
+              </Button>
             </Link>
           </div>
 
