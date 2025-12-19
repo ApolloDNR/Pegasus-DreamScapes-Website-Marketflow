@@ -163,8 +163,9 @@ function DiscoverPage() {
     await toggleSaveItem('capital_project', projectId);
   };
 
-  const displayDeals = isGuestMode ? sampleWholesaleDeals : deals;
-  const displayProjects = isGuestMode ? sampleCapitalProjects : projects;
+  const useSampleData = isGuestMode || (!deals?.length && !dealsLoading) || (!projects?.length && !projectsLoading);
+  const displayDeals = (deals?.length ? deals : sampleWholesaleDeals) as WholesaleDeal[];
+  const displayProjects = (projects?.length ? projects : sampleCapitalProjects) as CapitalProject[];
   
   const filteredDeals = displayDeals?.filter(deal => {
     let matches = true;
