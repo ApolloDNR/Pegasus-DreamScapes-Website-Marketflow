@@ -22,6 +22,7 @@ import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/compone
 import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
 import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
 import { type UserRole } from "@/lib/supabase";
+import { sampleWholesaleDeals, sampleCapitalProjects } from "@/lib/sample-data";
 import {
   Search,
   Filter,
@@ -162,7 +163,10 @@ function DiscoverPage() {
     await toggleSaveItem('capital_project', projectId);
   };
 
-  const filteredDeals = deals?.filter(deal => {
+  const displayDeals = isGuestMode ? sampleWholesaleDeals : deals;
+  const displayProjects = isGuestMode ? sampleCapitalProjects : projects;
+  
+  const filteredDeals = displayDeals?.filter(deal => {
     let matches = true;
     
     if (searchQuery) {
@@ -182,7 +186,7 @@ function DiscoverPage() {
     return matches;
   }) || [];
 
-  const filteredProjects = projects?.filter(project => {
+  const filteredProjects = displayProjects?.filter(project => {
     let matches = true;
     
     if (searchQuery) {
@@ -336,7 +340,7 @@ function DiscoverPage() {
         </TabsList>
 
         <TabsContent value="deals" className="mt-6">
-          {dealsLoading ? (
+          {dealsLoading && !isGuestMode ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Card key={i}>
@@ -380,7 +384,7 @@ function DiscoverPage() {
         </TabsContent>
 
         <TabsContent value="projects" className="mt-6">
-          {projectsLoading ? (
+          {projectsLoading && !isGuestMode ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <Card key={i}>
