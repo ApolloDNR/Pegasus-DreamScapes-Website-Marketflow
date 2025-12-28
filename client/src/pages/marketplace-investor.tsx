@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import type { CommittedInvestment, CapitalProject } from "@shared/schema";
 import {
   TrendingUp,
@@ -19,6 +19,8 @@ import {
   Heart,
   Building,
   MapPin,
+  Eye,
+  LogIn,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
@@ -34,7 +36,13 @@ interface CommitmentWithProject extends CommittedInvestment {
 }
 
 export default function MarketplaceInvestorPage() {
-  const { profile } = useSupabaseAuth();
+  const { profile, isGuestMode, exitGuestMode } = useSupabaseAuth();
+  const [, setLocation] = useLocation();
+
+  const handleExitPreview = () => {
+    exitGuestMode();
+    setLocation("/marketplace/discover");
+  };
 
   const { data: stats, isLoading } = useQuery<InvestorStats>({
     queryKey: ["/api/supabase/marketplace/investor/stats"],
@@ -62,10 +70,32 @@ export default function MarketplaceInvestorPage() {
     <AuthGuard requiredRoles={["admin", "investor"]}>
       <MarketplaceLayout>
         <div className="space-y-6">
+          {isGuestMode && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-6 py-3">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-amber-600" />
+                  <span className="text-sm font-medium" data-testid="text-guest-preview-banner">Guest Preview Mode - Viewing as Investor</span>
+                  <span className="text-sm text-muted-foreground">Sign in to take actions</span>
+                </div>
+                <div className="flex gap-2">
+                  <Link href="/login">
+                    <Button size="sm" data-testid="button-guest-sign-in">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Button size="sm" variant="outline" onClick={handleExitPreview} data-testid="button-exit-preview">
+                    Exit Preview
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-serif font-bold" data-testid="text-page-title">
-                Investor Dashboard
+                {isGuestMode ? "Welcome, Guest Investor" : "Investor Dashboard"}
               </h1>
               <p className="text-muted-foreground">
                 Discover deals and grow your real estate portfolio

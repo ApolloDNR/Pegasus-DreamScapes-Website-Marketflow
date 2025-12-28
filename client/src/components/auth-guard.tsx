@@ -10,7 +10,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRoles, fallbackPath = "/login" }: AuthGuardProps) {
-  const { isAuthenticated, isLoading, userRole } = useSupabaseAuth();
+  const { isAuthenticated, isLoading, userRole, isGuestMode, guestRole } = useSupabaseAuth();
   const [location] = useLocation();
 
   if (isLoading) {
@@ -24,19 +24,23 @@ export function AuthGuard({ children, requiredRoles, fallbackPath = "/login" }: 
     );
   }
 
-  if (!isAuthenticated) {
+  // Allow guest mode users to access the portal for preview
+  const effectiveRole = isGuestMode ? guestRole : userRole;
+  const hasAccess = isAuthenticated || isGuestMode;
+
+  if (!hasAccess) {
     return <Redirect to={fallbackPath} />;
   }
 
   if (requiredRoles && requiredRoles.length > 0) {
-    if (!userRole || !requiredRoles.includes(userRole)) {
-      const dashboardPath = getRoleDashboardPath(userRole);
+    if (!effectiveRole || !requiredRoles.includes(effectiveRole)) {
+      const dashboardPath = getRoleDashboardPath(effectiveRole);
       return <Redirect to={dashboardPath} />;
     }
   }
 
-  if (!canAccessRoute(userRole, location)) {
-    const dashboardPath = getRoleDashboardPath(userRole);
+  if (!canAccessRoute(effectiveRole, location)) {
+    const dashboardPath = getRoleDashboardPath(effectiveRole);
     return <Redirect to={dashboardPath} />;
   }
 
@@ -72,7 +76,7 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ children, allowedRoles, redirectTo }: RoleGuardProps) {
-  const { userRole, isLoading, isAuthenticated } = useSupabaseAuth();
+  const { userRole, isLoading, isAuthenticated, isGuestMode, guestRole } = useSupabaseAuth();
 
   if (isLoading) {
     return (
@@ -85,12 +89,15 @@ export function RoleGuard({ children, allowedRoles, redirectTo }: RoleGuardProps
     );
   }
 
-  if (!isAuthenticated) {
+  const effectiveRole = isGuestMode ? guestRole : userRole;
+  const hasAccess = isAuthenticated || isGuestMode;
+
+  if (!hasAccess) {
     return <Redirect to="/login" />;
   }
 
-  if (!userRole || !allowedRoles.includes(userRole)) {
-    const fallback = redirectTo ?? getRoleDashboardPath(userRole);
+  if (!effectiveRole || !allowedRoles.includes(effectiveRole)) {
+    const fallback = redirectTo ?? getRoleDashboardPath(effectiveRole);
     return <Redirect to={fallback} />;
   }
 
@@ -105,7 +112,7 @@ interface PermissionGuardProps {
 }
 
 export function PermissionGuard({ children, requiredPermission, fallback, redirectTo }: PermissionGuardProps) {
-  const { hasPermission, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { hasPermission, isLoading, isAuthenticated, userRole, isGuestMode, guestRole } = useSupabaseAuth();
 
   if (isLoading) {
     return (
@@ -118,7 +125,10 @@ export function PermissionGuard({ children, requiredPermission, fallback, redire
     );
   }
 
-  if (!isAuthenticated) {
+  const effectiveRole = isGuestMode ? guestRole : userRole;
+  const hasValidAccess = isAuthenticated || isGuestMode;
+
+  if (!hasValidAccess) {
     return <Redirect to="/login" />;
   }
 
@@ -126,7 +136,7 @@ export function PermissionGuard({ children, requiredPermission, fallback, redire
     if (fallback) {
       return <>{fallback}</>;
     }
-    const path = redirectTo ?? getRoleDashboardPath(userRole);
+    const path = redirectTo ?? getRoleDashboardPath(effectiveRole);
     return <Redirect to={path} />;
   }
 
@@ -149,7 +159,9 @@ export function RoleCategoryGuard({ children, category, redirectTo }: RoleCatego
     isPegasus, 
     isLoading, 
     isAuthenticated, 
-    userRole 
+    userRole,
+    isGuestMode,
+    guestRole
   } = useSupabaseAuth();
 
   if (isLoading) {
@@ -163,11 +175,14 @@ export function RoleCategoryGuard({ children, category, redirectTo }: RoleCatego
     );
   }
 
-  if (!isAuthenticated) {
+  const effectiveRole = isGuestMode ? guestRole : userRole;
+  const hasValidAccess = isAuthenticated || isGuestMode;
+
+  if (!hasValidAccess) {
     return <Redirect to="/login" />;
   }
 
-  const hasAccess = (() => {
+  const hasRoleAccess = (() => {
     switch (category) {
       case 'admin': return isAdmin;
       case 'wholesaler': return isWholesaler;
@@ -179,8 +194,8 @@ export function RoleCategoryGuard({ children, category, redirectTo }: RoleCatego
     }
   })();
 
-  if (!hasAccess) {
-    const path = redirectTo ?? getRoleDashboardPath(userRole);
+  if (!hasRoleAccess) {
+    const path = redirectTo ?? getRoleDashboardPath(effectiveRole);
     return <Redirect to={path} />;
   }
 
