@@ -117,7 +117,7 @@ function DiscoverPage() {
       buyer_investment: '/marketplace/buyer',
       buyer_retail: '/marketplace/buyer',
     }[role] || '/marketplace';
-    setLocation(dashboardPath);
+    setTimeout(() => setLocation(dashboardPath), 50);
   };
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
@@ -289,7 +289,7 @@ function DiscoverPage() {
                 <Button variant="outline" size="sm" onClick={exitGuestMode} data-testid="button-exit-guest">
                   Exit Preview
                 </Button>
-                <Link href="/auth/login">
+                <Link href="/login">
                   <Button size="sm" data-testid="button-sign-in-guest">
                     <LogIn className="w-4 h-4 mr-2" />
                     Sign In

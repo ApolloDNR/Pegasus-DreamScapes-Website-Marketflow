@@ -44,8 +44,20 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGuestMode, setIsGuestMode] = useState(false);
-  const [guestRole, setGuestRole] = useState<UserRole | null>(null);
+  const [isGuestMode, setIsGuestMode] = useState(() => {
+    try {
+      return localStorage.getItem('guestMode') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [guestRole, setGuestRole] = useState<UserRole | null>(() => {
+    try {
+      return localStorage.getItem('guestRole') as UserRole | null;
+    } catch {
+      return null;
+    }
+  });
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -241,11 +253,23 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const enterGuestMode = useCallback((role: UserRole) => {
     setIsGuestMode(true);
     setGuestRole(role);
+    try {
+      localStorage.setItem('guestMode', 'true');
+      localStorage.setItem('guestRole', role);
+    } catch {
+      // localStorage not available
+    }
   }, []);
 
   const exitGuestMode = useCallback(() => {
     setIsGuestMode(false);
     setGuestRole(null);
+    try {
+      localStorage.removeItem('guestMode');
+      localStorage.removeItem('guestRole');
+    } catch {
+      // localStorage not available
+    }
   }, []);
 
   const value: SupabaseAuthContextType = {

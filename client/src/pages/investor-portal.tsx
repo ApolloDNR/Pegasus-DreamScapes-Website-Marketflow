@@ -124,7 +124,7 @@ export default function InvestorPortal() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exitGuestMode}>Exit Preview</Button>
-              <Link href="/auth/login">
+              <Link href="/login">
                 <Button size="sm">
                   <LogIn className="w-4 h-4 mr-2" />
                   Sign In

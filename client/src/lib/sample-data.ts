@@ -1,6 +1,6 @@
 export const sampleWholesaleDeals = [
   {
-    id: 1,
+    id: "sample-deal-1",
     submittedBy: "demo-wholesaler-001",
     propertyAddress: "4521 W McDowell Rd, Phoenix, AZ 85035",
     city: "Phoenix",
@@ -19,7 +19,7 @@ export const sampleWholesaleDeals = [
     photos: ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"],
   },
   {
-    id: 2,
+    id: "sample-deal-2",
     submittedBy: "demo-wholesaler-001",
     propertyAddress: "7832 N 19th Ave, Phoenix, AZ 85021",
     city: "Phoenix",
@@ -38,7 +38,7 @@ export const sampleWholesaleDeals = [
     photos: ["https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800"],
   },
   {
-    id: 3,
+    id: "sample-deal-3",
     submittedBy: "demo-wholesaler-002",
     propertyAddress: "2156 E University Dr, Mesa, AZ 85213",
     city: "Mesa",
@@ -57,7 +57,7 @@ export const sampleWholesaleDeals = [
     photos: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"],
   },
   {
-    id: 4,
+    id: "sample-deal-4",
     submittedBy: "demo-wholesaler-001",
     propertyAddress: "9012 S 48th St, Phoenix, AZ 85044",
     city: "Phoenix",
@@ -76,7 +76,7 @@ export const sampleWholesaleDeals = [
     photos: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"],
   },
   {
-    id: 5,
+    id: "sample-deal-5",
     submittedBy: "demo-wholesaler-002",
     propertyAddress: "3345 W Baseline Rd, Laveen, AZ 85339",
     city: "Laveen",
@@ -98,13 +98,13 @@ export const sampleWholesaleDeals = [
 
 export const sampleCapitalProjects = [
   {
-    id: 1,
+    id: "sample-project-1",
     userId: "demo-dreamscaper-001",
     title: "Scottsdale Fix & Flip - Luxury Single Family",
     description: "Acquiring a distressed luxury property in North Scottsdale. Target ARV of $1.2M after full renovation including pool, kitchen, and landscaping upgrades.",
     location: "Scottsdale, AZ",
     propertyType: "Single Family",
-    fundingStructure: "EQUITY",
+    structure: "EQUITY",
     fundingGoal: 250000,
     amountRaised: 175000,
     minInvestment: 25000,
@@ -115,13 +115,13 @@ export const sampleCapitalProjects = [
     isPublic: true,
   },
   {
-    id: 2,
+    id: "sample-project-2",
     userId: "demo-dreamscaper-001",
     title: "Mesa Multi-Family Renovation",
     description: "8-unit apartment complex needing cosmetic updates. Strong rental demand in the area with 95% occupancy in surrounding properties.",
     location: "Mesa, AZ",
     propertyType: "Multi-Family",
-    fundingStructure: "DEBT",
+    structure: "DEBT",
     fundingGoal: 85000,
     amountRaised: 85000,
     minInvestment: 10000,
@@ -132,13 +132,13 @@ export const sampleCapitalProjects = [
     isPublic: true,
   },
   {
-    id: 3,
+    id: "sample-project-3",
     userId: "demo-dreamscaper-002",
     title: "Gilbert Rental Portfolio Acquisition",
     description: "Acquiring a 4-property rental portfolio in Gilbert. All properties leased with strong NOI. Seeking equity partners.",
     location: "Gilbert, AZ",
     propertyType: "Multi-Family",
-    fundingStructure: "EQUITY",
+    structure: "EQUITY",
     fundingGoal: 280000,
     amountRaised: 140000,
     minInvestment: 50000,
@@ -149,13 +149,13 @@ export const sampleCapitalProjects = [
     isPublic: true,
   },
   {
-    id: 4,
+    id: "sample-project-4",
     userId: "demo-dreamscaper-001",
     title: "Tempe Townhome Development",
     description: "Ground-up construction of 6 townhomes near ASU campus. Pre-sold units with strong buyer demand. Hybrid funding structure.",
     location: "Tempe, AZ",
     propertyType: "Townhome",
-    fundingStructure: "HYBRID",
+    structure: "HYBRID",
     fundingGoal: 450000,
     amountRaised: 125000,
     minInvestment: 25000,
