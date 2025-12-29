@@ -143,12 +143,26 @@ export async function registerRoutes(
         return res.status(400).json({ message: 'Missing required fields' });
       }
       
-      await createUserProfile(userId, {
-        primary_role: role,
-        display_name: displayName
-      });
+      // Try Supabase provisioning, but don't fail if unavailable
+      try {
+        await createUserProfile(userId, {
+          primary_role: role,
+          display_name: displayName
+        });
+        await createUserReputation(userId);
+      } catch (supabaseError) {
+        console.log('Supabase provisioning failed (likely unavailable), using PostgreSQL fallback');
+      }
       
-      await createUserReputation(userId);
+      // Ensure user role exists in PostgreSQL
+      try {
+        const existingRoles = await storage.getUserRoles(userId);
+        if (existingRoles.length === 0) {
+          await storage.addUserRole({ userId, role });
+        }
+      } catch (pgError) {
+        console.log('PostgreSQL role assignment failed:', pgError);
+      }
       
       res.json({ success: true });
     } catch (error) {
@@ -157,15 +171,45 @@ export async function registerRoutes(
     }
   });
 
-  // Get user profile from Supabase
+  // Get user profile - try Supabase first, fall back to PostgreSQL
   app.get('/api/supabase/profile/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
-      const profile = await getUserProfile(userId);
       
-      if (!profile) {
+      // Try Supabase first if available
+      try {
+        const profile = await getUserProfile(userId);
+        if (profile) {
+          return res.json(profile);
+        }
+      } catch (supabaseError) {
+        // Supabase unavailable, fall through to PostgreSQL
+        console.log('Supabase profile fetch failed, falling back to PostgreSQL');
+      }
+      
+      // Fall back to PostgreSQL user data
+      const pgUser = await storage.getUser(userId);
+      if (!pgUser) {
         return res.status(404).json({ message: 'Profile not found' });
       }
+      
+      // Get user roles from PostgreSQL
+      const userRoles = await storage.getUserRoles(userId);
+      const primaryRole = userRoles.length > 0 ? userRoles[0].role : 'investor';
+      const isPegasus = primaryRole.startsWith('pegasus_');
+      
+      // Construct profile from PostgreSQL user data
+      const profile = {
+        id: pgUser.id,
+        user_id: pgUser.id,
+        primary_role: primaryRole,
+        display_name: `${pgUser.firstName || ''} ${pgUser.lastName || ''}`.trim() || pgUser.email?.split('@')[0] || 'User',
+        avatar_url: pgUser.profileImageUrl || undefined,
+        is_pegasus_badged: isPegasus || pgUser.role === 'admin',
+        pegasus_role_type: isPegasus ? primaryRole : undefined,
+        created_at: pgUser.createdAt?.toISOString() || new Date().toISOString(),
+        updated_at: pgUser.updatedAt?.toISOString() || new Date().toISOString()
+      };
       
       res.json(profile);
     } catch (error) {

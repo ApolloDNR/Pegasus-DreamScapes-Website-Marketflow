@@ -90,11 +90,27 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           const replitUser = await replitAuthResponse.json();
           if (replitUser?.id) {
             // Fetch profile using Replit Auth user ID (external_user_id)
-            const profileData = await fetchProfile(replitUser.id);
+            let profileData = await fetchProfile(replitUser.id);
+            
+            // If profile fetch fails, construct from Replit Auth user data
+            if (!profileData) {
+              const primaryRole = replitUser.roles?.[0] || replitUser.role || 'investor';
+              const isPegasus = primaryRole.startsWith('pegasus_');
+              profileData = {
+                id: replitUser.id,
+                user_id: replitUser.id,
+                primary_role: primaryRole as UserRole,
+                display_name: `${replitUser.firstName || ''} ${replitUser.lastName || ''}`.trim() || replitUser.email?.split('@')[0] || 'User',
+                avatar_url: replitUser.profileImageUrl || undefined,
+                is_pegasus_badged: isPegasus || replitUser.isStaff || replitUser.role === 'admin',
+                pegasus_role_type: isPegasus ? primaryRole : undefined,
+                created_at: replitUser.createdAt || new Date().toISOString(),
+                updated_at: replitUser.updatedAt || new Date().toISOString()
+              };
+            }
+            
             if (mounted) {
-              if (profileData) {
-                setProfile(profileData);
-              }
+              setProfile(profileData);
               setIsLoading(false);
             }
             return;
