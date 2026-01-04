@@ -112,7 +112,7 @@ Schema managed via `npm run db:push` for Drizzle and `supabase-schema.sql` for S
 ### Key Features
 
 *   **Peggy AI Assistant**: A context-aware AI assistant powered by OpenAI (via Replit AI Integrations) providing real estate investing guidance, accessible via a floating chat bubble and integrated with calculators.
-*   **Marketplace Platform**: A unified, role-based platform (`/marketplace`) for Wholesalers, Investors, Dreamscapers, and Buyers, replacing legacy portal routes.
+*   **MarketFlow Platform**: A premium app-like deal-flow portal at `/marketflow` featuring Grid/Swipe deal browsing with Match Score badges, role-gated submission (Dreamscaper/Wholesaler only), and quick action buttons. Routes under `/marketplace` redirect to `/marketflow`.
 *   **Community & Messaging**: Features discussion forums and direct messaging for deal negotiations.
 *   **Centralized Deal Components**: Reusable UI components for consistent rendering of various deal types (Capital Projects, Wholesale Deals) across the platform.
 *   **Compatibility Scoring Engine**: An algorithm that matches deals to investor preferences based on weighted factors like property type, strategy, location, and budget.
