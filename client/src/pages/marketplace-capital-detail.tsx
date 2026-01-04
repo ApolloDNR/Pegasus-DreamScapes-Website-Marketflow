@@ -98,7 +98,7 @@ function CapitalDetailPage() {
             <p className="text-muted-foreground text-center mb-4">
               The capital opportunity you're looking for doesn't exist or has been removed.
             </p>
-            <Link href="/marketplace/capital">
+            <Link href="/marketflow/capital">
               <Button variant="outline">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Opportunities
@@ -118,7 +118,7 @@ function CapitalDetailPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <Link href="/marketplace/capital">
+        <Link href="/marketflow/capital">
           <Button variant="ghost" size="sm" data-testid="button-back-to-capital">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Opportunities

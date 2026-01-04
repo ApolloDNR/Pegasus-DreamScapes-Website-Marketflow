@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
-import { AuthGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,11 +60,9 @@ import {
 
 export default function MarketplaceDealDetail() {
   return (
-    <AuthGuard requiredRoles={["dreamscaper", "pegasus_dreamscaper", "admin", "investor", "buyer_investment"]}>
-      <MarketplaceLayout>
-        <DealDetailPage />
-      </MarketplaceLayout>
-    </AuthGuard>
+    <MarketplaceLayout>
+      <DealDetailPage />
+    </MarketplaceLayout>
   );
 }
 
@@ -78,7 +75,7 @@ function DealDetailPage() {
   const [negotiationDialogOpen, setNegotiationDialogOpen] = useState(false);
 
   const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
-    queryKey: ['/api/supabase/wholesale-deals', dealId],
+    queryKey: ['/api/wholesale-deals', dealId],
   });
 
   if (isLoading) {
@@ -94,7 +91,7 @@ function DealDetailPage() {
           <p className="text-muted-foreground mb-6">
             This deal may have been removed or is no longer available.
           </p>
-          <Link href="/marketplace/deals">
+          <Link href="/marketflow/deals">
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Deals
@@ -130,7 +127,7 @@ function DealDetailPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <Link href="/marketplace/deals">
+        <Link href="/marketflow/deals">
           <Button variant="ghost" size="sm" data-testid="button-back-to-deals">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Deals

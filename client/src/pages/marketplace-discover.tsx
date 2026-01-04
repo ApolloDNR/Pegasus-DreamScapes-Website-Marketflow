@@ -111,12 +111,12 @@ function DiscoverPage() {
       description: `Previewing as ${role.replace(/_/g, ' ')}. Sign in to take actions.`,
     });
     const dashboardPath = {
-      wholesaler: '/marketplace/wholesaler',
-      investor: '/marketplace/investor',
-      dreamscaper: '/marketplace/dreamscaper',
-      buyer_investment: '/marketplace/buyer',
-      buyer_retail: '/marketplace/buyer',
-    }[role] || '/marketplace';
+      wholesaler: '/marketflow/wholesaler',
+      investor: '/marketflow/investor',
+      dreamscaper: '/marketflow/dreamscaper',
+      buyer_investment: '/marketflow/buyer',
+      buyer_retail: '/marketflow/buyer',
+    }[role] || '/marketflow';
     setTimeout(() => setLocation(dashboardPath), 50);
   };
 
@@ -576,7 +576,7 @@ function DealCard({
           </div>
         </div>
         <div className="mt-auto space-y-2">
-          <Link href={`/marketplace/deals/${deal.id}`}>
+          <Link href={`/marketflow/deals/${deal.id}`}>
             <Button className="w-full" variant="outline" data-testid={`button-view-deal-${deal.id}`}>
               View Details
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -722,7 +722,7 @@ function ProjectCard({
         </div>
 
         <div className="mt-auto flex gap-2">
-          <Link href={`/marketplace/capital/${project.id}`} className="flex-1">
+          <Link href={`/marketflow/capital/${project.id}`} className="flex-1">
             <Button className="w-full" variant="outline" data-testid={`button-view-project-${project.id}`}>
               View Project
               <ArrowRight className="w-4 h-4 ml-2" />

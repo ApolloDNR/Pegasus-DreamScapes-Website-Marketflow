@@ -168,7 +168,7 @@ export default function LoginPage() {
             <p className="text-sm text-muted-foreground text-center mb-3">
               Want to explore first?
             </p>
-            <Link href="/marketplace/discover">
+            <Link href="/marketflow/discover">
               <Button 
                 variant="outline" 
                 className="w-full"

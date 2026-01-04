@@ -425,7 +425,7 @@ function CTASection({ isLoggedIn, userRole }: { isLoggedIn: boolean; userRole: s
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {isLoggedIn ? (
             <>
-              <Link href="/marketplace/wholesaler">
+              <Link href="/marketflow/wholesaler">
                 <Button size="lg" className="text-base px-8 py-6" data-testid="button-go-to-dashboard">
                   Go to Wholesaler Dashboard
                   <ArrowRight className="ml-2 w-5 h-5" />

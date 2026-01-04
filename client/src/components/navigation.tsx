@@ -77,7 +77,7 @@ const megaMenuSections = {
     items: [
       { href: "/calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator, badge: "Pro" },
       { href: "/resources", label: "Investment Guides", description: "Learn the fundamentals", icon: FileText },
-      { href: "/marketplace/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
+      { href: "/marketflow/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
       { href: "/projects", label: "Case Studies", description: "Real project examples", icon: Target },
     ]
   },
@@ -239,22 +239,22 @@ function UserMenu({ profile, userEmail, scrolled, isHomePage, isAdmin }: { profi
         
         <DropdownMenuSeparator />
         
-        <Link href="/marketplace">
+        <Link href="/marketflow">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span>Marketplace Hub</span>
+            <span>MarketFlow Hub</span>
             <Badge variant="secondary" className="ml-auto text-[10px] px-1.5">New</Badge>
           </DropdownMenuItem>
         </Link>
         
-        <Link href="/marketplace">
+        <Link href="/marketflow">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <BarChart3 className="w-4 h-4" />
             <span>My Dashboard</span>
           </DropdownMenuItem>
         </Link>
         
-        <Link href="/marketplace/messages">
+        <Link href="/marketflow/messages">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <MessageSquare className="w-4 h-4" />
             <span>Messages</span>
@@ -265,7 +265,7 @@ function UserMenu({ profile, userEmail, scrolled, isHomePage, isAdmin }: { profi
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <Link href="/marketplace/admin">
+            <Link href="/marketflow/admin">
               <DropdownMenuItem className="cursor-pointer gap-2 text-blue-600">
                 <Shield className="w-4 h-4" />
                 <span>Admin Dashboard</span>
@@ -277,7 +277,7 @@ function UserMenu({ profile, userEmail, scrolled, isHomePage, isAdmin }: { profi
         
         <DropdownMenuSeparator />
         
-        <Link href="/marketplace/settings">
+        <Link href="/marketflow/settings">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <Settings className="w-4 h-4" />
             <span>Settings</span>

@@ -21,23 +21,23 @@ export default function Dashboard() {
       case "admin":
       case "pegasus_wholesaler":
       case "pegasus_dreamscaper":
-        setLocation("/marketplace/admin");
+        setLocation("/marketflow/admin");
         break;
       case "wholesaler":
-        setLocation("/marketplace/wholesaler");
+        setLocation("/marketflow/wholesaler");
         break;
       case "dreamscaper":
-        setLocation("/marketplace/dreamscaper");
+        setLocation("/marketflow/dreamscaper");
         break;
       case "investor":
-        setLocation("/marketplace/investor");
+        setLocation("/marketflow/investor");
         break;
       case "buyer_retail":
       case "buyer_investment":
-        setLocation("/marketplace/buyer");
+        setLocation("/marketflow/buyer");
         break;
       default:
-        setLocation("/marketplace");
+        setLocation("/marketflow");
     }
   }, [user, isLoading, setLocation]);
 

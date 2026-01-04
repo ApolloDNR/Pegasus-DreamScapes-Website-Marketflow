@@ -411,7 +411,7 @@ function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: 
             >
               <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
             </Button>
-            <Link href={`/marketplace/capital/${project.id}`}>
+            <Link href={`/marketflow/capital/${project.id}`}>
               <Button 
                 disabled={isFunded} 
                 data-testid={`button-view-project-${project.id}`}

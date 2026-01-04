@@ -28,7 +28,7 @@ export default function MarketplacePage() {
   useEffect(() => {
     if (!isLoading && isAuthenticated && userRole) {
       const dashboardPath = getRoleDashboardPath(userRole);
-      if (dashboardPath !== "/marketplace") {
+      if (dashboardPath !== "/marketflow") {
         setLocation(dashboardPath);
       }
     }

@@ -381,7 +381,7 @@ function PropertyGridCard({ listing, formatCurrency, getStatusBadge, onSave, isA
             </span>
           )}
         </div>
-        <Link href={`/marketplace/properties/${listing.id}`}>
+        <Link href={`/marketflow/properties/${listing.id}`}>
           <Button className="w-full" data-testid={`button-view-${listing.id}`}>
             View Details
           </Button>
@@ -458,7 +458,7 @@ function PropertyListCard({ listing, formatCurrency, getStatusBadge, onSave, isA
             )}
           </div>
           <div className="mt-4">
-            <Link href={`/marketplace/properties/${listing.id}`}>
+            <Link href={`/marketflow/properties/${listing.id}`}>
               <Button data-testid={`button-view-${listing.id}`}>
                 View Details
               </Button>

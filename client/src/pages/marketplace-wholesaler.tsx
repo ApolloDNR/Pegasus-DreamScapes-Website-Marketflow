@@ -41,7 +41,7 @@ export default function MarketplaceWholesalerPage() {
   const isPegasus = profile?.is_pegasus_badged;
 
   const { data: stats, isLoading } = useQuery<DealStats>({
-    queryKey: ["/api/supabase/marketplace/wholesaler/stats"],
+    queryKey: ["/api/supabase/marketflow/wholesaler/stats"],
   });
 
   const { data: myDeals, isLoading: isDealsLoading } = useQuery<WholesaleDeal[]>({
@@ -95,7 +95,7 @@ export default function MarketplaceWholesalerPage() {
                   Pegasus Verified
                 </Badge>
               )}
-              <Link href="/marketplace/wholesaler/submit">
+              <Link href="/marketflow/wholesaler/submit">
                 <Button data-testid="button-submit-deal">
                   <Plus className="h-4 w-4 mr-2" />
                   Submit New Deal
@@ -191,7 +191,7 @@ export default function MarketplaceWholesalerPage() {
                   <div className="text-center py-8">
                     <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-4">No deals yet</p>
-                    <Link href="/marketplace/wholesaler/submit">
+                    <Link href="/marketflow/wholesaler/submit">
                       <Button size="sm">
                         <Plus className="w-4 h-4 mr-2" />
                         Submit Your First Deal
@@ -221,7 +221,7 @@ export default function MarketplaceWholesalerPage() {
                     ))}
                   </div>
                 )}
-                <Link href="/marketplace/wholesaler/deals">
+                <Link href="/marketflow/wholesaler/deals">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-view-all-deals">
                     View All Deals
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -320,7 +320,7 @@ export default function MarketplaceWholesalerPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   List a new wholesale deal for our network of Dreamscapers and investors.
                 </p>
-                <Link href="/marketplace/wholesaler/submit">
+                <Link href="/marketflow/wholesaler/submit">
                   <Button className="w-full" data-testid="action-submit-deal">
                     <Plus className="h-4 w-4 mr-2" />
                     Submit Deal
@@ -337,7 +337,7 @@ export default function MarketplaceWholesalerPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect with verified Dreamscapers and investors in our network.
                 </p>
-                <Link href="/marketplace/discover">
+                <Link href="/marketflow/discover">
                   <Button variant="outline" className="w-full" data-testid="action-browse-buyers">
                     <Users className="h-4 w-4 mr-2" />
                     View Network

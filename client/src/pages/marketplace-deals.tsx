@@ -474,7 +474,7 @@ function DealCard({ deal, onProtectedAction, onSave, isSaved, isSaving }: DealCa
         </CardContent>
 
         <CardFooter className="pt-4 border-t">
-          <Link href={`/marketplace/deals/${deal.id}`} className="w-full">
+          <Link href={`/marketflow/deals/${deal.id}`} className="w-full">
             <Button className="w-full" data-testid={`button-view-deal-${deal.id}`}>
               View Deal
               <ArrowRight className="w-4 h-4 ml-2" />

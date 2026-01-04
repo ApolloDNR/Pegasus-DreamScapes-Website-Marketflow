@@ -179,7 +179,7 @@ export function NotificationDropdown() {
           <>
             <DropdownMenuSeparator />
             <div className="p-2">
-              <Link href="/marketplace/notifications" onClick={() => setIsOpen(false)}>
+              <Link href="/marketflow/notifications" onClick={() => setIsOpen(false)}>
                 <Button 
                   variant="ghost" 
                   className="w-full justify-center h-8 text-xs"

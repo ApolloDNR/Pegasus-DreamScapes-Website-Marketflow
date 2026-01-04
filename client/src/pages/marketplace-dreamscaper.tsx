@@ -36,7 +36,7 @@ export default function MarketplaceDreamscaperPage() {
   const isPegasus = profile?.is_pegasus_badged;
 
   const { data: stats, isLoading } = useQuery<ProjectStats>({
-    queryKey: ["/api/supabase/marketplace/dreamscaper/stats"],
+    queryKey: ["/api/supabase/marketflow/dreamscaper/stats"],
   });
 
   const { data: myProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
@@ -72,7 +72,7 @@ export default function MarketplaceDreamscaperPage() {
                   Pegasus Partner
                 </Badge>
               )}
-              <Link href="/marketplace/dreamscaper/projects/new">
+              <Link href="/marketflow/dreamscaper/projects/new">
                 <Button data-testid="button-new-project">
                   <Plus className="h-4 w-4 mr-2" />
                   New Project
@@ -168,7 +168,7 @@ export default function MarketplaceDreamscaperPage() {
                   <div className="text-center py-8">
                     <Hammer className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-4">No projects yet</p>
-                    <Link href="/marketplace/dreamscaper/projects/new">
+                    <Link href="/marketflow/dreamscaper/projects/new">
                       <Button size="sm">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Your First Project
@@ -207,7 +207,7 @@ export default function MarketplaceDreamscaperPage() {
                     })}
                   </div>
                 )}
-                <Link href="/marketplace/dreamscaper/projects">
+                <Link href="/marketflow/dreamscaper/projects">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-view-all-projects">
                     View All Projects
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -222,13 +222,13 @@ export default function MarketplaceDreamscaperPage() {
                 <CardDescription>Manage your DreamScaper activities</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link href="/marketplace/dreamscaper/projects/new" className="block">
+                <Link href="/marketflow/dreamscaper/projects/new" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-new-project">
                     <Building2 className="h-4 w-4 mr-2" />
                     Create New Project
                   </Button>
                 </Link>
-                <Link href="/marketplace/dreamscaper/capital" className="block">
+                <Link href="/marketflow/dreamscaper/capital" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-raise-capital">
                     <DollarSign className="h-4 w-4 mr-2" />
                     Raise Capital
@@ -256,13 +256,13 @@ export default function MarketplaceDreamscaperPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3">
-                <Link href="/marketplace/deals">
+                <Link href="/marketflow/deals">
                   <Button data-testid="button-browse-deals">
                     <Target className="h-4 w-4 mr-2" />
                     Browse All Deals
                   </Button>
                 </Link>
-                <Link href="/marketplace/capital">
+                <Link href="/marketflow/capital">
                   <Button variant="outline" data-testid="button-browse-capital">
                     <Handshake className="h-4 w-4 mr-2" />
                     View Capital Opportunities

@@ -69,6 +69,8 @@ import MarketplaceDiscover from "@/pages/marketplace-discover";
 import MarketplaceCalculators from "@/pages/marketplace-calculators";
 import MarketplaceResources from "@/pages/marketplace-resources";
 import SubmitDeal from "@/pages/submit-deal";
+import MarketflowSubmit from "@/pages/marketflow-submit";
+import MarketflowDeals from "@/pages/marketflow-deals";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -94,51 +96,77 @@ function Router() {
       <Route path="/partner" component={Partner} />
       <Route path="/submit-deal" component={SubmitDeal} />
       <Route path="/dashboard" component={Dashboard} />
-      {/* Legacy HQ routes redirect to marketplace admin */}
-      <Route path="/dealflow/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
-      <Route path="/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
+      {/* Legacy HQ routes redirect to marketflow admin */}
+      <Route path="/dealflow/hq">{() => <Redirect to="/marketflow/admin" />}</Route>
+      <Route path="/hq">{() => <Redirect to="/marketflow/admin" />}</Route>
       
-      {/* Legacy portal routes redirect to marketplace */}
-      <Route path="/portal">{() => <Redirect to="/marketplace" />}</Route>
-      <Route path="/portal/investor">{() => <Redirect to="/marketplace/investor" />}</Route>
-      <Route path="/portal/wholesaler">{() => <Redirect to="/marketplace/wholesaler" />}</Route>
-      <Route path="/portal/buyer">{() => <Redirect to="/marketplace/buyer" />}</Route>
-      <Route path="/portal/dreamscaper">{() => <Redirect to="/marketplace/dreamscaper" />}</Route>
+      {/* Legacy portal routes redirect to marketflow */}
+      <Route path="/portal">{() => <Redirect to="/marketflow" />}</Route>
+      <Route path="/portal/investor">{() => <Redirect to="/marketflow/investor" />}</Route>
+      <Route path="/portal/wholesaler">{() => <Redirect to="/marketflow/wholesaler" />}</Route>
+      <Route path="/portal/buyer">{() => <Redirect to="/marketflow/buyer" />}</Route>
+      <Route path="/portal/dreamscaper">{() => <Redirect to="/marketflow/dreamscaper" />}</Route>
       <Route path="/capital-raising" component={CapitalRaising} />
-      <Route path="/community">{() => <Redirect to="/marketplace/community" />}</Route>
+      <Route path="/community">{() => <Redirect to="/marketflow/community" />}</Route>
       
-      {/* Legacy /dealflow routes redirect to /marketplace */}
-      <Route path="/dealflow">{() => <Redirect to="/marketplace" />}</Route>
-      <Route path="/dealflow/office">{() => <Redirect to="/marketplace" />}</Route>
-      <Route path="/dealflow/hq">{() => <Redirect to="/marketplace/admin" />}</Route>
-      <Route path="/dealflow/deals">{() => <Redirect to="/marketplace/discover" />}</Route>
+      {/* Legacy /dealflow routes redirect to /marketflow */}
+      <Route path="/dealflow">{() => <Redirect to="/marketflow" />}</Route>
+      <Route path="/dealflow/office">{() => <Redirect to="/marketflow" />}</Route>
+      <Route path="/dealflow/deals">{() => <Redirect to="/marketflow/discover" />}</Route>
       <Route path="/dealflow/project/:id" component={DealflowProject} />
-      <Route path="/dealflow/community">{() => <Redirect to="/marketplace/community" />}</Route>
-      <Route path="/dealflow/messages">{() => <Redirect to="/marketplace/messages" />}</Route>
+      <Route path="/dealflow/community">{() => <Redirect to="/marketflow/community" />}</Route>
+      <Route path="/dealflow/messages">{() => <Redirect to="/marketflow/messages" />}</Route>
       
-      {/* New Marketplace Routes with Supabase Auth */}
-      <Route path="/marketplace" component={Marketplace} />
-      <Route path="/marketplace/wholesaler/:rest*" component={MarketplaceWholesaler} />
-      <Route path="/marketplace/wholesaler" component={MarketplaceWholesaler} />
-      <Route path="/marketplace/dreamscaper/:rest*" component={MarketplaceDreamscaper} />
-      <Route path="/marketplace/dreamscaper" component={MarketplaceDreamscaper} />
-      <Route path="/marketplace/investor/:rest*" component={MarketplaceInvestor} />
-      <Route path="/marketplace/investor" component={MarketplaceInvestor} />
-      <Route path="/marketplace/buyer/:rest*" component={MarketplaceBuyer} />
-      <Route path="/marketplace/buyer" component={MarketplaceBuyer} />
-      <Route path="/marketplace/admin/:rest*" component={MarketplaceAdmin} />
-      <Route path="/marketplace/admin" component={MarketplaceAdmin} />
-      <Route path="/marketplace/discover" component={MarketplaceDiscover} />
-      <Route path="/marketplace/calculators" component={MarketplaceCalculators} />
-      <Route path="/marketplace/resources" component={MarketplaceResources} />
-      <Route path="/marketplace/community" component={DealflowCommunity} />
-      <Route path="/marketplace/messages" component={DealflowMessages} />
-      <Route path="/marketplace/deals" component={MarketplaceDeals} />
-      <Route path="/marketplace/deals/:id" component={MarketplaceDealDetail} />
-      <Route path="/marketplace/capital" component={MarketplaceCapital} />
-      <Route path="/marketplace/capital/:id" component={MarketplaceCapitalDetail} />
-      <Route path="/marketplace/properties" component={MarketplaceProperties} />
-      <Route path="/marketplace/properties/:id" component={MarketplacePropertyDetail} />
+      {/* Legacy /marketplace routes redirect to /marketflow */}
+      <Route path="/marketplace">{() => <Redirect to="/marketflow" />}</Route>
+      <Route path="/marketplace/wholesaler/:rest*">{() => <Redirect to="/marketflow/wholesaler" />}</Route>
+      <Route path="/marketplace/wholesaler">{() => <Redirect to="/marketflow/wholesaler" />}</Route>
+      <Route path="/marketplace/dreamscaper/:rest*">{() => <Redirect to="/marketflow/dreamscaper" />}</Route>
+      <Route path="/marketplace/dreamscaper">{() => <Redirect to="/marketflow/dreamscaper" />}</Route>
+      <Route path="/marketplace/investor/:rest*">{() => <Redirect to="/marketflow/investor" />}</Route>
+      <Route path="/marketplace/investor">{() => <Redirect to="/marketflow/investor" />}</Route>
+      <Route path="/marketplace/buyer/:rest*">{() => <Redirect to="/marketflow/buyer" />}</Route>
+      <Route path="/marketplace/buyer">{() => <Redirect to="/marketflow/buyer" />}</Route>
+      <Route path="/marketplace/admin/:rest*">{() => <Redirect to="/marketflow/admin" />}</Route>
+      <Route path="/marketplace/admin">{() => <Redirect to="/marketflow/admin" />}</Route>
+      <Route path="/marketplace/discover">{() => <Redirect to="/marketflow/discover" />}</Route>
+      <Route path="/marketplace/calculators">{() => <Redirect to="/marketflow/calculators" />}</Route>
+      <Route path="/marketplace/resources">{() => <Redirect to="/marketflow/resources" />}</Route>
+      <Route path="/marketplace/community">{() => <Redirect to="/marketflow/community" />}</Route>
+      <Route path="/marketplace/messages">{() => <Redirect to="/marketflow/messages" />}</Route>
+      <Route path="/marketplace/deals/:id">{() => <Redirect to="/marketflow/deals" />}</Route>
+      <Route path="/marketplace/deals">{() => <Redirect to="/marketflow/deals" />}</Route>
+      <Route path="/marketplace/capital/:id">{() => <Redirect to="/marketflow/capital" />}</Route>
+      <Route path="/marketplace/capital">{() => <Redirect to="/marketflow/capital" />}</Route>
+      <Route path="/marketplace/properties/:id">{() => <Redirect to="/marketflow/properties" />}</Route>
+      <Route path="/marketplace/properties">{() => <Redirect to="/marketflow/properties" />}</Route>
+      
+      {/* MarketFlow Routes with Supabase Auth */}
+      <Route path="/marketflow" component={Marketplace} />
+      <Route path="/marketflow/wholesaler/:rest*" component={MarketplaceWholesaler} />
+      <Route path="/marketflow/wholesaler" component={MarketplaceWholesaler} />
+      <Route path="/marketflow/dreamscaper/:rest*" component={MarketplaceDreamscaper} />
+      <Route path="/marketflow/dreamscaper" component={MarketplaceDreamscaper} />
+      <Route path="/marketflow/investor/:rest*" component={MarketplaceInvestor} />
+      <Route path="/marketflow/investor" component={MarketplaceInvestor} />
+      <Route path="/marketflow/buyer/:rest*" component={MarketplaceBuyer} />
+      <Route path="/marketflow/buyer" component={MarketplaceBuyer} />
+      <Route path="/marketflow/admin/:rest*" component={MarketplaceAdmin} />
+      <Route path="/marketflow/admin" component={MarketplaceAdmin} />
+      <Route path="/marketflow/discover" component={MarketplaceDiscover} />
+      <Route path="/marketflow/calculators" component={MarketplaceCalculators} />
+      <Route path="/marketflow/resources" component={MarketplaceResources} />
+      <Route path="/marketflow/community" component={DealflowCommunity} />
+      <Route path="/marketflow/messages" component={DealflowMessages} />
+      <Route path="/marketflow/deals" component={MarketflowDeals} />
+      <Route path="/marketflow/deals/:id" component={MarketplaceDealDetail} />
+      <Route path="/marketflow/capital" component={MarketplaceCapital} />
+      <Route path="/marketflow/capital/:id" component={MarketplaceCapitalDetail} />
+      <Route path="/marketflow/properties" component={MarketplaceProperties} />
+      <Route path="/marketflow/properties/:id" component={MarketplacePropertyDetail} />
+      <Route path="/marketflow/submit" component={MarketflowSubmit} />
+      <Route path="/marketflow/deals/:id/negotiate" component={MarketplaceDealDetail} />
+      <Route path="/marketflow/dashboard" component={MarketplaceInvestor} />
       
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />

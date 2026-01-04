@@ -56,7 +56,7 @@ export default function MarketplacePropertyDetailPage() {
 }
 
 function PropertyDetailContent() {
-  const [, params] = useRoute("/marketplace/properties/:id");
+  const [, params] = useRoute("/marketflow/properties/:id");
   const propertyId = params?.id || null;
   const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
@@ -123,7 +123,7 @@ function PropertyDetailContent() {
   if (error || !listing) {
     return (
       <div className="space-y-6">
-        <Link href="/marketplace/properties">
+        <Link href="/marketflow/properties">
           <Button variant="ghost" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Properties
@@ -170,7 +170,7 @@ function PropertyDetailContent() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <Link href="/marketplace/properties">
+        <Link href="/marketflow/properties">
           <Button variant="ghost" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Properties

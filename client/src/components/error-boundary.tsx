@@ -56,7 +56,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   <RefreshCw className="h-4 w-4" />
                   Try Again
                 </Button>
-                <Link href="/marketplace">
+                <Link href="/marketflow">
                   <Button className="gap-2 w-full sm:w-auto">
                     <Home className="h-4 w-4" />
                     Go to Dashboard
@@ -97,7 +97,7 @@ export function QueryErrorFallback({
             <p className="text-muted-foreground">
               The requested item could not be found. It may have been removed or you may not have access.
             </p>
-            <Link href="/marketplace">
+            <Link href="/marketflow">
               <Button variant="outline" className="gap-2">
                 <Home className="h-4 w-4" />
                 Return to Dashboard

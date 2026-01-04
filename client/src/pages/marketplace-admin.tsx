@@ -101,19 +101,19 @@ export default function MarketplaceAdminPage() {
   const [auditLogFilter, setAuditLogFilter] = useState<string>("all");
 
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
-    queryKey: ["/api/marketplace/admin/stats"],
+    queryKey: ["/api/marketflow/admin/stats"],
   });
 
   const { data: pendingItems = [], isLoading: pendingLoading } = useQuery<PendingItem[]>({
-    queryKey: ["/api/marketplace/admin/pending"],
+    queryKey: ["/api/marketflow/admin/pending"],
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<AdminUser[]>({
-    queryKey: ["/api/marketplace/admin/users"],
+    queryKey: ["/api/marketflow/admin/users"],
   });
 
   const { data: leads = [], isLoading: leadsLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/marketplace/admin/leads"],
+    queryKey: ["/api/marketflow/admin/leads"],
   });
 
   const auditLogQueryKey = auditLogFilter === "all" 
@@ -127,8 +127,8 @@ export default function MarketplaceAdminPage() {
   const approveMutation = useMutation({
     mutationFn: async ({ itemType, itemId, approved }: { itemType: string; itemId: number; approved: boolean }) => {
       const endpoint = itemType === "wholesale_deal" 
-        ? `/api/marketplace/admin/deals/${itemId}/status`
-        : `/api/marketplace/admin/projects/${itemId}/status`;
+        ? `/api/marketflow/admin/deals/${itemId}/status`
+        : `/api/marketflow/admin/projects/${itemId}/status`;
       return apiRequest("PATCH", endpoint, {
         status: approved ? "listed" : "rejected",
         rejectionReason: approved ? undefined : rejectionReason,
@@ -139,8 +139,8 @@ export default function MarketplaceAdminPage() {
         title: variables.approved ? "Approved" : "Rejected",
         description: `Item has been ${variables.approved ? "approved and listed" : "rejected"}.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/pending"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/admin/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/admin/stats"] });
       setReviewDialogOpen(false);
       setSelectedItem(null);
       setRejectionReason("");
@@ -206,7 +206,7 @@ export default function MarketplaceAdminPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link href="/marketplace/admin/settings">
+              <Link href="/marketflow/admin/settings">
                 <Button variant="outline" data-testid="button-settings">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
@@ -527,7 +527,7 @@ export default function MarketplaceAdminPage() {
                       ))}
                     </div>
                   )}
-                  <Link href="/marketplace/admin/leads">
+                  <Link href="/marketflow/admin/leads">
                     <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-leads">
                       View All Leads
                       <ArrowRight className="h-4 w-4 ml-2" />

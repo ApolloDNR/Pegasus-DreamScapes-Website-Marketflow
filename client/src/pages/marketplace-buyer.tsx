@@ -47,8 +47,8 @@ interface EnrichedOffer extends BuyerOffer {
 }
 
 export default function MarketplaceBuyerPage() {
-  const [matchSaved] = useRoute("/marketplace/buyer/saved");
-  const [matchOffers] = useRoute("/marketplace/buyer/offers");
+  const [matchSaved] = useRoute("/marketflow/buyer/saved");
+  const [matchOffers] = useRoute("/marketflow/buyer/offers");
 
   let content;
   if (matchSaved) {
@@ -73,7 +73,7 @@ function BuyerDashboard() {
   const isInvestmentBuyer = userRole === "buyer_investment";
 
   const { data: stats, isLoading: statsLoading } = useQuery<BuyerStats>({
-    queryKey: ["/api/supabase/marketplace/buyer/stats"],
+    queryKey: ["/api/supabase/marketflow/buyer/stats"],
   });
 
   const { data: savedProperties, isLoading: savedLoading } = useQuery<EnrichedSavedProperty[]>({
@@ -137,7 +137,7 @@ function BuyerDashboard() {
           <Badge variant="secondary">
             {isInvestmentBuyer ? "Investment Buyer" : "Retail Buyer"}
           </Badge>
-          <Link href="/marketplace/properties">
+          <Link href="/marketflow/properties">
             <Button data-testid="button-search-properties">
               <Search className="h-4 w-4 mr-2" />
               Browse Properties
@@ -236,7 +236,7 @@ function BuyerDashboard() {
                 <p className="text-sm text-muted-foreground mt-1">
                   Browse properties and save your favorites
                 </p>
-                <Link href="/marketplace/properties">
+                <Link href="/marketflow/properties">
                   <Button variant="outline" size="sm" className="mt-4" data-testid="button-browse-empty">
                     Browse Properties
                   </Button>
@@ -258,7 +258,7 @@ function BuyerDashboard() {
                   return (
                     <Link 
                       key={saved.id} 
-                      href={saved.propertyType === 'retail' ? `/marketplace/properties/${saved.propertyId}` : `/marketplace/deals/${saved.propertyId}`}
+                      href={saved.propertyType === 'retail' ? `/marketflow/properties/${saved.propertyId}` : `/marketflow/deals/${saved.propertyId}`}
                     >
                       <div className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer" data-testid={`saved-property-${saved.id}`}>
                         <div className="flex items-start gap-3">
@@ -290,7 +290,7 @@ function BuyerDashboard() {
               </div>
             )}
             {recentSaved.length > 0 && (
-              <Link href="/marketplace/buyer/saved">
+              <Link href="/marketflow/buyer/saved">
                 <Button variant="ghost" className="w-full mt-4" data-testid="link-view-saved">
                   View All Saved
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -319,7 +319,7 @@ function BuyerDashboard() {
                 <p className="text-sm text-muted-foreground mt-1">
                   Find a property and make an offer
                 </p>
-                <Link href="/marketplace/properties">
+                <Link href="/marketflow/properties">
                   <Button variant="outline" size="sm" className="mt-4" data-testid="button-find-property">
                     Browse Properties
                   </Button>
@@ -354,7 +354,7 @@ function BuyerDashboard() {
               </div>
             )}
             {recentOffers.length > 0 && (
-              <Link href="/marketplace/buyer/offers">
+              <Link href="/marketflow/buyer/offers">
                 <Button variant="ghost" className="w-full mt-4" data-testid="link-view-offers">
                   View All Offers
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -376,7 +376,7 @@ function BuyerDashboard() {
                 ? "Find investment opportunities and wholesale deals"
                 : "Explore our collection of renovated homes"}
             </p>
-            <Link href="/marketplace/properties">
+            <Link href="/marketflow/properties">
               <Button className="w-full" data-testid="action-browse">
                 <Search className="h-4 w-4 mr-2" />
                 Browse Now
@@ -393,7 +393,7 @@ function BuyerDashboard() {
             <p className="text-sm text-muted-foreground mb-4">
               Review properties you've saved for later
             </p>
-            <Link href="/marketplace/buyer/saved">
+            <Link href="/marketflow/buyer/saved">
               <Button variant="outline" className="w-full" data-testid="action-favorites">
                 <Heart className="h-4 w-4 mr-2" />
                 My Favorites
@@ -445,7 +445,7 @@ function BuyerDashboard() {
 
 function SavedPropertiesView() {
   const { data: savedProperties, isLoading } = useQuery<EnrichedSavedProperty[]>({
-    queryKey: ["/api/marketplace/buyer/saved"],
+    queryKey: ["/api/marketflow/buyer/saved"],
   });
 
   const formatCurrency = (amount: number | null | undefined) => {
@@ -460,7 +460,7 @@ function SavedPropertiesView() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/marketplace/buyer">
+        <Link href="/marketflow/buyer">
           <Button variant="ghost" size="sm" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back
@@ -490,7 +490,7 @@ function SavedPropertiesView() {
             <p className="text-muted-foreground mb-4">
               You haven't saved any properties yet. Browse our listings and save your favorites.
             </p>
-            <Link href="/marketplace/properties">
+            <Link href="/marketflow/properties">
               <Button data-testid="button-browse">
                 <Search className="h-4 w-4 mr-2" />
                 Browse Properties
@@ -514,7 +514,7 @@ function SavedPropertiesView() {
             return (
               <Link 
                 key={saved.id} 
-                href={saved.propertyType === 'retail' ? `/marketplace/properties/${saved.propertyId}` : `/marketplace/deals/${saved.propertyId}`}
+                href={saved.propertyType === 'retail' ? `/marketflow/properties/${saved.propertyId}` : `/marketflow/deals/${saved.propertyId}`}
               >
                 <Card className="hover-elevate cursor-pointer h-full" data-testid={`saved-property-${saved.id}`}>
                   <CardContent className="p-4">
@@ -553,7 +553,7 @@ function SavedPropertiesView() {
 
 function OffersView() {
   const { data: offers, isLoading } = useQuery<EnrichedOffer[]>({
-    queryKey: ["/api/marketplace/buyer/offers"],
+    queryKey: ["/api/marketflow/buyer/offers"],
   });
 
   const formatCurrency = (amount: number | null | undefined) => {
@@ -585,7 +585,7 @@ function OffersView() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/marketplace/buyer">
+        <Link href="/marketflow/buyer">
           <Button variant="ghost" size="sm" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back
@@ -615,7 +615,7 @@ function OffersView() {
             <p className="text-muted-foreground mb-4">
               You haven't submitted any offers. Find a property and make an offer to get started.
             </p>
-            <Link href="/marketplace/properties">
+            <Link href="/marketflow/properties">
               <Button data-testid="button-browse">
                 <Search className="h-4 w-4 mr-2" />
                 Browse Properties

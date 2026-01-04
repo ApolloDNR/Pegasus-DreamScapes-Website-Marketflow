@@ -41,11 +41,11 @@ export default function MarketplaceInvestorPage() {
 
   const handleExitPreview = () => {
     exitGuestMode();
-    setLocation("/marketplace/discover");
+    setLocation("/marketflow/discover");
   };
 
   const { data: stats, isLoading } = useQuery<InvestorStats>({
-    queryKey: ["/api/supabase/marketplace/investor/stats"],
+    queryKey: ["/api/supabase/marketflow/investor/stats"],
   });
 
   const { data: myCommitments, isLoading: isCommitmentsLoading } = useQuery<CommitmentWithProject[]>({
@@ -102,7 +102,7 @@ export default function MarketplaceInvestorPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link href="/marketplace/discover">
+              <Link href="/marketflow/discover">
                 <Button data-testid="button-browse-deals">
                   <Compass className="h-4 w-4 mr-2" />
                   Browse Deals
@@ -198,7 +198,7 @@ export default function MarketplaceInvestorPage() {
                   <div className="text-center py-8">
                     <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-4">No investments yet</p>
-                    <Link href="/marketplace/capital">
+                    <Link href="/marketflow/capital">
                       <Button size="sm">
                         <Compass className="w-4 h-4 mr-2" />
                         Discover Opportunities
@@ -230,7 +230,7 @@ export default function MarketplaceInvestorPage() {
                     ))}
                   </div>
                 )}
-                <Link href="/marketplace/investor/portfolio">
+                <Link href="/marketflow/investor/portfolio">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-view-portfolio">
                     View Full Portfolio
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -259,7 +259,7 @@ export default function MarketplaceInvestorPage() {
                 ) : (
                   <div className="space-y-4">
                     {recommendedProjects.map((project) => (
-                      <Link key={project.id} href={`/marketplace/capital/${project.id}`}>
+                      <Link key={project.id} href={`/marketflow/capital/${project.id}`}>
                         <div 
                           className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer"
                           data-testid={`project-recommendation-${project.id}`}
@@ -290,7 +290,7 @@ export default function MarketplaceInvestorPage() {
                     ))}
                   </div>
                 )}
-                <Link href="/marketplace/capital">
+                <Link href="/marketflow/capital">
                   <Button variant="ghost" className="w-full mt-4" data-testid="link-discover-more">
                     Browse All Opportunities
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -312,7 +312,7 @@ export default function MarketplaceInvestorPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Browse wholesale deals and capital projects matched to your preferences.
                 </p>
-                <Link href="/marketplace/discover">
+                <Link href="/marketflow/discover">
                   <Button className="w-full" data-testid="action-discover">
                     <Compass className="h-4 w-4 mr-2" />
                     Discover
@@ -352,7 +352,7 @@ export default function MarketplaceInvestorPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Review deals you've saved for later consideration.
                 </p>
-                <Link href="/marketplace/investor/saved">
+                <Link href="/marketflow/investor/saved">
                   <Button variant="outline" className="w-full" data-testid="action-saved">
                     <Heart className="h-4 w-4 mr-2" />
                     View Saved

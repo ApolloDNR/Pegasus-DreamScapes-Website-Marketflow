@@ -328,24 +328,24 @@ export function useSupabaseAuth() {
 }
 
 export function getRoleDashboardPath(role: UserRole | null): string {
-  if (!role) return '/marketplace';
+  if (!role) return '/marketflow';
   
   switch (role) {
     case 'admin':
-      return '/marketplace/admin';
+      return '/marketflow/admin';
     case 'pegasus_wholesaler':
     case 'wholesaler':
-      return '/marketplace/wholesaler';
+      return '/marketflow/wholesaler';
     case 'pegasus_dreamscaper':
     case 'dreamscaper':
-      return '/marketplace/dreamscaper';
+      return '/marketflow/dreamscaper';
     case 'investor':
-      return '/marketplace/investor';
+      return '/marketflow/investor';
     case 'buyer_retail':
     case 'buyer_investment':
-      return '/marketplace/buyer';
+      return '/marketflow/buyer';
     default:
-      return '/marketplace';
+      return '/marketflow';
   }
 }
 
@@ -354,25 +354,25 @@ export function canAccessRoute(userRole: UserRole | null, path: string, isGuestM
   
   if (userRole === 'admin') return true;
   
-  if (path.startsWith('/marketplace/admin')) {
+  if (path.startsWith('/marketflow/admin')) {
     return false;
   }
   
   const effectiveRole = userRole;
   
-  if (path.startsWith('/marketplace/wholesaler')) {
+  if (path.startsWith('/marketflow/wholesaler')) {
     return effectiveRole === 'pegasus_wholesaler' || effectiveRole === 'wholesaler' || isGuestMode;
   }
   
-  if (path.startsWith('/marketplace/dreamscaper')) {
+  if (path.startsWith('/marketflow/dreamscaper')) {
     return effectiveRole === 'pegasus_dreamscaper' || effectiveRole === 'dreamscaper' || isGuestMode;
   }
   
-  if (path.startsWith('/marketplace/investor')) {
+  if (path.startsWith('/marketflow/investor')) {
     return effectiveRole === 'investor' || isGuestMode;
   }
   
-  if (path.startsWith('/marketplace/buyer')) {
+  if (path.startsWith('/marketflow/buyer')) {
     return effectiveRole === 'buyer_retail' || effectiveRole === 'buyer_investment' || isGuestMode;
   }
   

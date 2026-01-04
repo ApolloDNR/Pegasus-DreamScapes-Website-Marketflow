@@ -86,7 +86,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
               </div>
               <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="font-serif font-semibold text-sm">Pegasus</span>
-                <span className="text-xs text-muted-foreground">Marketplace</span>
+                <span className="text-xs text-muted-foreground">MarketFlow</span>
               </div>
             </div>
           </SidebarHeader>
@@ -99,9 +99,9 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
                   {BASE_NAV_ITEMS.map((item) => {
                     const dashboardPath = getRoleDashboardPath(userRole);
                     const isActive =
-                      item.href === "/marketplace"
+                      item.href === "/marketflow"
                         ? location === dashboardPath ||
-                          location === "/marketplace"
+                          location === "/marketflow"
                         : location.startsWith(item.href);
                     return (
                       <SidebarMenuItem key={item.title}>
@@ -110,7 +110,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
                           isActive={isActive}
                           tooltip={item.title}
                         >
-                          <Link href={item.href === "/marketplace" ? dashboardPath : item.href}>
+                          <Link href={item.href === "/marketflow" ? dashboardPath : item.href}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
                           </Link>
@@ -215,7 +215,7 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/marketplace/settings">
+                      <Link href="/marketflow/settings">
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
                       </Link>
