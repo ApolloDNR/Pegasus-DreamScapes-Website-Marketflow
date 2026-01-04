@@ -229,6 +229,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
       return { error: null };
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND')) {
+        return { 
+          error: new Error('Unable to connect to authentication service. Please try again later or use guest mode to explore the platform.') 
+        };
+      }
       return { error: err as Error };
     }
   };
@@ -242,6 +248,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       });
       return { error };
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND')) {
+        return { 
+          error: new Error('Unable to connect to authentication service. Please try again later or use guest mode to explore the platform.') 
+        };
+      }
       return { error: err as Error };
     }
   };
