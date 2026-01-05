@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { OfferFormDialog, type OfferFormData } from "@/components/offer-form-dialog";
+import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import {
   ArrowLeft,
   DollarSign,
@@ -140,7 +140,7 @@ function NegotiationRoom() {
     }
   };
 
-  const handleSubmitOffer = (data: OfferFormData) => {
+  const handleSubmitOffer = (data: OfferStudioData) => {
     const newOffer: Offer = {
       id: String(Date.now()),
       sender: "investor",
@@ -152,7 +152,7 @@ function NegotiationRoom() {
         earnestMoney: data.earnestMoney,
         closeDate: data.closeDate,
         inspectionPeriod: data.inspectionPeriod,
-        fundingType: data.fundingType,
+        fundingType: data.fundingSource,
         notes: data.notes || "",
       },
     };
@@ -576,7 +576,7 @@ function NegotiationRoom() {
       </div>
 
       {deal && (
-        <OfferFormDialog
+        <OfferStudio
           open={offerDialogOpen}
           onOpenChange={setOfferDialogOpen}
           mode={offerMode}
@@ -585,8 +585,18 @@ function NegotiationRoom() {
             propertyAddress: deal.propertyAddress || "",
             askingPrice: deal.askingPrice || 0,
             arv: deal.arv || undefined,
+            repairCost: (deal as any).repairCosts || (deal as any).repairCost || undefined,
+            wholesalerName: `Wholesaler #${((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}`,
           }}
-          previousOffer={counterOfferData}
+          previousOffer={counterOfferData ? {
+            structureType: "cash",
+            offerPrice: counterOfferData.offerPrice,
+            earnestMoney: counterOfferData.earnestMoney,
+            closeDate: counterOfferData.closeDate,
+            inspectionPeriod: counterOfferData.inspectionPeriod,
+            fundingSource: counterOfferData.fundingType as any || "cash_reserves",
+            notes: counterOfferData.notes,
+          } : undefined}
           onSubmit={handleSubmitOffer}
         />
       )}

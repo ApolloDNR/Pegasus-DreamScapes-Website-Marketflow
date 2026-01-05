@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
-import { OfferFormDialog, type OfferFormData } from "@/components/offer-form-dialog";
+import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -85,7 +85,7 @@ function DealDetailPage() {
   const [jvDialogOpen, setJvDialogOpen] = useState(false);
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
 
-  const handleSubmitOffer = (data: OfferFormData) => {
+  const handleSubmitOffer = (data: OfferStudioData) => {
     toast({
       title: "Offer Submitted",
       description: `Your offer of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(data.offerPrice)} has been sent to the wholesaler.`,
@@ -405,9 +405,9 @@ function DealDetailPage() {
           </Card>
         </div>
 
-        <div className="space-y-6">
-          <Card className="sticky top-24">
-            <CardHeader>
+        <div className="lg:sticky lg:top-24 space-y-6 self-start">
+          <Card>
+            <CardHeader className="pb-3">
               <CardTitle className="text-xl">Take Action</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -540,7 +540,7 @@ function DealDetailPage() {
         </div>
       </div>
 
-      <OfferFormDialog
+      <OfferStudio
         open={offerDialogOpen}
         onOpenChange={setOfferDialogOpen}
         mode="new"
@@ -549,6 +549,8 @@ function DealDetailPage() {
           propertyAddress: deal.propertyAddress || "",
           askingPrice: deal.askingPrice || 0,
           arv: deal.arv || undefined,
+          repairCost: (deal as any).repairCosts || (deal as any).repairCost || undefined,
+          wholesalerName: `Wholesaler #${((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}`,
         }}
         onSubmit={handleSubmitOffer}
       />
