@@ -12,6 +12,8 @@ import { UnderConstructionBadge, UnderConstructionCard } from "@/components/unde
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
+import { QuickCounterOffer, type QuickCounterData } from "@/components/quick-counter-offer";
+import { PeggyCharm } from "@/components/peggy-charm";
 import {
   ArrowLeft,
   DollarSign,
@@ -120,6 +122,8 @@ function NegotiationRoom() {
   const [offerMode, setOfferMode] = useState<"new" | "counter">("new");
   const [counterOfferData, setCounterOfferData] = useState<Offer["terms"] | undefined>(undefined);
   const [offers, setOffers] = useState<Offer[]>(mockOffers);
+  const [quickCounterOpen, setQuickCounterOpen] = useState(false);
+  const [quickCounterPrevious, setQuickCounterPrevious] = useState<QuickCounterData | null>(null);
 
   const { data: deal, isLoading } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
@@ -188,6 +192,42 @@ function NegotiationRoom() {
     setOfferMode("counter");
     setCounterOfferData(offer.terms);
     setOfferDialogOpen(true);
+  };
+
+  const openQuickCounter = (offer: Offer) => {
+    setQuickCounterPrevious({
+      offerPrice: offer.terms.offerPrice,
+      earnestMoney: offer.terms.earnestMoney,
+      closeDate: offer.terms.closeDate,
+      inspectionPeriod: offer.terms.inspectionPeriod,
+      notes: offer.terms.notes,
+    });
+    setQuickCounterOpen(true);
+  };
+
+  const handleQuickCounter = (data: QuickCounterData) => {
+    const newOffer: Offer = {
+      id: String(Date.now()),
+      sender: "investor",
+      senderName: "You",
+      timestamp: new Date(),
+      status: "pending",
+      terms: {
+        offerPrice: data.offerPrice,
+        earnestMoney: data.earnestMoney,
+        closeDate: data.closeDate,
+        inspectionPeriod: data.inspectionPeriod,
+        fundingType: "cash",
+        notes: data.notes || "",
+      },
+    };
+    setOffers([...offers, newOffer]);
+    setQuickCounterOpen(false);
+    setQuickCounterPrevious(null);
+    toast({
+      title: "Counter Sent!",
+      description: "Your counter-offer has been submitted.",
+    });
   };
 
   const handleAcceptOffer = (offerId: string) => {
@@ -368,11 +408,11 @@ function NegotiationRoom() {
                                   <Button 
                                     size="sm" 
                                     variant="outline"
-                                    onClick={() => openCounterOffer(offer)}
-                                    data-testid={`button-counter-${offer.id}`}
+                                    onClick={() => openQuickCounter(offer)}
+                                    data-testid={`button-quick-counter-${offer.id}`}
                                   >
                                     <RefreshCw className="w-4 h-4 mr-1" />
-                                    Counter
+                                    Quick Counter
                                   </Button>
                                 </div>
                               )}
@@ -617,6 +657,28 @@ function NegotiationRoom() {
           onSubmit={handleSubmitOffer}
         />
       )}
+
+      {deal && quickCounterPrevious && (
+        <QuickCounterOffer
+          open={quickCounterOpen}
+          onOpenChange={setQuickCounterOpen}
+          previousOffer={quickCounterPrevious}
+          dealInfo={{
+            propertyAddress: deal.propertyAddress || "",
+            askingPrice: deal.askingPrice || 0,
+          }}
+          onSubmit={handleQuickCounter}
+        />
+      )}
+
+      <PeggyCharm 
+        context="negotiation" 
+        dealInfo={{
+          askingPrice: deal?.askingPrice || undefined,
+          arv: deal?.arv || undefined,
+          propertyType: deal?.propertyType || undefined,
+        }}
+      />
     </div>
   );
 }
