@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './lib/supabase';
+import { supabaseAdmin, isSupabaseReachable } from './lib/supabase';
 
 function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -179,13 +179,17 @@ export interface SupabaseNotification {
 
 export class SupabaseStorage {
   async getUserProfile(userId: string): Promise<SupabaseUserProfile | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('user_profiles')
       .select('*')
       .eq('user_id', userId)
       .single();
     
-    if (error) {
+    if (error && error.code !== 'PGRST116') {
       console.error('Error fetching user profile:', error);
       return null;
     }
@@ -201,6 +205,10 @@ export class SupabaseStorage {
     is_pegasus_badged?: boolean;
     pegasus_role_type?: string;
   }): Promise<SupabaseUserProfile | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data: profile, error } = await supabaseAdmin
       .from('user_profiles')
       .insert({
@@ -219,6 +227,10 @@ export class SupabaseStorage {
   }
 
   async updateUserProfile(userId: string, data: Partial<SupabaseUserProfile>): Promise<SupabaseUserProfile | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data: profile, error } = await supabaseAdmin
       .from('user_profiles')
       .update(data)
@@ -234,6 +246,10 @@ export class SupabaseStorage {
   }
 
   async getPublicWholesaleDeals(): Promise<SupabaseWholesaleDeal[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
       .select('*')
@@ -248,6 +264,10 @@ export class SupabaseStorage {
   }
 
   async getWholesaleDealsByUser(userId: string): Promise<SupabaseWholesaleDeal[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
       .select('*')
@@ -262,6 +282,10 @@ export class SupabaseStorage {
   }
 
   async getWholesaleDeal(id: string): Promise<SupabaseWholesaleDeal | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
       .select('*')
@@ -276,6 +300,10 @@ export class SupabaseStorage {
   }
 
   async createWholesaleDeal(deal: Omit<SupabaseWholesaleDeal, 'id' | 'created_at' | 'updated_at'>): Promise<SupabaseWholesaleDeal | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
       .insert(deal)
@@ -290,6 +318,10 @@ export class SupabaseStorage {
   }
 
   async updateWholesaleDeal(id: string, updates: Partial<SupabaseWholesaleDeal>): Promise<SupabaseWholesaleDeal | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
       .update(updates)
@@ -305,6 +337,10 @@ export class SupabaseStorage {
   }
 
   async getPublicCapitalProjects(): Promise<SupabaseCapitalProject[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
       .select('*')
@@ -320,6 +356,10 @@ export class SupabaseStorage {
   }
 
   async getCapitalProjectsByUser(userId: string): Promise<SupabaseCapitalProject[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
       .select('*')
@@ -334,6 +374,10 @@ export class SupabaseStorage {
   }
 
   async getCapitalProject(id: string): Promise<SupabaseCapitalProject | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
       .select('*')
@@ -348,6 +392,10 @@ export class SupabaseStorage {
   }
 
   async createCapitalProject(project: Omit<SupabaseCapitalProject, 'id' | 'created_at' | 'updated_at' | 'amount_raised'>): Promise<SupabaseCapitalProject | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
       .insert({ ...project, amount_raised: 0 })
@@ -362,6 +410,10 @@ export class SupabaseStorage {
   }
 
   async createJVRequest(request: Omit<SupabaseJVRequest, 'id' | 'created_at' | 'updated_at'>): Promise<SupabaseJVRequest | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('jv_requests')
       .insert(request)
@@ -376,6 +428,10 @@ export class SupabaseStorage {
   }
 
   async getJVRequestsByUser(userId: string): Promise<SupabaseJVRequest[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('jv_requests')
       .select('*')
@@ -390,6 +446,10 @@ export class SupabaseStorage {
   }
 
   async updateJVRequestStatus(id: string, status: string): Promise<SupabaseJVRequest | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('jv_requests')
       .update({ status })
@@ -405,6 +465,10 @@ export class SupabaseStorage {
   }
 
   async createCapitalCommitment(commitment: Omit<SupabaseCapitalCommitment, 'id' | 'created_at' | 'updated_at'>): Promise<SupabaseCapitalCommitment | null> {
+    if (!await isSupabaseReachable()) {
+      return null;
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_commitments')
       .insert(commitment)
@@ -419,6 +483,10 @@ export class SupabaseStorage {
   }
 
   async getCapitalCommitmentsByUser(userId: string): Promise<SupabaseCapitalCommitment[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_commitments')
       .select('*')
@@ -433,6 +501,10 @@ export class SupabaseStorage {
   }
 
   async getCapitalCommitmentsByProject(projectId: string): Promise<SupabaseCapitalCommitment[]> {
+    if (!await isSupabaseReachable()) {
+      return [];
+    }
+    
     const { data, error } = await supabaseAdmin
       .from('capital_commitments')
       .select('*')

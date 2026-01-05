@@ -11,6 +11,7 @@ export const isSupabaseAdminConfigured = Boolean(supabaseUrl && supabaseServiceR
 let supabaseConnectivityChecked = false;
 let supabaseIsReachable = false;
 let lastConnectivityCheck = 0;
+let connectivityCheckInProgress: Promise<boolean> | null = null;
 const CONNECTIVITY_CHECK_INTERVAL = 60000; // Re-check every 60 seconds
 
 if (!supabaseUrl) {
@@ -57,39 +58,68 @@ export async function isSupabaseReachable(): Promise<boolean> {
     return false;
   }
   
-  try {
-    // Use a simple health check - just try to access auth
-    const { error } = await supabase.auth.getSession();
-    supabaseConnectivityChecked = true;
-    lastConnectivityCheck = now;
-    
-    if (error && error.message?.includes('ENOTFOUND')) {
-      supabaseIsReachable = false;
-      console.warn('Supabase DNS resolution failed - using PostgreSQL fallback');
-      return false;
-    }
-    
-    supabaseIsReachable = true;
-    return true;
-  } catch (err: any) {
-    supabaseConnectivityChecked = true;
-    lastConnectivityCheck = now;
-    
-    // Check for DNS-related errors
-    if (err?.code === 'ENOTFOUND' || err?.message?.includes('ENOTFOUND') || 
-        err?.code === 'ECONNREFUSED' || err?.message?.includes('getaddrinfo')) {
-      supabaseIsReachable = false;
-      // Only log once when first detected
-      if (!supabaseConnectivityChecked) {
-        console.warn('Supabase unreachable (DNS/connection error) - using PostgreSQL fallback');
-      }
-      return false;
-    }
-    
-    console.error('Supabase connectivity check error:', err);
-    supabaseIsReachable = false;
-    return false;
+  // If a check is already in progress, wait for it
+  if (connectivityCheckInProgress) {
+    return connectivityCheckInProgress;
   }
+  
+  // Start the connectivity check
+  const wasCheckedBefore = supabaseConnectivityChecked;
+  
+  connectivityCheckInProgress = (async () => {
+    try {
+      // Use a simple database query to check connectivity
+      // This ensures we actually test the database connection, not just auth
+      const { error } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id')
+        .limit(1);
+      
+      supabaseConnectivityChecked = true;
+      lastConnectivityCheck = Date.now();
+      
+      if (error) {
+        const errorStr = JSON.stringify(error);
+        if (errorStr.includes('ENOTFOUND') || errorStr.includes('getaddrinfo') || errorStr.includes('fetch failed')) {
+          supabaseIsReachable = false;
+          if (!wasCheckedBefore) {
+            console.warn('Supabase unreachable - using PostgreSQL fallback');
+          }
+          return false;
+        }
+        // Other errors (like table not found) mean connection works
+        supabaseIsReachable = true;
+        return true;
+      }
+      
+      supabaseIsReachable = true;
+      return true;
+    } catch (err: any) {
+      supabaseConnectivityChecked = true;
+      lastConnectivityCheck = Date.now();
+      
+      // Check for DNS-related errors
+      const errStr = String(err?.message || err);
+      if (err?.code === 'ENOTFOUND' || errStr.includes('ENOTFOUND') || 
+          err?.code === 'ECONNREFUSED' || errStr.includes('getaddrinfo') || errStr.includes('fetch failed')) {
+        supabaseIsReachable = false;
+        if (!wasCheckedBefore) {
+          console.warn('Supabase unreachable (DNS/connection error) - using PostgreSQL fallback');
+        }
+        return false;
+      }
+      
+      if (!wasCheckedBefore) {
+        console.error('Supabase connectivity check error:', err);
+      }
+      supabaseIsReachable = false;
+      return false;
+    } finally {
+      connectivityCheckInProgress = null;
+    }
+  })();
+  
+  return connectivityCheckInProgress;
 }
 
 export async function testSupabaseConnection(): Promise<boolean> {
