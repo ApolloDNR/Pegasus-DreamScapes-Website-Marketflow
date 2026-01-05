@@ -93,6 +93,23 @@ const mockOffers: Offer[] = [
   },
 ];
 
+type FundingSource = "cash_reserves" | "hard_money" | "conventional" | "private_lender" | "self_directed_ira";
+
+function mapFundingTypeToSource(fundingType: string | undefined): FundingSource {
+  const mapping: Record<string, FundingSource> = {
+    "cash": "cash_reserves",
+    "cash_reserves": "cash_reserves",
+    "hard_money": "hard_money",
+    "hardMoney": "hard_money",
+    "conventional": "conventional",
+    "private": "private_lender",
+    "private_lender": "private_lender",
+    "ira": "self_directed_ira",
+    "self_directed_ira": "self_directed_ira",
+  };
+  return mapping[fundingType || "cash"] || "cash_reserves";
+}
+
 function NegotiationRoom() {
   const params = useParams<{ id: string }>();
   const dealId = params.id;
@@ -594,7 +611,7 @@ function NegotiationRoom() {
             earnestMoney: counterOfferData.earnestMoney,
             closeDate: counterOfferData.closeDate,
             inspectionPeriod: counterOfferData.inspectionPeriod,
-            fundingSource: counterOfferData.fundingType as any || "cash_reserves",
+            fundingSource: mapFundingTypeToSource(counterOfferData.fundingType),
             notes: counterOfferData.notes,
           } : undefined}
           onSubmit={handleSubmitOffer}
