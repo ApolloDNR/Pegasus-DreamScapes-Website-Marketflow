@@ -118,6 +118,7 @@ Schema managed via `npm run db:push` for Drizzle and `supabase-schema.sql` for S
 *   **Compatibility Scoring Engine**: An algorithm that matches deals to investor preferences based on weighted factors like property type, strategy, location, and budget.
 *   **Deal Negotiation System**: Supports debt/equity investment structures and includes a counter-offer system with offer history.
 *   **Investment Offer Dialog**: A unified two-step investment flow for making and countering offers on deals.
+*   **JV Partnership Form**: Multi-step wizard for wholesaler-to-wholesaler partnerships with role selection (deal bringer/buyer bringer), assignment fee split slider (10-90%), contribution selectors, and JV agreement summary. Note: Properties can be purchased by developers, flippers, builders, and dreamscapers - wholesalers can only JV partner (not purchase directly).
 *   **Staff Permission System**: Role-based access control for internal team members with granular permissions.
 *   **User Profiles**: Detailed profiles with stats, reviews, ratings, achievement badges, and a rank tier system.
 *   **Notification System**: In-app notifications for deal and project updates, JV requests, and investment offers.
