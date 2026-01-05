@@ -101,6 +101,8 @@ const wholesaleDealFormSchema = z.object({
   assignmentNotes: z.string().optional(),
   pipelineStage: z.string().optional(),
   dispositionPath: z.string().optional(),
+  negotiationAllowed: z.boolean().optional().default(true),
+  jvAllowed: z.boolean().optional().default(true),
 });
 
 type WholesaleDealFormData = z.infer<typeof wholesaleDealFormSchema>;
@@ -231,6 +233,8 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
       assignmentNotes: "",
       pipelineStage: "under_contract",
       dispositionPath: "assignment",
+      negotiationAllowed: true,
+      jvAllowed: true,
     },
   });
 
@@ -1320,6 +1324,50 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="negotiationAllowed"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-3 space-y-0 p-4 rounded-lg border">
+                          <FormControl>
+                            <Checkbox 
+                              checked={field.value} 
+                              onCheckedChange={field.onChange}
+                              data-testid="checkbox-negotiation-allowed"
+                            />
+                          </FormControl>
+                          <div>
+                            <FormLabel className="font-medium flex items-center gap-2">
+                              Assignment Fee Negotiable
+                              <Badge variant="secondary" className="text-[10px]">Recommended</Badge>
+                            </FormLabel>
+                            <FormDescription>Allow buyers to counter your assignment fee</FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="jvAllowed"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-3 space-y-0 p-4 rounded-lg border">
+                          <FormControl>
+                            <Checkbox 
+                              checked={field.value} 
+                              onCheckedChange={field.onChange}
+                              data-testid="checkbox-jv-allowed"
+                            />
+                          </FormControl>
+                          <div>
+                            <FormLabel className="font-medium">Open to JV Partners</FormLabel>
+                            <FormDescription>Allow other wholesalers to request JV partnership</FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}

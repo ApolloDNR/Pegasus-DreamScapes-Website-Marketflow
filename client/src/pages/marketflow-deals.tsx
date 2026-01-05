@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -21,8 +22,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
+import { CapitalRaiseOfferDialog, type CapitalOfferData } from "@/components/capital-raise-offer-dialog";
 import { sampleWholesaleDeals } from "@/lib/sample-data";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import type { CapitalProject } from "@shared/schema";
 import {
   Search,
   Filter,
@@ -49,7 +52,12 @@ import {
   RotateCcw,
   MessageSquare,
   Wrench,
-  Building2
+  Building2,
+  Handshake,
+  Users,
+  FileText,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -71,6 +79,8 @@ interface WholesaleDeal {
   status?: string;
   isPegasusDeal?: boolean;
   matchScore?: number;
+  negotiationAllowed?: boolean;
+  jvAllowed?: boolean;
 }
 
 export default function MarketflowDeals() {
@@ -82,12 +92,16 @@ export default function MarketflowDeals() {
 }
 
 function DealsPage() {
+  const [dealCategory, setDealCategory] = useState<"wholesale" | "capital">("wholesale");
   const [viewMode, setViewMode] = useState<"grid" | "swipe">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState<string>("all");
   const [selectedDeal, setSelectedDeal] = useState<WholesaleDeal | null>(null);
+  const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
   const [dealActionType, setDealActionType] = useState<"jv_request" | "invest">("invest");
   const [dealActionDialogOpen, setDealActionDialogOpen] = useState(false);
+  const [capitalOfferDialogOpen, setCapitalOfferDialogOpen] = useState(false);
+  const [capitalOfferMode, setCapitalOfferMode] = useState<"accept" | "counter">("accept");
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
@@ -95,6 +109,10 @@ function DealsPage() {
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
+  });
+
+  const { data: capitalProjects, isLoading: projectsLoading } = useQuery<CapitalProject[]>({
+    queryKey: ['/api/capital-projects'],
   });
 
   const handleDealAction = (deal: WholesaleDeal, actionType: "jv_request" | "invest") => {
@@ -159,28 +177,45 @@ function DealsPage() {
               Deal Discovery
             </h1>
             <p className="text-muted-foreground">
-              Browse wholesale deals. Swipe or browse the grid to find your next investment.
+              {dealCategory === "wholesale" 
+                ? "Browse wholesale assignments. Find contracts to assign or JV partner on."
+                : "Browse capital raise opportunities. Invest in operator projects."}
             </p>
           </div>
           
           <div className="flex items-center gap-2">
-            <ToggleGroup 
-              type="single" 
-              value={viewMode} 
-              onValueChange={(value) => value && setViewMode(value as "grid" | "swipe")}
-              className="border rounded-lg"
-            >
-              <ToggleGroupItem value="grid" aria-label="Grid View" data-testid="toggle-grid-view">
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                Grid
-              </ToggleGroupItem>
-              <ToggleGroupItem value="swipe" aria-label="Swipe View" data-testid="toggle-swipe-view">
-                <Layers className="w-4 h-4 mr-2" />
-                Swipe
-              </ToggleGroupItem>
-            </ToggleGroup>
+            {dealCategory === "wholesale" && (
+              <ToggleGroup 
+                type="single" 
+                value={viewMode} 
+                onValueChange={(value) => value && setViewMode(value as "grid" | "swipe")}
+                className="border rounded-lg"
+              >
+                <ToggleGroupItem value="grid" aria-label="Grid View" data-testid="toggle-grid-view">
+                  <LayoutGrid className="w-4 h-4 mr-2" />
+                  Grid
+                </ToggleGroupItem>
+                <ToggleGroupItem value="swipe" aria-label="Swipe View" data-testid="toggle-swipe-view">
+                  <Layers className="w-4 h-4 mr-2" />
+                  Swipe
+                </ToggleGroupItem>
+              </ToggleGroup>
+            )}
           </div>
         </div>
+
+        <Tabs value={dealCategory} onValueChange={(v) => setDealCategory(v as "wholesale" | "capital")} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsTrigger value="wholesale" className="gap-2" data-testid="tab-wholesale">
+              <Handshake className="w-4 h-4" />
+              Wholesale Assignments
+            </TabsTrigger>
+            <TabsTrigger value="capital" className="gap-2" data-testid="tab-capital">
+              <TrendingUp className="w-4 h-4" />
+              Capital Raises
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </ScrollReveal>
 
       {isGuestMode && (
@@ -210,7 +245,7 @@ function DealsPage() {
         </Card>
       )}
 
-      {viewMode === "grid" && (
+      {dealCategory === "wholesale" && viewMode === "grid" && (
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -239,25 +274,62 @@ function DealsPage() {
         </div>
       )}
 
-      {viewMode === "grid" ? (
-        <GridView 
-          deals={filteredDeals}
-          isLoading={dealsLoading && !useSampleData}
-          onSave={handleSaveDeal}
-          onAction={handleDealAction}
-          isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
-          isSaving={isSaving}
-          showInvest={isDreamscaper || isInvestor || isAdmin}
-          showJVRequest={isWholesaler || isAdmin}
-        />
+      {dealCategory === "wholesale" ? (
+        viewMode === "grid" ? (
+          <GridView 
+            deals={filteredDeals}
+            isLoading={dealsLoading && !useSampleData}
+            onSave={handleSaveDeal}
+            onAction={handleDealAction}
+            isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
+            isSaving={isSaving}
+            showInvest={isDreamscaper || isInvestor || isAdmin}
+            showJVRequest={isWholesaler || isAdmin}
+          />
+        ) : (
+          <SwipeView 
+            deals={filteredDeals}
+            onSave={handleSaveDeal}
+            onAction={handleDealAction}
+            isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
+            showInvest={isDreamscaper || isInvestor || isAdmin}
+            showJVRequest={isWholesaler || isAdmin}
+          />
+        )
       ) : (
-        <SwipeView 
-          deals={filteredDeals}
-          onSave={handleSaveDeal}
-          onAction={handleDealAction}
-          isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
-          showInvest={isDreamscaper || isInvestor || isAdmin}
-          showJVRequest={isWholesaler || isAdmin}
+        <CapitalRaiseGridView 
+          projects={capitalProjects || []}
+          isLoading={projectsLoading}
+          onSelectProject={(project) => {
+            setSelectedProject(project);
+            setLocation(`/marketflow/capital/${project.id}`);
+          }}
+          onAcceptTerms={(project) => {
+            if (!isAuthenticated && !isGuestMode) {
+              toast({
+                title: "Sign in required",
+                description: "Please sign in to invest in capital raises.",
+              });
+              return;
+            }
+            setSelectedProject(project);
+            setCapitalOfferMode("accept");
+            setCapitalOfferDialogOpen(true);
+          }}
+          onCounterTerms={(project) => {
+            if (!isAuthenticated && !isGuestMode) {
+              toast({
+                title: "Sign in required",
+                description: "Please sign in to invest in capital raises.",
+              });
+              return;
+            }
+            setSelectedProject(project);
+            setCapitalOfferMode("counter");
+            setCapitalOfferDialogOpen(true);
+          }}
+          isItemSaved={(id) => isItemSaved('capital_project', String(id))}
+          onSave={(id) => toggleSaveItem('capital_project', String(id))}
         />
       )}
 
@@ -284,6 +356,24 @@ function DealsPage() {
               description: dealActionType === "jv_request" 
                 ? "Your partnership request has been sent."
                 : "Your offer has been submitted for review.",
+            });
+          }}
+        />
+      )}
+
+      {selectedProject && (
+        <CapitalRaiseOfferDialog
+          open={capitalOfferDialogOpen}
+          onOpenChange={setCapitalOfferDialogOpen}
+          project={selectedProject}
+          mode={capitalOfferMode}
+          onSubmit={(data: CapitalOfferData) => {
+            console.log("Capital offer submitted:", data);
+            toast({
+              title: capitalOfferMode === "accept" ? "Investment Committed!" : "Counter-Offer Sent!",
+              description: capitalOfferMode === "accept"
+                ? `You've committed ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(data.investmentAmount)} to this capital raise.`
+                : "Your counter-terms have been sent to the operator.",
             });
           }}
         />
@@ -696,6 +786,18 @@ function DealCard({ deal, onSave, onAction, onView, isSaved, isSaving, showInves
               Pegasus
             </Badge>
           )}
+          {deal.negotiationAllowed !== false && (
+            <Badge variant="outline" className="bg-background/80 text-[10px] gap-1">
+              <MessageSquare className="w-2.5 h-2.5" />
+              Negotiable
+            </Badge>
+          )}
+          {deal.jvAllowed && (
+            <Badge variant="secondary" className="text-[10px] gap-1">
+              <Handshake className="w-2.5 h-2.5" />
+              JV Open
+            </Badge>
+          )}
         </div>
 
         <div className="absolute top-2 right-2">
@@ -810,5 +912,238 @@ function StatusBadge({ status }: { status: string }) {
     <Badge variant={config.variant} className={`text-[10px] gap-1 ${config.className}`}>
       {status}
     </Badge>
+  );
+}
+
+interface CapitalRaiseGridViewProps {
+  projects: CapitalProject[];
+  isLoading: boolean;
+  onSelectProject: (project: CapitalProject) => void;
+  onAcceptTerms: (project: CapitalProject) => void;
+  onCounterTerms: (project: CapitalProject) => void;
+  isItemSaved: (id: number) => boolean;
+  onSave: (id: number) => void;
+}
+
+function CapitalRaiseGridView({ 
+  projects, 
+  isLoading, 
+  onSelectProject, 
+  onAcceptTerms, 
+  onCounterTerms,
+  isItemSaved,
+  onSave
+}: CapitalRaiseGridViewProps) {
+  if (isLoading) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Card key={i}>
+            <Skeleton className="h-48 w-full rounded-t-lg" />
+            <CardContent className="p-4">
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-4" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <Card className="p-12 text-center">
+        <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No Capital Raises Available</h3>
+        <p className="text-muted-foreground">
+          Check back later for new investment opportunities.
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <StaggerItem key={project.id}>
+          <HoverLift>
+            <CapitalRaiseCard
+              project={project}
+              onView={() => onSelectProject(project)}
+              onAcceptTerms={() => onAcceptTerms(project)}
+              onCounterTerms={() => onCounterTerms(project)}
+              isSaved={isItemSaved(project.id)}
+              onSave={() => onSave(project.id)}
+            />
+          </HoverLift>
+        </StaggerItem>
+      ))}
+    </StaggerChildren>
+  );
+}
+
+interface CapitalRaiseCardProps {
+  project: CapitalProject;
+  onView: () => void;
+  onAcceptTerms: () => void;
+  onCounterTerms: () => void;
+  isSaved: boolean;
+  onSave: () => void;
+}
+
+function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSaved, onSave }: CapitalRaiseCardProps) {
+  const fundingGoal = project.fundingGoal || 0;
+  const amountRaised = project.amountRaised || 0;
+  const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
+  const isFunded = project.status === "FUNDED" || progressPercent >= 100;
+
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+    return `$${amount.toLocaleString()}`;
+  };
+
+  const getStrategyLabel = (strategy: string | null | undefined) => {
+    const labels: Record<string, string> = {
+      "fix-flip": "Fix & Flip",
+      "buy-hold": "Buy & Hold",
+      "value-add": "Value Add",
+      "development": "Development",
+      "new-construction": "New Construction",
+    };
+    return labels[strategy || ""] || strategy || "Investment";
+  };
+
+  const getStructureLabel = (structure: string | null | undefined) => {
+    const labels: Record<string, string> = {
+      "EQUITY": "Equity",
+      "DEBT": "Debt",
+      "HYBRID": "Hybrid",
+    };
+    return labels[structure || ""] || structure || "Equity";
+  };
+
+  return (
+    <Card className="overflow-hidden group" data-testid={`card-capital-project-${project.id}`}>
+      <div className="relative h-40 bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/20">
+        {project.images?.[0] ? (
+          <img 
+            src={project.images[0]} 
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <TrendingUp className="w-12 h-12 text-green-600/30" />
+          </div>
+        )}
+        
+        <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+          <Badge className={isFunded ? "bg-green-600 text-white" : "bg-amber-500 text-white"}>
+            {isFunded ? "Funded" : project.status?.replace(/_/g, ' ') || "Open"}
+          </Badge>
+          <Badge variant="outline" className="bg-background/80">
+            {getStructureLabel(project.structure)}
+          </Badge>
+        </div>
+
+        <Button
+          size="icon"
+          variant={isSaved ? "default" : "secondary"}
+          className="absolute bottom-2 right-2 h-8 w-8"
+          onClick={(e) => { e.stopPropagation(); onSave(); }}
+          data-testid={`button-save-project-${project.id}`}
+        >
+          {isSaved ? (
+            <BookmarkCheck className="w-4 h-4" />
+          ) : (
+            <Bookmark className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
+
+      <CardContent className="p-4">
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Badge variant="secondary" className="text-[10px]">
+              {getStrategyLabel(project.strategy)}
+            </Badge>
+          </div>
+          <h3 className="font-semibold truncate" data-testid={`text-project-title-${project.id}`}>
+            {project.title}
+          </h3>
+          <p className="text-sm text-muted-foreground flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {project.location || 'Location TBD'}
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-muted-foreground">Funding Progress</span>
+            <span className="font-semibold">{progressPercent.toFixed(0)}%</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+            <span>{formatCurrency(amountRaised)} raised</span>
+            <span>of {formatCurrency(fundingGoal)}</span>
+          </div>
+        </div>
+
+        <div className="p-3 bg-muted/50 rounded-lg mb-3">
+          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Operator Terms</p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {project.structure === "DEBT" ? (
+              <>
+                <div>
+                  <span className="text-muted-foreground">Interest: </span>
+                  <span className="font-medium">{project.askingInterestRate || "TBD"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Duration: </span>
+                  <span className="font-medium">{project.askingLoanDuration || "TBD"}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <span className="text-muted-foreground">Return: </span>
+                  <span className="font-medium">{project.projectedReturn || "TBD"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Split: </span>
+                  <span className="font-medium">{project.askingProfitSplit || "TBD"}</span>
+                </div>
+              </>
+            )}
+          </div>
+          {project.minInvestment && (
+            <div className="mt-2 pt-2 border-t border-muted text-xs">
+              <span className="text-muted-foreground">Min Investment: </span>
+              <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1" onClick={onView} data-testid={`button-view-project-${project.id}`}>
+            <Eye className="w-3 h-3 mr-1" />
+            View
+          </Button>
+          {!isFunded && (
+            <>
+              <Button size="sm" className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Accept
+              </Button>
+              <Button size="sm" variant="secondary" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
+                <MessageSquare className="w-3 h-3" />
+              </Button>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

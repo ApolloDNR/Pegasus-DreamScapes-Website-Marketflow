@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
+import { CapitalRaiseForm } from "@/components/capital-raise-form";
 import { Link } from "wouter";
 import {
   ArrowRight,
@@ -22,7 +25,9 @@ import {
   Award,
   Lock,
   AlertCircle,
-  Wrench
+  Wrench,
+  Handshake,
+  PiggyBank
 } from "lucide-react";
 
 export default function MarketflowSubmit() {
@@ -158,6 +163,8 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
 }
 
 function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
+  const [submitType, setSubmitType] = useState<"wholesale" | "capital">("wholesale");
+  
   return (
     <div className="space-y-6">
       <div>
@@ -176,102 +183,216 @@ function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
           Submit your deal for review. Approved deals will be listed in MarketFlow for investors to discover.
         </p>
       </div>
+
+      <Tabs value={submitType} onValueChange={(v) => setSubmitType(v as "wholesale" | "capital")} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+          <TabsTrigger value="wholesale" className="gap-2" data-testid="tab-submit-wholesale">
+            <Handshake className="w-4 h-4" />
+            Wholesale Assignment
+          </TabsTrigger>
+          <TabsTrigger value="capital" className="gap-2" data-testid="tab-submit-capital">
+            <PiggyBank className="w-4 h-4" />
+            Capital Raise
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="wholesale">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <WholesaleDealForm onSuccess={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} />
+            </div>
+            <WholesaleSidebar isPegasus={isPegasus} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="capital">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <CapitalRaiseForm onSuccess={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} />
+            </div>
+            <CapitalRaiseSidebar isPegasus={isPegasus} />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function WholesaleSidebar({ isPegasus }: { isPegasus: boolean }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            What We Look For
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <Target className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Clear title or path to clear title</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <DollarSign className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Minimum 70% rule spread or better</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Accurate repair estimates with photos</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Clock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Reasonable closing timeline</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
       
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <WholesaleDealForm onSuccess={() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }} />
-        </div>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                What We Look For
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <Target className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Clear title or path to clear title</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <DollarSign className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Minimum 70% rule spread or better</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Accurate repair estimates with photos</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Reasonable closing timeline</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Review Timeline
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">1</div>
-                <div>
-                  <p className="font-medium">Initial Review</p>
-                  <p className="text-muted-foreground text-xs">Within 24 hours</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">2</div>
-                <div>
-                  <p className="font-medium">Deep Analysis</p>
-                  <p className="text-muted-foreground text-xs">1-2 business days</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">3</div>
-                <div>
-                  <p className="font-medium">Approval Decision</p>
-                  <p className="text-muted-foreground text-xs">You'll be notified</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {isPegasus && (
-            <Card className="border-primary/30 bg-primary/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-primary" />
-                  Pegasus Privileges
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-2">
-                <p className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  Priority listing placement
-                </p>
-                <p className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-primary" />
-                  Verified Pegasus badge on deals
-                </p>
-                <p className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  Expedited review process
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Review Timeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">1</div>
+            <div>
+              <p className="font-medium">Initial Review</p>
+              <p className="text-muted-foreground text-xs">Within 24 hours</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">2</div>
+            <div>
+              <p className="font-medium">Deep Analysis</p>
+              <p className="text-muted-foreground text-xs">1-2 business days</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">3</div>
+            <div>
+              <p className="font-medium">Approval Decision</p>
+              <p className="text-muted-foreground text-xs">You'll be notified</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {isPegasus && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crown className="w-5 h-5 text-primary" />
+              Pegasus Privileges
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2">
+            <p className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Priority listing placement
+            </p>
+            <p className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-primary" />
+              Verified Pegasus badge on deals
+            </p>
+            <p className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Expedited review process
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function CapitalRaiseSidebar({ isPegasus }: { isPegasus: boolean }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <PiggyBank className="w-5 h-5 text-green-600" />
+            Capital Raise Requirements
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <FileText className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Clear investment thesis and exit strategy</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <DollarSign className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Realistic projected returns with supporting data</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Users className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Operator track record and experience</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Proper deal structure and legal documentation</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Investment Structures
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div className="p-3 rounded-lg bg-muted/50">
+            <p className="font-medium">Equity</p>
+            <p className="text-muted-foreground text-xs">Ownership stake with profit sharing</p>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <p className="font-medium">Debt</p>
+            <p className="text-muted-foreground text-xs">Fixed interest loans with set terms</p>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <p className="font-medium">Hybrid</p>
+            <p className="text-muted-foreground text-xs">Combination of debt and equity</p>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {isPegasus && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crown className="w-5 h-5 text-primary" />
+              Pegasus Privileges
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2">
+            <p className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Featured placement to investors
+            </p>
+            <p className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-primary" />
+              Verified operator badge
+            </p>
+            <p className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Priority capital matching
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
