@@ -13,7 +13,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import { QuickCounterOffer, type QuickCounterData } from "@/components/quick-counter-offer";
-import { PeggyCharm } from "@/components/peggy-charm";
+import { PeggyChatBubble } from "@/components/peggy-chat";
 import {
   ArrowLeft,
   DollarSign,
@@ -671,14 +671,7 @@ function NegotiationRoom() {
         />
       )}
 
-      <PeggyCharm 
-        context="negotiation" 
-        dealInfo={{
-          askingPrice: deal?.askingPrice || undefined,
-          arv: deal?.arv || undefined,
-          propertyType: deal?.propertyType || undefined,
-        }}
-      />
+      <PeggyChatBubble />
     </div>
   );
 }

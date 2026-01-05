@@ -31,7 +31,7 @@ import {
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
-import { PeggyCharm } from "@/components/peggy-charm";
+import { PeggyChatBubble } from "@/components/peggy-chat";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -556,14 +556,7 @@ function DealDetailPage() {
         onSubmit={handleSubmitOffer}
       />
 
-      <PeggyCharm 
-        context="deal" 
-        dealInfo={{
-          askingPrice: deal.askingPrice || undefined,
-          arv: deal.arv || undefined,
-          propertyType: deal.propertyType || undefined,
-        }}
-      />
+      <PeggyChatBubble />
     </div>
   );
 }
