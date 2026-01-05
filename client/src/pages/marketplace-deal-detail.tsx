@@ -55,8 +55,19 @@ import {
   Building2,
   Ruler,
   Bed,
-  Bath
+  Bath,
+  Lock,
+  FolderOpen,
+  MessageSquare,
+  Hammer,
+  PaintBucket,
+  Layers,
+  Flag,
+  CheckSquare,
+  Construction,
+  Sparkles,
 } from "lucide-react";
+import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 
 export default function MarketplaceDealDetail() {
   return (
@@ -332,6 +343,58 @@ function DealDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Flag className="w-5 h-5" />
+                Deal Updates
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DealUpdatesTimeline />
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed border-amber-500/30 bg-amber-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-amber-600" />
+                Data Room
+                <UnderConstructionBadge />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-lg border border-dashed flex flex-col items-center justify-center text-center">
+                  <FolderOpen className="w-8 h-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm font-medium">Property Documents</p>
+                  <p className="text-xs text-muted-foreground">Title, deed, liens</p>
+                </div>
+                <div className="p-4 rounded-lg border border-dashed flex flex-col items-center justify-center text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm font-medium">Inspection Reports</p>
+                  <p className="text-xs text-muted-foreground">Condition assessments</p>
+                </div>
+                <div className="p-4 rounded-lg border border-dashed flex flex-col items-center justify-center text-center">
+                  <Calculator className="w-8 h-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm font-medium">Financials</p>
+                  <p className="text-xs text-muted-foreground">Pro formas, comps</p>
+                </div>
+                <div className="p-4 rounded-lg border border-dashed flex flex-col items-center justify-center text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm font-medium">Contracts</p>
+                  <p className="text-xs text-muted-foreground">Purchase agreements</p>
+                </div>
+              </div>
+              <div className="mt-4 p-3 rounded-lg bg-amber-500/10 text-center">
+                <Lock className="w-5 h-5 text-amber-600 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Request access to view deal documents. Available after offer accepted.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -388,6 +451,17 @@ function DealDetailPage() {
                 <Bookmark className="w-4 h-4 mr-2" />
                 Save for Later
               </Button>
+
+              <Link href={`/marketflow/deals/${deal.id}/negotiate`}>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  data-testid="button-go-to-negotiation"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Go to Negotiation Room
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -466,6 +540,78 @@ function DealDetailPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface DealUpdate {
+  id: string;
+  milestone: string;
+  description: string;
+  timestamp: Date;
+  completed: boolean;
+}
+
+const mockUpdates: DealUpdate[] = [
+  { id: "1", milestone: "Listed", description: "Deal listed on MarketFlow", timestamp: new Date(Date.now() - 86400000 * 14), completed: true },
+  { id: "2", milestone: "Under Review", description: "Property inspection completed", timestamp: new Date(Date.now() - 86400000 * 10), completed: true },
+  { id: "3", milestone: "Approved", description: "Deal approved for marketplace", timestamp: new Date(Date.now() - 86400000 * 7), completed: true },
+  { id: "4", milestone: "In Negotiation", description: "Active investor interest", timestamp: new Date(Date.now() - 86400000 * 2), completed: false },
+];
+
+const milestoneIcons: Record<string, typeof Construction> = {
+  "Listed": Flag,
+  "Under Review": Clock,
+  "Approved": CheckCircle2,
+  "In Negotiation": Handshake,
+  "Funded": DollarSign,
+  "Demo": Hammer,
+  "Rough": Layers,
+  "Drywall": Construction,
+  "Paint": PaintBucket,
+  "Flooring": Layers,
+  "Final": CheckSquare,
+  "In Escrow": FileText,
+  "Closed": CheckCircle2,
+};
+
+function DealUpdatesTimeline() {
+  return (
+    <div className="space-y-4">
+      {mockUpdates.map((update, index) => {
+        const Icon = milestoneIcons[update.milestone] || Flag;
+        return (
+          <div key={update.id} className="flex gap-3" data-testid={`update-${update.id}`}>
+            <div className="flex flex-col items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${update.completed ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              {index < mockUpdates.length - 1 && (
+                <div className={`w-0.5 flex-1 mt-2 ${update.completed ? "bg-green-500/30" : "bg-muted"}`} />
+              )}
+            </div>
+            <div className="flex-1 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{update.milestone}</span>
+                {update.completed && (
+                  <Badge variant="outline" className="border-green-500/30 text-green-600 text-xs">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    Complete
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{update.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">{update.timestamp.toLocaleDateString()}</p>
+            </div>
+          </div>
+        );
+      })}
+      
+      <div className="pt-2 border-t">
+        <p className="text-xs text-muted-foreground text-center">
+          Updates are posted by the Dreamscaper/Wholesaler
+        </p>
       </div>
     </div>
   );

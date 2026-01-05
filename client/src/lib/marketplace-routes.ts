@@ -25,8 +25,9 @@ export interface RouteConfig {
 }
 
 export const BASE_NAV_ITEMS: RouteConfig[] = [
-  { title: "Dashboard", href: "/marketflow", icon: LayoutDashboard, description: "Overview and quick actions" },
+  { title: "Dashboard", href: "/marketflow/dashboard", icon: LayoutDashboard, description: "Portfolio and investments" },
   { title: "Discover", href: "/marketflow/discover", icon: Compass, description: "Browse deals and opportunities" },
+  { title: "Deal Flow", href: "/marketflow/deals", icon: Briefcase, description: "Wholesale deals marketplace" },
   { title: "Community", href: "/marketflow/community", icon: Users, description: "Connect with other members" },
   { title: "Messages", href: "/marketflow/messages", icon: MessageSquare, description: "Direct conversations" },
 ];

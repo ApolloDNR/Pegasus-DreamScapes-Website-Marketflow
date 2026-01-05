@@ -784,17 +784,30 @@ function MatchScoreBadge({ score, size = "default" }: { score: number; size?: "s
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const getVariant = (status: string): "default" | "secondary" | "outline" | "destructive" => {
+  const getConfig = (status: string) => {
     const s = status.toLowerCase();
-    if (s.includes("approved") || s.includes("active")) return "default";
-    if (s.includes("review")) return "secondary";
-    if (s.includes("negotiat")) return "outline";
-    if (s.includes("funded") || s.includes("exit")) return "default";
-    return "secondary";
+    if (s.includes("approved") || s.includes("active")) {
+      return { variant: "default" as const, className: "bg-green-600 dark:bg-green-700 text-white" };
+    }
+    if (s.includes("review") || s.includes("pending")) {
+      return { variant: "secondary" as const, className: "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-300/50 dark:border-amber-700/50" };
+    }
+    if (s.includes("negotiat")) {
+      return { variant: "outline" as const, className: "border-blue-400 dark:border-blue-600 text-blue-700 dark:text-blue-400" };
+    }
+    if (s.includes("funded")) {
+      return { variant: "default" as const, className: "bg-primary text-primary-foreground" };
+    }
+    if (s.includes("exit") || s.includes("closed")) {
+      return { variant: "secondary" as const, className: "" };
+    }
+    return { variant: "secondary" as const, className: "" };
   };
 
+  const config = getConfig(status);
+
   return (
-    <Badge variant={getVariant(status)} className="text-[10px] gap-1">
+    <Badge variant={config.variant} className={`text-[10px] gap-1 ${config.className}`}>
       {status}
     </Badge>
   );

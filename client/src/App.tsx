@@ -71,6 +71,8 @@ import MarketplaceResources from "@/pages/marketplace-resources";
 import SubmitDeal from "@/pages/submit-deal";
 import MarketflowSubmit from "@/pages/marketflow-submit";
 import MarketflowDeals from "@/pages/marketflow-deals";
+import MarketflowNegotiate from "@/pages/marketflow-negotiate";
+import MarketflowDashboard from "@/pages/marketflow-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -165,8 +167,8 @@ function Router() {
       <Route path="/marketflow/properties" component={MarketplaceProperties} />
       <Route path="/marketflow/properties/:id" component={MarketplacePropertyDetail} />
       <Route path="/marketflow/submit" component={MarketflowSubmit} />
-      <Route path="/marketflow/deals/:id/negotiate" component={MarketplaceDealDetail} />
-      <Route path="/marketflow/dashboard" component={MarketplaceInvestor} />
+      <Route path="/marketflow/deals/:id/negotiate" component={MarketflowNegotiate} />
+      <Route path="/marketflow/dashboard" component={MarketflowDashboard} />
       
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />
