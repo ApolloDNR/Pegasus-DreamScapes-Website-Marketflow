@@ -31,6 +31,11 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
   - Like/Pass indicators that appear and scale based on drag direction
   - Ring/shadow effects showing intent (green for like, red for pass)
   - Helper text and preserved button controls for accessibility
+- **Phase 6: Supabase Connectivity Improvements** - Enhanced Supabase client with graceful fallback:
+  - `isSupabaseReachable()` function with 60-second caching prevents repeated DNS lookups
+  - All Supabase functions check connectivity before operations
+  - DNS errors (ENOTFOUND, ECONNREFUSED) are logged once then cached
+  - PostgreSQL fallback automatically triggered when Supabase unavailable
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)

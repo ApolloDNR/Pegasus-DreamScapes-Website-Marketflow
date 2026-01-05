@@ -7,6 +7,12 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const isSupabaseAdminConfigured = Boolean(supabaseUrl && supabaseServiceRoleKey);
 
+// Track connectivity state to avoid repeated DNS errors
+let supabaseConnectivityChecked = false;
+let supabaseIsReachable = false;
+let lastConnectivityCheck = 0;
+const CONNECTIVITY_CHECK_INTERVAL = 60000; // Re-check every 60 seconds
+
 if (!supabaseUrl) {
   console.warn('Server: SUPABASE_URL not found. Supabase features will fall back to PostgreSQL.');
 }
@@ -37,19 +43,63 @@ export const supabaseAdmin: SupabaseClient = isSupabaseAdminConfigured
     })
   : dummyClient;
 
-export async function testSupabaseConnection(): Promise<boolean> {
-  try {
-    const { error } = await supabase.auth.getSession();
-    if (error) {
-      console.error('Supabase server connection test failed:', error.message);
-      return false;
-    }
-    console.log('Supabase server connection successful');
-    return true;
-  } catch (err) {
-    console.error('Supabase server connection test error:', err);
+export async function isSupabaseReachable(): Promise<boolean> {
+  const now = Date.now();
+  
+  // Return cached result if checked recently
+  if (supabaseConnectivityChecked && (now - lastConnectivityCheck) < CONNECTIVITY_CHECK_INTERVAL) {
+    return supabaseIsReachable;
+  }
+  
+  if (!isSupabaseConfigured) {
+    supabaseConnectivityChecked = true;
+    supabaseIsReachable = false;
     return false;
   }
+  
+  try {
+    // Use a simple health check - just try to access auth
+    const { error } = await supabase.auth.getSession();
+    supabaseConnectivityChecked = true;
+    lastConnectivityCheck = now;
+    
+    if (error && error.message?.includes('ENOTFOUND')) {
+      supabaseIsReachable = false;
+      console.warn('Supabase DNS resolution failed - using PostgreSQL fallback');
+      return false;
+    }
+    
+    supabaseIsReachable = true;
+    return true;
+  } catch (err: any) {
+    supabaseConnectivityChecked = true;
+    lastConnectivityCheck = now;
+    
+    // Check for DNS-related errors
+    if (err?.code === 'ENOTFOUND' || err?.message?.includes('ENOTFOUND') || 
+        err?.code === 'ECONNREFUSED' || err?.message?.includes('getaddrinfo')) {
+      supabaseIsReachable = false;
+      // Only log once when first detected
+      if (!supabaseConnectivityChecked) {
+        console.warn('Supabase unreachable (DNS/connection error) - using PostgreSQL fallback');
+      }
+      return false;
+    }
+    
+    console.error('Supabase connectivity check error:', err);
+    supabaseIsReachable = false;
+    return false;
+  }
+}
+
+export async function testSupabaseConnection(): Promise<boolean> {
+  const isReachable = await isSupabaseReachable();
+  if (isReachable) {
+    console.log('Supabase server connection successful');
+  } else {
+    console.log('Supabase connection unavailable - PostgreSQL fallback active');
+  }
+  return isReachable;
 }
 
 export async function createUserProfile(externalUserId: string, data: {
@@ -61,6 +111,11 @@ export async function createUserProfile(externalUserId: string, data: {
   is_pegasus_badged?: boolean;
   pegasus_role_type?: string;
 }) {
+  // Check connectivity first to avoid DNS errors
+  if (!await isSupabaseReachable()) {
+    throw new Error('SUPABASE_UNREACHABLE');
+  }
+  
   const { error } = await supabaseAdmin
     .from('user_profiles')
     .insert({
@@ -76,6 +131,10 @@ export async function createUserProfile(externalUserId: string, data: {
 }
 
 export async function createUserReputation(externalUserId: string) {
+  if (!await isSupabaseReachable()) {
+    throw new Error('SUPABASE_UNREACHABLE');
+  }
+  
   const { error } = await supabaseAdmin
     .from('user_reputation')
     .insert({
@@ -94,13 +153,17 @@ export async function createUserReputation(externalUserId: string) {
 }
 
 export async function getUserProfile(externalUserId: string) {
+  if (!await isSupabaseReachable()) {
+    return null; // Return null to trigger PostgreSQL fallback
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
     .select('*')
     .eq('external_user_id', externalUserId)
     .single();
   
-  if (error && error.code !== 'PGRST116') {
+  if (error && error.code !== 'PGRST116' && error.code !== 'NOT_CONFIGURED') {
     console.error('Error fetching user profile:', error);
     return null;
   }
@@ -109,13 +172,17 @@ export async function getUserProfile(externalUserId: string) {
 }
 
 export async function getUserReputation(externalUserId: string) {
+  if (!await isSupabaseReachable()) {
+    return null;
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('user_reputation')
     .select('*')
     .eq('external_user_id', externalUserId)
     .single();
   
-  if (error && error.code !== 'PGRST116') {
+  if (error && error.code !== 'PGRST116' && error.code !== 'NOT_CONFIGURED') {
     console.error('Error fetching user reputation:', error);
     return null;
   }
@@ -124,12 +191,16 @@ export async function getUserReputation(externalUserId: string) {
 }
 
 export async function getUserBadges(externalUserId: string) {
+  if (!await isSupabaseReachable()) {
+    return [];
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('user_badges')
     .select('*')
     .eq('external_user_id', externalUserId);
   
-  if (error) {
+  if (error && error.code !== 'NOT_CONFIGURED') {
     console.error('Error fetching user badges:', error);
     return [];
   }
@@ -138,6 +209,10 @@ export async function getUserBadges(externalUserId: string) {
 }
 
 export async function updateUserProfile(externalUserId: string, updates: Record<string, any>) {
+  if (!await isSupabaseReachable()) {
+    throw new Error('SUPABASE_UNREACHABLE');
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
     .update({
@@ -161,6 +236,10 @@ export async function addUserBadge(externalUserId: string, badge: {
   label: string;
   description?: string;
 }) {
+  if (!await isSupabaseReachable()) {
+    throw new Error('SUPABASE_UNREACHABLE');
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('user_badges')
     .insert({
@@ -212,12 +291,16 @@ export async function ensureUserProfileExists(externalUserId: string, userData: 
 }
 
 export async function getAllUsers() {
+  if (!await isSupabaseReachable()) {
+    return [];
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
     .select('*')
     .order('created_at', { ascending: false });
   
-  if (error) {
+  if (error && error.code !== 'NOT_CONFIGURED') {
     console.error('Error fetching all users:', error);
     return [];
   }
