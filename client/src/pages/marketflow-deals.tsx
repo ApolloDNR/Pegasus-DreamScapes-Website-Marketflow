@@ -22,7 +22,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
-import { CapitalRaiseOfferDialog, type CapitalOfferData } from "@/components/capital-raise-offer-dialog";
+import { CapitalRaiseInvestmentStudio, type InvestmentStudioData } from "@/components/capital-raise-investment-studio";
 import { sampleWholesaleDeals } from "@/lib/sample-data";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
@@ -362,19 +362,13 @@ function DealsPage() {
       )}
 
       {selectedProject && (
-        <CapitalRaiseOfferDialog
+        <CapitalRaiseInvestmentStudio
           open={capitalOfferDialogOpen}
           onOpenChange={setCapitalOfferDialogOpen}
           project={selectedProject}
           mode={capitalOfferMode}
-          onSubmit={(data: CapitalOfferData) => {
-            console.log("Capital offer submitted:", data);
-            toast({
-              title: capitalOfferMode === "accept" ? "Investment Committed!" : "Counter-Offer Sent!",
-              description: capitalOfferMode === "accept"
-                ? `You've committed ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(data.investmentAmount)} to this capital raise.`
-                : "Your counter-terms have been sent to the operator.",
-            });
+          onSubmit={(data: InvestmentStudioData) => {
+            console.log("Capital investment submitted:", data);
           }}
         />
       )}

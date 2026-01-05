@@ -4,22 +4,38 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+export const isSupabaseAdminConfigured = Boolean(supabaseUrl && supabaseServiceRoleKey);
+
 if (!supabaseUrl) {
-  console.warn('Server: SUPABASE_URL not found. Supabase features will not work.');
+  console.warn('Server: SUPABASE_URL not found. Supabase features will fall back to PostgreSQL.');
 }
 
 if (!supabaseServiceRoleKey) {
-  console.warn('Server: SUPABASE_SERVICE_ROLE_KEY not found. Admin operations will not work.');
+  console.warn('Server: SUPABASE_SERVICE_ROLE_KEY not found. Admin operations will fall back to PostgreSQL.');
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+const dummyClient = {
+  auth: { getSession: async () => ({ error: new Error('Supabase not configured') }) },
+  from: () => ({
+    select: () => ({ eq: () => ({ single: async () => ({ data: null, error: { code: 'NOT_CONFIGURED' } }) }) }),
+    insert: async () => ({ error: { code: 'NOT_CONFIGURED' } }),
+    update: async () => ({ data: null, error: { code: 'NOT_CONFIGURED' } }),
+  }),
+} as unknown as SupabaseClient;
 
-export const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+export const supabase: SupabaseClient = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : dummyClient;
+
+export const supabaseAdmin: SupabaseClient = isSupabaseAdminConfigured 
+  ? createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : dummyClient;
 
 export async function testSupabaseConnection(): Promise<boolean> {
   try {

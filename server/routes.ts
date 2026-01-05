@@ -121,10 +121,10 @@ export async function registerRoutes(
 
   // Public config endpoint - exposes only public/safe configuration
   app.get('/api/config/supabase', (_req, res) => {
-    res.json({
-      url: process.env.SUPABASE_URL || '',
-      anonKey: process.env.SUPABASE_ANON_KEY || ''
-    });
+    const url = process.env.SUPABASE_URL || '';
+    const anonKey = process.env.SUPABASE_ANON_KEY || '';
+    const isConfigured = Boolean(url && anonKey);
+    res.json({ url, anonKey, isConfigured });
   });
 
   // Google Maps API key for address autocomplete (public key)
