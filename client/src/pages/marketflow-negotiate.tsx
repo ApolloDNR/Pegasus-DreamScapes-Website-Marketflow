@@ -3,32 +3,15 @@ import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { OfferFormDialog, type OfferFormData } from "@/components/offer-form-dialog";
 import {
   ArrowLeft,
   DollarSign,
@@ -116,7 +99,9 @@ function NegotiationRoom() {
   const { toast } = useToast();
   const { user, isAuthenticated } = useSupabaseAuth();
   const [activeTab, setActiveTab] = useState<"offers" | "chat" | "terms">("offers");
-  const [newOfferOpen, setNewOfferOpen] = useState(false);
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+  const [offerMode, setOfferMode] = useState<"new" | "counter">("new");
+  const [counterOfferData, setCounterOfferData] = useState<Offer["terms"] | undefined>(undefined);
   const [offers, setOffers] = useState<Offer[]>(mockOffers);
 
   const { data: deal, isLoading } = useQuery<WholesaleDeal>({
@@ -155,21 +140,37 @@ function NegotiationRoom() {
     }
   };
 
-  const handleSubmitOffer = (terms: Offer["terms"]) => {
+  const handleSubmitOffer = (data: OfferFormData) => {
     const newOffer: Offer = {
       id: String(Date.now()),
       sender: "investor",
       senderName: "You",
       timestamp: new Date(),
       status: "pending",
-      terms,
+      terms: {
+        offerPrice: data.offerPrice,
+        earnestMoney: data.earnestMoney,
+        closeDate: data.closeDate,
+        inspectionPeriod: data.inspectionPeriod,
+        fundingType: data.fundingType,
+        notes: data.notes || "",
+      },
     };
     setOffers([...offers, newOffer]);
-    setNewOfferOpen(false);
-    toast({
-      title: "Offer Submitted",
-      description: "Your offer has been sent to the wholesaler.",
-    });
+    setOfferDialogOpen(false);
+    setCounterOfferData(undefined);
+  };
+
+  const openNewOffer = () => {
+    setOfferMode("new");
+    setCounterOfferData(undefined);
+    setOfferDialogOpen(true);
+  };
+
+  const openCounterOffer = (offer: Offer) => {
+    setOfferMode("counter");
+    setCounterOfferData(offer.terms);
+    setOfferDialogOpen(true);
   };
 
   const handleAcceptOffer = (offerId: string) => {
@@ -350,7 +351,7 @@ function NegotiationRoom() {
                                   <Button 
                                     size="sm" 
                                     variant="outline"
-                                    onClick={() => setNewOfferOpen(true)}
+                                    onClick={() => openCounterOffer(offer)}
                                     data-testid={`button-counter-${offer.id}`}
                                   >
                                     <RefreshCw className="w-4 h-4 mr-1" />
@@ -369,7 +370,7 @@ function NegotiationRoom() {
                     <div className="pt-4 border-t">
                       <Button 
                         className="w-full" 
-                        onClick={() => setNewOfferOpen(true)}
+                        onClick={openNewOffer}
                         data-testid="button-new-offer"
                       >
                         <Send className="w-4 h-4 mr-2" />
@@ -574,153 +575,22 @@ function NegotiationRoom() {
         </div>
       </div>
 
-      <NewOfferDialog 
-        open={newOfferOpen} 
-        onOpenChange={setNewOfferOpen}
-        onSubmit={handleSubmitOffer}
-        defaultValues={latestOffer?.terms}
-      />
+      {deal && (
+        <OfferFormDialog
+          open={offerDialogOpen}
+          onOpenChange={setOfferDialogOpen}
+          mode={offerMode}
+          dealInfo={{
+            id: dealId || "",
+            propertyAddress: deal.propertyAddress || "",
+            askingPrice: deal.askingPrice || 0,
+            arv: deal.arv || undefined,
+          }}
+          previousOffer={counterOfferData}
+          onSubmit={handleSubmitOffer}
+        />
+      )}
     </div>
   );
 }
 
-interface NewOfferDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (terms: Offer["terms"]) => void;
-  defaultValues?: Offer["terms"];
-}
-
-function NewOfferDialog({ open, onOpenChange, onSubmit, defaultValues }: NewOfferDialogProps) {
-  const [offerPrice, setOfferPrice] = useState(defaultValues?.offerPrice?.toString() || "");
-  const [earnestMoney, setEarnestMoney] = useState(defaultValues?.earnestMoney?.toString() || "5000");
-  const [closeDate, setCloseDate] = useState(defaultValues?.closeDate || "");
-  const [inspectionPeriod, setInspectionPeriod] = useState(defaultValues?.inspectionPeriod?.toString() || "10");
-  const [fundingType, setFundingType] = useState(defaultValues?.fundingType || "cash");
-  const [notes, setNotes] = useState("");
-
-  const handleSubmit = () => {
-    onSubmit({
-      offerPrice: parseInt(offerPrice) || 0,
-      earnestMoney: parseInt(earnestMoney) || 0,
-      closeDate,
-      inspectionPeriod: parseInt(inspectionPeriod) || 10,
-      fundingType,
-      notes,
-    });
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Submit Offer</DialogTitle>
-          <DialogDescription>
-            Enter your offer terms. The wholesaler will be notified and can accept, reject, or counter.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="offerPrice">Offer Price *</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="offerPrice"
-                  type="number"
-                  className="pl-9"
-                  placeholder="150000"
-                  value={offerPrice}
-                  onChange={(e) => setOfferPrice(e.target.value)}
-                  data-testid="input-offer-price"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="earnestMoney">Earnest Money</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="earnestMoney"
-                  type="number"
-                  className="pl-9"
-                  placeholder="5000"
-                  value={earnestMoney}
-                  onChange={(e) => setEarnestMoney(e.target.value)}
-                  data-testid="input-earnest-money"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="closeDate">Close Date *</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="closeDate"
-                  type="date"
-                  className="pl-9"
-                  value={closeDate}
-                  onChange={(e) => setCloseDate(e.target.value)}
-                  data-testid="input-close-date"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="inspectionPeriod">Inspection (days)</Label>
-              <Input
-                id="inspectionPeriod"
-                type="number"
-                placeholder="10"
-                value={inspectionPeriod}
-                onChange={(e) => setInspectionPeriod(e.target.value)}
-                data-testid="input-inspection-period"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fundingType">Funding Type</Label>
-            <Select value={fundingType} onValueChange={setFundingType}>
-              <SelectTrigger data-testid="select-funding-type">
-                <SelectValue placeholder="Select funding type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="hard_money">Hard Money</SelectItem>
-                <SelectItem value="private_money">Private Money</SelectItem>
-                <SelectItem value="conventional">Conventional Loan</SelectItem>
-                <SelectItem value="jv">JV Partnership</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes / Contingencies</Label>
-            <Textarea
-              id="notes"
-              placeholder="Any additional terms or notes..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="min-h-[80px]"
-              data-testid="input-offer-notes"
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!offerPrice || !closeDate} data-testid="button-submit-offer">
-            <Send className="w-4 h-4 mr-2" />
-            Submit Offer
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}

@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
-import { DealNegotiationDialog } from "@/components/deal-negotiation-dialog";
+import { OfferFormDialog, type OfferFormData } from "@/components/offer-form-dialog";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -83,7 +83,15 @@ function DealDetailPage() {
   const { toast } = useToast();
   const { user } = useSupabaseAuth();
   const [jvDialogOpen, setJvDialogOpen] = useState(false);
-  const [negotiationDialogOpen, setNegotiationDialogOpen] = useState(false);
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+
+  const handleSubmitOffer = (data: OfferFormData) => {
+    toast({
+      title: "Offer Submitted",
+      description: `Your offer of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(data.offerPrice)} has been sent to the wholesaler.`,
+    });
+    setOfferDialogOpen(false);
+  };
 
   const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
@@ -417,22 +425,12 @@ function DealDetailPage() {
               <Button 
                 size="lg"
                 className="w-full"
-                onClick={() => setNegotiationDialogOpen(true)}
+                onClick={() => setOfferDialogOpen(true)}
                 data-testid="button-make-offer"
               >
                 <DollarSign className="w-5 h-5 mr-2" />
-                Make Investment Offer
+                Make Offer
               </Button>
-
-              <DealNegotiationDialog
-                open={negotiationDialogOpen}
-                onOpenChange={setNegotiationDialogOpen}
-                dealType="wholesale_deal"
-                dealId={String(deal.id)}
-                dealTitle={deal.propertyAddress || 'Deal'}
-                responderId={(deal as any).externalWholesalerId || deal.submittedBy || ''}
-                onSuccess={() => setNegotiationDialogOpen(false)}
-              />
 
               <Button 
                 variant="outline" 
@@ -541,6 +539,19 @@ function DealDetailPage() {
           </Card>
         </div>
       </div>
+
+      <OfferFormDialog
+        open={offerDialogOpen}
+        onOpenChange={setOfferDialogOpen}
+        mode="new"
+        dealInfo={{
+          id: dealId || "",
+          propertyAddress: deal.propertyAddress || "",
+          askingPrice: deal.askingPrice || 0,
+          arv: deal.arv || undefined,
+        }}
+        onSubmit={handleSubmitOffer}
+      />
     </div>
   );
 }

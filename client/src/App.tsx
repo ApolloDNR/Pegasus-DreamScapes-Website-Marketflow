@@ -65,7 +65,6 @@ import MarketplaceCapital from "@/pages/marketplace-capital";
 import MarketplaceCapitalDetail from "@/pages/marketplace-capital-detail";
 import MarketplaceProperties from "@/pages/marketplace-properties";
 import MarketplacePropertyDetail from "@/pages/marketplace-property-detail";
-import MarketplaceDiscover from "@/pages/marketplace-discover";
 import MarketplaceCalculators from "@/pages/marketplace-calculators";
 import MarketplaceResources from "@/pages/marketplace-resources";
 import SubmitDeal from "@/pages/submit-deal";
@@ -114,7 +113,7 @@ function Router() {
       {/* Legacy /dealflow routes redirect to /marketflow */}
       <Route path="/dealflow">{() => <Redirect to="/marketflow" />}</Route>
       <Route path="/dealflow/office">{() => <Redirect to="/marketflow" />}</Route>
-      <Route path="/dealflow/deals">{() => <Redirect to="/marketflow/discover" />}</Route>
+      <Route path="/dealflow/deals">{() => <Redirect to="/marketflow/deals" />}</Route>
       <Route path="/dealflow/project/:id" component={DealflowProject} />
       <Route path="/dealflow/community">{() => <Redirect to="/marketflow/community" />}</Route>
       <Route path="/dealflow/messages">{() => <Redirect to="/marketflow/messages" />}</Route>
@@ -131,7 +130,7 @@ function Router() {
       <Route path="/marketplace/buyer">{() => <Redirect to="/marketflow/buyer" />}</Route>
       <Route path="/marketplace/admin/:rest*">{() => <Redirect to="/marketflow/admin" />}</Route>
       <Route path="/marketplace/admin">{() => <Redirect to="/marketflow/admin" />}</Route>
-      <Route path="/marketplace/discover">{() => <Redirect to="/marketflow/discover" />}</Route>
+      <Route path="/marketplace/discover">{() => <Redirect to="/marketflow/deals" />}</Route>
       <Route path="/marketplace/calculators">{() => <Redirect to="/marketflow/calculators" />}</Route>
       <Route path="/marketplace/resources">{() => <Redirect to="/marketflow/resources" />}</Route>
       <Route path="/marketplace/community">{() => <Redirect to="/marketflow/community" />}</Route>
@@ -155,7 +154,7 @@ function Router() {
       <Route path="/marketflow/buyer" component={MarketplaceBuyer} />
       <Route path="/marketflow/admin/:rest*" component={MarketplaceAdmin} />
       <Route path="/marketflow/admin" component={MarketplaceAdmin} />
-      <Route path="/marketflow/discover" component={MarketplaceDiscover} />
+      <Route path="/marketflow/discover">{() => <Redirect to="/marketflow/deals" />}</Route>
       <Route path="/marketflow/calculators" component={MarketplaceCalculators} />
       <Route path="/marketflow/resources" component={MarketplaceResources} />
       <Route path="/marketflow/community" component={DealflowCommunity} />
