@@ -889,6 +889,144 @@ export async function registerRoutes(
     }
   });
 
+  // --- Negotiations (Accept/Counter for deals) ---
+  app.post('/api/negotiations/accept', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { type, dealId, terms } = req.body;
+      
+      if (!type || !dealId || !terms) {
+        return res.status(400).json({ message: 'Missing type, dealId, or terms' });
+      }
+      
+      // Log the acceptance (in a production system, this would create a binding agreement)
+      console.log(`[Negotiation] User ${userId} accepted terms for ${type} deal ${dealId}:`, terms);
+      
+      // For wholesale deals, notify the deal poster (wholesaler)
+      if (type === 'wholesale') {
+        try {
+          const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
+          if (!isNaN(numericId)) {
+            const deal = await storage.getWholesaleDeal(numericId);
+            const posterUserId = deal?.submittedBy;
+            
+            if (posterUserId && posterUserId !== userId) {
+              const { storage: supaStore } = await getSupabaseStorage();
+              await supaStore.createNotification({
+                user_id: posterUserId,
+                type: 'deal_accepted',
+                title: 'Your Deal Terms Accepted!',
+                message: `Someone has accepted your terms for deal #${dealId}. Check your inbox for details.`,
+                link: `/marketflow/deals/${dealId}`
+              });
+            }
+          }
+        } catch (e) {
+          console.log('Could not create notification for deal poster:', e);
+        }
+      }
+      
+      // For capital projects, notify the operator
+      if (type === 'capital') {
+        try {
+          const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
+          if (!isNaN(numericId)) {
+            const project = await storage.getCapitalProject(numericId);
+            const operatorUserId = project?.userId;
+            
+            if (operatorUserId && operatorUserId !== userId) {
+              const { storage: supaStore } = await getSupabaseStorage();
+              await supaStore.createNotification({
+                user_id: operatorUserId,
+                type: 'investment_accepted',
+                title: 'Investment Terms Accepted!',
+                message: `An investor has accepted your terms for project "${project?.title || dealId}".`,
+                link: `/marketflow/projects/${dealId}`
+              });
+            }
+          }
+        } catch (e) {
+          console.log('Could not create notification for project operator:', e);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Terms accepted successfully',
+        type,
+        dealId,
+        terms
+      });
+    } catch (error) {
+      console.error('Error accepting terms:', error);
+      res.status(500).json({ message: 'Failed to accept terms' });
+    }
+  });
+
+  app.post('/api/negotiations/counter', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const { type, dealId, terms, message } = req.body;
+      
+      if (!type || !dealId || !terms) {
+        return res.status(400).json({ message: 'Missing type, dealId, or terms' });
+      }
+      
+      // Log the counter offer
+      console.log(`[Negotiation] User ${userId} sent counter offer for ${type} deal ${dealId}:`, terms, message);
+      
+      // Notify the deal/project poster about the counter offer
+      try {
+        let posterUserId: string | null = null;
+        let itemTitle = '';
+        const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
+        
+        if (!isNaN(numericId)) {
+          if (type === 'wholesale') {
+            const deal = await storage.getWholesaleDeal(numericId);
+            posterUserId = deal?.submittedBy || null;
+            itemTitle = deal?.propertyAddress || `Deal #${dealId}`;
+          } else {
+            const project = await storage.getCapitalProject(numericId);
+            posterUserId = project?.userId || null;
+            itemTitle = project?.title || `Project #${dealId}`;
+          }
+          
+          if (posterUserId && posterUserId !== userId) {
+            const { storage: supaStore } = await getSupabaseStorage();
+            await supaStore.createNotification({
+              user_id: posterUserId,
+              type: 'counter_offer_received',
+              title: 'Counter Offer Received',
+              message: `You received a counter offer for "${itemTitle}". Review and respond.`,
+              link: type === 'wholesale' ? `/marketflow/deals/${dealId}` : `/marketflow/projects/${dealId}`
+            });
+          }
+        }
+      } catch (e) {
+        console.log('Could not create notification for counter offer:', e);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Counter offer sent successfully',
+        type,
+        dealId,
+        terms,
+        sentAt: new Date()
+      });
+    } catch (error) {
+      console.error('Error sending counter offer:', error);
+      res.status(500).json({ message: 'Failed to send counter offer' });
+    }
+  });
+
   // --- Notifications (Supabase) ---
   app.get('/api/supabase/notifications', isHybridAuthenticated, async (req: any, res) => {
     try {

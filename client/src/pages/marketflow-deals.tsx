@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
 import { CapitalRaiseInvestmentStudio, type InvestmentStudioData } from "@/components/capital-raise-investment-studio";
+import { NegotiationRoom, type NegotiationTerms, type NegotiationType } from "@/components/negotiation-room";
 import { sampleWholesaleDeals } from "@/lib/sample-data";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
@@ -102,10 +103,34 @@ function DealsPage() {
   const [dealActionDialogOpen, setDealActionDialogOpen] = useState(false);
   const [capitalOfferDialogOpen, setCapitalOfferDialogOpen] = useState(false);
   const [capitalOfferMode, setCapitalOfferMode] = useState<"accept" | "counter">("accept");
+  const [negotiationRoomOpen, setNegotiationRoomOpen] = useState(false);
+  const [negotiationType, setNegotiationType] = useState<NegotiationType>("wholesale");
+  const [negotiationTerms, setNegotiationTerms] = useState<NegotiationTerms>({});
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
   const [, setLocation] = useLocation();
+
+  const acceptTermsMutation = useMutation({
+    mutationFn: async (data: { type: string; dealId: string | number; terms: NegotiationTerms }) => {
+      const response = await apiRequest('POST', '/api/negotiations/accept', data);
+      return response;
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "Agreement Recorded!",
+        description: `Your acceptance of ${variables.type === 'wholesale' ? 'deal' : 'project'} terms has been recorded.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/negotiations'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to accept terms",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
@@ -184,23 +209,21 @@ function DealsPage() {
           </div>
           
           <div className="flex items-center gap-2">
-            {dealCategory === "wholesale" && (
-              <ToggleGroup 
-                type="single" 
-                value={viewMode} 
-                onValueChange={(value) => value && setViewMode(value as "grid" | "swipe")}
-                className="border rounded-lg"
-              >
-                <ToggleGroupItem value="grid" aria-label="Grid View" data-testid="toggle-grid-view">
-                  <LayoutGrid className="w-4 h-4 mr-2" />
-                  Grid
-                </ToggleGroupItem>
-                <ToggleGroupItem value="swipe" aria-label="Swipe View" data-testid="toggle-swipe-view">
-                  <Layers className="w-4 h-4 mr-2" />
-                  Swipe
-                </ToggleGroupItem>
-              </ToggleGroup>
-            )}
+            <ToggleGroup 
+              type="single" 
+              value={viewMode} 
+              onValueChange={(value) => value && setViewMode(value as "grid" | "swipe")}
+              className="border rounded-lg"
+            >
+              <ToggleGroupItem value="grid" aria-label="Grid View" data-testid="toggle-grid-view">
+                <LayoutGrid className="w-4 h-4 mr-2" />
+                Grid
+              </ToggleGroupItem>
+              <ToggleGroupItem value="swipe" aria-label="Swipe View" data-testid="toggle-swipe-view">
+                <Layers className="w-4 h-4 mr-2" />
+                Swipe
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
 
@@ -291,46 +314,141 @@ function DealsPage() {
             deals={filteredDeals}
             onSave={handleSaveDeal}
             onAction={handleDealAction}
+            onAcceptTerms={(deal) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to accept deal terms.",
+                });
+                return;
+              }
+              const posterTerms: NegotiationTerms = {
+                purchasePrice: deal.askingPrice || deal.contractPrice || 0,
+                assignmentFee: deal.assignmentFee || 0,
+                contractPrice: deal.contractPrice || 0,
+              };
+              acceptTermsMutation.mutate({
+                type: "wholesale",
+                dealId: deal.id,
+                terms: posterTerms
+              });
+            }}
+            onCounterTerms={(deal) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to make a counter offer.",
+                });
+                return;
+              }
+              setSelectedDeal(deal);
+              setNegotiationType("wholesale");
+              setNegotiationTerms({
+                purchasePrice: deal.askingPrice || deal.contractPrice,
+                assignmentFee: deal.assignmentFee,
+              });
+              setNegotiationRoomOpen(true);
+            }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             showInvest={isDreamscaper || isInvestor || isAdmin}
             showJVRequest={isWholesaler || isAdmin}
           />
         )
       ) : (
-        <CapitalRaiseGridView 
-          projects={capitalProjects || []}
-          isLoading={projectsLoading}
-          onSelectProject={(project) => {
-            setSelectedProject(project);
-            setLocation(`/marketflow/capital/${project.id}`);
-          }}
-          onAcceptTerms={(project) => {
-            if (!isAuthenticated && !isGuestMode) {
-              toast({
-                title: "Sign in required",
-                description: "Please sign in to invest in capital raises.",
+        viewMode === "grid" ? (
+          <CapitalRaiseGridView 
+            projects={capitalProjects || []}
+            isLoading={projectsLoading}
+            onSelectProject={(project) => {
+              setSelectedProject(project);
+              setLocation(`/marketflow/capital/${project.id}`);
+            }}
+            onAcceptTerms={(project) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to invest in capital raises.",
+                });
+                return;
+              }
+              const posterTerms: NegotiationTerms = {
+                investmentAmount: project.targetRaise || project.totalCapitalNeeded || project.minInvestment || 50000,
+                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
+                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+              };
+              acceptTermsMutation.mutate({
+                type: "capital",
+                dealId: project.id,
+                terms: posterTerms
               });
-              return;
-            }
-            setSelectedProject(project);
-            setCapitalOfferMode("accept");
-            setCapitalOfferDialogOpen(true);
-          }}
-          onCounterTerms={(project) => {
-            if (!isAuthenticated && !isGuestMode) {
-              toast({
-                title: "Sign in required",
-                description: "Please sign in to invest in capital raises.",
+            }}
+            onCounterTerms={(project) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to invest in capital raises.",
+                });
+                return;
+              }
+              setSelectedProject(project);
+              setNegotiationType("capital");
+              setNegotiationTerms({
+                investmentAmount: project.minInvestment || 50000,
+                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
+                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
               });
-              return;
-            }
-            setSelectedProject(project);
-            setCapitalOfferMode("counter");
-            setCapitalOfferDialogOpen(true);
-          }}
-          isItemSaved={(id) => isItemSaved('capital_project', String(id))}
-          onSave={(id) => toggleSaveItem('capital_project', String(id))}
-        />
+              setNegotiationRoomOpen(true);
+            }}
+            isItemSaved={(id) => isItemSaved('capital_project', String(id))}
+            onSave={(id) => toggleSaveItem('capital_project', String(id))}
+          />
+        ) : (
+          <CapitalRaiseSwipeView 
+            projects={capitalProjects || []}
+            onSave={(id) => toggleSaveItem('capital_project', String(id))}
+            onAcceptTerms={(project) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to invest in capital raises.",
+                });
+                return;
+              }
+              const posterTerms: NegotiationTerms = {
+                investmentAmount: project.targetRaise || project.totalCapitalNeeded || project.minInvestment || 50000,
+                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
+                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+              };
+              acceptTermsMutation.mutate({
+                type: "capital",
+                dealId: project.id,
+                terms: posterTerms
+              });
+            }}
+            onCounterTerms={(project) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to invest in capital raises.",
+                });
+                return;
+              }
+              setSelectedProject(project);
+              setNegotiationType("capital");
+              setNegotiationTerms({
+                investmentAmount: project.minInvestment || 50000,
+                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
+                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+              });
+              setNegotiationRoomOpen(true);
+            }}
+            isItemSaved={(id) => isItemSaved('capital_project', String(id))}
+          />
+        )
       )}
 
       {selectedDeal && (
@@ -372,6 +490,25 @@ function DealsPage() {
           }}
         />
       )}
+
+      <NegotiationRoom
+        open={negotiationRoomOpen}
+        onOpenChange={setNegotiationRoomOpen}
+        type={negotiationType}
+        dealId={negotiationType === "wholesale" ? (selectedDeal?.id || "") : (selectedProject?.id || 0)}
+        dealTitle={negotiationType === "wholesale" 
+          ? (selectedDeal?.propertyAddress || selectedDeal?.address || "Wholesale Deal")
+          : (selectedProject?.title || "Capital Project")}
+        originalTerms={negotiationTerms}
+        counterpartyName={negotiationType === "wholesale" ? "Wholesaler" : "Operator"}
+        counterpartyId="counterparty-1"
+        onAgreementReached={(finalTerms) => {
+          toast({
+            title: "Deal Closed!",
+            description: "Congratulations on reaching an agreement. We'll send you the details shortly.",
+          });
+        }}
+      />
     </div>
   );
 }
@@ -445,12 +582,14 @@ interface SwipeViewProps {
   deals: WholesaleDeal[];
   onSave: (dealId: string) => void;
   onAction: (deal: WholesaleDeal, actionType: "jv_request" | "invest") => void;
+  onAcceptTerms: (deal: WholesaleDeal) => void;
+  onCounterTerms: (deal: WholesaleDeal) => void;
   isItemSaved: (id: string) => boolean;
   showInvest: boolean;
   showJVRequest: boolean;
 }
 
-function SwipeView({ deals, onSave, onAction, isItemSaved, showInvest, showJVRequest }: SwipeViewProps) {
+function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, showInvest, showJVRequest }: SwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const [, setLocation] = useLocation();
@@ -572,53 +711,62 @@ function SwipeView({ deals, onSave, onAction, isItemSaved, showInvest, showJVReq
               likeOpacity={likeOpacity}
               passOpacity={passOpacity}
               onView={() => setLocation(`/marketflow/deals/${currentDeal.id}`)}
-              onCounter={() => onAction(currentDeal, "invest")}
+              onAcceptTerms={() => onAcceptTerms(currentDeal)}
+              onCounterTerms={() => onCounterTerms(currentDeal)}
             />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="flex items-center justify-center gap-4 mt-6">
+      <div className="flex items-center justify-center gap-3 mt-6">
         <Button 
           size="lg" 
           variant="outline" 
-          className="rounded-full h-14 w-14"
+          className="rounded-full h-12 w-12"
           onClick={handleUndo}
           disabled={currentIndex === 0}
           data-testid="button-undo"
         >
-          <RotateCcw className="w-5 h-5" />
+          <RotateCcw className="w-4 h-4" />
         </Button>
         <Button 
           size="lg" 
           variant="outline" 
-          className="rounded-full h-16 w-16 border-red-300 hover:bg-red-50 hover:border-red-400"
+          className="rounded-full h-14 w-14 border-red-300 hover:bg-red-50 hover:border-red-400"
           onClick={() => handleSwipe("left")}
           data-testid="button-pass"
         >
-          <X className="w-6 h-6 text-red-500" />
+          <X className="w-5 h-5 text-red-500" />
         </Button>
         <Button 
           size="lg" 
-          className="rounded-full h-16 w-16 bg-green-500 hover:bg-green-600"
+          className="rounded-full h-14 w-14 bg-green-500 hover:bg-green-600"
           onClick={() => handleSwipe("right")}
           data-testid="button-save-swipe"
         >
-          <Heart className="w-6 h-6" />
+          <Heart className="w-5 h-5" />
         </Button>
         <Button 
           size="lg" 
-          variant="outline" 
-          className="rounded-full h-14 w-14 border-primary/30 hover:bg-primary/5"
-          onClick={() => onAction(currentDeal, "invest")}
+          className="rounded-full h-12 w-12"
+          onClick={() => onAcceptTerms(currentDeal)}
+          data-testid="button-accept"
+        >
+          <CheckCircle2 className="w-5 h-5" />
+        </Button>
+        <Button 
+          size="lg" 
+          variant="secondary"
+          className="rounded-full h-12 w-12"
+          onClick={() => onCounterTerms(currentDeal)}
           data-testid="button-counter"
         >
-          <MessageSquare className="w-5 h-5 text-primary" />
+          <MessageSquare className="w-4 h-4" />
         </Button>
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Undo • Pass • Like • Counteroffer
+        Undo • Pass • Save • Accept Terms • Counter Offer
       </p>
     </div>
   );
@@ -629,10 +777,11 @@ interface SwipeCardProps {
   likeOpacity: any;
   passOpacity: any;
   onView: () => void;
-  onCounter: () => void;
+  onAcceptTerms: () => void;
+  onCounterTerms: () => void;
 }
 
-function SwipeCard({ deal, likeOpacity, passOpacity, onView, onCounter }: SwipeCardProps) {
+function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms }: SwipeCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
   const askPrice = deal.askingPrice || deal.contractPrice || 0;
@@ -727,9 +876,15 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onCounter }: SwipeC
             <Eye className="w-4 h-4 mr-2" />
             View Deal
           </Button>
-          <Button className="flex-1" onClick={onCounter} data-testid="button-counter-deal">
-            <ArrowRight className="w-4 h-4 mr-2" />
-            Counteroffer
+        </div>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-deal-swipe">
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Accept Terms
+          </Button>
+          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-deal-swipe">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Counter Offer
           </Button>
         </div>
       </CardContent>
@@ -1137,6 +1292,360 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
             </>
           )}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface CapitalRaiseSwipeViewProps {
+  projects: CapitalProject[];
+  onSave: (id: number) => void;
+  onAcceptTerms: (project: CapitalProject) => void;
+  onCounterTerms: (project: CapitalProject) => void;
+  isItemSaved: (id: number) => boolean;
+}
+
+function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms, isItemSaved }: CapitalRaiseSwipeViewProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
+  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
+  const passOpacity = useTransform(x, [-100, 0], [1, 0]);
+  
+  const currentProject = projects[currentIndex];
+  const hasMore = currentIndex < projects.length - 1;
+
+  const handleSwipe = (direction: "left" | "right") => {
+    setExitDirection(direction);
+    
+    if (direction === "right" && currentProject) {
+      onSave(currentProject.id);
+      toast({
+        title: "Project Saved!",
+        description: "Added to your saved projects.",
+      });
+    }
+    
+    setTimeout(() => {
+      if (hasMore) {
+        setCurrentIndex(prev => prev + 1);
+      }
+      setExitDirection(null);
+    }, 300);
+  };
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const threshold = 120;
+    if (info.offset.x > threshold) {
+      handleSwipe("right");
+    } else if (info.offset.x < -threshold) {
+      handleSwipe("left");
+    }
+  };
+
+  const handleUndo = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
+  };
+
+  if (projects.length === 0) {
+    return (
+      <Card className="p-12 text-center max-w-lg mx-auto">
+        <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No Capital Raises to Swipe</h3>
+        <p className="text-muted-foreground">
+          Check back later for new investment opportunities.
+        </p>
+      </Card>
+    );
+  }
+
+  if (currentIndex >= projects.length) {
+    return (
+      <Card className="p-12 text-center max-w-lg mx-auto">
+        <Sparkles className="w-12 h-12 mx-auto text-primary mb-4" />
+        <h3 className="text-lg font-semibold mb-2">You've Seen All Projects!</h3>
+        <p className="text-muted-foreground mb-6">
+          You've reviewed all available capital raises. Check your saved projects or come back later.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <Button variant="outline" onClick={() => setCurrentIndex(0)} data-testid="button-capital-start-over">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Start Over
+          </Button>
+          <Link href="/marketflow/investor/saved">
+            <Button data-testid="button-capital-view-saved">
+              <Bookmark className="w-4 h-4 mr-2" />
+              View Saved
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <div className="text-center mb-4">
+        <Badge variant="outline" className="gap-1">
+          {currentIndex + 1} / {projects.length}
+        </Badge>
+        <p className="text-sm text-muted-foreground mt-2">
+          Swipe right to save, left to pass
+        </p>
+      </div>
+
+      <div className="relative h-[560px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentProject.id}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={handleDragEnd}
+            style={{ x, rotate }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              x: exitDirection === "left" ? -300 : exitDirection === "right" ? 300 : 0
+            }}
+            exit={{ 
+              x: exitDirection === "left" ? -300 : 300,
+              opacity: 0,
+              transition: { duration: 0.2 }
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+          >
+            <CapitalSwipeCard 
+              project={currentProject}
+              likeOpacity={likeOpacity}
+              passOpacity={passOpacity}
+              onView={() => setLocation(`/marketflow/capital/${currentProject.id}`)}
+              onAcceptTerms={() => onAcceptTerms(currentProject)}
+              onCounterTerms={() => onCounterTerms(currentProject)}
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="flex items-center justify-center gap-3 mt-6">
+        <Button 
+          size="lg" 
+          variant="outline" 
+          className="rounded-full h-12 w-12"
+          onClick={handleUndo}
+          disabled={currentIndex === 0}
+          data-testid="button-capital-undo"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </Button>
+        <Button 
+          size="lg" 
+          variant="outline" 
+          className="rounded-full h-14 w-14 border-red-300 hover:bg-red-50 hover:border-red-400"
+          onClick={() => handleSwipe("left")}
+          data-testid="button-capital-pass"
+        >
+          <X className="w-5 h-5 text-red-500" />
+        </Button>
+        <Button 
+          size="lg" 
+          className="rounded-full h-14 w-14 bg-green-500 hover:bg-green-600"
+          onClick={() => handleSwipe("right")}
+          data-testid="button-capital-save-swipe"
+        >
+          <Heart className="w-5 h-5" />
+        </Button>
+        <Button 
+          size="lg" 
+          className="rounded-full h-12 w-12"
+          onClick={() => onAcceptTerms(currentProject)}
+          data-testid="button-capital-accept"
+        >
+          <CheckCircle2 className="w-5 h-5" />
+        </Button>
+        <Button 
+          size="lg" 
+          variant="secondary"
+          className="rounded-full h-12 w-12"
+          onClick={() => onCounterTerms(currentProject)}
+          data-testid="button-capital-counter"
+        >
+          <MessageSquare className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground mt-4">
+        Undo • Pass • Save • Accept Terms • Counter Offer
+      </p>
+    </div>
+  );
+}
+
+interface CapitalSwipeCardProps {
+  project: CapitalProject;
+  likeOpacity: any;
+  passOpacity: any;
+  onView: () => void;
+  onAcceptTerms: () => void;
+  onCounterTerms: () => void;
+}
+
+function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms }: CapitalSwipeCardProps) {
+  const fundingGoal = project.fundingGoal || 0;
+  const amountRaised = project.amountRaised || 0;
+  const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
+  const isFunded = project.status === "FUNDED" || progressPercent >= 100;
+
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+    return `$${amount.toLocaleString()}`;
+  };
+
+  const getStrategyLabel = (strategy: string | null | undefined) => {
+    const labels: Record<string, string> = {
+      "fix-flip": "Fix & Flip",
+      "buy-hold": "Buy & Hold",
+      "value-add": "Value Add",
+      "development": "Development",
+      "new-construction": "New Construction",
+    };
+    return labels[strategy || ""] || strategy || "Investment";
+  };
+
+  const getStructureLabel = (structure: string | null | undefined) => {
+    const labels: Record<string, string> = {
+      "EQUITY": "Equity",
+      "DEBT": "Debt",
+      "HYBRID": "Hybrid",
+    };
+    return labels[structure || ""] || structure || "Equity";
+  };
+
+  return (
+    <Card className="h-full overflow-hidden shadow-xl">
+      <div className="relative h-44 bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/20">
+        {project.images?.[0] ? (
+          <img 
+            src={project.images[0]} 
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <TrendingUp className="w-16 h-16 text-green-600/30" />
+          </div>
+        )}
+        
+        <motion.div 
+          className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg"
+          style={{ opacity: likeOpacity }}
+        >
+          SAVE
+        </motion.div>
+        <motion.div 
+          className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg"
+          style={{ opacity: passOpacity }}
+        >
+          PASS
+        </motion.div>
+
+        <div className="absolute bottom-2 left-2 flex gap-1">
+          <Badge className={isFunded ? "bg-green-600 text-white" : "bg-amber-500 text-white"}>
+            {isFunded ? "Funded" : project.status?.replace(/_/g, ' ') || "Open"}
+          </Badge>
+          <Badge variant="outline" className="bg-background/80">
+            {getStructureLabel(project.structure)}
+          </Badge>
+        </div>
+      </div>
+
+      <CardContent className="p-4 space-y-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Badge variant="secondary" className="text-[10px]">
+              {getStrategyLabel(project.strategy)}
+            </Badge>
+          </div>
+          <h3 className="font-semibold text-lg truncate">{project.title}</h3>
+          <p className="text-sm text-muted-foreground flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {project.location || 'Location TBD'}
+          </p>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-muted-foreground">Funding Progress</span>
+            <span className="font-semibold">{progressPercent.toFixed(0)}%</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+            <span>{formatCurrency(amountRaised)} raised</span>
+            <span>of {formatCurrency(fundingGoal)}</span>
+          </div>
+        </div>
+
+        <div className="p-3 bg-muted/50 rounded-lg">
+          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Operator Terms</p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {project.structure === "DEBT" ? (
+              <>
+                <div>
+                  <span className="text-muted-foreground">Interest: </span>
+                  <span className="font-medium">{project.askingInterestRate || "TBD"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Duration: </span>
+                  <span className="font-medium">{project.askingLoanDuration || "TBD"}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <span className="text-muted-foreground">Return: </span>
+                  <span className="font-medium">{project.projectedReturn || "TBD"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Split: </span>
+                  <span className="font-medium">{project.askingProfitSplit || "TBD"}</span>
+                </div>
+              </>
+            )}
+          </div>
+          {project.minInvestment && (
+            <div className="mt-2 pt-2 border-t border-muted text-xs">
+              <span className="text-muted-foreground">Min Investment: </span>
+              <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={onView} data-testid="button-view-capital-swipe">
+            <Eye className="w-4 h-4 mr-2" />
+            View Details
+          </Button>
+        </div>
+        {!isFunded && (
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Accept Terms
+            </Button>
+            <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Counter Offer
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
