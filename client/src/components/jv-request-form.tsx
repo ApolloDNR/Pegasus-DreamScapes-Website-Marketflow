@@ -164,6 +164,7 @@ export function JVRequestForm({
                   ? "text-green-600 bg-green-500/5"
                   : "text-muted-foreground"
               }`}
+              data-testid={`button-jv-step-${s}`}
             >
               {step > s && <CheckCircle2 className="w-3 h-3 inline mr-1" />}
               {s === 1 ? "Your Role" : s === 2 ? "Fee Split" : "Review"}
@@ -198,8 +199,9 @@ export function JVRequestForm({
                               ? "border-primary bg-primary/5"
                               : "hover:border-muted-foreground/50"
                           }`}
+                          data-testid={`label-jv-role-${role.value}`}
                         >
-                          <RadioGroupItem value={role.value} className="mt-0.5" />
+                          <RadioGroupItem value={role.value} className="mt-0.5" data-testid={`radio-jv-role-${role.value}`} />
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <Icon className="w-4 h-4 text-primary" />
@@ -386,6 +388,7 @@ export function JVRequestForm({
               variant="outline"
               onClick={() => setStep((step - 1) as 1 | 2)}
               className="flex-1"
+              data-testid="button-jv-back"
             >
               Back
             </Button>
