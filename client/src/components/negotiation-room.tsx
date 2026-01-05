@@ -41,6 +41,7 @@ export interface NegotiationTerms {
   equityPercentage?: number;
   assignmentFee?: number;
   purchasePrice?: number;
+  contractPrice?: number;
   notes?: string;
 }
 

@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
@@ -372,7 +373,7 @@ function DealsPage() {
                 return;
               }
               const posterTerms: NegotiationTerms = {
-                investmentAmount: project.targetRaise || project.totalCapitalNeeded || project.minInvestment || 50000,
+                investmentAmount: project.fundingGoal || project.minInvestment || 50000,
                 interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
                 profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
                 duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
@@ -417,7 +418,7 @@ function DealsPage() {
                 return;
               }
               const posterTerms: NegotiationTerms = {
-                investmentAmount: project.targetRaise || project.totalCapitalNeeded || project.minInvestment || 50000,
+                investmentAmount: project.fundingGoal || project.minInvestment || 50000,
                 interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
                 profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
                 duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
