@@ -305,6 +305,41 @@ function DealsPage() {
             isLoading={dealsLoading && !useSampleData}
             onSave={handleSaveDeal}
             onAction={handleDealAction}
+            onAcceptTerms={(deal) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to accept deal terms.",
+                });
+                return;
+              }
+              const posterTerms: NegotiationTerms = {
+                purchasePrice: deal.askingPrice || deal.contractPrice || 0,
+                assignmentFee: deal.assignmentFee || 0,
+                contractPrice: deal.contractPrice || 0,
+              };
+              acceptTermsMutation.mutate({
+                type: "wholesale",
+                dealId: deal.id,
+                terms: posterTerms
+              });
+            }}
+            onCounterTerms={(deal) => {
+              if (!isAuthenticated && !isGuestMode) {
+                toast({
+                  title: "Sign in required",
+                  description: "Please sign in to make a counter offer.",
+                });
+                return;
+              }
+              setSelectedDeal(deal);
+              setNegotiationType("wholesale");
+              setNegotiationTerms({
+                purchasePrice: deal.askingPrice || deal.contractPrice,
+                assignmentFee: deal.assignmentFee,
+              });
+              setNegotiationRoomOpen(true);
+            }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             isSaving={isSaving}
             showInvest={isDreamscaper || isInvestor || isAdmin}
@@ -519,13 +554,15 @@ interface GridViewProps {
   isLoading: boolean;
   onSave: (dealId: string) => void;
   onAction: (deal: WholesaleDeal, actionType: "jv_request" | "invest") => void;
+  onAcceptTerms: (deal: WholesaleDeal) => void;
+  onCounterTerms: (deal: WholesaleDeal) => void;
   isItemSaved: (id: string) => boolean;
   isSaving: boolean;
   showInvest: boolean;
   showJVRequest: boolean;
 }
 
-function GridView({ deals, isLoading, onSave, onAction, isItemSaved, isSaving, showInvest, showJVRequest }: GridViewProps) {
+function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, showJVRequest }: GridViewProps) {
   const [, setLocation] = useLocation();
   
   if (isLoading) {
@@ -567,6 +604,8 @@ function GridView({ deals, isLoading, onSave, onAction, isItemSaved, isSaving, s
               onSave={() => onSave(deal.id)}
               onAction={(actionType) => onAction(deal, actionType)}
               onView={() => setLocation(`/marketflow/deals/${deal.id}`)}
+              onAcceptTerms={() => onAcceptTerms(deal)}
+              onCounterTerms={() => onCounterTerms(deal)}
               isSaved={isItemSaved(deal.id)}
               isSaving={isSaving}
               showInvest={showInvest}
@@ -898,13 +937,15 @@ interface DealCardProps {
   onSave: () => void;
   onAction: (actionType: "jv_request" | "invest") => void;
   onView: () => void;
+  onAcceptTerms: () => void;
+  onCounterTerms: () => void;
   isSaved: boolean;
   isSaving: boolean;
   showInvest: boolean;
   showJVRequest: boolean;
 }
 
-function DealCard({ deal, onSave, onAction, onView, isSaved, isSaving, showInvest, showJVRequest }: DealCardProps) {
+function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, showJVRequest }: DealCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
   const askPrice = deal.askingPrice || deal.contractPrice || 0;
@@ -997,20 +1038,20 @@ function DealCard({ deal, onSave, onAction, onView, isSaved, isSaving, showInves
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={onView} data-testid={`button-view-deal-${deal.id}`}>
-            <Eye className="w-3 h-3 mr-1" />
-            View
+          <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-deal-${deal.id}`}>
+            <Eye className="w-4 h-4 mr-2" />
+            View Deal
           </Button>
-          {showInvest && (
-            <Button size="sm" className="flex-1" onClick={() => onAction("invest")} data-testid={`button-invest-deal-${deal.id}`}>
-              Counteroffer
-            </Button>
-          )}
-          {showJVRequest && (
-            <Button size="sm" variant="secondary" className="flex-1" onClick={() => onAction("jv_request")} data-testid={`button-jv-deal-${deal.id}`}>
-              JV Request
-            </Button>
-          )}
+        </div>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${deal.id}`}>
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Accept Terms
+          </Button>
+          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${deal.id}`}>
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Counter Offer
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -1277,22 +1318,23 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={onView} data-testid={`button-view-project-${project.id}`}>
-            <Eye className="w-3 h-3 mr-1" />
-            View
+          <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-project-${project.id}`}>
+            <Eye className="w-4 h-4 mr-2" />
+            View Details
           </Button>
-          {!isFunded && (
-            <>
-              <Button size="sm" className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
-                <CheckCircle2 className="w-3 h-3 mr-1" />
-                Accept
-              </Button>
-              <Button size="sm" variant="secondary" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
-                <MessageSquare className="w-3 h-3" />
-              </Button>
-            </>
-          )}
         </div>
+        {!isFunded && (
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Accept Terms
+            </Button>
+            <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Counter Offer
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
