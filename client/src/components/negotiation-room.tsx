@@ -46,29 +46,80 @@ import {
   Info
 } from "lucide-react";
 
-export type NegotiationType = "wholesale" | "capital";
+// FORM A: Wholesale Assignment Offer - buyer/operator taking a contract
+// FORM B: Wholesale JV Request - wholesaler partnering with another wholesaler  
+// FORM C: Capital Raise Terms - operator/dreamscaper listing capital raise
+// FORM D: Capital Investment - investor counter terms on capital raise
+export type NegotiationType = "wholesale_offer" | "wholesale_jv" | "capital_raise" | "capital_invest";
 
+// Legacy type support for backward compatibility
+export type LegacyNegotiationType = "wholesale" | "capital";
+
+export interface WholesaleOfferTerms {
+  assignmentFee: number;
+  earnestMoney: number;
+  closingDate: string;
+  inspectionPeriod: number;
+  message?: string;
+}
+
+export interface WholesaleJVTerms {
+  assignmentSplitPercent: number;
+  partnerRole: "deal_bringer" | "buyer_bringer";
+  message?: string;
+}
+
+export interface CapitalRaiseTerms {
+  capitalTarget: number;
+  minimumInvestment: number;
+  structureType: "debt" | "equity" | "hybrid";
+  proposedReturns: number;
+  profitSplit: number;
+  timeline: number;
+  amountRaised?: number;
+}
+
+export interface CapitalInvestTerms {
+  investmentAmount: number;
+  expectedReturn: number;
+  profitSplit: number;
+  termMonths: number;
+  message?: string;
+}
+
+// Union type for all negotiation terms
 export interface NegotiationTerms {
-  investmentAmount?: number;
-  interestRate?: number;
-  profitSplit?: number;
-  duration?: number;
-  equityPercentage?: number;
+  // Wholesale Offer (Form A)
   assignmentFee?: number;
+  earnestMoney?: number;
+  closingDate?: string;
+  inspectionPeriod?: number;
+  
+  // Wholesale JV (Form B)
+  assignmentSplitPercent?: number;
+  partnerRole?: "deal_bringer" | "buyer_bringer";
+  
+  // Capital Raise (Form C)
+  capitalTarget?: number;
+  minimumInvestment?: number;
+  structureType?: "debt" | "equity" | "hybrid";
+  proposedReturns?: number;
+  amountRaised?: number;
+  
+  // Capital Investment (Form D)
+  investmentAmount?: number;
+  expectedReturn?: number;
+  profitSplit?: number;
+  termMonths?: number;
+  
+  // Shared
+  message?: string;
+  notes?: string;
+  
+  // Legacy fields (for backward compatibility)
   purchasePrice?: number;
   contractPrice?: number;
-  notes?: string;
-  earnestMoney?: number;
-  inspectionPeriod?: number;
-  closingTimeline?: number;
-  financingContingency?: boolean;
-  inspectionContingency?: boolean;
-  appraisalContingency?: boolean;
-  minimumHoldPeriod?: number;
-  exitStrategy?: string;
-  preferredReturnRate?: number;
-  managementFee?: number;
-  capitalCallProvision?: boolean;
+  timeline?: number;
 }
 
 export interface NegotiationMessage {
@@ -122,22 +173,60 @@ export function NegotiationRoom({
   const [isAiLoading, setIsAiLoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
 
+  // Helper to get form type label
+  const getFormTypeLabel = () => {
+    switch (type) {
+      case "wholesale_offer": return "Wholesale Assignment Offer";
+      case "wholesale_jv": return "JV Partnership Request";
+      case "capital_raise": return "Capital Raise Terms";
+      case "capital_invest": return "Capital Investment";
+      default: return "Negotiation";
+    }
+  };
+
+  // Helper to check if this is a wholesale type
+  const isWholesaleType = type === "wholesale_offer" || type === "wholesale_jv";
+  const isCapitalType = type === "capital_raise" || type === "capital_invest";
+
   useEffect(() => {
     if (open) {
-      const enrichedTerms: NegotiationTerms = {
-        ...originalTerms,
-        earnestMoney: originalTerms.earnestMoney || Math.round((originalTerms.purchasePrice || 0) * 0.01),
-        inspectionPeriod: originalTerms.inspectionPeriod || 10,
-        closingTimeline: originalTerms.closingTimeline || 30,
-        financingContingency: originalTerms.financingContingency ?? false,
-        inspectionContingency: originalTerms.inspectionContingency ?? true,
-        appraisalContingency: originalTerms.appraisalContingency ?? false,
-        minimumHoldPeriod: originalTerms.minimumHoldPeriod || 12,
-        exitStrategy: originalTerms.exitStrategy || "refinance",
-        preferredReturnRate: originalTerms.preferredReturnRate || 8,
-        managementFee: originalTerms.managementFee || 2,
-        capitalCallProvision: originalTerms.capitalCallProvision ?? true,
-      };
+      // Initialize terms based on form type
+      let enrichedTerms: NegotiationTerms = { ...originalTerms };
+      
+      if (type === "wholesale_offer") {
+        enrichedTerms = {
+          assignmentFee: originalTerms.assignmentFee || 0,
+          earnestMoney: originalTerms.earnestMoney || 1000,
+          closingDate: originalTerms.closingDate || "",
+          inspectionPeriod: originalTerms.inspectionPeriod || 10,
+          message: "",
+        };
+      } else if (type === "wholesale_jv") {
+        enrichedTerms = {
+          assignmentSplitPercent: originalTerms.assignmentSplitPercent || 50,
+          partnerRole: originalTerms.partnerRole || "deal_bringer",
+          message: "",
+        };
+      } else if (type === "capital_raise") {
+        enrichedTerms = {
+          capitalTarget: originalTerms.capitalTarget || 0,
+          minimumInvestment: originalTerms.minimumInvestment || 25000,
+          structureType: originalTerms.structureType || "equity",
+          proposedReturns: originalTerms.proposedReturns || 15,
+          profitSplit: originalTerms.profitSplit || 70,
+          timeline: originalTerms.timeline || 24,
+          amountRaised: originalTerms.amountRaised || 0,
+        };
+      } else if (type === "capital_invest") {
+        enrichedTerms = {
+          investmentAmount: originalTerms.investmentAmount || 0,
+          expectedReturn: originalTerms.expectedReturn || originalTerms.proposedReturns || 15,
+          profitSplit: originalTerms.profitSplit || 70,
+          termMonths: originalTerms.termMonths || originalTerms.timeline || 24,
+          message: "",
+        };
+      }
+      
       setProposedTerms(enrichedTerms);
       setMessage("");
       setMessages([
@@ -151,9 +240,11 @@ export function NegotiationRoom({
           timestamp: new Date(Date.now() - 3600000)
         }
       ]);
+      
+      const typeDescription = isWholesaleType ? "wholesale deal" : "capital raise";
       setAiMessages([{
         role: "assistant",
-        content: `Hi! I'm Peggy, your AI negotiation assistant. I'm here to help you analyze this ${type === "wholesale" ? "wholesale deal" : "capital raise"} and guide you through the negotiation. What would you like to know about the deal terms?`
+        content: `Hi! I'm Peggy, your AI negotiation assistant. I'm here to help you analyze this ${typeDescription} and guide you through the negotiation. What would you like to know about the deal terms?`
       }]);
     }
   }, [open, dealId, originalTerms, counterpartyId, counterpartyName, dealTitle, type]);
@@ -331,26 +422,24 @@ export function NegotiationRoom({
   };
 
   const validateTerms = (): boolean => {
-    if (type === "wholesale") {
-      return !!(proposedTerms.purchasePrice && proposedTerms.purchasePrice > 0);
-    } else {
-      return !!(proposedTerms.investmentAmount && proposedTerms.investmentAmount > 0);
+    switch (type) {
+      case "wholesale_offer":
+        return !!(proposedTerms.assignmentFee && proposedTerms.assignmentFee > 0);
+      case "wholesale_jv":
+        return !!(proposedTerms.assignmentSplitPercent && proposedTerms.partnerRole);
+      case "capital_raise":
+        return !!(proposedTerms.capitalTarget && proposedTerms.capitalTarget > 0 && proposedTerms.structureType);
+      case "capital_invest":
+        return !!(proposedTerms.investmentAmount && proposedTerms.investmentAmount > 0);
+      default:
+        return false;
     }
   };
 
   const calculateTermsDifference = () => {
     const diffs: { field: string; original: string; proposed: string; change: string }[] = [];
     
-    if (type === "wholesale") {
-      if (originalTerms.purchasePrice !== proposedTerms.purchasePrice) {
-        const diff = (proposedTerms.purchasePrice || 0) - (originalTerms.purchasePrice || 0);
-        diffs.push({
-          field: "Purchase Price",
-          original: formatCurrency(originalTerms.purchasePrice),
-          proposed: formatCurrency(proposedTerms.purchasePrice),
-          change: diff > 0 ? `+${formatCurrency(diff)}` : formatCurrency(diff)
-        });
-      }
+    if (type === "wholesale_offer") {
       if (originalTerms.assignmentFee !== proposedTerms.assignmentFee) {
         const diff = (proposedTerms.assignmentFee || 0) - (originalTerms.assignmentFee || 0);
         diffs.push({
@@ -360,7 +449,26 @@ export function NegotiationRoom({
           change: diff > 0 ? `+${formatCurrency(diff)}` : formatCurrency(diff)
         });
       }
-    } else {
+      if (originalTerms.earnestMoney !== proposedTerms.earnestMoney) {
+        const diff = (proposedTerms.earnestMoney || 0) - (originalTerms.earnestMoney || 0);
+        diffs.push({
+          field: "Earnest Money",
+          original: formatCurrency(originalTerms.earnestMoney),
+          proposed: formatCurrency(proposedTerms.earnestMoney),
+          change: diff > 0 ? `+${formatCurrency(diff)}` : formatCurrency(diff)
+        });
+      }
+    } else if (type === "wholesale_jv") {
+      if (originalTerms.assignmentSplitPercent !== proposedTerms.assignmentSplitPercent) {
+        const diff = (proposedTerms.assignmentSplitPercent || 0) - (originalTerms.assignmentSplitPercent || 0);
+        diffs.push({
+          field: "Assignment Split",
+          original: `${originalTerms.assignmentSplitPercent || 50}%`,
+          proposed: `${proposedTerms.assignmentSplitPercent || 50}%`,
+          change: diff > 0 ? `+${diff}%` : `${diff}%`
+        });
+      }
+    } else if (type === "capital_invest") {
       if (originalTerms.investmentAmount !== proposedTerms.investmentAmount) {
         const diff = (proposedTerms.investmentAmount || 0) - (originalTerms.investmentAmount || 0);
         diffs.push({
@@ -391,48 +499,63 @@ export function NegotiationRoom({
     return `$${amount.toLocaleString()}`;
   };
 
-  const quickAiQuestions = type === "wholesale" 
-    ? [
-        "Is this assignment fee competitive?",
-        "What's a fair inspection period?",
-        "Should I request seller financing?",
-        "Red flags to watch for?"
-      ]
-    : [
-        "Is this profit split fair?",
-        "What preferred return should I ask for?",
-        "Evaluate the exit strategy",
-        "Key risks to consider?"
-      ];
+  const getQuickAiQuestions = () => {
+    switch (type) {
+      case "wholesale_offer":
+        return [
+          "Is this assignment fee competitive?",
+          "What's a fair earnest money amount?",
+          "Recommended inspection period?",
+          "Red flags to watch for?"
+        ];
+      case "wholesale_jv":
+        return [
+          "Is this split fair for my role?",
+          "What should I contribute?",
+          "How to structure the JV agreement?",
+          "Protect myself in the partnership?"
+        ];
+      case "capital_raise":
+        return [
+          "Are my returns competitive?",
+          "What structure attracts investors?",
+          "How to present the opportunity?",
+          "Common investor concerns?"
+        ];
+      case "capital_invest":
+        return [
+          "Is this profit split fair?",
+          "What return should I expect?",
+          "Evaluate the risk/reward",
+          "Key risks to consider?"
+        ];
+      default:
+        return [];
+    }
+  };
 
-  const renderWholesaleTermsForm = () => (
-    <div className="space-y-6">
+  const quickAiQuestions = getQuickAiQuestions();
+
+  // FORM A: Wholesale Assignment Offer
+  // Used when buyer/operator wants to take a contract
+  // Fields: assignment fee, earnest money, close date, inspection, message
+  // NO financing, NO investment terms
+  const renderWholesaleOfferForm = () => (
+    <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-primary" />
-            Financial Terms
+            Assignment Offer Terms
           </CardTitle>
+          <CardDescription className="text-xs">
+            Submit your offer to take this wholesale contract
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Purchase Price *</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  value={proposedTerms.purchasePrice || ""}
-                  onChange={(e) => setProposedTerms(prev => ({ ...prev, purchasePrice: Number(e.target.value) }))}
-                  className="pl-9"
-                  placeholder="0"
-                  data-testid="input-purchase-price"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Assignment Fee</Label>
+              <Label className="text-xs font-medium">Assignment Fee *</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -440,75 +563,55 @@ export function NegotiationRoom({
                   value={proposedTerms.assignmentFee || ""}
                   onChange={(e) => setProposedTerms(prev => ({ ...prev, assignmentFee: Number(e.target.value) }))}
                   className="pl-9"
-                  placeholder="0"
+                  placeholder="10000"
                   data-testid="input-assignment-fee"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">Fee paid to wholesaler for assignment</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Earnest Money Deposit</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  value={proposedTerms.earnestMoney || ""}
+                  onChange={(e) => setProposedTerms(prev => ({ ...prev, earnestMoney: Number(e.target.value) }))}
+                  className="pl-9"
+                  placeholder="1000"
+                  data-testid="input-earnest-money"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Deposit to secure the contract</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-medium">Earnest Money Deposit</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="number"
-                value={proposedTerms.earnestMoney || ""}
-                onChange={(e) => setProposedTerms(prev => ({ ...prev, earnestMoney: Number(e.target.value) }))}
-                className="pl-9"
-                placeholder="0"
-                data-testid="input-earnest-money"
+            <Label className="text-xs font-medium">Proposed Close Date</Label>
+            <Input
+              type="date"
+              value={proposedTerms.closingDate || ""}
+              onChange={(e) => setProposedTerms(prev => ({ ...prev, closingDate: e.target.value }))}
+              data-testid="input-closing-date"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Inspection Period (days)</Label>
+            <div className="space-y-2">
+              <Slider
+                value={[proposedTerms.inspectionPeriod || 10]}
+                onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, inspectionPeriod: value }))}
+                max={30}
+                min={0}
+                step={1}
+                data-testid="slider-inspection-period"
               />
-            </div>
-            <p className="text-xs text-muted-foreground">Typically 1-3% of purchase price</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            Timeline
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Inspection Period (days)</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.inspectionPeriod || 10]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, inspectionPeriod: value }))}
-                  max={30}
-                  min={0}
-                  step={1}
-                  data-testid="slider-inspection-period"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0 days</span>
-                  <span className="font-medium text-foreground">{proposedTerms.inspectionPeriod || 10} days</span>
-                  <span>30 days</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Closing Timeline (days)</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.closingTimeline || 30]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, closingTimeline: value }))}
-                  max={90}
-                  min={7}
-                  step={1}
-                  data-testid="slider-closing-timeline"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>7 days</span>
-                  <span className="font-medium text-foreground">{proposedTerms.closingTimeline || 30} days</span>
-                  <span>90 days</span>
-                </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0 days</span>
+                <span className="font-medium text-foreground">{proposedTerms.inspectionPeriod || 10} days</span>
+                <span>30 days</span>
               </div>
             </div>
           </div>
@@ -518,66 +621,285 @@ export function NegotiationRoom({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Shield className="w-4 h-4 text-primary" />
-            Contingencies
+            <MessageSquare className="w-4 h-4 text-primary" />
+            Message to Wholesaler
           </CardTitle>
-          <CardDescription className="text-xs">
-            Select protections for your offer
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-xs font-medium">Inspection Contingency</Label>
-              <p className="text-xs text-muted-foreground">Right to inspect and negotiate repairs</p>
-            </div>
-            <Switch
-              checked={proposedTerms.inspectionContingency ?? true}
-              onCheckedChange={(checked) => setProposedTerms(prev => ({ ...prev, inspectionContingency: checked }))}
-              data-testid="switch-inspection-contingency"
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-xs font-medium">Financing Contingency</Label>
-              <p className="text-xs text-muted-foreground">Subject to loan approval</p>
-            </div>
-            <Switch
-              checked={proposedTerms.financingContingency ?? false}
-              onCheckedChange={(checked) => setProposedTerms(prev => ({ ...prev, financingContingency: checked }))}
-              data-testid="switch-financing-contingency"
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-xs font-medium">Appraisal Contingency</Label>
-              <p className="text-xs text-muted-foreground">Property must appraise at purchase price</p>
-            </div>
-            <Switch
-              checked={proposedTerms.appraisalContingency ?? false}
-              onCheckedChange={(checked) => setProposedTerms(prev => ({ ...prev, appraisalContingency: checked }))}
-              data-testid="switch-appraisal-contingency"
-            />
-          </div>
+        <CardContent>
+          <Textarea
+            value={proposedTerms.message || ""}
+            onChange={(e) => setProposedTerms(prev => ({ ...prev, message: e.target.value }))}
+            placeholder="Introduce yourself and explain why you're a good fit for this deal..."
+            className="min-h-[80px]"
+            data-testid="textarea-message"
+          />
         </CardContent>
       </Card>
     </div>
   );
 
-  const renderCapitalTermsForm = () => (
-    <div className="space-y-6">
+  // FORM B: Wholesale JV Request
+  // Used when a wholesaler wants to JV with another wholesaler
+  // Fields: proposed assignment split, who brings buyer, message
+  // NO funding source, NO investment strategy fields
+  const renderWholesaleJVForm = () => (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Handshake className="w-4 h-4 text-primary" />
+            JV Partnership Terms
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Partner with this wholesaler on the assignment
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Your Role in Partnership</Label>
+            <Select
+              value={proposedTerms.partnerRole || "deal_bringer"}
+              onValueChange={(value: "deal_bringer" | "buyer_bringer") => setProposedTerms(prev => ({ ...prev, partnerRole: value }))}
+            >
+              <SelectTrigger data-testid="select-partner-role">
+                <SelectValue placeholder="Select your role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="deal_bringer">I'm Bringing the Deal</SelectItem>
+                <SelectItem value="buyer_bringer">I'm Bringing the Buyer</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {proposedTerms.partnerRole === "buyer_bringer" 
+                ? "You have a qualified cash buyer and need a deal" 
+                : "You have a deal under contract and need a buyer"}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Assignment Fee Split (Your Share)</Label>
+            <div className="space-y-2">
+              <Slider
+                value={[proposedTerms.assignmentSplitPercent || 50]}
+                onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, assignmentSplitPercent: value }))}
+                max={90}
+                min={10}
+                step={5}
+                data-testid="slider-assignment-split"
+              />
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">10%</span>
+                <span className="font-medium text-primary">{proposedTerms.assignmentSplitPercent || 50}% You / {100 - (proposedTerms.assignmentSplitPercent || 50)}% Partner</span>
+                <span className="text-muted-foreground">90%</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-primary" />
+            Message to Partner
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={proposedTerms.message || ""}
+            onChange={(e) => setProposedTerms(prev => ({ ...prev, message: e.target.value }))}
+            placeholder="Describe what you bring to this partnership and why it would be mutually beneficial..."
+            className="min-h-[80px]"
+            data-testid="textarea-jv-message"
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // FORM C: Capital Raise Terms (Operator Listing)
+  // Used by Dreamscaper/operator to raise capital
+  // Fields: capital target, minimum investment, structure type, proposed returns, profit split, timeline
+  // Shows capital progress bar
+  const renderCapitalRaiseForm = () => {
+    const fundingProgress = proposedTerms.capitalTarget && proposedTerms.amountRaised 
+      ? Math.min((proposedTerms.amountRaised / proposedTerms.capitalTarget) * 100, 100)
+      : 0;
+
+    return (
+      <div className="space-y-4">
+        {proposedTerms.capitalTarget && (
+          <Card className="bg-primary/5 border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                Funding Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Progress value={fundingProgress} className="h-3" />
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {formatCurrency(proposedTerms.amountRaised || 0)} raised
+                </span>
+                <span className="font-medium text-primary">{Math.round(fundingProgress)}%</span>
+                <span className="text-muted-foreground">
+                  of {formatCurrency(proposedTerms.capitalTarget)}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Target className="w-4 h-4 text-primary" />
+              Capital Raise Structure
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Define your capital raise parameters
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Capital Target *</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    value={proposedTerms.capitalTarget || ""}
+                    onChange={(e) => setProposedTerms(prev => ({ ...prev, capitalTarget: Number(e.target.value) }))}
+                    className="pl-9"
+                    placeholder="500000"
+                    data-testid="input-capital-target"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Minimum Investment</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    value={proposedTerms.minimumInvestment || ""}
+                    onChange={(e) => setProposedTerms(prev => ({ ...prev, minimumInvestment: Number(e.target.value) }))}
+                    className="pl-9"
+                    placeholder="25000"
+                    data-testid="input-min-investment"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Structure Type *</Label>
+              <Select
+                value={proposedTerms.structureType || "equity"}
+                onValueChange={(value: "debt" | "equity" | "hybrid") => setProposedTerms(prev => ({ ...prev, structureType: value }))}
+              >
+                <SelectTrigger data-testid="select-structure-type">
+                  <SelectValue placeholder="Select structure" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="equity">Equity Investment</SelectItem>
+                  <SelectItem value="debt">Debt / Fixed Return</SelectItem>
+                  <SelectItem value="hybrid">Hybrid (Debt + Equity)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Returns & Timeline
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Proposed Returns (%)</Label>
+                <div className="space-y-2">
+                  <Slider
+                    value={[proposedTerms.proposedReturns || 15]}
+                    onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, proposedReturns: value }))}
+                    max={30}
+                    min={5}
+                    step={1}
+                    data-testid="slider-proposed-returns"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>5%</span>
+                    <span className="font-medium text-foreground">{proposedTerms.proposedReturns || 15}%</span>
+                    <span>30%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Profit Split (Investor Share)</Label>
+                <div className="space-y-2">
+                  <Slider
+                    value={[proposedTerms.profitSplit || 70]}
+                    onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, profitSplit: value }))}
+                    max={90}
+                    min={50}
+                    step={5}
+                    data-testid="slider-profit-split"
+                  />
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">50%</span>
+                    <span className="font-medium text-primary">{proposedTerms.profitSplit || 70}% Investor / {100 - (proposedTerms.profitSplit || 70)}% Operator</span>
+                    <span className="text-muted-foreground">90%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Project Timeline (months)</Label>
+              <div className="space-y-2">
+                <Slider
+                  value={[proposedTerms.timeline || 24]}
+                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, timeline: value }))}
+                  max={60}
+                  min={6}
+                  step={6}
+                  data-testid="slider-timeline"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>6 mo</span>
+                  <span className="font-medium text-foreground">{proposedTerms.timeline || 24} months</span>
+                  <span>60 mo</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  // FORM D: Capital Investment / Counter Terms
+  // Used by investors on capital raise deals
+  // Actions: Accept terms or Counter terms
+  // Fields: investment amount, return, profit split, term
+  const renderCapitalInvestForm = () => (
+    <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-primary" />
-            Investment Terms
+            Your Investment Offer
           </CardTitle>
+          <CardDescription className="text-xs">
+            Submit your investment terms for this capital raise
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -589,50 +911,13 @@ export function NegotiationRoom({
                 value={proposedTerms.investmentAmount || ""}
                 onChange={(e) => setProposedTerms(prev => ({ ...prev, investmentAmount: Number(e.target.value) }))}
                 className="pl-9"
-                placeholder="0"
+                placeholder="50000"
                 data-testid="input-investment-amount"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Equity Percentage</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.equityPercentage || 10]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, equityPercentage: value }))}
-                  max={50}
-                  min={1}
-                  step={1}
-                  data-testid="slider-equity-percentage"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>1%</span>
-                  <span className="font-medium text-foreground">{proposedTerms.equityPercentage || 10}%</span>
-                  <span>50%</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Profit Split (Your Share)</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.profitSplit || 50]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, profitSplit: value }))}
-                  max={90}
-                  min={10}
-                  step={5}
-                  data-testid="slider-profit-split"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>10%</span>
-                  <span className="font-medium text-foreground">{proposedTerms.profitSplit || 50}%</span>
-                  <span>90%</span>
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Minimum: {formatCurrency(originalTerms.minimumInvestment || 25000)}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -641,46 +926,63 @@ export function NegotiationRoom({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Percent className="w-4 h-4 text-primary" />
-            Return Structure
+            Proposed Terms
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Expected Return (%)</Label>
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Preferred Return Rate</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.preferredReturnRate || 8]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, preferredReturnRate: value }))}
-                  max={15}
-                  min={0}
-                  step={0.5}
-                  data-testid="slider-preferred-return"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0%</span>
-                  <span className="font-medium text-foreground">{proposedTerms.preferredReturnRate || 8}%</span>
-                  <span>15%</span>
-                </div>
+              <Slider
+                value={[proposedTerms.expectedReturn || 15]}
+                onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, expectedReturn: value }))}
+                max={30}
+                min={5}
+                step={1}
+                data-testid="slider-expected-return"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>5%</span>
+                <span className="font-medium text-foreground">{proposedTerms.expectedReturn || 15}%</span>
+                <span>30%</span>
               </div>
             </div>
+          </div>
 
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Profit Split (Your Share)</Label>
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Management Fee</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.managementFee || 2]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, managementFee: value }))}
-                  max={5}
-                  min={0}
-                  step={0.25}
-                  data-testid="slider-management-fee"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0%</span>
-                  <span className="font-medium text-foreground">{proposedTerms.managementFee || 2}%</span>
-                  <span>5%</span>
-                </div>
+              <Slider
+                value={[proposedTerms.profitSplit || 70]}
+                onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, profitSplit: value }))}
+                max={90}
+                min={50}
+                step={5}
+                data-testid="slider-investor-profit-split"
+              />
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">50%</span>
+                <span className="font-medium text-primary">{proposedTerms.profitSplit || 70}%</span>
+                <span className="text-muted-foreground">90%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Investment Term (months)</Label>
+            <div className="space-y-2">
+              <Slider
+                value={[proposedTerms.termMonths || 24]}
+                onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, termMonths: value }))}
+                max={60}
+                min={6}
+                step={6}
+                data-testid="slider-term-months"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>6 mo</span>
+                <span className="font-medium text-foreground">{proposedTerms.termMonths || 24} months</span>
+                <span>60 mo</span>
               </div>
             </div>
           </div>
@@ -690,65 +992,38 @@ export function NegotiationRoom({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary" />
-            Exit & Hold Terms
+            <MessageSquare className="w-4 h-4 text-primary" />
+            Message to Operator
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Minimum Hold Period (months)</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[proposedTerms.minimumHoldPeriod || 12]}
-                  onValueChange={([value]) => setProposedTerms(prev => ({ ...prev, minimumHoldPeriod: value }))}
-                  max={60}
-                  min={6}
-                  step={6}
-                  data-testid="slider-hold-period"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>6mo</span>
-                  <span className="font-medium text-foreground">{proposedTerms.minimumHoldPeriod || 12} months</span>
-                  <span>60mo</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Exit Strategy</Label>
-              <Select
-                value={proposedTerms.exitStrategy || "refinance"}
-                onValueChange={(value) => setProposedTerms(prev => ({ ...prev, exitStrategy: value }))}
-              >
-                <SelectTrigger data-testid="select-exit-strategy">
-                  <SelectValue placeholder="Select strategy" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="refinance">Refinance</SelectItem>
-                  <SelectItem value="sale">Property Sale</SelectItem>
-                  <SelectItem value="buyout">Partner Buyout</SelectItem>
-                  <SelectItem value="hold">Long-term Hold</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <div className="space-y-0.5">
-              <Label className="text-xs font-medium">Capital Call Provision</Label>
-              <p className="text-xs text-muted-foreground">Allow additional capital requests</p>
-            </div>
-            <Switch
-              checked={proposedTerms.capitalCallProvision ?? true}
-              onCheckedChange={(checked) => setProposedTerms(prev => ({ ...prev, capitalCallProvision: checked }))}
-              data-testid="switch-capital-call"
-            />
-          </div>
+        <CardContent>
+          <Textarea
+            value={proposedTerms.message || ""}
+            onChange={(e) => setProposedTerms(prev => ({ ...prev, message: e.target.value }))}
+            placeholder="Introduce yourself and explain your investment experience..."
+            className="min-h-[80px]"
+            data-testid="textarea-invest-message"
+          />
         </CardContent>
       </Card>
     </div>
   );
+
+  // Master form renderer that selects the appropriate form based on type
+  const renderTermsForm = () => {
+    switch (type) {
+      case "wholesale_offer":
+        return renderWholesaleOfferForm();
+      case "wholesale_jv":
+        return renderWholesaleJVForm();
+      case "capital_raise":
+        return renderCapitalRaiseForm();
+      case "capital_invest":
+        return renderCapitalInvestForm();
+      default:
+        return renderWholesaleOfferForm();
+    }
+  };
 
   const renderMessage = (msg: NegotiationMessage) => {
     const isCurrentUser = msg.senderId === currentUserId;
@@ -805,10 +1080,10 @@ export function NegotiationRoom({
                       <span className="font-medium">{formatCurrency(msg.terms.investmentAmount)}</span>
                     </div>
                   )}
-                  {msg.terms.interestRate && (
+                  {msg.terms.expectedReturn && (
                     <div>
-                      <span className="text-muted-foreground">Interest: </span>
-                      <span className="font-medium">{msg.terms.interestRate}%</span>
+                      <span className="text-muted-foreground">Return: </span>
+                      <span className="font-medium">{msg.terms.expectedReturn}%</span>
                     </div>
                   )}
                   {msg.terms.profitSplit && (
@@ -860,8 +1135,8 @@ export function NegotiationRoom({
                 with {counterpartyName}
               </Badge>
               <Badge variant="secondary" className="gap-1">
-                {type === "wholesale" ? <Home className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
-                {type === "wholesale" ? "Wholesale" : "Capital Raise"}
+                {isWholesaleType ? <Home className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+                {getFormTypeLabel()}
               </Badge>
             </div>
           </div>
@@ -887,7 +1162,7 @@ export function NegotiationRoom({
               
               <TabsContent value="terms" className="flex-1 overflow-hidden m-0">
                 <ScrollArea className="h-full p-4">
-                  {type === "wholesale" ? renderWholesaleTermsForm() : renderCapitalTermsForm()}
+                  {renderTermsForm()}
                   
                   {/* Notes section - common to both */}
                   <Card className="mt-6">

@@ -105,7 +105,7 @@ function DealsPage() {
   const [capitalOfferDialogOpen, setCapitalOfferDialogOpen] = useState(false);
   const [capitalOfferMode, setCapitalOfferMode] = useState<"accept" | "counter">("accept");
   const [negotiationRoomOpen, setNegotiationRoomOpen] = useState(false);
-  const [negotiationType, setNegotiationType] = useState<NegotiationType>("wholesale");
+  const [negotiationType, setNegotiationType] = useState<NegotiationType>("wholesale_offer");
   const [negotiationTerms, setNegotiationTerms] = useState<NegotiationTerms>({});
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
@@ -118,9 +118,10 @@ function DealsPage() {
       return response;
     },
     onSuccess: (_, variables) => {
+      const isWholesaleType = variables.type === 'wholesale_offer' || variables.type === 'wholesale_jv';
       toast({
         title: "Agreement Recorded!",
-        description: `Your acceptance of ${variables.type === 'wholesale' ? 'deal' : 'project'} terms has been recorded.`,
+        description: `Your acceptance of ${isWholesaleType ? 'deal' : 'project'} terms has been recorded.`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/negotiations'] });
     },
@@ -314,12 +315,12 @@ function DealsPage() {
                 return;
               }
               const posterTerms: NegotiationTerms = {
-                purchasePrice: deal.askingPrice || deal.contractPrice || 0,
                 assignmentFee: deal.assignmentFee || 0,
-                contractPrice: deal.contractPrice || 0,
+                earnestMoney: 1000,
+                inspectionPeriod: 10,
               };
               acceptTermsMutation.mutate({
-                type: "wholesale",
+                type: "wholesale_offer",
                 dealId: deal.id,
                 terms: posterTerms
               });
@@ -333,10 +334,11 @@ function DealsPage() {
                 return;
               }
               setSelectedDeal(deal);
-              setNegotiationType("wholesale");
+              setNegotiationType("wholesale_offer");
               setNegotiationTerms({
-                purchasePrice: deal.askingPrice || deal.contractPrice,
                 assignmentFee: deal.assignmentFee,
+                earnestMoney: 1000,
+                inspectionPeriod: 10,
               });
               setNegotiationRoomOpen(true);
             }}
@@ -359,12 +361,12 @@ function DealsPage() {
                 return;
               }
               const posterTerms: NegotiationTerms = {
-                purchasePrice: deal.askingPrice || deal.contractPrice || 0,
                 assignmentFee: deal.assignmentFee || 0,
-                contractPrice: deal.contractPrice || 0,
+                earnestMoney: 1000,
+                inspectionPeriod: 10,
               };
               acceptTermsMutation.mutate({
-                type: "wholesale",
+                type: "wholesale_offer",
                 dealId: deal.id,
                 terms: posterTerms
               });
@@ -378,10 +380,11 @@ function DealsPage() {
                 return;
               }
               setSelectedDeal(deal);
-              setNegotiationType("wholesale");
+              setNegotiationType("wholesale_offer");
               setNegotiationTerms({
-                purchasePrice: deal.askingPrice || deal.contractPrice,
                 assignmentFee: deal.assignmentFee,
+                earnestMoney: 1000,
+                inspectionPeriod: 10,
               });
               setNegotiationRoomOpen(true);
             }}
@@ -408,13 +411,13 @@ function DealsPage() {
                 return;
               }
               const posterTerms: NegotiationTerms = {
-                investmentAmount: project.fundingGoal || project.minInvestment || 50000,
-                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
-                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+                investmentAmount: project.minInvestment || 50000,
+                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
+                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
               };
               acceptTermsMutation.mutate({
-                type: "capital",
+                type: "capital_invest",
                 dealId: project.id,
                 terms: posterTerms
               });
@@ -428,12 +431,12 @@ function DealsPage() {
                 return;
               }
               setSelectedProject(project);
-              setNegotiationType("capital");
+              setNegotiationType("capital_invest");
               setNegotiationTerms({
                 investmentAmount: project.minInvestment || 50000,
-                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
-                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
+                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
               });
               setNegotiationRoomOpen(true);
             }}
@@ -453,13 +456,13 @@ function DealsPage() {
                 return;
               }
               const posterTerms: NegotiationTerms = {
-                investmentAmount: project.fundingGoal || project.minInvestment || 50000,
-                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
-                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+                investmentAmount: project.minInvestment || 50000,
+                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
+                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
               };
               acceptTermsMutation.mutate({
-                type: "capital",
+                type: "capital_invest",
                 dealId: project.id,
                 terms: posterTerms
               });
@@ -473,12 +476,12 @@ function DealsPage() {
                 return;
               }
               setSelectedProject(project);
-              setNegotiationType("capital");
+              setNegotiationType("capital_invest");
               setNegotiationTerms({
                 investmentAmount: project.minInvestment || 50000,
-                interestRate: parseFloat(project.askingInterestRate?.replace('%', '') || "8") || 8,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "50") || 50,
-                duration: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "12") || 12,
+                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
+                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
+                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
               });
               setNegotiationRoomOpen(true);
             }}
@@ -531,12 +534,12 @@ function DealsPage() {
         open={negotiationRoomOpen}
         onOpenChange={setNegotiationRoomOpen}
         type={negotiationType}
-        dealId={negotiationType === "wholesale" ? (selectedDeal?.id || "") : (selectedProject?.id || 0)}
-        dealTitle={negotiationType === "wholesale" 
+        dealId={(negotiationType === "wholesale_offer" || negotiationType === "wholesale_jv") ? (selectedDeal?.id || "") : (selectedProject?.id || 0)}
+        dealTitle={(negotiationType === "wholesale_offer" || negotiationType === "wholesale_jv") 
           ? (selectedDeal?.propertyAddress || selectedDeal?.address || "Wholesale Deal")
           : (selectedProject?.title || "Capital Project")}
         originalTerms={negotiationTerms}
-        counterpartyName={negotiationType === "wholesale" ? "Wholesaler" : "Operator"}
+        counterpartyName={(negotiationType === "wholesale_offer" || negotiationType === "wholesale_jv") ? "Wholesaler" : "Operator"}
         counterpartyId="counterparty-1"
         onAgreementReached={(finalTerms) => {
           toast({
