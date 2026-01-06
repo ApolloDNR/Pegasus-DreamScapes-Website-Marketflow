@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -184,11 +184,25 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
   const [closingDate, setClosingDate] = useState("");
   const [inspectionPeriod, setInspectionPeriod] = useState("10");
   const [message, setMessage] = useState("");
+  const [initialized, setInitialized] = useState(false);
 
   const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
     queryKey: ["/api/wholesale-deals", dealId],
     enabled: !!dealId,
   });
+
+  // Pre-populate form with deal data when loaded
+  useEffect(() => {
+    if (deal && !initialized) {
+      if (deal.assignmentFee) {
+        setAssignmentFee(String(deal.assignmentFee));
+      }
+      if (deal.closingDate) {
+        setClosingDate(deal.closingDate);
+      }
+      setInitialized(true);
+    }
+  }, [deal, initialized]);
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -809,11 +823,34 @@ function CapitalInvestmentForm({ projectId, mode, existingOfferId, onClose }: Fo
   const [profitSplit, setProfitSplit] = useState("70");
   const [termMonths, setTermMonths] = useState("24");
   const [message, setMessage] = useState("");
+  const [initialized, setInitialized] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useQuery<CapitalProject>({
     queryKey: ["/api/capital-projects", projectId],
     enabled: !!projectId,
   });
+
+  // Pre-populate form with project data when loaded
+  useEffect(() => {
+    if (project && !initialized) {
+      if (project.minInvestment) {
+        setInvestmentAmount(String(project.minInvestment));
+      }
+      if (project.askingInterestRate) {
+        const rate = parseFloat(project.askingInterestRate.replace('%', ''));
+        if (!isNaN(rate)) setExpectedReturn(String(rate));
+      }
+      if (project.askingProfitSplit) {
+        const split = parseFloat(project.askingProfitSplit.replace(/[^0-9]/g, ''));
+        if (!isNaN(split)) setProfitSplit(String(split));
+      }
+      if (project.askingLoanDuration) {
+        const months = parseInt(project.askingLoanDuration.replace(/[^0-9]/g, ''));
+        if (!isNaN(months)) setTermMonths(String(months));
+      }
+      setInitialized(true);
+    }
+  }, [project, initialized]);
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {

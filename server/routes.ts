@@ -715,44 +715,46 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { dealId, type, isCounter, parentOfferId, partnershipType, offerAmount, equityPercent, profitSplit, notes } = req.body;
+      const { dealId, type, isCounter, parentOfferId, partnershipType, assignmentFee, earnestMoney, closingDate, inspectionPeriod, message: offerMessage, offerAmount, equityPercent, profitSplit, notes } = req.body;
       
       if (!dealId) {
         return res.status(400).json({ message: 'Missing dealId' });
       }
       
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      
+      // Use PostgreSQL storage for deal lookup (deals use numeric IDs)
       const deal = await storage.getWholesaleDeal(dealId);
       if (!deal) {
         return res.status(404).json({ message: 'Deal not found' });
       }
       
+      // Create offer using PostgreSQL storage (to match deal storage)
+      const offerAmountValue = assignmentFee || offerAmount || 0;
+      
       const offer = await storage.createWholesaleDealOffer({
-        deal_id: dealId,
-        buyer_id: userId,
-        offer_amount: offerAmount || 0,
-        equity_percent: equityPercent,
-        profit_split: profitSplit,
-        notes,
-        is_counter: isCounter || false,
-        parent_offer_id: parentOfferId,
-        status: 'pending'
+        dealId: Number(dealId),
+        buyerId: userId,
+        offerAmount: offerAmountValue,
+        fundingType: 'cash', // Default to cash funding
+        earnestMoney: earnestMoney || 1000,
+        closingTimeline: closingDate || null,
+        inspectionContingency: true,
+        buyerMessage: offerMessage || notes || null,
       });
       
-      if (offer && deal.wholesaler_id) {
+      // Create notification for wholesaler
+      if (offer && deal.wholesalerId) {
         await storage.createNotification({
-          user_id: deal.wholesaler_id,
+          userId: deal.wholesalerId,
           type: isCounter ? 'counter_offer' : 'investment_offer',
           title: isCounter ? 'Counter-Offer Received' : 'New Investment Offer',
           message: isCounter 
-            ? `A counter-offer of $${(offerAmount || 0).toLocaleString()} was submitted on your deal`
-            : `An offer of $${(offerAmount || 0).toLocaleString()} was submitted on your deal`,
+            ? `A counter-offer of $${offerAmountValue.toLocaleString()} was submitted on your deal`
+            : `An offer of $${offerAmountValue.toLocaleString()} was submitted on your deal`,
           link: `/marketplace/wholesaler/deals/${dealId}`
         });
       }
       
-      res.status(201).json(toCamelCase(offer));
+      res.status(201).json(offer);
     } catch (error) {
       console.error('Error creating wholesale offer:', error);
       res.status(500).json({ message: 'Failed to create offer' });
