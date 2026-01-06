@@ -589,7 +589,7 @@ export async function registerRoutes(
       
       const commitment = await storage.createCapitalCommitment({
         project_id: projectId,
-        external_investor_id: userId,
+        investor_id: userId,
         amount,
         structure_preference: structurePreference,
         notes,
@@ -738,13 +738,13 @@ export async function registerRoutes(
         earnestMoney: earnestMoney || 1000,
         closingTimeline: closingDate || null,
         inspectionContingency: true,
-        buyerMessage: offerMessage || notes || null,
+        notes: offerMessage || notes || null,
       });
       
-      // Create notification for wholesaler
-      if (offer && deal.wholesalerId) {
+      // Create notification for wholesaler (submittedBy is the wholesaler's user ID)
+      if (offer && deal.submittedBy) {
         await storage.createNotification({
-          userId: deal.wholesalerId,
+          userId: deal.submittedBy,
           type: isCounter ? 'counter_offer' : 'investment_offer',
           title: isCounter ? 'Counter-Offer Received' : 'New Investment Offer',
           message: isCounter 
@@ -937,7 +937,7 @@ export async function registerRoutes(
           const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
           if (!isNaN(numericId)) {
             const project = await storage.getCapitalProject(numericId);
-            const operatorUserId = project?.userId;
+            const operatorUserId = project?.createdBy;
             
             if (operatorUserId && operatorUserId !== userId) {
               const { storage: supaStore } = await getSupabaseStorage();
@@ -996,7 +996,7 @@ export async function registerRoutes(
             itemTitle = deal?.propertyAddress || `Deal #${dealId}`;
           } else {
             const project = await storage.getCapitalProject(numericId);
-            posterUserId = project?.userId || null;
+            posterUserId = project?.createdBy || null;
             itemTitle = project?.title || `Project #${dealId}`;
           }
           
@@ -1473,10 +1473,9 @@ export async function registerRoutes(
         investorId: offer.investorId,
         committedAmount: offer.amountOffered,
         structureType: offer.structureType,
-        interestRate: offer.requestedInterestRate,
-        equityPercent: offer.requestedEquityPercent,
+        interestRate: offer.proposedInterestRate,
+        equityPercent: offer.proposedEquityPercent,
         role: offer.requestedRole,
-        status: 'ACTIVE'
       });
       
       await storage.updateCapitalProjectFunding(offer.projectId, offer.amountOffered);
@@ -1878,7 +1877,7 @@ export async function registerRoutes(
         contractPrice: deal.contractPrice,
         assignmentFee: deal.assignmentFee,
         arv: deal.arv || undefined,
-        submittedBy: profile.companyName || profile.contactName || userId,
+        submittedBy: profile.company || userId,
       }).catch(err => console.error('Failed to send deal submission notification:', err));
       
       return res.status(201).json(deal);
@@ -4898,14 +4897,13 @@ export async function registerRoutes(
       }
 
       const inquiry = await storage.createBuyerInquiry({
-        userId: userId || null,
-        propertyType,
-        propertyId: Number(propertyId),
+        listingType: propertyType,
+        listingId: Number(propertyId),
         name,
         email,
-        phone: phone || null,
+        phone: phone || '',
+        buyerType: requestType || 'investor',
         message: message || null,
-        requestType,
       });
 
       res.json(inquiry);
@@ -4997,7 +4995,7 @@ export async function registerRoutes(
           id: d.id,
           type: "wholesale_deal" as const,
           title: "Wholesale Deal Submission",
-          description: d.address || "New deal submission",
+          description: d.propertyAddress || "New deal submission",
           submittedBy: d.submittedBy,
           createdAt: d.createdAt,
         })),
@@ -5006,7 +5004,7 @@ export async function registerRoutes(
           type: "capital_project" as const,
           title: "Capital Project Submission",
           description: p.title || "New project submission",
-          submittedBy: p.operatorId,
+          submittedBy: p.createdBy,
           createdAt: p.createdAt,
         })),
       ].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
@@ -5050,16 +5048,16 @@ export async function registerRoutes(
         ...sellerLeads.slice(0, 10).map(l => ({
           id: l.id,
           type: "seller" as const,
-          name: `${l.firstName || ""} ${l.lastName || ""}`.trim() || "Property Owner",
-          description: `${l.propertyAddress || "Property"} | ${l.motivation || "Inquiry"}`,
+          name: l.name || "Property Owner",
+          description: `${l.propertyAddress || "Property"} | ${l.timeline || "Inquiry"}`,
           status: l.status,
           createdAt: l.createdAt,
         })),
         ...investorLeads.slice(0, 10).map(l => ({
           id: l.id,
           type: "investor" as const,
-          name: `${l.firstName || ""} ${l.lastName || ""}`.trim() || "Investor",
-          description: `Budget: ${l.capitalAvailable ? "$" + l.capitalAvailable : "TBD"} | ${l.investmentTypes?.join(", ") || "Various"}`,
+          name: l.name || "Investor",
+          description: `Budget: ${l.capitalRange || "TBD"} | ${l.investmentPreference || "Various"}`,
           status: l.status,
           createdAt: l.createdAt,
         })),
@@ -5143,7 +5141,7 @@ export async function registerRoutes(
         ...(rejectionReason && { notes: rejectionReason })
       });
       
-      if (project.operatorId) {
+      if (project.createdBy) {
         const notificationTitle = status === "approved" || status === "funding" 
           ? `Your project "${project.title}" has been approved!`
           : status === "rejected"
@@ -5156,7 +5154,7 @@ export async function registerRoutes(
           : undefined;
         
         await storage.createNotification({
-          userId: project.operatorId,
+          userId: project.createdBy,
           type: "deal_update",
           title: notificationTitle,
           message: notificationMessage,
@@ -5605,7 +5603,7 @@ export async function registerRoutes(
         )
         .map(p => ({
           ...p,
-          isPegasusProject: p.operatorId ? pegasusUserIds.has(p.operatorId) : false,
+          isPegasusProject: p.createdBy ? pegasusUserIds.has(p.createdBy) : false,
         }))
         .sort((a, b) => {
           if (a.isPegasusProject && !b.isPegasusProject) return -1;
@@ -5671,23 +5669,16 @@ export async function registerRoutes(
         amountOffered: Number(amount),
         structureType: structurePreference || project.structure,
         notes: notes || null,
-        status: "pending",
-        role: "LP",
-        requestedInterestRate: null,
-        requestedEquityPercent: null,
-        requestedProfitSplit: null,
-        requestedPreferredReturn: null,
-        requestedPoints: null,
-        requestedDuration: null,
-        counterOfferRate: null,
-        counterOfferEquity: null,
-        counterOfferNotes: null,
-        negotiationHistory: null,
+        requestedRole: "LP",
+        proposedInterestRate: null,
+        proposedEquityPercent: null,
+        proposedProfitSplit: null,
+        proposedLoanDuration: null,
       });
 
-      if (project.operatorId) {
+      if (project.createdBy) {
         await storage.createNotification({
-          userId: project.operatorId,
+          userId: project.createdBy,
           type: "investment_offer",
           title: `New investment interest in "${project.title}"`,
           message: `An investor is interested in investing $${Number(amount).toLocaleString()}`,
