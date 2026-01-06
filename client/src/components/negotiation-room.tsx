@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useDealAction, type DealActionType } from "@/contexts/deal-action-context";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -51,6 +52,17 @@ import {
 // FORM C: Capital Raise Terms - operator/dreamscaper listing capital raise
 // FORM D: Capital Investment - investor counter terms on capital raise
 export type NegotiationType = "wholesale_offer" | "wholesale_jv" | "capital_raise" | "capital_invest";
+
+// Map NegotiationType to DealActionType for canonical form delegation
+function mapNegotiationTypeToDealAction(type: NegotiationType): DealActionType {
+  switch (type) {
+    case "wholesale_offer": return "assignment_offer";
+    case "wholesale_jv": return "wholesale_jv";
+    case "capital_raise": return "capital_raise";
+    case "capital_invest": return "capital_invest";
+    default: return "assignment_offer";
+  }
+}
 
 // Legacy type support for backward compatibility
 export type LegacyNegotiationType = "wholesale" | "capital";
@@ -163,6 +175,7 @@ export function NegotiationRoom({
 }: NegotiationRoomProps) {
   const { profile, user } = useSupabaseAuth();
   const { toast } = useToast();
+  const { openDealAction } = useDealAction();
   const [activeTab, setActiveTab] = useState<"terms" | "chat">("terms");
   const [message, setMessage] = useState("");
   const [proposedTerms, setProposedTerms] = useState<NegotiationTerms>({});
@@ -1223,6 +1236,18 @@ export function NegotiationRoom({
                         <Send className="w-4 h-4 mr-2" />
                       )}
                       Send Counter Offer
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        onOpenChange(false);
+                        openDealAction(dealId, mapNegotiationTypeToDealAction(type), "counter");
+                      }}
+                      data-testid="button-open-form"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Open Full Form
                     </Button>
                     <Button 
                       variant="outline"

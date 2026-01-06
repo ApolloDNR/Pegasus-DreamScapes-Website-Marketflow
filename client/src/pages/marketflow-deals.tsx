@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
+import { useDealAction } from "@/contexts/deal-action-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,9 +22,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
-import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
-import { CapitalRaiseInvestmentStudio, type InvestmentStudioData } from "@/components/capital-raise-investment-studio";
-import { NegotiationRoom, type NegotiationTerms, type NegotiationType } from "@/components/negotiation-room";
 import { sampleWholesaleDeals } from "@/lib/sample-data";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
@@ -98,41 +95,11 @@ function DealsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "swipe">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState<string>("all");
-  const [selectedDeal, setSelectedDeal] = useState<WholesaleDeal | null>(null);
-  const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
-  const [dealActionType, setDealActionType] = useState<"jv_request" | "invest">("invest");
-  const [dealActionDialogOpen, setDealActionDialogOpen] = useState(false);
-  const [capitalOfferDialogOpen, setCapitalOfferDialogOpen] = useState(false);
-  const [capitalOfferMode, setCapitalOfferMode] = useState<"accept" | "counter">("accept");
-  const [negotiationRoomOpen, setNegotiationRoomOpen] = useState(false);
-  const [negotiationType, setNegotiationType] = useState<NegotiationType>("wholesale_offer");
-  const [negotiationTerms, setNegotiationTerms] = useState<NegotiationTerms>({});
-  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
+  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
+  const { openDealAction } = useDealAction();
   const [, setLocation] = useLocation();
-
-  const acceptTermsMutation = useMutation({
-    mutationFn: async (data: { type: string; dealId: string | number; terms: NegotiationTerms }) => {
-      const response = await apiRequest('POST', '/api/negotiations/accept', data);
-      return response;
-    },
-    onSuccess: (_, variables) => {
-      const isWholesaleType = variables.type === 'wholesale_offer' || variables.type === 'wholesale_jv';
-      toast({
-        title: "Agreement Recorded!",
-        description: `Your acceptance of ${isWholesaleType ? 'deal' : 'project'} terms has been recorded.`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/negotiations'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to accept terms",
-        description: error.message || "Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
@@ -151,9 +118,11 @@ function DealsPage() {
       });
       return;
     }
-    setSelectedDeal(deal);
-    setDealActionType(actionType);
-    setDealActionDialogOpen(true);
+    if (actionType === "jv_request") {
+      openDealAction(deal.id, "wholesale_jv");
+    } else {
+      openDealAction(deal.id, "assignment_offer");
+    }
   };
 
   const handleSaveDeal = async (dealId: string) => {
@@ -308,39 +277,17 @@ function DealsPage() {
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to accept deal terms.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to accept deal terms." });
                 return;
               }
-              const posterTerms: NegotiationTerms = {
-                assignmentFee: deal.assignmentFee || 0,
-                earnestMoney: 1000,
-                inspectionPeriod: 10,
-              };
-              acceptTermsMutation.mutate({
-                type: "wholesale_offer",
-                dealId: deal.id,
-                terms: posterTerms
-              });
+              openDealAction(deal.id, "assignment_offer");
             }}
             onCounterTerms={(deal) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to make a counter offer.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to make a counter offer." });
                 return;
               }
-              setSelectedDeal(deal);
-              setNegotiationType("wholesale_offer");
-              setNegotiationTerms({
-                assignmentFee: deal.assignmentFee,
-                earnestMoney: 1000,
-                inspectionPeriod: 10,
-              });
-              setNegotiationRoomOpen(true);
+              openDealAction(deal.id, "assignment_offer", "counter");
             }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             isSaving={isSaving}
@@ -354,39 +301,17 @@ function DealsPage() {
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to accept deal terms.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to accept deal terms." });
                 return;
               }
-              const posterTerms: NegotiationTerms = {
-                assignmentFee: deal.assignmentFee || 0,
-                earnestMoney: 1000,
-                inspectionPeriod: 10,
-              };
-              acceptTermsMutation.mutate({
-                type: "wholesale_offer",
-                dealId: deal.id,
-                terms: posterTerms
-              });
+              openDealAction(deal.id, "assignment_offer");
             }}
             onCounterTerms={(deal) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to make a counter offer.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to make a counter offer." });
                 return;
               }
-              setSelectedDeal(deal);
-              setNegotiationType("wholesale_offer");
-              setNegotiationTerms({
-                assignmentFee: deal.assignmentFee,
-                earnestMoney: 1000,
-                inspectionPeriod: 10,
-              });
-              setNegotiationRoomOpen(true);
+              openDealAction(deal.id, "assignment_offer", "counter");
             }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             showInvest={isDreamscaper || isInvestor || isAdmin}
@@ -399,46 +324,21 @@ function DealsPage() {
             projects={capitalProjects || []}
             isLoading={projectsLoading}
             onSelectProject={(project) => {
-              setSelectedProject(project);
               setLocation(`/marketflow/capital/${project.id}`);
             }}
             onAcceptTerms={(project) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to invest in capital raises.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
                 return;
               }
-              const posterTerms: NegotiationTerms = {
-                investmentAmount: project.minInvestment || 50000,
-                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
-                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
-              };
-              acceptTermsMutation.mutate({
-                type: "capital_invest",
-                dealId: project.id,
-                terms: posterTerms
-              });
+              openDealAction(project.id, "capital_invest");
             }}
             onCounterTerms={(project) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to invest in capital raises.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
                 return;
               }
-              setSelectedProject(project);
-              setNegotiationType("capital_invest");
-              setNegotiationTerms({
-                investmentAmount: project.minInvestment || 50000,
-                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
-                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
-              });
-              setNegotiationRoomOpen(true);
+              openDealAction(project.id, "capital_invest", "counter");
             }}
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
             onSave={(id) => toggleSaveItem('capital_project', String(id))}
@@ -449,105 +349,22 @@ function DealsPage() {
             onSave={(id) => toggleSaveItem('capital_project', String(id))}
             onAcceptTerms={(project) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to invest in capital raises.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
                 return;
               }
-              const posterTerms: NegotiationTerms = {
-                investmentAmount: project.minInvestment || 50000,
-                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
-                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
-              };
-              acceptTermsMutation.mutate({
-                type: "capital_invest",
-                dealId: project.id,
-                terms: posterTerms
-              });
+              openDealAction(project.id, "capital_invest");
             }}
             onCounterTerms={(project) => {
               if (!isAuthenticated && !isGuestMode) {
-                toast({
-                  title: "Sign in required",
-                  description: "Please sign in to invest in capital raises.",
-                });
+                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
                 return;
               }
-              setSelectedProject(project);
-              setNegotiationType("capital_invest");
-              setNegotiationTerms({
-                investmentAmount: project.minInvestment || 50000,
-                expectedReturn: parseFloat(project.askingInterestRate?.replace('%', '') || "15") || 15,
-                profitSplit: parseFloat(project.askingProfitSplit?.replace(/[^0-9]/g, '') || "70") || 70,
-                termMonths: parseInt(project.askingLoanDuration?.replace(/[^0-9]/g, '') || "24") || 24,
-              });
-              setNegotiationRoomOpen(true);
+              openDealAction(project.id, "capital_invest", "counter");
             }}
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
           />
         )
       )}
-
-      {selectedDeal && (
-        <WholesaleDealActionDialog
-          open={dealActionDialogOpen}
-          onOpenChange={setDealActionDialogOpen}
-          deal={{
-            id: selectedDeal.id,
-            propertyAddress: selectedDeal.propertyAddress || selectedDeal.address || "Unknown",
-            city: selectedDeal.city,
-            state: selectedDeal.state,
-            askingPrice: selectedDeal.askingPrice || selectedDeal.contractPrice,
-            arv: selectedDeal.arv,
-            estimatedRepairs: selectedDeal.repairEstimate || selectedDeal.estimatedRepairs,
-            assignmentFee: selectedDeal.assignmentFee,
-            contractPrice: selectedDeal.contractPrice,
-            propertyType: selectedDeal.propertyType,
-          }}
-          actionType={dealActionType}
-          onSuccess={() => {
-            toast({
-              title: dealActionType === "jv_request" ? "JV Request Sent" : "Offer Submitted",
-              description: dealActionType === "jv_request" 
-                ? "Your partnership request has been sent."
-                : "Your offer has been submitted for review.",
-            });
-          }}
-        />
-      )}
-
-      {selectedProject && (
-        <CapitalRaiseInvestmentStudio
-          open={capitalOfferDialogOpen}
-          onOpenChange={setCapitalOfferDialogOpen}
-          project={selectedProject}
-          mode={capitalOfferMode}
-          onSubmit={(data: InvestmentStudioData) => {
-            console.log("Capital investment submitted:", data);
-          }}
-        />
-      )}
-
-      <NegotiationRoom
-        open={negotiationRoomOpen}
-        onOpenChange={setNegotiationRoomOpen}
-        type={negotiationType}
-        dealId={(negotiationType === "wholesale_offer" || negotiationType === "wholesale_jv") ? (selectedDeal?.id || "") : (selectedProject?.id || 0)}
-        dealTitle={(negotiationType === "wholesale_offer" || negotiationType === "wholesale_jv") 
-          ? (selectedDeal?.propertyAddress || selectedDeal?.address || "Wholesale Deal")
-          : (selectedProject?.title || "Capital Project")}
-        originalTerms={negotiationTerms}
-        counterpartyName={(negotiationType === "wholesale_offer" || negotiationType === "wholesale_jv") ? "Wholesaler" : "Operator"}
-        counterpartyId="counterparty-1"
-        onAgreementReached={(finalTerms) => {
-          toast({
-            title: "Deal Closed!",
-            description: "Congratulations on reaching an agreement. We'll send you the details shortly.",
-          });
-        }}
-      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer";
 import { PeggyProvider } from "@/contexts/peggy-context";
 import { PeggyChatBubble } from "@/components/peggy-chat";
 import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
+import { DealActionProvider } from "@/contexts/deal-action-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
 
 function ScrollToTop() {
@@ -180,20 +181,22 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <SupabaseAuthProvider>
         <TooltipProvider>
-          <PeggyProvider>
-            <ScrollToTop />
-            <div className="min-h-screen flex flex-col">
-              <Navigation />
-              <main className="flex-1">
-                <ErrorBoundary>
-                  <Router />
-                </ErrorBoundary>
-              </main>
-              <Footer />
-            </div>
-            <PeggyChatBubble />
-            <Toaster />
-          </PeggyProvider>
+          <DealActionProvider>
+            <PeggyProvider>
+              <ScrollToTop />
+              <div className="min-h-screen flex flex-col">
+                <Navigation />
+                <main className="flex-1">
+                  <ErrorBoundary>
+                    <Router />
+                  </ErrorBoundary>
+                </main>
+                <Footer />
+              </div>
+              <PeggyChatBubble />
+              <Toaster />
+            </PeggyProvider>
+          </DealActionProvider>
         </TooltipProvider>
       </SupabaseAuthProvider>
     </QueryClientProvider>
