@@ -309,17 +309,9 @@ function DealsPage() {
             onSave={handleSaveDeal}
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to accept deal terms." });
-                return;
-              }
               openDealAction(deal.id, "assignment_offer");
             }}
             onCounterTerms={(deal) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to make a counter offer." });
-                return;
-              }
               openDealAction(deal.id, "assignment_offer", "counter");
             }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
@@ -333,17 +325,9 @@ function DealsPage() {
             onSave={handleSaveDeal}
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to accept deal terms." });
-                return;
-              }
               openDealAction(deal.id, "assignment_offer");
             }}
             onCounterTerms={(deal) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to make a counter offer." });
-                return;
-              }
               openDealAction(deal.id, "assignment_offer", "counter");
             }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
@@ -362,17 +346,9 @@ function DealsPage() {
               setLocation(`/marketflow/capital/${project.id}`);
             }}
             onAcceptTerms={(project) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
-                return;
-              }
               openDealAction(project.id, "capital_invest");
             }}
             onCounterTerms={(project) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
-                return;
-              }
               openDealAction(project.id, "capital_invest", "counter");
             }}
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
@@ -383,17 +359,9 @@ function DealsPage() {
             projects={capitalProjects || []}
             onSave={(id) => toggleSaveItem('capital_project', String(id))}
             onAcceptTerms={(project) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
-                return;
-              }
               openDealAction(project.id, "capital_invest");
             }}
             onCounterTerms={(project) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to invest in capital raises." });
-                return;
-              }
               openDealAction(project.id, "capital_invest", "counter");
             }}
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
