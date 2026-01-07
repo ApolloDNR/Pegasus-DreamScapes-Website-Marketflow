@@ -7,18 +7,21 @@ import { Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { DealType, DealAction } from "@shared/schema";
 
 export type DealActionType = 
   | "assignment_offer"    
   | "wholesale_jv"        
   | "capital_raise"       
-  | "capital_invest";     
+  | "capital_invest"
+  | "listing_inquiry";    // New: for LISTING deals
 
-export type DealCategory = "wholesale" | "capital";
+export type DealCategory = "wholesale" | "capital" | "listing";
 
 interface DealActionState {
   isOpen: boolean;
   dealId: string | number | null;
+  dealType: DealType | null;  // New: track dealType for routing
   actionType: DealActionType | null;
   mode: "new" | "counter";
   existingOfferId?: string;
@@ -26,7 +29,8 @@ interface DealActionState {
 
 interface DealActionContextValue {
   openDealAction: (dealId: string | number, actionType: DealActionType, mode?: "new" | "counter", existingOfferId?: string) => void;
-  openInStudio: (dealId: string | number, dealType: "wholesale" | "capital") => void;
+  openDealActionByType: (dealType: DealType, dealId: string | number, action: DealAction) => void; // New: type-aware routing
+  openInStudio: (dealId: string | number, projectType: "capital") => void;  // Studio is CAPITAL-only
   closeDealAction: () => void;
   state: DealActionState;
 }
@@ -50,40 +54,81 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
   const [state, setState] = useState<DealActionState>({
     isOpen: false,
     dealId: null,
+    dealType: null,
     actionType: null,
     mode: "new",
   });
 
+  // Legacy: action-only routing (still supported for backward compatibility)
   const openDealAction = useCallback((
     dealId: string | number, 
     actionType: DealActionType,
     mode: "new" | "counter" = "new",
     existingOfferId?: string
   ) => {
+    // Infer dealType from actionType for legacy compatibility
+    const inferredDealType: DealType = 
+      actionType === "assignment_offer" || actionType === "wholesale_jv" 
+        ? "WHOLESALE_ASSIGNMENT"
+        : actionType === "listing_inquiry" 
+          ? "LISTING"
+          : "CAPITAL_RAISE";
+    
     setState({
       isOpen: true,
       dealId,
+      dealType: inferredDealType,
       actionType,
       mode,
       existingOfferId,
     });
   }, []);
 
-  const openInStudio = useCallback((dealId: string | number, dealType: "wholesale" | "capital") => {
-    setLocation(`/offer-studio/${dealType}/${dealId}`);
+  // New: type-aware routing using (dealType, action) pair
+  const openDealActionByType = useCallback((
+    dealType: DealType,
+    dealId: string | number,
+    action: DealAction
+  ) => {
+    // Map (dealType, action) to correct actionType for modal routing
+    let actionType: DealActionType;
+    
+    if (dealType === "WHOLESALE_ASSIGNMENT") {
+      actionType = action === "JV" ? "wholesale_jv" : "assignment_offer";
+    } else if (dealType === "CAPITAL_RAISE") {
+      actionType = action === "INVEST" ? "capital_invest" : "capital_raise";
+    } else if (dealType === "LISTING") {
+      actionType = "listing_inquiry";
+    } else {
+      actionType = "assignment_offer"; // fallback
+    }
+    
+    setState({
+      isOpen: true,
+      dealId,
+      dealType,
+      actionType,
+      mode: "new",
+    });
+  }, []);
+
+  // Studio is CAPITAL_RAISE only - no wholesale deals in studio
+  const openInStudio = useCallback((dealId: string | number, projectType: "capital") => {
+    setLocation(`/offer-studio/${projectType}/${dealId}`);
   }, [setLocation]);
 
   const closeDealAction = useCallback(() => {
     setState({
       isOpen: false,
       dealId: null,
+      dealType: null,
       actionType: null,
       mode: "new",
     });
   }, []);
 
   return (
-    <DealActionContext.Provider value={{ openDealAction, openInStudio, closeDealAction, state }}>
+    <DealActionContext.Provider value={{ openDealAction, openDealActionByType, openInStudio, closeDealAction, state }}>
       {children}
       <DealActionModal />
     </DealActionContext.Provider>
@@ -92,48 +137,73 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
 
 function DealActionModal() {
   const { state, closeDealAction } = useDealAction();
-  const { isOpen, dealId, actionType, mode, existingOfferId } = state;
+  const { isOpen, dealId, dealType, actionType, mode, existingOfferId } = state;
 
   if (!isOpen || !dealId || !actionType) return null;
 
-  const isWholesale = actionType === "assignment_offer" || actionType === "wholesale_jv";
+  // Render form based on dealType + actionType combination
+  const renderForm = () => {
+    // WHOLESALE_ASSIGNMENT forms
+    if (dealType === "WHOLESALE_ASSIGNMENT" || actionType === "assignment_offer" || actionType === "wholesale_jv") {
+      if (actionType === "wholesale_jv") {
+        return (
+          <WholesaleJVForm 
+            dealId={String(dealId)} 
+            mode={mode}
+            existingOfferId={existingOfferId}
+            onClose={closeDealAction} 
+          />
+        );
+      }
+      return (
+        <AssignmentOfferForm 
+          dealId={String(dealId)} 
+          mode={mode} 
+          existingOfferId={existingOfferId}
+          onClose={closeDealAction} 
+        />
+      );
+    }
+    
+    // CAPITAL_RAISE forms
+    if (dealType === "CAPITAL_RAISE" || actionType === "capital_raise" || actionType === "capital_invest") {
+      if (actionType === "capital_invest") {
+        return (
+          <CapitalInvestmentForm 
+            projectId={Number(dealId)} 
+            mode={mode}
+            existingOfferId={existingOfferId}
+            onClose={closeDealAction} 
+          />
+        );
+      }
+      return (
+        <CapitalRaiseTermsForm 
+          projectId={Number(dealId)} 
+          mode={mode}
+          existingOfferId={existingOfferId}
+          onClose={closeDealAction} 
+        />
+      );
+    }
+    
+    // LISTING forms
+    if (dealType === "LISTING" || actionType === "listing_inquiry") {
+      return (
+        <ListingInquiryForm 
+          listingId={Number(dealId)} 
+          onClose={closeDealAction} 
+        />
+      );
+    }
+    
+    return null;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeDealAction()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        {isWholesale ? (
-          actionType === "assignment_offer" ? (
-            <AssignmentOfferForm 
-              dealId={String(dealId)} 
-              mode={mode} 
-              existingOfferId={existingOfferId}
-              onClose={closeDealAction} 
-            />
-          ) : (
-            <WholesaleJVForm 
-              dealId={String(dealId)} 
-              mode={mode}
-              existingOfferId={existingOfferId}
-              onClose={closeDealAction} 
-            />
-          )
-        ) : (
-          actionType === "capital_raise" ? (
-            <CapitalRaiseTermsForm 
-              projectId={Number(dealId)} 
-              mode={mode}
-              existingOfferId={existingOfferId}
-              onClose={closeDealAction} 
-            />
-          ) : (
-            <CapitalInvestmentForm 
-              projectId={Number(dealId)} 
-              mode={mode}
-              existingOfferId={existingOfferId}
-              onClose={closeDealAction} 
-            />
-          )
-        )}
+        {renderForm()}
       </DialogContent>
     </Dialog>
   );
@@ -371,28 +441,19 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 pt-4">
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-offer">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={submitMutation.isPending}
-              className="flex-1"
-              data-testid="button-submit-assignment-offer"
-            >
-              {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {mode === "counter" ? "Send Counter-Offer" : "Submit Offer"}
-            </Button>
-          </div>
-          <Link href={`/offer-studio/wholesale/${dealId}`} onClick={onClose}>
-            <Button variant="ghost" className="w-full gap-2 text-muted-foreground hover:text-foreground" data-testid="button-continue-in-studio">
-              <Sparkles className="w-4 h-4" />
-              Continue in Offer Studio
-              <ExternalLink className="w-3 h-3" />
-            </Button>
-          </Link>
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-offer">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitMutation.isPending}
+            className="flex-1"
+            data-testid="button-submit-assignment-offer"
+          >
+            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {mode === "counter" ? "Send Counter-Offer" : "Submit Offer"}
+          </Button>
         </div>
       </div>
     </>
@@ -1071,6 +1132,243 @@ function CapitalInvestmentForm({ projectId, mode, existingOfferId, onClose }: Fo
           >
             {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {mode === "counter" ? "Send Counter-Offer" : "Submit Investment"}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// LISTING dealType form - for property inquiries and tour scheduling
+interface ListingInquiryFormProps {
+  listingId: number;
+  onClose: () => void;
+}
+
+interface ListingData {
+  id: number;
+  title?: string;
+  propertyAddress?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  askingPrice?: number;
+  listPrice?: number;
+  bedrooms?: number;
+  bathrooms?: number | string;
+  sqft?: number;
+  propertyType?: string;
+  status?: string;
+}
+
+function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
+  const { toast } = useToast();
+  const { isAuthenticated, profile } = useSupabaseAuth();
+  const [inquiryType, setInquiryType] = useState<"info" | "tour" | "offer">("info");
+  const [message, setMessage] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const { data: listing, isLoading: listingLoading } = useQuery<ListingData>({
+    queryKey: ["/api/listings", listingId],
+    enabled: !!listingId,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/listing-inquiries", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Inquiry Submitted",
+        description: inquiryType === "tour" 
+          ? "Your tour request has been sent to the listing agent."
+          : "Your inquiry has been submitted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/listing-inquiries"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit inquiry",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to submit an inquiry." });
+      return;
+    }
+    if (!message && inquiryType !== "tour") {
+      toast({ title: "Message required", variant: "destructive" });
+      return;
+    }
+
+    submitMutation.mutate({
+      listingId,
+      inquiryType,
+      message: message || `Interested in scheduling a tour`,
+      preferredDate: preferredDate || undefined,
+      preferredTime: preferredTime || undefined,
+      phone: phone || undefined,
+    });
+  };
+
+  if (listingLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return "—";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle data-testid="dialog-title-listing-inquiry">
+          {inquiryType === "tour" ? "Schedule a Tour" : "Property Inquiry"}
+        </DialogTitle>
+        <DialogDescription>
+          {listing?.propertyAddress || listing?.address || listing?.title || "Property"}
+          {listing?.city && listing?.state && ` - ${listing.city}, ${listing.state}`}
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 mt-4">
+        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
+          <div>
+            <span className="text-muted-foreground">List Price:</span>
+            <span className="ml-2 font-medium">{formatCurrency(listing?.askingPrice || listing?.listPrice)}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Type:</span>
+            <span className="ml-2 font-medium">{listing?.propertyType || "—"}</span>
+          </div>
+          {(listing?.bedrooms || listing?.bathrooms) && (
+            <>
+              <div>
+                <span className="text-muted-foreground">Beds:</span>
+                <span className="ml-2 font-medium">{listing?.bedrooms || "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Baths:</span>
+                <span className="ml-2 font-medium">{listing?.bathrooms || "—"}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Inquiry Type</label>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {[
+                { value: "info", label: "More Info" },
+                { value: "tour", label: "Schedule Tour" },
+                { value: "offer", label: "Make Offer" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setInquiryType(option.value as "info" | "tour" | "offer")}
+                  className={`p-2 border rounded-lg text-center text-sm transition-colors ${
+                    inquiryType === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  data-testid={`button-inquiry-type-${option.value}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {inquiryType === "tour" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Preferred Date</label>
+                <input
+                  type="date"
+                  value={preferredDate}
+                  onChange={(e) => setPreferredDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border rounded-md mt-1"
+                  data-testid="input-tour-date"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Preferred Time</label>
+                <select
+                  value={preferredTime}
+                  onChange={(e) => setPreferredTime(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md mt-1"
+                  data-testid="select-tour-time"
+                >
+                  <option value="">Select time</option>
+                  <option value="morning">Morning (9am-12pm)</option>
+                  <option value="afternoon">Afternoon (12pm-5pm)</option>
+                  <option value="evening">Evening (5pm-8pm)</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="text-sm font-medium">Phone Number (optional)</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(555) 123-4567"
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-inquiry-phone"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">
+              Message {inquiryType === "tour" ? "(optional)" : "*"}
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={
+                inquiryType === "tour"
+                  ? "Any special requests or questions..."
+                  : inquiryType === "offer"
+                    ? "Describe your offer terms..."
+                    : "What would you like to know about this property?"
+              }
+              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
+              data-testid="input-inquiry-message"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-inquiry">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitMutation.isPending}
+            className="flex-1"
+            data-testid="button-submit-listing-inquiry"
+          >
+            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {inquiryType === "tour" ? "Request Tour" : "Submit Inquiry"}
           </Button>
         </div>
       </div>

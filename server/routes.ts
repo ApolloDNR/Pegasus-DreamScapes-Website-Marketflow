@@ -2225,6 +2225,73 @@ export async function registerRoutes(
     }
   });
 
+  // LISTING dealType endpoints
+  app.get("/api/listings", async (req, res) => {
+    try {
+      const activeListings = await storage.getActiveListings();
+      return res.json(activeListings);
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/listings/:id", async (req, res) => {
+    try {
+      const listing = await storage.getListing(parseInt(req.params.id));
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      return res.json(listing);
+    } catch (error) {
+      console.error("Error fetching listing:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/listing-inquiries", isAuthenticated, async (req, res) => {
+    try {
+      const { listingId, inquiryType, message, preferredDate, preferredTime, phone } = req.body;
+      
+      if (!listingId) {
+        return res.status(400).json({ message: "Listing ID is required" });
+      }
+
+      // Verify listing exists
+      const listing = await storage.getListing(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      const inquiry = await storage.createListingInquiry({
+        listingId,
+        userId: req.user?.claims?.sub || "",
+        inquiryType: inquiryType || "info",
+        message: message || "",
+        preferredDate: preferredDate ? new Date(preferredDate) : undefined,
+        preferredTime: preferredTime || undefined,
+        phone: phone || undefined,
+        status: "pending",
+      });
+
+      console.log("New listing inquiry received:", { listingId, inquiryType });
+      return res.status(201).json(inquiry);
+    } catch (error) {
+      console.error("Error creating listing inquiry:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/listings/:id/inquiries", isAuthenticated, async (req, res) => {
+    try {
+      const inquiries = await storage.getListingInquiries(parseInt(req.params.id));
+      return res.json(inquiries);
+    } catch (error) {
+      console.error("Error fetching listing inquiries:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Protected HQ Routes for Retail Listings (staff only)
   app.get("/api/hq/retail-listings", isAuthenticated, requireStaffRole, async (req, res) => {
     try {
