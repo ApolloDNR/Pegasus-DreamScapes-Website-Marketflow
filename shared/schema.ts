@@ -176,6 +176,43 @@ export function hasMarketplacePermission(role: MarketplaceRole, permission: Mark
   return (MARKETPLACE_ROLE_CONFIG[role].permissions as readonly string[]).includes(permission);
 }
 
+// =====================================================
+// DEAL TYPE ENUM - Drives forms, buttons, and negotiation schemas
+// =====================================================
+// Every deal/listing/project MUST have a dealType that determines:
+// - Which buttons show on cards
+// - Which canonical form opens
+// - Which negotiation room schema is used
+// - Which fields are available
+
+export const DEAL_TYPES = [
+  "WHOLESALE_ASSIGNMENT", // Wholesale assignment deals - uses WholesaleAssignmentOfferModal
+  "CAPITAL_RAISE",        // Capital raise projects - uses OfferStudio
+  "LISTING",              // Ready-to-move-in properties - uses ListingInquiryModal
+] as const;
+
+export type DealType = typeof DEAL_TYPES[number];
+
+// Action types that can be performed on deals
+export const DEAL_ACTIONS = [
+  "VIEW",              // View deal details
+  "ACCEPT",            // Accept terms as-is
+  "COUNTER",           // Counter with different terms
+  "OFFER",             // Make an offer (wholesale assignment)
+  "JV",                // Request JV partnership (wholesaler-to-wholesaler)
+  "INVEST",            // Invest in capital raise
+  "INQUIRE",           // Send inquiry (listings)
+  "SCHEDULE",          // Schedule showing (listings)
+  "NEGOTIATION_ROOM",  // Open negotiation room
+] as const;
+
+export type DealAction = typeof DEAL_ACTIONS[number];
+
+// Helper to validate deal type
+export function isValidDealType(type: string): type is DealType {
+  return DEAL_TYPES.includes(type as DealType);
+}
+
 // Role category helpers
 export function isAdminRole(role: string): boolean {
   return role === "admin";
@@ -791,6 +828,105 @@ export const wholesaleRequests = pgTable("wholesale_requests", {
 export const insertWholesaleRequestSchema = createInsertSchema(wholesaleRequests).omit({ id: true, createdAt: true, status: true });
 export type InsertWholesaleRequest = z.infer<typeof insertWholesaleRequestSchema>;
 export type WholesaleRequest = typeof wholesaleRequests.$inferSelect;
+
+// =====================================================
+// LISTINGS - Ready-to-move-in properties (dealType: LISTING)
+// =====================================================
+// Properties that are ready for retail buyers or investors
+// Uses ListingInquiryModal for inquiries and showing scheduling
+
+export const listings = pgTable("listings", {
+  id: serial("id").primaryKey(),
+  submittedBy: varchar("submitted_by", { length: 255 }), // User ID of listing agent/owner
+  
+  // === PROPERTY DETAILS ===
+  propertyAddress: text("property_address").notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(),
+  zipCode: varchar("zip_code", { length: 20 }).notNull(),
+  county: varchar("county", { length: 100 }),
+  propertyType: varchar("property_type", { length: 50 }).notNull(), // single_family, multi_family, condo, townhouse, commercial
+  bedrooms: integer("bedrooms"),
+  bathrooms: varchar("bathrooms", { length: 10 }),
+  sqft: integer("sqft"),
+  yearBuilt: integer("year_built"),
+  lotSize: varchar("lot_size", { length: 50 }),
+  
+  // === LISTING DETAILS ===
+  listingType: varchar("listing_type", { length: 50 }).notNull().default("on_market"), // on_market, off_market
+  listPrice: integer("list_price").notNull(),
+  pricePerSqft: integer("price_per_sqft"),
+  
+  // === PROPERTY CONDITION ===
+  condition: varchar("condition", { length: 50 }), // move_in_ready, needs_minor_updates, needs_renovation
+  renovationYear: integer("renovation_year"), // Year of last major renovation
+  amenities: text("amenities").array(), // pool, garage, fireplace, etc.
+  hoa: integer("hoa"), // Monthly HOA fee
+  
+  // === DESCRIPTION ===
+  description: text("description"),
+  highlights: text("highlights").array(),
+  images: text("images").array(),
+  virtualTourUrl: varchar("virtual_tour_url", { length: 500 }),
+  
+  // === SHOWING INFORMATION ===
+  showingInstructions: text("showing_instructions"),
+  lockboxCode: varchar("lockbox_code", { length: 50 }),
+  occupancyStatus: varchar("occupancy_status", { length: 50 }), // vacant, owner_occupied, tenant_occupied
+  availableDate: timestamp("available_date"),
+  
+  // === CONTACT INFO ===
+  agentName: varchar("agent_name", { length: 255 }),
+  agentPhone: varchar("agent_phone", { length: 50 }),
+  agentEmail: varchar("agent_email", { length: 255 }),
+  
+  // === STATUS ===
+  status: varchar("status", { length: 50 }).notNull().default("active"), // active, pending, sold, off_market, expired
+  daysOnMarket: integer("days_on_market").default(0),
+  viewCount: integer("view_count").default(0),
+  inquiryCount: integer("inquiry_count").default(0),
+  isFeatured: boolean("is_featured").default(false),
+  
+  // === TIMESTAMPS ===
+  listedAt: timestamp("listed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertListingSchema = createInsertSchema(listings).omit({ id: true, createdAt: true, updatedAt: true, status: true });
+export type InsertListing = z.infer<typeof insertListingSchema>;
+export type Listing = typeof listings.$inferSelect;
+
+// Listing Inquiries - inquiries and showing requests for listings
+export const listingInquiries = pgTable("listing_inquiries", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull(),
+  userId: varchar("user_id", { length: 255 }), // Optional - can be guest inquiries
+  
+  // === CONTACT INFO ===
+  fullName: varchar("full_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  
+  // === INQUIRY DETAILS ===
+  interestType: varchar("interest_type", { length: 50 }).notNull(), // request_info, schedule_showing, ask_about_offer, ask_about_financing
+  preferredShowingDates: text("preferred_showing_dates").array(), // Array of preferred date/time strings
+  preApproved: boolean("pre_approved").default(false),
+  message: text("message"),
+  
+  // === STATUS ===
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, contacted, scheduled, completed, cancelled
+  assignedTo: varchar("assigned_to", { length: 255 }), // Agent handling the inquiry
+  notes: text("notes"), // Internal notes
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertListingInquirySchema = createInsertSchema(listingInquiries).omit({ id: true, createdAt: true, updatedAt: true, status: true });
+export type InsertListingInquiry = z.infer<typeof insertListingInquirySchema>;
+export type ListingInquiry = typeof listingInquiries.$inferSelect;
 
 // Community Discussion Topics/Categories
 export const communityCategories = pgTable("community_categories", {
