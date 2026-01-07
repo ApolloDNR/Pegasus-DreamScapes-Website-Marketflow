@@ -1990,6 +1990,136 @@ export async function registerRoutes(
     }
   });
 
+  // =================================================================
+  // UNIFIED DEAL CONTEXT ENDPOINT
+  // =================================================================
+  // Returns full deal context based on dealType, used by all forms/modals
+  // GET /api/deals/:dealType/:dealId/context
+  app.get("/api/deals/:dealType/:dealId/context", async (req, res) => {
+    try {
+      const { dealType, dealId } = req.params;
+      
+      let context: any = {
+        dealType,
+        dealId,
+      };
+      
+      if (dealType === "WHOLESALE_ASSIGNMENT" || dealType === "wholesale") {
+        const deal = await storage.getWholesaleDeal(parseInt(dealId));
+        if (!deal) {
+          return res.status(404).json({ message: "Wholesale deal not found" });
+        }
+        
+        context = {
+          ...context,
+          dealType: "WHOLESALE_ASSIGNMENT",
+          lane: "wholesale",
+          // Core fields
+          propertyAddress: deal.propertyAddress,
+          city: deal.city,
+          state: deal.state,
+          zipCode: deal.zipCode,
+          propertyType: deal.propertyType,
+          // Financial terms for context header
+          contractPrice: deal.contractPrice,
+          arv: deal.arv,
+          estimatedRepairs: deal.estimatedRepairs,
+          listedAssignmentFee: deal.assignmentFee,
+          negotiableFlag: deal.negotiable ?? true,
+          // Wholesale terms
+          wholesaleTerms: {
+            assignmentFee: deal.assignmentFee,
+            maxAssignmentFee: deal.maxAssignmentFee,
+            emdAmount: deal.emdAmount,
+            closingDate: deal.closingDate,
+            inspectionDeadline: deal.inspectionDeadline,
+            strategy: deal.strategy,
+          },
+          // Status
+          status: deal.status,
+          submittedBy: deal.submittedBy,
+        };
+      } else if (dealType === "CAPITAL_RAISE" || dealType === "capital") {
+        const project = await storage.getCapitalProject(parseInt(dealId));
+        if (!project) {
+          return res.status(404).json({ message: "Capital project not found" });
+        }
+        
+        context = {
+          ...context,
+          dealType: "CAPITAL_RAISE",
+          lane: "capital",
+          // Core fields
+          title: project.title,
+          description: project.description,
+          location: project.location,
+          propertyType: project.propertyType,
+          // Funding details for context header
+          fundingGoal: project.fundingGoal,
+          amountRaised: project.amountRaised,
+          remaining: (project.fundingGoal || 0) - (project.amountRaised || 0),
+          minInvestment: project.minInvestment,
+          structure: project.structure,
+          // Operator terms
+          operatorTerms: {
+            structure: project.structure,
+            askingInterestRate: project.askingInterestRate,
+            askingLoanDuration: project.askingLoanDuration,
+            askingPoints: project.askingPoints,
+            askingEquityPercent: project.askingEquityPercent,
+            askingProfitSplit: project.askingProfitSplit,
+            askingPreferredReturn: project.askingPreferredReturn,
+            holdPeriod: project.holdPeriod,
+            projectedReturn: project.projectedReturn,
+          },
+          // Status
+          status: project.status,
+          createdBy: project.createdBy,
+        };
+      } else if (dealType === "LISTING" || dealType === "listing") {
+        const listing = await storage.getListing(parseInt(dealId));
+        if (!listing) {
+          return res.status(404).json({ message: "Listing not found" });
+        }
+        
+        context = {
+          ...context,
+          dealType: "LISTING",
+          lane: "listing",
+          // Core fields
+          propertyAddress: listing.propertyAddress,
+          city: listing.city,
+          state: listing.state,
+          zipCode: listing.zipCode,
+          propertyType: listing.propertyType,
+          // Listing details
+          listingDetails: {
+            listPrice: listing.listPrice,
+            listingType: listing.listingType,
+            condition: listing.condition,
+            bedrooms: listing.bedrooms,
+            bathrooms: listing.bathrooms,
+            sqft: listing.sqft,
+            yearBuilt: listing.yearBuilt,
+          },
+          // Contact info
+          agentName: listing.agentName,
+          agentPhone: listing.agentPhone,
+          agentEmail: listing.agentEmail,
+          // Status
+          status: listing.status,
+        };
+      } else {
+        return res.status(400).json({ message: `Invalid deal type: ${dealType}` });
+      }
+      
+      return res.json(context);
+    } catch (error) {
+      console.error("Error fetching deal context:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Wholesale Deals Routes (public - only available deals)
   app.get("/api/wholesale-deals", async (req, res) => {
     try {

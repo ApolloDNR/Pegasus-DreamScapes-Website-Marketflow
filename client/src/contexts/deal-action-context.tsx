@@ -1145,19 +1145,35 @@ interface ListingInquiryFormProps {
   onClose: () => void;
 }
 
-interface ListingData {
-  id: number;
-  title?: string;
-  propertyAddress?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  askingPrice?: number;
-  listPrice?: number;
-  bedrooms?: number;
-  bathrooms?: number | string;
-  sqft?: number;
-  propertyType?: string;
+interface ListingContext {
+  dealType: string;
+  dealId: number;
+  deal?: {
+    id: number;
+    propertyAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    propertyType?: string;
+    bedrooms?: number;
+    bathrooms?: string;
+    sqft?: number;
+    yearBuilt?: number;
+    images?: string[];
+  };
+  listingTerms?: {
+    listPrice?: number;
+    pricePerSqft?: number;
+    listingType?: string;
+    condition?: string;
+    hoa?: number;
+    amenities?: string[];
+  };
+  contact?: {
+    agentName?: string;
+    agentPhone?: string;
+    agentEmail?: string;
+  };
   status?: string;
 }
 
@@ -1170,8 +1186,9 @@ function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
   const [preferredTime, setPreferredTime] = useState("");
   const [phone, setPhone] = useState("");
 
-  const { data: listing, isLoading: listingLoading } = useQuery<ListingData>({
-    queryKey: ["/api/listings", listingId],
+  // Use unified context endpoint for consistency with other deal types
+  const { data: context, isLoading: contextLoading } = useQuery<ListingContext>({
+    queryKey: [`/api/deals/LISTING/${listingId}/context`],
     enabled: !!listingId,
   });
 
@@ -1220,7 +1237,7 @@ function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
     });
   };
 
-  if (listingLoading) {
+  if (contextLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin" />
@@ -1233,6 +1250,9 @@ function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
   };
 
+  const deal = context?.deal;
+  const terms = context?.listingTerms;
+
   return (
     <>
       <DialogHeader>
@@ -1240,8 +1260,8 @@ function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
           {inquiryType === "tour" ? "Schedule a Tour" : "Property Inquiry"}
         </DialogTitle>
         <DialogDescription>
-          {listing?.propertyAddress || listing?.address || listing?.title || "Property"}
-          {listing?.city && listing?.state && ` - ${listing.city}, ${listing.state}`}
+          {deal?.propertyAddress || "Property"}
+          {deal?.city && deal?.state && ` - ${deal.city}, ${deal.state}`}
         </DialogDescription>
       </DialogHeader>
 
@@ -1249,21 +1269,21 @@ function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
         <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
           <div>
             <span className="text-muted-foreground">List Price:</span>
-            <span className="ml-2 font-medium">{formatCurrency(listing?.askingPrice || listing?.listPrice)}</span>
+            <span className="ml-2 font-medium">{formatCurrency(terms?.listPrice)}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Type:</span>
-            <span className="ml-2 font-medium">{listing?.propertyType || "—"}</span>
+            <span className="ml-2 font-medium">{deal?.propertyType || "—"}</span>
           </div>
-          {(listing?.bedrooms || listing?.bathrooms) && (
+          {(deal?.bedrooms || deal?.bathrooms) && (
             <>
               <div>
                 <span className="text-muted-foreground">Beds:</span>
-                <span className="ml-2 font-medium">{listing?.bedrooms || "—"}</span>
+                <span className="ml-2 font-medium">{deal?.bedrooms || "—"}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Baths:</span>
-                <span className="ml-2 font-medium">{listing?.bathrooms || "—"}</span>
+                <span className="ml-2 font-medium">{deal?.bathrooms || "—"}</span>
               </div>
             </>
           )}

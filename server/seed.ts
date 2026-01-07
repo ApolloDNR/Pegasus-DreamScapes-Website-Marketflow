@@ -1103,5 +1103,128 @@ export async function seedDealflowData() {
   }
   console.log("Investor activity seeded.");
   
+  // Seed Listings (LISTING dealType)
+  const { listings } = await import("@shared/schema");
+  const sampleListings = [
+    {
+      propertyAddress: "4521 Maple Grove Lane",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94116",
+      propertyType: "single_family",
+      bedrooms: 4,
+      bathrooms: "2.5",
+      sqft: 2450,
+      yearBuilt: 1985,
+      listingType: "on_market",
+      listPrice: 1295000,
+      pricePerSqft: 529,
+      condition: "move_in_ready",
+      description: "Beautifully updated home in prime Sunset District location with panoramic city views. Modern kitchen, hardwood floors throughout.",
+      highlights: ["Updated Kitchen", "City Views", "Large Backyard", "2-Car Garage"],
+      daysOnMarket: 12,
+      isFeatured: true,
+      agentName: "Sarah Chen",
+      agentPhone: "(415) 555-1234",
+      agentEmail: "sarah.chen@realestate.com",
+    },
+    {
+      propertyAddress: "892 Piedmont Avenue",
+      city: "Oakland",
+      state: "CA",
+      zipCode: "94611",
+      propertyType: "townhouse",
+      bedrooms: 3,
+      bathrooms: "2",
+      sqft: 1650,
+      yearBuilt: 2018,
+      listingType: "on_market",
+      listPrice: 785000,
+      pricePerSqft: 476,
+      condition: "move_in_ready",
+      description: "Modern townhome in desirable Piedmont Avenue neighborhood. Open concept living with high ceilings and natural light.",
+      highlights: ["Built 2018", "Rooftop Deck", "Central A/C", "In-Unit Laundry"],
+      daysOnMarket: 5,
+      isFeatured: true,
+      agentName: "Mike Rodriguez",
+      agentPhone: "(510) 555-4567",
+      agentEmail: "mike.r@oaklandrealty.com",
+    },
+    {
+      propertyAddress: "2105 Telegraph Hill Road",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94133",
+      propertyType: "condo",
+      bedrooms: 2,
+      bathrooms: "1",
+      sqft: 950,
+      yearBuilt: 1960,
+      listingType: "on_market",
+      listPrice: 675000,
+      pricePerSqft: 711,
+      condition: "needs_minor_updates",
+      description: "Classic North Beach condo with stunning bay views. Great bones but could use cosmetic updates. Amazing location.",
+      highlights: ["Bay Views", "Walk to Restaurants", "Parking Included"],
+      daysOnMarket: 28,
+      isFeatured: false,
+      agentName: "Lisa Park",
+      agentPhone: "(415) 555-7890",
+      agentEmail: "lisa@sfhomes.com",
+    },
+    {
+      propertyAddress: "7834 Lakeview Drive",
+      city: "Oakland",
+      state: "CA",
+      zipCode: "94619",
+      propertyType: "single_family",
+      bedrooms: 5,
+      bathrooms: "3",
+      sqft: 3200,
+      yearBuilt: 1975,
+      listingType: "off_market",
+      listPrice: 925000,
+      pricePerSqft: 289,
+      condition: "needs_renovation",
+      description: "Off-market opportunity! Large family home near Lake Chabot with significant renovation potential. Sold as-is.",
+      highlights: ["Large Lot", "Near Lake Chabot", "Investment Opportunity"],
+      daysOnMarket: 0,
+      isFeatured: false,
+      agentName: "Tony Vasquez",
+      agentPhone: "(510) 555-2345",
+      agentEmail: "tony@eastbaydeals.com",
+    },
+    {
+      propertyAddress: "156 Marina Boulevard",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94123",
+      propertyType: "multi_family",
+      bedrooms: 6,
+      bathrooms: "4",
+      sqft: 4500,
+      yearBuilt: 1925,
+      listingType: "on_market",
+      listPrice: 2850000,
+      pricePerSqft: 633,
+      condition: "move_in_ready",
+      description: "Stunning Marina duplex with classic San Francisco charm. Both units recently renovated with premium finishes.",
+      highlights: ["Duplex", "Renovated 2023", "Marina District", "Garden"],
+      daysOnMarket: 45,
+      isFeatured: true,
+      agentName: "Jennifer Wu",
+      agentPhone: "(415) 555-3456",
+      agentEmail: "jen.wu@sfproperties.com",
+    }
+  ];
+
+  for (const listing of sampleListings) {
+    const existing = await db.select().from(listings).where(eq(listings.propertyAddress, listing.propertyAddress));
+    if (existing.length === 0) {
+      await db.insert(listings).values(listing);
+    }
+  }
+  console.log("Listings seeded.");
+  
   console.log("Dealflow data seeding complete!");
 }

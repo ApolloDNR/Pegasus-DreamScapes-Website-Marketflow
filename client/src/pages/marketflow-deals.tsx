@@ -82,6 +82,27 @@ interface WholesaleDeal {
   jvAllowed?: boolean;
 }
 
+interface Listing {
+  id: number;
+  propertyAddress: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  propertyType: string;
+  bedrooms?: number;
+  bathrooms?: string;
+  sqft?: number;
+  yearBuilt?: number;
+  listPrice: number;
+  listingType: string;
+  condition?: string;
+  images?: string[];
+  description?: string;
+  status: string;
+  daysOnMarket?: number;
+  isFeatured?: boolean;
+}
+
 export default function MarketflowDeals() {
   return (
     <MarketplaceLayout>
@@ -91,7 +112,7 @@ export default function MarketflowDeals() {
 }
 
 function DealsPage() {
-  const [dealCategory, setDealCategory] = useState<"wholesale" | "capital">("wholesale");
+  const [dealCategory, setDealCategory] = useState<"wholesale" | "capital" | "listings">("wholesale");
   const [viewMode, setViewMode] = useState<"grid" | "swipe">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState<string>("all");
@@ -107,6 +128,10 @@ function DealsPage() {
 
   const { data: capitalProjects, isLoading: projectsLoading } = useQuery<CapitalProject[]>({
     queryKey: ['/api/capital-projects'],
+  });
+
+  const { data: listings, isLoading: listingsLoading } = useQuery<Listing[]>({
+    queryKey: ['/api/listings'],
   });
 
   const handleDealAction = (deal: WholesaleDeal, actionType: "jv_request" | "invest") => {
@@ -175,31 +200,35 @@ function DealsPage() {
             <p className="text-muted-foreground">
               {dealCategory === "wholesale" 
                 ? "Browse wholesale assignments. Find contracts to assign or JV partner on."
-                : "Browse capital raise opportunities. Invest in operator projects."}
+                : dealCategory === "capital"
+                  ? "Browse capital raise opportunities. Invest in operator projects."
+                  : "Browse ready-to-move-in properties. Request info or schedule showings."}
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
-            <ToggleGroup 
-              type="single" 
-              value={viewMode} 
-              onValueChange={(value) => value && setViewMode(value as "grid" | "swipe")}
-              className="border rounded-lg"
-            >
-              <ToggleGroupItem value="grid" aria-label="Grid View" data-testid="toggle-grid-view">
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                Grid
-              </ToggleGroupItem>
-              <ToggleGroupItem value="swipe" aria-label="Swipe View" data-testid="toggle-swipe-view">
-                <Layers className="w-4 h-4 mr-2" />
-                Swipe
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+          {dealCategory !== "listings" && (
+            <div className="flex items-center gap-2">
+              <ToggleGroup 
+                type="single" 
+                value={viewMode} 
+                onValueChange={(value) => value && setViewMode(value as "grid" | "swipe")}
+                className="border rounded-lg"
+              >
+                <ToggleGroupItem value="grid" aria-label="Grid View" data-testid="toggle-grid-view">
+                  <LayoutGrid className="w-4 h-4 mr-2" />
+                  Grid
+                </ToggleGroupItem>
+                <ToggleGroupItem value="swipe" aria-label="Swipe View" data-testid="toggle-swipe-view">
+                  <Layers className="w-4 h-4 mr-2" />
+                  Swipe
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          )}
         </div>
 
-        <Tabs value={dealCategory} onValueChange={(v) => setDealCategory(v as "wholesale" | "capital")} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+        <Tabs value={dealCategory} onValueChange={(v) => setDealCategory(v as "wholesale" | "capital" | "listings")} className="w-full">
+          <TabsList className="grid w-full max-w-xl grid-cols-3 mb-6">
             <TabsTrigger value="wholesale" className="gap-2" data-testid="tab-wholesale">
               <Handshake className="w-4 h-4" />
               Wholesale Assignments
@@ -207,6 +236,10 @@ function DealsPage() {
             <TabsTrigger value="capital" className="gap-2" data-testid="tab-capital">
               <TrendingUp className="w-4 h-4" />
               Capital Raises
+            </TabsTrigger>
+            <TabsTrigger value="listings" className="gap-2" data-testid="tab-listings">
+              <Home className="w-4 h-4" />
+              Listings
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -268,7 +301,7 @@ function DealsPage() {
         </div>
       )}
 
-      {dealCategory === "wholesale" ? (
+      {dealCategory === "wholesale" && (
         viewMode === "grid" ? (
           <GridView 
             deals={filteredDeals}
@@ -318,7 +351,9 @@ function DealsPage() {
             showJVRequest={isWholesaler || isAdmin}
           />
         )
-      ) : (
+      )}
+      
+      {dealCategory === "capital" && (
         viewMode === "grid" ? (
           <CapitalRaiseGridView 
             projects={capitalProjects || []}
@@ -364,6 +399,22 @@ function DealsPage() {
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
           />
         )
+      )}
+      
+      {dealCategory === "listings" && (
+        <ListingsGridView 
+          listings={listings || []}
+          isLoading={listingsLoading}
+          onViewListing={(listing) => setLocation(`/marketflow/listings/${listing.id}`)}
+          onRequestInfo={(listing) => {
+            openDealAction(listing.id, "listing_inquiry");
+          }}
+          onScheduleShowing={(listing) => {
+            openDealAction(listing.id, "listing_inquiry");
+          }}
+          isItemSaved={(id) => isItemSaved('listing', String(id))}
+          onSave={(id) => toggleSaveItem('listing', String(id))}
+        />
       )}
     </div>
   );
@@ -1509,6 +1560,206 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
             </Button>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface ListingsGridViewProps {
+  listings: Listing[];
+  isLoading: boolean;
+  onViewListing: (listing: Listing) => void;
+  onRequestInfo: (listing: Listing) => void;
+  onScheduleShowing: (listing: Listing) => void;
+  isItemSaved: (id: number) => boolean;
+  onSave: (id: number) => void;
+}
+
+function ListingsGridView({ 
+  listings, 
+  isLoading, 
+  onViewListing, 
+  onRequestInfo, 
+  onScheduleShowing,
+  isItemSaved,
+  onSave
+}: ListingsGridViewProps) {
+  if (isLoading) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Card key={i}>
+            <Skeleton className="h-48 w-full rounded-t-lg" />
+            <CardContent className="p-4">
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-4" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (listings.length === 0) {
+    return (
+      <Card className="p-12 text-center">
+        <Home className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No Listings Available</h3>
+        <p className="text-muted-foreground">
+          Check back later for new property listings.
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {listings.map((listing) => (
+        <StaggerItem key={listing.id}>
+          <HoverLift>
+            <ListingCard
+              listing={listing}
+              onView={() => onViewListing(listing)}
+              onRequestInfo={() => onRequestInfo(listing)}
+              onScheduleShowing={() => onScheduleShowing(listing)}
+              isSaved={isItemSaved(listing.id)}
+              onSave={() => onSave(listing.id)}
+            />
+          </HoverLift>
+        </StaggerItem>
+      ))}
+    </StaggerChildren>
+  );
+}
+
+interface ListingCardProps {
+  listing: Listing;
+  onView: () => void;
+  onRequestInfo: () => void;
+  onScheduleShowing: () => void;
+  isSaved: boolean;
+  onSave: () => void;
+}
+
+function ListingCard({ listing, onView, onRequestInfo, onScheduleShowing, isSaved, onSave }: ListingCardProps) {
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (!amount) return "Price TBD";
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+    return `$${amount.toLocaleString()}`;
+  };
+
+  const getListingTypeBadge = (type: string) => {
+    if (type === "on_market") {
+      return <Badge className="bg-green-600 text-white text-[10px]">On Market</Badge>;
+    }
+    return <Badge variant="secondary" className="text-[10px]">Off Market</Badge>;
+  };
+
+  const getConditionBadge = (condition: string | undefined) => {
+    if (!condition) return null;
+    const labels: Record<string, { label: string; className: string }> = {
+      "move_in_ready": { label: "Move-In Ready", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+      "needs_minor_updates": { label: "Minor Updates", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
+      "needs_renovation": { label: "Needs Renovation", className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
+    };
+    const config = labels[condition];
+    if (!config) return null;
+    return <Badge variant="outline" className={`text-[10px] ${config.className}`}>{config.label}</Badge>;
+  };
+
+  return (
+    <Card className="overflow-hidden group">
+      <div className="relative h-40 bg-gradient-to-br from-muted to-muted/50">
+        {listing.images?.[0] ? (
+          <img 
+            src={listing.images[0]} 
+            alt={listing.propertyAddress}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Building2 className="w-12 h-12 text-muted-foreground/30" />
+          </div>
+        )}
+        
+        <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+          {getListingTypeBadge(listing.listingType)}
+          {getConditionBadge(listing.condition)}
+          {listing.isFeatured && (
+            <Badge className="bg-primary text-primary-foreground gap-1 text-[10px]">
+              <Sparkles className="w-3 h-3" />
+              Featured
+            </Badge>
+          )}
+        </div>
+        
+        <div className="absolute top-2 right-2 flex gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`h-8 w-8 bg-background/80 backdrop-blur-sm ${isSaved ? 'text-primary' : ''}`}
+            onClick={(e) => { e.stopPropagation(); onSave(); }}
+            data-testid={`button-save-listing-${listing.id}`}
+          >
+            {isSaved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+          </Button>
+        </div>
+        
+        <div className="absolute bottom-2 right-2">
+          <div className="bg-background/90 backdrop-blur-sm rounded-full px-3 py-1 font-bold text-sm">
+            {formatCurrency(listing.listPrice)}
+          </div>
+        </div>
+      </div>
+
+      <CardContent className="p-4 space-y-3">
+        <div className="mb-3">
+          <h3 className="font-semibold truncate" data-testid={`text-listing-address-${listing.id}`}>
+            {listing.propertyAddress}
+          </h3>
+          <p className="text-sm text-muted-foreground flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {listing.city}, {listing.state}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          {listing.bedrooms && (
+            <span>{listing.bedrooms} bed</span>
+          )}
+          {listing.bathrooms && (
+            <span>{listing.bathrooms} bath</span>
+          )}
+          {listing.sqft && (
+            <span>{listing.sqft.toLocaleString()} sqft</span>
+          )}
+        </div>
+
+        {listing.daysOnMarket !== undefined && listing.daysOnMarket > 0 && (
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {listing.daysOnMarket} days on market
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-listing-${listing.id}`}>
+            <Eye className="w-4 h-4 mr-2" />
+            View Listing
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={onRequestInfo} data-testid={`button-request-info-${listing.id}`}>
+            <FileText className="w-4 h-4 mr-2" />
+            Request Info
+          </Button>
+          <Button variant="secondary" className="flex-1" onClick={onScheduleShowing} data-testid={`button-schedule-showing-${listing.id}`}>
+            <Calendar className="w-4 h-4 mr-2" />
+            Schedule Showing
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
