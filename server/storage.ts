@@ -12,6 +12,7 @@ import {
   dealMessages,
   leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
   userReputation, userBadges, adminAuditLog,
+  listings, listingInquiries,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -60,7 +61,9 @@ import {
   type JVRequest, type InsertJVRequest,
   type UserReputation, type InsertUserReputation,
   type UserBadge, type InsertUserBadge,
-  type AdminAuditLog, type InsertAdminAuditLog
+  type AdminAuditLog, type InsertAdminAuditLog,
+  type Listing, type InsertListing,
+  type ListingInquiry, type InsertListingInquiry
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -181,6 +184,21 @@ export interface IStorage {
   getBuyerInquiries(): Promise<BuyerInquiry[]>;
   getBuyerInquiriesByListing(listingType: string, listingId: number): Promise<BuyerInquiry[]>;
   updateBuyerInquiryStatus(id: number, status: string): Promise<BuyerInquiry | undefined>;
+
+  // Listings (new dealType: LISTING)
+  createListing(listing: InsertListing): Promise<Listing>;
+  getListings(): Promise<Listing[]>;
+  getActiveListings(): Promise<Listing[]>;
+  getListing(id: number): Promise<Listing | undefined>;
+  getListingsBySubmitter(submitterId: string): Promise<Listing[]>;
+  updateListing(id: number, data: Partial<InsertListing>): Promise<Listing | undefined>;
+  updateListingStatus(id: number, status: string): Promise<Listing | undefined>;
+
+  // Listing Inquiries
+  createListingInquiry(inquiry: InsertListingInquiry): Promise<ListingInquiry>;
+  getListingInquiries(listingId: number): Promise<ListingInquiry[]>;
+  getListingInquiry(id: number): Promise<ListingInquiry | undefined>;
+  updateListingInquiryStatus(id: number, status: string): Promise<ListingInquiry | undefined>;
 
   // Buyer Profiles
   getBuyerProfile(userId: string): Promise<BuyerProfile | undefined>;
@@ -973,6 +991,74 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(buyerInquiries)
       .set({ status })
       .where(eq(buyerInquiries.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Listings (new dealType: LISTING)
+  async createListing(listing: InsertListing): Promise<Listing> {
+    const [created] = await db.insert(listings).values(listing).returning();
+    return created;
+  }
+
+  async getListings(): Promise<Listing[]> {
+    return db.select().from(listings).orderBy(desc(listings.createdAt));
+  }
+
+  async getActiveListings(): Promise<Listing[]> {
+    return db.select().from(listings)
+      .where(eq(listings.status, "active"))
+      .orderBy(desc(listings.isFeatured), desc(listings.createdAt));
+  }
+
+  async getListing(id: number): Promise<Listing | undefined> {
+    const [listing] = await db.select().from(listings).where(eq(listings.id, id));
+    return listing;
+  }
+
+  async getListingsBySubmitter(submitterId: string): Promise<Listing[]> {
+    return db.select().from(listings)
+      .where(eq(listings.submittedBy, submitterId))
+      .orderBy(desc(listings.createdAt));
+  }
+
+  async updateListing(id: number, data: Partial<InsertListing>): Promise<Listing | undefined> {
+    const [updated] = await db.update(listings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(listings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateListingStatus(id: number, status: string): Promise<Listing | undefined> {
+    const [updated] = await db.update(listings)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(listings.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Listing Inquiries
+  async createListingInquiry(inquiry: InsertListingInquiry): Promise<ListingInquiry> {
+    const [created] = await db.insert(listingInquiries).values(inquiry).returning();
+    return created;
+  }
+
+  async getListingInquiries(listingId: number): Promise<ListingInquiry[]> {
+    return db.select().from(listingInquiries)
+      .where(eq(listingInquiries.listingId, listingId))
+      .orderBy(desc(listingInquiries.createdAt));
+  }
+
+  async getListingInquiry(id: number): Promise<ListingInquiry | undefined> {
+    const [inquiry] = await db.select().from(listingInquiries).where(eq(listingInquiries.id, id));
+    return inquiry;
+  }
+
+  async updateListingInquiryStatus(id: number, status: string): Promise<ListingInquiry | undefined> {
+    const [updated] = await db.update(listingInquiries)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(listingInquiries.id, id))
       .returning();
     return updated;
   }

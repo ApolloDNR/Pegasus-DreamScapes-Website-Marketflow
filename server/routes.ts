@@ -829,6 +829,207 @@ export async function registerRoutes(
     }
   });
 
+  // --- Unified Deal Context Endpoint ---
+  // Returns normalized deal data based on dealType for any deal/project/listing
+  // This is the single source of truth for all canonical forms
+  app.get('/api/deals/:dealType/:id/context', async (req: any, res) => {
+    try {
+      const { dealType, id } = req.params;
+      const userId = req.user?.id || null;
+      
+      let context: any = null;
+      
+      if (dealType === 'WHOLESALE_ASSIGNMENT' || dealType === 'wholesale') {
+        // Fetch wholesale deal from PostgreSQL storage
+        const deal = await storage.getWholesaleDeal(id);
+        if (!deal) {
+          return res.status(404).json({ message: 'Deal not found' });
+        }
+        
+        // Fetch existing offers for this deal
+        const offers = await storage.getWholesaleDealOffers(Number(id));
+        
+        context = {
+          dealType: 'WHOLESALE_ASSIGNMENT',
+          dealId: deal.id,
+          deal: {
+            id: deal.id,
+            propertyAddress: deal.propertyAddress,
+            city: deal.city,
+            state: deal.state,
+            zipCode: deal.zipCode,
+            propertyType: deal.propertyType,
+            bedrooms: deal.bedrooms,
+            bathrooms: deal.bathrooms,
+            sqft: deal.sqft,
+            yearBuilt: deal.yearBuilt,
+            images: deal.images,
+          },
+          // Wholesale-specific terms
+          wholesaleTerms: {
+            contractPrice: deal.contractPrice,
+            assignmentFee: deal.assignmentFee,
+            maxAssignmentFee: deal.maxAssignmentFee,
+            arv: deal.arv,
+            repairs: deal.estimatedRepairs,
+            closingDate: deal.closingDate,
+          },
+          // Existing offers/counters
+          existingOffers: offers.map((o: any) => ({
+            id: o.id,
+            buyerId: o.buyerId,
+            offerAmount: o.offerAmount,
+            earnestMoney: o.earnestMoney,
+            closingTimeline: o.closingTimeline,
+            status: o.status,
+            createdAt: o.createdAt,
+          })),
+          // User's existing offers on this deal
+          userOffers: userId ? offers.filter((o: any) => o.buyerId === userId) : [],
+          // Permissions
+          permissions: {
+            canOffer: userId !== deal.submittedBy,
+            canCounter: userId !== deal.submittedBy,
+            canRequestJV: userId !== deal.submittedBy,
+            isOwner: userId === deal.submittedBy,
+          },
+          submittedBy: deal.submittedBy,
+          status: deal.status,
+        };
+      } else if (dealType === 'CAPITAL_RAISE' || dealType === 'capital') {
+        // Fetch capital project
+        const project = await storage.getCapitalProject(Number(id));
+        if (!project) {
+          return res.status(404).json({ message: 'Project not found' });
+        }
+        
+        // Fetch existing investment offers for this project
+        const commitments = await storage.getInvestmentOffersByProject(Number(id));
+        
+        context = {
+          dealType: 'CAPITAL_RAISE',
+          dealId: project.id,
+          deal: {
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            location: project.location,
+            images: project.images,
+          },
+          // Capital-specific terms
+          capitalTerms: {
+            fundingGoal: project.fundingGoal,
+            amountRaised: project.amountRaised,
+            remaining: project.fundingGoal - (project.amountRaised || 0),
+            minInvestment: project.minInvestment,
+            maxInvestmentPerInvestor: project.maxInvestmentPerInvestor,
+            structure: project.structure,
+            projectedReturn: project.projectedReturn,
+            holdPeriod: project.holdPeriod,
+            // Debt terms
+            askingInterestRate: project.askingInterestRate,
+            askingLoanDuration: project.askingLoanDuration,
+            askingPoints: project.askingPoints,
+            // Equity terms
+            askingEquityPercent: project.askingEquityPercent,
+            askingProfitSplit: project.askingProfitSplit,
+            askingPreferredReturn: project.askingPreferredReturn,
+            // Hybrid terms
+            askingDebtPortion: project.askingDebtPortion,
+            askingEquityPortion: project.askingEquityPortion,
+          },
+          capitalStack: {
+            purchasePrice: project.purchasePrice,
+            rehabBudget: project.rehabBudget,
+            softCosts: project.softCosts,
+            operatorEquity: project.operatorEquity,
+            contingency: project.contingency,
+            seniorLoan: project.seniorLoan,
+            projectedARV: project.projectedARV,
+            projectedProfit: project.projectedProfit,
+          },
+          // Existing commitments
+          existingCommitments: commitments.map((c: any) => ({
+            id: c.id,
+            investorId: c.investorId,
+            amount: c.amount,
+            structure: c.structure,
+            status: c.status,
+            createdAt: c.createdAt,
+          })),
+          // User's existing commitments
+          userCommitments: userId ? commitments.filter((c: any) => c.investorId === userId) : [],
+          // Permissions
+          permissions: {
+            canInvest: userId !== project.createdBy,
+            canCounter: userId !== project.createdBy,
+            isOwner: userId === project.createdBy,
+          },
+          createdBy: project.createdBy,
+          status: project.status,
+        };
+      } else if (dealType === 'LISTING' || dealType === 'listing') {
+        // Fetch listing - use PostgreSQL storage (listings table)
+        const listing = await storage.getListing(Number(id));
+        if (!listing) {
+          return res.status(404).json({ message: 'Listing not found' });
+        }
+        
+        context = {
+          dealType: 'LISTING',
+          dealId: listing.id,
+          deal: {
+            id: listing.id,
+            propertyAddress: listing.propertyAddress,
+            city: listing.city,
+            state: listing.state,
+            zipCode: listing.zipCode,
+            propertyType: listing.propertyType,
+            bedrooms: listing.bedrooms,
+            bathrooms: listing.bathrooms,
+            sqft: listing.sqft,
+            yearBuilt: listing.yearBuilt,
+            images: listing.images,
+          },
+          // Listing-specific terms
+          listingTerms: {
+            listPrice: listing.listPrice,
+            pricePerSqft: listing.pricePerSqft,
+            listingType: listing.listingType, // on_market, off_market
+            condition: listing.condition,
+            hoa: listing.hoa,
+            amenities: listing.amenities,
+          },
+          showingInfo: {
+            showingInstructions: listing.showingInstructions,
+            occupancyStatus: listing.occupancyStatus,
+            availableDate: listing.availableDate,
+          },
+          contact: {
+            agentName: listing.agentName,
+            agentPhone: listing.agentPhone,
+            agentEmail: listing.agentEmail,
+          },
+          // Permissions
+          permissions: {
+            canInquire: true,
+            canSchedule: true,
+            isOwner: userId === listing.submittedBy,
+          },
+          submittedBy: listing.submittedBy,
+          status: listing.status,
+        };
+      } else {
+        return res.status(400).json({ message: 'Invalid dealType. Must be WHOLESALE_ASSIGNMENT, CAPITAL_RAISE, or LISTING' });
+      }
+      
+      res.json(context);
+    } catch (error) {
+      console.error('Error fetching deal context:', error);
+      res.status(500).json({ message: 'Failed to fetch deal context' });
+    }
+  });
+
   // --- Buyer Offers (Supabase) ---
   app.post('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
     try {
