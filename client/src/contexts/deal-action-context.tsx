@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation, Link } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
@@ -25,6 +26,7 @@ interface DealActionState {
 
 interface DealActionContextValue {
   openDealAction: (dealId: string | number, actionType: DealActionType, mode?: "new" | "counter", existingOfferId?: string) => void;
+  openInStudio: (dealId: string | number, dealType: "wholesale" | "capital") => void;
   closeDealAction: () => void;
   state: DealActionState;
 }
@@ -44,6 +46,7 @@ interface DealActionProviderProps {
 }
 
 export function DealActionProvider({ children }: DealActionProviderProps) {
+  const [, setLocation] = useLocation();
   const [state, setState] = useState<DealActionState>({
     isOpen: false,
     dealId: null,
@@ -66,6 +69,10 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
     });
   }, []);
 
+  const openInStudio = useCallback((dealId: string | number, dealType: "wholesale" | "capital") => {
+    setLocation(`/offer-studio/${dealType}/${dealId}`);
+  }, [setLocation]);
+
   const closeDealAction = useCallback(() => {
     setState({
       isOpen: false,
@@ -76,7 +83,7 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
   }, []);
 
   return (
-    <DealActionContext.Provider value={{ openDealAction, closeDealAction, state }}>
+    <DealActionContext.Provider value={{ openDealAction, openInStudio, closeDealAction, state }}>
       {children}
       <DealActionModal />
     </DealActionContext.Provider>
@@ -364,19 +371,28 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
           </div>
         </div>
 
-        <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-offer">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
-            className="flex-1"
-            data-testid="button-submit-assignment-offer"
-          >
-            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {mode === "counter" ? "Send Counter-Offer" : "Submit Offer"}
-          </Button>
+        <div className="flex flex-col gap-3 pt-4">
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-offer">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitMutation.isPending}
+              className="flex-1"
+              data-testid="button-submit-assignment-offer"
+            >
+              {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {mode === "counter" ? "Send Counter-Offer" : "Submit Offer"}
+            </Button>
+          </div>
+          <Link href={`/offer-studio/wholesale/${dealId}`} onClick={onClose}>
+            <Button variant="ghost" className="w-full gap-2 text-muted-foreground hover:text-foreground" data-testid="button-continue-in-studio">
+              <Sparkles className="w-4 h-4" />
+              Continue in Offer Studio
+              <ExternalLink className="w-3 h-3" />
+            </Button>
+          </Link>
         </div>
       </div>
     </>
