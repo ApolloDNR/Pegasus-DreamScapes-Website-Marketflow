@@ -176,7 +176,7 @@ export function NegotiationRoom({
   const { profile, user } = useSupabaseAuth();
   const { toast } = useToast();
   const { openDealAction } = useDealAction();
-  const [activeTab, setActiveTab] = useState<"terms" | "chat">("terms");
+  const [activeTab, setActiveTab] = useState<"terms" | "ladder" | "chat">("terms");
   const [message, setMessage] = useState("");
   const [proposedTerms, setProposedTerms] = useState<NegotiationTerms>({});
   const [messages, setMessages] = useState<NegotiationMessage[]>([]);
@@ -1158,18 +1158,22 @@ export function NegotiationRoom({
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Terms Form */}
           <div className="w-[420px] border-r flex flex-col">
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "terms" | "chat")} className="flex flex-col h-full">
-              <TabsList className="mx-4 mt-4 grid grid-cols-2">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "terms" | "ladder" | "chat")} className="flex flex-col h-full">
+              <TabsList className="mx-4 mt-4 grid grid-cols-3">
                 <TabsTrigger value="terms" className="gap-1">
                   <FileText className="w-3 h-3" />
                   Edit Terms
                 </TabsTrigger>
+                <TabsTrigger value="ladder" className="gap-1" data-testid="tab-offer-ladder">
+                  <History className="w-3 h-3" />
+                  Offer Ladder
+                  {messages.filter(m => m.terms).length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">{messages.filter(m => m.terms).length}</Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="chat" className="gap-1">
                   <MessageSquare className="w-3 h-3" />
-                  Messages
-                  {messages.length > 1 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">{messages.length}</Badge>
-                  )}
+                  Chat
                 </TabsTrigger>
               </TabsList>
               
@@ -1259,6 +1263,167 @@ export function NegotiationRoom({
                       <CheckCircle2 className="w-4 h-4 mr-2" />
                       Accept Original Terms
                     </Button>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="ladder" className="flex-1 overflow-hidden m-0">
+                <ScrollArea className="h-full p-4">
+                  <div className="space-y-4">
+                    <Card className="border-primary/30 bg-primary/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <History className="w-4 h-4 text-primary" />
+                          Negotiation History
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {isWholesaleType 
+                            ? "Track assignment fee offers and counter-offers" 
+                            : "Track investment terms and counter-proposals"}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                    
+                    {messages.filter(m => m.terms).length === 0 ? (
+                      <div className="text-center py-8">
+                        <History className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
+                        <p className="text-sm text-muted-foreground">No offers yet</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Submit an offer to start the negotiation ladder
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+                        
+                        {messages.filter(m => m.terms).map((msg, index) => {
+                          const isCurrentUser = msg.senderId === currentUserId;
+                          const isAccepted = msg.type === "accepted";
+                          
+                          return (
+                            <div key={msg.id} className="relative pl-10 pb-6 last:pb-0">
+                              <div className={`absolute left-2 w-4 h-4 rounded-full border-2 ${
+                                isAccepted 
+                                  ? "bg-green-500 border-green-500" 
+                                  : isCurrentUser 
+                                    ? "bg-primary border-primary" 
+                                    : "bg-background border-muted-foreground"
+                              }`}>
+                                {isAccepted && <CheckCircle2 className="w-3 h-3 text-white -ml-[1px] -mt-[1px]" />}
+                              </div>
+                              
+                              <Card className={`${isAccepted ? "border-green-500/50 bg-green-50 dark:bg-green-900/10" : ""}`}>
+                                <CardHeader className="pb-2 pt-3 px-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarImage src={msg.senderAvatar} />
+                                        <AvatarFallback className="text-xs">{msg.senderName[0]}</AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <span className="text-xs font-medium">{msg.senderName}</span>
+                                        <span className="text-[10px] text-muted-foreground ml-2">
+                                          {new Date(msg.timestamp).toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Badge variant={isAccepted ? "default" : "outline"} className={`text-[10px] ${isAccepted ? "bg-green-600" : ""}`}>
+                                      {isAccepted ? "Accepted" : msg.type === "offer" ? "Initial" : `Counter #${index + 1}`}
+                                    </Badge>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="pt-0 pb-3 px-3">
+                                  {type === "wholesale_offer" && msg.terms && (
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                        <span className="text-muted-foreground">Assignment Fee</span>
+                                        <span className="font-semibold">{formatCurrency(msg.terms.assignmentFee)}</span>
+                                      </div>
+                                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                        <span className="text-muted-foreground">Earnest Money</span>
+                                        <span className="font-semibold">{formatCurrency(msg.terms.earnestMoney)}</span>
+                                      </div>
+                                      {msg.terms.closingDate && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                          <span className="text-muted-foreground">Close Date</span>
+                                          <span className="font-semibold">{msg.terms.closingDate}</span>
+                                        </div>
+                                      )}
+                                      {msg.terms.inspectionPeriod && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                          <span className="text-muted-foreground">Inspection</span>
+                                          <span className="font-semibold">{msg.terms.inspectionPeriod} days</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  
+                                  {type === "wholesale_jv" && msg.terms && (
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <div className="flex justify-between p-2 bg-muted/50 rounded col-span-2">
+                                        <span className="text-muted-foreground">Assignment Split</span>
+                                        <span className="font-semibold">{msg.terms.assignmentSplitPercent}% / {100 - (msg.terms.assignmentSplitPercent || 50)}%</span>
+                                      </div>
+                                      {msg.terms.partnerRole && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded col-span-2">
+                                          <span className="text-muted-foreground">Role</span>
+                                          <span className="font-semibold">{msg.terms.partnerRole === "deal_bringer" ? "Deal Bringer" : "Buyer Bringer"}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  
+                                  {(type === "capital_invest" || type === "capital_raise") && msg.terms && (
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      {msg.terms.investmentAmount && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                          <span className="text-muted-foreground">Investment</span>
+                                          <span className="font-semibold">{formatCurrency(msg.terms.investmentAmount)}</span>
+                                        </div>
+                                      )}
+                                      {msg.terms.expectedReturn && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                          <span className="text-muted-foreground">Return</span>
+                                          <span className="font-semibold">{msg.terms.expectedReturn}%</span>
+                                        </div>
+                                      )}
+                                      {msg.terms.profitSplit && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                          <span className="text-muted-foreground">Split</span>
+                                          <span className="font-semibold">{msg.terms.profitSplit}% / {100 - msg.terms.profitSplit}%</span>
+                                        </div>
+                                      )}
+                                      {msg.terms.termMonths && (
+                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                          <span className="text-muted-foreground">Term</span>
+                                          <span className="font-semibold">{msg.terms.termMonths} months</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  
+                                  {msg.message && (
+                                    <p className="text-xs text-muted-foreground mt-2 italic">"{msg.message}"</p>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    <div className="pt-4 space-y-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => setActiveTab("terms")}
+                        data-testid="button-make-counter-from-ladder"
+                      >
+                        <ArrowLeftRight className="w-4 h-4 mr-2" />
+                        Make Counter Offer
+                      </Button>
+                    </div>
                   </div>
                 </ScrollArea>
               </TabsContent>
