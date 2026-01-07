@@ -1,0 +1,165 @@
+REPLIT — PLEASE READ CAREFULLY. This is a product architecture + UX spec.
+
+We need MarketFlow to support THREE different marketplace lanes with THREE different deal types. The main problem right now is form duplication + inconsistent flows across Grid vs Swipe vs View Deal. FIX MUST BE ARCHITECTURAL: forms must be tied to dealType (data), not tied to view (UI).
+
+========================================
+A) CORE CONCEPT: 3 MARKET LANES / 3 DEAL TYPES
+========================================
+
+MarketFlow has 3 sections (tabs) at the top:
+
+1) WHOLESALES (Wholesale Assignments)
+2) DEVELOPMENTS / CAPITAL RAISES
+3) LISTINGS (Ready-to-move-in properties)
+
+Every card/listing/project MUST have a required field:
+dealType ENUM = "WHOLESALE_ASSIGNMENT" | "CAPITAL_RAISE" | "LISTING"
+
+This dealType drives:
+- which buttons show on the card
+- which form opens
+- which negotiation room schema is used
+- which fields exist
+
+Non-negotiable: The SAME dealType must open the SAME form, regardless of entry point:
+- Grid view card buttons
+- Swipe view card buttons
+- View Deal page buttons
+- Negotiation Room buttons
+
+Views are just different presentations. They must not create different forms or logic.
+
+========================================
+B) SINGLE ACTION ROUTER (MANDATORY)
+========================================
+
+Implement a single “Deal Action Router” used by ALL buttons:
+
+openDealAction({
+  dealId,
+  dealType,
+  action: "VIEW" | "ACCEPT" | "COUNTER" | "OFFER" | "JV" | "INVEST" | "INQUIRE" | "SCHEDULE" | "NEGOTIATION_ROOM"
+})
+
+ALL buttons in ALL views must call openDealAction(). No view-specific modals.
+
+openDealAction() decides which UI to open:
+- modal component
+- or route page
+based on dealType + action.
+
+========================================
+C) FORMS: CANONICAL FORMS ONLY (NO DUPLICATES)
+========================================
+
+We will have EXACTLY these canonical forms:
+
+----------------------------------------
+FORM 1 — WholesaleAssignmentOfferModal (SIMPLE)
+----------------------------------------
+DealType: WHOLESALE_ASSIGNMENT
+Used for: "Offer" and "Counter" on wholesale assignment deals.
+This is NOT Offer Studio. Keep it simple and fast.
+
+Fields (required unless noted):
+- assignmentFeeOffer (currency) (default to listedAssignmentFee)
+- earnestMoney (currency) (default sensible value)
+- closingDate (date)
+- inspectionDays (number)
+- messageToWholesaler (text, optional)
+
+Context header (read-only):
+- contractPrice
+- ARV
+- repairs
+- listedAssignmentFee
+- negotiableFlag
+
+Actions:
+- Submit Offer (or Submit Counter if this is a counter)
+- Cancel
+- (optional link) “Continue in Negotiation Room” BUT it must still use SAME data schema.
+
+Rules:
+- No “Deal Structure” step.
+- No financing tabs.
+- No equity/hybrid cards.
+- No investor terms.
+- Must look and behave the same from Grid/Swipe/View Deal.
+
+----------------------------------------
+FORM 2 — WholesaleJVRequestModal (SIMPLE)
+----------------------------------------
+DealType: WHOLESALE_ASSIGNMENT
+Used for: wholesaler-to-wholesaler JV requests.
+
+Fields:
+- proposedSplitPercent (e.g., 50/50)
+- whoBringsBuyer (Me / You / Both)
+- expectedAssignmentFee (optional)
+- messageToWholesaler (text)
+
+Actions:
+- Submit JV Request
+- Cancel
+
+Rules:
+- Remove “Investment Strategy” and “Funding Source” from JV form. Those do not belong here.
+
+----------------------------------------
+FORM 3 — OfferStudio (ADVANCED) — Capital Only
+----------------------------------------
+DealType: CAPITAL_RAISE
+Offer Studio MUST ONLY be used for capital raise deals, NOT wholesales.
+
+Offer Studio steps can remain:
+Step 1: Choose structure (Debt / Equity / Hybrid)
+Step 2: Terms & Price (investment terms)
+Step 3: Financing (if needed, only for capital context)
+Step 4: Review & Submit
+
+But its fields must be capital-focused:
+- investmentAmount
+- expectedReturn (interest/preferred return)
+- profitSplit (investor share)
+- termLengthMonths
+- optional notes / conditions
+- optional milestones (later)
+
+Header must show:
+- fundingTarget
+- raisedSoFar
+- remaining
+- minInvestment
+- structure type
+- progress bar (raised/target)
+
+Actions:
+- Accept Terms (1-click with operator terms)
+- Counter Terms (submits investor proposed terms)
+- Message operator / go to negotiation room
+
+----------------------------------------
+FORM 4 — ListingInquiryModal (LISTINGS ONLY)
+----------------------------------------
+DealType: LISTING
+Listings are “Ready-to-move-in properties” (on-market/off-market). This is NOT negotiation.
+Goal is inquiry + showing scheduling.
+
+Fields:
+- fullName
+- email
+- phone
+- interestType dropdown: (Request Info, Schedule Showing, Ask About Offer, Ask About Financing)
+- preferredShowingDates (2-3 options OR date/time picker)
+- preApproval toggle (optional)
+- message
+
+Listing card must show tags:
+- On Market / Off Market
+
+Actions:
+- Send Inquiry
+- Cancel
+
+Rul...
