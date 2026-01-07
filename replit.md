@@ -36,6 +36,14 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
   - All Supabase functions check connectivity before operations
   - DNS errors (ENOTFOUND, ECONNREFUSED) are logged once then cached
   - PostgreSQL fallback automatically triggered when Supabase unavailable
+- **Phase 7: MarketFlow 3-Lane Architecture** - Unified deal-flow portal with 3 market lanes:
+  - Tab 1: **Wholesale Assignments** - Assignment offers and JV partnership requests
+  - Tab 2: **Capital Raises** - Investment opportunities with debt/equity/hybrid structures
+  - Tab 3: **Listings** - Property listings with inquiry and tour scheduling
+  - Unified context endpoint: `GET /api/deals/:dealType/:id/context` for all 3 lanes
+  - Canonical form routing via `openDealAction(dealId, actionType)` function
+  - 4 canonical forms: AssignmentOfferForm, WholesaleJVForm, CapitalInvestForm, ListingInquiryForm
+  - Modals open for all users; authentication checked at form submission
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
