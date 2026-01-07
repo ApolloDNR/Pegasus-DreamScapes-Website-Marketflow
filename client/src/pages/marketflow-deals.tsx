@@ -98,7 +98,7 @@ function DealsPage() {
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
-  const { openDealAction, openInStudio } = useDealAction();
+  const { openDealAction } = useDealAction();
   const [, setLocation] = useLocation();
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
@@ -289,13 +289,6 @@ function DealsPage() {
               }
               openDealAction(deal.id, "assignment_offer", "counter");
             }}
-            onOpenStudio={(deal) => {
-              if (!isAuthenticated && !isGuestMode) {
-                toast({ title: "Sign in required", description: "Please sign in to use Offer Studio." });
-                return;
-              }
-              openInStudio(deal.id, "wholesale");
-            }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             isSaving={isSaving}
             showInvest={isDreamscaper || isInvestor || isAdmin}
@@ -383,14 +376,13 @@ interface GridViewProps {
   onAction: (deal: WholesaleDeal, actionType: "jv_request" | "invest") => void;
   onAcceptTerms: (deal: WholesaleDeal) => void;
   onCounterTerms: (deal: WholesaleDeal) => void;
-  onOpenStudio: (deal: WholesaleDeal) => void;
   isItemSaved: (id: string) => boolean;
   isSaving: boolean;
   showInvest: boolean;
   showJVRequest: boolean;
 }
 
-function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, onOpenStudio, isItemSaved, isSaving, showInvest, showJVRequest }: GridViewProps) {
+function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, showJVRequest }: GridViewProps) {
   const [, setLocation] = useLocation();
   
   if (isLoading) {
@@ -434,7 +426,6 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
               onView={() => setLocation(`/marketflow/deals/${deal.id}`)}
               onAcceptTerms={() => onAcceptTerms(deal)}
               onCounterTerms={() => onCounterTerms(deal)}
-              onOpenStudio={() => onOpenStudio(deal)}
               isSaved={isItemSaved(deal.id)}
               isSaving={isSaving}
               showInvest={showInvest}
@@ -768,14 +759,13 @@ interface DealCardProps {
   onView: () => void;
   onAcceptTerms: () => void;
   onCounterTerms: () => void;
-  onOpenStudio: () => void;
   isSaved: boolean;
   isSaving: boolean;
   showInvest: boolean;
   showJVRequest: boolean;
 }
 
-function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, onOpenStudio, isSaved, isSaving, showInvest, showJVRequest }: DealCardProps) {
+function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, showJVRequest }: DealCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
   const askPrice = deal.askingPrice || deal.contractPrice || 0;
@@ -871,9 +861,6 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-deal-${deal.id}`}>
             <Eye className="w-4 h-4 mr-2" />
             View Deal
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onOpenStudio} data-testid={`button-open-studio-${deal.id}`} title="Open in Offer Studio with Peggy AI">
-            <Sparkles className="w-4 h-4" />
           </Button>
         </div>
         <div className="flex gap-2">
