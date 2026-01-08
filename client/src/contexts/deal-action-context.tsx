@@ -9,12 +9,22 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { DealType, DealAction } from "@shared/schema";
 
+// Canonical action types per the 3-lane blueprint
 export type DealActionType = 
-  | "assignment_offer"    
-  | "wholesale_jv"        
-  | "capital_raise"       
-  | "capital_invest"
-  | "listing_inquiry";    // New: for LISTING deals
+  // WHOLESALE LANE - simple, fast negotiation
+  | "wholesale_accept"      // Accept terms as-is (fast path)
+  | "wholesale_counter"     // Counter offer (full form)
+  | "wholesale_jv"          // JV partnership request
+  // CAPITAL LANE - advanced negotiation  
+  | "capital_accept"        // Accept terms (fast path - investment amount + acknowledgements)
+  | "capital_counter"       // Counter offer (redirects to Offer Studio)
+  // LISTINGS LANE - inquiry-focused, not negotiation-heavy
+  | "listing_request_info"  // Request more information
+  | "listing_schedule_tour" // Schedule a showing
+  // Legacy types (kept for backward compatibility)
+  | "assignment_offer"      // Legacy: maps to wholesale_accept or wholesale_counter based on mode
+  | "capital_invest"        // Legacy: maps to capital_accept
+  | "listing_inquiry";      // Legacy: maps to listing_request_info
 
 export type DealCategory = "wholesale" | "capital" | "listing";
 
@@ -66,13 +76,21 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
     mode: "new" | "counter" = "new",
     existingOfferId?: string
   ) => {
-    // Infer dealType from actionType for legacy compatibility
+    // Infer dealType from actionType - includes both canonical and legacy action types
     const inferredDealType: DealType = 
-      actionType === "assignment_offer" || actionType === "wholesale_jv" 
+      // Wholesale lane actions (canonical + legacy)
+      actionType === "wholesale_accept" || 
+      actionType === "wholesale_counter" || 
+      actionType === "wholesale_jv" || 
+      actionType === "assignment_offer"
         ? "WHOLESALE_ASSIGNMENT"
-        : actionType === "listing_inquiry" 
-          ? "LISTING"
-          : "CAPITAL_RAISE";
+      // Listing lane actions (canonical + legacy)
+      : actionType === "listing_request_info" || 
+        actionType === "listing_schedule_tour" || 
+        actionType === "listing_inquiry" 
+        ? "LISTING"
+      // Capital lane (everything else including capital_accept, capital_counter, capital_invest)
+      : "CAPITAL_RAISE";
     
     setState({
       isOpen: true,
@@ -136,63 +154,123 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
 }
 
 function DealActionModal() {
-  const { state, closeDealAction } = useDealAction();
+  const { state, closeDealAction, openInStudio } = useDealAction();
   const { isOpen, dealId, dealType, actionType, mode, existingOfferId } = state;
 
   if (!isOpen || !dealId || !actionType) return null;
 
-  // Render form based on dealType + actionType combination
+  // CANONICAL FORM ROUTER - routes to the correct form based on actionType
+  // This ensures the SAME form opens regardless of where the user clicked (Grid/Swipe/Detail)
   const renderForm = () => {
-    // WHOLESALE_ASSIGNMENT forms
-    if (dealType === "WHOLESALE_ASSIGNMENT" || actionType === "assignment_offer" || actionType === "wholesale_jv") {
-      if (actionType === "wholesale_jv") {
-        return (
-          <WholesaleJVForm 
-            dealId={String(dealId)} 
-            mode={mode}
-            existingOfferId={existingOfferId}
-            onClose={closeDealAction} 
-          />
-        );
-      }
+    // ========== WHOLESALE LANE FORMS ==========
+    // Wholesale Accept Terms (fast path)
+    if (actionType === "wholesale_accept") {
       return (
-        <AssignmentOfferForm 
+        <WholesaleAcceptTermsModal
+          dealId={String(dealId)}
+          onClose={closeDealAction}
+        />
+      );
+    }
+    
+    // Wholesale Counter Offer (full form)
+    if (actionType === "wholesale_counter") {
+      return (
+        <WholesaleCounterOfferModal
+          dealId={String(dealId)}
+          existingOfferId={existingOfferId}
+          onClose={closeDealAction}
+        />
+      );
+    }
+    
+    // Wholesale JV Partnership Request
+    if (actionType === "wholesale_jv") {
+      return (
+        <WholesaleJVRequestModal 
           dealId={String(dealId)} 
-          mode={mode} 
           existingOfferId={existingOfferId}
           onClose={closeDealAction} 
         />
       );
     }
     
-    // CAPITAL_RAISE forms
-    if (dealType === "CAPITAL_RAISE" || actionType === "capital_raise" || actionType === "capital_invest") {
-      if (actionType === "capital_invest") {
+    // ========== CAPITAL LANE FORMS ==========
+    // Capital Accept Terms (fast path - investment amount + acknowledgements)
+    if (actionType === "capital_accept") {
+      return (
+        <CapitalAcceptTermsModal
+          projectId={Number(dealId)}
+          onClose={closeDealAction}
+        />
+      );
+    }
+    
+    // Capital Counter - redirects to Offer Studio (should not render modal)
+    if (actionType === "capital_counter") {
+      // Counter offers go to Offer Studio - close modal and redirect
+      closeDealAction();
+      openInStudio(dealId, "capital");
+      return null;
+    }
+    
+    // ========== LISTINGS LANE FORMS ==========
+    // Listing Request Info
+    if (actionType === "listing_request_info") {
+      return (
+        <ListingRequestInfoModal
+          listingId={Number(dealId)}
+          onClose={closeDealAction}
+        />
+      );
+    }
+    
+    // Listing Schedule Showing
+    if (actionType === "listing_schedule_tour") {
+      return (
+        <ListingScheduleShowingModal
+          listingId={Number(dealId)}
+          onClose={closeDealAction}
+        />
+      );
+    }
+    
+    // ========== LEGACY SUPPORT ==========
+    // Legacy assignment_offer - route based on mode
+    if (actionType === "assignment_offer") {
+      if (mode === "counter") {
         return (
-          <CapitalInvestmentForm 
-            projectId={Number(dealId)} 
-            mode={mode}
+          <WholesaleCounterOfferModal
+            dealId={String(dealId)}
             existingOfferId={existingOfferId}
-            onClose={closeDealAction} 
+            onClose={closeDealAction}
           />
         );
       }
       return (
-        <CapitalRaiseTermsForm 
-          projectId={Number(dealId)} 
-          mode={mode}
-          existingOfferId={existingOfferId}
-          onClose={closeDealAction} 
+        <WholesaleAcceptTermsModal
+          dealId={String(dealId)}
+          onClose={closeDealAction}
         />
       );
     }
     
-    // LISTING forms
-    if (dealType === "LISTING" || actionType === "listing_inquiry") {
+    // Legacy capital_invest - route to accept
+    if (actionType === "capital_invest") {
       return (
-        <ListingInquiryForm 
-          listingId={Number(dealId)} 
-          onClose={closeDealAction} 
+        <CapitalAcceptTermsModal
+          projectId={Number(dealId)}
+          onClose={closeDealAction}
+        />
+      );
+    }
+    
+    // Legacy listing_inquiry - route to request info
+    if (actionType === "listing_inquiry") {
+      return (
+        <ListingRequestInfoModal
+          listingId={Number(dealId)}
+          onClose={closeDealAction}
         />
       );
     }
@@ -253,9 +331,190 @@ interface FormProps {
   onClose: () => void;
 }
 
-function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormProps) {
+// ========== CANONICAL WHOLESALE FORMS ==========
+
+interface WholesaleAcceptFormProps {
+  dealId: string;
+  onClose: () => void;
+}
+
+// WHOLESALE ACCEPT TERMS - Fast path with minimal fields
+function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps) {
   const { toast } = useToast();
-  const { isAuthenticated, profile } = useSupabaseAuth();
+  const { isAuthenticated } = useSupabaseAuth();
+  const [earnestMoney, setEarnestMoney] = useState("1000");
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
+    queryKey: ["/api/wholesale-deals", dealId],
+    enabled: !!dealId,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/supabase/wholesale-offers", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Offer Accepted",
+        description: "You've accepted the wholesaler's terms. They will be notified.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit acceptance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to accept this deal." });
+      return;
+    }
+    if (!acknowledged) {
+      toast({ title: "Acknowledgement required", description: "Please acknowledge the terms.", variant: "destructive" });
+      return;
+    }
+
+    submitMutation.mutate({
+      dealId,
+      type: "wholesale_accept",
+      isCounter: false,
+      assignmentFee: deal?.assignmentFee,
+      earnestMoney: parseFloat(earnestMoney) || 1000,
+      closingDate: deal?.closingDate,
+      message,
+    });
+  };
+
+  if (dealLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return "—";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle data-testid="dialog-title-wholesale-accept">
+          Wholesale Accept Terms
+        </DialogTitle>
+        <DialogDescription>
+          Accept the assignment as posted
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 mt-4">
+        <div className="p-4 bg-muted rounded-lg space-y-2">
+          <div className="text-lg font-semibold">{deal?.propertyAddress || deal?.address}</div>
+          {deal?.city && deal?.state && (
+            <div className="text-sm text-muted-foreground">{deal.city}, {deal.state}</div>
+          )}
+          <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Contract Price:</span>
+              <span className="ml-2 font-medium">{formatCurrency(deal?.contractPrice)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Assignment Fee:</span>
+              <span className="ml-2 font-medium text-primary">{formatCurrency(deal?.assignmentFee)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">ARV:</span>
+              <span className="ml-2 font-medium">{formatCurrency(deal?.arv)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Closing:</span>
+              <span className="ml-2 font-medium">{deal?.closingDate || "TBD"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Earnest Money Deposit</label>
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <input
+                type="number"
+                value={earnestMoney}
+                onChange={(e) => setEarnestMoney(e.target.value)}
+                placeholder="1000"
+                className="w-full pl-7 pr-3 py-2 border rounded-md"
+                data-testid="input-accept-earnest-money"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Message (optional)</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Any notes for the wholesaler..."
+              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[60px]"
+              data-testid="input-accept-message"
+            />
+          </div>
+
+          <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+            <input
+              type="checkbox"
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              className="mt-0.5 rounded"
+              data-testid="checkbox-acknowledge-terms"
+            />
+            <span className="text-sm">
+              I acknowledge and accept the assignment terms as posted. I understand I am agreeing to pay the listed assignment fee of {formatCurrency(deal?.assignmentFee)}.
+            </span>
+          </label>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-accept">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitMutation.isPending || !acknowledged}
+            className="flex-1"
+            data-testid="button-submit-wholesale-accept"
+          >
+            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Accept Terms
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface WholesaleCounterFormProps {
+  dealId: string;
+  existingOfferId?: string;
+  onClose: () => void;
+}
+
+// WHOLESALE COUNTER OFFER - Full form with all negotiable fields
+function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: WholesaleCounterFormProps) {
+  const { toast } = useToast();
+  const { isAuthenticated } = useSupabaseAuth();
   const [assignmentFee, setAssignmentFee] = useState("");
   const [earnestMoney, setEarnestMoney] = useState("1000");
   const [closingDate, setClosingDate] = useState("");
@@ -268,7 +527,6 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
     enabled: !!dealId,
   });
 
-  // Pre-populate form with deal data when loaded
   useEffect(() => {
     if (deal && !initialized) {
       if (deal.assignmentFee) {
@@ -288,10 +546,8 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
     },
     onSuccess: () => {
       toast({
-        title: mode === "counter" ? "Counter-Offer Sent" : "Offer Submitted",
-        description: mode === "counter" 
-          ? "Your counter-offer has been sent for review."
-          : "Your assignment offer has been submitted.",
+        title: "Counter-Offer Sent",
+        description: "Your counter-offer has been sent for review.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
@@ -300,7 +556,7 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit offer",
+        description: error.message || "Failed to submit counter-offer",
         variant: "destructive",
       });
     },
@@ -308,7 +564,7 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to make an offer." });
+      toast({ title: "Sign in required", description: "Please sign in to make a counter-offer." });
       return;
     }
     if (!assignmentFee) {
@@ -318,8 +574,8 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
 
     submitMutation.mutate({
       dealId,
-      type: "assignment_offer",
-      isCounter: mode === "counter",
+      type: "wholesale_counter",
+      isCounter: true,
       parentOfferId: existingOfferId,
       assignmentFee: parseFloat(assignmentFee),
       earnestMoney: parseFloat(earnestMoney) || 1000,
@@ -345,8 +601,8 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
   return (
     <>
       <DialogHeader>
-        <DialogTitle data-testid="dialog-title-assignment-offer">
-          {mode === "counter" ? "Counter-Offer" : "Assignment Offer"}
+        <DialogTitle data-testid="dialog-title-wholesale-counter">
+          Wholesale Counter Offer
         </DialogTitle>
         <DialogDescription>
           {deal?.propertyAddress || deal?.address || "Property"}
@@ -385,7 +641,7 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
                 onChange={(e) => setAssignmentFee(e.target.value)}
                 placeholder={String(deal?.assignmentFee || 5000)}
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
-                data-testid="input-assignment-fee"
+                data-testid="input-counter-assignment-fee"
               />
             </div>
           </div>
@@ -400,7 +656,7 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
                 onChange={(e) => setEarnestMoney(e.target.value)}
                 placeholder="1000"
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
-                data-testid="input-earnest-money"
+                data-testid="input-counter-earnest-money"
               />
             </div>
           </div>
@@ -413,7 +669,7 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
                 value={closingDate}
                 onChange={(e) => setClosingDate(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md mt-1"
-                data-testid="input-closing-date"
+                data-testid="input-counter-closing-date"
               />
             </div>
             <div>
@@ -424,7 +680,7 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
                 onChange={(e) => setInspectionPeriod(e.target.value)}
                 placeholder="10"
                 className="w-full px-3 py-2 border rounded-md mt-1"
-                data-testid="input-inspection-period"
+                data-testid="input-counter-inspection-period"
               />
             </div>
           </div>
@@ -434,25 +690,25 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add any notes or conditions..."
+              placeholder="Explain your counter-offer terms..."
               className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
-              data-testid="input-offer-message"
+              data-testid="input-counter-message"
             />
           </div>
         </div>
 
         <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-offer">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-counter">
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={submitMutation.isPending}
             className="flex-1"
-            data-testid="button-submit-assignment-offer"
+            data-testid="button-submit-wholesale-counter"
           >
             {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {mode === "counter" ? "Send Counter-Offer" : "Submit Offer"}
+            Send Counter-Offer
           </Button>
         </div>
       </div>
@@ -460,12 +716,20 @@ function AssignmentOfferForm({ dealId, mode, existingOfferId, onClose }: FormPro
   );
 }
 
-function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) {
+interface WholesaleJVFormProps {
+  dealId: string;
+  existingOfferId?: string;
+  onClose: () => void;
+}
+
+// WHOLESALE JV REQUEST - Partnership request form
+function WholesaleJVRequestModal({ dealId, existingOfferId, onClose }: WholesaleJVFormProps) {
   const { toast } = useToast();
   const { isAuthenticated } = useSupabaseAuth();
   const [partnerRole, setPartnerRole] = useState<"deal_bringer" | "buyer_bringer">("deal_bringer");
   const [assignmentSplit, setAssignmentSplit] = useState(50);
   const [contributions, setContributions] = useState<string[]>([]);
+  const [proposedTimeline, setProposedTimeline] = useState("");
   const [message, setMessage] = useState("");
 
   const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
@@ -480,7 +744,7 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
     },
     onSuccess: () => {
       toast({
-        title: mode === "counter" ? "Counter-Proposal Sent" : "JV Request Sent",
+        title: "JV Request Sent",
         description: "Your partnership request has been sent to the wholesaler.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
@@ -505,11 +769,11 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
     submitMutation.mutate({
       dealId,
       type: "wholesale_jv",
-      isCounter: mode === "counter",
       parentOfferId: existingOfferId,
       partnerRole,
       assignmentSplitPercent: assignmentSplit,
       contributions,
+      proposedTimeline,
       message,
     });
   };
@@ -528,19 +792,19 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
   };
 
   const contributionOptions = [
-    "Buyer network access",
-    "Marketing materials",
-    "Due diligence support",
-    "Earnest money funding",
-    "Transaction coordination",
-    "Legal/title support",
+    { id: "capital", label: "Capital / Funding" },
+    { id: "construction", label: "Construction Management" },
+    { id: "acquisitions", label: "Acquisitions / Deal Sourcing" },
+    { id: "dispositions", label: "Dispositions / Sales" },
+    { id: "buyer_network", label: "Buyer Network Access" },
+    { id: "due_diligence", label: "Due Diligence Support" },
   ];
 
   return (
     <>
       <DialogHeader>
         <DialogTitle data-testid="dialog-title-jv-request">
-          {mode === "counter" ? "Counter JV Proposal" : "Request JV Partnership"}
+          Wholesale JV Partnership Request
         </DialogTitle>
         <DialogDescription>
           Partner on: {deal?.propertyAddress || deal?.address || "Property"}
@@ -555,7 +819,7 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
           </div>
           <div>
             <span className="text-muted-foreground">Your Share ({assignmentSplit}%):</span>
-            <span className="ml-2 font-medium">
+            <span className="ml-2 font-medium text-primary">
               {formatCurrency((deal?.assignmentFee || 0) * (assignmentSplit / 100))}
             </span>
           </div>
@@ -602,7 +866,7 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
               max="90"
               value={assignmentSplit}
               onChange={(e) => setAssignmentSplit(parseInt(e.target.value))}
-              className="w-full mt-2"
+              className="w-full mt-2 accent-primary"
               data-testid="slider-assignment-split"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -615,23 +879,36 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
             <label className="text-sm font-medium">Your Contributions</label>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {contributionOptions.map((option) => (
-                <label key={option} className="flex items-center gap-2 text-sm">
+                <label key={option.id} className="flex items-center gap-2 text-sm p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={contributions.includes(option)}
+                    checked={contributions.includes(option.id)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setContributions([...contributions, option]);
+                        setContributions([...contributions, option.id]);
                       } else {
-                        setContributions(contributions.filter((c) => c !== option));
+                        setContributions(contributions.filter((c) => c !== option.id));
                       }
                     }}
                     className="rounded"
+                    data-testid={`checkbox-contribution-${option.id}`}
                   />
-                  {option}
+                  {option.label}
                 </label>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Proposed Timeline</label>
+            <input
+              type="text"
+              value={proposedTimeline}
+              onChange={(e) => setProposedTimeline(e.target.value)}
+              placeholder="e.g., 30-day close, 14-day due diligence"
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-jv-timeline"
+            />
           </div>
 
           <div>
@@ -646,6 +923,19 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
           </div>
         </div>
 
+        {/* JV Agreement Summary */}
+        <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
+          <div className="font-medium mb-2">JV Agreement Summary</div>
+          <ul className="space-y-1 text-muted-foreground">
+            <li>Role: {partnerRole === "deal_bringer" ? "Deal Bringer" : "Buyer Bringer"}</li>
+            <li>Split: {assignmentSplit}% (you) / {100 - assignmentSplit}% (partner)</li>
+            <li>Your take: {formatCurrency((deal?.assignmentFee || 0) * (assignmentSplit / 100))}</li>
+            {contributions.length > 0 && (
+              <li>Contributions: {contributions.map(c => contributionOptions.find(o => o.id === c)?.label).join(", ")}</li>
+            )}
+          </ul>
+        </div>
+
         <div className="flex gap-3 pt-4">
           <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-jv">
             Cancel
@@ -657,7 +947,7 @@ function WholesaleJVForm({ dealId, mode, existingOfferId, onClose }: FormProps) 
             data-testid="button-submit-jv-request"
           >
             {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {mode === "counter" ? "Send Counter-Proposal" : "Request Partnership"}
+            Request JV
           </Button>
         </div>
       </div>
@@ -1139,8 +1429,243 @@ function CapitalInvestmentForm({ projectId, mode, existingOfferId, onClose }: Fo
   );
 }
 
-// LISTING dealType form - for property inquiries and tour scheduling
-interface ListingInquiryFormProps {
+// ========== CANONICAL CAPITAL FORMS ==========
+
+interface CapitalAcceptFormProps {
+  projectId: number;
+  onClose: () => void;
+}
+
+// CAPITAL ACCEPT TERMS - Fast path with minimal fields (investment amount + acknowledgements)
+function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps) {
+  const { toast } = useToast();
+  const { isAuthenticated } = useSupabaseAuth();
+  const [investmentAmount, setInvestmentAmount] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledgedRisk, setAcknowledgedRisk] = useState(false);
+  const [message, setMessage] = useState("");
+  const [initialized, setInitialized] = useState(false);
+
+  const { data: project, isLoading: projectLoading } = useQuery<CapitalProject>({
+    queryKey: ["/api/capital-projects", projectId],
+    enabled: !!projectId,
+  });
+
+  useEffect(() => {
+    if (project && !initialized) {
+      if (project.minInvestment) {
+        setInvestmentAmount(String(project.minInvestment));
+      }
+      setInitialized(true);
+    }
+  }, [project, initialized]);
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/supabase/capital-investments", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Investment Accepted",
+        description: "You've accepted the operator's terms. They will be notified.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/supabase/capital-investments"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit investment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to invest." });
+      return;
+    }
+    if (!investmentAmount) {
+      toast({ title: "Investment amount required", variant: "destructive" });
+      return;
+    }
+    if (!acknowledged || !acknowledgedRisk) {
+      toast({ title: "Acknowledgements required", description: "Please acknowledge all terms.", variant: "destructive" });
+      return;
+    }
+
+    const amount = parseFloat(investmentAmount);
+    if (project?.minInvestment && amount < project.minInvestment) {
+      toast({ 
+        title: "Below minimum investment", 
+        description: `Minimum investment is ${formatCurrency(project.minInvestment)}`,
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    submitMutation.mutate({
+      projectId,
+      type: "capital_accept",
+      isCounter: false,
+      investmentAmount: amount,
+      message,
+    });
+  };
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return "—";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  };
+
+  if (projectLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const fundingProgress = project?.fundingGoal 
+    ? ((project.amountRaised || 0) / project.fundingGoal) * 100 
+    : 0;
+  const remaining = (project?.fundingGoal || 0) - (project?.amountRaised || 0);
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle data-testid="dialog-title-capital-accept">
+          Capital Accept Terms
+        </DialogTitle>
+        <DialogDescription>
+          Accept the investment opportunity as posted
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 mt-4">
+        <div className="p-4 bg-muted rounded-lg space-y-2">
+          <div className="text-lg font-semibold">{project?.title}</div>
+          {project?.address && (
+            <div className="text-sm text-muted-foreground">{project.address}, {project.city}, {project.state}</div>
+          )}
+          <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Structure:</span>
+              <span className="ml-2 font-medium">{project?.structure || "Equity"}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Target Return:</span>
+              <span className="ml-2 font-medium text-primary">{project?.askingInterestRate || project?.askingPreferredReturn || "—"}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Profit Split:</span>
+              <span className="ml-2 font-medium">{project?.askingProfitSplit || "—"}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Hold Period:</span>
+              <span className="ml-2 font-medium">{project?.holdPeriod || project?.askingLoanDuration || "—"}</span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>Funding Progress</span>
+              <span>{formatCurrency(project?.amountRaised)} / {formatCurrency(project?.fundingGoal)}</span>
+            </div>
+            <div className="w-full bg-background rounded-full h-2">
+              <div 
+                className="bg-primary h-2 rounded-full transition-all" 
+                style={{ width: `${Math.min(fundingProgress, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Investment Amount *</label>
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <input
+                type="number"
+                value={investmentAmount}
+                onChange={(e) => setInvestmentAmount(e.target.value)}
+                placeholder={String(project?.minInvestment || 25000)}
+                className="w-full pl-7 pr-3 py-2 border rounded-md"
+                data-testid="input-capital-accept-amount"
+              />
+            </div>
+            {project?.minInvestment && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Minimum: {formatCurrency(project.minInvestment)} | Remaining: {formatCurrency(remaining)}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Message (optional)</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Any notes for the operator..."
+              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[60px]"
+              data-testid="input-capital-accept-message"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+                className="mt-0.5 rounded"
+                data-testid="checkbox-capital-acknowledge-terms"
+              />
+              <span className="text-sm">
+                I acknowledge and accept the investment terms as posted, including the {project?.structure || "equity"} structure with {project?.askingInterestRate || project?.askingPreferredReturn || "stated"} target return.
+              </span>
+            </label>
+            
+            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+              <input
+                type="checkbox"
+                checked={acknowledgedRisk}
+                onChange={(e) => setAcknowledgedRisk(e.target.checked)}
+                className="mt-0.5 rounded"
+                data-testid="checkbox-capital-acknowledge-risk"
+              />
+              <span className="text-sm">
+                I understand that real estate investments carry risk and returns are not guaranteed. I have reviewed the project details and am making an informed investment decision.
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-capital-accept">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitMutation.isPending || !acknowledged || !acknowledgedRisk}
+            className="flex-1"
+            data-testid="button-submit-capital-accept"
+          >
+            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Accept Terms
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ========== CANONICAL LISTING FORMS ==========
+
+interface ListingFormProps {
   listingId: number;
   onClose: () => void;
 }
@@ -1175,6 +1700,526 @@ interface ListingContext {
     agentEmail?: string;
   };
   status?: string;
+}
+
+// LISTING REQUEST INFO - For requesting more information about a property
+function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
+  const { toast } = useToast();
+  const { isAuthenticated, profile } = useSupabaseAuth();
+  const [name, setName] = useState(profile?.display_name || "");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [preferredContact, setPreferredContact] = useState<"email" | "phone" | "either">("email");
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [customQuestion, setCustomQuestion] = useState("");
+  const [timeframe, setTimeframe] = useState("");
+
+  const { data: context, isLoading: contextLoading } = useQuery<ListingContext>({
+    queryKey: [`/api/deals/LISTING/${listingId}/context`],
+    enabled: !!listingId,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/listing-inquiries", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Inquiry Submitted",
+        description: "Your request for information has been sent to the listing agent.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/listing-inquiries"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit inquiry",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to submit an inquiry." });
+      return;
+    }
+    if (!name) {
+      toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
+    if (preferredContact === "email" && !email) {
+      toast({ title: "Email required", variant: "destructive" });
+      return;
+    }
+    if (preferredContact === "phone" && !phone) {
+      toast({ title: "Phone required", variant: "destructive" });
+      return;
+    }
+
+    submitMutation.mutate({
+      listingId,
+      inquiryType: "info",
+      name,
+      email: email || undefined,
+      phone: phone || undefined,
+      preferredContact,
+      questions: [...questions, customQuestion].filter(Boolean),
+      timeframe,
+      message: customQuestion || questions.join(", "),
+    });
+  };
+
+  if (contextLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return "—";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  };
+
+  const deal = context?.deal;
+  const terms = context?.listingTerms;
+
+  const questionOptions = [
+    "Property condition and recent updates",
+    "HOA fees and restrictions",
+    "Utility costs and average bills",
+    "School district information",
+    "Neighborhood and nearby amenities",
+    "Reason for selling",
+    "Comparable sales in the area",
+  ];
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle data-testid="dialog-title-listing-request-info">
+          Listing Request Info
+        </DialogTitle>
+        <DialogDescription>
+          {deal?.propertyAddress || "Property"}
+          {deal?.city && deal?.state && ` - ${deal.city}, ${deal.state}`}
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 mt-4">
+        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
+          <div>
+            <span className="text-muted-foreground">List Price:</span>
+            <span className="ml-2 font-medium">{formatCurrency(terms?.listPrice)}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Type:</span>
+            <span className="ml-2 font-medium">{deal?.propertyType || "—"}</span>
+          </div>
+          {deal?.bedrooms && (
+            <div>
+              <span className="text-muted-foreground">Beds / Baths:</span>
+              <span className="ml-2 font-medium">{deal.bedrooms} / {deal.bathrooms || "—"}</span>
+            </div>
+          )}
+          {deal?.sqft && (
+            <div>
+              <span className="text-muted-foreground">Sqft:</span>
+              <span className="ml-2 font-medium">{deal.sqft.toLocaleString()}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Your Name *</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full name"
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-info-name"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full px-3 py-2 border rounded-md mt-1"
+                data-testid="input-info-email"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Phone</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                className="w-full px-3 py-2 border rounded-md mt-1"
+                data-testid="input-info-phone"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Preferred Contact Method</label>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {[
+                { value: "email", label: "Email" },
+                { value: "phone", label: "Phone" },
+                { value: "either", label: "Either" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setPreferredContact(option.value as "email" | "phone" | "either")}
+                  className={`p-2 border rounded-lg text-center text-sm transition-colors ${
+                    preferredContact === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  data-testid={`button-contact-${option.value}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">What would you like to know?</label>
+            <div className="grid grid-cols-1 gap-2 mt-2">
+              {questionOptions.map((option) => (
+                <label key={option} className="flex items-center gap-2 text-sm p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={questions.includes(option)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setQuestions([...questions, option]);
+                      } else {
+                        setQuestions(questions.filter((q) => q !== option));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Additional Questions</label>
+            <textarea
+              value={customQuestion}
+              onChange={(e) => setCustomQuestion(e.target.value)}
+              placeholder="Any other specific questions about this property..."
+              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[60px]"
+              data-testid="input-info-custom-question"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Your Timeframe (optional)</label>
+            <input
+              type="text"
+              value={timeframe}
+              onChange={(e) => setTimeframe(e.target.value)}
+              placeholder="e.g., Looking to buy in the next 3 months"
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-info-timeframe"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-info">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitMutation.isPending}
+            className="flex-1"
+            data-testid="button-submit-listing-info"
+          >
+            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Request Info
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// LISTING SCHEDULE SHOWING - For scheduling property tours
+function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
+  const { toast } = useToast();
+  const { isAuthenticated, profile } = useSupabaseAuth();
+  const [name, setName] = useState(profile?.display_name || "");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [preferredDates, setPreferredDates] = useState<string[]>(["", "", ""]);
+  const [preferredTimes, setPreferredTimes] = useState<string[]>(["", "", ""]);
+  const [isPreApproved, setIsPreApproved] = useState<boolean | null>(null);
+  const [notes, setNotes] = useState("");
+
+  const { data: context, isLoading: contextLoading } = useQuery<ListingContext>({
+    queryKey: [`/api/deals/LISTING/${listingId}/context`],
+    enabled: !!listingId,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/listing-inquiries", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Tour Request Submitted",
+        description: "Your showing request has been sent to the listing agent.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/listing-inquiries"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit tour request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to schedule a tour." });
+      return;
+    }
+    if (!name) {
+      toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
+    if (!email && !phone) {
+      toast({ title: "Contact info required", description: "Please provide email or phone.", variant: "destructive" });
+      return;
+    }
+    if (!preferredDates[0]) {
+      toast({ title: "Preferred date required", variant: "destructive" });
+      return;
+    }
+
+    submitMutation.mutate({
+      listingId,
+      inquiryType: "tour",
+      name,
+      email: email || undefined,
+      phone: phone || undefined,
+      preferredDates: preferredDates.filter(Boolean),
+      preferredTimes: preferredTimes.filter(Boolean),
+      isPreApproved,
+      message: notes || "Interested in scheduling a tour",
+    });
+  };
+
+  if (contextLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return "—";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  };
+
+  const deal = context?.deal;
+  const terms = context?.listingTerms;
+
+  const updatePreferredDate = (index: number, value: string) => {
+    const newDates = [...preferredDates];
+    newDates[index] = value;
+    setPreferredDates(newDates);
+  };
+
+  const updatePreferredTime = (index: number, value: string) => {
+    const newTimes = [...preferredTimes];
+    newTimes[index] = value;
+    setPreferredTimes(newTimes);
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle data-testid="dialog-title-listing-schedule-tour">
+          Listing Schedule Showing
+        </DialogTitle>
+        <DialogDescription>
+          {deal?.propertyAddress || "Property"}
+          {deal?.city && deal?.state && ` - ${deal.city}, ${deal.state}`}
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 mt-4">
+        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
+          <div>
+            <span className="text-muted-foreground">List Price:</span>
+            <span className="ml-2 font-medium">{formatCurrency(terms?.listPrice)}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Type:</span>
+            <span className="ml-2 font-medium">{deal?.propertyType || "—"}</span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Your Name *</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full name"
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-tour-name"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full px-3 py-2 border rounded-md mt-1"
+                data-testid="input-tour-email"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Phone</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                className="w-full px-3 py-2 border rounded-md mt-1"
+                data-testid="input-tour-phone"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Preferred Dates/Times (provide 2-3 options)</label>
+            <div className="space-y-2 mt-2">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={preferredDates[index]}
+                    onChange={(e) => updatePreferredDate(index, e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="px-3 py-2 border rounded-md"
+                    placeholder={index === 0 ? "Date (required)" : "Date (optional)"}
+                    data-testid={`input-tour-date-${index}`}
+                  />
+                  <select
+                    value={preferredTimes[index]}
+                    onChange={(e) => updatePreferredTime(index, e.target.value)}
+                    className="px-3 py-2 border rounded-md"
+                    data-testid={`select-tour-time-${index}`}
+                  >
+                    <option value="">Select time</option>
+                    <option value="morning">Morning (9am-12pm)</option>
+                    <option value="afternoon">Afternoon (12pm-5pm)</option>
+                    <option value="evening">Evening (5pm-8pm)</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Are you pre-approved / have proof of funds?</label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setIsPreApproved(true)}
+                className={`p-3 border rounded-lg text-center transition-colors ${
+                  isPreApproved === true
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+                data-testid="button-preapproved-yes"
+              >
+                <div className="font-medium text-sm">Yes</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPreApproved(false)}
+                className={`p-3 border rounded-lg text-center transition-colors ${
+                  isPreApproved === false
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+                data-testid="button-preapproved-no"
+              >
+                <div className="font-medium text-sm">No / Not Yet</div>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Notes (optional)</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any special requests or questions..."
+              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[60px]"
+              data-testid="input-tour-notes"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-tour">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitMutation.isPending}
+            className="flex-1"
+            data-testid="button-submit-listing-tour"
+          >
+            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Schedule Showing
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// Legacy LISTING form - kept for backward compatibility
+interface ListingInquiryFormProps {
+  listingId: number;
+  onClose: () => void;
 }
 
 function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {

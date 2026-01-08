@@ -311,7 +311,8 @@ function DealsPage() {
     if (actionType === "jv_request") {
       openDealAction(deal.id, "wholesale_jv");
     } else {
-      openDealAction(deal.id, "assignment_offer");
+      // Default to accept - user can choose counter from within the form
+      openDealAction(deal.id, "wholesale_accept");
     }
   };
 
@@ -556,7 +557,7 @@ function DealsPage() {
                   variant="outline"
                   size="sm"
                   className="justify-start text-left h-auto py-2"
-                  onClick={() => openDealAction(deal.id, "assignment_offer")}
+                  onClick={() => openDealAction(deal.id, "wholesale_accept")}
                 >
                   <MapPin className="w-3 h-3 mr-1 shrink-0 text-primary" />
                   <span className="truncate text-xs">
@@ -577,10 +578,10 @@ function DealsPage() {
             onSave={handleSaveDeal}
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
-              openDealAction(deal.id, "assignment_offer");
+              openDealAction(deal.id, "wholesale_accept");
             }}
             onCounterTerms={(deal) => {
-              openDealAction(deal.id, "assignment_offer", "counter");
+              openDealAction(deal.id, "wholesale_counter");
             }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             isSaving={isSaving}
@@ -596,10 +597,10 @@ function DealsPage() {
             onSave={handleSaveDeal}
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
-              openDealAction(deal.id, "assignment_offer");
+              openDealAction(deal.id, "wholesale_accept");
             }}
             onCounterTerms={(deal) => {
-              openDealAction(deal.id, "assignment_offer", "counter");
+              openDealAction(deal.id, "wholesale_counter");
             }}
             isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
             showInvest={isDreamscaper || isInvestor || isAdmin}
@@ -617,10 +618,10 @@ function DealsPage() {
               setLocation(`/marketflow/capital/${project.id}`);
             }}
             onAcceptTerms={(project) => {
-              openDealAction(project.id, "capital_invest");
+              openDealAction(project.id, "capital_accept");
             }}
             onCounterTerms={(project) => {
-              openDealAction(project.id, "capital_invest", "counter");
+              openDealAction(project.id, "capital_counter");
             }}
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
             onSave={(id) => toggleSaveItem('capital_project', String(id))}
@@ -630,10 +631,10 @@ function DealsPage() {
             projects={capitalProjects || []}
             onSave={(id) => toggleSaveItem('capital_project', String(id))}
             onAcceptTerms={(project) => {
-              openDealAction(project.id, "capital_invest");
+              openDealAction(project.id, "capital_accept");
             }}
             onCounterTerms={(project) => {
-              openDealAction(project.id, "capital_invest", "counter");
+              openDealAction(project.id, "capital_counter");
             }}
             isItemSaved={(id) => isItemSaved('capital_project', String(id))}
           />
@@ -646,10 +647,10 @@ function DealsPage() {
           isLoading={listingsLoading}
           onViewListing={(listing) => setLocation(`/marketflow/listings/${listing.id}`)}
           onRequestInfo={(listing) => {
-            openDealAction(listing.id, "listing_inquiry");
+            openDealAction(listing.id, "listing_request_info");
           }}
           onScheduleShowing={(listing) => {
-            openDealAction(listing.id, "listing_inquiry");
+            openDealAction(listing.id, "listing_schedule_tour");
           }}
           isItemSaved={(id) => isItemSaved('listing', String(id))}
           onSave={(id) => toggleSaveItem('listing', String(id))}
@@ -673,9 +674,9 @@ function DealsPage() {
               const deal = compareDeals.find(d => d.id === dealId);
               if (deal) {
                 if (action === "accept") {
-                  openDealAction(deal.id, "assignment_offer");
+                  openDealAction(deal.id, "wholesale_accept");
                 } else {
-                  openDealAction(deal.id, "assignment_offer", "counter");
+                  openDealAction(deal.id, "wholesale_counter");
                 }
               }
               setShowComparison(false);
