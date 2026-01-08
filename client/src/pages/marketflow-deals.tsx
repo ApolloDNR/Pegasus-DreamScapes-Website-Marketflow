@@ -101,7 +101,8 @@ import {
   FolderPlus,
   CheckSquare,
   ClipboardList,
-  Folder
+  Folder,
+  FolderOpen
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -226,6 +227,8 @@ function DealsPage() {
   const [showMapView, setShowMapView] = useState(false);
   const [showActivityFeed, setShowActivityFeed] = useState(false);
   const [showSavedSearches, setShowSavedSearches] = useState(false);
+  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [addToFolderDeal, setAddToFolderDeal] = useState<WholesaleDeal | null>(null);
   
   // Feature hooks
@@ -575,6 +578,22 @@ function DealsPage() {
                 <p>Activity Feed</p>
               </TooltipContent>
             </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant={showFolderSidebar ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => setShowFolderSidebar(!showFolderSidebar)}
+                  data-testid="button-toggle-folders"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Watchlist Folders</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       )}
@@ -630,6 +649,54 @@ function DealsPage() {
               <p>No recent activity to display</p>
               <p className="text-xs">Your deal interactions will appear here</p>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Watchlist Folders Panel */}
+      {showFolderSidebar && dealCategory === "wholesale" && (
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-primary" />
+              Watchlist Folders
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FolderSidebar
+              folders={watchlistFolders.folders}
+              selectedFolderId={selectedFolderId}
+              onSelectFolder={(folderId) => {
+                setSelectedFolderId(folderId);
+                if (folderId) {
+                  toast({
+                    title: "Folder selected",
+                    description: "Showing deals from this folder",
+                  });
+                }
+              }}
+              onCreateFolder={() => {
+                watchlistFolders.createFolder("New Folder", "#3B82F6");
+                toast({
+                  title: "Folder created",
+                  description: "New watchlist folder added",
+                });
+              }}
+              onDeleteFolder={(id) => {
+                watchlistFolders.deleteFolder(id);
+                if (selectedFolderId === id) setSelectedFolderId(null);
+                toast({
+                  title: "Folder deleted",
+                  description: "Watchlist folder removed",
+                });
+              }}
+              onEditFolder={(folder) => {
+                toast({
+                  title: "Edit folder",
+                  description: `Editing "${folder.name}"`,
+                });
+              }}
+            />
           </CardContent>
         </Card>
       )}
