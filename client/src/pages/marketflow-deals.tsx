@@ -125,6 +125,8 @@ interface WholesaleDeal {
   matchScore?: number;
   negotiationAllowed?: boolean;
   jvAllowed?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface Listing {
@@ -222,6 +224,8 @@ function DealsPage() {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showSaveSearchDialog, setShowSaveSearchDialog] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
+  const [showActivityFeed, setShowActivityFeed] = useState(false);
+  const [showSavedSearches, setShowSavedSearches] = useState(false);
   const [addToFolderDeal, setAddToFolderDeal] = useState<WholesaleDeal | null>(null);
   
   // Feature hooks
@@ -353,6 +357,16 @@ function DealsPage() {
     
     return matches;
   }) || [];
+
+  // Bulk selection for batch operations (must be after filteredDeals is defined)
+  const {
+    selectedIds: bulkSelectedIds,
+    toggleItem: toggleBulkSelect,
+    selectAll: selectAllBulk,
+    clearSelection: clearBulkSelection,
+    isSelected: isBulkSelected,
+    selectedCount: bulkSelectedCount
+  } = useBulkSelection(filteredDeals);
 
   return (
     <div className="space-y-6">
@@ -529,45 +543,119 @@ function DealsPage() {
                 <p>Keyboard Shortcuts <KeyboardShortcutHint shortcut="?" /></p>
               </TooltipContent>
             </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant={showSavedSearches ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => setShowSavedSearches(!showSavedSearches)}
+                  data-testid="button-toggle-saved-searches"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Saved Searches</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant={showActivityFeed ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => setShowActivityFeed(!showActivityFeed)}
+                  data-testid="button-toggle-activity"
+                >
+                  <Clock className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Activity Feed</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       )}
       
-      {/* Map View - placeholder for future integration with Google Maps */}
-      {showMapView && dealCategory === "wholesale" && (
+      {/* Saved Searches Panel */}
+      {showSavedSearches && dealCategory === "wholesale" && (
         <Card className="mb-6">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Map className="w-5 h-5 text-primary" />
-              Deal Locations
+              <Search className="w-5 h-5 text-primary" />
+              Saved Searches
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <Map className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Map view shows {filteredDeals.length} deals</p>
-                <p className="text-xs mt-1">Locations across {new Set(filteredDeals.map(d => d.state)).size} states</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
-              {filteredDeals.slice(0, 8).map(deal => (
-                <Button
-                  key={deal.id}
-                  variant="outline"
-                  size="sm"
-                  className="justify-start text-left h-auto py-2"
-                  onClick={() => openDealAction(deal.id, "wholesale_accept")}
-                >
-                  <MapPin className="w-3 h-3 mr-1 shrink-0 text-primary" />
-                  <span className="truncate text-xs">
-                    {deal.city}, {deal.state}
-                  </span>
-                </Button>
-              ))}
+            <SavedSearchesList
+              searches={savedSearches.savedSearches}
+              onApply={(search) => {
+                if (search.filters.propertyType) setPropertyType(search.filters.propertyType);
+                if (search.filters.query) setSearchQuery(search.filters.query);
+                if (search.filters.sortBy) setSortBy(search.filters.sortBy);
+                savedSearches.markUsed(search.id);
+                toast({
+                  title: "Search loaded",
+                  description: `Applied filters from "${search.name}"`,
+                });
+              }}
+              onDelete={(id) => {
+                savedSearches.deleteSearch(id);
+                toast({
+                  title: "Search deleted",
+                  description: "Saved search has been removed.",
+                });
+              }}
+              onToggleAlerts={(id) => savedSearches.toggleAlerts(id)}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Activity Feed Panel */}
+      {showActivityFeed && (
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <ActivityFeedWidget />
+            <div className="text-center text-muted-foreground text-sm py-4">
+              <Clock className="w-6 h-6 mx-auto mb-2 opacity-50" />
+              <p>No recent activity to display</p>
+              <p className="text-xs">Your deal interactions will appear here</p>
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Map View - Google Maps integration */}
+      {showMapView && dealCategory === "wholesale" && (
+        <div className="mb-6">
+          <DealMapView
+            deals={filteredDeals.map(deal => ({
+              id: deal.id,
+              lat: deal.latitude || 0,
+              lng: deal.longitude || 0,
+              address: deal.propertyAddress || deal.address || '',
+              city: deal.city,
+              state: deal.state,
+              askingPrice: deal.askingPrice,
+              arv: deal.arv,
+              propertyType: deal.propertyType,
+              status: deal.status,
+              matchScore: deal.matchScore
+            }))}
+            onDealSelect={(dealId) => openDealAction(dealId, "wholesale_accept")}
+            selectedDealId={undefined}
+            isLoading={dealsLoading && !useSampleData}
+          />
+        </div>
       )}
 
       {dealCategory === "wholesale" && (
@@ -685,6 +773,39 @@ function DealsPage() {
         </>
       )}
       
+      {/* Bulk Actions Bar - appears when items are selected */}
+      <BulkActionsBar
+        selectedCount={bulkSelectedCount}
+        totalCount={filteredDeals.length}
+        onSelectAll={selectAllBulk}
+        onClearSelection={clearBulkSelection}
+        onBulkSave={() => {
+          bulkSelectedIds.forEach(id => handleSaveDeal(id));
+          toast({
+            title: "Deals saved",
+            description: `${bulkSelectedCount} deals saved to your watchlist.`,
+          });
+          clearBulkSelection();
+        }}
+        onBulkCompare={() => {
+          const selectedDeals = filteredDeals.filter(d => bulkSelectedIds.has(d.id));
+          selectedDeals.slice(0, 3).forEach(d => toggleCompare(d));
+          setShowComparison(true);
+          clearBulkSelection();
+        }}
+        onBulkExport={(format) => {
+          setShowExportDialog(true);
+          clearBulkSelection();
+        }}
+        onAddToFolder={() => {
+          const firstSelected = filteredDeals.find(d => bulkSelectedIds.has(d.id));
+          if (firstSelected) {
+            setAddToFolderDeal(firstSelected);
+          }
+        }}
+        compareDisabled={bulkSelectedCount > 3}
+      />
+
       {/* Feature Dialogs */}
       <KeyboardShortcutsDialog 
         open={showKeyboardShortcuts} 
