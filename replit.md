@@ -41,9 +41,26 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
   - Tab 2: **Capital Raises** - Investment opportunities with debt/equity/hybrid structures
   - Tab 3: **Listings** - Property listings with inquiry and tour scheduling
   - Unified context endpoint: `GET /api/deals/:dealType/:id/context` for all 3 lanes
-  - Canonical form routing via `openDealAction(dealId, actionType)` function
-  - 4 canonical forms: AssignmentOfferForm, WholesaleJVForm, CapitalInvestForm, ListingInquiryForm
   - Modals open for all users; authentication checked at form submission
+- **Phase 8: Canonical Form System** - Separate accept/counter flows with 7 modal forms:
+  - **Wholesale Lane:**
+    - `WholesaleAcceptTermsModal` - Fast accept path (Assignment Fee, Earnest Money, Closing Date)
+    - `WholesaleCounterOfferModal` - Full counter form with all negotiation fields
+    - `WholesaleJVRequestModal` - JV partnership wizard with role/split selection
+  - **Capital Lane:**
+    - `CapitalAcceptTermsModal` - Accept with investment amount + acknowledgements
+    - `capital_counter` action redirects to Offer Studio for complex negotiations
+  - **Listings Lane:**
+    - `ListingRequestInfoModal` - Request property information
+    - `ListingScheduleShowingModal` - Schedule property tour with date picker
+  - Canonical action types: `wholesale_accept`, `wholesale_counter`, `wholesale_jv`, `capital_accept`, `capital_counter`, `listing_request_info`, `listing_schedule_tour`
+  - `openDealAction(dealId, actionType)` routes to correct modal via DealActionModal
+  - Legacy action types maintained for backward compatibility
+- **Phase 8b: Negotiation Room 3-Column Layout** - Visual deal negotiation interface:
+  - Column 1: **Chat** - Direct messaging with counterparty
+  - Column 2: **Offer Ladder** - Visual versioned history of all offers/counters with timeline
+  - Column 3: **Peggy AI Advisor** - AI-powered negotiation guidance with quick questions
+  - Counter/Accept buttons delegate to canonical forms via `mapNegotiationTypeToDealAction(type, isCounter)`
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
