@@ -38,6 +38,9 @@ import { DueDiligenceProgress } from "@/components/due-diligence-checklist";
 import { TimelineProgress } from "@/components/deal-timeline";
 import { CommunicationSummary } from "@/components/communication-log";
 import { DocumentCount } from "@/components/document-attachments";
+import { QuickCalcButton, InlineROIBadge } from "@/components/quick-calculator";
+import { ActivityFeedWidget, useActivityFeed } from "@/components/activity-feed";
+import { SearchAutocomplete } from "@/components/search-autocomplete";
 import {
   Tooltip,
   TooltipContent,

@@ -7,7 +7,7 @@ import {
   communityCategories, communityPosts, communityReplies, postLikes, postBookmarks, dealBookmarks,
   directMessages, STAFF_ROLES,
   capitalProjects, projectMilestones, investmentOffers, committedInvestments, dealMatches,
-  announcements, notifications,
+  announcements, notifications, investorActivity,
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
   leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
@@ -46,6 +46,7 @@ import {
   type DealMatch, type InsertDealMatch,
   type Announcement, type InsertAnnouncement,
   type Notification, type InsertNotification,
+  type InvestorActivity,
   type InvestorWantedDeal, type InsertInvestorWantedDeal,
   type UserReview, type InsertUserReview,
   type UserStats,
@@ -298,6 +299,10 @@ export interface IStorage {
   markNotificationRead(id: number): Promise<Notification | undefined>;
   markAllNotificationsRead(userId: string): Promise<void>;
   getUnreadNotificationCount(userId: string): Promise<number>;
+
+  // Investor Activity Feed
+  getInvestorActivity(userId: string): Promise<InvestorActivity[]>;
+  createInvestorActivity(activity: { userId: string; activityType: string; title: string; description?: string; link?: string; relatedType?: string; relatedId?: number }): Promise<InvestorActivity>;
 
   // Investor Wanted Deals
   createInvestorWantedDeal(deal: InsertInvestorWantedDeal): Promise<InvestorWantedDeal>;
@@ -1753,6 +1758,19 @@ export class DatabaseStorage implements IStorage {
         eq(notifications.isRead, false)
       ));
     return Number(result[0]?.count || 0);
+  }
+
+  // Investor Activity Feed
+  async getInvestorActivity(userId: string): Promise<InvestorActivity[]> {
+    return db.select().from(investorActivity)
+      .where(eq(investorActivity.userId, userId))
+      .orderBy(desc(investorActivity.createdAt))
+      .limit(50);
+  }
+
+  async createInvestorActivity(activity: { userId: string; activityType: string; title: string; description?: string; link?: string; relatedType?: string; relatedId?: number }): Promise<InvestorActivity> {
+    const [created] = await db.insert(investorActivity).values(activity).returning();
+    return created;
   }
 
   // Investor Wanted Deals

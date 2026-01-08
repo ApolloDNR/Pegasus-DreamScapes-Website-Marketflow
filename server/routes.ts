@@ -3761,6 +3761,49 @@ export async function registerRoutes(
   });
 
   // =====================================================
+  // Investor Activity Feed Routes
+  // =====================================================
+  
+  // Get user's activity feed
+  app.get("/api/investor-activity", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const activities = await storage.getInvestorActivity(userId);
+      return res.json(activities);
+    } catch (error) {
+      console.error("Error fetching investor activity:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Add activity to feed
+  app.post("/api/investor-activity", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { type, title, description, link, relatedType, relatedId } = req.body;
+      
+      if (!type || !title) {
+        return res.status(400).json({ message: "Type and title are required" });
+      }
+      
+      const activity = await storage.createInvestorActivity({
+        userId,
+        activityType: type,
+        title,
+        description,
+        link,
+        relatedType,
+        relatedId
+      });
+      
+      return res.status(201).json(activity);
+    } catch (error) {
+      console.error("Error creating investor activity:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // =====================================================
   // Investor Wanted Deals Routes
   // =====================================================
   
