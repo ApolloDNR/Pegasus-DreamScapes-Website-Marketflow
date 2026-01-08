@@ -255,6 +255,25 @@ function DealsPage() {
       e.preventDefault();
       setShowSaveSearchDialog(true);
     }
+    // v for toggle view mode
+    if (e.key === 'v' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setViewMode(prev => prev === 'grid' ? 'swipe' : 'grid');
+    }
+    // / for focus search (SearchAutocomplete uses input-search testid)
+    if (e.key === '/') {
+      e.preventDefault();
+      const searchContainer = document.querySelector('[data-testid="search-autocomplete"]');
+      const searchInput = searchContainer?.querySelector('input') as HTMLInputElement;
+      searchInput?.focus();
+    }
+    // Escape to close modals
+    if (e.key === 'Escape') {
+      setShowKeyboardShortcuts(false);
+      setShowExportDialog(false);
+      setShowSaveSearchDialog(false);
+      setShowMapView(false);
+    }
   }, []);
   
   useEffect(() => {
@@ -423,16 +442,13 @@ function DealsPage() {
 
       {dealCategory === "wholesale" && viewMode === "grid" && (
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by address or city..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-              data-testid="input-search-deals"
-            />
-          </div>
+          <SearchAutocomplete
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={setSearchQuery}
+            placeholder="Search by address or city..."
+            className="flex-1"
+          />
           <Select value={propertyType} onValueChange={setPropertyType}>
             <SelectTrigger className="w-full lg:w-48" data-testid="select-property-type">
               <Filter className="w-4 h-4 mr-2" />

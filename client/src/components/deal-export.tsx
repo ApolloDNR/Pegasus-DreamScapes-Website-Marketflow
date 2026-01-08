@@ -236,6 +236,11 @@ ${content}`;
   };
 
   const handleExport = async () => {
+    if (deals.length === 0) {
+      toast({ title: "No deals to export", description: "Try adjusting your filters or selection", variant: "destructive" });
+      return;
+    }
+    
     if (selectedFields.size === 0) {
       toast({ title: "Select at least one field to export", variant: "destructive" });
       return;

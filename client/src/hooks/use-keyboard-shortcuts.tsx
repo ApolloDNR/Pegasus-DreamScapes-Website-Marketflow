@@ -136,12 +136,11 @@ export function useMarketflowShortcuts({
 }
 
 export const SHORTCUT_REFERENCE = [
-  { key: "S", description: "Save current deal", category: "Actions" },
-  { key: "C", description: "Add to compare", category: "Actions" },
-  { key: "→ / J", description: "Next deal", category: "Navigation" },
-  { key: "← / K", description: "Previous deal", category: "Navigation" },
-  { key: "/", description: "Focus search", category: "Search" },
+  { key: "M", description: "Toggle map view", category: "View" },
   { key: "V", description: "Toggle Grid/Swipe view", category: "View" },
+  { key: "E", description: "Export deals", category: "Actions" },
+  { key: "S", description: "Save search", category: "Actions" },
+  { key: "/", description: "Focus search", category: "Search" },
   { key: "Esc", description: "Close modal / Clear", category: "Navigation" },
   { key: "?", description: "Show shortcuts help", category: "Help" },
 ];
