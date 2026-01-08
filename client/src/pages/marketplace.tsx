@@ -26,13 +26,11 @@ export default function MarketplacePage() {
   const { isLoading, isAuthenticated, userRole } = useSupabaseAuth();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && userRole) {
-      const dashboardPath = getRoleDashboardPath(userRole);
-      if (dashboardPath !== "/marketflow") {
-        setLocation(dashboardPath);
-      }
+    if (!isLoading && isAuthenticated) {
+      // All authenticated users go directly to the deals page
+      setLocation("/marketflow/deals");
     }
-  }, [isLoading, isAuthenticated, userRole, setLocation]);
+  }, [isLoading, isAuthenticated, setLocation]);
 
   if (isLoading) {
     return (
@@ -45,12 +43,12 @@ export default function MarketplacePage() {
     );
   }
 
-  if (isAuthenticated && userRole) {
+  if (isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Redirecting to your dashboard...</p>
+          <p className="text-muted-foreground">Redirecting to deals...</p>
         </div>
       </div>
     );
