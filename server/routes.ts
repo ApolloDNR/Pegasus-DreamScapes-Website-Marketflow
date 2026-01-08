@@ -45,6 +45,7 @@ import {
 } from "./lib/supabase";
 import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification } from "./email";
 import { supabaseStorage } from "./supabase-storage";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
@@ -118,6 +119,9 @@ export async function registerRoutes(
   
   // Add Supabase auth middleware to extract user from JWT tokens
   app.use(supabaseAuthMiddleware);
+
+  // Register object storage routes for file uploads
+  registerObjectStorageRoutes(app);
 
   // Public config endpoint - exposes only public/safe configuration
   app.get('/api/config/supabase', (_req, res) => {

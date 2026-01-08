@@ -1025,6 +1025,24 @@ export const insertDealBookmarkSchema = createInsertSchema(dealBookmarks).omit({
 export type InsertDealBookmark = z.infer<typeof insertDealBookmarkSchema>;
 export type DealBookmark = typeof dealBookmarks.$inferSelect;
 
+// Deal Documents - file attachments for deals
+export const dealDocuments = pgTable("deal_documents", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // 'wholesale', 'capital', 'listing'
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  objectPath: text("object_path").notNull(),
+  category: varchar("category", { length: 50 }).notNull().default("other"), // inspection, title, contract, financial, photos, other
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
+export const insertDealDocumentSchema = createInsertSchema(dealDocuments).omit({ id: true, uploadedAt: true });
+export type InsertDealDocument = z.infer<typeof insertDealDocumentSchema>;
+export type DealDocument = typeof dealDocuments.$inferSelect;
+
 // Community Replies
 export const communityReplies = pgTable("community_replies", {
   id: serial("id").primaryKey(),
