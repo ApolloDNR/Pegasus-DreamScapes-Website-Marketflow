@@ -1686,6 +1686,21 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           </div>
         </div>
 
+        {/* Workflow Indicators Row */}
+        <div className="flex items-center justify-between gap-2 mb-3 py-2 px-1 bg-muted/30 rounded text-xs">
+          <DueDiligenceProgress dealId={deal.id} />
+          <DocumentCount dealId={deal.id} />
+          <CommunicationSummary dealId={deal.id} />
+          <InlineROIBadge deal={{
+            contractPrice: deal.contractPrice,
+            askingPrice: deal.askingPrice,
+            arv: deal.arv,
+            repairEstimate: deal.repairEstimate,
+            estimatedRepairs: deal.estimatedRepairs,
+            assignmentFee: deal.assignmentFee
+          }} />
+        </div>
+
         <div className="flex gap-2 mb-2">
           <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-deal-${deal.id}`}>
             <Eye className="w-4 h-4 mr-2" />
