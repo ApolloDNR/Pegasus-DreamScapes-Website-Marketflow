@@ -70,7 +70,7 @@ const EXPORT_FIELDS = [
 
 export function ExportDialog({ open, onClose, deals, selectedCount }: ExportDialogProps) {
   const { toast } = useToast();
-  const [format, setFormat] = useState<"csv" | "pdf">("csv");
+  const [format, setFormat] = useState<"csv" | "json" | "pdf">("csv");
   const [selectedFields, setSelectedFields] = useState<Set<string>>(
     new Set(EXPORT_FIELDS.filter(f => f.default).map(f => f.key))
   );
@@ -161,6 +161,47 @@ export function ExportDialog({ open, onClose, deals, selectedCount }: ExportDial
     URL.revokeObjectURL(url);
   };
 
+  const exportToJson = () => {
+    const exportData = deals.map(deal => {
+      const data = prepareDealData(deal);
+      const result: Record<string, unknown> = {};
+      selectedFields.forEach(field => {
+        if (field === "address") result.address = data.address;
+        else if (field === "cityState") result.location = data.cityState;
+        else if (field === "propertyType") result.propertyType = data.propertyType;
+        else if (field === "askingPrice") result.askingPrice = data.askingPrice;
+        else if (field === "arv") result.arv = data.arv;
+        else if (field === "repairs") result.repairEstimate = data.repairs;
+        else if (field === "profit") result.potentialProfit = data.profit;
+        else if (field === "roi") result.roi = data.roi;
+        else if (field === "assignmentFee") result.assignmentFee = data.assignmentFee;
+        else if (field === "bedrooms") result.bedrooms = data.bedrooms;
+        else if (field === "bathrooms") result.bathrooms = data.bathrooms;
+        else if (field === "sqft") result.squareFeet = data.sqft;
+        else if (field === "yearBuilt") result.yearBuilt = data.yearBuilt;
+        else if (field === "status") result.status = data.status;
+        else if (field === "matchScore") result.matchScore = data.matchScore;
+      });
+      return result;
+    });
+
+    const jsonContent = JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      totalDeals: deals.length,
+      deals: exportData
+    }, null, 2);
+
+    const blob = new Blob([jsonContent], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `marketflow-deals-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const exportToPdf = async () => {
     const content = deals.map(deal => {
       const data = prepareDealData(deal);
@@ -210,6 +251,8 @@ ${content}`;
     try {
       if (format === "csv") {
         exportToCsv();
+      } else if (format === "json") {
+        exportToJson();
       } else {
         await exportToPdf();
       }
@@ -247,8 +290,8 @@ ${content}`;
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Export Format</Label>
-            <RadioGroup value={format} onValueChange={(v) => setFormat(v as "csv" | "pdf")}>
-              <div className="flex gap-4">
+            <RadioGroup value={format} onValueChange={(v) => setFormat(v as "csv" | "json" | "pdf")}>
+              <div className="flex gap-4 flex-wrap">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="csv" id="csv" data-testid="radio-csv" />
                   <Label htmlFor="csv" className="flex items-center gap-1 cursor-pointer">
@@ -257,10 +300,17 @@ ${content}`;
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="json" id="json" data-testid="radio-json" />
+                  <Label htmlFor="json" className="flex items-center gap-1 cursor-pointer">
+                    <FileText className="w-4 h-4" />
+                    JSON
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
                   <RadioGroupItem value="pdf" id="pdf" data-testid="radio-pdf" />
                   <Label htmlFor="pdf" className="flex items-center gap-1 cursor-pointer">
                     <FileText className="w-4 h-4" />
-                    PDF (Text)
+                    PDF
                   </Label>
                 </div>
               </div>

@@ -225,39 +225,39 @@ function DealsPage() {
   const savedSearches = useSavedSearches();
   const watchlistFolders = useWatchlistFolders();
   
-  // Keyboard shortcuts handler
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Ignore if typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      // ? key for help
-      if (e.key === '?' && e.shiftKey) {
-        e.preventDefault();
-        setShowKeyboardShortcuts(true);
-      }
-      // m for map view
-      if (e.key === 'm' && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        setShowMapView(prev => !prev);
-      }
-      // e for export
-      if (e.key === 'e' && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        setShowExportDialog(true);
-      }
-      // s for save search
-      if (e.key === 's' && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        setShowSaveSearchDialog(true);
-      }
+  // Keyboard shortcuts handler - memoized to prevent stale closures
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Ignore if typing in an input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return;
     }
     
+    // ? key for help
+    if (e.key === '?' && e.shiftKey) {
+      e.preventDefault();
+      setShowKeyboardShortcuts(true);
+    }
+    // m for map view
+    if (e.key === 'm' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setShowMapView(prev => !prev);
+    }
+    // e for export
+    if (e.key === 'e' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setShowExportDialog(true);
+    }
+    // s for save search
+    if (e.key === 's' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setShowSaveSearchDialog(true);
+    }
+  }, []);
+  
+  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleKeyDown]);
   
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
