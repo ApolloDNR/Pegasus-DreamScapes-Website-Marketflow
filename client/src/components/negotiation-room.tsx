@@ -54,13 +54,26 @@ import {
 export type NegotiationType = "wholesale_offer" | "wholesale_jv" | "capital_raise" | "capital_invest";
 
 // Map NegotiationType to DealActionType for canonical form delegation
-function mapNegotiationTypeToDealAction(type: NegotiationType): DealActionType {
-  switch (type) {
-    case "wholesale_offer": return "assignment_offer";
-    case "wholesale_jv": return "wholesale_jv";
-    case "capital_raise": return "capital_raise";
-    case "capital_invest": return "capital_invest";
-    default: return "assignment_offer";
+// The isCounter flag determines whether to route to accept or counter forms
+function mapNegotiationTypeToDealAction(type: NegotiationType, isCounter: boolean = false): DealActionType {
+  if (isCounter) {
+    // Counter flow - use counter action types
+    switch (type) {
+      case "wholesale_offer": return "wholesale_counter";
+      case "wholesale_jv": return "wholesale_jv";  // JV has no separate counter form
+      case "capital_raise": return "capital_counter";  // Redirects to Offer Studio
+      case "capital_invest": return "capital_counter";
+      default: return "wholesale_counter";
+    }
+  } else {
+    // Accept flow - use accept action types
+    switch (type) {
+      case "wholesale_offer": return "wholesale_accept";
+      case "wholesale_jv": return "wholesale_jv";
+      case "capital_raise": return "capital_accept";
+      case "capital_invest": return "capital_accept";
+      default: return "wholesale_accept";
+    }
   }
 }
 
@@ -176,7 +189,7 @@ export function NegotiationRoom({
   const { profile, user } = useSupabaseAuth();
   const { toast } = useToast();
   const { openDealAction } = useDealAction();
-  const [activeTab, setActiveTab] = useState<"terms" | "ladder" | "chat">("terms");
+  // 3-column layout - all panels visible at once, no tabs needed
   const [message, setMessage] = useState("");
   const [proposedTerms, setProposedTerms] = useState<NegotiationTerms>({});
   const [messages, setMessages] = useState<NegotiationMessage[]>([]);
@@ -338,7 +351,6 @@ export function NegotiationRoom({
       };
       
       setMessages(prev => [...prev, counterMessage]);
-      setActiveTab("chat");
       
       toast({
         title: "Counter Offer Sent",
@@ -1155,318 +1167,175 @@ export function NegotiationRoom({
           </div>
         </DialogHeader>
 
+        {/* 3-Column Layout: Chat | Offer Ladder | Peggy AI */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel - Terms Form */}
-          <div className="w-[420px] border-r flex flex-col">
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "terms" | "ladder" | "chat")} className="flex flex-col h-full">
-              <TabsList className="mx-4 mt-4 grid grid-cols-3">
-                <TabsTrigger value="terms" className="gap-1">
-                  <FileText className="w-3 h-3" />
-                  Edit Terms
-                </TabsTrigger>
-                <TabsTrigger value="ladder" className="gap-1" data-testid="tab-offer-ladder">
-                  <History className="w-3 h-3" />
-                  Offer Ladder
+          
+          {/* Column 1: Chat Messages */}
+          <div className="w-[280px] border-r flex flex-col bg-muted/30">
+            <div className="p-3 border-b bg-background/80 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-sm">Chat</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">Message {counterpartyName}</p>
+            </div>
+            
+            <ScrollArea className="flex-1 p-3">
+              <div className="space-y-3">
+                {messages.map(renderMessage)}
+              </div>
+            </ScrollArea>
+            
+            <div className="border-t p-3 bg-background">
+              <div className="flex gap-2">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 h-9 text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  data-testid="input-chat-message"
+                />
+                <Button size="sm" onClick={handleSendMessage} data-testid="button-send-chat">
+                  <Send className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Column 2: Offer Ladder - Visual Negotiation History */}
+          <div className="w-[340px] border-r flex flex-col">
+            <div className="p-3 border-b bg-background/80 backdrop-blur">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold text-sm">Offer Ladder</h3>
                   {messages.filter(m => m.terms).length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">{messages.filter(m => m.terms).length}</Badge>
+                    <Badge variant="secondary" className="h-5 px-1.5 text-xs">{messages.filter(m => m.terms).length}</Badge>
                   )}
-                </TabsTrigger>
-                <TabsTrigger value="chat" className="gap-1">
-                  <MessageSquare className="w-3 h-3" />
-                  Chat
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="terms" className="flex-1 overflow-hidden m-0">
-                <ScrollArea className="h-full p-4">
-                  {renderTermsForm()}
-                  
-                  {/* Notes section - common to both */}
-                  <Card className="mt-6">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-primary" />
-                        Additional Notes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Textarea
-                        value={proposedTerms.notes || ""}
-                        onChange={(e) => setProposedTerms(prev => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Add any conditions, requests, or notes for the other party..."
-                        className="min-h-[80px] resize-none"
-                        data-testid="textarea-notes"
-                      />
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Terms Comparison Summary */}
-                  {termsDiff.length > 0 && (
-                    <Card className="mt-4 border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/10">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <BarChart3 className="w-4 h-4 text-amber-600" />
-                          Your Changes
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {termsDiff.map((diff, i) => (
-                            <div key={i} className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">{diff.field}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="line-through text-muted-foreground">{diff.original}</span>
-                                <ChevronRight className="w-3 h-3" />
-                                <span className="font-medium">{diff.proposed}</span>
-                                <Badge variant="outline" className="text-[10px]">{diff.change}</Badge>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  
-                  <div className="mt-4 space-y-2">
-                    <Button 
-                      className="w-full" 
-                      onClick={handleSendCounterOffer}
-                      disabled={isSubmitting || !validateTerms()}
-                      data-testid="button-send-counter"
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Send className="w-4 h-4 mr-2" />
-                      )}
-                      Send Counter Offer
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        onOpenChange(false);
-                        openDealAction(dealId, mapNegotiationTypeToDealAction(type), "counter");
-                      }}
-                      data-testid="button-open-form"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Open Full Form
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
-                      onClick={handleAcceptTerms}
-                      disabled={isSubmitting}
-                      data-testid="button-accept-and-close"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Accept Original Terms
-                    </Button>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              
-              <TabsContent value="ladder" className="flex-1 overflow-hidden m-0">
-                <ScrollArea className="h-full p-4">
-                  <div className="space-y-4">
-                    <Card className="border-primary/30 bg-primary/5">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <History className="w-4 h-4 text-primary" />
-                          Negotiation History
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          {isWholesaleType 
-                            ? "Track assignment fee offers and counter-offers" 
-                            : "Track investment terms and counter-proposals"}
-                        </CardDescription>
-                      </CardHeader>
-                    </Card>
-                    
-                    {messages.filter(m => m.terms).length === 0 ? (
-                      <div className="text-center py-8">
-                        <History className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-                        <p className="text-sm text-muted-foreground">No offers yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Submit an offer to start the negotiation ladder
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-                        
-                        {messages.filter(m => m.terms).map((msg, index) => {
-                          const isCurrentUser = msg.senderId === currentUserId;
-                          const isAccepted = msg.type === "accepted";
-                          
-                          return (
-                            <div key={msg.id} className="relative pl-10 pb-6 last:pb-0">
-                              <div className={`absolute left-2 w-4 h-4 rounded-full border-2 ${
-                                isAccepted 
-                                  ? "bg-green-500 border-green-500" 
-                                  : isCurrentUser 
-                                    ? "bg-primary border-primary" 
-                                    : "bg-background border-muted-foreground"
-                              }`}>
-                                {isAccepted && <CheckCircle2 className="w-3 h-3 text-white -ml-[1px] -mt-[1px]" />}
-                              </div>
-                              
-                              <Card className={`${isAccepted ? "border-green-500/50 bg-green-50 dark:bg-green-900/10" : ""}`}>
-                                <CardHeader className="pb-2 pt-3 px-3">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="h-6 w-6">
-                                        <AvatarImage src={msg.senderAvatar} />
-                                        <AvatarFallback className="text-xs">{msg.senderName[0]}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <span className="text-xs font-medium">{msg.senderName}</span>
-                                        <span className="text-[10px] text-muted-foreground ml-2">
-                                          {new Date(msg.timestamp).toLocaleString()}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <Badge variant={isAccepted ? "default" : "outline"} className={`text-[10px] ${isAccepted ? "bg-green-600" : ""}`}>
-                                      {isAccepted ? "Accepted" : msg.type === "offer" ? "Initial" : `Counter #${index + 1}`}
-                                    </Badge>
-                                  </div>
-                                </CardHeader>
-                                <CardContent className="pt-0 pb-3 px-3">
-                                  {type === "wholesale_offer" && msg.terms && (
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                      <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                        <span className="text-muted-foreground">Assignment Fee</span>
-                                        <span className="font-semibold">{formatCurrency(msg.terms.assignmentFee)}</span>
-                                      </div>
-                                      <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                        <span className="text-muted-foreground">Earnest Money</span>
-                                        <span className="font-semibold">{formatCurrency(msg.terms.earnestMoney)}</span>
-                                      </div>
-                                      {msg.terms.closingDate && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                          <span className="text-muted-foreground">Close Date</span>
-                                          <span className="font-semibold">{msg.terms.closingDate}</span>
-                                        </div>
-                                      )}
-                                      {msg.terms.inspectionPeriod && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                          <span className="text-muted-foreground">Inspection</span>
-                                          <span className="font-semibold">{msg.terms.inspectionPeriod} days</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  
-                                  {type === "wholesale_jv" && msg.terms && (
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                      <div className="flex justify-between p-2 bg-muted/50 rounded col-span-2">
-                                        <span className="text-muted-foreground">Assignment Split</span>
-                                        <span className="font-semibold">{msg.terms.assignmentSplitPercent}% / {100 - (msg.terms.assignmentSplitPercent || 50)}%</span>
-                                      </div>
-                                      {msg.terms.partnerRole && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded col-span-2">
-                                          <span className="text-muted-foreground">Role</span>
-                                          <span className="font-semibold">{msg.terms.partnerRole === "deal_bringer" ? "Deal Bringer" : "Buyer Bringer"}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  
-                                  {(type === "capital_invest" || type === "capital_raise") && msg.terms && (
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                      {msg.terms.investmentAmount && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                          <span className="text-muted-foreground">Investment</span>
-                                          <span className="font-semibold">{formatCurrency(msg.terms.investmentAmount)}</span>
-                                        </div>
-                                      )}
-                                      {msg.terms.expectedReturn && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                          <span className="text-muted-foreground">Return</span>
-                                          <span className="font-semibold">{msg.terms.expectedReturn}%</span>
-                                        </div>
-                                      )}
-                                      {msg.terms.profitSplit && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                          <span className="text-muted-foreground">Split</span>
-                                          <span className="font-semibold">{msg.terms.profitSplit}% / {100 - msg.terms.profitSplit}%</span>
-                                        </div>
-                                      )}
-                                      {msg.terms.termMonths && (
-                                        <div className="flex justify-between p-2 bg-muted/50 rounded">
-                                          <span className="text-muted-foreground">Term</span>
-                                          <span className="font-semibold">{msg.terms.termMonths} months</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  
-                                  {msg.message && (
-                                    <p className="text-xs text-muted-foreground mt-2 italic">"{msg.message}"</p>
-                                  )}
-                                </CardContent>
-                              </Card>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    
-                    <div className="pt-4 space-y-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => setActiveTab("terms")}
-                        data-testid="button-make-counter-from-ladder"
-                      >
-                        <ArrowLeftRight className="w-4 h-4 mr-2" />
-                        Make Counter Offer
-                      </Button>
-                    </div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              
-              <TabsContent value="chat" className="flex-1 overflow-hidden m-0 flex flex-col">
-                <ScrollArea className="flex-1 p-4">
-                  <div className="space-y-4">
-                    {messages.map(renderMessage)}
-                  </div>
-                </ScrollArea>
-                
-                <div className="border-t p-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      className="flex-1"
-                      onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                      data-testid="input-message"
-                    />
-                    <Button onClick={handleSendMessage} data-testid="button-send-message">
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex gap-2 mt-3">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => onOpenChange(false)}
-                      data-testid="button-exit-negotiation"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Exit
-                    </Button>
-                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isWholesaleType ? "Assignment fee negotiation history" : "Investment terms history"}
+              </p>
+            </div>
+            
+            <ScrollArea className="flex-1 p-3">
+              {messages.filter(m => m.terms).length === 0 ? (
+                <div className="text-center py-8">
+                  <History className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">No offers yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Submit an offer to start</p>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
+                  
+                  {messages.filter(m => m.terms).map((msg, index) => {
+                    const isCurrentUser = msg.senderId === currentUserId;
+                    const isAccepted = msg.type === "accepted";
+                    
+                    return (
+                      <div key={msg.id} className="relative pl-8 pb-4 last:pb-0">
+                        <div className={`absolute left-1.5 w-3.5 h-3.5 rounded-full border-2 ${
+                          isAccepted 
+                            ? "bg-green-500 border-green-500" 
+                            : isCurrentUser 
+                              ? "bg-primary border-primary" 
+                              : "bg-background border-muted-foreground"
+                        }`}>
+                          {isAccepted && <CheckCircle2 className="w-2.5 h-2.5 text-white -ml-[1px] -mt-[1px]" />}
+                        </div>
+                        
+                        <Card className={`text-xs ${isAccepted ? "border-green-500/50 bg-green-50 dark:bg-green-900/10" : ""}`}>
+                          <CardHeader className="pb-1.5 pt-2 px-2.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={msg.senderAvatar} />
+                                  <AvatarFallback className="text-[10px]">{msg.senderName[0]}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-[11px] font-medium">{msg.senderName}</span>
+                              </div>
+                              <Badge variant={isAccepted ? "default" : "outline"} className={`text-[9px] h-4 ${isAccepted ? "bg-green-600" : ""}`}>
+                                {isAccepted ? "Accepted" : msg.type === "offer" ? "Initial" : `v${index + 1}`}
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-0 pb-2 px-2.5">
+                            {type === "wholesale_offer" && msg.terms && (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <div className="flex justify-between p-1.5 bg-muted/50 rounded text-[10px]">
+                                  <span className="text-muted-foreground">Fee</span>
+                                  <span className="font-semibold">{formatCurrency(msg.terms.assignmentFee)}</span>
+                                </div>
+                                <div className="flex justify-between p-1.5 bg-muted/50 rounded text-[10px]">
+                                  <span className="text-muted-foreground">EMD</span>
+                                  <span className="font-semibold">{formatCurrency(msg.terms.earnestMoney)}</span>
+                                </div>
+                              </div>
+                            )}
+                            {type === "wholesale_jv" && msg.terms && (
+                              <div className="p-1.5 bg-muted/50 rounded text-[10px]">
+                                <span className="text-muted-foreground">Split: </span>
+                                <span className="font-semibold">{msg.terms.assignmentSplitPercent}% / {100 - (msg.terms.assignmentSplitPercent || 50)}%</span>
+                              </div>
+                            )}
+                            {(type === "capital_invest" || type === "capital_raise") && msg.terms && (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                {msg.terms.investmentAmount && (
+                                  <div className="flex justify-between p-1.5 bg-muted/50 rounded text-[10px]">
+                                    <span className="text-muted-foreground">Amount</span>
+                                    <span className="font-semibold">{formatCurrency(msg.terms.investmentAmount)}</span>
+                                  </div>
+                                )}
+                                {msg.terms.profitSplit && (
+                                  <div className="flex justify-between p-1.5 bg-muted/50 rounded text-[10px]">
+                                    <span className="text-muted-foreground">Split</span>
+                                    <span className="font-semibold">{msg.terms.profitSplit}%</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <p className="text-[10px] text-muted-foreground mt-1.5">
+                              {new Date(msg.timestamp).toLocaleString()}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+            
+            {/* Action Buttons */}
+            <div className="border-t p-3 space-y-2 bg-background">
+              <Button 
+                className="w-full h-9" 
+                onClick={() => {
+                  onOpenChange(false);
+                  openDealAction(dealId, mapNegotiationTypeToDealAction(type, true));
+                }}
+                data-testid="button-make-counter"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+                Counter Offer
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full h-9 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+                onClick={handleAcceptTerms}
+                disabled={isSubmitting}
+                data-testid="button-accept-terms"
+              >
+                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />}
+                Accept Terms
+              </Button>
+            </div>
           </div>
 
-          {/* Right Panel - Peggy AI Assistant */}
+          {/* Column 3: Peggy AI Assistant */}
           <div className="flex-1 flex flex-col bg-gradient-to-br from-primary/5 to-primary/10">
             <div className="p-4 border-b bg-background/80 backdrop-blur">
               <div className="flex items-center gap-3">

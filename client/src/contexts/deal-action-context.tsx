@@ -112,13 +112,14 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
     let actionType: DealActionType;
     
     if (dealType === "WHOLESALE_ASSIGNMENT") {
-      actionType = action === "JV" ? "wholesale_jv" : "assignment_offer";
+      actionType = action === "JV" ? "wholesale_jv" : "wholesale_accept";
     } else if (dealType === "CAPITAL_RAISE") {
-      actionType = action === "INVEST" ? "capital_invest" : "capital_raise";
+      // All capital actions route to capital_accept (counter goes to Offer Studio)
+      actionType = "capital_accept";
     } else if (dealType === "LISTING") {
-      actionType = "listing_inquiry";
+      actionType = "listing_request_info";
     } else {
-      actionType = "assignment_offer"; // fallback
+      actionType = "wholesale_accept"; // fallback
     }
     
     setState({
