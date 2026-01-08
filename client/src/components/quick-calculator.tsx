@@ -55,11 +55,13 @@ export function QuickCalcButton({ deal, className }: QuickCalcButtonProps) {
     const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
     const assignmentFee = deal.assignmentFee || 0;
 
-    const totalInvestment = purchase + repairs;
+    // Total investment includes purchase price, repairs, AND assignment fee
+    const totalInvestment = purchase + repairs + assignmentFee;
     const profit = arv - totalInvestment;
     const roi = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
     const margin = arv > 0 ? (profit / arv) * 100 : 0;
-    const rule70 = (arv * 0.7) - repairs;
+    // 70% rule max offer subtracts repairs and assignment fee
+    const rule70 = (arv * 0.7) - repairs - assignmentFee;
     const maxOffer = rule70;
     const dealScore = purchase <= maxOffer ? "good" : purchase <= maxOffer * 1.1 ? "fair" : "risky";
 
@@ -132,6 +134,12 @@ export function QuickCalcButton({ deal, className }: QuickCalcButtonProps) {
               <span className="text-muted-foreground">Repairs</span>
               <span className="font-medium">${calculations.repairs.toLocaleString()}</span>
             </div>
+            {calculations.assignmentFee > 0 && (
+              <div className="flex justify-between items-center py-1 border-b">
+                <span className="text-muted-foreground">Assignment Fee</span>
+                <span className="font-medium">${calculations.assignmentFee.toLocaleString()}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center py-1 border-b">
               <span className="text-muted-foreground">Total Investment</span>
               <span className="font-medium">${calculations.totalInvestment.toLocaleString()}</span>
@@ -466,7 +474,9 @@ export function InlineROIBadge({ deal }: { deal: DealNumbers }) {
   const purchase = deal.contractPrice || deal.askingPrice || 0;
   const arv = deal.arv || 0;
   const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
-  const totalInvestment = purchase + repairs;
+  const assignmentFee = deal.assignmentFee || 0;
+  // Total investment includes purchase price, repairs, AND assignment fee
+  const totalInvestment = purchase + repairs + assignmentFee;
   const profit = arv - totalInvestment;
   const roi = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
 
