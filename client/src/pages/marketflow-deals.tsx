@@ -28,6 +28,16 @@ import type { CapitalProject } from "@shared/schema";
 import { DealProgressTracker, ActivityTimeline } from "@/components/deal-progress-tracker";
 import { DealNotes, NotesIndicator } from "@/components/deal-notes";
 import { useCompareDeals, DealComparisonButton, CompareCheckbox, ComparisonModal } from "@/components/deal-comparison";
+import { BulkActionsBar, useBulkSelection, BulkSelectCheckbox } from "@/components/bulk-actions";
+import { ExportDialog, QuickExportButton } from "@/components/deal-export";
+import { DealMapView } from "@/components/deal-map-view";
+import { KeyboardShortcutsDialog, KeyboardShortcutHint } from "@/components/keyboard-shortcuts-dialog";
+import { useSavedSearches, SaveSearchDialog, SavedSearchesList } from "@/components/saved-searches";
+import { useWatchlistFolders, AddToFolderDialog, FolderSidebar } from "@/components/watchlist-folders";
+import { DueDiligenceProgress } from "@/components/due-diligence-checklist";
+import { TimelineProgress } from "@/components/deal-timeline";
+import { CommunicationSummary } from "@/components/communication-log";
+import { DocumentCount } from "@/components/document-attachments";
 import {
   Tooltip,
   TooltipContent,
@@ -81,7 +91,14 @@ import {
   BarChart3,
   TrendingDown,
   CircleDollarSign,
-  Columns
+  Columns,
+  Map,
+  Download,
+  Keyboard,
+  FolderPlus,
+  CheckSquare,
+  ClipboardList,
+  Folder
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -196,6 +213,51 @@ function DealsPage() {
     showComparison,
     setShowComparison
   } = useCompareDeals(3);
+  
+  // Feature dialog states
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showSaveSearchDialog, setShowSaveSearchDialog] = useState(false);
+  const [showMapView, setShowMapView] = useState(false);
+  const [addToFolderDeal, setAddToFolderDeal] = useState<WholesaleDeal | null>(null);
+  
+  // Feature hooks
+  const savedSearches = useSavedSearches();
+  const watchlistFolders = useWatchlistFolders();
+  
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      // ? key for help
+      if (e.key === '?' && e.shiftKey) {
+        e.preventDefault();
+        setShowKeyboardShortcuts(true);
+      }
+      // m for map view
+      if (e.key === 'm' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShowMapView(prev => !prev);
+      }
+      // e for export
+      if (e.key === 'e' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShowExportDialog(true);
+      }
+      // s for save search
+      if (e.key === 's' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShowSaveSearchDialog(true);
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
@@ -382,7 +444,110 @@ function DealsPage() {
               <SelectItem value="Commercial">Commercial</SelectItem>
             </SelectContent>
           </Select>
+          
+          <div className="flex items-center gap-1 border-l pl-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant={showMapView ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => setShowMapView(!showMapView)}
+                  data-testid="button-toggle-map"
+                >
+                  <Map className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Toggle Map View <KeyboardShortcutHint shortcut="M" /></p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowExportDialog(true)}
+                  data-testid="button-export"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Export Deals <KeyboardShortcutHint shortcut="E" /></p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowSaveSearchDialog(true)}
+                  data-testid="button-save-search"
+                >
+                  <Bookmark className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Save Search <KeyboardShortcutHint shortcut="S" /></p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowKeyboardShortcuts(true)}
+                  data-testid="button-keyboard-shortcuts"
+                >
+                  <Keyboard className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Keyboard Shortcuts <KeyboardShortcutHint shortcut="?" /></p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
+      )}
+      
+      {/* Map View - placeholder for future integration with Google Maps */}
+      {showMapView && dealCategory === "wholesale" && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Map className="w-5 h-5 text-primary" />
+              Deal Locations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <Map className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Map view shows {filteredDeals.length} deals</p>
+                <p className="text-xs mt-1">Locations across {new Set(filteredDeals.map(d => d.state)).size} states</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+              {filteredDeals.slice(0, 8).map(deal => (
+                <Button
+                  key={deal.id}
+                  variant="outline"
+                  size="sm"
+                  className="justify-start text-left h-auto py-2"
+                  onClick={() => openDealAction(deal.id, "assignment_offer")}
+                >
+                  <MapPin className="w-3 h-3 mr-1 shrink-0 text-primary" />
+                  <span className="truncate text-xs">
+                    {deal.city}, {deal.state}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {dealCategory === "wholesale" && (
@@ -499,6 +664,73 @@ function DealsPage() {
           />
         </>
       )}
+      
+      {/* Feature Dialogs */}
+      <KeyboardShortcutsDialog 
+        open={showKeyboardShortcuts} 
+        onClose={() => setShowKeyboardShortcuts(false)} 
+      />
+      
+      <ExportDialog 
+        open={showExportDialog} 
+        onClose={() => setShowExportDialog(false)} 
+        deals={filteredDeals.map(d => ({
+          id: d.id,
+          address: d.propertyAddress || d.address || '',
+          city: d.city || '',
+          state: d.state || '',
+          askingPrice: d.askingPrice || d.contractPrice || 0,
+          arv: d.arv || 0,
+          repairEstimate: d.repairEstimate || d.estimatedRepairs || 0,
+          propertyType: d.propertyType || '',
+          status: d.status || 'active',
+          matchScore: d.matchScore,
+        }))}
+        selectedCount={compareDeals.length}
+      />
+      
+      <SaveSearchDialog 
+        open={showSaveSearchDialog} 
+        onClose={() => setShowSaveSearchDialog(false)}
+        onSave={(name: string) => {
+          savedSearches.saveSearch(name, {
+            propertyType,
+            sortBy,
+            query: searchQuery,
+          });
+          toast({
+            title: "Search saved",
+            description: `"${name}" has been saved to your searches.`,
+          });
+          setShowSaveSearchDialog(false);
+        }}
+        currentFilters={{
+          propertyType,
+          sortBy,
+          query: searchQuery,
+        }}
+      />
+      
+      <AddToFolderDialog
+        open={!!addToFolderDeal}
+        onClose={() => setAddToFolderDeal(null)}
+        dealId={addToFolderDeal?.id || ''}
+        dealAddress={addToFolderDeal?.propertyAddress || addToFolderDeal?.address || ''}
+        folders={watchlistFolders.folders}
+        onAddToFolder={(folderId: string) => {
+          if (addToFolderDeal) {
+            watchlistFolders.addDealToFolder(folderId, addToFolderDeal.id);
+            toast({
+              title: "Added to folder",
+              description: "Deal added to your watchlist folder.",
+            });
+          }
+          setAddToFolderDeal(null);
+        }}
+        onCreateFolder={() => {
+          watchlistFolders.createFolder("New Folder", "#3B82F6");
+        }}
+      />
     </div>
   );
 }
