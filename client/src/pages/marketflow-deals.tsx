@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
@@ -23,8 +23,21 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { sampleWholesaleDeals } from "@/lib/sample-data";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useSpring } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
+import { DealProgressTracker, ActivityTimeline } from "@/components/deal-progress-tracker";
+import { DealNotes, NotesIndicator } from "@/components/deal-notes";
+import { useCompareDeals, DealComparisonButton, CompareCheckbox, ComparisonModal } from "@/components/deal-comparison";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Search,
   Filter,
@@ -56,7 +69,19 @@ import {
   Users,
   FileText,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Share2,
+  Calculator,
+  Copy,
+  Mail,
+  StickyNote,
+  Info,
+  Zap,
+  PieChart,
+  BarChart3,
+  TrendingDown,
+  CircleDollarSign,
+  Columns
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -111,11 +136,67 @@ export default function MarketflowDeals() {
   );
 }
 
+// Filter Persistence Hook
+function useFilterPersistence() {
+  const STORAGE_KEY = "marketflow_filters";
+  
+  const getStoredFilters = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+  
+  const saveFilters = useCallback((filters: {
+    dealCategory: string;
+    viewMode: string;
+    propertyType: string;
+    sortBy?: string;
+  }) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // Silently fail if localStorage unavailable
+    }
+  }, []);
+  
+  return { getStoredFilters, saveFilters };
+}
+
 function DealsPage() {
-  const [dealCategory, setDealCategory] = useState<"wholesale" | "capital" | "listings">("wholesale");
-  const [viewMode, setViewMode] = useState<"grid" | "swipe">("grid");
+  const { getStoredFilters, saveFilters } = useFilterPersistence();
+  const storedFilters = useMemo(() => getStoredFilters(), [getStoredFilters]);
+  
+  const [dealCategory, setDealCategory] = useState<"wholesale" | "capital" | "listings">(
+    storedFilters?.dealCategory || "wholesale"
+  );
+  const [viewMode, setViewMode] = useState<"grid" | "swipe">(
+    storedFilters?.viewMode || "grid"
+  );
   const [searchQuery, setSearchQuery] = useState("");
-  const [propertyType, setPropertyType] = useState<string>("all");
+  const [propertyType, setPropertyType] = useState<string>(
+    storedFilters?.propertyType || "all"
+  );
+  const [sortBy, setSortBy] = useState<string>(storedFilters?.sortBy || "newest");
+  
+  // Save filters whenever they change
+  useEffect(() => {
+    saveFilters({ dealCategory, viewMode, propertyType, sortBy });
+  }, [dealCategory, viewMode, propertyType, sortBy, saveFilters]);
+  
+  // Comparison mode state
+  const { 
+    selectedDeals: compareDeals, 
+    toggleDeal: toggleCompare, 
+    isSelected: isCompareSelected, 
+    clearSelection: clearCompare, 
+    canAddMore: canAddMoreCompare,
+    showComparison,
+    setShowComparison
+  } = useCompareDeals(3);
+  
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
@@ -190,6 +271,9 @@ function DealsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Progress Tracker - shows pipeline status for authenticated users */}
+      <DealProgressTracker />
+
       <ScrollReveal>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div>
@@ -318,6 +402,9 @@ function DealsPage() {
             isSaving={isSaving}
             showInvest={isDreamscaper || isInvestor || isAdmin}
             showJVRequest={isWholesaler || isAdmin}
+            isCompareSelected={isCompareSelected}
+            toggleCompare={toggleCompare}
+            canAddMoreCompare={canAddMoreCompare}
           />
         ) : (
           <SwipeView 
@@ -384,6 +471,34 @@ function DealsPage() {
           onSave={(id) => toggleSaveItem('listing', String(id))}
         />
       )}
+      
+      {/* Comparison floating button and modal */}
+      {dealCategory === "wholesale" && viewMode === "grid" && (
+        <>
+          <DealComparisonButton
+            selectedDeals={compareDeals}
+            onToggle={() => {}}
+            onClear={clearCompare}
+            onCompare={() => setShowComparison(true)}
+          />
+          <ComparisonModal
+            deals={compareDeals}
+            open={showComparison}
+            onClose={() => setShowComparison(false)}
+            onAction={(dealId, action) => {
+              const deal = compareDeals.find(d => d.id === dealId);
+              if (deal) {
+                if (action === "accept") {
+                  openDealAction(deal.id, "assignment_offer");
+                } else {
+                  openDealAction(deal.id, "assignment_offer", "counter");
+                }
+              }
+              setShowComparison(false);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -399,21 +514,47 @@ interface GridViewProps {
   isSaving: boolean;
   showInvest: boolean;
   showJVRequest: boolean;
+  isCompareSelected?: (dealId: string) => boolean;
+  toggleCompare?: (deal: WholesaleDeal) => void;
+  canAddMoreCompare?: boolean;
 }
 
-function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, showJVRequest }: GridViewProps) {
+function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, showJVRequest, isCompareSelected, toggleCompare, canAddMoreCompare }: GridViewProps) {
   const [, setLocation] = useLocation();
   
   if (isLoading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i}>
-            <Skeleton className="h-48 w-full rounded-t-lg" />
-            <CardContent className="p-4">
-              <Skeleton className="h-5 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2 mb-4" />
-              <Skeleton className="h-4 w-full" />
+          <Card key={i} className="overflow-hidden">
+            {/* Image area with badges skeleton */}
+            <div className="relative h-40 bg-gradient-to-br from-muted to-muted/50">
+              <div className="absolute top-2 left-2 flex gap-1">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <div className="absolute top-2 right-2">
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+              <div className="absolute bottom-2 right-2">
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            </div>
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <Skeleton className="h-5 w-3/4 mb-1.5" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Skeleton className="h-14 rounded" />
+                <Skeleton className="h-14 rounded" />
+                <Skeleton className="h-14 rounded" />
+              </div>
+              <Skeleton className="h-9 w-full rounded" />
+              <div className="grid grid-cols-2 gap-2">
+                <Skeleton className="h-9 rounded" />
+                <Skeleton className="h-9 rounded" />
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -449,6 +590,9 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
               isSaving={isSaving}
               showInvest={showInvest}
               showJVRequest={showJVRequest}
+              isCompareSelected={isCompareSelected?.(deal.id)}
+              onToggleCompare={() => toggleCompare?.(deal)}
+              canAddMoreCompare={canAddMoreCompare}
             />
           </HoverLift>
         </StaggerItem>
@@ -471,42 +615,78 @@ interface SwipeViewProps {
 function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, showInvest, showJVRequest }: SwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragIntent, setDragIntent] = useState<"like" | "pass" | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   const x = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 400, damping: 30 });
   const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
-  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-  const passOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const likeOpacity = useTransform(x, [0, 80, 150], [0, 0.5, 1]);
+  const passOpacity = useTransform(x, [-150, -80, 0], [1, 0.5, 0]);
+  
+  const scale = useTransform(x, [-200, -100, 0, 100, 200], [0.95, 1, 1, 1, 0.95]);
+  const borderGlow = useTransform(x, [-150, 0, 150], [
+    "0 0 30px rgba(239, 68, 68, 0.4)",
+    "0 0 0px rgba(0, 0, 0, 0)",
+    "0 0 30px rgba(34, 197, 94, 0.4)"
+  ]);
   
   const currentDeal = deals[currentIndex];
   const hasMore = currentIndex < deals.length - 1;
 
   const handleSwipe = (direction: "left" | "right") => {
     setExitDirection(direction);
+    setDragIntent(null);
     
     if (direction === "right" && currentDeal) {
       onSave(currentDeal.id);
       toast({
         title: "Deal Saved!",
         description: "Added to your saved deals.",
+        className: "bg-green-50 dark:bg-green-900/30 border-green-200"
+      });
+    } else if (direction === "left") {
+      toast({
+        title: "Passed",
+        description: "You can always find it later.",
+        variant: "default"
       });
     }
     
     setTimeout(() => {
       if (hasMore) {
         setCurrentIndex(prev => prev + 1);
+      } else {
+        setCurrentIndex(deals.length);
       }
       setExitDirection(null);
-    }, 300);
+      x.set(0);
+    }, 250);
+  };
+
+  const handleDrag = (event: any, info: PanInfo) => {
+    if (info.offset.x > 60) {
+      setDragIntent("like");
+    } else if (info.offset.x < -60) {
+      setDragIntent("pass");
+    } else {
+      setDragIntent(null);
+    }
   };
 
   const handleDragEnd = (event: any, info: PanInfo) => {
-    const threshold = 120;
-    if (info.offset.x > threshold) {
+    setIsDragging(false);
+    const threshold = 100;
+    const velocity = info.velocity.x;
+    
+    if (info.offset.x > threshold || velocity > 500) {
       handleSwipe("right");
-    } else if (info.offset.x < -threshold) {
+    } else if (info.offset.x < -threshold || velocity < -500) {
       handleSwipe("left");
+    } else {
+      setDragIntent(null);
     }
   };
 
@@ -564,26 +744,43 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
       </div>
 
       <div className="relative h-[500px]">
+        {/* Intent indicators on sides */}
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 z-10 transition-all duration-200 ${dragIntent === "pass" ? "opacity-100 scale-110" : "opacity-30 scale-100"}`}>
+          <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500">
+            <X className="w-8 h-8 text-red-500" />
+          </div>
+        </div>
+        <div className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-all duration-200 ${dragIntent === "like" ? "opacity-100 scale-110" : "opacity-30 scale-100"}`}>
+          <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center border-2 border-green-500">
+            <Heart className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+        
         <AnimatePresence mode="wait">
           <motion.div
             key={currentDeal.id}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.15}
+            onDragStart={() => setIsDragging(true)}
+            onDrag={handleDrag}
             onDragEnd={handleDragEnd}
-            style={{ x, rotate }}
-            initial={{ scale: 0.95, opacity: 0 }}
+            style={{ x, rotate, scale, boxShadow: borderGlow }}
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ 
-              scale: 1, 
-              opacity: 1,
-              x: exitDirection === "left" ? -300 : exitDirection === "right" ? 300 : 0
+              scale: exitDirection ? 0.95 : 1, 
+              opacity: exitDirection ? 0 : 1,
+              y: 0,
+              x: exitDirection === "left" ? -400 : exitDirection === "right" ? 400 : 0
             }}
             exit={{ 
-              x: exitDirection === "left" ? -300 : 300,
+              x: exitDirection === "left" ? -400 : 400,
               opacity: 0,
-              transition: { duration: 0.2 }
+              scale: 0.9,
+              transition: { duration: 0.25, ease: "easeOut" }
             }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+            transition={{ type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
+            className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-xl"
           >
             <SwipeCard 
               deal={currentDeal}
@@ -592,6 +789,8 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
               onView={() => setLocation(`/marketflow/deals/${currentDeal.id}`)}
               onAcceptTerms={() => onAcceptTerms(currentDeal)}
               onCounterTerms={() => onCounterTerms(currentDeal)}
+              isDragging={isDragging}
+              dragIntent={dragIntent}
             />
           </motion.div>
         </AnimatePresence>
@@ -658,9 +857,11 @@ interface SwipeCardProps {
   onView: () => void;
   onAcceptTerms: () => void;
   onCounterTerms: () => void;
+  isDragging?: boolean;
+  dragIntent?: "like" | "pass" | null;
 }
 
-function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms }: SwipeCardProps) {
+function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isDragging, dragIntent }: SwipeCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
   const askPrice = deal.askingPrice || deal.contractPrice || 0;
@@ -670,8 +871,14 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
   const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : '0';
   const matchScore = deal.matchScore || Math.floor(Math.random() * 40) + 60;
 
+  const cardBorderClass = dragIntent === "like" 
+    ? "ring-4 ring-green-500/50" 
+    : dragIntent === "pass" 
+      ? "ring-4 ring-red-500/50" 
+      : "";
+
   return (
-    <Card className="h-full overflow-hidden shadow-xl">
+    <Card className={`h-full overflow-hidden shadow-xl transition-all duration-150 ${cardBorderClass}`}>
       <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50">
         {deal.photos?.[0] || deal.images?.[0] ? (
           <img 
@@ -782,9 +989,17 @@ interface DealCardProps {
   isSaving: boolean;
   showInvest: boolean;
   showJVRequest: boolean;
+  isCompareSelected?: boolean;
+  onToggleCompare?: () => void;
+  canAddMoreCompare?: boolean;
 }
 
-function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, showJVRequest }: DealCardProps) {
+function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, showJVRequest, isCompareSelected, onToggleCompare, canAddMoreCompare }: DealCardProps) {
+  const { toast } = useToast();
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [customOffer, setCustomOffer] = useState("");
+  const [customRepairs, setCustomRepairs] = useState("");
+  
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
   const askPrice = deal.askingPrice || deal.contractPrice || 0;
@@ -792,9 +1007,122 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
   const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
   const profit = arv - askPrice - repairs;
   const matchScore = deal.matchScore || Math.floor(Math.random() * 40) + 60;
+  const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : "0";
+
+  // Calculator values
+  const calcOffer = customOffer ? parseFloat(customOffer) : askPrice;
+  const calcRepairs = customRepairs ? parseFloat(customRepairs) : repairs;
+  const calcProfit = arv - calcOffer - calcRepairs;
+  const calcROI = calcOffer > 0 ? ((calcProfit / calcOffer) * 100).toFixed(1) : "0";
+  const cashOnCash = calcOffer > 0 ? ((calcProfit / (calcOffer * 0.25)) * 100).toFixed(1) : "0"; // 25% down
+
+  // Match score breakdown
+  const getMatchBreakdown = (score: number) => {
+    const propertyMatch = Math.min(100, Math.floor(score * 0.3 + Math.random() * 20));
+    const locationMatch = Math.min(100, Math.floor(score * 0.25 + Math.random() * 15));
+    const priceMatch = Math.min(100, Math.floor(score * 0.25 + Math.random() * 20));
+    const strategyMatch = Math.min(100, Math.floor(score * 0.2 + Math.random() * 15));
+    return { propertyMatch, locationMatch, priceMatch, strategyMatch };
+  };
+  const matchBreakdown = getMatchBreakdown(matchScore);
+
+  const handleShare = async (type: "copy" | "email") => {
+    const dealUrl = `${window.location.origin}/marketflow/deals/${deal.id}`;
+    if (type === "copy") {
+      await navigator.clipboard.writeText(dealUrl);
+      toast({ title: "Link copied!", description: "Deal link copied to clipboard" });
+    } else {
+      const subject = encodeURIComponent(`Check out this deal: ${address}`);
+      const body = encodeURIComponent(`I found this investment opportunity:\n\n${address}\n${cityState}\nAsking: $${askPrice.toLocaleString()}\nARV: $${arv.toLocaleString()}\nProfit: $${profit.toLocaleString()}\n\nView details: ${dealUrl}`);
+      window.open(`mailto:?subject=${subject}&body=${body}`);
+    }
+  };
 
   return (
-    <Card className="overflow-hidden group">
+    <Card className="overflow-hidden group relative">
+      {/* Quick Actions Bar - appears on hover */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
+        <div className="flex gap-2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-2 shadow-lg border">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onSave(); }} data-testid={`quick-save-${deal.id}`}>
+                {isSaved ? <BookmarkCheck className="w-4 h-4 text-primary" /> : <Bookmark className="w-4 h-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>{isSaved ? "Saved" : "Save Deal"}</p></TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`}>
+                <Calculator className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>Deal Calculator</p></TooltipContent>
+          </Tooltip>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => e.stopPropagation()} data-testid={`quick-share-${deal.id}`}>
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2" align="center">
+              <div className="space-y-1">
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => handleShare("copy")}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Link
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => handleShare("email")}>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email Deal
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          {onToggleCompare && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant={isCompareSelected ? "default" : "ghost"} 
+                  className="h-8 w-8 rounded-full" 
+                  onClick={(e) => { e.stopPropagation(); onToggleCompare(); }}
+                  disabled={!isCompareSelected && !canAddMoreCompare}
+                  data-testid={`quick-compare-${deal.id}`}
+                >
+                  <Columns className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isCompareSelected ? "Remove from Compare" : canAddMoreCompare ? "Add to Compare" : "Compare List Full (3)"}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          
+          {showJVRequest && deal.jvAllowed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAction("jv_request"); }} data-testid={`quick-jv-${deal.id}`}>
+                  <Handshake className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>JV Request</p></TooltipContent>
+            </Tooltip>
+          )}
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="default" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAcceptTerms(); }} data-testid={`quick-accept-${deal.id}`}>
+                <Zap className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>Quick Offer</p></TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+
       <div className="relative h-40 bg-gradient-to-br from-muted to-muted/50">
         {deal.photos?.[0] || deal.images?.[0] ? (
           <img 
@@ -830,8 +1158,53 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           )}
         </div>
 
+        {/* Match Score with Explanation Tooltip */}
         <div className="absolute top-2 right-2">
-          <MatchScoreBadge score={matchScore} size="sm" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="cursor-help">
+                <MatchScoreBadge score={matchScore} size="sm" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="w-48 p-3" side="left">
+              <div className="space-y-2">
+                <p className="font-semibold text-xs flex items-center gap-1">
+                  <Target className="w-3 h-3" />
+                  Match Breakdown
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Property Type</span>
+                    <div className="flex items-center gap-1">
+                      <Progress value={matchBreakdown.propertyMatch} className="w-12 h-1.5" />
+                      <span className="w-8 text-right">{matchBreakdown.propertyMatch}%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Location</span>
+                    <div className="flex items-center gap-1">
+                      <Progress value={matchBreakdown.locationMatch} className="w-12 h-1.5" />
+                      <span className="w-8 text-right">{matchBreakdown.locationMatch}%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Price Range</span>
+                    <div className="flex items-center gap-1">
+                      <Progress value={matchBreakdown.priceMatch} className="w-12 h-1.5" />
+                      <span className="w-8 text-right">{matchBreakdown.priceMatch}%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Strategy Fit</span>
+                    <div className="flex items-center gap-1">
+                      <Progress value={matchBreakdown.strategyMatch} className="w-12 h-1.5" />
+                      <span className="w-8 text-right">{matchBreakdown.strategyMatch}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <Button
@@ -858,6 +1231,70 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             {cityState || 'Location TBD'}
           </p>
         </div>
+
+        {/* Inline Calculator Widget */}
+        <AnimatePresence>
+          {showCalculator && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mb-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium flex items-center gap-1">
+                    <Calculator className="w-3 h-3" />
+                    Deal Calculator
+                  </span>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setShowCalculator(false)}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Your Offer</label>
+                    <Input 
+                      type="number" 
+                      placeholder={askPrice.toString()} 
+                      value={customOffer}
+                      onChange={(e) => setCustomOffer(e.target.value)}
+                      className="h-7 text-xs"
+                      data-testid={`input-calc-offer-${deal.id}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Est. Repairs</label>
+                    <Input 
+                      type="number" 
+                      placeholder={repairs.toString()} 
+                      value={customRepairs}
+                      onChange={(e) => setCustomRepairs(e.target.value)}
+                      className="h-7 text-xs"
+                      data-testid={`input-calc-repairs-${deal.id}`}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1 text-center">
+                  <div className="bg-background rounded p-1.5">
+                    <p className="text-[9px] text-muted-foreground">Profit</p>
+                    <p className={`font-bold text-xs ${calcProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ${(calcProfit / 1000).toFixed(0)}K
+                    </p>
+                  </div>
+                  <div className="bg-background rounded p-1.5">
+                    <p className="text-[9px] text-muted-foreground">ROI</p>
+                    <p className="font-bold text-xs">{calcROI}%</p>
+                  </div>
+                  <div className="bg-background rounded p-1.5">
+                    <p className="text-[9px] text-muted-foreground">CoC (25%)</p>
+                    <p className="font-bold text-xs text-primary">{cashOnCash}%</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
           <div className="bg-muted/50 rounded p-2">
