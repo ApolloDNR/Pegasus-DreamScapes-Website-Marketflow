@@ -61,6 +61,18 @@ The platform is migrating from Replit Auth + PostgreSQL/Drizzle to Supabase (Aut
   - Column 2: **Offer Ladder** - Visual versioned history of all offers/counters with timeline
   - Column 3: **Peggy AI Advisor** - AI-powered negotiation guidance with quick questions
   - Counter/Accept buttons delegate to canonical forms via `mapNegotiationTypeToDealAction(type, isCounter)`
+- **Phase 9: Peggy AI Dock Enhancement** - Floating, draggable AI assistant dock:
+  - New `PeggyDock` component replaces `PeggyChatBubble` with enhanced UX
+  - Framer Motion drag functionality with localStorage position persistence
+  - Expandable chat panel with smooth animations and online indicator
+  - Context-aware quick prompts based on current page/route
+  - Page detection for MarketFlow routes, Offer Studio, negotiations, calculators
+  - Feedback buttons (helpful/not helpful) for telemetry
+  - Visual polish with amber gradient styling and sparkle branding
+- **Phase 9b: MarketFlow Branding** - Navigation and copy updates:
+  - "Marketplace" text renamed to "MarketFlow" across navigation
+  - Desktop and mobile nav links updated to `/marketflow`
+  - Legacy dialog files removed: `wholesale-deal-action-dialog.tsx`, `investment-offer-dialog.tsx`, `deal-negotiation-dialog.tsx`, `capital-raise-offer-dialog.tsx`, `offer-form-dialog.tsx`
 
 ### Pending Steps
 - **Supabase Table Creation** - Run `supabase-schema.sql` in Supabase SQL Editor (see `SUPABASE_SETUP.md`)
