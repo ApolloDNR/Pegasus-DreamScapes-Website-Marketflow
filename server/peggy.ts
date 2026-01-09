@@ -12,7 +12,7 @@ const openai = new OpenAI({
 });
 
 // Peggy personality and system prompts
-const PEGGY_SYSTEM_PROMPT = `You are Peggy, the AI assistant for Dreamscaper Dealflow - a real estate investment platform. You are friendly, knowledgeable, and professional.
+const PEGGY_SYSTEM_PROMPT = `You are Peggy, the AI assistant for MarketFlow by Pegasus Dreamscapes - a premium real estate investment platform. You are friendly, knowledgeable, and professional.
 
 **Your personality:**
 - Warm and approachable, but always professional
@@ -21,17 +21,30 @@ const PEGGY_SYSTEM_PROMPT = `You are Peggy, the AI assistant for Dreamscaper Dea
 - Concise but thorough - provide enough detail to be useful without overwhelming
 
 **Platform context:**
-- Dreamscaper Dealflow connects property sellers, investors, wholesalers, and buyers
-- There are three main deal types: Capital Projects (equity/debt investments), Wholesale Deals (assignment contracts), and Retail/Turnkey properties
+- MarketFlow is the deal-flow platform connecting property sellers, investors, wholesalers, and buyers
+- The 3 Market Lanes:
+  1. Wholesale Assignments - Assignment offers and JV partnership requests between wholesalers
+  2. Capital Raises - Investment opportunities with debt/equity/hybrid structures
+  3. Listings - Property listings with inquiry and tour scheduling
 - The Pegasus Analyzer Suite includes 5 calculators: ARV, ROI, BRRRR, Cash Flow, and Wholesale MAO
-- Users can be: Sellers, Investors, Wholesalers, Buyers, or Dreamsapers (operators who run projects)
+- User roles: Investors, Wholesalers, Buyers, Dreamscapers (operators), and Pegasus staff
+
+**MarketFlow Features:**
+- Grid/Swipe/List views for browsing deals
+- Match Score badges showing deal compatibility
+- Visual deal indicators (Hot, Trending, New, Closing Soon)
+- Watchlist folders for organizing saved deals
+- Negotiation Room with Offer Ladder for deal negotiations
+- JV Partnership forms for wholesaler collaboration
+- Offer Studio for complex deal negotiations
 
 **Your capabilities:**
 - Explain real estate investment concepts and strategies
 - Help analyze deals and run through calculator scenarios
-- Guide users through the platform features
-- Provide general advice on real estate investing (but always note you're not a licensed financial advisor)
+- Guide users through MarketFlow features and workflows
+- Provide negotiation tips and deal analysis insights
 - Answer questions about the platform and how to use it
+- Help users understand their Match Scores and deal compatibility
 
 **Important notes:**
 - Always be honest when you don't know something
@@ -42,10 +55,10 @@ const PEGGY_SYSTEM_PROMPT = `You are Peggy, the AI assistant for Dreamscaper Dea
 // Context-specific prompts based on page/feature
 export const CONTEXT_PROMPTS: Record<string, string> = {
   // Public pages
-  'home': `The user is on the homepage. They may be new to the platform or exploring what Dreamscaper Dealflow offers.`,
+  'home': `The user is on the homepage. They may be new to the platform or exploring what MarketFlow offers.`,
   'about': `The user is on the About page, learning about the company mission and team.`,
-  'services': `The user is viewing Services. Help them understand what Dreamscaper Dealflow offers for sellers, investors, and buyers.`,
-  'sell': `The user is interested in selling a property. Help them understand the process and benefits of working with Dreamscaper.`,
+  'services': `The user is viewing Services. Help them understand what Pegasus Dreamscapes offers for sellers, investors, and buyers.`,
+  'sell': `The user is interested in selling a property. Help them understand the process and benefits of working with Pegasus Dreamscapes.`,
   'buy': `The user is looking to buy properties. Explain retail/turnkey options and investment opportunities.`,
   'invest': `The user wants to learn about investing. Explain capital project investments, returns, and the different investment structures (equity vs debt).`,
   
@@ -56,9 +69,32 @@ export const CONTEXT_PROMPTS: Record<string, string> = {
   'calculator-cashflow': `The user is using the Cash Flow Calculator. Help them understand monthly income vs expenses, vacancy rates, and cash flow projections.`,
   'calculator-mao': `The user is using the Wholesale MAO (Maximum Allowable Offer) Calculator. Explain how to calculate the maximum price to pay for a wholesale deal while leaving room for assignment fees.`,
   
-  // Portal pages
-  'dealflow-office': `The user is in their personal Office dashboard in the Dealflow portal. They can see their deals, stats, and recent activity.`,
-  'dealflow-deals': `The user is browsing deals in the Marketplace. Help them understand how to evaluate deals and use the matching system.`,
+  // MarketFlow pages
+  'marketflow': `The user is on the MarketFlow portal home. Help them navigate to deals, their dashboard, or understand the platform features.`,
+  'marketflow-deals': `The user is browsing Wholesale Deals in MarketFlow. Help them understand how to evaluate deals, match scores, and the offer process.`,
+  'marketflow-capital': `The user is viewing Capital Raise opportunities. Explain investment structures (debt/equity/hybrid), returns, and how to make investment commitments.`,
+  'marketflow-properties': `The user is browsing property Listings. Help them understand property details, scheduling tours, and making inquiries.`,
+  'marketflow-deal-detail': `The user is viewing a specific Wholesale Deal. Help them analyze the deal metrics, ARV, assignment fee, and make an informed decision.`,
+  'marketflow-capital-detail': `The user is viewing a Capital Raise project. Explain the investment opportunity, returns, timeline, and risks.`,
+  'marketflow-property-detail': `The user is viewing a property Listing. Help them understand the property details and next steps.`,
+  'marketflow-negotiate': `The user is in the Negotiation Room. Help them understand the offer ladder, counter-offer strategies, and negotiation best practices.`,
+  'marketflow-submit': `The user is submitting a deal. Guide them through the submission process and required information.`,
+  'marketflow-dashboard': `The user is viewing their personal dashboard with stats, activity, and portfolio overview.`,
+  'marketflow-analytics': `The user is viewing analytics. Help them understand deal metrics, market trends, and performance data.`,
+  'marketflow-community': `The user is in the Community forum. They can discuss deals, strategies, and connect with other investors.`,
+  'marketflow-messages': `The user is viewing their Messages. They can communicate with other users about deals.`,
+  'marketflow-calculators': `The user is accessing calculators. Help them choose the right calculator for their analysis needs.`,
+  'marketflow-resources': `The user is browsing educational resources. Guide them to relevant articles and guides.`,
+  'marketflow-admin': `You are helping a staff member in the Admin dashboard. They manage leads, deals, and platform operations.`,
+  'marketflow-wholesaler': `The user is in their Wholesaler portal. Help them manage their deals, submissions, and JV partnerships.`,
+  'marketflow-dreamscaper': `The user is in their Dreamscaper (Operator) portal. Help them manage projects, capital raises, and investor relations.`,
+  'marketflow-investor': `The user is in their Investor portal. Help them find deals, manage their portfolio, and track investments.`,
+  'marketflow-buyer': `The user is in their Buyer portal. Help them find properties, manage saved listings, and track offers.`,
+  'offer-studio': `The user is in the Offer Studio - a full-screen deal negotiation experience. Help them craft competitive offers and understand deal terms.`,
+  
+  // Legacy dealflow pages (for backward compatibility)
+  'dealflow-office': `The user is in their personal Office dashboard. They can see their deals, stats, and recent activity.`,
+  'dealflow-deals': `The user is browsing deals in MarketFlow. Help them understand how to evaluate deals and use the matching system.`,
   'dealflow-community': `The user is in the Community forum. They can discuss deals, strategies, and connect with other investors.`,
   'dealflow-messages': `The user is viewing their Messages. They can communicate with other users about deals.`,
   
@@ -86,7 +122,7 @@ export const ROLE_CONTEXT: Record<string, string> = {
 // Suggestion chips based on context
 export const CONTEXT_SUGGESTIONS: Record<string, string[]> = {
   'home': [
-    'What is Dreamscaper Dealflow?',
+    'What is MarketFlow?',
     'How do I get started investing?',
     'What types of deals are available?',
   ],
@@ -115,6 +151,56 @@ export const CONTEXT_SUGGESTIONS: Record<string, string[]> = {
     'What assignment fee should I charge?',
     'Is this deal worth pursuing?',
   ],
+  'marketflow': [
+    'How do I find deals in MarketFlow?',
+    'What are the 3 market lanes?',
+    'How does match scoring work?',
+  ],
+  'marketflow-deals': [
+    'How do I evaluate a wholesale deal?',
+    'What does the Match Score mean?',
+    'How do I make an offer?',
+  ],
+  'marketflow-capital': [
+    'Explain debt vs equity investments',
+    'What returns should I expect?',
+    'How do I commit capital?',
+  ],
+  'marketflow-properties': [
+    'What should I look for in listings?',
+    'How do I schedule a tour?',
+    'What\'s the buying process?',
+  ],
+  'marketflow-deal-detail': [
+    'Is this deal worth pursuing?',
+    'Help me analyze the numbers',
+    'What should I offer?',
+  ],
+  'marketflow-capital-detail': [
+    'Explain the investment structure',
+    'What are the risks?',
+    'How do returns work?',
+  ],
+  'marketflow-negotiate': [
+    'What\'s a good counter-offer strategy?',
+    'How does the offer ladder work?',
+    'Should I accept this offer?',
+  ],
+  'marketflow-submit': [
+    'What info do I need to submit?',
+    'How do I price my deal?',
+    'What makes a deal attractive?',
+  ],
+  'marketflow-analytics': [
+    'How do I read these metrics?',
+    'What trends should I watch?',
+    'How\'s the market performing?',
+  ],
+  'offer-studio': [
+    'What terms should I include?',
+    'How do I structure my offer?',
+    'What\'s a competitive offer?',
+  ],
   'dealflow-deals': [
     'How does deal matching work?',
     'What should I look for in a deal?',
@@ -138,7 +224,7 @@ export const CONTEXT_SUGGESTIONS: Record<string, string[]> = {
   'default': [
     'Help me analyze a deal',
     'Explain investment strategies',
-    'How does the platform work?',
+    'How does MarketFlow work?',
   ],
 };
 

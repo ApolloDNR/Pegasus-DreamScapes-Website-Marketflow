@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { PeggyProvider } from "@/contexts/peggy-context";
-import { PeggyChatBubble } from "@/components/peggy-chat";
+import { PeggyDock } from "@/components/peggy-dock";
 import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
 import { DealActionProvider } from "@/contexts/deal-action-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
@@ -199,7 +199,7 @@ function App() {
                 </main>
                 <Footer />
               </div>
-              <PeggyChatBubble />
+              <PeggyDock />
               <Toaster />
             </PeggyProvider>
           </DealActionProvider>

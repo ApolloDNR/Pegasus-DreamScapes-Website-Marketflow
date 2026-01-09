@@ -47,6 +47,31 @@ function getPageFromPath(pathname: string): string {
     return 'calculator';
   }
   
+  if (path.includes('/marketflow')) {
+    if (path.includes('/admin')) return 'marketflow-admin';
+    if (path.includes('/wholesaler')) return 'marketflow-wholesaler';
+    if (path.includes('/dreamscaper')) return 'marketflow-dreamscaper';
+    if (path.includes('/investor')) return 'marketflow-investor';
+    if (path.includes('/buyer')) return 'marketflow-buyer';
+    if (path.includes('/deals/') && path.includes('/negotiate')) return 'marketflow-negotiate';
+    if (path.includes('/deals/')) return 'marketflow-deal-detail';
+    if (path.includes('/deals')) return 'marketflow-deals';
+    if (path.includes('/capital/')) return 'marketflow-capital-detail';
+    if (path.includes('/capital')) return 'marketflow-capital';
+    if (path.includes('/properties/')) return 'marketflow-property-detail';
+    if (path.includes('/properties')) return 'marketflow-properties';
+    if (path.includes('/submit')) return 'marketflow-submit';
+    if (path.includes('/community')) return 'marketflow-community';
+    if (path.includes('/messages')) return 'marketflow-messages';
+    if (path.includes('/analytics')) return 'marketflow-analytics';
+    if (path.includes('/dashboard')) return 'marketflow-dashboard';
+    if (path.includes('/calculators')) return 'marketflow-calculators';
+    if (path.includes('/resources')) return 'marketflow-resources';
+    return 'marketflow';
+  }
+  
+  if (path.includes('/offer-studio')) return 'offer-studio';
+  
   if (path.includes('/dealflow/hq')) {
     if (path.includes('leads')) return 'hq-leads';
     if (path.includes('deals')) return 'hq-deals';

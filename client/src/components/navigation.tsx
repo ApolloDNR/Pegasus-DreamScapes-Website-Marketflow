@@ -527,16 +527,16 @@ export function Navigation() {
               {isAuthenticated ? (
                 <>
                   <Link 
-                    href="/dealflow"
+                    href="/marketflow"
                     className={`hidden lg:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                       (scrolled || !isHomePage) 
                         ? 'text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20' 
                         : 'text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30'
                     }`}
-                    data-testid="link-nav-dealflow"
+                    data-testid="link-nav-marketflow"
                   >
                     <Sparkles className="w-4 h-4" />
-                    <span>Marketplace</span>
+                    <span>MarketFlow</span>
                   </Link>
                   
                   <NotificationBell scrolled={scrolled} isHomePage={isHomePage} />
@@ -655,33 +655,33 @@ export function Navigation() {
                   {isAuthenticated ? (
                     <>
                       <Link 
-                        href="/dealflow"
+                        href="/marketflow"
                         className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-primary bg-primary/5 transition-all"
                         onClick={() => setIsOpen(false)} 
-                        data-testid="link-mobile-dealflow"
+                        data-testid="link-mobile-marketflow"
                       >
                         <Sparkles className="w-4 h-4" />
-                        Marketplace
+                        MarketFlow
                         <Badge variant="secondary" className="ml-auto text-[10px]">New</Badge>
                       </Link>
                       <Link 
-                        href="/dealflow/office"
+                        href="/marketflow/dashboard"
                         className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-foreground hover:bg-secondary transition-all"
                         onClick={() => setIsOpen(false)} 
-                        data-testid="link-mobile-office"
+                        data-testid="link-mobile-dashboard"
                       >
                         <BarChart3 className="w-4 h-4 text-muted-foreground" />
-                        My Office
+                        My Dashboard
                       </Link>
                       {isAdmin && (
                         <Link 
-                          href="/dealflow/hq"
+                          href="/marketflow/admin"
                           className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-blue-600 bg-blue-500/5 transition-all"
                           onClick={() => setIsOpen(false)} 
-                          data-testid="link-mobile-hq"
+                          data-testid="link-mobile-admin"
                         >
                           <Shield className="w-4 h-4" />
-                          HQ Dashboard
+                          Admin Dashboard
                           <Badge variant="outline" className="ml-auto text-[10px] border-blue-500/50 text-blue-500">Staff</Badge>
                         </Link>
                       )}

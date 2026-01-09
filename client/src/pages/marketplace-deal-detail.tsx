@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
-import { PeggyChatBubble } from "@/components/peggy-chat";
 import { useDealAction } from "@/contexts/deal-action-context";
 import type { WholesaleDeal } from "@shared/schema";
 import {
@@ -520,8 +519,6 @@ function DealDetailPage() {
           </Card>
         </div>
       </div>
-
-      <PeggyChatBubble />
     </div>
   );
 }
