@@ -5445,11 +5445,11 @@ export async function registerRoutes(
       });
 
       const dealStatus = [
-        { status: 'Under Review', count: statusCounts['pending_review'] || statusCounts['under_review'] || 0, color: '#f59e0b' },
-        { status: 'Listed', count: statusCounts['listed'] || statusCounts['approved'] || 0, color: '#3b82f6' },
+        { status: 'Under Review', count: (statusCounts['pending_review'] || 0) + (statusCounts['under_review'] || 0) + (statusCounts['submitted'] || 0), color: '#f59e0b' },
+        { status: 'Listed', count: (statusCounts['listed'] || 0) + (statusCounts['approved'] || 0), color: '#3b82f6' },
         { status: 'Under Contract', count: statusCounts['under_contract'] || 0, color: '#8b5cf6' },
-        { status: 'Sold', count: statusCounts['sold'] || statusCounts['closed'] || 0, color: '#10b981' },
-        { status: 'Withdrawn', count: statusCounts['withdrawn'] || statusCounts['expired'] || 0, color: '#ef4444' },
+        { status: 'Sold', count: (statusCounts['sold'] || 0) + (statusCounts['closed'] || 0), color: '#10b981' },
+        { status: 'Withdrawn', count: (statusCounts['withdrawn'] || 0) + (statusCounts['expired'] || 0), color: '#ef4444' },
       ].filter(s => s.count > 0);
 
       // Funding progress for top projects
