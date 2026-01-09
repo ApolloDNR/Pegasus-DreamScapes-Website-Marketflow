@@ -32,6 +32,7 @@ import {
   Square,
   ArrowUpRight,
   Info,
+  Sparkles,
 } from "lucide-react";
 import type { ScoreBreakdown } from "@/lib/compatibility-score";
 
@@ -301,44 +302,78 @@ export function RatingBar({ label, value, max = 5, animated = true }: { label: s
   );
 }
 
-// Deal Badges Component
+// Deal Badges Component with Enhanced Indicators
 function DealBadges({ 
   isHot, 
   isFeatured, 
+  isNew,
+  isTrending,
+  priceDrop,
+  closingSoon,
   riskLevel, 
   holdPeriod,
   status,
-  dealType
+  dealType,
+  viewCount
 }: {
   isHot?: boolean;
   isFeatured?: boolean;
+  isNew?: boolean;
+  isTrending?: boolean;
+  priceDrop?: number;
+  closingSoon?: boolean;
   riskLevel?: string;
   holdPeriod?: string;
   status?: string;
   dealType?: "capital" | "wholesale";
+  viewCount?: number;
 }) {
   return (
-    <div className="flex gap-2 flex-wrap max-w-[60%]">
+    <div className="flex gap-1.5 flex-wrap max-w-[80%]">
       {isHot && (
-        <Badge className="bg-red-500 text-white">
+        <Badge className="bg-red-500 text-white text-xs px-2 py-0.5">
           <Flame className="w-3 h-3 mr-1" />
           Hot
         </Badge>
       )}
       {isFeatured && (
-        <Badge className="bg-amber-500 text-white">
+        <Badge className="bg-amber-500 text-white text-xs px-2 py-0.5">
           <Star className="w-3 h-3 mr-1" />
           Featured
         </Badge>
       )}
+      {isNew && (
+        <Badge className="bg-blue-500 text-white text-xs px-2 py-0.5">
+          <Sparkles className="w-3 h-3 mr-1" />
+          New
+        </Badge>
+      )}
+      {isTrending && (
+        <Badge className="bg-purple-500 text-white text-xs px-2 py-0.5">
+          <TrendingUp className="w-3 h-3 mr-1" />
+          Trending
+        </Badge>
+      )}
+      {priceDrop && priceDrop > 0 && (
+        <Badge className="bg-emerald-500 text-white text-xs px-2 py-0.5">
+          <ArrowUpRight className="w-3 h-3 mr-1 rotate-180" />
+          -{priceDrop}%
+        </Badge>
+      )}
+      {closingSoon && (
+        <Badge className="bg-orange-500 text-white text-xs px-2 py-0.5">
+          <Clock className="w-3 h-3 mr-1" />
+          Closing Soon
+        </Badge>
+      )}
       {dealType === "wholesale" && (
-        <Badge className="bg-amber-600 text-white">Wholesale</Badge>
+        <Badge className="bg-amber-600 text-white text-xs px-2 py-0.5">Wholesale</Badge>
       )}
       {status === "FUNDED" && (
-        <Badge className="bg-green-600 text-white">Fully Funded</Badge>
+        <Badge className="bg-green-600 text-white text-xs px-2 py-0.5">Fully Funded</Badge>
       )}
       {riskLevel && (
-        <Badge className={`${
+        <Badge className={`text-xs px-2 py-0.5 ${
           riskLevel === "low" ? "bg-green-600" : 
           riskLevel === "high" ? "bg-red-600" : 
           "bg-amber-600"
@@ -348,13 +383,45 @@ function DealBadges({
         </Badge>
       )}
       {holdPeriod && (
-        <Badge className="bg-blue-600 text-white">
+        <Badge className="bg-blue-600 text-white text-xs px-2 py-0.5">
           <Clock className="w-3 h-3 mr-1" />
           {holdPeriod}
         </Badge>
       )}
+      {viewCount && viewCount > 50 && (
+        <Badge variant="outline" className="text-xs px-2 py-0.5 bg-white/80">
+          <Eye className="w-3 h-3 mr-1" />
+          {viewCount}+ views
+        </Badge>
+      )}
     </div>
   );
+}
+
+// Helper to compute deal indicators from deal properties
+export function computeDealIndicators(deal: WholesaleDeal | CapitalProject, type: 'wholesale' | 'capital') {
+  const now = new Date();
+  const indicators = {
+    isNew: false,
+    isTrending: false,
+    closingSoon: false,
+    priceDrop: 0
+  };
+  
+  if (type === 'wholesale') {
+    const d = deal as WholesaleDeal;
+    if (d.viewCount && d.viewCount > 100) indicators.isTrending = true;
+    if (d.closingDate) {
+      const closing = new Date(d.closingDate);
+      const daysUntilClose = Math.ceil((closing.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntilClose > 0 && daysUntilClose <= 14) indicators.closingSoon = true;
+    }
+  } else {
+    const p = deal as CapitalProject;
+    if (p.investorCount && p.investorCount > 5) indicators.isTrending = true;
+  }
+  
+  return indicators;
 }
 
 // Capital Project Match Card (for swipe deck view)
@@ -394,6 +461,7 @@ export function CapitalProjectMatchCard({
           <DealBadges 
             isHot={project.isHot}
             isFeatured={project.isFeatured}
+            isTrending={project.investorCount ? project.investorCount > 5 : false}
             riskLevel={project.riskLevel}
             holdPeriod={project.holdPeriod}
             status={project.status}
@@ -659,11 +727,17 @@ export function WholesaleDealMatchCard({
           <DealBadges 
             isHot={deal.isHot}
             isFeatured={deal.isFeatured}
+            isTrending={deal.viewCount ? deal.viewCount > 100 : false}
+            closingSoon={deal.closingDate ? (() => {
+              const days = Math.ceil((new Date(deal.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              return days > 0 && days <= 14;
+            })() : false}
             riskLevel={deal.riskLevel}
+            viewCount={deal.viewCount}
             dealType="wholesale"
           />
           {deal.strategy && (
-            <Badge className="bg-blue-600 text-white mt-2">
+            <Badge className="bg-blue-600 text-white text-xs px-2 py-0.5 mt-2">
               {deal.strategy === "flip" ? "Flip" : deal.strategy === "rental" ? "Rental" : deal.strategy}
             </Badge>
           )}
