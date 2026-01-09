@@ -1,37 +1,14 @@
-import { useState } from "react";
 import { useParams, Link } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
-import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import { PeggyChatBubble } from "@/components/peggy-chat";
+import { useDealAction } from "@/contexts/deal-action-context";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -81,18 +58,7 @@ export default function MarketplaceDealDetail() {
 function DealDetailPage() {
   const params = useParams<{ id: string }>();
   const dealId = params.id;
-  const { toast } = useToast();
-  const { user } = useSupabaseAuth();
-  const [jvDialogOpen, setJvDialogOpen] = useState(false);
-  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
-
-  const handleSubmitOffer = (data: OfferStudioData) => {
-    toast({
-      title: "Offer Submitted",
-      description: `Your offer of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(data.offerPrice)} has been sent to the wholesaler.`,
-    });
-    setOfferDialogOpen(false);
-  };
+  const { openDealAction } = useDealAction();
 
   const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
@@ -417,20 +383,34 @@ function DealDetailPage() {
                 <p className="text-2xl font-bold text-primary">{formatCurrency(deal.askingPrice)}</p>
               </div>
 
-              <JVRequestDialog 
-                deal={deal} 
-                open={jvDialogOpen} 
-                onOpenChange={setJvDialogOpen} 
-              />
-
               <Button 
                 size="lg"
                 className="w-full"
-                onClick={() => setOfferDialogOpen(true)}
-                data-testid="button-make-offer"
+                onClick={() => openDealAction(deal.id, "wholesale_accept")}
+                data-testid="button-accept-terms"
+              >
+                <CheckCircle2 className="w-5 h-5 mr-2" />
+                Accept Terms
+              </Button>
+
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => openDealAction(deal.id, "wholesale_counter")}
+                data-testid="button-counter-offer"
               >
                 <DollarSign className="w-5 h-5 mr-2" />
-                Make Offer
+                Counter Offer
+              </Button>
+
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => openDealAction(deal.id, "wholesale_jv")}
+                data-testid="button-request-jv"
+              >
+                <Handshake className="w-5 h-5 mr-2" />
+                Request JV
               </Button>
 
               <Button 
@@ -541,21 +521,6 @@ function DealDetailPage() {
         </div>
       </div>
 
-      <OfferStudio
-        open={offerDialogOpen}
-        onOpenChange={setOfferDialogOpen}
-        mode="new"
-        dealInfo={{
-          id: dealId || "",
-          propertyAddress: deal.propertyAddress || "",
-          askingPrice: deal.askingPrice || 0,
-          arv: deal.arv || undefined,
-          repairCost: (deal as any).repairCosts || (deal as any).repairCost || undefined,
-          wholesalerName: `Wholesaler #${((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}`,
-        }}
-        onSubmit={handleSubmitOffer}
-      />
-
       <PeggyChatBubble />
     </div>
   );
@@ -630,152 +595,6 @@ function DealUpdatesTimeline() {
         </p>
       </div>
     </div>
-  );
-}
-
-function JVRequestDialog({ 
-  deal, 
-  open, 
-  onOpenChange 
-}: { 
-  deal: WholesaleDeal; 
-  open: boolean; 
-  onOpenChange: (open: boolean) => void;
-}) {
-  const { toast } = useToast();
-  const { user } = useSupabaseAuth();
-  const [message, setMessage] = useState("");
-  const [strategy, setStrategy] = useState("");
-  const [fundingSource, setFundingSource] = useState("");
-  const [proposedFee, setProposedFee] = useState(deal.assignmentFee?.toString() || "");
-
-  const submitJVRequest = useMutation({
-    mutationFn: async () => {
-      return apiRequest('POST', '/api/supabase/jv-requests', {
-        dealId: String(deal.id),
-        wholesalerId: (deal as any).externalWholesalerId || deal.submittedBy || '',
-        message,
-        strategy,
-        fundingSource,
-        proposedFee: proposedFee ? parseInt(proposedFee) : undefined,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "JV Request Submitted",
-        description: "The wholesaler will be notified of your interest.",
-      });
-      onOpenChange(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/supabase/jv-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/supabase/wholesale-deals'] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to submit JV request. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="w-full" size="lg" data-testid="button-request-jv">
-          <Handshake className="w-4 h-4 mr-2" />
-          Request JV Partnership
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Request JV Partnership</DialogTitle>
-          <DialogDescription>
-            Submit your interest in this deal. The wholesaler will review your request and respond.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="text-sm text-muted-foreground">Deal</p>
-            <p className="font-medium">{deal.propertyAddress}</p>
-            <p className="text-sm text-muted-foreground">{deal.city}, {deal.state}</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="strategy">Investment Strategy</Label>
-            <Select value={strategy} onValueChange={setStrategy}>
-              <SelectTrigger data-testid="select-jv-strategy">
-                <SelectValue placeholder="Select your strategy" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fix-flip">Fix & Flip</SelectItem>
-                <SelectItem value="buy-hold">Buy & Hold</SelectItem>
-                <SelectItem value="BRRRR">BRRRR</SelectItem>
-                <SelectItem value="development">Development</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="funding">Funding Source</Label>
-            <Select value={fundingSource} onValueChange={setFundingSource}>
-              <SelectTrigger data-testid="select-jv-funding">
-                <SelectValue placeholder="How will you fund this?" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="hard_money">Hard Money</SelectItem>
-                <SelectItem value="private_money">Private Money</SelectItem>
-                <SelectItem value="conventional">Conventional Loan</SelectItem>
-                <SelectItem value="capital_raise">Capital Raise</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="proposedFee">Proposed Assignment Fee</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="proposedFee"
-                type="number"
-                placeholder={deal.assignmentFee?.toString() || "Enter amount"}
-                value={proposedFee}
-                onChange={(e) => setProposedFee(e.target.value)}
-                className="pl-9"
-                data-testid="input-jv-fee"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">Current asking fee: {deal.assignmentFee ? `$${deal.assignmentFee.toLocaleString()}` : "—"}</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="message">Message to Wholesaler</Label>
-            <Textarea
-              id="message"
-              placeholder="Introduce yourself and explain why you're interested in this deal..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              data-testid="textarea-jv-message"
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={() => submitJVRequest.mutate()}
-            disabled={submitJVRequest.isPending || !strategy || !fundingSource}
-            data-testid="button-submit-jv-request"
-          >
-            {submitJVRequest.isPending ? "Submitting..." : "Submit Request"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 

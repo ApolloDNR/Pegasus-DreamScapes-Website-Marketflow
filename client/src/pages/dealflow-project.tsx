@@ -14,14 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useDealAction } from "@/contexts/deal-action-context";
 import { 
   Building2, 
   DollarSign, 
@@ -60,7 +53,6 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DealChat } from "@/components/deal-chat";
-import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
 import { 
   CapitalStackBreakdown, 
   DealLevelTransparency, 
@@ -119,10 +111,9 @@ interface CapitalProject {
 export default function DealflowProject() {
   const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
   const { toast } = useToast();
+  const { openDealAction, openInStudio } = useDealAction();
   const [, params] = useRoute("/dealflow/project/:id");
   const projectId = params?.id ? parseInt(params.id) : null;
-
-  const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   
   // Admin edit mode states
@@ -706,10 +697,18 @@ export default function DealflowProject() {
               <TabsContent value="offers" className="mt-6 space-y-4">
                 <Card className="border-2 border-dashed border-primary/30">
                   <CardContent className="py-6 text-center">
-                    <Button onClick={() => setInvestDialogOpen(true)} className="gap-2" data-testid="button-make-offer">
-                      <Zap className="w-4 h-4" />
-                      Make an Investment Offer
-                    </Button>
+                    {projectId && (
+                      <>
+                        <Button onClick={() => openDealAction(projectId, "capital_accept")} className="gap-2" data-testid="button-accept-terms">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Accept Terms
+                        </Button>
+                        <Button variant="outline" onClick={() => openInStudio(projectId, "capital")} className="gap-2 ml-2" data-testid="button-counter-offer">
+                          <Zap className="w-4 h-4" />
+                          Counter Offer
+                        </Button>
+                      </>
+                    )}
                     <p className="text-xs text-muted-foreground mt-2">
                       Submit your terms and start negotiating
                     </p>
@@ -937,16 +936,25 @@ export default function DealflowProject() {
                   </div>
                 </div>
 
-                {project.status === "OPEN_FOR_INVESTMENT" && (
+                {project.status === "OPEN_FOR_INVESTMENT" && projectId && (
                   <div className="space-y-2 pt-2">
                     <Button 
                       className="w-full" 
                       size="lg"
-                      onClick={() => setInvestDialogOpen(true)}
-                      data-testid="button-invest-now"
+                      onClick={() => openDealAction(projectId, "capital_accept")}
+                      data-testid="button-accept-terms"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Accept Terms
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full" 
+                      onClick={() => openInStudio(projectId, "capital")}
+                      data-testid="button-counter-offer"
                     >
                       <Zap className="w-4 h-4 mr-2" />
-                      Invest Now
+                      Counter Offer
                     </Button>
                     <Button 
                       variant="outline"
@@ -1063,17 +1071,28 @@ export default function DealflowProject() {
                   </div>
                 )}
                 
-                {/* Action Button - Opens unified investment dialog */}
-                <div className="pt-2">
-                  <Button 
-                    onClick={() => setInvestDialogOpen(true)}
-                    className="w-full bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
-                    data-testid="button-invest-from-terms"
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Make Investment Offer
-                  </Button>
-                </div>
+                {/* Action Buttons - Uses canonical form router */}
+                {projectId && (
+                  <div className="pt-2 space-y-2">
+                    <Button 
+                      onClick={() => openDealAction(projectId, "capital_accept")}
+                      className="w-full"
+                      data-testid="button-accept-terms-sidebar"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Accept Terms
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => openInStudio(projectId, "capital")}
+                      className="w-full"
+                      data-testid="button-counter-offer-sidebar"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Counter Offer
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1120,11 +1139,6 @@ export default function DealflowProject() {
         </div>
       </div>
 
-      <InvestmentOfferDialog
-        open={investDialogOpen}
-        onOpenChange={setInvestDialogOpen}
-        project={project}
-      />
     </DealflowLayout>
   );
 }

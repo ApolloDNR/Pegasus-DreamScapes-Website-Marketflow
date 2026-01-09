@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
-import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
-import { WholesaleDealActionDialog } from "@/components/wholesale-deal-action-dialog";
+import { useDealAction } from "@/contexts/deal-action-context";
 import { type UserRole } from "@/lib/supabase";
 import { sampleWholesaleDeals, sampleCapitalProjects } from "@/lib/sample-data";
 import {
@@ -94,13 +93,9 @@ function DiscoverPage() {
   const [activeTab, setActiveTab] = useState("deals");
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState<string>("all");
-  const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
-  const [investDialogOpen, setInvestDialogOpen] = useState(false);
-  const [selectedDeal, setSelectedDeal] = useState<WholesaleDeal | null>(null);
-  const [dealActionType, setDealActionType] = useState<"jv_request" | "invest">("invest");
-  const [dealActionDialogOpen, setDealActionDialogOpen] = useState(false);
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
+  const { openDealAction, openInStudio } = useDealAction();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
   const [, setLocation] = useLocation();
 
@@ -129,14 +124,15 @@ function DiscoverPage() {
   });
 
   const handleInvest = (project: CapitalProject) => {
-    setSelectedProject(project);
-    setInvestDialogOpen(true);
+    openDealAction(Number(project.id), "capital_accept");
   };
 
   const handleDealAction = (deal: WholesaleDeal, actionType: "jv_request" | "invest") => {
-    setSelectedDeal(deal);
-    setDealActionType(actionType);
-    setDealActionDialogOpen(true);
+    if (actionType === "jv_request") {
+      openDealAction(deal.id, "wholesale_jv");
+    } else {
+      openDealAction(deal.id, "wholesale_accept");
+    }
   };
 
   const handleSaveDeal = async (dealId: string) => {
@@ -426,61 +422,6 @@ function DiscoverPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Capital Project Investment Dialog */}
-      {selectedProject && (
-        <InvestmentOfferDialog
-          open={investDialogOpen}
-          onOpenChange={setInvestDialogOpen}
-          project={{
-            id: selectedProject.id as any,
-            title: selectedProject.title,
-            description: selectedProject.description,
-            location: selectedProject.location,
-            fundingGoal: selectedProject.fundingGoal || 0,
-            amountRaised: selectedProject.amountRaised || 0,
-            minInvestment: selectedProject.minInvestment || 0,
-            projectedReturn: selectedProject.projectedReturn,
-            holdPeriod: selectedProject.holdPeriod,
-            structure: selectedProject.structure,
-            status: selectedProject.status || "ACTIVE",
-          }}
-          onSuccess={() => {
-            toast({
-              title: "Investment submitted",
-              description: "Your investment offer has been sent to the operator.",
-            });
-          }}
-        />
-      )}
-
-      {/* Wholesale Deal Action Dialog */}
-      {selectedDeal && (
-        <WholesaleDealActionDialog
-          open={dealActionDialogOpen}
-          onOpenChange={setDealActionDialogOpen}
-          deal={{
-            id: selectedDeal.id,
-            propertyAddress: selectedDeal.propertyAddress || selectedDeal.address || "Unknown",
-            city: selectedDeal.city,
-            state: selectedDeal.state,
-            askingPrice: selectedDeal.askingPrice || selectedDeal.contractPrice,
-            arv: selectedDeal.arv,
-            estimatedRepairs: selectedDeal.repairEstimate || selectedDeal.estimatedRepairs,
-            assignmentFee: selectedDeal.assignmentFee,
-            contractPrice: selectedDeal.contractPrice,
-            propertyType: selectedDeal.propertyType,
-          }}
-          actionType={dealActionType}
-          onSuccess={() => {
-            toast({
-              title: dealActionType === "jv_request" ? "JV Request Sent" : "Offer Submitted",
-              description: dealActionType === "jv_request" 
-                ? "Your partnership request has been sent."
-                : "Your offer has been submitted for review.",
-            });
-          }}
-        />
-      )}
     </div>
   );
 }

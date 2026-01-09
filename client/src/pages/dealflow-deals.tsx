@@ -11,8 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { DealNegotiationDialog } from "@/components/deal-negotiation-dialog";
-import { InvestmentOfferDialog } from "@/components/investment-offer-dialog";
+import { useDealAction } from "@/contexts/deal-action-context";
 import {
   CapitalProjectMatchCard,
   CapitalProjectGridCard,
@@ -121,20 +120,9 @@ export default function DealflowDeals() {
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
   const [viewMode, setViewMode] = useState<"deck" | "grid">("deck");
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
-  const [negotiationOpen, setNegotiationOpen] = useState(false);
-  const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<DealFilters>(defaultFilters);
-  const [selectedDeal, setSelectedDeal] = useState<{
-    type: "capital_project" | "wholesale_deal";
-    id: number;
-    title: string;
-    responderId: string;
-    structure?: string;
-  } | null>(null);
-  const [selectedProject, setSelectedProject] = useState<CapitalProject | null>(null);
-  const [selectedWholesaleDeal, setSelectedWholesaleDeal] = useState<WholesaleDeal | null>(null);
-  const [jvRequestOpen, setJvRequestOpen] = useState(false);
+  const { openDealAction, openInStudio } = useDealAction();
 
   const { data: capitalProjects = [], isLoading: loadingProjects } = useQuery<CapitalProject[]>({
     queryKey: ["/api/capital-projects"],
@@ -353,30 +341,15 @@ export default function DealflowDeals() {
 
   const openNegotiation = (type: "capital_project" | "wholesale_deal", item: any) => {
     if (type === "capital_project") {
-      setSelectedProject(item as CapitalProject);
-      setInvestDialogOpen(true);
+      openDealAction(item.id, "capital_accept");
     } else {
-      setSelectedDeal({
-        type,
-        id: item.id,
-        title: `${item.propertyAddress}, ${item.city}`,
-        responderId: item.submittedBy || "staff",
-        structure: item.structure,
-      });
-      setNegotiationOpen(true);
+      openDealAction(item.id, "wholesale_accept");
     }
   };
 
   // Handler for Dreamscaper/Investor to invest in a wholesale deal
   const handleInvestInDeal = (deal: WholesaleDeal) => {
-    setSelectedDeal({
-      type: "wholesale_deal",
-      id: deal.id,
-      title: `${deal.propertyAddress}, ${deal.city}`,
-      responderId: deal.submittedBy || "staff",
-      structure: "investment",
-    });
-    setNegotiationOpen(true);
+    openDealAction(deal.id, "wholesale_accept");
     toast({
       title: "Investment Offer",
       description: `Opening investment dialog for ${deal.propertyAddress}`,
@@ -385,14 +358,7 @@ export default function DealflowDeals() {
 
   // Handler for Wholesaler to request JV partner
   const handleRequestJV = (deal: WholesaleDeal) => {
-    setSelectedDeal({
-      type: "wholesale_deal",
-      id: deal.id,
-      title: `${deal.propertyAddress}, ${deal.city}`,
-      responderId: deal.submittedBy || "staff",
-      structure: "jv_partnership",
-    });
-    setNegotiationOpen(true);
+    openDealAction(deal.id, "wholesale_jv");
     toast({
       title: "JV Partner Request",
       description: `You're requesting a JV partnership for this deal. The other wholesaler may have a buyer ready.`,
@@ -734,26 +700,6 @@ export default function DealflowDeals() {
         )}
       </div>
 
-      {selectedDeal && (
-        <DealNegotiationDialog
-          open={negotiationOpen}
-          onOpenChange={setNegotiationOpen}
-          dealType={selectedDeal.type}
-          dealId={selectedDeal.id}
-          dealTitle={selectedDeal.title}
-          responderId={selectedDeal.responderId}
-          existingStructure={selectedDeal.structure}
-          onSuccess={() => setNegotiationOpen(false)}
-        />
-      )}
-
-      {selectedProject && (
-        <InvestmentOfferDialog
-          open={investDialogOpen}
-          onOpenChange={setInvestDialogOpen}
-          project={selectedProject}
-        />
-      )}
     </DealflowLayout>
   );
 }

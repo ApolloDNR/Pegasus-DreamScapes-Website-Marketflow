@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useDealAction } from "@/contexts/deal-action-context";
 import {
   Home,
   Heart,
@@ -60,9 +61,9 @@ function PropertyDetailContent() {
   const propertyId = params?.id || null;
   const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
+  const { openDealAction } = useDealAction();
   const [, navigate] = useLocation();
   const [showOfferModal, setShowOfferModal] = useState(false);
-  const [showContactModal, setShowContactModal] = useState(false);
 
   const { data: listing, isLoading, error } = useQuery<RetailListing>({
     queryKey: ["/api/supabase/listings", propertyId],
@@ -328,15 +329,28 @@ function PropertyDetailContent() {
                     {isAuthenticated ? "Make an Offer" : "Login to Make Offer"}
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowContactModal(true)}
-                  data-testid="button-schedule-showing"
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Showing
-                </Button>
+                {propertyId && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => openDealAction(Number(propertyId), "listing_request_info")}
+                      data-testid="button-request-info"
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Request Info
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => openDealAction(Number(propertyId), "listing_schedule_tour")}
+                      data-testid="button-schedule-showing"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Schedule Showing
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="ghost"
                   className="w-full"
@@ -357,23 +371,21 @@ function PropertyDetailContent() {
               <CardDescription>Questions about this property?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => setShowContactModal(true)}
-                data-testid="button-contact"
-              >
-                <Phone className="h-4 w-4 mr-2" />
-                (555) 123-4567
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => setShowContactModal(true)}
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                info@pegasusdreamscapes.com
-              </Button>
+              {propertyId && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => openDealAction(Number(propertyId), "listing_request_info")}
+                  data-testid="button-contact"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Request Info
+                </Button>
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span>info@pegasusdreamscapes.com</span>
+              </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span>Response within 24 hours</span>
@@ -388,12 +400,6 @@ function PropertyDetailContent() {
         onClose={() => setShowOfferModal(false)}
         listing={listing}
         formatCurrency={formatCurrency}
-      />
-
-      <ContactModal
-        open={showContactModal}
-        onClose={() => setShowContactModal(false)}
-        listing={listing}
       />
     </div>
   );
@@ -552,139 +558,3 @@ function OfferModal({ open, onClose, listing, formatCurrency }: OfferModalProps)
   );
 }
 
-interface ContactModalProps {
-  open: boolean;
-  onClose: () => void;
-  listing: RetailListing;
-}
-
-function ContactModal({ open, onClose, listing }: ContactModalProps) {
-  const { toast } = useToast();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-  const [requestType, setRequestType] = useState("showing");
-
-  const submitInquiryMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/marketplace/buyer/inquiries", {
-        propertyType: "retail",
-        propertyId: listing.id,
-        name,
-        email,
-        phone: phone || null,
-        message: message || null,
-        requestType,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Request Submitted",
-        description: "We'll contact you shortly to schedule your showing.",
-      });
-      onClose();
-      setName("");
-      setEmail("");
-      setPhone("");
-      setMessage("");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit request",
-        variant: "destructive",
-      });
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {requestType === "showing" ? "Schedule a Showing" : "Contact Us"}
-          </DialogTitle>
-          <DialogDescription>
-            {listing.propertyAddress}, {listing.city}, {listing.state}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Request Type</Label>
-            <Select value={requestType} onValueChange={setRequestType}>
-              <SelectTrigger data-testid="select-request-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="showing">Schedule Showing</SelectItem>
-                <SelectItem value="question">Ask a Question</SelectItem>
-                <SelectItem value="more_info">Request More Info</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              data-testid="input-name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              data-testid="input-email"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone (Optional)</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="(555) 123-4567"
-              data-testid="input-phone"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="message">Message (Optional)</Label>
-            <Textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Any specific questions or preferred times..."
-              className="resize-none"
-              rows={3}
-              data-testid="input-message"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => submitInquiryMutation.mutate()}
-            disabled={submitInquiryMutation.isPending || !name || !email}
-            data-testid="button-submit-inquiry"
-          >
-            {submitInquiryMutation.isPending ? "Submitting..." : "Submit"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
