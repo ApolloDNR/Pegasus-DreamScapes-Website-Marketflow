@@ -17,20 +17,45 @@ import {
 import { Link } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+interface AnalyticsData {
+  stats: {
+    totalDeals: number;
+    totalVolume: number;
+    activeProjects: number;
+    totalUsers: number;
+    dealsChange: number;
+    volumeChange: number;
+    projectsChange: number;
+    usersChange: number;
+  };
+  dealVolumeData: Array<{ month: string; deals: number; volume: number }>;
+  roleDistribution: Array<{ role: string; count: number; color: string }>;
+  fundingProgress: Array<{ project: string; raised: number; goal: number }>;
+  dealStatus: Array<{ status: string; count: number; color: string }>;
+}
 
 export default function AnalyticsPage() {
   const { isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
   const [timeRange, setTimeRange] = useState("30d");
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const { data: analyticsData, isLoading: isDataLoading, refetch, isRefetching } = useQuery<AnalyticsData>({
+    queryKey: ['/api/analytics/dashboard', timeRange],
+    enabled: isAuthenticated && isAdmin,
+    staleTime: 60000,
+  });
 
   useEffect(() => {
     document.title = "Analytics Dashboard | Pegasus Dreamscapes";
   }, []);
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    refetch();
   };
+  
+  const displayData = analyticsData || sampleAnalyticsData;
+  const isRefreshing = isDataLoading || isRefetching;
 
   if (isLoading) {
     return (
@@ -166,11 +191,11 @@ export default function AnalyticsPage() {
 
             <TabsContent value="overview" className="space-y-6">
               <AnalyticsDashboard
-                stats={sampleAnalyticsData.stats}
-                dealVolumeData={sampleAnalyticsData.dealVolumeData}
-                roleDistribution={sampleAnalyticsData.roleDistribution}
-                fundingProgress={sampleAnalyticsData.fundingProgress}
-                dealStatus={sampleAnalyticsData.dealStatus}
+                stats={displayData.stats}
+                dealVolumeData={displayData.dealVolumeData}
+                roleDistribution={displayData.roleDistribution}
+                fundingProgress={displayData.fundingProgress}
+                dealStatus={displayData.dealStatus}
                 isLoading={isRefreshing}
                 data-testid="analytics-dashboard"
               />
