@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +34,15 @@ import {
   CheckCircle2,
   BarChart3,
   DollarSign,
-  Clock
+  Clock,
+  Target,
+  Search,
+  FileCheck,
+  Handshake,
+  Key,
+  Zap,
+  Send,
+  ChevronRight
 } from "lucide-react";
 import {
   Form,
@@ -66,12 +74,16 @@ export default function Home() {
     <div className="min-h-screen">
       <HeroSection />
       <StatsSection />
+      <FeaturedDealsSection />
       <ServicesSection />
       <TestimonialsSection />
       <FeaturedProjectSection />
       <SellPropertySection />
       <InvestSection />
-      <DreamsCaperCreedSection />
+      <InvestmentPhilosophySection />
+      <HowItWorksSection />
+      <TrustLogosSection />
+      <NewsletterSection />
       <ContactSection />
     </div>
   );
@@ -149,6 +161,157 @@ function StatsSection() {
             </StaggerItem>
           ))}
         </StaggerChildren>
+      </div>
+    </section>
+  );
+}
+
+interface WholesaleDeal {
+  id: number;
+  propertyAddress: string;
+  city: string;
+  state: string;
+  contractPrice: number;
+  assignmentFee: number;
+  arv: number;
+  propertyType: string;
+  status: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFootage?: number;
+}
+
+function FeaturedDealsSection() {
+  const { data: deals = [], isLoading } = useQuery<WholesaleDeal[]>({
+    queryKey: ['/api/supabase/wholesale-deals'],
+  });
+
+  const featuredDeals = deals.filter(d => d.status === 'listed' || d.status === 'approved').slice(0, 4);
+
+  if (isLoading) {
+    return (
+      <section className="py-24 lg:py-32 bg-muted/20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="text-center mb-12">
+            <div className="h-4 w-32 bg-muted rounded mx-auto mb-4 animate-pulse" />
+            <div className="h-8 w-64 bg-muted rounded mx-auto animate-pulse" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-card rounded-lg h-80 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredDeals.length === 0) {
+    return null;
+  }
+
+  return (
+    <section id="featured-deals" className="py-24 lg:py-32 bg-muted/20 scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
+          <div>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">MarketFlow</p>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-deals-title">
+              Featured Opportunities
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
+              Browse our latest investment-ready properties. Each deal is vetted and underwritten by our team.
+            </p>
+          </div>
+          <Link href="/marketflow">
+            <Button variant="outline" className="group whitespace-nowrap" data-testid="button-view-all-deals">
+              View All Deals
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+          {featuredDeals.map((deal, index) => (
+            <StaggerItem key={deal.id}>
+              <Link href={`/marketflow/deals/${deal.id}`} data-testid={`link-featured-deal-${index}`}>
+                <motion.div 
+                  className="group bg-card rounded-lg border border-border/50 overflow-hidden hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full cursor-pointer"
+                  data-testid={`card-featured-deal-${index}`}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Property type badge */}
+                  <div className="relative h-36 bg-gradient-to-br from-primary/10 to-champagne/10 flex items-center justify-center">
+                    <Building className="w-12 h-12 text-primary/30" />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2 py-1 bg-primary text-primary-foreground text-xs font-bold rounded" data-testid={`text-deal-type-${index}`}>
+                        {deal.propertyType || 'Residential'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-5">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1" data-testid={`text-deal-location-${index}`}>
+                      {deal.city}, {deal.state}
+                    </p>
+                    <h3 className="font-semibold text-base mb-3 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-deal-address-${index}`}>
+                      {deal.propertyAddress}
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Contract Price</span>
+                        <span className="font-semibold" data-testid={`text-deal-price-${index}`}>${(deal.contractPrice || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Assignment Fee</span>
+                        <span className="font-semibold text-primary" data-testid={`text-deal-fee-${index}`}>${(deal.assignmentFee || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">ARV</span>
+                        <span className="font-semibold" data-testid={`text-deal-arv-${index}`}>${(deal.arv || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    
+                    {(deal.bedrooms || deal.squareFootage) && (
+                      <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border/50 text-xs text-muted-foreground" data-testid={`text-deal-specs-${index}`}>
+                        {deal.bedrooms && <span>{deal.bedrooms} bed</span>}
+                        {deal.bathrooms && <span>{deal.bathrooms} bath</span>}
+                        {deal.squareFootage && <span>{deal.squareFootage.toLocaleString()} sqft</span>}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </Link>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.3} className="text-center mt-12">
+          <p className="text-sm text-muted-foreground mb-4">
+            New deals added weekly. Sign up for alerts to be notified first.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <span>Vetted Deals</span>
+            </div>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />
+              <span>Secure Platform</span>
+            </div>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              <span>Fast Closing</span>
+            </div>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );
@@ -1071,66 +1234,339 @@ function InvestSection() {
   );
 }
 
-function DreamsCaperCreedSection() {
-  const creedLines = [
-    { text: "We are Dreamscapers.", icon: Sparkles },
-    { text: "We repair what's broken.", icon: Shield },
-    { text: "We restore what's forgotten.", icon: Heart },
-    { text: "We protect what matters.", icon: Shield },
-    { text: "We elevate communities through design, discipline, and intention.", icon: TrendingUp },
+function InvestmentPhilosophySection() {
+  const principles = [
+    {
+      number: "01",
+      title: "Disciplined Analysis",
+      description: "Every property undergoes rigorous underwriting. We evaluate market dynamics, renovation costs, and exit strategies before committing capital.",
+      icon: Target,
+    },
+    {
+      number: "02", 
+      title: "Transparent Partnership",
+      description: "Full visibility into deal structures, regular updates, and clear communication. Our partners always know exactly where their investment stands.",
+      icon: Users,
+    },
+    {
+      number: "03",
+      title: "Community-Centered Design",
+      description: "We don't just renovate properties—we elevate neighborhoods. Every project considers its impact on the surrounding community.",
+      icon: Heart,
+    },
+    {
+      number: "04",
+      title: "Sustainable Returns",
+      description: "We balance aggressive opportunity pursuit with risk management. Our goal is consistent, long-term wealth building—not quick wins.",
+      icon: TrendingUp,
+    },
   ];
 
   return (
-    <section id="creed" className="py-32 lg:py-40 bg-gradient-to-b from-background via-background to-muted/20 scroll-mt-24 relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-b from-primary/30 to-transparent" />
+    <section id="philosophy" className="py-32 lg:py-40 bg-gradient-to-b from-background to-muted/10 scroll-mt-24 relative overflow-hidden">
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{
+        backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
+        backgroundSize: '80px 80px'
+      }} />
       
-      <div className="max-w-4xl mx-auto px-6 lg:px-12 relative">
-        <ScrollReveal className="text-center mb-16">
-          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Our Identity</p>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-creed-title">
-            The Dreamscaper Creed
-          </h2>
-        </ScrollReveal>
-
-        <StaggerChildren className="space-y-5 mb-16" staggerDelay={0.1}>
-          {creedLines.map((line, index) => (
-            <StaggerItem key={index}>
-              <motion.div 
-                className={`flex items-center gap-5 p-5 rounded-lg transition-all duration-300 ${index === 0 ? 'bg-primary/5 border border-primary/10' : 'hover:bg-muted/30'}`}
-                data-testid={`creed-line-${index}`}
-                whileHover={{ x: 8 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${index === 0 ? 'bg-primary' : 'bg-primary/10'}`}>
-                  <line.icon className={`w-5 h-5 ${index === 0 ? 'text-primary-foreground' : 'text-primary'}`} />
-                </div>
-                <p className={`text-xl sm:text-2xl font-medium ${index === 0 ? 'text-primary font-serif' : 'text-foreground'}`}>{line.text}</p>
-              </motion.div>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
-
-        <ScrollReveal delay={0.3}>
-          <div className="p-8 lg:p-10 bg-card rounded-lg border border-border/50 mb-6">
-            <p className="text-base text-muted-foreground leading-relaxed">
-              <span className="text-primary font-semibold">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+          {/* Left column - Header content */}
+          <ScrollReveal className="lg:sticky lg:top-32">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Our Approach</p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-philosophy-title">
+              Investment Philosophy
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-10">
+              We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders.
             </p>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal delay={0.4}>
-          <div className="p-8 lg:p-10 bg-gradient-to-br from-primary/5 to-champagne/5 rounded-lg border border-primary/10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            
+            {/* Mission statement card */}
+            <div className="p-8 bg-card rounded-lg border border-border/50 relative">
+              <div className="absolute -top-3 -left-3 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Quote className="w-4 h-4 text-primary" />
               </div>
-              <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Our Mission</p>
+              <p className="text-base text-foreground leading-relaxed italic">
+                "We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve."
+              </p>
+              <p className="text-sm text-muted-foreground mt-4">— Pegasus Dreamscapes</p>
             </div>
-            <p className="font-serif text-lg sm:text-xl text-foreground leading-relaxed italic">
-              "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
-            </p>
+          </ScrollReveal>
+
+          {/* Right column - Principles */}
+          <StaggerChildren className="space-y-6" staggerDelay={0.1}>
+            {principles.map((principle, index) => (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className="group p-6 lg:p-8 bg-card rounded-lg border border-border/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300"
+                  data-testid={`philosophy-principle-${index}`}
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex items-start gap-5">
+                    <div className="flex-shrink-0">
+                      <span className="text-4xl font-serif font-bold text-primary/20 group-hover:text-primary/40 transition-colors">{principle.number}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-md transition-all duration-300">
+                          <principle.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                        </div>
+                        <h3 className="text-xl font-semibold">{principle.title}</h3>
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed">{principle.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorksSection() {
+  const steps = [
+    {
+      number: "01",
+      title: "Explore Opportunities",
+      description: "Browse our curated marketplace of wholesale deals, capital raises, and listings. Use AI-powered matching to find deals that align with your investment goals.",
+      icon: Search,
+    },
+    {
+      number: "02",
+      title: "Due Diligence",
+      description: "Access comprehensive property data, financials, and market analysis. Our team provides transparent underwriting on every opportunity.",
+      icon: FileCheck,
+    },
+    {
+      number: "03",
+      title: "Make Your Move",
+      description: "Submit offers, negotiate terms, or commit capital directly through our platform. Real-time updates keep you informed every step of the way.",
+      icon: Handshake,
+    },
+    {
+      number: "04",
+      title: "Close & Grow",
+      description: "Complete transactions with our streamlined closing process. Track your portfolio performance and reinvest in new opportunities.",
+      icon: Key,
+    },
+  ];
+
+  return (
+    <section id="how-it-works" className="py-32 lg:py-40 bg-stone scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-20">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Process</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-how-it-works-title">
+            How It Works
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            From discovery to closing, our platform streamlines the entire investment process. Here's how to get started.
+          </p>
+        </ScrollReveal>
+
+        <div className="relative">
+          {/* Connection line */}
+          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent -translate-y-1/2" />
+          
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.15}>
+            {steps.map((step, index) => (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className="group relative bg-card p-8 rounded-lg border border-border/50 hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full"
+                  data-testid={`how-it-works-step-${index}`}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Step number badge */}
+                  <div className="absolute -top-4 left-8 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                    Step {step.number}
+                  </div>
+                  
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:shadow-lg transition-all duration-300 mt-2">
+                    <step.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
+                  
+                  {/* Arrow indicator on larger screens */}
+                  {index < steps.length - 1 && (
+                    <div className="hidden lg:flex absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-background border border-border rounded-full items-center justify-center z-10">
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </div>
+
+        <ScrollReveal delay={0.4} className="text-center mt-16">
+          <Link href="/marketflow">
+            <Button size="lg" className="text-sm uppercase tracking-widest font-medium group" data-testid="button-explore-marketplace">
+              Explore MarketFlow
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function TrustLogosSection() {
+  const trustItems = [
+    { icon: Shield, label: "Secure Transactions", description: "Bank-level encryption" },
+    { icon: Award, label: "Verified Deals", description: "Vetted opportunities" },
+    { icon: Users, label: "100+ Partners", description: "Growing network" },
+    { icon: CheckCircle2, label: "$12M+ Funded", description: "Proven track record" },
+  ];
+
+  return (
+    <section className="py-16 bg-muted/30 border-y border-border/50">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {trustItems.map((item, index) => (
+            <motion.div 
+              key={index}
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              data-testid={`trust-item-${index}`}
+            >
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <item.icon className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">{item.label}</p>
+                <p className="text-xs text-muted-foreground">{item.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const newsletterSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+function NewsletterSection() {
+  const { toast } = useToast();
+  const form = useForm<z.infer<typeof newsletterSchema>>({
+    resolver: zodResolver(newsletterSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof newsletterSchema>) => {
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'newsletter',
+        source: 'newsletter_signup',
+        email: data.email,
+        firstName: '',
+        lastName: '',
+      };
+      return apiRequest("POST", "/api/leads", unifiedLead);
+    },
+    onSuccess: () => {
+      toast({
+        title: "You're in!",
+        description: "You'll receive our latest deals and insights.",
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof newsletterSchema>) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <section className="py-24 lg:py-32 bg-gradient-to-br from-primary/5 via-background to-champagne/5 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-champagne/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+      
+      <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center relative">
+        <ScrollReveal>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
+            <Zap className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">Stay Ahead</span>
+          </div>
+          
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-newsletter-title">
+            Get Exclusive Deal Alerts
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
+            Be the first to know about new investment opportunities. Join our newsletter for market insights, featured deals, and expert tips.
+          </p>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="Enter your email" 
+                        className="h-12 px-5 bg-card border-border/50"
+                        {...field} 
+                        data-testid="input-newsletter-email" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="h-12 px-8 text-sm uppercase tracking-widest font-medium group whitespace-nowrap" 
+                disabled={mutation.isPending}
+                data-testid="button-newsletter-submit"
+              >
+                {mutation.isPending ? "Subscribing..." : (
+                  <>
+                    Subscribe
+                    <Send className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+          
+          <p className="text-xs text-muted-foreground mt-4">
+            No spam, unsubscribe anytime. We respect your privacy.
+          </p>
         </ScrollReveal>
       </div>
     </section>
