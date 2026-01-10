@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
 import { useDealAction } from "@/contexts/deal-action-context";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { sampleWholesaleDeals } from "@/lib/sample-data";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -61,10 +63,23 @@ function DealDetailPage() {
   const dealId = params.id;
   const { openDealAction } = useDealAction();
   const { trackDealView } = useAnalytics();
+  const { isAuthenticated, isDemoMode } = useSupabaseAuth();
+  
+  const isGuestMode = !isAuthenticated;
+  const useSampleData = isGuestMode || isDemoMode;
+  
+  const sampleDeal = useMemo(() => {
+    if (!useSampleData) return null;
+    const numericId = parseInt(dealId || "0");
+    return sampleWholesaleDeals.find(d => d.id === numericId) as WholesaleDeal | undefined;
+  }, [dealId, useSampleData]);
 
-  const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
+  const { data: apiDeal, isLoading, error } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
+    enabled: !useSampleData && !!dealId,
   });
+  
+  const deal = useSampleData ? sampleDeal : apiDeal;
 
   useEffect(() => {
     if (deal?.id) {
@@ -72,11 +87,11 @@ function DealDetailPage() {
     }
   }, [deal?.id, trackDealView]);
 
-  if (isLoading) {
+  if (isLoading && !useSampleData) {
     return <DealDetailSkeleton />;
   }
 
-  if (error || !deal) {
+  if (!deal) {
     return (
       <div className="p-6">
         <div className="text-center py-16">
