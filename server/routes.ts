@@ -572,6 +572,40 @@ export async function registerRoutes(
     }
   });
 
+  // Update capital project (owner only)
+  app.patch('/api/supabase/capital-projects/:id', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const projectId = req.params.id;
+      
+      const { storage: supabaseStorage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
+      
+      // Check ownership
+      const existingProject = await supabaseStorage.getCapitalProject(projectId);
+      if (!existingProject) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      if (existingProject.owner_id !== userId) {
+        return res.status(403).json({ message: 'Not authorized to edit this project' });
+      }
+      
+      // Update project with provided fields
+      const updateData = toSnakeCase(req.body);
+      delete updateData.id;
+      delete updateData.owner_id;
+      delete updateData.created_at;
+      
+      const updatedProject = await supabaseStorage.updateCapitalProject(projectId, updateData);
+      res.json(toCamelCase(updatedProject));
+    } catch (error) {
+      console.error('Error updating capital project:', error);
+      res.status(500).json({ message: 'Failed to update capital project' });
+    }
+  });
+
   // --- Capital Commitments (Supabase) ---
   app.post('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
     try {
@@ -710,6 +744,43 @@ export async function registerRoutes(
     } catch (error) {
       console.error('Error creating wholesale deal:', error);
       res.status(500).json({ message: 'Failed to create wholesale deal' });
+    }
+  });
+
+  // Update wholesale deal (owner only)
+  app.patch('/api/supabase/wholesale-deals/:id', isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const dealId = parseInt(req.params.id);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: 'Invalid deal ID' });
+      }
+      
+      // Check ownership using PostgreSQL storage
+      const existingDeal = await storage.getWholesaleDeal(dealId);
+      if (!existingDeal) {
+        return res.status(404).json({ message: 'Deal not found' });
+      }
+      if (existingDeal.submittedBy !== userId) {
+        return res.status(403).json({ message: 'Not authorized to edit this deal' });
+      }
+      
+      // Update deal with provided fields
+      const { storage: supabaseStorage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
+      const updateData = toSnakeCase(req.body);
+      delete updateData.id;
+      delete updateData.submitted_by;
+      delete updateData.wholesaler_id;
+      delete updateData.created_at;
+      
+      const updatedDeal = await supabaseStorage.updateWholesaleDeal(dealId, updateData);
+      res.json(toCamelCase(updatedDeal));
+    } catch (error) {
+      console.error('Error updating wholesale deal:', error);
+      res.status(500).json({ message: 'Failed to update wholesale deal' });
     }
   });
 
