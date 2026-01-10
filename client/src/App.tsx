@@ -75,6 +75,7 @@ import MarketflowNegotiate from "@/pages/marketflow-negotiate";
 import MarketflowDashboard from "@/pages/marketflow-dashboard";
 import OfferStudioPage from "@/pages/offer-studio";
 import AnalyticsPage from "@/pages/analytics";
+import MyAnalyticsPage from "@/pages/my-analytics";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -172,6 +173,7 @@ function Router() {
       <Route path="/marketflow/deals/:id/negotiate" component={MarketflowNegotiate} />
       <Route path="/marketflow/dashboard" component={MarketflowDashboard} />
       <Route path="/marketflow/analytics" component={AnalyticsPage} />
+      <Route path="/marketflow/my-analytics" component={MyAnalyticsPage} />
       
       {/* Offer Studio - Full page deal offer experience */}
       <Route path="/offer-studio/:dealType/:dealId" component={OfferStudioPage} />
