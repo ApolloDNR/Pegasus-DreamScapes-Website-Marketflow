@@ -2269,3 +2269,176 @@ export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLog).omit(
 });
 export type InsertAdminAuditLog = z.infer<typeof insertAdminAuditLogSchema>;
 export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
+
+// ============================================
+// USER WATCHLISTS - Collaborative deal tracking
+// ============================================
+
+export const userWatchlists = pgTable("user_watchlists", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  color: varchar("color", { length: 20 }).default("#3B82F6"),
+  isShared: boolean("is_shared").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserWatchlistSchema = createInsertSchema(userWatchlists).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true 
+});
+export type InsertUserWatchlist = z.infer<typeof insertUserWatchlistSchema>;
+export type UserWatchlist = typeof userWatchlists.$inferSelect;
+
+// Watchlist items - deals in a watchlist
+export const watchlistItems = pgTable("watchlist_items", {
+  id: serial("id").primaryKey(),
+  watchlistId: integer("watchlist_id").notNull(),
+  dealId: integer("deal_id").notNull(),
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // wholesale, capital, listing
+  notes: text("notes"),
+  addedBy: varchar("added_by", { length: 255 }),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+});
+
+export const insertWatchlistItemSchema = createInsertSchema(watchlistItems).omit({ 
+  id: true, 
+  addedAt: true 
+});
+export type InsertWatchlistItem = z.infer<typeof insertWatchlistItemSchema>;
+export type WatchlistItem = typeof watchlistItems.$inferSelect;
+
+// Watchlist collaborators - sharing watchlists
+export const watchlistCollaborators = pgTable("watchlist_collaborators", {
+  id: serial("id").primaryKey(),
+  watchlistId: integer("watchlist_id").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  canEdit: boolean("can_edit").default(false),
+  invitedAt: timestamp("invited_at").defaultNow().notNull(),
+});
+
+export const insertWatchlistCollaboratorSchema = createInsertSchema(watchlistCollaborators).omit({ 
+  id: true, 
+  invitedAt: true 
+});
+export type InsertWatchlistCollaborator = z.infer<typeof insertWatchlistCollaboratorSchema>;
+export type WatchlistCollaborator = typeof watchlistCollaborators.$inferSelect;
+
+// ============================================
+// USER PREFERENCES - Onboarding and settings
+// ============================================
+
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  
+  // === ONBOARDING COMPLETED ===
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  onboardingStep: integer("onboarding_step").default(0),
+  
+  // === ROLE PREFERENCES ===
+  primaryGoal: varchar("primary_goal", { length: 100 }), // flip, rental, wholesale, develop
+  experienceLevel: varchar("experience_level", { length: 50 }), // beginner, intermediate, expert
+  
+  // === PROPERTY PREFERENCES ===
+  preferredPropertyTypes: text("preferred_property_types").array(),
+  preferredLocations: text("preferred_locations").array(),
+  minBudget: integer("min_budget"),
+  maxBudget: integer("max_budget"),
+  
+  // === INVESTMENT PREFERENCES ===
+  preferredStrategies: text("preferred_strategies").array(),
+  riskTolerance: varchar("risk_tolerance", { length: 20 }), // low, medium, high
+  investmentTimeline: varchar("investment_timeline", { length: 50 }),
+  
+  // === NOTIFICATION PREFERENCES ===
+  emailNotifications: boolean("email_notifications").default(true),
+  dealAlerts: boolean("deal_alerts").default(true),
+  messageNotifications: boolean("message_notifications").default(true),
+  
+  // === TIMESTAMPS ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true 
+});
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+
+// ============================================
+// USER ACTIVITY - Analytics tracking
+// ============================================
+
+export const userActivity = pgTable("user_activity", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  
+  // === ACTIVITY TYPE ===
+  activityType: varchar("activity_type", { length: 50 }).notNull(), // view, save, offer, message, share
+  
+  // === RESOURCE ===
+  resourceType: varchar("resource_type", { length: 50 }).notNull(), // deal, project, listing, user
+  resourceId: integer("resource_id").notNull(),
+  
+  // === METADATA ===
+  metadata: text("metadata"), // JSON for additional context
+  
+  // === TIMESTAMP ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserActivitySchema = createInsertSchema(userActivity).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertUserActivity = z.infer<typeof insertUserActivitySchema>;
+export type UserActivity = typeof userActivity.$inferSelect;
+
+// ============================================
+// HOMEPAGE CONTENT - Admin-managed content
+// ============================================
+
+export const homepageContent = pgTable("homepage_content", {
+  id: serial("id").primaryKey(),
+  sectionKey: varchar("section_key", { length: 100 }).notNull().unique(), // hero_title, hero_subtitle, cta_text, etc.
+  content: text("content").notNull(),
+  contentType: varchar("content_type", { length: 50 }).default("text"), // text, html, json
+  isActive: boolean("is_active").default(true),
+  updatedBy: varchar("updated_by", { length: 255 }),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertHomepageContentSchema = createInsertSchema(homepageContent).omit({ 
+  id: true, 
+  updatedAt: true 
+});
+export type InsertHomepageContent = z.infer<typeof insertHomepageContentSchema>;
+export type HomepageContent = typeof homepageContent.$inferSelect;
+
+// ============================================
+// FEATURED DEALS - Admin-curated highlights
+// ============================================
+
+export const featuredDeals = pgTable("featured_deals", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  dealType: varchar("deal_type", { length: 50 }).notNull(), // wholesale, capital, listing
+  displayOrder: integer("display_order").default(0),
+  featuredBy: varchar("featured_by", { length: 255 }),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFeaturedDealSchema = createInsertSchema(featuredDeals).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertFeaturedDeal = z.infer<typeof insertFeaturedDealSchema>;
+export type FeaturedDeal = typeof featuredDeals.$inferSelect;

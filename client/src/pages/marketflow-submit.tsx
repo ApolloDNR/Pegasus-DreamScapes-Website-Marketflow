@@ -7,6 +7,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
 import { CapitalRaiseForm } from "@/components/capital-raise-form";
+import { ListingForm } from "@/components/listing-form";
 import { Link } from "wouter";
 import {
   ArrowRight,
@@ -27,7 +28,8 @@ import {
   AlertCircle,
   Wrench,
   Handshake,
-  PiggyBank
+  PiggyBank,
+  Home
 } from "lucide-react";
 
 export default function MarketflowSubmit() {
@@ -163,7 +165,7 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
 }
 
 function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
-  const [submitType, setSubmitType] = useState<"wholesale" | "capital">("wholesale");
+  const [submitType, setSubmitType] = useState<"wholesale" | "capital" | "listing">("wholesale");
   
   return (
     <div className="space-y-6">
@@ -184,15 +186,19 @@ function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
         </p>
       </div>
 
-      <Tabs value={submitType} onValueChange={(v) => setSubmitType(v as "wholesale" | "capital")} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+      <Tabs value={submitType} onValueChange={(v) => setSubmitType(v as "wholesale" | "capital" | "listing")} className="w-full">
+        <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
           <TabsTrigger value="wholesale" className="gap-2" data-testid="tab-submit-wholesale">
             <Handshake className="w-4 h-4" />
-            Wholesale Assignment
+            <span className="hidden sm:inline">Wholesale</span>
           </TabsTrigger>
           <TabsTrigger value="capital" className="gap-2" data-testid="tab-submit-capital">
             <PiggyBank className="w-4 h-4" />
-            Capital Raise
+            <span className="hidden sm:inline">Capital Raise</span>
+          </TabsTrigger>
+          <TabsTrigger value="listing" className="gap-2" data-testid="tab-submit-listing">
+            <Home className="w-4 h-4" />
+            <span className="hidden sm:inline">Listing</span>
           </TabsTrigger>
         </TabsList>
 
@@ -215,6 +221,17 @@ function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
               }} />
             </div>
             <CapitalRaiseSidebar isPegasus={isPegasus} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="listing">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <ListingForm onSuccess={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} />
+            </div>
+            <ListingSidebar isPegasus={isPegasus} />
           </div>
         </TabsContent>
       </Tabs>
@@ -389,6 +406,85 @@ function CapitalRaiseSidebar({ isPegasus }: { isPegasus: boolean }) {
             <p className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
               Priority capital matching
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function ListingSidebar({ isPegasus }: { isPegasus: boolean }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Home className="w-5 h-5 text-green-600" />
+            Listing Guidelines
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Accurate property details and pricing</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>High-quality photos of the property</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Clear showing instructions</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span>Responsive contact information</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            Listing Types
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div className="p-3 rounded-lg bg-muted/50">
+            <p className="font-medium">On Market</p>
+            <p className="text-muted-foreground text-xs">Active MLS listings open to all buyers</p>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <p className="font-medium">Off Market</p>
+            <p className="text-muted-foreground text-xs">Exclusive listings for platform members</p>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {isPegasus && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crown className="w-5 h-5 text-primary" />
+              Pegasus Privileges
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2">
+            <p className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Featured listing placement
+            </p>
+            <p className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-primary" />
+              Verified agent badge
+            </p>
+            <p className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Priority buyer matching
             </p>
           </CardContent>
         </Card>

@@ -10,6 +10,7 @@ import {
   insertWholesaleDealSchema,
   insertWholesaleRequestSchema,
   insertRetailListingSchema,
+  insertListingSchema,
   insertBuyerInquirySchema,
   insertInvestorProfileSchema,
   insertWholesalerProfileSchema,
@@ -2379,6 +2380,58 @@ export async function registerRoutes(
       return res.json(listing);
     } catch (error) {
       console.error("Error fetching listing:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create new listing
+  app.post("/api/listings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const listingData = {
+        ...req.body,
+        submittedBy: userId,
+        status: "pending",
+      };
+
+      const result = insertListingSchema.safeParse(listingData);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+
+      const listing = await storage.createListing(result.data);
+      console.log("New listing created:", listing.propertyAddress);
+      return res.status(201).json(listing);
+    } catch (error) {
+      console.error("Error creating listing:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update listing (owner only)
+  app.patch("/api/listings/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const listingId = parseInt(req.params.id);
+
+      const existing = await storage.getListing(listingId);
+      if (!existing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // Check ownership
+      if (existing.submittedBy !== userId) {
+        return res.status(403).json({ message: "Not authorized to edit this listing" });
+      }
+
+      const updated = await storage.updateListing(listingId, req.body);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating listing:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
