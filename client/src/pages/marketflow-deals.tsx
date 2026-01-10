@@ -354,6 +354,7 @@ function DealsPage() {
   const displayDeals = useSampleData 
     ? sampleWholesaleDeals.map(d => ({
         ...d,
+        id: String(d.id),
         matchScore: Math.floor(Math.random() * 40) + 60
       })) as WholesaleDeal[]
     : (deals || []) as WholesaleDeal[];
