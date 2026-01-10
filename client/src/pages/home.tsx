@@ -2,6 +2,12 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +48,9 @@ import {
   Key,
   Zap,
   Send,
-  ChevronRight
+  ChevronRight,
+  HelpCircle,
+  ChevronLeft
 } from "lucide-react";
 import {
   Form,
@@ -83,6 +91,7 @@ export default function Home() {
       <InvestmentPhilosophySection />
       <HowItWorksSection />
       <TrustLogosSection />
+      <FAQSection />
       <NewsletterSection />
       <ContactSection />
     </div>
@@ -318,6 +327,9 @@ function FeaturedDealsSection() {
 }
 
 function TestimonialsSection() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  
   const testimonials = [
     {
       quote: "Pegasus Dreamscapes made selling my inherited property stress-free. They gave me a fair offer and closed in two weeks. I couldn't have asked for a better experience.",
@@ -343,13 +355,39 @@ function TestimonialsSection() {
       rating: 5,
       initials: "LT",
     },
+    {
+      quote: "The MarketFlow platform made it easy to find off-market deals. I've closed three wholesale assignments in my first quarter. Outstanding deal flow quality.",
+      author: "James K.",
+      role: "Wholesale Investor",
+      location: "Los Angeles, CA",
+      rating: 5,
+      initials: "JK",
+    },
+    {
+      quote: "Professional, responsive, and fair. They bought my rental property as-is and handled all the paperwork. Made a stressful situation manageable.",
+      author: "Maria G.",
+      role: "Property Seller",
+      location: "Fresno, CA",
+      rating: 5,
+      initials: "MG",
+    },
   ];
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [isPaused, testimonials.length]);
 
   return (
     <section id="testimonials" className="py-32 lg:py-40 bg-card relative overflow-hidden">
-      {/* Subtle background decoration */}
+      {/* Enhanced background decoration */}
       <div className="absolute top-20 left-10 w-64 h-64 bg-primary/3 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-10 w-80 h-80 bg-champagne/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/3 to-transparent rounded-full blur-3xl" />
       
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="text-center mb-16">
@@ -360,43 +398,91 @@ function TestimonialsSection() {
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">Real stories from clients who have partnered with us to achieve their real estate goals.</p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid md:grid-cols-3 gap-6 lg:gap-8" staggerDelay={0.15}>
-          {testimonials.map((testimonial, index) => (
-            <StaggerItem key={index}>
-              <motion.div 
-                className="p-8 lg:p-10 bg-background rounded-lg border border-border/50 h-full relative group"
-                data-testid={`testimonial-card-${index}`}
-                whileHover={{ y: -6, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.08)" }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Quote icon */}
-                <div className="absolute -top-3 -left-3 w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                  <Quote className="w-4 h-4 text-primary-foreground" />
+        {/* Testimonials Carousel */}
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Main carousel container */}
+          <div className="overflow-hidden">
+            <motion.div 
+              className="flex"
+              animate={{ x: `-${currentSlide * 100}%` }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+            >
+              {testimonials.map((testimonial, index) => (
+                <div 
+                  key={index}
+                  className="w-full flex-shrink-0 px-4"
+                >
+                  <motion.div 
+                    className="max-w-3xl mx-auto p-10 lg:p-14 bg-background rounded-2xl border border-border/50 relative"
+                    data-testid={`testimonial-card-${index}`}
+                  >
+                    {/* Large quote icon */}
+                    <div className="absolute -top-5 left-10 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                      <Quote className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    
+                    <div className="flex gap-1 mb-8 mt-4 justify-center">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                      ))}
+                    </div>
+                    
+                    <p className="text-foreground leading-relaxed text-lg lg:text-xl text-center italic mb-10">
+                      "{testimonial.quote}"
+                    </p>
+                    
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold">
+                        {testimonial.initials}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold text-foreground text-lg">{testimonial.author}</p>
+                        <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
-                
-                <div className="flex gap-1 mb-6 mt-2">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                
-                <p className="text-foreground leading-relaxed mb-8 text-base italic">
-                  "{testimonial.quote}"
-                </p>
-                
-                <div className="flex items-center gap-4 pt-6 border-t border-border/50">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                    {testimonial.initials}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{testimonial.author}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
-                  </div>
-                </div>
-              </motion.div>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Carousel dots */}
+          <div className="flex justify-center gap-2 mt-10">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  currentSlide === index 
+                    ? 'w-8 bg-primary' 
+                    : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+                data-testid={`button-testimonial-dot-${index}`}
+                aria-label={`Go to testimonial ${index + 1}`}
+              />
+            ))}
+          </div>
+
+          {/* Navigation arrows */}
+          <button 
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 shadow-lg"
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+            data-testid="button-testimonial-prev"
+          >
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </button>
+          <button 
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 shadow-lg"
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % testimonials.length)}
+            data-testid="button-testimonial-next"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Trust badges - enhanced styling */}
         <ScrollReveal className="mt-24" delay={0.3}>
@@ -466,10 +552,44 @@ function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
       
-      {/* Subtle animated particles/glow effect */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      {/* Enhanced animated gradient orbs */}
+      <div className="absolute inset-0 opacity-40 overflow-hidden">
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/25 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            x: [0, -40, 0],
+            y: [0, 30, 0],
+            opacity: [0.4, 0.6, 0.4]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+        <motion.div 
+          className="absolute top-1/2 right-1/3 w-48 h-48 bg-tan/15 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.3, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div 
+          className="absolute bottom-1/3 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+          animate={{ 
+            y: [0, -50, 0],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
       </div>
       
       {/* Content - centered for more impact */}
@@ -1264,6 +1384,9 @@ function InvestmentPhilosophySection() {
 
   return (
     <section id="philosophy" className="py-32 lg:py-40 bg-gradient-to-b from-background to-muted/10 scroll-mt-24 relative overflow-hidden">
+      {/* Section divider at top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      
       {/* Subtle grid pattern */}
       <div className="absolute inset-0 opacity-[0.015]" style={{
         backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
@@ -1459,6 +1582,91 @@ function TrustLogosSection() {
           ))}
         </div>
       </div>
+    </section>
+  );
+}
+
+function FAQSection() {
+  const faqs = [
+    {
+      question: "How does the wholesale assignment process work?",
+      answer: "Our MarketFlow platform connects you with verified wholesale deals. Once you find a property that fits your criteria, you can submit an offer directly through the platform. Our team handles the assignment process, ensuring a smooth transaction from contract to close."
+    },
+    {
+      question: "What is the minimum investment amount?",
+      answer: "Investment minimums vary by deal type. Wholesale assignments typically require earnest money deposits starting at $5,000. Capital raise opportunities may have higher minimums depending on the project structure. Contact us for specific deal requirements."
+    },
+    {
+      question: "How are deals vetted before listing?",
+      answer: "Every deal on MarketFlow goes through our rigorous underwriting process. We verify property ownership, assess repair estimates, confirm ARV calculations with local comps, and ensure all contracts are legally sound before listing any opportunity."
+    },
+    {
+      question: "Can I sell my property directly to Pegasus Dreamscapes?",
+      answer: "Yes! We purchase properties in any condition. Whether you're facing foreclosure, dealing with an inherited property, or simply want a fast, hassle-free sale, we can provide a fair cash offer within 24-48 hours."
+    },
+    {
+      question: "What types of properties do you focus on?",
+      answer: "We specialize in residential properties suitable for fix-and-flip or rental strategies, including single-family homes, duplexes, and small multi-family buildings. We focus on the California market, particularly the Bay Area and Central Valley regions."
+    },
+    {
+      question: "How quickly can deals close?",
+      answer: "Our average closing time is 14-21 days for wholesale assignments and 7-14 days for direct purchases. For cash buyers with proof of funds ready, we can often close even faster depending on title work and inspections."
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background relative">
+      {/* Section divider at top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full mb-6">
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Common Questions</span>
+          </div>
+          
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-faq-title">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            Find answers to common questions about our investment process, deal flow, and how we can help you achieve your real estate goals.
+          </p>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.2}>
+          <Accordion type="single" collapsible className="space-y-4" data-testid="accordion-faq">
+            {faqs.map((faq, index) => (
+              <AccordionItem 
+                key={index} 
+                value={`item-${index}`}
+                className="bg-card border border-border/50 rounded-lg px-6 data-[state=open]:border-primary/30 transition-colors"
+                data-testid={`faq-item-${index}`}
+              >
+                <AccordionTrigger className="text-left font-semibold text-base py-5 hover:no-underline hover:text-primary transition-colors" data-testid={`button-faq-trigger-${index}`}>
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5" data-testid={`text-faq-answer-${index}`}>
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.4} className="text-center mt-12">
+          <p className="text-muted-foreground mb-4">Still have questions?</p>
+          <Link href="#contact">
+            <Button variant="outline" className="group" data-testid="button-faq-contact">
+              Contact Our Team
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </ScrollReveal>
+      </div>
+      
+      {/* Section divider at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
     </section>
   );
 }
