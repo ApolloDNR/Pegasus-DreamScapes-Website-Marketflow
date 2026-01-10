@@ -5,6 +5,7 @@ import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
+import { useDemoMode } from "@/contexts/demo-mode-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -289,36 +290,47 @@ function DealsPage() {
   }, [handleKeyDown]);
   
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
+  const { isDemoMode, disableDemoMode } = useDemoMode();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
   const { openDealAction } = useDealAction();
   const [, setLocation] = useLocation();
 
+  const canBrowse = isAuthenticated || isGuestMode || isDemoMode;
+  const shouldFetchLiveData = isAuthenticated && !isDemoMode && !isGuestMode;
+
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
+    enabled: shouldFetchLiveData,
   });
 
   const { data: capitalProjects, isLoading: projectsLoading } = useQuery<CapitalProject[]>({
     queryKey: ['/api/capital-projects'],
+    enabled: shouldFetchLiveData,
   });
 
   const { data: listings, isLoading: listingsLoading } = useQuery<Listing[]>({
     queryKey: ['/api/listings'],
+    enabled: shouldFetchLiveData,
   });
 
   const handleDealAction = (deal: WholesaleDeal, actionType: "jv_request" | "invest") => {
     if (!isAuthenticated && !isGuestMode) {
       toast({
         title: "Sign in required",
-        description: "Please sign in to take action on deals.",
+        description: isDemoMode 
+          ? "Demo mode allows browsing only. Sign up for an account to take action on deals."
+          : "Please sign in to take action on deals.",
         variant: "default",
       });
+      if (isDemoMode) {
+        setTimeout(() => setLocation("/signup"), 2000);
+      }
       return;
     }
     if (actionType === "jv_request") {
       openDealAction(deal.id, "wholesale_jv");
     } else {
-      // Default to accept - user can choose counter from within the form
       openDealAction(deal.id, "wholesale_accept");
     }
   };
@@ -327,7 +339,9 @@ function DealsPage() {
     if (!isAuthenticated) {
       toast({
         title: "Sign in required",
-        description: "Please sign in to save deals.",
+        description: isDemoMode 
+          ? "Demo mode allows browsing only. Sign up to save deals to your watchlist."
+          : "Please sign in to save deals.",
         variant: "default",
       });
       return;
@@ -335,11 +349,13 @@ function DealsPage() {
     await toggleSaveItem('wholesale_deal', dealId);
   };
 
-  const useSampleData = isGuestMode || (!deals?.length && !dealsLoading);
-  const displayDeals = (deals?.length ? deals : sampleWholesaleDeals.map(d => ({
-    ...d,
-    matchScore: Math.floor(Math.random() * 40) + 60
-  }))) as WholesaleDeal[];
+  const useSampleData = isGuestMode || isDemoMode || (!deals?.length && !dealsLoading);
+  const displayDeals = useSampleData 
+    ? sampleWholesaleDeals.map(d => ({
+        ...d,
+        matchScore: Math.floor(Math.random() * 40) + 60
+      })) as WholesaleDeal[]
+    : (deals || []) as WholesaleDeal[];
   
   const filteredDeals = displayDeals?.filter(deal => {
     let matches = true;
@@ -373,6 +389,40 @@ function DealsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Eye className="w-5 h-5 text-amber-500" />
+            <div>
+              <p className="font-medium text-foreground">Demo Mode Active</p>
+              <p className="text-sm text-muted-foreground">
+                You're exploring the marketplace in demo mode. Sign up to unlock full features.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/signup">
+              <Button size="sm" data-testid="button-demo-signup">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign Up
+              </Button>
+            </Link>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => {
+                disableDemoMode();
+                setLocation("/marketflow");
+              }}
+              data-testid="button-exit-demo"
+            >
+              Exit Demo
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Progress Tracker - shows pipeline status for authenticated users */}
       <DealProgressTracker />
 

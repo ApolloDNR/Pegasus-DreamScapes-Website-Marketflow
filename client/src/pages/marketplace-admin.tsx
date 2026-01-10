@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "wouter";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -35,6 +35,7 @@ import {
   Edit,
   Save,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -731,12 +732,22 @@ interface WholesaleDealSummary {
   status: string;
 }
 
+interface StoredHomepageContent {
+  id: number;
+  sectionKey: string;
+  content: string;
+  contentType: string | null;
+  isActive: boolean | null;
+  updatedBy: string | null;
+  updatedAt: string;
+}
+
 function HomepageContentManager() {
   const { toast } = useToast();
-  const [editingContent, setEditingContent] = useState<HomepageContent | null>(null);
   const [heroTitle, setHeroTitle] = useState("");
   const [heroSubtitle, setHeroSubtitle] = useState("");
   const [heroCta, setHeroCta] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: wholesaleDeals = [] } = useQuery<WholesaleDealSummary[]>({
     queryKey: ["/api/wholesale-deals"],
@@ -745,6 +756,53 @@ function HomepageContentManager() {
   const { data: featuredDeals = [], isLoading: featuredLoading } = useQuery<FeaturedDeal[]>({
     queryKey: ["/api/admin/featured-deals"],
   });
+
+  const { data: storedContent = [] } = useQuery<StoredHomepageContent[]>({
+    queryKey: ["/api/admin/homepage-content"],
+  });
+
+  React.useEffect(() => {
+    if (storedContent.length > 0) {
+      const heroTitleContent = storedContent.find(c => c.sectionKey === "hero_title");
+      const heroSubtitleContent = storedContent.find(c => c.sectionKey === "hero_subtitle");
+      const heroCtaContent = storedContent.find(c => c.sectionKey === "hero_cta");
+      
+      if (heroTitleContent) setHeroTitle(heroTitleContent.content);
+      if (heroSubtitleContent) setHeroSubtitle(heroSubtitleContent.content);
+      if (heroCtaContent) setHeroCta(heroCtaContent.content);
+    }
+  }, [storedContent]);
+
+  const saveContentMutation = useMutation({
+    mutationFn: async ({ sectionKey, content }: { sectionKey: string; content: string }) => {
+      return apiRequest("POST", "/api/admin/homepage-content", { sectionKey, content });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/homepage-content"] });
+    },
+  });
+
+  const handleSaveHeroContent = async () => {
+    setIsSaving(true);
+    try {
+      const saves = [];
+      if (heroTitle.trim()) {
+        saves.push(saveContentMutation.mutateAsync({ sectionKey: "hero_title", content: heroTitle }));
+      }
+      if (heroSubtitle.trim()) {
+        saves.push(saveContentMutation.mutateAsync({ sectionKey: "hero_subtitle", content: heroSubtitle }));
+      }
+      if (heroCta.trim()) {
+        saves.push(saveContentMutation.mutateAsync({ sectionKey: "hero_cta", content: heroCta }));
+      }
+      await Promise.all(saves);
+      toast({ title: "Hero content saved successfully" });
+    } catch (error) {
+      toast({ title: "Failed to save hero content", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const featureDealMutation = useMutation({
     mutationFn: async ({ dealType, dealId, priority }: { dealType: string; dealId: number; priority: number }) => {
@@ -829,13 +887,24 @@ function HomepageContentManager() {
               data-testid="input-hero-cta"
             />
           </div>
-          <Button className="w-full" data-testid="button-save-hero">
-            <Save className="h-4 w-4 mr-2" />
-            Save Hero Content
+          <Button 
+            className="w-full" 
+            onClick={handleSaveHeroContent}
+            disabled={isSaving}
+            data-testid="button-save-hero"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Hero Content
+              </>
+            )}
           </Button>
-          <p className="text-xs text-muted-foreground text-center">
-            Note: Hero content API integration coming soon
-          </p>
         </CardContent>
       </Card>
 

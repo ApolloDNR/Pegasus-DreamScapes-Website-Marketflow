@@ -10,6 +10,7 @@ import { PeggyProvider } from "@/contexts/peggy-context";
 import { PeggyDock } from "@/components/peggy-dock";
 import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
 import { DealActionProvider } from "@/contexts/deal-action-context";
+import { DemoModeProvider } from "@/contexts/demo-mode-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
 
 function ScrollToTop() {
@@ -190,24 +191,26 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SupabaseAuthProvider>
-        <TooltipProvider>
-          <DealActionProvider>
-            <PeggyProvider>
-              <ScrollToTop />
-              <div className="min-h-screen flex flex-col">
-                <Navigation />
-                <main className="flex-1">
-                  <ErrorBoundary>
-                    <Router />
-                  </ErrorBoundary>
-                </main>
-                <Footer />
-              </div>
-              <PeggyDock />
-              <Toaster />
-            </PeggyProvider>
-          </DealActionProvider>
-        </TooltipProvider>
+        <DemoModeProvider>
+          <TooltipProvider>
+            <DealActionProvider>
+              <PeggyProvider>
+                <ScrollToTop />
+                <div className="min-h-screen flex flex-col">
+                  <Navigation />
+                  <main className="flex-1">
+                    <ErrorBoundary>
+                      <Router />
+                    </ErrorBoundary>
+                  </main>
+                  <Footer />
+                </div>
+                <PeggyDock />
+                <Toaster />
+              </PeggyProvider>
+            </DealActionProvider>
+          </TooltipProvider>
+        </DemoModeProvider>
       </SupabaseAuthProvider>
     </QueryClientProvider>
   );

@@ -66,7 +66,11 @@ import {
   type Listing, type InsertListing,
   type ListingInquiry, type InsertListingInquiry,
   type FeaturedDeal, type InsertFeaturedDeal,
+  type UserActivity, type InsertUserActivity,
+  type HomepageContent, type InsertHomepageContent,
   featuredDeals,
+  userActivity,
+  homepageContent,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -418,6 +422,16 @@ export interface IStorage {
   getFeaturedDeals(): Promise<FeaturedDeal[]>;
   createFeaturedDeal(data: { dealType: string; dealId: number; priority?: number; isActive?: boolean }): Promise<FeaturedDeal>;
   deleteFeaturedDeal(id: number): Promise<void>;
+
+  // User Activity (Analytics)
+  createUserActivity(activity: InsertUserActivity): Promise<UserActivity>;
+  getUserActivities(userId?: string, limit?: number): Promise<UserActivity[]>;
+  getActivityStats(): Promise<{ totalViews: number; totalSaves: number; totalOffers: number; recentActivity: UserActivity[] }>;
+
+  // Homepage Content
+  getHomepageContent(): Promise<HomepageContent[]>;
+  getHomepageContentByKey(sectionKey: string): Promise<HomepageContent | undefined>;
+  upsertHomepageContent(data: { sectionKey: string; content: string; contentType?: string; updatedBy?: string }): Promise<HomepageContent>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2505,6 +2519,83 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFeaturedDeal(id: number): Promise<void> {
     await db.delete(featuredDeals).where(eq(featuredDeals.id, id));
+  }
+
+  // ============================================
+  // USER ACTIVITY (ANALYTICS)
+  // ============================================
+
+  async createUserActivity(activity: InsertUserActivity): Promise<UserActivity> {
+    const [created] = await db.insert(userActivity).values(activity).returning();
+    return created;
+  }
+
+  async getUserActivities(userId?: string, limit: number = 50): Promise<UserActivity[]> {
+    if (userId) {
+      return db.select().from(userActivity)
+        .where(eq(userActivity.userId, userId))
+        .orderBy(desc(userActivity.createdAt))
+        .limit(limit);
+    }
+    return db.select().from(userActivity)
+      .orderBy(desc(userActivity.createdAt))
+      .limit(limit);
+  }
+
+  async getActivityStats(): Promise<{ totalViews: number; totalSaves: number; totalOffers: number; recentActivity: UserActivity[] }> {
+    const allActivity = await db.select().from(userActivity);
+    
+    const totalViews = allActivity.filter(a => a.activityType === "view").length;
+    const totalSaves = allActivity.filter(a => a.activityType === "save").length;
+    const totalOffers = allActivity.filter(a => a.activityType === "offer").length;
+    
+    const recentActivity = await db.select().from(userActivity)
+      .orderBy(desc(userActivity.createdAt))
+      .limit(10);
+    
+    return { totalViews, totalSaves, totalOffers, recentActivity };
+  }
+
+  // ============================================
+  // HOMEPAGE CONTENT
+  // ============================================
+
+  async getHomepageContent(): Promise<HomepageContent[]> {
+    return db.select().from(homepageContent)
+      .where(eq(homepageContent.isActive, true))
+      .orderBy(homepageContent.sectionKey);
+  }
+
+  async getHomepageContentByKey(sectionKey: string): Promise<HomepageContent | undefined> {
+    const [content] = await db.select().from(homepageContent)
+      .where(eq(homepageContent.sectionKey, sectionKey));
+    return content;
+  }
+
+  async upsertHomepageContent(data: { sectionKey: string; content: string; contentType?: string; updatedBy?: string }): Promise<HomepageContent> {
+    const existing = await this.getHomepageContentByKey(data.sectionKey);
+    
+    if (existing) {
+      const [updated] = await db.update(homepageContent)
+        .set({
+          content: data.content,
+          contentType: data.contentType || "text",
+          updatedBy: data.updatedBy,
+          updatedAt: new Date(),
+        })
+        .where(eq(homepageContent.sectionKey, data.sectionKey))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db.insert(homepageContent).values({
+      sectionKey: data.sectionKey,
+      content: data.content,
+      contentType: data.contentType || "text",
+      updatedBy: data.updatedBy,
+      isActive: true,
+    }).returning();
+    return created;
   }
 }
 

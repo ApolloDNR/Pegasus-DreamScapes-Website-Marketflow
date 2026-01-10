@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
+import { useDemoMode } from "@/contexts/demo-mode-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,19 +19,20 @@ import {
   BarChart3,
   Handshake,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Eye
 } from "lucide-react";
 
 export default function MarketplacePage() {
   const [, setLocation] = useLocation();
   const { isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { isDemoMode } = useDemoMode();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      // All authenticated users go directly to the deals page
+    if (!isLoading && (isAuthenticated || isDemoMode)) {
       setLocation("/marketflow/deals");
     }
-  }, [isLoading, isAuthenticated, setLocation]);
+  }, [isLoading, isAuthenticated, isDemoMode, setLocation]);
 
   if (isLoading) {
     return (
@@ -66,6 +68,14 @@ export default function MarketplacePage() {
 }
 
 function HeroSection() {
+  const { enableDemoMode } = useDemoMode();
+  const [, setLocation] = useLocation();
+
+  const handleDemoMode = () => {
+    enableDemoMode();
+    setLocation("/marketflow/deals");
+  };
+
   return (
     <section className="relative py-24 lg:py-32 bg-gradient-to-br from-card via-background to-card overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-secondary/3" />
@@ -95,7 +105,14 @@ function HeroSection() {
                   Sign In
                 </Button>
               </Link>
+              <Button size="lg" variant="ghost" onClick={handleDemoMode} data-testid="button-demo-mode">
+                <Eye className="w-4 h-4 mr-2" />
+                Try Demo Mode
+              </Button>
             </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              Explore the marketplace without an account—demo mode allows browsing with limited features
+            </p>
           </div>
         </FadeIn>
       </div>

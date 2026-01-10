@@ -2344,6 +2344,133 @@ export async function registerRoutes(
     }
   });
 
+  // Analytics Tracking API - requires authentication
+  const validActivityTypes = ["view", "save", "offer", "message", "share", "click"];
+  const validResourceTypes = ["deal", "project", "listing", "user", "page"];
+
+  app.post("/api/analytics/track", isAuthenticated, async (req: any, res) => {
+    try {
+      const { activityType, resourceType, resourceId, metadata } = req.body;
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      if (!activityType || !resourceType || resourceId === undefined) {
+        return res.status(400).json({ message: "activityType, resourceType, and resourceId are required" });
+      }
+
+      if (!validActivityTypes.includes(activityType)) {
+        return res.status(400).json({ message: `Invalid activityType. Must be one of: ${validActivityTypes.join(", ")}` });
+      }
+
+      if (!validResourceTypes.includes(resourceType)) {
+        return res.status(400).json({ message: `Invalid resourceType. Must be one of: ${validResourceTypes.join(", ")}` });
+      }
+
+      const parsedResourceId = parseInt(String(resourceId), 10);
+      if (isNaN(parsedResourceId) || parsedResourceId < 0) {
+        return res.status(400).json({ message: "resourceId must be a valid positive integer" });
+      }
+
+      let sanitizedMetadata: string | undefined;
+      if (metadata) {
+        const metadataStr = JSON.stringify(metadata);
+        if (metadataStr.length > 1000) {
+          return res.status(400).json({ message: "metadata exceeds maximum size of 1000 characters" });
+        }
+        sanitizedMetadata = metadataStr;
+      }
+
+      const activity = await storage.createUserActivity({
+        userId,
+        activityType,
+        resourceType,
+        resourceId: parsedResourceId,
+        metadata: sanitizedMetadata,
+      });
+
+      return res.status(201).json(activity);
+    } catch (error) {
+      console.error("Error tracking activity:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/analytics/stats", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const stats = await storage.getActivityStats();
+      return res.json(stats);
+    } catch (error) {
+      console.error("Error fetching analytics stats:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Homepage Content API - public endpoint returns only active content
+  app.get("/api/homepage-content", async (req, res) => {
+    try {
+      const content = await storage.getHomepageContent();
+      const activeContent = content.filter(item => item.isActive !== false);
+      const contentMap = activeContent.reduce((acc, item) => {
+        acc[item.sectionKey] = item.content;
+        return acc;
+      }, {} as Record<string, string>);
+      return res.json(contentMap);
+    } catch (error) {
+      console.error("Error fetching homepage content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/homepage-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const content = await storage.getHomepageContent();
+      return res.json(content);
+    } catch (error) {
+      console.error("Error fetching homepage content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  const validSectionKeys = ["hero_title", "hero_subtitle", "hero_cta", "featured_title", "featured_subtitle"];
+  const validContentTypes = ["text", "html", "json"];
+
+  app.post("/api/admin/homepage-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const { sectionKey, content, contentType } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      if (!sectionKey || !content) {
+        return res.status(400).json({ message: "sectionKey and content are required" });
+      }
+
+      if (!validSectionKeys.includes(sectionKey)) {
+        return res.status(400).json({ message: `Invalid sectionKey. Must be one of: ${validSectionKeys.join(", ")}` });
+      }
+
+      if (content.length > 2000) {
+        return res.status(400).json({ message: "Content exceeds maximum length of 2000 characters" });
+      }
+
+      const safeContentType = contentType && validContentTypes.includes(contentType) ? contentType : "text";
+
+      const savedContent = await storage.upsertHomepageContent({
+        sectionKey,
+        content,
+        contentType: safeContentType,
+        updatedBy: userId,
+      });
+
+      console.log("Homepage content updated:", sectionKey);
+      return res.status(201).json(savedContent);
+    } catch (error) {
+      console.error("Error saving homepage content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Protected HQ Wholesale Routes (staff only)
   app.get("/api/hq/wholesale-deals", isAuthenticated, requireStaffRole, async (req, res) => {
     try {

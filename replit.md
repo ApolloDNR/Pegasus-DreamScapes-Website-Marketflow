@@ -30,6 +30,8 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 *   **User Profiles & Role System**: Detailed profiles with stats, reviews, achievement badges, and an 8-tier role-based access control system (`MARKETPLACE_ROLES`).
 *   **User Onboarding**: A guided 5-step flow for new users, covering role selection, property preferences, and goal setting.
 *   **Admin Content Management**: Admins can manage homepage content and featured deals through the "Content" tab in the Admin Dashboard, including hero section customization and deal featuring capabilities.
+*   **Demo Mode**: Allows visitors to explore the marketplace without signing up. Demo mode enables browsing deals with sample data while prompting users to sign up for protected actions like saving deals or submitting offers.
+*   **Analytics Tracking**: User activity tracking system with support for views, saves, offers, messages, and shares across deals, projects, listings, and pages. Accessible via `useAnalytics` hook.
 
 ## External Dependencies
 
