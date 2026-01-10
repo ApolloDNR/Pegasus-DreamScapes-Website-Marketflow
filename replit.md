@@ -29,6 +29,7 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 *   **Document Management**: Drag-and-drop file uploads with categorization and photo galleries integrated with object storage.
 *   **User Profiles & Role System**: Detailed profiles with stats, reviews, achievement badges, and an 8-tier role-based access control system (`MARKETPLACE_ROLES`).
 *   **User Onboarding**: A guided 5-step flow for new users, covering role selection, property preferences, and goal setting.
+*   **Admin Content Management**: Admins can manage homepage content and featured deals through the "Content" tab in the Admin Dashboard, including hero section customization and deal featuring capabilities.
 
 ## External Dependencies
 

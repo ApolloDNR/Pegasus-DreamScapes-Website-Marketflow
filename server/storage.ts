@@ -64,7 +64,9 @@ import {
   type UserBadge, type InsertUserBadge,
   type AdminAuditLog, type InsertAdminAuditLog,
   type Listing, type InsertListing,
-  type ListingInquiry, type InsertListingInquiry
+  type ListingInquiry, type InsertListingInquiry,
+  type FeaturedDeal, type InsertFeaturedDeal,
+  featuredDeals,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -411,6 +413,11 @@ export interface IStorage {
   getJvRequestsByWholesaler(wholesalerId: string): Promise<JVRequest[]>;
   getJvRequest(id: number): Promise<JVRequest | undefined>;
   updateJvRequestStatus(id: number, status: string): Promise<JVRequest | undefined>;
+
+  // Featured Deals
+  getFeaturedDeals(): Promise<FeaturedDeal[]>;
+  createFeaturedDeal(data: { dealType: string; dealId: number; priority?: number; isActive?: boolean }): Promise<FeaturedDeal>;
+  deleteFeaturedDeal(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1908,7 +1915,7 @@ export class DatabaseStorage implements IStorage {
         id: deal.id * 100 + 2,
         type: "deal_submitted",
         title: "Deal Submitted",
-        description: deal.address || "Wholesale deal submitted",
+        description: deal.propertyAddress || "Wholesale deal submitted",
         amount: deal.askingPrice || undefined,
         createdAt: deal.createdAt || new Date(),
       });
@@ -2476,6 +2483,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(jvRequests.id, id))
       .returning();
     return updated;
+  }
+
+  // ============================================
+  // FEATURED DEALS
+  // ============================================
+
+  async getFeaturedDeals(): Promise<FeaturedDeal[]> {
+    return db.select().from(featuredDeals)
+      .orderBy(featuredDeals.displayOrder);
+  }
+
+  async createFeaturedDeal(data: { dealType: string; dealId: number; priority?: number; isActive?: boolean }): Promise<FeaturedDeal> {
+    const [created] = await db.insert(featuredDeals).values({
+      dealType: data.dealType,
+      dealId: data.dealId,
+      displayOrder: data.priority || 0,
+    }).returning();
+    return created;
+  }
+
+  async deleteFeaturedDeal(id: number): Promise<void> {
+    await db.delete(featuredDeals).where(eq(featuredDeals.id, id));
   }
 }
 

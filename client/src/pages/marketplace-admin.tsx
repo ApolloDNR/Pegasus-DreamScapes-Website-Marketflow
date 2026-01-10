@@ -31,7 +31,12 @@ import {
   History,
   Search,
   User,
+  Star,
+  Edit,
+  Save,
+  Sparkles,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -311,6 +316,10 @@ export default function MarketplaceAdminPage() {
               <TabsTrigger value="audit-log" data-testid="tab-audit-log">
                 <History className="h-4 w-4 mr-1" />
                 Audit Log
+              </TabsTrigger>
+              <TabsTrigger value="content" data-testid="tab-content">
+                <Home className="h-4 w-4 mr-1" />
+                Content
               </TabsTrigger>
             </TabsList>
 
@@ -623,6 +632,10 @@ export default function MarketplaceAdminPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="content" className="space-y-4">
+              <HomepageContentManager />
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -684,5 +697,251 @@ export default function MarketplaceAdminPage() {
         </Dialog>
       </MarketplaceLayout>
     </AuthGuard>
+  );
+}
+
+interface HomepageContent {
+  id: number;
+  section: string;
+  title: string | null;
+  subtitle: string | null;
+  content: string | null;
+  ctaText: string | null;
+  ctaLink: string | null;
+  imageUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+interface FeaturedDeal {
+  id: number;
+  dealType: string;
+  dealId: number;
+  displayOrder: number | null;
+  expiresAt: string | null;
+  featuredBy: string | null;
+}
+
+interface WholesaleDealSummary {
+  id: number;
+  propertyAddress: string;
+  city: string;
+  state: string;
+  askingPrice: number | null;
+  status: string;
+}
+
+function HomepageContentManager() {
+  const { toast } = useToast();
+  const [editingContent, setEditingContent] = useState<HomepageContent | null>(null);
+  const [heroTitle, setHeroTitle] = useState("");
+  const [heroSubtitle, setHeroSubtitle] = useState("");
+  const [heroCta, setHeroCta] = useState("");
+
+  const { data: wholesaleDeals = [] } = useQuery<WholesaleDealSummary[]>({
+    queryKey: ["/api/wholesale-deals"],
+  });
+
+  const { data: featuredDeals = [], isLoading: featuredLoading } = useQuery<FeaturedDeal[]>({
+    queryKey: ["/api/admin/featured-deals"],
+  });
+
+  const featureDealMutation = useMutation({
+    mutationFn: async ({ dealType, dealId, priority }: { dealType: string; dealId: number; priority: number }) => {
+      return apiRequest("POST", "/api/admin/featured-deals", {
+        dealType,
+        dealId,
+        priority,
+        isActive: true,
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Deal featured successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/featured-deals"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to feature deal", variant: "destructive" });
+    },
+  });
+
+  const unfeatureDealMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/featured-deals/${id}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Deal unfeatured" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/featured-deals"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to unfeature deal", variant: "destructive" });
+    },
+  });
+
+  const activeDeals = wholesaleDeals.filter(d => d.status === "approved" || d.status === "listed" || d.status === "active");
+  const featuredDealIds = new Set(featuredDeals.map(f => `${f.dealType}-${f.dealId}`));
+
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return "N/A";
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+  };
+
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Home className="h-5 w-5" />
+            Homepage Hero
+          </CardTitle>
+          <CardDescription>
+            Customize the main hero section on the homepage
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="hero-title">Hero Title</Label>
+            <Input
+              id="hero-title"
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              placeholder="Transform Distressed Assets Into Dream Investments"
+              data-testid="input-hero-title"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hero-subtitle">Hero Subtitle</Label>
+            <Textarea
+              id="hero-subtitle"
+              value={heroSubtitle}
+              onChange={(e) => setHeroSubtitle(e.target.value)}
+              placeholder="Your premier destination for wholesale real estate deals..."
+              rows={3}
+              data-testid="input-hero-subtitle"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hero-cta">Call to Action Text</Label>
+            <Input
+              id="hero-cta"
+              value={heroCta}
+              onChange={(e) => setHeroCta(e.target.value)}
+              placeholder="Explore MarketFlow"
+              data-testid="input-hero-cta"
+            />
+          </div>
+          <Button className="w-full" data-testid="button-save-hero">
+            <Save className="h-4 w-4 mr-2" />
+            Save Hero Content
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Note: Hero content API integration coming soon
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-yellow-500" />
+            Featured Deals
+          </CardTitle>
+          <CardDescription>
+            Select deals to highlight on the homepage
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {featuredLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {featuredDeals.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    Currently Featured
+                  </Label>
+                  {featuredDeals.map((fd) => {
+                    const deal = wholesaleDeals.find(d => d.id === fd.dealId);
+                    return (
+                      <div 
+                        key={fd.id} 
+                        className="flex items-center justify-between p-3 rounded-lg border bg-yellow-50 dark:bg-yellow-900/20"
+                        data-testid={`featured-deal-${fd.id}`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">
+                            {deal?.propertyAddress || `Deal #${fd.dealId}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Order: {fd.displayOrder || 0} | {fd.dealType}
+                          </p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => unfeatureDealMutation.mutate(fd.id)}
+                          disabled={unfeatureDealMutation.isPending}
+                          data-testid={`button-unfeature-${fd.id}`}
+                        >
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Available Deals</Label>
+                <ScrollArea className="h-[200px]">
+                  <div className="space-y-2">
+                    {activeDeals.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No active deals available to feature
+                      </p>
+                    ) : (
+                      activeDeals
+                        .filter(d => !featuredDealIds.has(`wholesale-${d.id}`))
+                        .map((deal) => (
+                          <div 
+                            key={deal.id} 
+                            className="flex items-center justify-between p-3 rounded-lg border hover-elevate"
+                            data-testid={`available-deal-${deal.id}`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{deal.propertyAddress}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {deal.city}, {deal.state} | {formatCurrency(deal.askingPrice)}
+                              </p>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => featureDealMutation.mutate({
+                                dealType: "wholesale",
+                                dealId: deal.id,
+                                priority: featuredDeals.length + 1,
+                              })}
+                              disabled={featureDealMutation.isPending}
+                              data-testid={`button-feature-${deal.id}`}
+                            >
+                              <Star className="h-4 w-4 mr-1" />
+                              Feature
+                            </Button>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

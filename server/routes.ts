@@ -1494,6 +1494,30 @@ export async function registerRoutes(
     }
   });
 
+  // Get user's submitted listings
+  app.get('/api/portal/my-listings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listings = await storage.getListingsBySubmitter(userId);
+      return res.json(listings);
+    } catch (error) {
+      console.error("Error fetching user listings:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user's capital projects
+  app.get('/api/portal/my-capital-projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projects = await storage.getCapitalProjectsByCreator(userId);
+      return res.json(projects);
+    } catch (error) {
+      console.error("Error fetching user capital projects:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get('/api/portal/buyer/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -2219,6 +2243,103 @@ export async function registerRoutes(
       return res.status(201).json(deal);
     } catch (error) {
       console.error("Error submitting wholesale deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // User-owned wholesale deal update (owner only)
+  app.patch("/api/wholesale-deals/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const dealId = parseInt(req.params.id);
+
+      const existing = await storage.getWholesaleDeal(dealId);
+      if (!existing) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      // Check ownership
+      if (existing.submittedBy !== userId) {
+        return res.status(403).json({ message: "Not authorized to edit this deal" });
+      }
+
+      // Don't allow changing status through this endpoint
+      const { status, submittedBy, ...updateData } = req.body;
+      const updated = await storage.updateWholesaleDeal(dealId, updateData);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating wholesale deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // User-owned capital project update (owner only)
+  app.patch("/api/capital-projects/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const projectId = parseInt(req.params.id);
+
+      const existing = await storage.getCapitalProject(projectId);
+      if (!existing) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Check ownership
+      if (existing.creatorId !== userId) {
+        return res.status(403).json({ message: "Not authorized to edit this project" });
+      }
+
+      // Don't allow changing status through this endpoint
+      const { status, creatorId, ...updateData } = req.body;
+      const updated = await storage.updateCapitalProject(projectId, updateData);
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating capital project:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin Featured Deals API
+  app.get("/api/admin/featured-deals", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const featuredDeals = await storage.getFeaturedDeals();
+      return res.json(featuredDeals);
+    } catch (error) {
+      console.error("Error fetching featured deals:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/featured-deals", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const { dealType, dealId, priority, isActive } = req.body;
+      
+      if (!dealType || !dealId) {
+        return res.status(400).json({ message: "dealType and dealId are required" });
+      }
+
+      const featuredDeal = await storage.createFeaturedDeal({
+        dealType,
+        dealId,
+        priority: priority || 1,
+        isActive: isActive !== false,
+      });
+      
+      console.log("Featured deal created:", { dealType, dealId });
+      return res.status(201).json(featuredDeal);
+    } catch (error) {
+      console.error("Error featuring deal:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/admin/featured-deals/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFeaturedDeal(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error removing featured deal:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
