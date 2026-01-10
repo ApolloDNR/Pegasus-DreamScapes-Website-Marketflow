@@ -70,6 +70,11 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 *   **Google Fonts**: Inter font family.
 
 ## Recent Changes (January 2026)
+- Enhanced homepage hero section with animated floating gradient orbs
+- Added testimonials carousel with auto-play (5s), pause-on-hover, navigation arrows, and dot indicators
+- Created FAQ accordion section with 6 real estate investment questions using Radix Accordion
+- Added section dividers with gradient styling for visual separation
+- Implemented premium micro-interactions and hover effects throughout
 - Added SEO meta tags and `useSEO` hook for dynamic page titles
 - Created reusable error/loading components (`ErrorMessage`, `PageLoader`)
 - Implemented DOMPurify-based input sanitization with URL protocol allowlisting
