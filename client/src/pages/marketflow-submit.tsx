@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useDemoMode } from "@/contexts/demo-mode-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
 import { CapitalRaiseForm } from "@/components/capital-raise-form";
@@ -41,7 +42,8 @@ export default function MarketflowSubmit() {
 }
 
 function SubmitPage() {
-  const { user, isLoading, isWholesaler, isDreamscaper, userRole } = useSupabaseAuth();
+  const { user, isLoading, isWholesaler, isDreamscaper, userRole, isGuestMode } = useSupabaseAuth();
+  const { isDemoMode } = useDemoMode();
   
   if (isLoading) {
     return (
@@ -53,16 +55,17 @@ function SubmitPage() {
   
   const isPegasus = userRole?.startsWith("pegasus_") || false;
   const canSubmit = isWholesaler || isDreamscaper;
+  const isPreviewMode = isDemoMode || isGuestMode;
   
-  if (!user) {
+  if (!user && !isPreviewMode) {
     return <LockedScreen reason="login" />;
   }
   
-  if (!canSubmit) {
+  if (user && !canSubmit && !isPreviewMode) {
     return <LockedScreen reason="role" currentRole={userRole} />;
   }
   
-  return <AuthenticatedSubmitPage isPegasus={isPegasus} />;
+  return <AuthenticatedSubmitPage isPegasus={isPegasus} isPreviewMode={isPreviewMode} />;
 }
 
 function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; currentRole?: string | null }) {
@@ -164,11 +167,37 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
   );
 }
 
-function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
+function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegasus: boolean; isPreviewMode?: boolean }) {
   const [submitType, setSubmitType] = useState<"wholesale" | "capital" | "listing">("wholesale");
   
   return (
     <div className="space-y-6">
+      {isPreviewMode && (
+        <Card className="border-amber-500/30 bg-amber-500/10">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-amber-600" />
+                <div>
+                  <h3 className="font-medium">Preview Mode</h3>
+                  <p className="text-sm text-muted-foreground">
+                    You're viewing the submission forms in preview mode. Sign up as a Wholesaler to submit deals.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Link href="/signup">
+                  <Button size="sm" data-testid="button-signup-preview">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Sign Up to Submit
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl sm:text-3xl font-bold" data-testid="text-submit-deal-title">
@@ -180,9 +209,17 @@ function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
               Pegasus
             </Badge>
           )}
+          {isPreviewMode && (
+            <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/50">
+              <Lock className="w-3 h-3" />
+              Preview
+            </Badge>
+          )}
         </div>
         <p className="text-muted-foreground">
-          Submit your deal for review. Approved deals will be listed in MarketFlow for investors to discover.
+          {isPreviewMode 
+            ? "Explore our deal submission process. Sign up to submit your own deals."
+            : "Submit your deal for review. Approved deals will be listed in MarketFlow for investors to discover."}
         </p>
       </div>
 

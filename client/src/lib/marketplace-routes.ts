@@ -27,6 +27,7 @@ export interface RouteConfig {
 export const BASE_NAV_ITEMS: RouteConfig[] = [
   { title: "Dashboard", href: "/marketflow/dashboard", icon: LayoutDashboard, description: "Portfolio and investments" },
   { title: "Deal Flow", href: "/marketflow/deals", icon: Briefcase, description: "Browse deals and opportunities" },
+  { title: "Submit Deal", href: "/marketflow/submit", icon: Store, description: "Submit a new deal" },
   { title: "Community", href: "/marketflow/community", icon: Users, description: "Connect with other members" },
   { title: "Messages", href: "/marketflow/messages", icon: MessageSquare, description: "Direct conversations" },
 ];
@@ -42,13 +43,11 @@ export const ROLE_NAV_ITEMS: Record<UserRole, RouteConfig[]> = {
   ],
   pegasus_wholesaler: [
     { title: "My Deals", href: "/marketflow/wholesaler/deals", icon: Briefcase },
-    { title: "Submit Deal", href: "/marketflow/wholesaler/submit", icon: Store },
     { title: "Buyer Network", href: "/marketflow/wholesaler/buyers", icon: Users },
     { title: "Analytics", href: "/marketflow/wholesaler/analytics", icon: TrendingUp },
   ],
   wholesaler: [
     { title: "My Deals", href: "/marketflow/wholesaler/deals", icon: Briefcase },
-    { title: "Submit Deal", href: "/marketflow/wholesaler/submit", icon: Store },
     { title: "Buyer Network", href: "/marketflow/wholesaler/buyers", icon: Users },
   ],
   pegasus_dreamscaper: [

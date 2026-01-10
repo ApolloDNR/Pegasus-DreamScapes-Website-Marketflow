@@ -103,7 +103,8 @@ import {
   CheckSquare,
   ClipboardList,
   Folder,
-  FolderOpen
+  FolderOpen,
+  Plus
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -441,6 +442,13 @@ function DealsPage() {
                   : "Browse ready-to-move-in properties. Request info or schedule showings."}
             </p>
           </div>
+          
+          <Link href="/marketflow/submit">
+            <Button className="gap-2" data-testid="button-submit-deal">
+              <Plus className="w-4 h-4" />
+              Submit a Deal
+            </Button>
+          </Link>
           
           {dealCategory !== "listings" && (
             <div className="flex items-center gap-2">
