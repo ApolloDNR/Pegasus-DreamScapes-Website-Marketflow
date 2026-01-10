@@ -249,59 +249,144 @@ function TestimonialsSection() {
 
 function HeroSection() {
   return (
-    <section id="hero" className="relative min-h-screen flex items-center">
-      {/* Full-bleed background image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
+      {/* Full-bleed background image with parallax effect */}
+      <motion.div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
         style={{ backgroundImage: `url(${heroImage})` }}
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1.05 }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       />
       
-      {/* Refined cinematic overlay - deeper, more luxurious */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+      {/* Premium cinematic overlay - luxury gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+      
+      {/* Subtle animated particles/glow effect */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
       
       {/* Content - centered for more impact */}
       <div className="relative z-10 w-full py-32">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="max-w-4xl">
-            {/* Luxury kicker text */}
-            <p className="text-sm uppercase tracking-[0.3em] text-white/60 mb-6 animate-fade-in font-medium" data-testid="text-hero-kicker">
-              Real Estate Investment & Design
-            </p>
+            {/* Luxury kicker with decorative line */}
+            <motion.div 
+              className="flex items-center gap-4 mb-8"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
+              <p className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium" data-testid="text-hero-kicker">
+                Real Estate Investment & Design
+              </p>
+            </motion.div>
             
-            {/* Refined headline - tighter tracking, elegant spacing */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-bold leading-[0.9] mb-8 tracking-[-0.02em] text-white" data-testid="text-hero-headline">
-              <span className="block animate-fade-in-up">Designed Profits.</span>
-              <span className="block animate-fade-in-up animation-delay-100">Elevated</span>
-              <span className="block text-champagne animate-fade-in-up animation-delay-200">Communities.</span>
+            {/* Premium headline with refined typography */}
+            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.85] mb-10 tracking-[-0.03em] text-white" data-testid="text-hero-headline">
+              <motion.span 
+                className="block"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+              >
+                Designed Profits.
+              </motion.span>
+              <motion.span 
+                className="block"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
+              >
+                Elevated
+              </motion.span>
+              <motion.span 
+                className="block bg-gradient-to-r from-champagne via-tan to-primary bg-clip-text text-transparent"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.7 }}
+              >
+                Communities.
+              </motion.span>
             </h1>
             
-            {/* Refined subheadline */}
-            <p className="text-lg sm:text-xl text-white/70 max-w-2xl mb-12 leading-relaxed animate-fade-in animation-delay-300 font-light" data-testid="text-hero-subheadline">
+            {/* Refined subheadline with better spacing */}
+            <motion.p 
+              className="text-lg sm:text-xl text-white/75 max-w-2xl mb-14 leading-relaxed font-light"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+              data-testid="text-hero-subheadline"
+            >
               We transform distressed properties into high-performing assets through intentional design, disciplined execution, and community-focused restoration.
-            </p>
+            </motion.p>
             
-            {/* Refined CTAs with elegant styling */}
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-400">
+            {/* Premium CTAs with enhanced styling */}
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-5"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.1 }}
+            >
               <a href="#sell">
-                <Button size="lg" className="text-sm uppercase tracking-widest px-10 py-6 w-full sm:w-auto bg-white text-foreground hover:bg-white/90 font-medium button-glow" data-testid="button-hero-sell">
+                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-foreground hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   Sell Your Property
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
               <Link href="/partner">
-                <Button size="lg" variant="outline" className="text-sm uppercase tracking-widest px-10 py-6 w-full sm:w-auto border-white/40 text-white hover:bg-white/10 backdrop-blur-sm font-medium" data-testid="button-hero-invest">
+                <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   Partner With Us
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
-            </div>
+            </motion.div>
+
+            {/* Quick stats preview */}
+            <motion.div 
+              className="mt-20 pt-10 border-t border-white/10 flex flex-wrap gap-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.4 }}
+            >
+              <div>
+                <p className="text-3xl font-bold text-white">47+</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Properties</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-white">$12M+</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Invested</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-white">98%</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Satisfaction</p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Refined accent line at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-tan to-champagne" />
+      {/* Premium accent bar at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
+      
+      {/* Scroll indicator */}
+      <motion.div 
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50"
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+          <motion.div 
+            className="w-1.5 h-3 bg-white/50 rounded-full"
+            animate={{ y: [0, 8, 0], opacity: [1, 0, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+      </motion.div>
     </section>
   );
 }
