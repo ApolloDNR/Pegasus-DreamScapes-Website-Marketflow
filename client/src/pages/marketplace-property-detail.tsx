@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAnalytics } from "@/hooks/use-analytics";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,11 +65,18 @@ function PropertyDetailContent() {
   const { openDealAction } = useDealAction();
   const [, navigate] = useLocation();
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const { trackListingView } = useAnalytics();
 
   const { data: listing, isLoading, error } = useQuery<RetailListing>({
     queryKey: ["/api/supabase/listings", propertyId],
     enabled: !!propertyId,
   });
+
+  useEffect(() => {
+    if (listing?.id) {
+      trackListingView(typeof listing.id === 'string' ? parseInt(listing.id) : listing.id);
+    }
+  }, [listing?.id, trackListingView]);
 
   const toggleSaveMutation = useMutation({
     mutationFn: async () => {

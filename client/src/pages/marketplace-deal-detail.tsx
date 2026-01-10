@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
 import { useDealAction } from "@/contexts/deal-action-context";
+import { useAnalytics } from "@/hooks/use-analytics";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -58,10 +60,17 @@ function DealDetailPage() {
   const params = useParams<{ id: string }>();
   const dealId = params.id;
   const { openDealAction } = useDealAction();
+  const { trackDealView } = useAnalytics();
 
   const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
   });
+
+  useEffect(() => {
+    if (deal?.id) {
+      trackDealView(deal.id, "wholesale");
+    }
+  }, [deal?.id, trackDealView]);
 
   if (isLoading) {
     return <DealDetailSkeleton />;

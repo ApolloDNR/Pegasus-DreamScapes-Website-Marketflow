@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { AuthGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
+import { useAnalytics } from "@/hooks/use-analytics";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -78,11 +79,18 @@ function CapitalDetailPage() {
   const { toast } = useToast();
   const { user } = useSupabaseAuth();
   const [isCommitDialogOpen, setIsCommitDialogOpen] = useState(false);
+  const { trackProjectView } = useAnalytics();
 
   const { data: project, isLoading, error } = useQuery<CapitalProject>({
     queryKey: ['/api/supabase/capital-projects', projectId],
     enabled: !!projectId,
   });
+
+  useEffect(() => {
+    if (project?.id) {
+      trackProjectView(typeof project.id === 'string' ? parseInt(project.id) : project.id);
+    }
+  }, [project?.id, trackProjectView]);
 
   if (isLoading) {
     return <LoadingSkeleton />;
