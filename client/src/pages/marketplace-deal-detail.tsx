@@ -11,6 +11,8 @@ import { PropertyMap } from "@/components/property-map";
 import { useDealAction } from "@/contexts/deal-action-context";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useDemoMode } from "@/contexts/demo-mode-context";
+import { useSEO } from "@/hooks/use-seo";
 import { sampleWholesaleDeals } from "@/lib/sample-data";
 import type { WholesaleDeal } from "@shared/schema";
 import {
@@ -63,7 +65,8 @@ function DealDetailPage() {
   const dealId = params.id;
   const { openDealAction } = useDealAction();
   const { trackDealView } = useAnalytics();
-  const { isAuthenticated, isDemoMode } = useSupabaseAuth();
+  const { isAuthenticated } = useSupabaseAuth();
+  const { isDemoMode } = useDemoMode();
   
   const isGuestMode = !isAuthenticated;
   const useSampleData = isGuestMode || isDemoMode;
@@ -80,6 +83,12 @@ function DealDetailPage() {
   });
   
   const deal = useSampleData ? sampleDeal : apiDeal;
+
+  useSEO({
+    title: deal?.propertyAddress ? `${deal.propertyAddress} - Wholesale Deal` : "Deal Details",
+    description: deal ? `Wholesale deal: ${deal.propertyAddress || "Property"} - ARV $${deal.arv?.toLocaleString() || "N/A"}, Asking $${deal.askingPrice?.toLocaleString() || "N/A"}` : "View wholesale deal details and make an offer.",
+    type: "article"
+  });
 
   useEffect(() => {
     if (deal?.id) {

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { useDemoMode } from "@/contexts/demo-mode-context";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,11 @@ export default function MarketplacePage() {
   const [, setLocation] = useLocation();
   const { isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   const { isDemoMode } = useDemoMode();
+
+  useSEO({
+    title: "MarketFlow - Deal Marketplace",
+    description: "Browse wholesale deals, capital projects, and property listings. Connect with vetted investors and close deals faster."
+  });
 
   useEffect(() => {
     if (!isLoading && (isAuthenticated || isDemoMode)) {

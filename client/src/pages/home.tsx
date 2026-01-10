@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/use-seo";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
@@ -56,6 +57,11 @@ import serviceImage1 from "@assets/generated_images/real_estate_investor_consult
 import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
 
 export default function Home() {
+  useSEO({
+    title: "Real Estate Investment & Design",
+    description: "Transform distressed properties into beautiful, high-performing assets. Sell your property fast or invest with Pegasus Dreamscapes Corp."
+  });
+  
   return (
     <div className="min-h-screen">
       <HeroSection />
