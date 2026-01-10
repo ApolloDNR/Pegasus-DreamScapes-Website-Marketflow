@@ -115,23 +115,37 @@ function AnimatedCounter({ end, duration = 2000, prefix = "", suffix = "" }: { e
 function StatsSection() {
   const stats = [
     { value: 47, suffix: "+", label: "Properties Transformed", icon: Building },
-    { value: 12, suffix: "M+", prefix: "$", label: "Total Investment Volume", icon: DollarSign },
+    { value: 12, suffix: "M+", prefix: "$", label: "Investment Volume", icon: DollarSign },
     { value: 98, suffix: "%", label: "Client Satisfaction", icon: Star },
-    { value: 14, suffix: " Days", label: "Average Close Time", icon: Clock },
+    { value: 14, suffix: "", label: "Day Avg Close", icon: Clock },
   ];
 
   return (
-    <section className="py-20 lg:py-24 bg-card">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16" staggerDelay={0.15}>
+    <section className="py-24 lg:py-28 bg-card relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
           {stats.map((stat, index) => (
             <StaggerItem key={index}>
-              <div className="text-center group cursor-default">
-                <p className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
+              <motion.div 
+                className="text-center group cursor-default py-8 px-4 relative"
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Decorative top accent */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors duration-300">
+                  <stat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                </div>
+                
+                <p className="font-serif text-4xl sm:text-5xl lg:text-5xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
                   <SharedAnimatedCounter end={stat.value} prefix={stat.prefix || ""} suffix={stat.suffix} />
                 </p>
-                <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-medium">{stat.label}</p>
-              </div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">{stat.label}</p>
+              </motion.div>
             </StaggerItem>
           ))}
         </StaggerChildren>
@@ -148,6 +162,7 @@ function TestimonialsSection() {
       role: "Property Seller",
       location: "Oakland, CA",
       rating: 5,
+      initials: "SM",
     },
     {
       quote: "As an investor, I appreciate their transparent underwriting and consistent returns. The team's expertise in identifying value-add opportunities is unmatched.",
@@ -155,6 +170,7 @@ function TestimonialsSection() {
       role: "Investment Partner",
       location: "San Francisco, CA",
       rating: 5,
+      initials: "MR",
     },
     {
       quote: "They transformed our neighborhood. The property next door went from an eyesore to the most beautiful house on the block. Thank you for caring about our community.",
@@ -162,86 +178,110 @@ function TestimonialsSection() {
       role: "Community Member",
       location: "San Jose, CA",
       rating: 5,
+      initials: "LT",
     },
   ];
 
   return (
-    <section id="testimonials" className="py-32 lg:py-40 bg-background">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center mb-20">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Client Experiences</p>
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
+    <section id="testimonials" className="py-32 lg:py-40 bg-card relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/3 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-80 h-80 bg-champagne/5 rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center mb-16">
+          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Client Experiences</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
             Trusted by Sellers & Investors
           </h2>
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">Real stories from clients who have partnered with us to achieve their real estate goals.</p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid md:grid-cols-3 gap-8" staggerDelay={0.15}>
+        <StaggerChildren className="grid md:grid-cols-3 gap-6 lg:gap-8" staggerDelay={0.15}>
           {testimonials.map((testimonial, index) => (
             <StaggerItem key={index}>
-              <HoverLift>
-                <div className="p-10 sleek-card rounded-lg h-full" data-testid={`testimonial-card-${index}`}>
-                  <motion.div 
-                    className="flex gap-1 mb-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                  >
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.4 + i * 0.1, type: "spring", stiffness: 200 }}
-                      >
-                        <Star className="w-4 h-4 fill-primary text-primary" />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                  <p className="text-foreground leading-relaxed mb-8 text-base">
-                    "{testimonial.quote}"
-                  </p>
-                  <div className="pt-6 border-t border-border/50">
+              <motion.div 
+                className="p-8 lg:p-10 bg-background rounded-lg border border-border/50 h-full relative group"
+                data-testid={`testimonial-card-${index}`}
+                whileHover={{ y: -6, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.08)" }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Quote icon */}
+                <div className="absolute -top-3 -left-3 w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg">
+                  <Quote className="w-4 h-4 text-primary-foreground" />
+                </div>
+                
+                <div className="flex gap-1 mb-6 mt-2">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                  ))}
+                </div>
+                
+                <p className="text-foreground leading-relaxed mb-8 text-base italic">
+                  "{testimonial.quote}"
+                </p>
+                
+                <div className="flex items-center gap-4 pt-6 border-t border-border/50">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                    {testimonial.initials}
+                  </div>
+                  <div>
                     <p className="font-semibold text-foreground">{testimonial.author}</p>
                     <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
                   </div>
                 </div>
-              </HoverLift>
+              </motion.div>
             </StaggerItem>
           ))}
         </StaggerChildren>
 
-        {/* Trust badges - refined styling */}
-        <div className="mt-20 pt-16 border-t border-border/30">
-          <div className="flex flex-wrap justify-center gap-12 lg:gap-20">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Licensed & Insured</p>
-                <p className="text-xs text-muted-foreground">CA DRE #02145678</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Award className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">BBB Accredited</p>
-                <p className="text-xs text-muted-foreground">A+ Rating</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-tan/10 flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-tan" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Proven Track Record</p>
-                <p className="text-xs text-muted-foreground">5+ Years Experience</p>
-              </div>
+        {/* Trust badges - enhanced styling */}
+        <ScrollReveal className="mt-24" delay={0.3}>
+          <div className="bg-muted/30 rounded-2xl p-8 lg:p-12">
+            <p className="text-center text-sm uppercase tracking-[0.2em] text-muted-foreground font-medium mb-10">Why Choose Us</p>
+            <div className="grid sm:grid-cols-3 gap-8 lg:gap-12">
+              <motion.div 
+                className="flex items-center gap-5"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-base">Licensed & Insured</p>
+                  <p className="text-sm text-muted-foreground">CA DRE #02145678</p>
+                </div>
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-5"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Award className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-base">BBB Accredited</p>
+                  <p className="text-sm text-muted-foreground">A+ Rating</p>
+                </div>
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-5"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-14 h-14 rounded-xl bg-tan/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-6 h-6 text-tan" />
+                </div>
+                <div>
+                  <p className="font-semibold text-base">Proven Track Record</p>
+                  <p className="text-sm text-muted-foreground">5+ Years Experience</p>
+                </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );
@@ -352,16 +392,17 @@ function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.4 }}
+              data-testid="hero-stats-preview"
             >
-              <div>
+              <div data-testid="hero-stat-properties">
                 <p className="text-3xl font-bold text-white">47+</p>
                 <p className="text-sm text-white/50 uppercase tracking-wider">Properties</p>
               </div>
-              <div>
+              <div data-testid="hero-stat-invested">
                 <p className="text-3xl font-bold text-white">$12M+</p>
                 <p className="text-sm text-white/50 uppercase tracking-wider">Invested</p>
               </div>
-              <div>
+              <div data-testid="hero-stat-satisfaction">
                 <p className="text-3xl font-bold text-white">98%</p>
                 <p className="text-sm text-white/50 uppercase tracking-wider">Satisfaction</p>
               </div>
@@ -399,6 +440,7 @@ function ServicesSection() {
       description: "Strategic guidance for real estate investments. We analyze opportunities, evaluate risks, and provide expert consultation to help you make informed decisions.",
       cta: "Book Consultation",
       ctaLink: "#contact",
+      accent: "Personalized Strategy",
     },
     {
       image: serviceImage2,
@@ -406,42 +448,57 @@ function ServicesSection() {
       description: "Get an accurate assessment of your property's value. Our comprehensive valuation considers market conditions, comparable sales, and property condition.",
       cta: "Request Valuation",
       ctaLink: "#sell",
+      accent: "Free Assessment",
     },
   ];
 
   return (
-    <section id="services" className="py-32 lg:py-40 bg-stone scroll-mt-24">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+    <section id="services" className="py-32 lg:py-40 bg-muted/30 scroll-mt-24 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-primary/5 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-gradient-to-tr from-champagne/10 to-transparent rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="mb-20">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">What We Offer</p>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
-            Our Services
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">What We Offer</p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
+            Premium Services
           </h2>
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl">Expert guidance and valuation services to help you make informed real estate decisions.</p>
         </ScrollReveal>
 
-        <div className="space-y-12">
+        <div className="space-y-8">
           {services.map((service, index) => (
             <ScrollReveal key={index} delay={index * 0.2} direction={index % 2 === 0 ? "left" : "right"}>
               <motion.div 
-                className="grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden luxury-card"
+                className={`grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden border border-border/50 shadow-sm ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}
                 data-testid={`card-service-${index}`}
-                whileHover={{ boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.15)" }}
+                whileHover={{ y: -4, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.12)" }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="aspect-[4/3] lg:aspect-auto relative overflow-hidden group">
+                <div className={`aspect-[4/3] lg:aspect-auto relative overflow-hidden group ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
                   <motion.img 
                     src={service.image} 
                     alt={service.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
+                  {/* Overlay with accent badge */}
+                  <div className="absolute top-6 left-6">
+                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-foreground text-xs font-semibold uppercase tracking-wider rounded-md shadow-sm">
+                      {service.accent}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="p-10 lg:p-16 flex flex-col justify-center">
-                  <h3 className="text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">{service.title}</h3>
+                <div className={`p-10 lg:p-14 flex flex-col justify-center ${index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">{service.title}</h3>
                   <p className="text-muted-foreground text-base leading-relaxed mb-10">{service.description}</p>
                   <div>
                     <a href={service.ctaLink}>
-                      <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium">
+                      <Button size="lg" className="px-8 text-sm uppercase tracking-[0.12em] font-semibold">
                         {service.cta}
                         <ArrowRight className="ml-3 w-4 h-4" />
                       </Button>
@@ -453,8 +510,11 @@ function ServicesSection() {
           ))}
         </div>
 
-        <ScrollReveal className="mt-24" delay={0.2}>
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-8 font-medium">Investment Strategies</p>
+        <ScrollReveal className="mt-28" delay={0.2}>
+          <div className="text-center mb-12">
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Investment Strategies</p>
+            <h3 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">How We Create Value</h3>
+          </div>
           <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
             {[
               { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties into profitable assets" },
@@ -463,24 +523,27 @@ function ServicesSection() {
               { icon: Building, title: "New Construction", desc: "Ground-up development coming soon", comingSoon: true },
             ].map((item, index) => (
               <StaggerItem key={index}>
-                <div className={`p-8 sleek-card rounded-lg h-full hover-elevate transition-all duration-300 ${item.comingSoon ? 'opacity-75' : ''}`}>
+                <motion.div 
+                  className={`p-8 bg-card rounded-lg border border-border/50 h-full transition-all duration-300 ${item.comingSoon ? 'opacity-70' : ''}`}
+                  whileHover={!item.comingSoon ? { y: -6, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.1)" } : {}}
+                >
                   <motion.div 
-                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-primary/10'}`}
-                    whileHover={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 0.4 }}
+                    className={`w-14 h-14 rounded-lg flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10'}`}
+                    whileHover={!item.comingSoon ? { scale: 1.05 } : {}}
+                    transition={{ duration: 0.2 }}
                   >
                     <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
                   </motion.div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <h4 className="font-semibold text-lg">{item.title}</h4>
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <h4 className="font-serif font-semibold text-lg">{item.title}</h4>
                     {item.comingSoon && (
-                      <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">
+                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
                         Soon
                       </span>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
+                </motion.div>
               </StaggerItem>
             ))}
           </StaggerChildren>
@@ -1018,42 +1081,57 @@ function DreamsCaperCreedSection() {
   ];
 
   return (
-    <section id="creed" className="py-32 lg:py-40 bg-background scroll-mt-24">
-      <div className="max-w-4xl mx-auto px-6 lg:px-12">
-        <div className="text-center mb-20">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Our Identity</p>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-creed-title">
+    <section id="creed" className="py-32 lg:py-40 bg-gradient-to-b from-background via-background to-muted/20 scroll-mt-24 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-b from-primary/30 to-transparent" />
+      
+      <div className="max-w-4xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center mb-16">
+          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Our Identity</p>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-creed-title">
             The Dreamscaper Creed
           </h2>
-        </div>
+        </ScrollReveal>
 
-        <div className="space-y-6 mb-16">
+        <StaggerChildren className="space-y-5 mb-16" staggerDelay={0.1}>
           {creedLines.map((line, index) => (
-            <div 
-              key={index} 
-              className="flex items-center gap-5 text-xl sm:text-2xl font-medium text-foreground"
-              data-testid={`creed-line-${index}`}
-            >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <line.icon className="w-5 h-5 text-primary" />
-              </div>
-              <p className={index === 0 ? "text-primary" : ""}>{line.text}</p>
-            </div>
+            <StaggerItem key={index}>
+              <motion.div 
+                className={`flex items-center gap-5 p-5 rounded-lg transition-all duration-300 ${index === 0 ? 'bg-primary/5 border border-primary/10' : 'hover:bg-muted/30'}`}
+                data-testid={`creed-line-${index}`}
+                whileHover={{ x: 8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${index === 0 ? 'bg-primary' : 'bg-primary/10'}`}>
+                  <line.icon className={`w-5 h-5 ${index === 0 ? 'text-primary-foreground' : 'text-primary'}`} />
+                </div>
+                <p className={`text-xl sm:text-2xl font-medium ${index === 0 ? 'text-primary font-serif' : 'text-foreground'}`}>{line.text}</p>
+              </motion.div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
 
-        <div className="p-10 sleek-card rounded-lg mb-8">
-          <p className="text-base text-muted-foreground leading-relaxed">
-            <span className="text-primary font-semibold">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
-          </p>
-        </div>
+        <ScrollReveal delay={0.3}>
+          <div className="p-8 lg:p-10 bg-card rounded-lg border border-border/50 mb-6">
+            <p className="text-base text-muted-foreground leading-relaxed">
+              <span className="text-primary font-semibold">Dreamscapers</span> are the workers, partners, and future franchise operators who embody our mission. They restore neighborhoods, strengthen cities, and create lasting value through intentional design and disciplined execution. Every Dreamscaper understands that profit and purpose go hand-in-hand.
+            </p>
+          </div>
+        </ScrollReveal>
 
-        <div className="p-10 sleek-card rounded-lg">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4 font-medium">Our Mission</p>
-          <p className="text-base text-foreground leading-relaxed italic">
-            "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
-          </p>
-        </div>
+        <ScrollReveal delay={0.4}>
+          <div className="p-8 lg:p-10 bg-gradient-to-br from-primary/5 to-champagne/5 rounded-lg border border-primary/10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Quote className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Our Mission</p>
+            </div>
+            <p className="font-serif text-lg sm:text-xl text-foreground leading-relaxed italic">
+              "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
+            </p>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );
@@ -1120,50 +1198,71 @@ function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-32 lg:py-40 bg-stone scroll-mt-24">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="grid lg:grid-cols-2 gap-20 items-start">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Get In Touch</p>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-contact-title">
-              Contact Us
+    <section id="contact" className="py-32 lg:py-40 bg-muted/20 scroll-mt-24 relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-primary/3 to-transparent rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-start">
+          <ScrollReveal>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Get In Touch</p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-contact-title">
+              Let's Connect
             </h2>
-            <p className="text-base text-muted-foreground leading-relaxed mb-10">
+            <p className="text-lg text-muted-foreground leading-relaxed mb-12">
               Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you.
             </p>
             
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-primary" />
+              <motion.a 
+                href="tel:5551234567"
+                className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
+                whileHover={{ x: 4 }}
+                data-testid="link-contact-phone"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                  <Phone className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Phone</p>
-                  <p className="font-semibold">(555) 123-4567</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Phone</p>
+                  <p className="font-semibold text-lg">(555) 123-4567</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Email</p>
-                  <p className="font-semibold">hello@pegasusdreamscapes.com</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-primary" />
+              </motion.a>
+              <motion.a 
+                href="mailto:hello@pegasusdreamscapes.com"
+                className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
+                whileHover={{ x: 4 }}
+                data-testid="link-contact-email"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                  <Mail className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Location</p>
-                  <p className="font-semibold">Bay Area, California</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Email</p>
+                  <p className="font-semibold text-lg">hello@pegasusdreamscapes.com</p>
                 </div>
-              </div>
+              </motion.a>
+              <motion.div 
+                className="flex items-center gap-5 p-4 rounded-lg"
+                whileHover={{ x: 4 }}
+                data-testid="text-contact-location"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Location</p>
+                  <p className="font-semibold text-lg">Bay Area, California</p>
+                </div>
+              </motion.div>
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div className="p-10 sleek-card rounded-lg">
+          <ScrollReveal delay={0.2}>
+            <div className="p-8 lg:p-10 bg-card rounded-lg border border-border/50 shadow-sm">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
@@ -1233,7 +1332,8 @@ function ContactSection() {
                   </Button>
                 </form>
               </Form>
-          </div>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>
