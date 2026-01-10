@@ -1,3 +1,4 @@
+import { useCallback, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
@@ -11,6 +12,7 @@ interface TrackEventParams {
 
 export function useAnalytics() {
   const { isAuthenticated } = useSupabaseAuth();
+  const trackedRef = useRef<Set<string>>(new Set());
 
   const trackMutation = useMutation({
     mutationFn: async (params: TrackEventParams) => {
@@ -24,53 +26,58 @@ export function useAnalytics() {
     },
   });
 
-  const trackEvent = (params: TrackEventParams) => {
+  const trackEvent = useCallback((params: TrackEventParams) => {
     if (!isAuthenticated) return;
+    
+    const key = `${params.activityType}-${params.resourceType}-${params.resourceId}`;
+    if (trackedRef.current.has(key)) return;
+    trackedRef.current.add(key);
+    
     trackMutation.mutate(params);
-  };
+  }, [isAuthenticated, trackMutation]);
 
-  const trackDealView = (dealId: number, dealType: string = "wholesale") => {
+  const trackDealView = useCallback((dealId: number, dealType: string = "wholesale") => {
     trackEvent({
       activityType: "view",
       resourceType: "deal",
       resourceId: dealId,
       metadata: { dealType },
     });
-  };
+  }, [trackEvent]);
 
-  const trackDealSave = (dealId: number, dealType: string = "wholesale") => {
+  const trackDealSave = useCallback((dealId: number, dealType: string = "wholesale") => {
     trackEvent({
       activityType: "save",
       resourceType: "deal",
       resourceId: dealId,
       metadata: { dealType },
     });
-  };
+  }, [trackEvent]);
 
-  const trackOffer = (dealId: number, offerAmount?: number) => {
+  const trackOffer = useCallback((dealId: number, offerAmount?: number) => {
     trackEvent({
       activityType: "offer",
       resourceType: "deal",
       resourceId: dealId,
       metadata: { offerAmount },
     });
-  };
+  }, [trackEvent]);
 
-  const trackProjectView = (projectId: number) => {
+  const trackProjectView = useCallback((projectId: number) => {
     trackEvent({
       activityType: "view",
       resourceType: "project",
       resourceId: projectId,
     });
-  };
+  }, [trackEvent]);
 
-  const trackListingView = (listingId: number) => {
+  const trackListingView = useCallback((listingId: number) => {
     trackEvent({
       activityType: "view",
       resourceType: "listing",
       resourceId: listingId,
     });
-  };
+  }, [trackEvent]);
 
   return {
     trackEvent,
