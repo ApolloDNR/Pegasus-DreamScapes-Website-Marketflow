@@ -32,6 +32,9 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 *   **Admin Content Management**: Admins can manage homepage content and featured deals through the "Content" tab in the Admin Dashboard, including hero section customization and deal featuring capabilities.
 *   **Demo Mode**: Allows visitors to explore the marketplace without signing up. Demo mode enables browsing deals with sample data while prompting users to sign up for protected actions like saving deals or submitting offers.
 *   **Analytics Tracking**: User activity tracking system with support for views, saves, offers, messages, and shares across deals, projects, listings, and pages. Accessible via `useAnalytics` hook.
+*   **SEO Support**: Dynamic meta tag management via `useSEO` hook for page-specific titles, descriptions, and Open Graph tags.
+*   **Input Sanitization**: DOMPurify-based sanitization utilities in `client/src/lib/sanitize.ts` for XSS prevention with URL protocol allowlisting.
+*   **Rate Limiting**: In-memory rate limiting for API endpoints (20 req/min for Peggy AI, 100 req/min for analytics) with automatic cleanup.
 
 ## External Dependencies
 
@@ -60,5 +63,16 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 *   **TypeScript**: Type safety.
 *   **Vite**: Fast development server and optimized builds.
 
+### Security
+*   **DOMPurify / isomorphic-dompurify**: HTML sanitization for XSS prevention.
+
 ### Fonts and Assets
 *   **Google Fonts**: Inter font family.
+
+## Recent Changes (January 2026)
+- Added SEO meta tags and `useSEO` hook for dynamic page titles
+- Created reusable error/loading components (`ErrorMessage`, `PageLoader`)
+- Implemented DOMPurify-based input sanitization with URL protocol allowlisting
+- Fixed TypeScript errors in server routes (iterator conversions, type mismatches)
+- Added rate limiting with automatic memory cleanup for API endpoints
+- Cleaned up debug console.log statements from client code
