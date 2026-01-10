@@ -33,6 +33,15 @@ import {
 
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 60000);
+
 const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Response, next: NextFunction) => {
   const userId = req.user?.claims?.sub || req.ip;
   const key = `${req.path}:${userId}`;
