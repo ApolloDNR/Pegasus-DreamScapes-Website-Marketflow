@@ -30,6 +30,27 @@ import {
   insertWholesaleDealOfferSchema,
   STAFF_ROLES
 } from "@shared/schema";
+
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Response, next: NextFunction) => {
+  const userId = req.user?.claims?.sub || req.ip;
+  const key = `${req.path}:${userId}`;
+  const now = Date.now();
+  
+  const record = rateLimitStore.get(key);
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return next();
+  }
+  
+  if (record.count >= maxRequests) {
+    return res.status(429).json({ message: "Too many requests. Please try again later." });
+  }
+  
+  record.count++;
+  return next();
+};
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
@@ -2419,7 +2440,7 @@ export async function registerRoutes(
   const validActivityTypes = ["view", "save", "offer", "message", "share", "click"];
   const validResourceTypes = ["deal", "project", "listing", "user", "page"];
 
-  app.post("/api/analytics/track", isAuthenticated, async (req: any, res) => {
+  app.post("/api/analytics/track", isAuthenticated, rateLimit(100, 60000), async (req: any, res) => {
     try {
       const { activityType, resourceType, resourceId, metadata } = req.body;
       const userId = req.user?.claims?.sub;
@@ -4814,7 +4835,7 @@ export async function registerRoutes(
   });
 
   // Send a message to Peggy
-  app.post("/api/peggy/chat", async (req: any, res) => {
+  app.post("/api/peggy/chat", rateLimit(20, 60000), async (req: any, res) => {
     try {
       const { conversationId, message, context } = req.body;
       
