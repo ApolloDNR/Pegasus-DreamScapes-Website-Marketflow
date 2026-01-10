@@ -472,13 +472,15 @@ function TestimonialsSection() {
             className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 shadow-lg"
             onClick={() => setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
             data-testid="button-testimonial-prev"
+            aria-label="Previous testimonial"
           >
-            <ChevronRight className="w-5 h-5 rotate-180" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <button 
             className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 shadow-lg"
             onClick={() => setCurrentSlide((prev) => (prev + 1) % testimonials.length)}
             data-testid="button-testimonial-next"
+            aria-label="Next testimonial"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
