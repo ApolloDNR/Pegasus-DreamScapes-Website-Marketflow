@@ -130,7 +130,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
               setUser(currentSession.user);
               setProfile(profileData);
             } else {
-              console.log('No profile found for Supabase session, signing out stale session');
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
@@ -155,7 +154,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
                   setUser(newSession.user);
                   setProfile(profileData);
                 } else {
-                  console.log('No profile found for new session, clearing auth state');
                   setSession(null);
                   setUser(null);
                   setProfile(null);

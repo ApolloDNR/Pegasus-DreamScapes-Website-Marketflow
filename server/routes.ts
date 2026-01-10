@@ -35,7 +35,8 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 setInterval(() => {
   const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
+  const entries = Array.from(rateLimitStore.entries());
+  for (const [key, record] of entries) {
     if (now > record.resetTime) {
       rateLimitStore.delete(key);
     }
@@ -602,34 +603,35 @@ export async function registerRoutes(
     }
   });
 
-  // Update capital project (owner only)
+  // Update capital project (owner only) - uses PostgreSQL storage
   app.patch('/api/supabase/capital-projects/:id', isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const projectId = req.params.id;
+      const projectId = parseInt(req.params.id);
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: 'Invalid project ID' });
+      }
       
-      const { storage: supabaseStorage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
-      
-      // Check ownership
-      const existingProject = await supabaseStorage.getCapitalProject(projectId);
+      // Check ownership using PostgreSQL storage
+      const existingProject = await storage.getCapitalProject(projectId);
       if (!existingProject) {
         return res.status(404).json({ message: 'Project not found' });
       }
-      if (existingProject.owner_id !== userId) {
+      if (existingProject.createdBy !== userId) {
         return res.status(403).json({ message: 'Not authorized to edit this project' });
       }
       
       // Update project with provided fields
-      const updateData = toSnakeCase(req.body);
+      const updateData = { ...req.body };
       delete updateData.id;
-      delete updateData.owner_id;
-      delete updateData.created_at;
+      delete updateData.createdBy;
+      delete updateData.createdAt;
       
-      const updatedProject = await supabaseStorage.updateCapitalProject(projectId, updateData);
-      res.json(toCamelCase(updatedProject));
+      const updatedProject = await storage.updateCapitalProject(projectId, updateData);
+      res.json(updatedProject);
     } catch (error) {
       console.error('Error updating capital project:', error);
       res.status(500).json({ message: 'Failed to update capital project' });
@@ -798,16 +800,15 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Not authorized to edit this deal' });
       }
       
-      // Update deal with provided fields
-      const { storage: supabaseStorage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
-      const updateData = toSnakeCase(req.body);
+      // Update deal with provided fields using PostgreSQL storage
+      const updateData = { ...req.body };
       delete updateData.id;
-      delete updateData.submitted_by;
-      delete updateData.wholesaler_id;
-      delete updateData.created_at;
+      delete updateData.submittedBy;
+      delete updateData.wholesalerId;
+      delete updateData.createdAt;
       
-      const updatedDeal = await supabaseStorage.updateWholesaleDeal(dealId, updateData);
-      res.json(toCamelCase(updatedDeal));
+      const updatedDeal = await storage.updateWholesaleDeal(dealId, updateData);
+      res.json(updatedDeal);
     } catch (error) {
       console.error('Error updating wholesale deal:', error);
       res.status(500).json({ message: 'Failed to update wholesale deal' });
@@ -2155,7 +2156,7 @@ export async function registerRoutes(
           arv: deal.arv,
           estimatedRepairs: deal.estimatedRepairs,
           listedAssignmentFee: deal.assignmentFee,
-          negotiableFlag: deal.negotiable ?? true,
+          negotiableFlag: true,
           // Wholesale terms
           wholesaleTerms: {
             assignmentFee: deal.assignmentFee,
@@ -2386,12 +2387,12 @@ export async function registerRoutes(
       }
 
       // Check ownership
-      if (existing.creatorId !== userId) {
+      if (existing.createdBy !== userId) {
         return res.status(403).json({ message: "Not authorized to edit this project" });
       }
 
       // Don't allow changing status through this endpoint
-      const { status, creatorId, ...updateData } = req.body;
+      const { status, createdBy, ...updateData } = req.body;
       const updated = await storage.updateCapitalProject(projectId, updateData);
       return res.json(updated);
     } catch (error) {
@@ -2785,12 +2786,17 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/listing-inquiries", isAuthenticated, async (req, res) => {
+  app.post("/api/listing-inquiries", isAuthenticated, async (req: any, res) => {
     try {
-      const { listingId, inquiryType, message, preferredDate, preferredTime, phone } = req.body;
+      const { listingId, inquiryType, message, email, fullName, phone } = req.body;
+      const userId = req.user?.claims?.sub;
       
       if (!listingId) {
         return res.status(400).json({ message: "Listing ID is required" });
+      }
+
+      if (!email || !fullName) {
+        return res.status(400).json({ message: "Email and full name are required" });
       }
 
       // Verify listing exists
@@ -2801,16 +2807,14 @@ export async function registerRoutes(
 
       const inquiry = await storage.createListingInquiry({
         listingId,
-        userId: req.user?.claims?.sub || "",
-        inquiryType: inquiryType || "info",
-        message: message || "",
-        preferredDate: preferredDate ? new Date(preferredDate) : undefined,
-        preferredTime: preferredTime || undefined,
+        userId: userId || undefined,
+        email,
+        fullName,
+        interestType: inquiryType || "info",
+        message: message || undefined,
         phone: phone || undefined,
-        status: "pending",
       });
 
-      console.log("New listing inquiry received:", { listingId, inquiryType });
       return res.status(201).json(inquiry);
     } catch (error) {
       console.error("Error creating listing inquiry:", error);
@@ -6390,7 +6394,7 @@ export async function registerRoutes(
       
       const filteredDeals = deals.filter(d => d.status === "listed" || d.status === "approved" || d.status === "available");
       
-      const uniqueSubmitterIds = [...new Set(filteredDeals.map(d => d.submittedBy).filter(Boolean))] as string[];
+      const uniqueSubmitterIds = Array.from(new Set(filteredDeals.map(d => d.submittedBy).filter(Boolean))) as string[];
       
       let userMap = new Map<string, any>();
       let rolesMap = new Map<string, any[]>();
@@ -6413,7 +6417,8 @@ export async function registerRoutes(
       }
       
       const pegasusUserIds = new Set<string>();
-      for (const [id, roles] of rolesMap) {
+      const rolesEntries = Array.from(rolesMap.entries());
+      for (const [id, roles] of rolesEntries) {
         if (roles && Array.isArray(roles) && roles.some((r: any) => r.role?.startsWith("pegasus_"))) {
           pegasusUserIds.add(id);
         }
@@ -6959,7 +6964,7 @@ export async function registerRoutes(
   // Get watchlist deals
   app.get("/api/watchlists/shared/:watchlistId/deals", async (req, res) => {
     try {
-      const deals = [];
+      const deals: any[] = [];
       res.json(deals);
     } catch (error) {
       console.error("Error fetching watchlist deals:", error);
