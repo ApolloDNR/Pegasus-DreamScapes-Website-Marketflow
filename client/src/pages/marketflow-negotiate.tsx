@@ -796,21 +796,16 @@ function NegotiationRoom() {
             </CardContent>
           </Card>
 
-          <Card className="border-amber-500/30 bg-amber-500/5">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-amber-700 mb-1">Negotiation Tips</p>
-                  <ul className="text-muted-foreground space-y-1">
-                    <li>• Be responsive to counter-offers</li>
-                    <li>• Include earnest money to show commitment</li>
-                    <li>• Clearly state your funding source</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PeggyNegotiationAdvisor 
+            dealInfo={{
+              propertyAddress: deal?.propertyAddress || "",
+              askingPrice: deal?.askingPrice || 0,
+              arv: deal?.arv,
+              lane,
+            }}
+            offers={offers}
+            agreementReached={agreementReached}
+          />
         </div>
       </div>
 
@@ -853,5 +848,214 @@ function NegotiationRoom() {
         />
       )}
     </div>
+  );
+}
+
+interface PeggyAdvisorProps {
+  dealInfo: {
+    propertyAddress: string;
+    askingPrice: number;
+    arv?: number;
+    lane: string;
+  };
+  offers: Offer[];
+  agreementReached: boolean;
+}
+
+function PeggyNegotiationAdvisor({ dealInfo, offers, agreementReached }: PeggyAdvisorProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [query, setQuery] = useState("");
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const latestOffer = offers[offers.length - 1];
+  const offerCount = offers.length;
+  
+  const getContextualTips = () => {
+    if (agreementReached) {
+      return [
+        "Congratulations on reaching agreement!",
+        "Review the final terms carefully before proceeding",
+        "Consider generating a term sheet to formalize the deal",
+      ];
+    }
+    if (offerCount === 0) {
+      return [
+        "Start by submitting your first offer",
+        "Review the deal terms before making an offer",
+        "Consider your funding strategy and timeline",
+      ];
+    }
+    if (latestOffer?.sender === "investor" && latestOffer?.status === "pending") {
+      return [
+        "Your offer is pending - await counterparty response",
+        "Use chat to clarify any questions they might have",
+        "Stay responsive to speed up negotiations",
+      ];
+    }
+    if (latestOffer?.sender === "dreamscaper" && latestOffer?.status === "pending") {
+      return [
+        "You have a pending offer to review",
+        "Consider the terms carefully before responding",
+        "Use Quick Counter for minor adjustments",
+      ];
+    }
+    return [
+      "Be responsive to counter-offers",
+      "Include earnest money to show commitment",
+      "Clearly state your funding source",
+    ];
+  };
+
+  const quickPrompts = [
+    "What's a fair offer for this property?",
+    "How should I counter this offer?",
+    "What due diligence should I do?",
+    "Explain the negotiation timeline",
+  ];
+
+  const handleAskPeggy = async (promptText: string) => {
+    if (!promptText.trim()) return;
+    
+    setIsLoading(true);
+    setAiResponse(null);
+    
+    try {
+      const context = `
+Deal: ${dealInfo.propertyAddress}
+Asking Price: $${dealInfo.askingPrice?.toLocaleString() || "N/A"}
+ARV: ${dealInfo.arv ? `$${dealInfo.arv.toLocaleString()}` : "Not specified"}
+Lane: ${dealInfo.lane}
+Offer Count: ${offerCount}
+${latestOffer ? `Latest Offer: $${latestOffer.terms.offerPrice.toLocaleString()} (${latestOffer.status})` : "No offers yet"}
+Agreement Status: ${agreementReached ? "Reached" : "In negotiation"}
+
+User Question: ${promptText}
+      `.trim();
+
+      const res = await fetch("/api/peggy-ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: promptText,
+          context,
+          mode: "negotiation_advisor",
+        }),
+      });
+      
+      if (!res.ok) throw new Error("Failed to get response");
+      
+      const data = await res.json();
+      setAiResponse(data.response || data.message || "I can help you with this negotiation. Could you provide more details?");
+    } catch (error) {
+      setAiResponse("I'm having trouble connecting right now. Please try again or check your connection.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const tips = getContextualTips();
+
+  return (
+    <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10" data-testid="card-peggy-advisor">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          Peggy AI Advisor
+          <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
+        </CardTitle>
+        <CardDescription className="text-sm">
+          Get real-time negotiation guidance
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-start gap-3 p-3 bg-background/60 rounded-lg border">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-primary" />
+          </div>
+          <div className="text-sm space-y-1">
+            {tips.map((tip, i) => (
+              <p key={i} className="text-muted-foreground">• {tip}</p>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {quickPrompts.slice(0, expanded ? 4 : 2).map((prompt) => (
+            <Button
+              key={prompt}
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => {
+                setQuery(prompt);
+                setExpanded(true);
+                handleAskPeggy(prompt);
+              }}
+              disabled={isLoading}
+              data-testid={`button-quick-prompt-${prompt.slice(0,10)}`}
+            >
+              {prompt}
+            </Button>
+          ))}
+        </div>
+
+        {!expanded && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full text-xs"
+            onClick={() => setExpanded(true)}
+            data-testid="button-expand-peggy"
+          >
+            <MessageSquare className="w-3 h-3 mr-1" />
+            Ask Peggy a question
+          </Button>
+        )}
+
+        {expanded && (
+          <div className="space-y-2 pt-2 border-t">
+            <div className="flex gap-2">
+              <Textarea
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Ask about this negotiation..."
+                className="min-h-[60px] text-sm resize-none"
+                data-testid="input-peggy-question"
+              />
+            </div>
+            <Button 
+              size="sm" 
+              className="w-full"
+              onClick={() => handleAskPeggy(query)}
+              disabled={isLoading || !query.trim()}
+              data-testid="button-ask-peggy"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                  Thinking...
+                </>
+              ) : (
+                <>
+                  <Send className="w-3 h-3 mr-1" />
+                  Ask Peggy
+                </>
+              )}
+            </Button>
+
+            {aiResponse && (
+              <div className="p-3 bg-background rounded-lg border text-sm space-y-2" data-testid="text-peggy-response">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Sparkles className="w-3 h-3 text-primary" />
+                  Peggy's Response
+                </div>
+                <p className="text-foreground whitespace-pre-wrap">{aiResponse}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
