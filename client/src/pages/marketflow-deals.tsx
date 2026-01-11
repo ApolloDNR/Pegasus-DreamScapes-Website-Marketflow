@@ -2118,14 +2118,14 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           </Button>
         </div>
         {!isFunded && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-2">
             <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Accept Terms
+              <DollarSign className="w-4 h-4 mr-2" />
+              Invest Now
             </Button>
             <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Counter Offer
+              <Handshake className="w-4 h-4 mr-2" />
+              Negotiate
             </Button>
           </div>
         )}
@@ -2305,7 +2305,7 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
           onClick={() => onAcceptTerms(currentProject)}
           data-testid="button-capital-accept"
         >
-          <CheckCircle2 className="w-5 h-5" />
+          <DollarSign className="w-5 h-5" />
         </Button>
         <Button 
           size="lg" 
@@ -2314,12 +2314,12 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
           onClick={() => onCounterTerms(currentProject)}
           data-testid="button-capital-counter"
         >
-          <MessageSquare className="w-4 h-4" />
+          <Handshake className="w-4 h-4" />
         </Button>
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Undo • Pass • Save • Accept Terms • Counter Offer
+        Undo • Pass • Save • Invest • Negotiate
       </p>
     </div>
   );
@@ -2472,14 +2472,14 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           </Button>
         </div>
         {!isFunded && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-2">
             <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Accept Terms
+              <DollarSign className="w-4 h-4 mr-2" />
+              Invest Now
             </Button>
             <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Counter Offer
+              <Handshake className="w-4 h-4 mr-2" />
+              Negotiate
             </Button>
           </div>
         )}
