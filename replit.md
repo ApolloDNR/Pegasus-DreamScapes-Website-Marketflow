@@ -91,3 +91,6 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 - **WebSocket Real-time Updates**: WebSocket server on `/ws` path with user subscription and broadcast functionality. Client hooks: `useWebSocket` and `useNotificationSocket` in `client/src/hooks/use-websocket.ts`. Broadcasts wired for offer status updates and direct messages.
 - **PDF Export**: Existing routes for calculator, deal packet, and term sheet PDFs confirmed functional.
 - **Portfolio Scenario Planner**: Complete 628-line component at `client/src/components/portfolio-scenario.tsx`.
+- **NotificationContext**: Unified WebSocket notification context at `client/src/contexts/notification-context.tsx`. Single WebSocket connection per user session with centralized query invalidation. NotificationBell consumes context for real-time updates without duplicate connections.
+- **Route-Level Code Splitting**: Added React.lazy() for 50+ page components in App.tsx with Suspense fallback using PageLoader. Reduces initial bundle size and improves load performance.
+- **Real-time Toast Notifications**: NotificationProvider displays toast notifications for WebSocket events (offer_update, new_message, deal_update, notification types).
