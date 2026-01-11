@@ -292,6 +292,171 @@ export async function sendWelcomeEmail(user: {
   });
 }
 
+export async function sendOfferNotification(offer: {
+  recipientEmail: string;
+  recipientName: string;
+  dealTitle: string;
+  dealAddress: string;
+  offerAmount: number;
+  offerType: 'new' | 'counter' | 'accepted' | 'declined';
+  offererName?: string;
+  notes?: string;
+}): Promise<EmailResult> {
+  const typeMessages = {
+    new: { subject: 'New Offer Received', action: 'has submitted an offer', color: '#3b82f6' },
+    counter: { subject: 'Counter-Offer Received', action: 'has submitted a counter-offer', color: '#f59e0b' },
+    accepted: { subject: 'Offer Accepted', action: 'Your offer has been accepted', color: '#22c55e' },
+    declined: { subject: 'Offer Declined', action: 'Your offer was declined', color: '#ef4444' },
+  };
+
+  const msg = typeMessages[offer.offerType];
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 30px 20px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus Dreamscapes</h1>
+        <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Deal Update Notification</p>
+      </div>
+      
+      <div style="padding: 30px 20px; background: #f8f8f6;">
+        <h2 style="color: #1a1a1a; margin-top: 0; border-left: 4px solid ${msg.color}; padding-left: 12px;">${msg.subject}</h2>
+        
+        <p style="color: #555; line-height: 1.6;">
+          Hello ${offer.recipientName},<br><br>
+          ${offer.offerType === 'accepted' || offer.offerType === 'declined' 
+            ? msg.action 
+            : `${offer.offererName || 'An investor'} ${msg.action}`} on the following property:
+        </p>
+        
+        <div style="background: white; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <p style="margin: 0 0 8px; font-weight: bold; color: #1a1a1a;">${offer.dealTitle}</p>
+          <p style="margin: 0 0 12px; color: #666; font-size: 14px;">${offer.dealAddress}</p>
+          <p style="margin: 0; font-size: 24px; color: #c77b30; font-weight: bold;">$${offer.offerAmount.toLocaleString()}</p>
+        </div>
+        
+        ${offer.notes ? `<p style="color: #555; background: #f0f0f0; padding: 12px; border-radius: 4px; font-style: italic;">"${offer.notes}"</p>` : ''}
+        
+        <div style="margin: 25px 0; text-align: center;">
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow" 
+             style="display: inline-block; padding: 14px 28px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            View Deal in MarketFlow
+          </a>
+        </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({
+    to: offer.recipientEmail,
+    subject: `${msg.subject}: ${offer.dealTitle}`,
+    html,
+  });
+}
+
+export async function sendMessageNotification(message: {
+  recipientEmail: string;
+  recipientName: string;
+  senderName: string;
+  messagePreview: string;
+  dealTitle?: string;
+}): Promise<EmailResult> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 30px 20px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus Dreamscapes</h1>
+        <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">New Message</p>
+      </div>
+      
+      <div style="padding: 30px 20px; background: #f8f8f6;">
+        <h2 style="color: #1a1a1a; margin-top: 0;">New Message from ${message.senderName}</h2>
+        
+        <p style="color: #555; line-height: 1.6;">
+          Hello ${message.recipientName},<br><br>
+          You have received a new message${message.dealTitle ? ` regarding "${message.dealTitle}"` : ''}:
+        </p>
+        
+        <div style="background: white; border-left: 4px solid #c77b30; padding: 15px 20px; margin: 20px 0;">
+          <p style="margin: 0; color: #333; font-style: italic;">"${message.messagePreview.substring(0, 200)}${message.messagePreview.length > 200 ? '...' : ''}"</p>
+        </div>
+        
+        <div style="margin: 25px 0; text-align: center;">
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow/messages" 
+             style="display: inline-block; padding: 14px 28px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            Reply to Message
+          </a>
+        </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({
+    to: message.recipientEmail,
+    subject: `New message from ${message.senderName}${message.dealTitle ? ` about ${message.dealTitle}` : ''}`,
+    html,
+  });
+}
+
+export async function sendDealUpdateNotification(update: {
+  recipientEmail: string;
+  recipientName: string;
+  dealTitle: string;
+  updateType: 'status_change' | 'price_change' | 'new_documents';
+  oldValue?: string;
+  newValue?: string;
+  message?: string;
+}): Promise<EmailResult> {
+  const updateMessages = {
+    status_change: `The status of "${update.dealTitle}" has changed`,
+    price_change: `The price of "${update.dealTitle}" has been updated`,
+    new_documents: `New documents have been added to "${update.dealTitle}"`,
+  };
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 30px 20px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus Dreamscapes</h1>
+        <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Deal Update</p>
+      </div>
+      
+      <div style="padding: 30px 20px; background: #f8f8f6;">
+        <h2 style="color: #1a1a1a; margin-top: 0;">Deal Update</h2>
+        
+        <p style="color: #555; line-height: 1.6;">
+          Hello ${update.recipientName},<br><br>
+          ${updateMessages[update.updateType]}${update.oldValue && update.newValue ? ` from "${update.oldValue}" to "${update.newValue}"` : ''}.
+        </p>
+        
+        ${update.message ? `<p style="color: #555; background: #f0f0f0; padding: 12px; border-radius: 4px;">${update.message}</p>` : ''}
+        
+        <div style="margin: 25px 0; text-align: center;">
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow" 
+             style="display: inline-block; padding: 14px 28px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            View Deal Details
+          </a>
+        </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({
+    to: update.recipientEmail,
+    subject: `Deal Update: ${update.dealTitle}`,
+    html,
+  });
+}
+
 export const emailService = {
   sendEmail,
   sendSellerLeadNotification,
@@ -299,6 +464,9 @@ export const emailService = {
   sendInvestorLeadNotification,
   sendBuyerLeadNotification,
   sendWelcomeEmail,
+  sendOfferNotification,
+  sendMessageNotification,
+  sendDealUpdateNotification,
   isConfigured,
 };
 

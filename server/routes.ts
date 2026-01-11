@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertSellerLeadSchema, 
@@ -75,7 +76,7 @@ import {
   getUserBadges,
   updateUserProfile
 } from "./lib/supabase";
-import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification } from "./email";
+import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification } from "./email";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
@@ -859,6 +860,18 @@ export async function registerRoutes(
             : `An offer of $${offerAmountValue.toLocaleString()} was submitted on your deal`,
           link: `/marketplace/wholesaler/deals/${dealId}`
         });
+        
+        // Send email notification (async, don't await to avoid blocking response)
+        const dealAddress = deal.propertyAddress || `${deal.city}, ${deal.state}`;
+        sendOfferNotification({
+          recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'deals@pegasusdreamscapes.com',
+          recipientName: 'Property Owner',
+          dealTitle: dealAddress,
+          dealAddress,
+          offerAmount: offerAmountValue,
+          offerType: isCounter ? 'counter' : 'new',
+          notes: offerMessage || notes,
+        }).catch(err => console.error('Failed to send offer email:', err));
       }
       
       res.status(201).json(offer);
@@ -893,11 +906,27 @@ export async function registerRoutes(
         return res.status(400).json({ message: 'Valid status is required' });
       }
       
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const offer = await storage.updateWholesaleOfferStatus(id, status);
+      const { storage: supaStorage, toCamelCase } = await getSupabaseStorage();
+      const offer = await supaStorage.updateWholesaleOfferStatus(id, status);
       
       if (!offer) {
         return res.status(404).json({ message: 'Offer not found' });
+      }
+      
+      // Send email notification for status updates (accepted/declined)
+      if ((status === 'accepted' || status === 'declined') && offer.buyer_id) {
+        const deal = await storage.getWholesaleDeal(offer.deal_id);
+        if (deal) {
+          const dealAddress = deal.propertyAddress || `${deal.city}, ${deal.state}`;
+          sendOfferNotification({
+            recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'deals@pegasusdreamscapes.com',
+            recipientName: 'Investor',
+            dealTitle: dealAddress,
+            dealAddress,
+            offerAmount: offer.offer_amount || 0,
+            offerType: status as 'accepted' | 'declined',
+          }).catch(err => console.error('Failed to send offer status email:', err));
+        }
       }
       
       res.json(toCamelCase(offer));
@@ -2610,6 +2639,27 @@ export async function registerRoutes(
       if (!updated) {
         return res.status(404).json({ message: "Deal not found" });
       }
+      
+      // Send deal update notification email
+      sendDealUpdateNotification({
+        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'deals@pegasusdreamscapes.com',
+        recipientName: 'Deal Subscriber',
+        dealTitle: updated.propertyAddress || `Wholesale Deal #${id}`,
+        updateType: 'status_change',
+        oldValue: 'previous status',
+        newValue: status,
+        message: notes || undefined,
+      }).catch(err => console.error('Failed to send deal update email:', err));
+      
+      // Broadcast real-time update via WebSocket (to watchers if implemented)
+      const broadcastToUser = (app as any).broadcastToUser;
+      if (broadcastToUser && updated.submittedBy) {
+        broadcastToUser(updated.submittedBy, {
+          type: 'deal_update',
+          payload: { dealId: id, status, propertyAddress: updated.propertyAddress }
+        });
+      }
+      
       return res.json(updated);
     } catch (error) {
       console.error("Error updating wholesale deal status:", error);
@@ -3409,6 +3459,25 @@ export async function registerRoutes(
         content,
         parentId
       });
+      
+      // Send email notification for new message (async, don't block response)
+      sendMessageNotification({
+        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'messages@pegasusdreamscapes.com',
+        recipientName: 'User',
+        senderName: req.user.claims.name || 'A user',
+        messagePreview: content?.substring(0, 200) || '',
+        dealTitle: subject,
+      }).catch(err => console.error('Failed to send message email:', err));
+      
+      // Send real-time notification to receiver via WebSocket
+      const broadcastToUser = (app as any).broadcastToUser;
+      if (broadcastToUser && receiverId) {
+        broadcastToUser(receiverId, {
+          type: 'new_message',
+          payload: { messageId: message.id, senderId, subject }
+        });
+      }
+      
       return res.status(201).json(message);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -3670,6 +3739,15 @@ export async function registerRoutes(
           interestRate: offer.proposedInterestRate,
           notes: offer.notes || "",
           offerId: offer.id
+        });
+      }
+      
+      // Send real-time notification to investor via WebSocket
+      const broadcastToUser = (app as any).broadcastToUser;
+      if (broadcastToUser && offer.investorId) {
+        broadcastToUser(offer.investorId, {
+          type: 'offer_update',
+          payload: { offerId: offer.id, status, projectId: offer.projectId }
         });
       }
       
@@ -5273,6 +5351,24 @@ export async function registerRoutes(
       if (!offer) {
         return res.status(404).json({ message: "Offer not found" });
       }
+      
+      // Send real-time notification to buyer via WebSocket
+      const broadcastToUser = (app as any).broadcastToUser;
+      if (broadcastToUser && offer.buyerId) {
+        broadcastToUser(offer.buyerId, {
+          type: 'offer_update',
+          payload: { offerId: offer.id, status, dealId: offer.dealId }
+        });
+      }
+      
+      // Send email notification for offer status update
+      sendOfferNotification({
+        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'offers@pegasusdreamscapes.com',
+        recipientName: 'Buyer',
+        dealTitle: `Wholesale Deal #${offer.dealId}`,
+        offerAmount: offer.amount || 0,
+        status: status,
+      }).catch(err => console.error('Failed to send offer status email:', err));
       
       res.json(offer);
     } catch (error) {
@@ -7071,6 +7167,70 @@ export async function registerRoutes(
       res.status(500).json({ message: "Failed to generate PDF" });
     }
   });
+
+  // =====================================================
+  // WebSocket Server for Real-time Notifications
+  // =====================================================
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const clients = new Map<string, Set<WebSocket>>();
+
+  wss.on('connection', (ws: WebSocket) => {
+    let userId: string | null = null;
+
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        if (message.type === 'subscribe' && message.payload?.userId) {
+          userId = message.payload.userId;
+          if (!clients.has(userId)) {
+            clients.set(userId, new Set());
+          }
+          clients.get(userId)?.add(ws);
+          
+          ws.send(JSON.stringify({ 
+            type: 'subscribed', 
+            payload: { userId },
+            timestamp: Date.now() 
+          }));
+        }
+      } catch (err) {
+        console.error('WebSocket message parse error:', err);
+      }
+    });
+
+    ws.on('close', () => {
+      if (userId) {
+        const userClients = clients.get(userId);
+        if (userClients) {
+          userClients.delete(ws);
+          if (userClients.size === 0) {
+            clients.delete(userId);
+          }
+        }
+      }
+    });
+
+    ws.on('error', (err) => {
+      console.error('WebSocket error:', err);
+    });
+  });
+
+  // Helper function to broadcast to specific user
+  const broadcastToUser = (userId: string, message: object) => {
+    const userClients = clients.get(userId);
+    if (userClients) {
+      const payload = JSON.stringify({ ...message, timestamp: Date.now() });
+      userClients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(payload);
+        }
+      });
+    }
+  };
+
+  // Export broadcast function for use in other routes
+  (app as any).broadcastToUser = broadcastToUser;
 
   return httpServer;
 }

@@ -12,6 +12,7 @@ import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
 import { DealActionProvider } from "@/contexts/deal-action-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
+import { ThemeProvider } from "@/components/theme-provider";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -191,28 +192,30 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SupabaseAuthProvider>
-        <DemoModeProvider>
-          <TooltipProvider>
-            <DealActionProvider>
-              <PeggyProvider>
-                <ScrollToTop />
-                <div className="min-h-screen flex flex-col">
-                  <Navigation />
-                  <main className="flex-1">
-                    <ErrorBoundary>
-                      <Router />
-                    </ErrorBoundary>
-                  </main>
-                  <Footer />
-                </div>
-                <PeggyDock />
-                <Toaster />
-              </PeggyProvider>
-            </DealActionProvider>
-          </TooltipProvider>
-        </DemoModeProvider>
-      </SupabaseAuthProvider>
+      <ThemeProvider defaultTheme="light" storageKey="pegasus-ui-theme">
+        <SupabaseAuthProvider>
+          <DemoModeProvider>
+            <TooltipProvider>
+              <DealActionProvider>
+                <PeggyProvider>
+                  <ScrollToTop />
+                  <div className="min-h-screen flex flex-col bg-background text-foreground">
+                    <Navigation />
+                    <main className="flex-1">
+                      <ErrorBoundary>
+                        <Router />
+                      </ErrorBoundary>
+                    </main>
+                    <Footer />
+                  </div>
+                  <PeggyDock />
+                  <Toaster />
+                </PeggyProvider>
+              </DealActionProvider>
+            </TooltipProvider>
+          </DemoModeProvider>
+        </SupabaseAuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -86,3 +86,8 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 - **Lazy Loading**: Added `loading="lazy"` attribute to below-fold images for improved LCP performance
 - **Analytics Lane Filter**: Enhanced analytics dashboard with lane-specific filtering (wholesale/capital/listings) using multiplier-based data filtering
 - **TypeScript Fixes**: Corrected bathroom type from number to string in marketflow-dashboard.tsx mock data to match schema
+- **Email Notifications**: Added email notification system in `server/email.ts` with SendGrid integration (requires SENDGRID_API_KEY). Functions: sendOfferNotification, sendMessageNotification, sendDealUpdateNotification. Configure STAFF_NOTIFICATION_EMAIL for recipient routing.
+- **Dark Mode**: Added ThemeProvider (`client/src/components/theme-provider.tsx`) and ThemeToggle (`client/src/components/theme-toggle.tsx`) components. Dark mode CSS tokens defined in index.css (lines 104-174) with navy/copper theme.
+- **WebSocket Real-time Updates**: WebSocket server on `/ws` path with user subscription and broadcast functionality. Client hooks: `useWebSocket` and `useNotificationSocket` in `client/src/hooks/use-websocket.ts`. Broadcasts wired for offer status updates and direct messages.
+- **PDF Export**: Existing routes for calculator, deal packet, and term sheet PDFs confirmed functional.
+- **Portfolio Scenario Planner**: Complete 628-line component at `client/src/components/portfolio-scenario.tsx`.
