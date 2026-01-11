@@ -101,3 +101,75 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
   - DealActionProvider in `client/src/contexts/deal-action-context.tsx` with `openNegotiation(dealId, lane)` for lane-aware navigation
   - Modal components: WholesaleAcceptTermsModal, WholesaleCounterOfferModal, WholesaleJVRequestModal, CapitalAcceptTermsModal, ListingRequestInfoModal, ListingScheduleShowingModal
   - Chat disabled until negotiation exists (offer must be sent first)
+- **MarketFlow Beta Launch**: Added Beta banner with dismissible UI, "Available Now" vs "Coming Next" feature sections on marketplace landing page
+- **Capital Raise Structure Forms**: Enhanced CapitalAcceptTermsModal with structure-specific displays for DEBT (interest rate, loan duration, payment schedule), EQUITY (equity %, preferred return, profit split), and HYBRID (debt/equity portions with combined terms)
+- **Peggy AI Negotiation Advisor**: Added PeggyNegotiationAdvisor component to Negotiation Room with contextual tips, quick prompts, and AI chat integration
+- **Homepage Copy Improvements**: Updated hero kicker/subheadline for clarity, improved CTA labels ("Get a Cash Offer", "Browse Deals")
+
+## Feature Flags System
+
+The platform uses environment-based feature flags for controlled rollout of new features.
+
+### Configuration Files
+- **shared/featureFlags.ts**: Central feature flag definitions with environment detection
+- **client/src/hooks/use-feature-flags.ts**: React hook for consuming feature flags
+
+### Current Feature Flags
+
+| Flag | Production | Development | Description |
+|------|------------|-------------|-------------|
+| `negotiationRoomV2` | Enabled | Enabled | 3-column negotiation room with chat, offer ladder, AI advisor |
+| `offerStudioEnabled` | Enabled | Enabled | Full offer builder with terms customization |
+| `peggyNegotiationAdvice` | Enabled | Enabled | Peggy AI contextual tips in negotiation room |
+| `capitalRaiseFormsV2` | Disabled | Enabled | Enhanced capital raise forms with structure selection |
+| `debtEquityHybridForms` | Disabled | Enabled | Debt/Equity/Hybrid investment structure support |
+| `documentUploads` | Disabled | Enabled | Document upload and data room features |
+| `underwritingTools` | Disabled | Enabled | Deal underwriting and analysis tools |
+| `advancedAnalytics` | Disabled | Enabled | Portfolio analytics and performance tracking |
+
+### Usage
+
+```typescript
+import { useFeatureFlags } from "@/hooks/use-feature-flags";
+
+function MyComponent() {
+  const { isEnabled, isProduction } = useFeatureFlags();
+  
+  if (isEnabled("capitalRaiseFormsV2")) {
+    // Show enhanced capital raise forms
+  }
+}
+```
+
+## Deployment Architecture
+
+### Two-Track Release Strategy
+
+1. **Production (Replit Deployment)**
+   - Accessed via published URL (.replit.app domain)
+   - Feature flags default to conservative settings (Beta features disabled)
+   - Stable, tested features only
+
+2. **Development/Staging (Workspace)**
+   - Accessed via workspace URL
+   - All Beta features enabled for testing
+   - Used for feature development and QA
+
+### Environment Detection
+
+The system automatically detects environment based on:
+- `NODE_ENV` environment variable
+- Hostname patterns (`.replit.app` = production)
+
+### Beta Status Indicators
+
+- **BetaBanner component**: Dismissible banner on MarketFlow pages
+- **Beta badges**: Feature sections marked with "Beta" or "Coming Soon" badges
+- **Feature gating**: UI elements hidden/disabled based on feature flags
+
+### Publishing to Production
+
+1. Test features thoroughly in workspace (development mode)
+2. Update feature flags in `shared/featureFlags.ts` to enable features in production
+3. Use Replit's "Deploy" button to publish
+4. Features become available on production URL
