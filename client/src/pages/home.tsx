@@ -608,7 +608,7 @@ function HeroSection() {
             >
               <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
               <p className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium" data-testid="text-hero-kicker">
-                Real Estate Investment & Design
+                Distressed Properties → Profitable Investments
               </p>
             </motion.div>
             
@@ -648,7 +648,7 @@ function HeroSection() {
               transition={{ duration: 0.8, delay: 0.9 }}
               data-testid="text-hero-subheadline"
             >
-              We transform distressed properties into high-performing assets through intentional design, disciplined execution, and community-focused restoration.
+              Sell your property fast for cash, or invest in off-market deals with proven returns. Our MarketFlow platform connects sellers and investors for seamless transactions.
             </motion.p>
             
             {/* Premium CTAs with enhanced styling */}
@@ -660,13 +660,13 @@ function HeroSection() {
             >
               <a href="#sell">
                 <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-foreground hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
-                  Sell Your Property
+                  Get a Cash Offer
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <Link href="/partner">
+              <Link href="/marketplace">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
-                  Partner With Us
+                  Browse Deals
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
