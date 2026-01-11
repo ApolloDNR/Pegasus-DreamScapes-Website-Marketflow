@@ -328,6 +328,10 @@ interface CapitalProject {
   askingPreferredReturn?: string;
   holdPeriod?: string;
   operatorId?: string;
+  askingEquityPercent?: number;
+  askingDebtPortion?: number;
+  askingEquityPortion?: number;
+  paymentSchedule?: string;
 }
 
 interface FormProps {
@@ -1553,30 +1557,117 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
       </DialogHeader>
 
       <div className="space-y-4 mt-4">
-        <div className="p-4 bg-muted rounded-lg space-y-2">
-          <div className="text-lg font-semibold">{project?.title}</div>
-          {project?.address && (
-            <div className="text-sm text-muted-foreground">{project.address}, {project.city}, {project.state}</div>
-          )}
-          <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+        <div className="p-4 bg-muted rounded-lg space-y-3">
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <span className="text-muted-foreground">Structure:</span>
-              <span className="ml-2 font-medium">{project?.structure || "Equity"}</span>
+              <div className="text-lg font-semibold">{project?.title}</div>
+              {project?.address && (
+                <div className="text-sm text-muted-foreground">{project.address}, {project.city}, {project.state}</div>
+              )}
             </div>
-            <div>
-              <span className="text-muted-foreground">Target Return:</span>
-              <span className="ml-2 font-medium text-primary">{project?.askingInterestRate || project?.askingPreferredReturn || "—"}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Profit Split:</span>
-              <span className="ml-2 font-medium">{project?.askingProfitSplit || "—"}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Hold Period:</span>
-              <span className="ml-2 font-medium">{project?.holdPeriod || project?.askingLoanDuration || "—"}</span>
-            </div>
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full shrink-0 ${
+              project?.structure === "DEBT" 
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                : project?.structure === "HYBRID"
+                  ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                  : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+            }`} data-testid="badge-structure-type">
+              {project?.structure || "EQUITY"}
+            </span>
           </div>
-          <div className="mt-3">
+          
+          {/* Structure-specific terms display */}
+          {project?.structure === "DEBT" && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
+              <div className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide">Debt Investment Terms</div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Interest Rate:</span>
+                  <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400">{project.askingInterestRate || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Loan Duration:</span>
+                  <span className="ml-2 font-medium">{project.askingLoanDuration || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Payment Schedule:</span>
+                  <span className="ml-2 font-medium">{project.paymentSchedule || "Monthly"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Security:</span>
+                  <span className="ml-2 font-medium">First Lien Position</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {project?.structure === "EQUITY" && (
+            <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800 space-y-2">
+              <div className="text-xs font-medium text-green-700 dark:text-green-300 uppercase tracking-wide">Equity Investment Terms</div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Equity Share:</span>
+                  <span className="ml-2 font-semibold text-green-600 dark:text-green-400">{project.askingEquityPercent ? `${project.askingEquityPercent}%` : "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Preferred Return:</span>
+                  <span className="ml-2 font-medium">{project.askingPreferredReturn || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Profit Split:</span>
+                  <span className="ml-2 font-medium">{project.askingProfitSplit || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Hold Period:</span>
+                  <span className="ml-2 font-medium">{project.holdPeriod || "—"}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {project?.structure === "HYBRID" && (
+            <div className="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800 space-y-2">
+              <div className="text-xs font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide">Hybrid Investment Terms</div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Debt Portion:</span>
+                  <span className="ml-2 font-semibold">{project.askingDebtPortion ? `${project.askingDebtPortion}%` : "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Equity Portion:</span>
+                  <span className="ml-2 font-semibold">{project.askingEquityPortion ? `${project.askingEquityPortion}%` : "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Base Interest:</span>
+                  <span className="ml-2 font-medium text-blue-600 dark:text-blue-400">{project.askingInterestRate || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Equity Upside:</span>
+                  <span className="ml-2 font-medium text-green-600 dark:text-green-400">{project.askingEquityPercent ? `${project.askingEquityPercent}%` : "—"}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Fallback for unspecified structure */}
+          {!project?.structure && (
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">Target Return:</span>
+                <span className="ml-2 font-medium text-primary">{project?.askingInterestRate || project?.askingPreferredReturn || "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Profit Split:</span>
+                <span className="ml-2 font-medium">{project?.askingProfitSplit || "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Hold Period:</span>
+                <span className="ml-2 font-medium">{project?.holdPeriod || project?.askingLoanDuration || "—"}</span>
+              </div>
+            </div>
+          )}
+          
+          <div className="pt-2 border-t border-border/50">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
               <span>Funding Progress</span>
               <span>{formatCurrency(project?.amountRaised)} / {formatCurrency(project?.fundingGoal)}</span>
