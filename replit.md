@@ -81,3 +81,8 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 - Fixed TypeScript errors in server routes (iterator conversions, type mismatches)
 - Added rate limiting with automatic memory cleanup for API endpoints
 - Cleaned up debug console.log statements from client code
+- **Route Consolidation**: Consolidated 35+ legacy redirect routes into a data-driven `legacyRedirects` array in App.tsx
+- **Community Impact Section**: Added "Dreamscaper Creed" section to homepage with 4 impact stats, 4 core values, and CTAs
+- **Lazy Loading**: Added `loading="lazy"` attribute to below-fold images for improved LCP performance
+- **Analytics Lane Filter**: Enhanced analytics dashboard with lane-specific filtering (wholesale/capital/listings) using multiplier-based data filtering
+- **TypeScript Fixes**: Corrected bathroom type from number to string in marketflow-dashboard.tsx mock data to match schema
