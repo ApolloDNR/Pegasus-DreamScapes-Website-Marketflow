@@ -13,6 +13,7 @@ import { DealActionProvider } from "@/contexts/deal-action-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
 import { ThemeProvider } from "@/components/theme-provider";
+import { NotificationProvider } from "@/components/notification-provider";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -198,18 +199,20 @@ function App() {
             <TooltipProvider>
               <DealActionProvider>
                 <PeggyProvider>
-                  <ScrollToTop />
-                  <div className="min-h-screen flex flex-col bg-background text-foreground">
-                    <Navigation />
-                    <main className="flex-1">
-                      <ErrorBoundary>
-                        <Router />
-                      </ErrorBoundary>
-                    </main>
-                    <Footer />
-                  </div>
-                  <PeggyDock />
-                  <Toaster />
+                  <NotificationProvider>
+                    <ScrollToTop />
+                    <div className="min-h-screen flex flex-col bg-background text-foreground">
+                      <Navigation />
+                      <main className="flex-1">
+                        <ErrorBoundary>
+                          <Router />
+                        </ErrorBoundary>
+                      </main>
+                      <Footer />
+                    </div>
+                    <PeggyDock />
+                    <Toaster />
+                  </NotificationProvider>
                 </PeggyProvider>
               </DealActionProvider>
             </TooltipProvider>
