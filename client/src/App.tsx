@@ -13,7 +13,7 @@ import { DealActionProvider } from "@/contexts/deal-action-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
 import { ThemeProvider } from "@/components/theme-provider";
-import { NotificationProvider } from "@/components/notification-provider";
+import { NotificationProvider } from "@/contexts/notification-context";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -25,62 +25,63 @@ function ScrollToTop() {
   return null;
 }
 import Home from "@/pages/home";
-import About from "@/pages/about";
-import Services from "@/pages/services";
-import Sell from "@/pages/sell";
-import Invest from "@/pages/invest";
-import Projects from "@/pages/projects";
-import ProjectDetail from "@/pages/project-detail";
-import Calculators from "@/pages/calculators";
-import Resources from "@/pages/resources";
-import ArticleDetail from "@/pages/article-detail";
-import Dreamspace from "@/pages/dreamspace";
-import Contact from "@/pages/contact";
-import HQ from "@/pages/hq";
-import Wholesale from "@/pages/wholesale";
-import Buyers from "@/pages/buyers";
-import Buy from "@/pages/buy";
-import PortalSelect from "@/pages/portal-select";
-import InvestorPortal from "@/pages/investor-portal";
-import WholesalerPortal from "@/pages/wholesaler-portal";
-import BuyerPortal from "@/pages/buyer-portal";
-import DreamscaperPortal from "@/pages/dreamscaper-portal";
-import Community from "@/pages/community";
-import CapitalRaising from "@/pages/capital-raising";
-import DealflowOffice from "@/pages/dealflow-office";
-import DealflowDeals from "@/pages/dealflow-deals";
-import DealflowProject from "@/pages/dealflow-project";
-import DealflowCommunity from "@/pages/dealflow-community";
-import DealflowMessages from "@/pages/dealflow-messages";
-import UserProfile from "@/pages/user-profile";
+import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
-import Marketplace from "@/pages/marketplace";
-import MarketplaceWholesaler from "@/pages/marketplace-wholesaler";
-import MarketplaceDreamscaper from "@/pages/marketplace-dreamscaper";
-import MarketplaceInvestor from "@/pages/marketplace-investor";
-import MarketplaceBuyer from "@/pages/marketplace-buyer";
-import MarketplaceAdmin from "@/pages/marketplace-admin";
-import Partner from "@/pages/partner";
-import Dashboard from "@/pages/dashboard";
-import MarketplaceDeals from "@/pages/marketplace-deals";
-import MarketplaceDealDetail from "@/pages/marketplace-deal-detail";
-import MarketplaceCapital from "@/pages/marketplace-capital";
-import MarketplaceCapitalDetail from "@/pages/marketplace-capital-detail";
-import MarketplaceProperties from "@/pages/marketplace-properties";
-import MarketplacePropertyDetail from "@/pages/marketplace-property-detail";
-import MarketplaceCalculators from "@/pages/marketplace-calculators";
-import MarketplaceResources from "@/pages/marketplace-resources";
-import SubmitDeal from "@/pages/submit-deal";
-import MarketflowSubmit from "@/pages/marketflow-submit";
-import MarketflowDeals from "@/pages/marketflow-deals";
-import MarketflowNegotiate from "@/pages/marketflow-negotiate";
-import MarketflowDashboard from "@/pages/marketflow-dashboard";
-import MyDealsPage from "@/pages/my-deals";
-import OfferStudioPage from "@/pages/offer-studio";
-import AnalyticsPage from "@/pages/analytics";
-import MyAnalyticsPage from "@/pages/my-analytics";
-import NotFound from "@/pages/not-found";
+
+const About = lazy(() => import("@/pages/about"));
+const Services = lazy(() => import("@/pages/services"));
+const Sell = lazy(() => import("@/pages/sell"));
+const Invest = lazy(() => import("@/pages/invest"));
+const Projects = lazy(() => import("@/pages/projects"));
+const ProjectDetail = lazy(() => import("@/pages/project-detail"));
+const Calculators = lazy(() => import("@/pages/calculators"));
+const Resources = lazy(() => import("@/pages/resources"));
+const ArticleDetail = lazy(() => import("@/pages/article-detail"));
+const Dreamspace = lazy(() => import("@/pages/dreamspace"));
+const Contact = lazy(() => import("@/pages/contact"));
+const HQ = lazy(() => import("@/pages/hq"));
+const Wholesale = lazy(() => import("@/pages/wholesale"));
+const Buyers = lazy(() => import("@/pages/buyers"));
+const Buy = lazy(() => import("@/pages/buy"));
+const PortalSelect = lazy(() => import("@/pages/portal-select"));
+const InvestorPortal = lazy(() => import("@/pages/investor-portal"));
+const WholesalerPortal = lazy(() => import("@/pages/wholesaler-portal"));
+const BuyerPortal = lazy(() => import("@/pages/buyer-portal"));
+const DreamscaperPortal = lazy(() => import("@/pages/dreamscaper-portal"));
+const Community = lazy(() => import("@/pages/community"));
+const CapitalRaising = lazy(() => import("@/pages/capital-raising"));
+const DealflowOffice = lazy(() => import("@/pages/dealflow-office"));
+const DealflowDeals = lazy(() => import("@/pages/dealflow-deals"));
+const DealflowProject = lazy(() => import("@/pages/dealflow-project"));
+const DealflowCommunity = lazy(() => import("@/pages/dealflow-community"));
+const DealflowMessages = lazy(() => import("@/pages/dealflow-messages"));
+const UserProfile = lazy(() => import("@/pages/user-profile"));
+const Marketplace = lazy(() => import("@/pages/marketplace"));
+const MarketplaceWholesaler = lazy(() => import("@/pages/marketplace-wholesaler"));
+const MarketplaceDreamscaper = lazy(() => import("@/pages/marketplace-dreamscaper"));
+const MarketplaceInvestor = lazy(() => import("@/pages/marketplace-investor"));
+const MarketplaceBuyer = lazy(() => import("@/pages/marketplace-buyer"));
+const MarketplaceAdmin = lazy(() => import("@/pages/marketplace-admin"));
+const Partner = lazy(() => import("@/pages/partner"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const MarketplaceDeals = lazy(() => import("@/pages/marketplace-deals"));
+const MarketplaceDealDetail = lazy(() => import("@/pages/marketplace-deal-detail"));
+const MarketplaceCapital = lazy(() => import("@/pages/marketplace-capital"));
+const MarketplaceCapitalDetail = lazy(() => import("@/pages/marketplace-capital-detail"));
+const MarketplaceProperties = lazy(() => import("@/pages/marketplace-properties"));
+const MarketplacePropertyDetail = lazy(() => import("@/pages/marketplace-property-detail"));
+const MarketplaceCalculators = lazy(() => import("@/pages/marketplace-calculators"));
+const MarketplaceResources = lazy(() => import("@/pages/marketplace-resources"));
+const SubmitDeal = lazy(() => import("@/pages/submit-deal"));
+const MarketflowSubmit = lazy(() => import("@/pages/marketflow-submit"));
+const MarketflowDeals = lazy(() => import("@/pages/marketflow-deals"));
+const MarketflowNegotiate = lazy(() => import("@/pages/marketflow-negotiate"));
+const MarketflowDashboard = lazy(() => import("@/pages/marketflow-dashboard"));
+const MyDealsPage = lazy(() => import("@/pages/my-deals"));
+const OfferStudioPage = lazy(() => import("@/pages/offer-studio"));
+const AnalyticsPage = lazy(() => import("@/pages/analytics"));
+const MyAnalyticsPage = lazy(() => import("@/pages/my-analytics"));
 
 const legacyRedirects: [string, string][] = [
   ["/dealflow/hq", "/marketflow/admin"],
@@ -122,6 +123,7 @@ const legacyRedirects: [string, string][] = [
 
 function Router() {
   return (
+    <Suspense fallback={<PageLoader />}>
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
@@ -187,6 +189,7 @@ function Router() {
       <Route path="/profile/:userId" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 

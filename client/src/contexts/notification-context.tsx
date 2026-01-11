@@ -1,8 +1,22 @@
-import { useEffect, useCallback } from "react";
+import { createContext, useContext, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSocket } from "@/hooks/use-websocket";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { Bell, MessageSquare, DollarSign, FileText } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
+
+interface NotificationContextValue {
+  notifications: Array<{ type: string; payload?: any }>;
+  isConnected: boolean;
+}
+
+const NotificationContext = createContext<NotificationContextValue>({
+  notifications: [],
+  isConnected: false,
+});
+
+export function useNotificationContext() {
+  return useContext(NotificationContext);
+}
 
 interface NotificationProviderProps {
   children: React.ReactNode;
@@ -54,8 +68,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (notifications.length > 0) {
       const latestNotification = notifications[0];
       showNotificationToast(latestNotification);
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
     }
   }, [notifications, showNotificationToast]);
 
-  return <>{children}</>;
+  return (
+    <NotificationContext.Provider value={{ notifications, isConnected }}>
+      {children}
+    </NotificationContext.Provider>
+  );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useNotificationContext } from "@/contexts/notification-context";
 import { 
   Bell, 
   Check, 
@@ -118,6 +119,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [, setLocation] = useLocation();
+  const { isConnected } = useNotificationContext();
 
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
@@ -125,7 +127,7 @@ export function NotificationBell() {
 
   const { data: unreadCount } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
-    refetchInterval: 30000,
+    refetchInterval: isConnected ? 60000 : 15000,
   });
 
   const markReadMutation = useMutation({
