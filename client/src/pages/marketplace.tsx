@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { useDemoMode } from "@/contexts/demo-mode-context";
 import { useSEO } from "@/hooks/use-seo";
+import { useFeatureFlags } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,9 @@ import {
   Handshake,
   CheckCircle2,
   Sparkles,
-  Eye
+  Eye,
+  Clock,
+  Construction
 } from "lucide-react";
 
 export default function MarketplacePage() {
@@ -65,6 +68,7 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-background">
       <HeroSection />
+      <BetaFeaturesSection />
       <StatsSection />
       <RolesSection />
       <HowItWorksSection />
@@ -121,6 +125,82 @@ function HeroSection() {
             </p>
           </div>
         </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+function BetaFeaturesSection() {
+  const { getAvailableFeatures, getComingSoonFeatures, isBeta } = useFeatureFlags();
+  
+  if (!isBeta('marketflow')) {
+    return null;
+  }
+  
+  const availableFeatures = getAvailableFeatures();
+  const comingSoonFeatures = getComingSoonFeatures();
+  
+  return (
+    <section className="py-12 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-amber-500/5 border-y border-amber-500/20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <FadeIn>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Construction className="w-5 h-5 text-amber-600" />
+              <Badge variant="outline" className="bg-amber-500/20 text-amber-700 border-amber-500/30 font-semibold">
+                BETA
+              </Badge>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">MarketFlow Beta</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We're actively building the future of real estate deal flow. Here's what's ready now and what's coming next.
+            </p>
+          </div>
+        </FadeIn>
+        
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <ScrollReveal>
+            <Card className="bg-background/80 border-green-500/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2 text-green-700 dark:text-green-400">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Available Now
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {availableFeatures.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                      <span className="text-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </ScrollReveal>
+          
+          <ScrollReveal>
+            <Card className="bg-background/80 border-amber-500/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                  <Clock className="w-5 h-5" />
+                  Coming Next
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {comingSoonFeatures.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </ScrollReveal>
+        </div>
       </div>
     </section>
   );

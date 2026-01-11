@@ -42,6 +42,7 @@ import { DocumentCount } from "@/components/document-attachments";
 import { QuickCalcButton, InlineROIBadge } from "@/components/quick-calculator";
 import { ActivityFeedWidget, useActivityFeed } from "@/components/activity-feed";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
+import { BetaBanner } from "@/components/beta-banner";
 import {
   Tooltip,
   TooltipContent,
@@ -391,6 +392,9 @@ function DealsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Beta Banner */}
+      <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
+      
       {/* Demo Mode Banner */}
       {isDemoMode && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
