@@ -94,3 +94,10 @@ The platform is in a migration phase to **Supabase**, which will serve as the pr
 - **NotificationContext**: Unified WebSocket notification context at `client/src/contexts/notification-context.tsx`. Single WebSocket connection per user session with centralized query invalidation. NotificationBell consumes context for real-time updates without duplicate connections.
 - **Route-Level Code Splitting**: Added React.lazy() for 50+ page components in App.tsx with Suspense fallback using PageLoader. Reduces initial bundle size and improves load performance.
 - **Real-time Toast Notifications**: NotificationProvider displays toast notifications for WebSocket events (offer_update, new_message, deal_update, notification types).
+- **Canonical MarketFlow Negotiation System**: Unified offer/negotiation workflow across all 3 lanes (WHOLESALE, CAPITAL, LISTING):
+  - Database schemas: `marketflowOffers`, `marketflowNegotiations`, `negotiationMessages` in shared/schema.ts
+  - API endpoints: `/api/marketflow/offers` (create), `/api/marketflow/offers/:id/respond` (accept/reject/counter), `/api/marketflow/negotiations/deal/:lane/:dealId` (fetch by deal)
+  - Route: `/marketflow/negotiate/:lane/:id` accepts lane (wholesale/capital/listing) and dealId
+  - DealActionProvider in `client/src/contexts/deal-action-context.tsx` with `openNegotiation(dealId, lane)` for lane-aware navigation
+  - Modal components: WholesaleAcceptTermsModal, WholesaleCounterOfferModal, WholesaleJVRequestModal, CapitalAcceptTermsModal, ListingRequestInfoModal, ListingScheduleShowingModal
+  - Chat disabled until negotiation exists (offer must be sent first)
