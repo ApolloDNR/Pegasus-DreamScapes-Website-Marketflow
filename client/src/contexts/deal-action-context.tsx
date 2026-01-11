@@ -41,6 +41,7 @@ interface DealActionContextValue {
   openDealAction: (dealId: string | number, actionType: DealActionType, mode?: "new" | "counter", existingOfferId?: string) => void;
   openDealActionByType: (dealType: DealType, dealId: string | number, action: DealAction) => void; // New: type-aware routing
   openInStudio: (dealId: string | number, projectType: "capital") => void;  // Studio is CAPITAL-only
+  openNegotiation: (dealId: string | number, lane: "WHOLESALE" | "CAPITAL" | "LISTING") => void; // Navigate to negotiation room
   closeDealAction: () => void;
   state: DealActionState;
 }
@@ -135,6 +136,11 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
   const openInStudio = useCallback((dealId: string | number, projectType: "capital") => {
     setLocation(`/offer-studio/${projectType}/${dealId}`);
   }, [setLocation]);
+  
+  // Navigate to negotiation room with correct lane context
+  const openNegotiation = useCallback((dealId: string | number, lane: "WHOLESALE" | "CAPITAL" | "LISTING") => {
+    setLocation(`/marketflow/negotiate/${lane.toLowerCase()}/${dealId}`);
+  }, [setLocation]);
 
   const closeDealAction = useCallback(() => {
     setState({
@@ -147,7 +153,7 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
   }, []);
 
   return (
-    <DealActionContext.Provider value={{ openDealAction, openDealActionByType, openInStudio, closeDealAction, state }}>
+    <DealActionContext.Provider value={{ openDealAction, openDealActionByType, openInStudio, openNegotiation, closeDealAction, state }}>
       {children}
       <DealActionModal />
     </DealActionContext.Provider>

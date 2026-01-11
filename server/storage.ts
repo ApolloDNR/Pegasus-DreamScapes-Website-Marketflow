@@ -13,6 +13,7 @@ import {
   leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
   userReputation, userBadges, adminAuditLog,
   listings, listingInquiries,
+  marketflowOffers, marketflowNegotiations, negotiationMessages,
   type User, type UpsertUser,
   type SellerLead, type InsertSellerLead,
   type InvestorLead, type InsertInvestorLead,
@@ -68,6 +69,9 @@ import {
   type FeaturedDeal, type InsertFeaturedDeal,
   type UserActivity, type InsertUserActivity,
   type HomepageContent, type InsertHomepageContent,
+  type MarketflowOffer, type InsertMarketflowOffer,
+  type MarketflowNegotiation, type InsertMarketflowNegotiation,
+  type NegotiationMessage, type InsertNegotiationMessage,
   featuredDeals,
   userActivity,
   homepageContent,
@@ -2596,6 +2600,167 @@ export class DatabaseStorage implements IStorage {
       isActive: true,
     }).returning();
     return created;
+  }
+
+  // ============================================
+  // MARKETFLOW OFFERS (Canonical Offer System)
+  // ============================================
+
+  async createMarketflowOffer(offer: InsertMarketflowOffer): Promise<MarketflowOffer> {
+    const [created] = await db.insert(marketflowOffers).values(offer).returning();
+    return created;
+  }
+
+  async getMarketflowOffer(id: number): Promise<MarketflowOffer | undefined> {
+    const [offer] = await db.select().from(marketflowOffers).where(eq(marketflowOffers.id, id));
+    return offer;
+  }
+
+  async getMarketflowOffersByDeal(lane: string, dealId: number): Promise<MarketflowOffer[]> {
+    return db.select().from(marketflowOffers)
+      .where(and(
+        eq(marketflowOffers.lane, lane),
+        eq(marketflowOffers.dealId, dealId)
+      ))
+      .orderBy(desc(marketflowOffers.createdAt));
+  }
+
+  async getMarketflowOffersByUser(userId: string): Promise<MarketflowOffer[]> {
+    return db.select().from(marketflowOffers)
+      .where(eq(marketflowOffers.createdBy, userId))
+      .orderBy(desc(marketflowOffers.createdAt));
+  }
+
+  async getMarketflowOffersReceivedByUser(userId: string): Promise<MarketflowOffer[]> {
+    return db.select().from(marketflowOffers)
+      .where(eq(marketflowOffers.recipientId, userId))
+      .orderBy(desc(marketflowOffers.createdAt));
+  }
+
+  async getMarketflowOffersByNegotiation(negotiationId: number): Promise<MarketflowOffer[]> {
+    return db.select().from(marketflowOffers)
+      .where(eq(marketflowOffers.negotiationId, negotiationId))
+      .orderBy(asc(marketflowOffers.createdAt));
+  }
+
+  async updateMarketflowOfferStatus(id: number, status: string, respondedAt?: Date): Promise<MarketflowOffer | undefined> {
+    const [updated] = await db.update(marketflowOffers)
+      .set({ 
+        status, 
+        respondedAt: respondedAt || new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(marketflowOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async linkOfferToNegotiation(offerId: number, negotiationId: number): Promise<MarketflowOffer | undefined> {
+    const [updated] = await db.update(marketflowOffers)
+      .set({ negotiationId, updatedAt: new Date() })
+      .where(eq(marketflowOffers.id, offerId))
+      .returning();
+    return updated;
+  }
+
+  // ============================================
+  // MARKETFLOW NEGOTIATIONS (Escrow Rooms)
+  // ============================================
+
+  async createMarketflowNegotiation(negotiation: InsertMarketflowNegotiation): Promise<MarketflowNegotiation> {
+    const [created] = await db.insert(marketflowNegotiations).values(negotiation).returning();
+    return created;
+  }
+
+  async getMarketflowNegotiation(id: number): Promise<MarketflowNegotiation | undefined> {
+    const [negotiation] = await db.select().from(marketflowNegotiations).where(eq(marketflowNegotiations.id, id));
+    return negotiation;
+  }
+
+  async getMarketflowNegotiationByDealAndParties(lane: string, dealId: number, posterId: string, counterpartyId: string): Promise<MarketflowNegotiation | undefined> {
+    const [negotiation] = await db.select().from(marketflowNegotiations)
+      .where(and(
+        eq(marketflowNegotiations.lane, lane),
+        eq(marketflowNegotiations.dealId, dealId),
+        eq(marketflowNegotiations.posterId, posterId),
+        eq(marketflowNegotiations.counterpartyId, counterpartyId)
+      ));
+    return negotiation;
+  }
+
+  async getMarketflowNegotiationsByUser(userId: string): Promise<MarketflowNegotiation[]> {
+    return db.select().from(marketflowNegotiations)
+      .where(or(
+        eq(marketflowNegotiations.posterId, userId),
+        eq(marketflowNegotiations.counterpartyId, userId)
+      ))
+      .orderBy(desc(marketflowNegotiations.lastActivityAt));
+  }
+
+  async getMarketflowNegotiationsByDeal(lane: string, dealId: number): Promise<MarketflowNegotiation[]> {
+    return db.select().from(marketflowNegotiations)
+      .where(and(
+        eq(marketflowNegotiations.lane, lane),
+        eq(marketflowNegotiations.dealId, dealId)
+      ))
+      .orderBy(desc(marketflowNegotiations.createdAt));
+  }
+
+  async updateMarketflowNegotiation(id: number, data: Partial<MarketflowNegotiation>): Promise<MarketflowNegotiation | undefined> {
+    const [updated] = await db.update(marketflowNegotiations)
+      .set({ ...data, updatedAt: new Date(), lastActivityAt: new Date() })
+      .where(eq(marketflowNegotiations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async incrementNegotiationOfferCount(id: number): Promise<void> {
+    await db.update(marketflowNegotiations)
+      .set({ 
+        offerCount: sql`COALESCE(offer_count, 0) + 1`,
+        lastActivityAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(marketflowNegotiations.id, id));
+  }
+
+  async incrementNegotiationMessageCount(id: number): Promise<void> {
+    await db.update(marketflowNegotiations)
+      .set({ 
+        messageCount: sql`COALESCE(message_count, 0) + 1`,
+        lastActivityAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(marketflowNegotiations.id, id));
+  }
+
+  // ============================================
+  // NEGOTIATION MESSAGES
+  // ============================================
+
+  async createNegotiationMessage(message: InsertNegotiationMessage): Promise<NegotiationMessage> {
+    const [created] = await db.insert(negotiationMessages).values(message).returning();
+    // Increment message count
+    if (message.negotiationId) {
+      await this.incrementNegotiationMessageCount(message.negotiationId);
+    }
+    return created;
+  }
+
+  async getNegotiationMessages(negotiationId: number): Promise<NegotiationMessage[]> {
+    return db.select().from(negotiationMessages)
+      .where(eq(negotiationMessages.negotiationId, negotiationId))
+      .orderBy(asc(negotiationMessages.createdAt));
+  }
+
+  async markNegotiationMessagesAsRead(negotiationId: number, userId: string): Promise<void> {
+    await db.update(negotiationMessages)
+      .set({ isRead: true, readAt: new Date() })
+      .where(and(
+        eq(negotiationMessages.negotiationId, negotiationId),
+        ne(negotiationMessages.senderId, userId),
+        eq(negotiationMessages.isRead, false)
+      ));
   }
 }
 

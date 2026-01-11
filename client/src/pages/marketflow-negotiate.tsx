@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import { QuickCounterOffer, type QuickCounterData } from "@/components/quick-counter-offer";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { MarketflowOffer, MarketflowNegotiation, NegotiationMessage } from "@shared/schema";
 import {
   ArrowLeft,
   DollarSign,
@@ -45,6 +48,12 @@ export default function MarketflowNegotiate() {
   );
 }
 
+interface NegotiationData {
+  negotiation: MarketflowNegotiation;
+  offers: MarketflowOffer[];
+  messages: NegotiationMessage[];
+}
+
 interface Offer {
   id: string;
   sender: "investor" | "dreamscaper" | "admin";
@@ -61,38 +70,26 @@ interface Offer {
   };
 }
 
-const mockOffers: Offer[] = [
-  {
-    id: "1",
-    sender: "investor",
-    senderName: "You",
-    timestamp: new Date(Date.now() - 86400000 * 2),
-    status: "countered",
+function transformMarketflowOffer(offer: MarketflowOffer, currentUserId?: string): Offer {
+  const payload = offer.payload as Record<string, unknown>;
+  const isCurrentUser = offer.createdBy === currentUserId;
+  
+  return {
+    id: String(offer.id),
+    sender: isCurrentUser ? "investor" : "dreamscaper",
+    senderName: isCurrentUser ? "You" : "Counterparty",
+    timestamp: new Date(offer.createdAt!),
+    status: (offer.status as Offer["status"]) || "pending",
     terms: {
-      offerPrice: 145000,
-      earnestMoney: 5000,
-      closeDate: "2026-02-15",
-      inspectionPeriod: 10,
-      fundingType: "cash",
-      notes: "Ready to close quickly. Proof of funds available.",
+      offerPrice: (payload?.offerPrice as number) || (payload?.assignmentFee as number) || 0,
+      earnestMoney: (payload?.earnestMoney as number) || 0,
+      closeDate: (payload?.closeDate as string) || (payload?.closingDate as string) || "",
+      inspectionPeriod: (payload?.inspectionPeriod as number) || 10,
+      fundingType: (payload?.fundingType as string) || "cash",
+      notes: (payload?.notes as string) || (payload?.message as string) || "",
     },
-  },
-  {
-    id: "2",
-    sender: "dreamscaper",
-    senderName: "Wholesaler #A1B2C3",
-    timestamp: new Date(Date.now() - 86400000),
-    status: "pending",
-    terms: {
-      offerPrice: 155000,
-      earnestMoney: 7500,
-      closeDate: "2026-02-20",
-      inspectionPeriod: 7,
-      fundingType: "cash",
-      notes: "Counter offer: Higher price but faster close possible.",
-    },
-  },
-];
+  };
+}
 
 type FundingSource = "cash_reserves" | "hard_money" | "conventional" | "private_lender" | "self_directed_ira";
 
@@ -112,20 +109,124 @@ function mapFundingTypeToSource(fundingType: string | undefined): FundingSource 
 }
 
 function NegotiationRoom() {
-  const params = useParams<{ id: string }>();
+  const params = useParams<{ id: string; lane?: string }>();
   const dealId = params.id;
+  const urlLane = (params.lane?.toUpperCase() || "WHOLESALE") as "WHOLESALE" | "CAPITAL" | "LISTING";
   const { toast } = useToast();
   const { user, isAuthenticated } = useSupabaseAuth();
   const [activeTab, setActiveTab] = useState<"offers" | "chat" | "terms">("offers");
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
   const [offerMode, setOfferMode] = useState<"new" | "counter">("new");
   const [counterOfferData, setCounterOfferData] = useState<Offer["terms"] | undefined>(undefined);
-  const [offers, setOffers] = useState<Offer[]>(mockOffers);
   const [quickCounterOpen, setQuickCounterOpen] = useState(false);
   const [quickCounterPrevious, setQuickCounterPrevious] = useState<QuickCounterData | null>(null);
+  const [chatMessage, setChatMessage] = useState("");
+  const lane = urlLane;
 
-  const { data: deal, isLoading } = useQuery<WholesaleDeal>({
+  const { data: wholesaleDeal, isLoading: wholesaleLoading } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
+    enabled: !!dealId && lane === "WHOLESALE",
+  });
+
+  const { data: capitalProject, isLoading: capitalLoading } = useQuery<any>({
+    queryKey: ['/api/capital-projects', dealId],
+    enabled: !!dealId && lane === "CAPITAL",
+  });
+
+  const { data: listing, isLoading: listingLoading } = useQuery<any>({
+    queryKey: ['/api/retail-listings', dealId],
+    enabled: !!dealId && lane === "LISTING",
+  });
+
+  const deal = lane === "WHOLESALE" ? wholesaleDeal : lane === "CAPITAL" ? capitalProject : listing;
+  const dealOwnerId = deal?.submittedBy || deal?.operatorId || deal?.createdBy || null;
+
+  const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
+    queryKey: ['/api/marketflow/negotiations/deal', lane, dealId],
+    enabled: !!dealId && isAuthenticated,
+  });
+  
+  const currentNegotiation = dealNegotiations?.find(
+    n => n.posterId === user?.id || n.counterpartyId === user?.id
+  );
+
+  const { data: negotiationData, isLoading: negotiationLoading, refetch: refetchNegotiation } = useQuery<NegotiationData>({
+    queryKey: ['/api/marketflow/negotiations', currentNegotiation?.id],
+    enabled: !!currentNegotiation?.id && isAuthenticated,
+  });
+
+  const offers = negotiationData?.offers?.map(o => transformMarketflowOffer(o, user?.id)) || [];
+  const messages = negotiationData?.messages || [];
+  const isLoading = wholesaleLoading || capitalLoading || listingLoading || negotiationLoading;
+
+  const createOfferMutation = useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => {
+      const negotiation = currentNegotiation;
+      const recipientId = negotiation 
+        ? (negotiation.posterId === user?.id ? negotiation.counterpartyId : negotiation.posterId)
+        : dealOwnerId;
+      
+      if (!recipientId) {
+        throw new Error("Cannot determine deal owner for this offer");
+      }
+      
+      const res = await apiRequest("POST", `/api/marketflow/offers`, {
+        lane,
+        dealId: parseInt(dealId || "0"),
+        recipientId,
+        offerKind: lane === "WHOLESALE" ? "WHOLESALE_ASSIGNMENT" : lane === "CAPITAL" ? "CAPITAL_INVESTMENT" : "LISTING_INQUIRY",
+        payload,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchNegotiation();
+      queryClient.invalidateQueries({ queryKey: ['/api/marketflow/negotiations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketflow/negotiations/deal', lane, dealId] });
+      toast({
+        title: "Offer Sent!",
+        description: "Your offer has been submitted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send offer",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const respondMutation = useMutation({
+    mutationFn: async ({ offerId, action, counterPayload }: { offerId: number; action: string; counterPayload?: Record<string, unknown> }) => {
+      const res = await apiRequest("POST", `/api/marketflow/offers/${offerId}/respond`, { action, counterPayload });
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchNegotiation();
+      queryClient.invalidateQueries({ queryKey: ['/api/marketflow/negotiations'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to respond to offer",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ content }: { content: string }) => {
+      if (!currentNegotiation?.id) {
+        throw new Error("No active negotiation to send message to");
+      }
+      const res = await apiRequest("POST", `/api/marketflow/negotiations/${currentNegotiation.id}/messages`, { content, messageType: "text" });
+      return res.json();
+    },
+    onSuccess: () => {
+      setChatMessage("");
+      refetchNegotiation();
+    },
   });
 
   const formatCurrency = (amount: number) => {
@@ -160,23 +261,28 @@ function NegotiationRoom() {
     }
   };
 
-  const handleSubmitOffer = (data: OfferStudioData) => {
-    const newOffer: Offer = {
-      id: String(Date.now()),
-      sender: "investor",
-      senderName: "You",
-      timestamp: new Date(),
-      status: "pending",
-      terms: {
-        offerPrice: data.offerPrice,
-        earnestMoney: data.earnestMoney,
-        closeDate: data.closeDate,
-        inspectionPeriod: data.inspectionPeriod,
-        fundingType: data.fundingSource,
-        notes: data.notes || "",
-      },
+  const handleSubmitOffer = async (data: OfferStudioData) => {
+    const offerPayload = {
+      offerPrice: data.offerPrice,
+      earnestMoney: data.earnestMoney,
+      closeDate: data.closeDate,
+      inspectionPeriod: data.inspectionPeriod,
+      fundingType: data.fundingSource,
+      notes: data.notes || "",
     };
-    setOffers([...offers, newOffer]);
+    
+    const latestOffer = offers[offers.length - 1];
+    
+    if (latestOffer && latestOffer.sender !== "investor") {
+      respondMutation.mutate({
+        offerId: parseInt(latestOffer.id),
+        action: "counter",
+        counterPayload: offerPayload,
+      });
+    } else {
+      createOfferMutation.mutate(offerPayload);
+    }
+    
     setOfferDialogOpen(false);
     setCounterOfferData(undefined);
   };
@@ -205,44 +311,69 @@ function NegotiationRoom() {
   };
 
   const handleQuickCounter = (data: QuickCounterData) => {
-    const newOffer: Offer = {
-      id: String(Date.now()),
-      sender: "investor",
-      senderName: "You",
-      timestamp: new Date(),
-      status: "pending",
-      terms: {
-        offerPrice: data.offerPrice,
-        earnestMoney: data.earnestMoney,
-        closeDate: data.closeDate,
-        inspectionPeriod: data.inspectionPeriod,
-        fundingType: "cash",
-        notes: data.notes || "",
-      },
+    const counterPayload = {
+      offerPrice: data.offerPrice,
+      earnestMoney: data.earnestMoney,
+      closeDate: data.closeDate,
+      inspectionPeriod: data.inspectionPeriod,
+      fundingType: "cash",
+      notes: data.notes || "",
     };
-    setOffers([...offers, newOffer]);
+    
+    const latestOffer = offers[offers.length - 1];
+    
+    if (latestOffer && latestOffer.sender !== "investor") {
+      respondMutation.mutate({
+        offerId: parseInt(latestOffer.id),
+        action: "counter",
+        counterPayload,
+      }, {
+        onSuccess: () => {
+          toast({
+            title: "Counter Sent!",
+            description: "Your counter-offer has been submitted.",
+          });
+        },
+      });
+    } else {
+      createOfferMutation.mutate(counterPayload);
+    }
+    
     setQuickCounterOpen(false);
     setQuickCounterPrevious(null);
-    toast({
-      title: "Counter Sent!",
-      description: "Your counter-offer has been submitted.",
-    });
   };
 
   const handleAcceptOffer = (offerId: string) => {
-    setOffers(offers.map(o => o.id === offerId ? { ...o, status: "accepted" as const } : o));
-    toast({
-      title: "Offer Accepted",
-      description: "Congratulations! The deal has been accepted.",
+    respondMutation.mutate({
+      offerId: parseInt(offerId),
+      action: "accept",
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Offer Accepted",
+          description: "Congratulations! The deal has been accepted.",
+        });
+      },
     });
   };
 
   const handleRejectOffer = (offerId: string) => {
-    setOffers(offers.map(o => o.id === offerId ? { ...o, status: "rejected" as const } : o));
-    toast({
-      title: "Offer Rejected",
-      description: "The offer has been declined.",
+    respondMutation.mutate({
+      offerId: parseInt(offerId),
+      action: "reject",
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Offer Rejected",
+          description: "The offer has been declined.",
+        });
+      },
     });
+  };
+  
+  const handleSendMessage = () => {
+    if (!chatMessage.trim()) return;
+    sendMessageMutation.mutate({ content: chatMessage.trim() });
   };
 
   const latestOffer = offers[offers.length - 1];
@@ -439,10 +570,62 @@ function NegotiationRoom() {
 
               {activeTab === "chat" && (
                 <div className="space-y-4">
-                  <UnderConstructionCard 
-                    title="Deal Chat" 
-                    description="Real-time messaging with the wholesaler will be available soon. Stay tuned!"
-                  />
+                  <ScrollArea className="h-[350px] pr-4">
+                    <div className="space-y-3">
+                      {messages.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                          <p>No messages yet. Start the conversation!</p>
+                        </div>
+                      ) : (
+                        messages.map((msg) => {
+                          const isMe = msg.senderId === user?.id;
+                          return (
+                            <div 
+                              key={msg.id} 
+                              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                            >
+                              <div className={`max-w-[80%] p-3 rounded-lg ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                                <p className="text-sm">{msg.content}</p>
+                                <span className={`text-xs ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                                  {new Date(msg.createdAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </ScrollArea>
+                  {!currentNegotiation && (
+                    <p className="text-sm text-muted-foreground text-center py-2 bg-muted/50 rounded-lg">
+                      Send an offer first to start chatting with the deal owner
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <Textarea 
+                      placeholder={currentNegotiation ? "Type a message..." : "Chat available after sending an offer..."}
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey && currentNegotiation) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      disabled={!currentNegotiation}
+                      className="flex-1 min-h-[60px] resize-none"
+                      data-testid="input-chat-message"
+                    />
+                    <Button 
+                      onClick={handleSendMessage}
+                      disabled={sendMessageMutation.isPending || !chatMessage.trim() || !currentNegotiation}
+                      title={!currentNegotiation ? "Send an offer first to start chatting" : "Send message"}
+                      data-testid="button-send-message"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
 

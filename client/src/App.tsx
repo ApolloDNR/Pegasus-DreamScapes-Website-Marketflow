@@ -178,6 +178,7 @@ function Router() {
       <Route path="/marketflow/properties/:id" component={MarketplacePropertyDetail} />
       <Route path="/marketflow/submit" component={MarketflowSubmit} />
       <Route path="/marketflow/deals/:id/negotiate" component={MarketflowNegotiate} />
+      <Route path="/marketflow/negotiate/:lane/:id" component={MarketflowNegotiate} />
       <Route path="/marketflow/dashboard" component={MarketflowDashboard} />
       <Route path="/marketflow/my-deals" component={MyDealsPage} />
       <Route path="/marketflow/analytics" component={AnalyticsPage} />

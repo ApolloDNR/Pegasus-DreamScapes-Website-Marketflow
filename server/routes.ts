@@ -7169,6 +7169,355 @@ export async function registerRoutes(
   });
 
   // =====================================================
+  // MARKETFLOW CANONICAL OFFER & NEGOTIATION API
+  // =====================================================
+
+  // Create a new offer (unified across all lanes)
+  app.post("/api/marketflow/offers", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { lane, dealId, recipientId, offerKind, payload, expiresAt } = req.body;
+      
+      if (!lane || !dealId || !recipientId || !offerKind || !payload) {
+        return res.status(400).json({ message: "Missing required fields: lane, dealId, recipientId, offerKind, payload" });
+      }
+
+      // Check if negotiation already exists for these parties
+      let negotiation = await storage.getMarketflowNegotiationByDealAndParties(lane, dealId, recipientId, userId);
+      
+      // Create negotiation if it doesn't exist
+      if (!negotiation) {
+        negotiation = await storage.createMarketflowNegotiation({
+          lane,
+          dealId,
+          posterId: recipientId,
+          counterpartyId: userId,
+          currentOfferId: null,
+          lastActivityAt: new Date(),
+        });
+      }
+
+      // Create the offer
+      const offer = await storage.createMarketflowOffer({
+        lane,
+        dealId,
+        negotiationId: negotiation.id,
+        createdBy: userId,
+        recipientId,
+        offerKind,
+        payload,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        parentOfferId: null,
+      });
+
+      // Update negotiation with current offer
+      await storage.updateMarketflowNegotiation(negotiation.id, {
+        currentOfferId: offer.id,
+      });
+      await storage.incrementNegotiationOfferCount(negotiation.id);
+
+      // Broadcast to recipient via WebSocket
+      const broadcastToUser = (app as any).broadcastToUser;
+      if (broadcastToUser) {
+        broadcastToUser(recipientId, {
+          type: 'offer_update',
+          payload: {
+            offerId: offer.id,
+            negotiationId: negotiation.id,
+            lane,
+            offerKind,
+            status: 'sent',
+          }
+        });
+      }
+
+      res.status(201).json({ offer, negotiation });
+    } catch (error) {
+      console.error("Error creating offer:", error);
+      res.status(500).json({ message: "Failed to create offer" });
+    }
+  });
+
+  // Get offers for a deal
+  app.get("/api/marketflow/offers/deal/:lane/:dealId", async (req, res) => {
+    try {
+      const { lane, dealId } = req.params;
+      const offers = await storage.getMarketflowOffersByDeal(lane, parseInt(dealId));
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Get my offers
+  app.get("/api/marketflow/offers/my", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const sent = await storage.getMarketflowOffersByUser(userId);
+      const received = await storage.getMarketflowOffersReceivedByUser(userId);
+      
+      res.json({ sent, received });
+    } catch (error) {
+      console.error("Error fetching my offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Get single offer
+  app.get("/api/marketflow/offers/:offerId", async (req, res) => {
+    try {
+      const offerId = parseInt(req.params.offerId);
+      const offer = await storage.getMarketflowOffer(offerId);
+      
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+      
+      res.json(offer);
+    } catch (error) {
+      console.error("Error fetching offer:", error);
+      res.status(500).json({ message: "Failed to fetch offer" });
+    }
+  });
+
+  // Respond to an offer (accept, reject, counter)
+  app.post("/api/marketflow/offers/:offerId/respond", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const offerId = parseInt(req.params.offerId);
+      const { action, counterPayload } = req.body;
+      
+      const offer = await storage.getMarketflowOffer(offerId);
+      if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+
+      if (offer.recipientId !== userId && offer.createdBy !== userId) {
+        return res.status(403).json({ message: "Not authorized to respond to this offer" });
+      }
+
+      if (action === "accept") {
+        await storage.updateMarketflowOfferStatus(offerId, "accepted");
+        
+        // Update negotiation to accepted
+        if (offer.negotiationId) {
+          await storage.updateMarketflowNegotiation(offer.negotiationId, {
+            status: "accepted",
+            finalTerms: offer.payload as object,
+            acceptedAt: new Date(),
+            acceptedBy: userId,
+          });
+        }
+
+        const updatedOffer = await storage.getMarketflowOffer(offerId);
+        res.json({ offer: updatedOffer, action: "accepted" });
+      } 
+      else if (action === "reject") {
+        await storage.updateMarketflowOfferStatus(offerId, "rejected");
+        const updatedOffer = await storage.getMarketflowOffer(offerId);
+        res.json({ offer: updatedOffer, action: "rejected" });
+      }
+      else if (action === "counter" && counterPayload) {
+        await storage.updateMarketflowOfferStatus(offerId, "countered");
+        
+        // Create counter offer
+        const counterOffer = await storage.createMarketflowOffer({
+          lane: offer.lane,
+          dealId: offer.dealId,
+          negotiationId: offer.negotiationId,
+          createdBy: userId,
+          recipientId: offer.createdBy,
+          offerKind: offer.offerKind,
+          payload: counterPayload,
+          parentOfferId: offerId,
+          expiresAt: null,
+        });
+
+        // Update negotiation
+        if (offer.negotiationId) {
+          await storage.updateMarketflowNegotiation(offer.negotiationId, {
+            currentOfferId: counterOffer.id,
+          });
+          await storage.incrementNegotiationOfferCount(offer.negotiationId);
+        }
+
+        // Broadcast to original offerer
+        const broadcastToUser = (app as any).broadcastToUser;
+        if (broadcastToUser) {
+          broadcastToUser(offer.createdBy, {
+            type: 'offer_update',
+            payload: {
+              offerId: counterOffer.id,
+              negotiationId: offer.negotiationId,
+              lane: offer.lane,
+              offerKind: offer.offerKind,
+              status: 'countered',
+            }
+          });
+        }
+
+        res.json({ offer: counterOffer, action: "countered" });
+      }
+      else {
+        return res.status(400).json({ message: "Invalid action. Must be 'accept', 'reject', or 'counter'" });
+      }
+    } catch (error) {
+      console.error("Error responding to offer:", error);
+      res.status(500).json({ message: "Failed to respond to offer" });
+    }
+  });
+
+  // Get negotiation by ID
+  app.get("/api/marketflow/negotiations/:negotiationId", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      const negotiationId = parseInt(req.params.negotiationId);
+      
+      const negotiation = await storage.getMarketflowNegotiation(negotiationId);
+      if (!negotiation) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+
+      // Check access
+      if (userId && negotiation.posterId !== userId && negotiation.counterpartyId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this negotiation" });
+      }
+
+      // Get all offers in this negotiation
+      const offers = await storage.getMarketflowOffersByNegotiation(negotiationId);
+      
+      // Get messages
+      const messages = await storage.getNegotiationMessages(negotiationId);
+      
+      res.json({ negotiation, offers, messages });
+    } catch (error) {
+      console.error("Error fetching negotiation:", error);
+      res.status(500).json({ message: "Failed to fetch negotiation" });
+    }
+  });
+
+  // Get my negotiations
+  app.get("/api/marketflow/negotiations/my", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const negotiations = await storage.getMarketflowNegotiationsByUser(userId);
+      res.json(negotiations);
+    } catch (error) {
+      console.error("Error fetching negotiations:", error);
+      res.status(500).json({ message: "Failed to fetch negotiations" });
+    }
+  });
+
+  // Get negotiations for a deal
+  app.get("/api/marketflow/negotiations/deal/:lane/:dealId", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { lane, dealId } = req.params;
+      const negotiations = await storage.getMarketflowNegotiationsByDeal(lane, parseInt(dealId));
+      
+      // Filter to only return negotiations the user is a participant in
+      const userNegotiations = negotiations.filter(
+        (n: any) => n.posterId === userId || n.counterpartyId === userId
+      );
+      
+      res.json(userNegotiations);
+    } catch (error) {
+      console.error("Error fetching negotiations:", error);
+      res.status(500).json({ message: "Failed to fetch negotiations" });
+    }
+  });
+
+  // Send message in negotiation room
+  app.post("/api/marketflow/negotiations/:negotiationId/messages", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const negotiationId = parseInt(req.params.negotiationId);
+      const { content, messageType, relatedOfferId } = req.body;
+
+      const negotiation = await storage.getMarketflowNegotiation(negotiationId);
+      if (!negotiation) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+
+      // Check access
+      if (negotiation.posterId !== userId && negotiation.counterpartyId !== userId) {
+        return res.status(403).json({ message: "Not authorized to send messages in this negotiation" });
+      }
+
+      const message = await storage.createNegotiationMessage({
+        negotiationId,
+        senderId: userId,
+        content,
+        messageType: messageType || "text",
+        relatedOfferId: relatedOfferId || null,
+      });
+
+      // Broadcast to the other party
+      const recipientId = negotiation.posterId === userId ? negotiation.counterpartyId : negotiation.posterId;
+      const broadcastToUser = (app as any).broadcastToUser;
+      if (broadcastToUser) {
+        broadcastToUser(recipientId, {
+          type: 'new_message',
+          payload: {
+            negotiationId,
+            messageId: message.id,
+            senderId: userId,
+            content,
+          }
+        });
+      }
+
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Mark messages as read
+  app.post("/api/marketflow/negotiations/:negotiationId/read", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const negotiationId = parseInt(req.params.negotiationId);
+      await storage.markNegotiationMessagesAsRead(negotiationId, userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
+  // =====================================================
   // WebSocket Server for Real-time Notifications
   // =====================================================
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });

@@ -2442,3 +2442,184 @@ export const insertFeaturedDealSchema = createInsertSchema(featuredDeals).omit({
 });
 export type InsertFeaturedDeal = z.infer<typeof insertFeaturedDealSchema>;
 export type FeaturedDeal = typeof featuredDeals.$inferSelect;
+
+// ============================================
+// MARKETFLOW CANONICAL OFFER SYSTEM
+// ============================================
+// Unified offer system across all lanes (Wholesale, Capital, Listings)
+// Every offer routes through this table for consistent negotiation room behavior
+
+export const OFFER_KINDS = [
+  "WHOLESALE_ASSIGNMENT",  // Simple wholesale assignment offer
+  "WHOLESALE_JV",          // JV partnership request on wholesale deal
+  "CAPITAL_INVESTMENT",    // Investment offer on capital project
+  "LISTING_INQUIRY",       // Inquiry about a listing
+  "SHOWING_REQUEST",       // Request to schedule showing
+] as const;
+
+export type OfferKind = typeof OFFER_KINDS[number];
+
+export const OFFER_STATUSES = [
+  "draft",           // Saved but not submitted
+  "sent",            // Submitted, awaiting response
+  "countered",       // Counter-offer sent back
+  "accepted",        // Offer accepted by recipient
+  "rejected",        // Offer rejected
+  "expired",         // Offer expired without response
+  "withdrawn",       // Offer withdrawn by creator
+] as const;
+
+export type OfferStatus = typeof OFFER_STATUSES[number];
+
+export const LANE_TYPES = [
+  "WHOLESALE",    // Wholesale assignments
+  "CAPITAL",      // Capital raises / developments
+  "LISTING",      // Ready-to-move-in properties
+] as const;
+
+export type LaneType = typeof LANE_TYPES[number];
+
+// MarketFlow Offers - unified offers for all lanes
+export const marketflowOffers = pgTable("marketflow_offers", {
+  id: serial("id").primaryKey(),
+  
+  // === DEAL REFERENCE ===
+  lane: varchar("lane", { length: 50 }).notNull(), // WHOLESALE, CAPITAL, LISTING
+  dealId: integer("deal_id").notNull(), // References wholesaleDeals.id, capitalProjects.id, or listings.id
+  negotiationId: integer("negotiation_id"), // Links to marketflowNegotiations once negotiation starts
+  
+  // === PARTICIPANTS ===
+  createdBy: varchar("created_by", { length: 255 }).notNull(), // User making the offer
+  recipientId: varchar("recipient_id", { length: 255 }).notNull(), // Deal poster/owner
+  
+  // === OFFER TYPE ===
+  offerKind: varchar("offer_kind", { length: 50 }).notNull(), // WHOLESALE_ASSIGNMENT, WHOLESALE_JV, CAPITAL_INVESTMENT, LISTING_INQUIRY, SHOWING_REQUEST
+  
+  // === OFFER PAYLOAD (varies by offerKind) ===
+  // For WHOLESALE_ASSIGNMENT:
+  //   { assignmentFee, emdAmount, closingDate, inspectionPeriodDays, message }
+  // For WHOLESALE_JV:
+  //   { roleSelection, proposedSplit, contributions, message }
+  // For CAPITAL_INVESTMENT:
+  //   { structureType, investmentAmount, proposedReturn, proposedSplit, termLengthMonths, isAcceptingTerms, message }
+  // For LISTING_INQUIRY:
+  //   { fullName, phone, email, buyerType, preApproved, message }
+  // For SHOWING_REQUEST:
+  //   { preferredDates, hasAgent, financingType, message }
+  payload: jsonb("payload").notNull(),
+  
+  // === STATUS ===
+  status: varchar("status", { length: 50 }).notNull().default("sent"),
+  
+  // === COUNTER OFFER REFERENCE ===
+  parentOfferId: integer("parent_offer_id"), // If this is a counter, references parent
+  counterCount: integer("counter_count").default(0), // How many counters in chain
+  
+  // === TIMESTAMPS ===
+  expiresAt: timestamp("expires_at"),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertMarketflowOfferSchema = createInsertSchema(marketflowOffers).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  status: true,
+  respondedAt: true,
+  counterCount: true
+});
+export type InsertMarketflowOffer = z.infer<typeof insertMarketflowOfferSchema>;
+export type MarketflowOffer = typeof marketflowOffers.$inferSelect;
+
+// ============================================
+// MARKETFLOW NEGOTIATIONS (Escrow-style rooms)
+// ============================================
+// Created when there are 2 principals in negotiation
+// Houses offer history, chat, and AI advisor
+
+export const NEGOTIATION_STATUSES = [
+  "active",        // Negotiation in progress
+  "accepted",      // Terms agreed, awaiting close
+  "closed",        // Deal closed successfully
+  "cancelled",     // Negotiation cancelled
+  "expired",       // Negotiation expired
+] as const;
+
+export type NegotiationStatus = typeof NEGOTIATION_STATUSES[number];
+
+export const marketflowNegotiations = pgTable("marketflow_negotiations", {
+  id: serial("id").primaryKey(),
+  
+  // === DEAL REFERENCE ===
+  lane: varchar("lane", { length: 50 }).notNull(), // WHOLESALE, CAPITAL, LISTING
+  dealId: integer("deal_id").notNull(),
+  
+  // === PARTICIPANTS ===
+  posterId: varchar("poster_id", { length: 255 }).notNull(), // Deal owner
+  counterpartyId: varchar("counterparty_id", { length: 255 }).notNull(), // Person making offers
+  
+  // === CURRENT STATE ===
+  status: varchar("status", { length: 50 }).notNull().default("active"),
+  currentOfferId: integer("current_offer_id"), // Most recent active offer
+  offerCount: integer("offer_count").default(0),
+  messageCount: integer("message_count").default(0),
+  
+  // === FINAL TERMS (set when accepted) ===
+  finalTerms: jsonb("final_terms"),
+  acceptedAt: timestamp("accepted_at"),
+  acceptedBy: varchar("accepted_by", { length: 255 }),
+  
+  // === TIMESTAMPS ===
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertMarketflowNegotiationSchema = createInsertSchema(marketflowNegotiations).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  status: true,
+  offerCount: true,
+  messageCount: true,
+  acceptedAt: true,
+  acceptedBy: true
+});
+export type InsertMarketflowNegotiation = z.infer<typeof insertMarketflowNegotiationSchema>;
+export type MarketflowNegotiation = typeof marketflowNegotiations.$inferSelect;
+
+// ============================================
+// NEGOTIATION ROOM MESSAGES
+// ============================================
+// Chat messages within a negotiation room
+
+export const negotiationMessages = pgTable("negotiation_messages", {
+  id: serial("id").primaryKey(),
+  negotiationId: integer("negotiation_id").notNull(),
+  senderId: varchar("sender_id", { length: 255 }).notNull(),
+  
+  // === MESSAGE CONTENT ===
+  content: text("content").notNull(),
+  messageType: varchar("message_type", { length: 50 }).default("text"), // text, system, offer_event
+  
+  // === OFFER REFERENCE (for offer_event messages) ===
+  relatedOfferId: integer("related_offer_id"),
+  
+  // === READ STATUS ===
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  
+  // === TIMESTAMP ===
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertNegotiationMessageSchema = createInsertSchema(negotiationMessages).omit({ 
+  id: true, 
+  createdAt: true,
+  isRead: true,
+  readAt: true
+});
+export type InsertNegotiationMessage = z.infer<typeof insertNegotiationMessageSchema>;
+export type NegotiationMessage = typeof negotiationMessages.$inferSelect;
