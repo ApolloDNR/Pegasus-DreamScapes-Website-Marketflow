@@ -91,6 +91,7 @@ export default function Home() {
       <InvestmentPhilosophySection />
       <HowItWorksSection />
       <TrustLogosSection />
+      <CommunityImpactSection />
       <FAQSection />
       <NewsletterSection />
       <ContactSection />
@@ -769,6 +770,7 @@ function ServicesSection() {
                     src={service.image} 
                     alt={service.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
                   />
                   {/* Overlay with accent badge */}
                   <div className="absolute top-6 left-6">
@@ -857,6 +859,7 @@ function FeaturedProjectSection() {
                 src={serviceImage2} 
                 alt="Featured Project - Nelson Dr"
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
             </div>
             <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium text-sm shadow-lg">
@@ -1583,6 +1586,120 @@ function TrustLogosSection() {
             </motion.div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function CommunityImpactSection() {
+  const impactStats = [
+    { value: "$2.4M", label: "Invested in Community Projects" },
+    { value: "47", label: "Properties Transformed" },
+    { value: "120+", label: "Local Jobs Created" },
+    { value: "15", label: "Neighborhoods Revitalized" },
+  ];
+
+  const values = [
+    {
+      icon: Heart,
+      title: "Community First",
+      description: "Every investment we make considers the impact on local communities. We don't just flip houses—we help revitalize neighborhoods."
+    },
+    {
+      icon: Shield,
+      title: "Transparency Always",
+      description: "Clear communication, honest valuations, and no hidden fees. Our reputation is built on trust and integrity."
+    },
+    {
+      icon: Sparkles,
+      title: "Excellence in Execution",
+      description: "From acquisition to renovation to sale, we maintain the highest standards of quality and professionalism."
+    },
+    {
+      icon: Users,
+      title: "Partnership Mindset",
+      description: "Whether you're a seller, investor, or fellow professional, we approach every relationship as a true partnership."
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-gradient-to-b from-background to-muted/20 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-80 h-80 bg-champagne/10 rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
+            <Heart className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary uppercase tracking-wider">Our Commitment</span>
+          </div>
+          
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-community-title">
+            The Dreamscaper Creed
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve.
+          </p>
+        </ScrollReveal>
+
+        {/* Impact stats */}
+        <ScrollReveal delay={0.2} className="mb-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {impactStats.map((stat, index) => (
+              <motion.div
+                key={index}
+                className="text-center p-6 bg-card rounded-lg border border-border/50"
+                whileHover={{ y: -4, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.1)" }}
+                transition={{ duration: 0.3 }}
+                data-testid={`community-stat-${index}`}
+              >
+                <p className="font-serif text-3xl sm:text-4xl font-bold text-primary mb-2">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        {/* Core values */}
+        <StaggerChildren className="grid md:grid-cols-2 gap-6" staggerDelay={0.1}>
+          {values.map((value, index) => (
+            <StaggerItem key={index}>
+              <motion.div 
+                className="flex gap-5 p-6 bg-card rounded-lg border border-border/50 h-full"
+                whileHover={{ y: -4, borderColor: "rgba(var(--primary), 0.2)" }}
+                transition={{ duration: 0.3 }}
+                data-testid={`community-value-${index}`}
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <value.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">{value.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{value.description}</p>
+                </div>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        {/* CTA */}
+        <ScrollReveal delay={0.4} className="text-center mt-16">
+          <p className="text-muted-foreground mb-6">Ready to explore investment opportunities?</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/marketflow">
+              <Button size="lg" className="group" data-testid="button-community-explore">
+                Explore MarketFlow
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button variant="outline" size="lg" data-testid="button-community-contact">
+                Schedule a Call
+              </Button>
+            </Link>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

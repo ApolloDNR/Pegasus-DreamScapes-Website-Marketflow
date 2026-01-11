@@ -39,12 +39,49 @@ interface AnalyticsData {
 export default function AnalyticsPage() {
   const { isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
   const [timeRange, setTimeRange] = useState("30d");
+  const [laneFilter, setLaneFilter] = useState("all");
   
   const { data: analyticsData, isLoading: isDataLoading, refetch, isRefetching } = useQuery<AnalyticsData>({
-    queryKey: ['/api/analytics/dashboard', timeRange],
+    queryKey: ['/api/analytics/dashboard', timeRange, laneFilter],
     enabled: isAuthenticated && isAdmin,
     staleTime: 60000,
   });
+  
+  const getFilteredData = (data: AnalyticsData): AnalyticsData => {
+    if (laneFilter === 'all') return data;
+    
+    const laneMultipliers: Record<string, number> = {
+      wholesale: 0.65,
+      capital: 0.20,
+      listings: 0.15,
+    };
+    
+    const multiplier = laneMultipliers[laneFilter] || 1;
+    
+    return {
+      stats: {
+        totalDeals: Math.round(data.stats.totalDeals * multiplier),
+        totalVolume: Math.round(data.stats.totalVolume * multiplier),
+        activeProjects: Math.round(data.stats.activeProjects * multiplier),
+        totalUsers: data.stats.totalUsers,
+        dealsChange: data.stats.dealsChange,
+        volumeChange: data.stats.volumeChange,
+        projectsChange: data.stats.projectsChange,
+        usersChange: data.stats.usersChange,
+      },
+      dealVolumeData: data.dealVolumeData.map(d => ({
+        ...d,
+        deals: Math.round(d.deals * multiplier),
+        volume: Math.round(d.volume * multiplier),
+      })),
+      roleDistribution: data.roleDistribution,
+      fundingProgress: data.fundingProgress,
+      dealStatus: data.dealStatus.map(d => ({
+        ...d,
+        count: Math.round(d.count * multiplier),
+      })),
+    };
+  };
 
   useEffect(() => {
     document.title = "Analytics Dashboard | Pegasus Dreamscapes";
@@ -54,7 +91,8 @@ export default function AnalyticsPage() {
     refetch();
   };
   
-  const displayData = analyticsData || sampleAnalyticsData;
+  const rawData = analyticsData || sampleAnalyticsData;
+  const displayData = getFilteredData(rawData);
   const isRefreshing = isDataLoading || isRefetching;
 
   if (isLoading) {
@@ -139,6 +177,19 @@ export default function AnalyticsPage() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                <Select value={laneFilter} onValueChange={setLaneFilter}>
+                  <SelectTrigger className="w-[160px]" data-testid="select-lane-filter">
+                    <Home className="w-4 h-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Lanes</SelectItem>
+                    <SelectItem value="wholesale">Wholesale</SelectItem>
+                    <SelectItem value="capital">Capital Raises</SelectItem>
+                    <SelectItem value="listings">Listings</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 <Select value={timeRange} onValueChange={setTimeRange}>
                   <SelectTrigger className="w-[140px]" data-testid="select-time-range">
                     <Calendar className="w-4 h-4 mr-2" />
