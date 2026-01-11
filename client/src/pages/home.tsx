@@ -217,7 +217,31 @@ function FeaturedDealsSection() {
   }
 
   if (featuredDeals.length === 0) {
-    return null;
+    return (
+      <section id="featured-deals" className="py-24 lg:py-32 bg-muted/20 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <ScrollReveal className="text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">MarketFlow</p>
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-[-0.02em] mb-4">
+              Fresh Deals Coming Soon
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+              Our team is sourcing new investment opportunities. Sign up for alerts to be notified when deals are available.
+            </p>
+            <Link href="/marketflow" data-testid="link-explore-marketplace">
+              <Button className="group" data-testid="button-explore-marketplace">
+                Explore Marketplace
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+    );
   }
 
   return (

@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
@@ -161,6 +160,10 @@ function NegotiationRoom() {
 
   const createOfferMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
+      if (!dealId) {
+        throw new Error("Deal ID is required to submit an offer");
+      }
+      
       const negotiation = currentNegotiation;
       const recipientId = negotiation 
         ? (negotiation.posterId === user?.id ? negotiation.counterpartyId : negotiation.posterId)
@@ -170,9 +173,19 @@ function NegotiationRoom() {
         throw new Error("Cannot determine deal owner for this offer");
       }
       
+      // Parse numeric IDs for wholesale deals, pass as-is for capital/listings (UUIDs)
+      let parsedDealId: number | string = dealId;
+      if (lane === "WHOLESALE") {
+        const numericId = parseInt(dealId, 10);
+        if (isNaN(numericId)) {
+          throw new Error("Invalid deal ID format for wholesale deal");
+        }
+        parsedDealId = numericId;
+      }
+      
       const res = await apiRequest("POST", `/api/marketflow/offers`, {
         lane,
-        dealId: parseInt(dealId || "0"),
+        dealId: parsedDealId,
         recipientId,
         offerKind: lane === "WHOLESALE" ? "WHOLESALE_ASSIGNMENT" : lane === "CAPITAL" ? "CAPITAL_INVESTMENT" : "LISTING_INQUIRY",
         payload,
@@ -702,20 +715,20 @@ function NegotiationRoom() {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" disabled>
+                  <Button variant="outline" className="h-auto py-4 flex flex-col gap-2 opacity-60" disabled>
                     <FileText className="w-5 h-5" />
                     <span>Generate Term Sheet</span>
-                    <UnderConstructionBadge />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Coming Soon</span>
                   </Button>
-                  <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" disabled>
+                  <Button variant="outline" className="h-auto py-4 flex flex-col gap-2 opacity-60" disabled>
                     <Lock className="w-5 h-5" />
                     <span>Move to Data Room</span>
-                    <UnderConstructionBadge />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Coming Soon</span>
                   </Button>
-                  <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" disabled>
+                  <Button variant="outline" className="h-auto py-4 flex flex-col gap-2 opacity-60" disabled>
                     <Sparkles className="w-5 h-5" />
                     <span>Mark as Funded</span>
-                    <UnderConstructionBadge />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Coming Soon</span>
                   </Button>
                 </div>
               </CardContent>

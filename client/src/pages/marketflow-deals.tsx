@@ -478,17 +478,18 @@ function DealsPage() {
 
         <Tabs value={dealCategory} onValueChange={(v) => setDealCategory(v as "wholesale" | "capital" | "listings")} className="w-full">
           <TabsList className="grid w-full max-w-xl grid-cols-3 mb-6">
-            <TabsTrigger value="wholesale" className="gap-2" data-testid="tab-wholesale">
-              <Handshake className="w-4 h-4" />
-              Wholesale Assignments
+            <TabsTrigger value="wholesale" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-wholesale">
+              <Handshake className="w-4 h-4 shrink-0" />
+              <span className="truncate">Wholesale</span>
             </TabsTrigger>
-            <TabsTrigger value="capital" className="gap-2" data-testid="tab-capital">
-              <TrendingUp className="w-4 h-4" />
-              Capital Raises
+            <TabsTrigger value="capital" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-capital">
+              <TrendingUp className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline truncate">Capital Raises</span>
+              <span className="sm:hidden truncate">Capital</span>
             </TabsTrigger>
-            <TabsTrigger value="listings" className="gap-2" data-testid="tab-listings">
-              <Home className="w-4 h-4" />
-              Listings
+            <TabsTrigger value="listings" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-listings">
+              <Home className="w-4 h-4 shrink-0" />
+              <span className="truncate">Listings</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -545,7 +546,7 @@ function DealsPage() {
             </SelectContent>
           </Select>
           
-          <div className="flex items-center gap-1 border-l pl-4">
+          <div className="hidden md:flex items-center gap-1 border-l pl-4">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
