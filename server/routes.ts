@@ -2539,6 +2539,108 @@ export async function registerRoutes(
     }
   });
 
+  // Saved Searches API - user-defined search filters for MarketFlow
+  app.get("/api/saved-searches", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      const searches = await storage.getSavedSearches(userId);
+      return res.json(searches);
+    } catch (error) {
+      console.error("Error fetching saved searches:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/saved-searches", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { name, lane, filters, emailAlerts, alertFrequency } = req.body;
+      
+      if (!name || !lane || !filters) {
+        return res.status(400).json({ message: "name, lane, and filters are required" });
+      }
+
+      if (!["wholesale", "capital", "listings"].includes(lane)) {
+        return res.status(400).json({ message: "lane must be wholesale, capital, or listings" });
+      }
+
+      const savedSearch = await storage.createSavedSearch({
+        userId,
+        name: name.slice(0, 100),
+        lane,
+        filters,
+        emailAlerts: emailAlerts || false,
+        alertFrequency: alertFrequency || "daily",
+        isActive: true,
+      });
+
+      return res.status(201).json(savedSearch);
+    } catch (error) {
+      console.error("Error creating saved search:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/saved-searches/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const searchId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const existing = await storage.getSavedSearchById(searchId);
+      if (!existing || existing.userId !== userId) {
+        return res.status(404).json({ message: "Saved search not found" });
+      }
+
+      const { name, filters, emailAlerts, alertFrequency, isActive, lastUsedAt } = req.body;
+      const updated = await storage.updateSavedSearch(searchId, {
+        name: name?.slice(0, 100),
+        filters,
+        emailAlerts,
+        alertFrequency,
+        isActive,
+        lastUsedAt: lastUsedAt ? new Date(lastUsedAt) : undefined,
+      });
+
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating saved search:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/saved-searches/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const searchId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const existing = await storage.getSavedSearchById(searchId);
+      if (!existing || existing.userId !== userId) {
+        return res.status(404).json({ message: "Saved search not found" });
+      }
+
+      await storage.deleteSavedSearch(searchId);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting saved search:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Homepage Content API - public endpoint returns only active content
   app.get("/api/homepage-content", async (req, res) => {
     try {

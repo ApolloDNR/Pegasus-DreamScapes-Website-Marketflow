@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { 
   Search, 
   Save, 
@@ -35,9 +37,13 @@ import {
   Bell,
   BellOff,
   Play,
-  Filter
+  Filter,
+  Cloud,
+  HardDrive
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export interface SavedSearch {
   id: string;
@@ -65,7 +71,7 @@ export interface SearchFilters {
 
 const STORAGE_KEY = "marketflow_saved_searches";
 
-export function useSavedSearches() {
+function useLocalSavedSearches() {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
   useEffect(() => {
@@ -79,7 +85,7 @@ export function useSavedSearches() {
     }
   }, []);
 
-  const saveSearch = (name: string, filters: SearchFilters) => {
+  const saveSearch = useCallback(async (name: string, filters: SearchFilters, _lane?: string): Promise<SavedSearch> => {
     const newSearch: SavedSearch = {
       id: Date.now().toString(),
       name,
@@ -88,36 +94,49 @@ export function useSavedSearches() {
       alertsEnabled: false
     };
 
-    const updated = [...savedSearches, newSearch];
-    setSavedSearches(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setSavedSearches(prev => {
+      const updated = [...prev, newSearch];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
     return newSearch;
-  };
+  }, []);
 
-  const deleteSearch = (id: string) => {
-    const updated = savedSearches.filter(s => s.id !== id);
-    setSavedSearches(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
+  const deleteSearch = useCallback((id: string) => {
+    setSavedSearches(prev => {
+      const updated = prev.filter(s => s.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
-  const updateSearch = (id: string, updates: Partial<SavedSearch>) => {
-    const updated = savedSearches.map(s => 
-      s.id === id ? { ...s, ...updates } : s
-    );
-    setSavedSearches(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
+  const updateSearch = useCallback((id: string, updates: Partial<SavedSearch>) => {
+    setSavedSearches(prev => {
+      const updated = prev.map(s => s.id === id ? { ...s, ...updates } : s);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
-  const toggleAlerts = (id: string) => {
-    const search = savedSearches.find(s => s.id === id);
-    if (search) {
-      updateSearch(id, { alertsEnabled: !search.alertsEnabled });
-    }
-  };
+  const toggleAlerts = useCallback((id: string) => {
+    setSavedSearches(prev => {
+      const search = prev.find(s => s.id === id);
+      if (search) {
+        const updated = prev.map(s => s.id === id ? { ...s, alertsEnabled: !s.alertsEnabled } : s);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      }
+      return prev;
+    });
+  }, []);
 
-  const markUsed = (id: string) => {
-    updateSearch(id, { lastUsed: new Date().toISOString() });
-  };
+  const markUsed = useCallback((id: string) => {
+    setSavedSearches(prev => {
+      const updated = prev.map(s => s.id === id ? { ...s, lastUsed: new Date().toISOString() } : s);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   return {
     savedSearches,
@@ -125,8 +144,139 @@ export function useSavedSearches() {
     deleteSearch,
     updateSearch,
     toggleAlerts,
-    markUsed
+    markUsed,
+    isLoading: false,
+    isApiMode: false
   };
+}
+
+interface ApiSavedSearch {
+  id: number;
+  userId: string;
+  name: string;
+  lane: string;
+  filters: Record<string, unknown>;
+  emailAlerts: boolean;
+  alertFrequency: string;
+  isActive: boolean;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+function useApiSavedSearches() {
+  const { toast } = useToast();
+  
+  const { data: apiSearches = [], isLoading } = useQuery<ApiSavedSearch[]>({
+    queryKey: ["/api/saved-searches"],
+  });
+
+  const savedSearches: SavedSearch[] = apiSearches.map(s => ({
+    id: String(s.id),
+    name: s.name,
+    filters: s.filters as SearchFilters,
+    createdAt: typeof s.createdAt === 'string' ? s.createdAt : new Date(s.createdAt).toISOString(),
+    lastUsed: s.lastUsedAt ? (typeof s.lastUsedAt === 'string' ? s.lastUsedAt : new Date(s.lastUsedAt).toISOString()) : undefined,
+    alertsEnabled: s.emailAlerts
+  }));
+
+  const createMutation = useMutation({
+    mutationFn: async (data: { name: string; filters: SearchFilters; lane: string; emailAlerts?: boolean }) => {
+      const result = await apiRequest("POST", "/api/saved-searches", data);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-searches"] });
+      toast({ title: "Search saved", description: "Your search has been saved" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save search", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/saved-searches/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-searches"] });
+      toast({ title: "Search deleted" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete search", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: { emailAlerts?: boolean; lastUsedAt?: string } }) => {
+      return apiRequest("PATCH", `/api/saved-searches/${id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-searches"] });
+    }
+  });
+
+  const saveSearch = useCallback(async (name: string, filters: SearchFilters, lane: string = "wholesale"): Promise<SavedSearch> => {
+    const result = await createMutation.mutateAsync({ name, filters, lane }) as ApiSavedSearch;
+    const normalizeTimestamp = (val: unknown): string => {
+      if (!val) return new Date().toISOString();
+      if (typeof val === 'string') return val;
+      if (val instanceof Date) return val.toISOString();
+      return new Date(val as string | number).toISOString();
+    };
+    return {
+      id: String(result.id),
+      name: result.name,
+      filters: result.filters as SearchFilters,
+      createdAt: normalizeTimestamp(result.createdAt),
+      alertsEnabled: result.emailAlerts
+    };
+  }, [createMutation]);
+
+  const deleteSearch = useCallback((id: string) => {
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return;
+    deleteMutation.mutate(numId);
+  }, [deleteMutation]);
+
+  const updateSearch = useCallback((id: string, updates: Partial<SavedSearch>) => {
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return;
+    updateMutation.mutate({ id: numId, updates: { emailAlerts: updates.alertsEnabled } });
+  }, [updateMutation]);
+
+  const toggleAlerts = useCallback((id: string) => {
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return;
+    const search = savedSearches.find(s => s.id === id);
+    if (search) {
+      updateMutation.mutate({ id: numId, updates: { emailAlerts: !search.alertsEnabled } });
+    }
+  }, [savedSearches, updateMutation]);
+
+  const markUsed = useCallback((id: string) => {
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return;
+    updateMutation.mutate({ id: numId, updates: { lastUsedAt: new Date().toISOString() } });
+  }, [updateMutation]);
+
+  return {
+    savedSearches,
+    saveSearch,
+    deleteSearch,
+    updateSearch,
+    toggleAlerts,
+    markUsed,
+    isLoading,
+    isApiMode: true
+  };
+}
+
+export function useSavedSearches() {
+  const { isAuthenticated } = useSupabaseAuth();
+  const apiHook = useApiSavedSearches();
+  const localHook = useLocalSavedSearches();
+  
+  return isAuthenticated ? apiHook : localHook;
 }
 
 interface SaveSearchDialogProps {

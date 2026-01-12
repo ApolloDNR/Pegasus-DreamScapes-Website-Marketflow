@@ -72,9 +72,11 @@ import {
   type MarketflowOffer, type InsertMarketflowOffer,
   type MarketflowNegotiation, type InsertMarketflowNegotiation,
   type NegotiationMessage, type InsertNegotiationMessage,
+  type SavedSearch, type InsertSavedSearch,
   featuredDeals,
   userActivity,
   homepageContent,
+  savedSearches,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -436,6 +438,13 @@ export interface IStorage {
   getHomepageContent(): Promise<HomepageContent[]>;
   getHomepageContentByKey(sectionKey: string): Promise<HomepageContent | undefined>;
   upsertHomepageContent(data: { sectionKey: string; content: string; contentType?: string; updatedBy?: string }): Promise<HomepageContent>;
+
+  // Saved Searches
+  getSavedSearches(userId: string): Promise<SavedSearch[]>;
+  getSavedSearchById(id: number): Promise<SavedSearch | undefined>;
+  createSavedSearch(data: InsertSavedSearch): Promise<SavedSearch>;
+  updateSavedSearch(id: number, data: Partial<InsertSavedSearch> & { lastUsedAt?: Date }): Promise<SavedSearch | undefined>;
+  deleteSavedSearch(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2600,6 +2609,46 @@ export class DatabaseStorage implements IStorage {
       isActive: true,
     }).returning();
     return created;
+  }
+
+  // ============================================
+  // SAVED SEARCHES
+  // ============================================
+
+  async getSavedSearches(userId: string): Promise<SavedSearch[]> {
+    return db.select().from(savedSearches)
+      .where(eq(savedSearches.userId, userId))
+      .orderBy(desc(savedSearches.createdAt));
+  }
+
+  async getSavedSearchById(id: number): Promise<SavedSearch | undefined> {
+    const [search] = await db.select().from(savedSearches).where(eq(savedSearches.id, id));
+    return search;
+  }
+
+  async createSavedSearch(data: InsertSavedSearch): Promise<SavedSearch> {
+    const [created] = await db.insert(savedSearches).values(data).returning();
+    return created;
+  }
+
+  async updateSavedSearch(id: number, data: Partial<InsertSavedSearch> & { lastUsedAt?: Date }): Promise<SavedSearch | undefined> {
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.filters !== undefined) updateData.filters = data.filters;
+    if (data.emailAlerts !== undefined) updateData.emailAlerts = data.emailAlerts;
+    if (data.alertFrequency !== undefined) updateData.alertFrequency = data.alertFrequency;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.lastUsedAt !== undefined) updateData.lastUsedAt = data.lastUsedAt;
+    
+    const [updated] = await db.update(savedSearches)
+      .set(updateData)
+      .where(eq(savedSearches.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSavedSearch(id: number): Promise<void> {
+    await db.delete(savedSearches).where(eq(savedSearches.id, id));
   }
 
   // ============================================

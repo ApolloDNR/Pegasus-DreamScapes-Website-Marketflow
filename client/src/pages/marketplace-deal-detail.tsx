@@ -49,7 +49,9 @@ import {
   CheckSquare,
   Construction,
   Sparkles,
+  Printer,
 } from "lucide-react";
+import { ShareButtons } from "@/components/share-buttons";
 import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 
 export default function MarketplaceDealDetail() {
@@ -188,9 +190,18 @@ function DealDetailPage() {
                       {deal.propertyAddress}, {deal.city}, {deal.state} {deal.zipCode}
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="icon" data-testid="button-save-deal">
-                    <Bookmark className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <ShareButtons 
+                      title={`Wholesale Deal: ${deal.propertyAddress}`}
+                      description={`Check out this wholesale deal at ${deal.propertyAddress}, ${deal.city}, ${deal.state} - ARV $${deal.arv?.toLocaleString() || "N/A"}`}
+                    />
+                    <Button variant="outline" size="icon" onClick={() => window.print()} data-testid="button-print-deal">
+                      <Printer className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" data-testid="button-save-deal">
+                      <Bookmark className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

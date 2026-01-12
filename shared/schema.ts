@@ -1332,6 +1332,34 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
+// Saved Searches - user-defined search filters for MarketFlow
+export const savedSearches = pgTable("saved_searches", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  // Which marketplace lane: wholesale, capital, listings
+  lane: varchar("lane", { length: 50 }).notNull(),
+  // JSON filter criteria
+  filters: jsonb("filters").notNull(), // {propertyTypes, locations, priceRange, etc.}
+  // Notification preferences
+  emailAlerts: boolean("email_alerts").default(false),
+  alertFrequency: varchar("alert_frequency", { length: 20 }).default("daily"), // instant, daily, weekly
+  lastNotified: timestamp("last_notified"),
+  lastUsedAt: timestamp("last_used_at"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSavedSearchSchema = createInsertSchema(savedSearches).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true,
+  lastNotified: true
+});
+export type InsertSavedSearch = z.infer<typeof insertSavedSearchSchema>;
+export type SavedSearch = typeof savedSearches.$inferSelect;
+
 // Deal Swipes - track user interactions with deals (like/pass for matching)
 export const dealSwipes = pgTable("deal_swipes", {
   id: serial("id").primaryKey(),

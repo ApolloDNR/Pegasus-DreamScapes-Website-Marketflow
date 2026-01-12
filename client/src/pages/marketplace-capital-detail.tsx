@@ -59,8 +59,10 @@ import {
   Wallet,
   ArrowRight,
   Home,
-  Hammer
+  Hammer,
+  Printer,
 } from "lucide-react";
+import { ShareButtons } from "@/components/share-buttons";
 
 export default function MarketplaceCapitalDetail() {
   return (
@@ -139,25 +141,38 @@ function CapitalDetailPage() {
           <ScrollReveal>
             <Card data-testid="card-project-header">
               <CardHeader>
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <StructureBadge structure={project.structure} />
-                  <StatusBadge status={project.status} />
-                  {project.propertyType && (
-                    <Badge variant="outline">
-                      <Building2 className="w-3 h-3 mr-1" />
-                      {project.propertyType.replace("-", " ")}
-                    </Badge>
-                  )}
-                </div>
-                <CardTitle className="text-2xl" data-testid="text-project-title">
-                  {project.title}
-                </CardTitle>
-                {project.location && (
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>{project.location}</span>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <StructureBadge structure={project.structure} />
+                      <StatusBadge status={project.status} />
+                      {project.propertyType && (
+                        <Badge variant="outline">
+                          <Building2 className="w-3 h-3 mr-1" />
+                          {project.propertyType.replace("-", " ")}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardTitle className="text-2xl" data-testid="text-project-title">
+                      {project.title}
+                    </CardTitle>
+                    {project.location && (
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <MapPin className="w-4 h-4" />
+                        <span>{project.location}</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                  <div className="flex gap-2">
+                    <ShareButtons 
+                      title={`Capital Opportunity: ${project.title}`}
+                      description={`Invest in ${project.title} - ${project.structure} structure, seeking $${((project.fundingGoal || 0) / 1000).toFixed(0)}K`}
+                    />
+                    <Button variant="outline" size="icon" onClick={() => window.print()} data-testid="button-print-project">
+                      <Printer className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed" data-testid="text-project-description">

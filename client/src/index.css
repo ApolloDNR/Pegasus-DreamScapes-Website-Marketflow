@@ -574,3 +574,142 @@ html {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
+
+/* Print Styles - Clean PDF-friendly layout */
+@media print {
+  /* Hide navigation, sidebars, footers, and interactive elements */
+  header,
+  footer,
+  nav,
+  aside,
+  .sidebar,
+  [data-sidebar],
+  [role="navigation"],
+  .no-print,
+  button:not(.print-include),
+  [data-testid*="button-"],
+  [data-testid*="menu-"],
+  .toast,
+  .dialog,
+  .modal,
+  [role="dialog"] {
+    display: none !important;
+  }
+
+  /* Reset colors for print */
+  * {
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Preserve color for badges/status indicators */
+  .badge,
+  [class*="bg-green"],
+  [class*="bg-red"],
+  [class*="bg-blue"],
+  [class*="text-green"],
+  [class*="text-red"],
+  [class*="text-primary"] {
+    color: inherit !important;
+    background-color: #f0f0f0 !important;
+    border: 1px solid #ccc !important;
+  }
+
+  /* Layout adjustments */
+  body {
+    padding: 0;
+    margin: 0;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+
+  /* Main content full width */
+  main,
+  .main-content,
+  [role="main"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Cards and content blocks */
+  .card,
+  [class*="Card"] {
+    border: 1px solid #ddd !important;
+    margin-bottom: 1rem !important;
+    page-break-inside: avoid;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Links - show URL after */
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666 !important;
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse !important;
+  }
+  
+  th, td {
+    border: 1px solid #ddd !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  /* Progress bars - show as text */
+  [role="progressbar"] {
+    border: 1px solid #ccc !important;
+    height: auto !important;
+    padding: 0.25rem !important;
+  }
+
+  /* Grid columns - stack on print */
+  .lg\\:grid-cols-3,
+  .lg\\:col-span-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Sticky elements - unstick */
+  .sticky,
+  [class*="sticky"] {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  /* Hide the right sidebar action card on print */
+  [data-testid="card-invest-action"] {
+    display: none !important;
+  }
+
+  /* Add page header for branding */
+  @page {
+    margin: 2cm;
+    size: letter;
+  }
+
+  /* First page header */
+  body::before {
+    content: "Pegasus Dreamscapes Corp - Investment Summary";
+    display: block;
+    font-size: 10pt;
+    color: #666 !important;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+}
