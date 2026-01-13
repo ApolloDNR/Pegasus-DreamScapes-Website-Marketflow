@@ -180,9 +180,9 @@ function useApiSavedSearches() {
   }));
 
   const createMutation = useMutation({
-    mutationFn: async (data: { name: string; filters: SearchFilters; lane: string; emailAlerts?: boolean }) => {
-      const result = await apiRequest("POST", "/api/saved-searches", data);
-      return result;
+    mutationFn: async (data: { name: string; filters: SearchFilters; lane: string; emailAlerts?: boolean }): Promise<ApiSavedSearch> => {
+      const response = await apiRequest("POST", "/api/saved-searches", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved-searches"] });
@@ -216,7 +216,7 @@ function useApiSavedSearches() {
   });
 
   const saveSearch = useCallback(async (name: string, filters: SearchFilters, lane: string = "wholesale"): Promise<SavedSearch> => {
-    const result = await createMutation.mutateAsync({ name, filters, lane }) as ApiSavedSearch;
+    const result = await createMutation.mutateAsync({ name, filters, lane });
     const normalizeTimestamp = (val: unknown): string => {
       if (!val) return new Date().toISOString();
       if (typeof val === 'string') return val;
@@ -408,7 +408,7 @@ export function SavedSearchesList({ searches, onApply, onDelete, onToggleAlerts 
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-7 w-7">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Search options">
                       <MoreVertical className="w-3 h-3" />
                     </Button>
                   </DropdownMenuTrigger>

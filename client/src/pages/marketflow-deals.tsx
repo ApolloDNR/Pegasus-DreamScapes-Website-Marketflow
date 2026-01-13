@@ -1549,7 +1549,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
         <div className="flex gap-2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-2 shadow-lg border">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onSave(); }} data-testid={`quick-save-${deal.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onSave(); }} data-testid={`quick-save-${deal.id}`} aria-label={isSaved ? "Saved" : "Save deal"}>
                 {isSaved ? <BookmarkCheck className="w-4 h-4 text-primary" /> : <Bookmark className="w-4 h-4" />}
               </Button>
             </TooltipTrigger>
@@ -1558,7 +1558,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`} aria-label="Deal calculator">
                 <Calculator className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
@@ -1567,7 +1567,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => e.stopPropagation()} data-testid={`quick-share-${deal.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => e.stopPropagation()} data-testid={`quick-share-${deal.id}`} aria-label="Share deal">
                 <Share2 className="w-4 h-4" />
               </Button>
             </PopoverTrigger>
@@ -1595,6 +1595,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                   onClick={(e) => { e.stopPropagation(); onToggleCompare(); }}
                   disabled={!isCompareSelected && !canAddMoreCompare}
                   data-testid={`quick-compare-${deal.id}`}
+                  aria-label={isCompareSelected ? "Remove from compare" : "Add to compare"}
                 >
                   <Columns className="w-4 h-4" />
                 </Button>
@@ -1608,7 +1609,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           {showJVRequest && deal.jvAllowed && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAction("jv_request"); }} data-testid={`quick-jv-${deal.id}`}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAction("jv_request"); }} data-testid={`quick-jv-${deal.id}`} aria-label="JV request">
                   <Handshake className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -1618,7 +1619,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" variant="default" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAcceptTerms(); }} data-testid={`quick-accept-${deal.id}`}>
+              <Button size="icon" variant="default" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAcceptTerms(); }} data-testid={`quick-accept-${deal.id}`} aria-label="Quick offer">
                 <Zap className="w-4 h-4" />
               </Button>
             </TooltipTrigger>

@@ -193,11 +193,14 @@ function PropertyDetailContent() {
             disabled={toggleSaveMutation.isPending}
             data-testid="button-save"
             title={isAuthenticated ? "Save to favorites" : "Login to save"}
+            aria-label={isAuthenticated ? "Save to favorites" : "Login to save"}
           >
             <Heart className="h-4 w-4" />
+            <span className="sr-only">Save</span>
           </Button>
-          <Button variant="outline" size="icon" data-testid="button-share">
+          <Button variant="outline" size="icon" data-testid="button-share" aria-label="Share property">
             <Share2 className="h-4 w-4" />
+            <span className="sr-only">Share</span>
           </Button>
         </div>
       </div>
