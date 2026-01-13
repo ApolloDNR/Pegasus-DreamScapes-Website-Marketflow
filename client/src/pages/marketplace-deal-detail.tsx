@@ -50,6 +50,7 @@ import {
   Construction,
   Sparkles,
   Printer,
+  AlertCircle,
 } from "lucide-react";
 import { ShareButtons } from "@/components/share-buttons";
 import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
@@ -100,6 +101,45 @@ function DealDetailPage() {
 
   if (isLoading && !useSampleData) {
     return <DealDetailSkeleton />;
+  }
+
+  if (error && !useSampleData) {
+    const isNetworkError = error instanceof Error && 
+      (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("500"));
+    
+    return (
+      <div className="p-6">
+        <div className="text-center py-16">
+          <AlertCircle className="w-16 h-16 text-destructive/50 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {isNetworkError ? "Unable to Load Deal" : "Deal Not Found"}
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            {isNetworkError 
+              ? "We're having trouble connecting. Please check your connection and try again."
+              : "This deal may have been removed or is no longer available."
+            }
+          </p>
+          <div className="flex gap-3 justify-center">
+            {isNetworkError && (
+              <Button 
+                variant="default" 
+                onClick={() => window.location.reload()}
+                data-testid="button-retry"
+              >
+                Try Again
+              </Button>
+            )}
+            <Link href="/marketflow/deals">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Deals
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!deal) {
@@ -195,11 +235,24 @@ function DealDetailPage() {
                       title={`Wholesale Deal: ${deal.propertyAddress}`}
                       description={`Check out this wholesale deal at ${deal.propertyAddress}, ${deal.city}, ${deal.state} - ARV $${deal.arv?.toLocaleString() || "N/A"}`}
                     />
-                    <Button variant="outline" size="icon" onClick={() => window.print()} data-testid="button-print-deal">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => window.print()} 
+                      data-testid="button-print-deal"
+                      aria-label="Print deal summary"
+                    >
                       <Printer className="w-4 h-4" />
+                      <span className="sr-only">Print</span>
                     </Button>
-                    <Button variant="outline" size="icon" data-testid="button-save-deal">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      data-testid="button-save-deal"
+                      aria-label="Save deal to favorites"
+                    >
                       <Bookmark className="w-4 h-4" />
+                      <span className="sr-only">Save</span>
                     </Button>
                   </div>
                 </div>

@@ -55,7 +55,7 @@ export function ShareButtons({
   };
 
   const openShare = (url: string) => {
-    window.open(url, "_blank", "width=600,height=400");
+    window.open(url, "_blank", "width=600,height=400,noopener,noreferrer");
   };
 
   if (variant === "full") {
@@ -113,8 +113,15 @@ export function ShareButtons({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className={className} data-testid="button-share">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className={className} 
+          data-testid="button-share"
+          aria-label="Share this page"
+        >
           <Share2 className="w-4 h-4" />
+          <span className="sr-only">Share</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

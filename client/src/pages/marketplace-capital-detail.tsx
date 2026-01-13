@@ -98,7 +98,48 @@ function CapitalDetailPage() {
     return <LoadingSkeleton />;
   }
 
-  if (error || !project) {
+  if (error) {
+    const isNetworkError = error instanceof Error && 
+      (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("500"));
+    
+    return (
+      <div className="p-6">
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              {isNetworkError ? "Unable to Load Project" : "Project Not Found"}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4">
+              {isNetworkError 
+                ? "We're having trouble connecting. Please check your connection and try again."
+                : "The capital opportunity you're looking for doesn't exist or has been removed."
+              }
+            </p>
+            <div className="flex gap-3 justify-center">
+              {isNetworkError && (
+                <Button 
+                  variant="default" 
+                  onClick={() => window.location.reload()}
+                  data-testid="button-retry"
+                >
+                  Try Again
+                </Button>
+              )}
+              <Link href="/marketflow/capital">
+                <Button variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Opportunities
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!project) {
     return (
       <div className="p-6">
         <Card className="border-dashed">
@@ -168,8 +209,15 @@ function CapitalDetailPage() {
                       title={`Capital Opportunity: ${project.title}`}
                       description={`Invest in ${project.title} - ${project.structure} structure, seeking $${((project.fundingGoal || 0) / 1000).toFixed(0)}K`}
                     />
-                    <Button variant="outline" size="icon" onClick={() => window.print()} data-testid="button-print-project">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => window.print()} 
+                      data-testid="button-print-project"
+                      aria-label="Print project summary"
+                    >
                       <Printer className="w-4 h-4" />
+                      <span className="sr-only">Print</span>
                     </Button>
                   </div>
                 </div>
@@ -462,7 +510,12 @@ function CapitalDetailPage() {
                       </DialogContent>
                     </Dialog>
 
-                    <Button variant="outline" className="w-full" data-testid="button-save-project">
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      data-testid="button-save-project"
+                      aria-label="Save project for later"
+                    >
                       <Bookmark className="w-4 h-4 mr-2" />
                       Save for Later
                     </Button>
