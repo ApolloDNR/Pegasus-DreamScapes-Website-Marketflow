@@ -2726,3 +2726,27 @@ export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
 });
 export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type TeamMember = typeof teamMembers.$inferSelect;
+
+// ============================================
+// MEDIA LIBRARY - Admin-managed media files
+// ============================================
+
+export const mediaFiles = pgTable("media_files", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  objectPath: text("object_path").notNull(),
+  url: text("url").notNull(),
+  contentType: varchar("content_type", { length: 100 }),
+  size: integer("size"),
+  category: varchar("category", { length: 50 }),
+  alt: text("alt"),
+  uploadedBy: varchar("uploaded_by", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({ 
+  id: true, 
+  createdAt: true
+});
+export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+export type MediaFile = typeof mediaFiles.$inferSelect;

@@ -41,10 +41,16 @@ import {
   HelpCircle,
   Quote,
   UserCircle,
+  ImageIcon,
+  Copy,
+  Check,
+  Upload,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useUpload } from "@/hooks/use-upload";
 
 interface AdminStats {
   totalSellerLeads: number;
@@ -330,6 +336,7 @@ export default function MarketplaceAdminPage() {
               <TabsTrigger value="faqs" data-testid="tab-faqs">FAQs</TabsTrigger>
               <TabsTrigger value="testimonials" data-testid="tab-testimonials">Testimonials</TabsTrigger>
               <TabsTrigger value="team" data-testid="tab-team">Team</TabsTrigger>
+              <TabsTrigger value="media" data-testid="tab-media">Media</TabsTrigger>
             </TabsList>
 
             <TabsContent value="pending" className="space-y-4">
@@ -656,6 +663,10 @@ export default function MarketplaceAdminPage() {
 
             <TabsContent value="team" className="space-y-4">
               <TeamManager />
+            </TabsContent>
+
+            <TabsContent value="media" className="space-y-4">
+              <MediaLibrary />
             </TabsContent>
           </Tabs>
         </div>
@@ -1657,6 +1668,187 @@ function TeamManager() {
             ))
           )}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
+// Media Library Component
+// ============================================
+
+interface MediaItem {
+  id: number;
+  name: string;
+  objectPath: string;
+  url: string;
+  contentType: string | null;
+  size: number | null;
+  category: string | null;
+  alt: string | null;
+  createdAt: string;
+}
+
+function MediaLibrary() {
+  const { toast } = useToast();
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const { getUploadParameters } = useUpload();
+
+  const { data: mediaFiles = [], isLoading, refetch } = useQuery<MediaItem[]>({
+    queryKey: ["/api/admin/media"],
+  });
+
+  const createMediaMutation = useMutation({
+    mutationFn: async (data: { name: string; objectPath: string; url: string; contentType: string; size: number }) => {
+      return apiRequest("POST", "/api/admin/media", data);
+    },
+    onSuccess: () => {
+      toast({ title: "File uploaded successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/media"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to save file record", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/media/${id}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "File deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/media"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete file", variant: "destructive" });
+    },
+  });
+
+  const handleCopyUrl = async (file: MediaItem) => {
+    try {
+      await navigator.clipboard.writeText(file.url);
+      setCopiedId(file.id);
+      setTimeout(() => setCopiedId(null), 2000);
+      toast({ title: "URL copied to clipboard" });
+    } catch {
+      toast({ title: "Failed to copy URL", variant: "destructive" });
+    }
+  };
+
+  const formatFileSize = (bytes: number | null): string => {
+    if (!bytes) return "Unknown";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleUploadComplete = async (result: { successful?: Array<{ name?: string; size?: number; type?: string; meta?: { objectPath?: string }; uploadURL?: string }> }) => {
+    if (result.successful && result.successful.length > 0) {
+      for (const uploadedFile of result.successful) {
+        const filename = uploadedFile.name || 'uploaded-file';
+        const contentType = uploadedFile.type || 'application/octet-stream';
+        const fileSize = uploadedFile.size || 0;
+        const objectPath = uploadedFile.meta?.objectPath || '';
+        
+        if (objectPath) {
+          await createMediaMutation.mutateAsync({
+            name: filename,
+            objectPath: objectPath,
+            url: objectPath,
+            contentType: contentType,
+            size: fileSize,
+          });
+        }
+      }
+      refetch();
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Media Library
+          </CardTitle>
+          <CardDescription>Upload and manage images for use across the website</CardDescription>
+        </div>
+        <ObjectUploader
+          maxNumberOfFiles={5}
+          maxFileSize={10 * 1024 * 1024}
+          onGetUploadParameters={getUploadParameters}
+          onComplete={handleUploadComplete}
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Upload Files
+        </ObjectUploader>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="aspect-square rounded-lg" />
+            ))}
+          </div>
+        ) : mediaFiles.length === 0 ? (
+          <div className="text-center py-12">
+            <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-medium mb-2">No media files yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload images to use them in your website content.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {mediaFiles.map((file) => (
+              <div 
+                key={file.id} 
+                className="group relative border rounded-lg overflow-hidden"
+                data-testid={`media-item-${file.id}`}
+              >
+                <div className="aspect-square bg-secondary/20 flex items-center justify-center">
+                  {file.contentType?.startsWith("image/") ? (
+                    <img 
+                      src={file.url} 
+                      alt={file.alt || file.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="p-2">
+                  <p className="text-xs font-medium truncate" title={file.name}>{file.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                </div>
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    onClick={() => handleCopyUrl(file)}
+                    data-testid={`button-copy-media-${file.id}`}
+                  >
+                    {copiedId === file.id ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    onClick={() => deleteMutation.mutate(file.id)}
+                    disabled={deleteMutation.isPending}
+                    data-testid={`button-delete-media-${file.id}`}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

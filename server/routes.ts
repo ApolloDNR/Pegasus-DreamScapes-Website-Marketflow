@@ -32,6 +32,7 @@ import {
   insertFaqSchema,
   insertTestimonialSchema,
   insertTeamMemberSchema,
+  insertMediaFileSchema,
   STAFF_ROLES
 } from "@shared/schema";
 
@@ -2889,6 +2890,48 @@ export async function registerRoutes(
       return res.status(204).send();
     } catch (error) {
       console.error("Error deleting team member:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // MEDIA FILES - Admin Content Management
+  // ============================================
+
+  // Admin: Get all media files
+  app.get("/api/admin/media", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const allMedia = await storage.getMediaFiles();
+      return res.json(allMedia);
+    } catch (error) {
+      console.error("Error fetching media files:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Create media file record (after upload completes)
+  app.post("/api/admin/media", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const result = insertMediaFileSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const media = await storage.createMediaFile(result.data);
+      return res.status(201).json(media);
+    } catch (error) {
+      console.error("Error creating media file record:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Delete media file
+  app.delete("/api/admin/media/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMediaFile(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting media file:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

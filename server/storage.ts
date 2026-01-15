@@ -76,6 +76,7 @@ import {
   type Faq, type InsertFaq,
   type Testimonial, type InsertTestimonial,
   type TeamMember, type InsertTeamMember,
+  type MediaFile, type InsertMediaFile,
   featuredDeals,
   userActivity,
   homepageContent,
@@ -83,6 +84,7 @@ import {
   faqs,
   testimonials,
   teamMembers,
+  mediaFiles,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -472,6 +474,12 @@ export interface IStorage {
   createTeamMember(data: InsertTeamMember): Promise<TeamMember>;
   updateTeamMember(id: number, data: Partial<InsertTeamMember>): Promise<TeamMember | undefined>;
   deleteTeamMember(id: number): Promise<void>;
+
+  // Media Files
+  getMediaFiles(): Promise<MediaFile[]>;
+  getMediaFile(id: number): Promise<MediaFile | undefined>;
+  createMediaFile(data: InsertMediaFile): Promise<MediaFile>;
+  deleteMediaFile(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2927,6 +2935,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTeamMember(id: number): Promise<void> {
     await db.delete(teamMembers).where(eq(teamMembers.id, id));
+  }
+
+  // ============================================
+  // MEDIA FILES
+  // ============================================
+
+  async getMediaFiles(): Promise<MediaFile[]> {
+    return db.select().from(mediaFiles).orderBy(desc(mediaFiles.createdAt));
+  }
+
+  async getMediaFile(id: number): Promise<MediaFile | undefined> {
+    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    return file;
+  }
+
+  async createMediaFile(data: InsertMediaFile): Promise<MediaFile> {
+    const [created] = await db.insert(mediaFiles).values(data).returning();
+    return created;
+  }
+
+  async deleteMediaFile(id: number): Promise<void> {
+    await db.delete(mediaFiles).where(eq(mediaFiles.id, id));
   }
 }
 
