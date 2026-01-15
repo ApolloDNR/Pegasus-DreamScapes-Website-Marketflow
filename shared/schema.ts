@@ -2651,3 +2651,78 @@ export const insertNegotiationMessageSchema = createInsertSchema(negotiationMess
 });
 export type InsertNegotiationMessage = z.infer<typeof insertNegotiationMessageSchema>;
 export type NegotiationMessage = typeof negotiationMessages.$inferSelect;
+
+// ============================================
+// FAQ - Admin-managed FAQ content
+// ============================================
+
+export const faqs = pgTable("faqs", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  category: varchar("category", { length: 100 }).default("general"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFaqSchema = createInsertSchema(faqs).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertFaq = z.infer<typeof insertFaqSchema>;
+export type Faq = typeof faqs.$inferSelect;
+
+// ============================================
+// TESTIMONIALS - Admin-managed testimonials
+// ============================================
+
+export const testimonials = pgTable("testimonials", {
+  id: serial("id").primaryKey(),
+  quote: text("quote").notNull(),
+  authorName: varchar("author_name", { length: 255 }).notNull(),
+  authorRole: varchar("author_role", { length: 100 }),
+  authorLocation: varchar("author_location", { length: 100 }),
+  rating: integer("rating").default(5),
+  authorImageUrl: text("author_image_url"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTestimonialSchema = createInsertSchema(testimonials).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+export type Testimonial = typeof testimonials.$inferSelect;
+
+// ============================================
+// TEAM MEMBERS - Admin-managed team info
+// ============================================
+
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  bio: text("bio"),
+  imageUrl: text("image_url"),
+  linkedinUrl: text("linkedin_url"),
+  email: varchar("email", { length: 255 }),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({ 
+  id: true, 
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;

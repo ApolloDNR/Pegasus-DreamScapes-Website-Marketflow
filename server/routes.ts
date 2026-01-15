@@ -29,6 +29,9 @@ import {
   insertLeadSchema,
   insertSavedAnalysisSchema,
   insertWholesaleDealOfferSchema,
+  insertFaqSchema,
+  insertTestimonialSchema,
+  insertTeamMemberSchema,
   STAFF_ROLES
 } from "@shared/schema";
 
@@ -2700,6 +2703,192 @@ export async function registerRoutes(
       return res.status(201).json(savedContent);
     } catch (error) {
       console.error("Error saving homepage content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // FAQs - Admin Content Management
+  // ============================================
+
+  // Public: Get all FAQs
+  app.get("/api/faqs", async (req, res) => {
+    try {
+      const allFaqs = await storage.getFaqs();
+      return res.json(allFaqs);
+    } catch (error) {
+      console.error("Error fetching FAQs:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Create FAQ
+  app.post("/api/admin/faqs", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const result = insertFaqSchema.safeParse({ ...req.body, isActive: true });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const faq = await storage.createFaq(result.data);
+      return res.status(201).json(faq);
+    } catch (error) {
+      console.error("Error creating FAQ:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Update FAQ
+  app.patch("/api/admin/faqs/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const partialSchema = insertFaqSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const updated = await storage.updateFaq(id, result.data);
+      if (!updated) {
+        return res.status(404).json({ message: "FAQ not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating FAQ:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Delete FAQ
+  app.delete("/api/admin/faqs/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFaq(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting FAQ:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // TESTIMONIALS - Admin Content Management
+  // ============================================
+
+  // Public: Get all testimonials
+  app.get("/api/testimonials", async (req, res) => {
+    try {
+      const allTestimonials = await storage.getTestimonials();
+      return res.json(allTestimonials);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Create testimonial
+  app.post("/api/admin/testimonials", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const result = insertTestimonialSchema.safeParse({ ...req.body, isActive: true });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const testimonial = await storage.createTestimonial(result.data);
+      return res.status(201).json(testimonial);
+    } catch (error) {
+      console.error("Error creating testimonial:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Update testimonial
+  app.patch("/api/admin/testimonials/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const partialSchema = insertTestimonialSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const updated = await storage.updateTestimonial(id, result.data);
+      if (!updated) {
+        return res.status(404).json({ message: "Testimonial not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating testimonial:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Delete testimonial
+  app.delete("/api/admin/testimonials/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTestimonial(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // TEAM MEMBERS - Admin Content Management
+  // ============================================
+
+  // Public: Get all team members
+  app.get("/api/team", async (req, res) => {
+    try {
+      const allMembers = await storage.getTeamMembers();
+      return res.json(allMembers);
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Create team member
+  app.post("/api/admin/team", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const result = insertTeamMemberSchema.safeParse({ ...req.body, isActive: true });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const member = await storage.createTeamMember(result.data);
+      return res.status(201).json(member);
+    } catch (error) {
+      console.error("Error creating team member:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Update team member
+  app.patch("/api/admin/team/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const partialSchema = insertTeamMemberSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const updated = await storage.updateTeamMember(id, result.data);
+      if (!updated) {
+        return res.status(404).json({ message: "Team member not found" });
+      }
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating team member:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Delete team member
+  app.delete("/api/admin/team/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTeamMember(id);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting team member:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

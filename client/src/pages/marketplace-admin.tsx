@@ -36,6 +36,11 @@ import {
   Save,
   Sparkles,
   Loader2,
+  Plus,
+  Trash2,
+  HelpCircle,
+  Quote,
+  UserCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -322,6 +327,9 @@ export default function MarketplaceAdminPage() {
                 <Home className="h-4 w-4 mr-1" />
                 Content
               </TabsTrigger>
+              <TabsTrigger value="faqs" data-testid="tab-faqs">FAQs</TabsTrigger>
+              <TabsTrigger value="testimonials" data-testid="tab-testimonials">Testimonials</TabsTrigger>
+              <TabsTrigger value="team" data-testid="tab-team">Team</TabsTrigger>
             </TabsList>
 
             <TabsContent value="pending" className="space-y-4">
@@ -636,6 +644,18 @@ export default function MarketplaceAdminPage() {
 
             <TabsContent value="content" className="space-y-4">
               <HomepageContentManager />
+            </TabsContent>
+
+            <TabsContent value="faqs" className="space-y-4">
+              <FAQManager />
+            </TabsContent>
+
+            <TabsContent value="testimonials" className="space-y-4">
+              <TestimonialsManager />
+            </TabsContent>
+
+            <TabsContent value="team" className="space-y-4">
+              <TeamManager />
             </TabsContent>
           </Tabs>
         </div>
@@ -1012,5 +1032,632 @@ function HomepageContentManager() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// ============================================
+// FAQ Manager Component
+// ============================================
+
+interface FAQItem {
+  id: number;
+  question: string;
+  answer: string;
+  category: string | null;
+  sortOrder: number | null;
+  isActive: boolean | null;
+}
+
+function FAQManager() {
+  const { toast } = useToast();
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newAnswer, setNewAnswer] = useState("");
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editAnswer, setEditAnswer] = useState("");
+
+  const { data: faqs = [], isLoading } = useQuery<FAQItem[]>({
+    queryKey: ["/api/faqs"],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: { question: string; answer: string }) => {
+      return apiRequest("POST", "/api/admin/faqs", data);
+    },
+    onSuccess: () => {
+      toast({ title: "FAQ created" });
+      queryClient.invalidateQueries({ queryKey: ["/api/faqs"] });
+      setNewQuestion("");
+      setNewAnswer("");
+    },
+    onError: () => {
+      toast({ title: "Failed to create FAQ", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, question, answer }: { id: number; question: string; answer: string }) => {
+      return apiRequest("PATCH", `/api/admin/faqs/${id}`, { question, answer });
+    },
+    onSuccess: () => {
+      toast({ title: "FAQ updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/faqs"] });
+      setEditingId(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update FAQ", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/faqs/${id}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "FAQ deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/faqs"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete FAQ", variant: "destructive" });
+    },
+  });
+
+  const handleEdit = (faq: FAQItem) => {
+    setEditingId(faq.id);
+    setEditQuestion(faq.question);
+    setEditAnswer(faq.answer);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <HelpCircle className="h-5 w-5" />
+          FAQ Management
+        </CardTitle>
+        <CardDescription>Add, edit, and remove frequently asked questions</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="p-4 border rounded-lg space-y-4">
+          <Label className="font-medium">Add New FAQ</Label>
+          <Input
+            placeholder="Question"
+            value={newQuestion}
+            onChange={(e) => setNewQuestion(e.target.value)}
+            data-testid="input-new-faq-question"
+          />
+          <Textarea
+            placeholder="Answer"
+            value={newAnswer}
+            onChange={(e) => setNewAnswer(e.target.value)}
+            rows={3}
+            data-testid="input-new-faq-answer"
+          />
+          <Button
+            onClick={() => createMutation.mutate({ question: newQuestion, answer: newAnswer })}
+            disabled={!newQuestion || !newAnswer || createMutation.isPending}
+            data-testid="button-add-faq"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add FAQ
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {isLoading ? (
+            <Skeleton className="h-20 w-full" />
+          ) : faqs.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No FAQs yet. Add your first one above.</p>
+          ) : (
+            faqs.map((faq) => (
+              <div key={faq.id} className="p-4 border rounded-lg" data-testid={`faq-item-${faq.id}`}>
+                {editingId === faq.id ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={editQuestion}
+                      onChange={(e) => setEditQuestion(e.target.value)}
+                      data-testid={`input-edit-faq-question-${faq.id}`}
+                    />
+                    <Textarea
+                      value={editAnswer}
+                      onChange={(e) => setEditAnswer(e.target.value)}
+                      rows={3}
+                      data-testid={`input-edit-faq-answer-${faq.id}`}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => updateMutation.mutate({ id: faq.id, question: editQuestion, answer: editAnswer })}
+                        disabled={updateMutation.isPending}
+                        data-testid={`button-save-faq-${faq.id}`}
+                      >
+                        <Save className="h-4 w-4 mr-1" />
+                        Save
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} data-testid={`button-cancel-faq-${faq.id}`}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="font-medium">{faq.question}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{faq.answer}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => handleEdit(faq)} data-testid={`button-edit-faq-${faq.id}`}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => deleteMutation.mutate(faq.id)}
+                          disabled={deleteMutation.isPending}
+                          data-testid={`button-delete-faq-${faq.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
+// Testimonials Manager Component
+// ============================================
+
+interface TestimonialItem {
+  id: number;
+  quote: string;
+  authorName: string;
+  authorRole: string | null;
+  authorLocation: string | null;
+  rating: number | null;
+  sortOrder: number | null;
+  isActive: boolean | null;
+}
+
+function TestimonialsManager() {
+  const { toast } = useToast();
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({ quote: "", authorName: "", authorRole: "", authorLocation: "", rating: 5 });
+
+  const { data: testimonials = [], isLoading } = useQuery<TestimonialItem[]>({
+    queryKey: ["/api/testimonials"],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      return apiRequest("POST", "/api/admin/testimonials", data);
+    },
+    onSuccess: () => {
+      toast({ title: "Testimonial created" });
+      queryClient.invalidateQueries({ queryKey: ["/api/testimonials"] });
+      setIsAdding(false);
+      setFormData({ quote: "", authorName: "", authorRole: "", authorLocation: "", rating: 5 });
+    },
+    onError: () => {
+      toast({ title: "Failed to create testimonial", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & typeof formData) => {
+      return apiRequest("PATCH", `/api/admin/testimonials/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({ title: "Testimonial updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/testimonials"] });
+      setEditingId(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update testimonial", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/testimonials/${id}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Testimonial deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/testimonials"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete testimonial", variant: "destructive" });
+    },
+  });
+
+  const handleEdit = (t: TestimonialItem) => {
+    setEditingId(t.id);
+    setFormData({
+      quote: t.quote,
+      authorName: t.authorName,
+      authorRole: t.authorRole || "",
+      authorLocation: t.authorLocation || "",
+      rating: t.rating || 5,
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <Quote className="h-5 w-5" />
+            Testimonials Management
+          </CardTitle>
+          <CardDescription>Manage customer testimonials displayed on the homepage</CardDescription>
+        </div>
+        <Button onClick={() => setIsAdding(!isAdding)} data-testid="button-toggle-add-testimonial">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Testimonial
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isAdding && (
+          <div className="p-4 border rounded-lg space-y-4">
+            <Textarea
+              placeholder="Customer quote..."
+              value={formData.quote}
+              onChange={(e) => setFormData({ ...formData, quote: e.target.value })}
+              rows={3}
+              data-testid="input-testimonial-quote"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="Author Name"
+                value={formData.authorName}
+                onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
+                data-testid="input-testimonial-author"
+              />
+              <Input
+                placeholder="Role (e.g., Property Seller)"
+                value={formData.authorRole}
+                onChange={(e) => setFormData({ ...formData, authorRole: e.target.value })}
+                data-testid="input-testimonial-role"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="Location (e.g., Oakland, CA)"
+                value={formData.authorLocation}
+                onChange={(e) => setFormData({ ...formData, authorLocation: e.target.value })}
+                data-testid="input-testimonial-location"
+              />
+              <div className="flex items-center gap-2">
+                <Label>Rating:</Label>
+                <Select value={String(formData.rating)} onValueChange={(v) => setFormData({ ...formData, rating: Number(v) })}>
+                  <SelectTrigger className="w-20" data-testid="select-testimonial-rating">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => createMutation.mutate(formData)}
+                disabled={!formData.quote || !formData.authorName || createMutation.isPending}
+                data-testid="button-save-new-testimonial"
+              >
+                Save Testimonial
+              </Button>
+              <Button variant="ghost" onClick={() => setIsAdding(false)} data-testid="button-cancel-add-testimonial">Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : testimonials.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No testimonials yet. Add your first one above.</p>
+          ) : (
+            testimonials.map((t) => (
+              <div key={t.id} className="p-4 border rounded-lg" data-testid={`testimonial-item-${t.id}`}>
+                {editingId === t.id ? (
+                  <div className="space-y-3">
+                    <Textarea
+                      value={formData.quote}
+                      onChange={(e) => setFormData({ ...formData, quote: e.target.value })}
+                      rows={3}
+                      data-testid={`input-edit-testimonial-quote-${t.id}`}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        value={formData.authorName}
+                        onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
+                        placeholder="Author Name"
+                        data-testid={`input-edit-testimonial-author-${t.id}`}
+                      />
+                      <Input
+                        value={formData.authorRole}
+                        onChange={(e) => setFormData({ ...formData, authorRole: e.target.value })}
+                        placeholder="Role"
+                        data-testid={`input-edit-testimonial-role-${t.id}`}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => updateMutation.mutate({ id: t.id, ...formData })}
+                        disabled={updateMutation.isPending}
+                        data-testid={`button-save-testimonial-${t.id}`}
+                      >
+                        Save
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} data-testid={`button-cancel-testimonial-${t.id}`}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="italic">"{t.quote}"</p>
+                      <p className="text-sm font-medium mt-2">— {t.authorName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.authorRole}{t.authorLocation ? ` · ${t.authorLocation}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => handleEdit(t)} data-testid={`button-edit-testimonial-${t.id}`}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => deleteMutation.mutate(t.id)}
+                        disabled={deleteMutation.isPending}
+                        data-testid={`button-delete-testimonial-${t.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
+// Team Manager Component
+// ============================================
+
+interface TeamMemberItem {
+  id: number;
+  name: string;
+  role: string;
+  bio: string | null;
+  email: string | null;
+  linkedinUrl: string | null;
+  sortOrder: number | null;
+  isActive: boolean | null;
+}
+
+function TeamManager() {
+  const { toast } = useToast();
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({ name: "", role: "", bio: "", email: "", linkedinUrl: "" });
+
+  const { data: members = [], isLoading } = useQuery<TeamMemberItem[]>({
+    queryKey: ["/api/team"],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      return apiRequest("POST", "/api/admin/team", data);
+    },
+    onSuccess: () => {
+      toast({ title: "Team member added" });
+      queryClient.invalidateQueries({ queryKey: ["/api/team"] });
+      setIsAdding(false);
+      setFormData({ name: "", role: "", bio: "", email: "", linkedinUrl: "" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add team member", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & typeof formData) => {
+      return apiRequest("PATCH", `/api/admin/team/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({ title: "Team member updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/team"] });
+      setEditingId(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update team member", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/team/${id}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Team member removed" });
+      queryClient.invalidateQueries({ queryKey: ["/api/team"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to remove team member", variant: "destructive" });
+    },
+  });
+
+  const handleEdit = (m: TeamMemberItem) => {
+    setEditingId(m.id);
+    setFormData({
+      name: m.name,
+      role: m.role,
+      bio: m.bio || "",
+      email: m.email || "",
+      linkedinUrl: m.linkedinUrl || "",
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <UserCircle className="h-5 w-5" />
+            Team Management
+          </CardTitle>
+          <CardDescription>Manage team members displayed on the About page</CardDescription>
+        </div>
+        <Button onClick={() => setIsAdding(!isAdding)} data-testid="button-toggle-add-team">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Team Member
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isAdding && (
+          <div className="p-4 border rounded-lg space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="Full Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                data-testid="input-team-name"
+              />
+              <Input
+                placeholder="Role (e.g., CEO, Lead Designer)"
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                data-testid="input-team-role"
+              />
+            </div>
+            <Textarea
+              placeholder="Short bio..."
+              value={formData.bio}
+              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              rows={3}
+              data-testid="input-team-bio"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                data-testid="input-team-email"
+              />
+              <Input
+                placeholder="LinkedIn URL"
+                value={formData.linkedinUrl}
+                onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                data-testid="input-team-linkedin"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => createMutation.mutate(formData)}
+                disabled={!formData.name || !formData.role || createMutation.isPending}
+                data-testid="button-save-new-team"
+              >
+                Add Member
+              </Button>
+              <Button variant="ghost" onClick={() => setIsAdding(false)} data-testid="button-cancel-add-team">Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {isLoading ? (
+            <Skeleton className="h-32 w-full" />
+          ) : members.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8 col-span-2">No team members yet. Add your first one above.</p>
+          ) : (
+            members.map((m) => (
+              <div key={m.id} className="p-4 border rounded-lg" data-testid={`team-item-${m.id}`}>
+                {editingId === m.id ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Name"
+                      data-testid={`input-edit-team-name-${m.id}`}
+                    />
+                    <Input
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      placeholder="Role"
+                      data-testid={`input-edit-team-role-${m.id}`}
+                    />
+                    <Textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      placeholder="Bio"
+                      rows={2}
+                      data-testid={`input-edit-team-bio-${m.id}`}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => updateMutation.mutate({ id: m.id, ...formData })}
+                        disabled={updateMutation.isPending}
+                        data-testid={`button-save-team-${m.id}`}
+                      >
+                        Save
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} data-testid={`button-cancel-team-${m.id}`}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <UserCircle className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{m.name}</p>
+                        <p className="text-sm text-muted-foreground">{m.role}</p>
+                        {m.bio && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.bio}</p>}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => handleEdit(m)} data-testid={`button-edit-team-${m.id}`}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => deleteMutation.mutate(m.id)}
+                        disabled={deleteMutation.isPending}
+                        data-testid={`button-delete-team-${m.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

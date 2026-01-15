@@ -73,10 +73,16 @@ import {
   type MarketflowNegotiation, type InsertMarketflowNegotiation,
   type NegotiationMessage, type InsertNegotiationMessage,
   type SavedSearch, type InsertSavedSearch,
+  type Faq, type InsertFaq,
+  type Testimonial, type InsertTestimonial,
+  type TeamMember, type InsertTeamMember,
   featuredDeals,
   userActivity,
   homepageContent,
   savedSearches,
+  faqs,
+  testimonials,
+  teamMembers,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -445,6 +451,27 @@ export interface IStorage {
   createSavedSearch(data: InsertSavedSearch): Promise<SavedSearch>;
   updateSavedSearch(id: number, data: Partial<InsertSavedSearch> & { lastUsedAt?: Date }): Promise<SavedSearch | undefined>;
   deleteSavedSearch(id: number): Promise<void>;
+
+  // FAQs
+  getFaqs(): Promise<Faq[]>;
+  getFaq(id: number): Promise<Faq | undefined>;
+  createFaq(data: InsertFaq): Promise<Faq>;
+  updateFaq(id: number, data: Partial<InsertFaq>): Promise<Faq | undefined>;
+  deleteFaq(id: number): Promise<void>;
+
+  // Testimonials
+  getTestimonials(): Promise<Testimonial[]>;
+  getTestimonial(id: number): Promise<Testimonial | undefined>;
+  createTestimonial(data: InsertTestimonial): Promise<Testimonial>;
+  updateTestimonial(id: number, data: Partial<InsertTestimonial>): Promise<Testimonial | undefined>;
+  deleteTestimonial(id: number): Promise<void>;
+
+  // Team Members
+  getTeamMembers(): Promise<TeamMember[]>;
+  getTeamMember(id: number): Promise<TeamMember | undefined>;
+  createTeamMember(data: InsertTeamMember): Promise<TeamMember>;
+  updateTeamMember(id: number, data: Partial<InsertTeamMember>): Promise<TeamMember | undefined>;
+  deleteTeamMember(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2810,6 +2837,96 @@ export class DatabaseStorage implements IStorage {
         ne(negotiationMessages.senderId, userId),
         eq(negotiationMessages.isRead, false)
       ));
+  }
+
+  // ============================================
+  // FAQs
+  // ============================================
+
+  async getFaqs(): Promise<Faq[]> {
+    return db.select().from(faqs).where(eq(faqs.isActive, true)).orderBy(asc(faqs.sortOrder));
+  }
+
+  async getFaq(id: number): Promise<Faq | undefined> {
+    const [faq] = await db.select().from(faqs).where(eq(faqs.id, id));
+    return faq;
+  }
+
+  async createFaq(data: InsertFaq): Promise<Faq> {
+    const [created] = await db.insert(faqs).values(data).returning();
+    return created;
+  }
+
+  async updateFaq(id: number, data: Partial<InsertFaq>): Promise<Faq | undefined> {
+    const [updated] = await db.update(faqs)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(faqs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFaq(id: number): Promise<void> {
+    await db.delete(faqs).where(eq(faqs.id, id));
+  }
+
+  // ============================================
+  // TESTIMONIALS
+  // ============================================
+
+  async getTestimonials(): Promise<Testimonial[]> {
+    return db.select().from(testimonials).where(eq(testimonials.isActive, true)).orderBy(asc(testimonials.sortOrder));
+  }
+
+  async getTestimonial(id: number): Promise<Testimonial | undefined> {
+    const [testimonial] = await db.select().from(testimonials).where(eq(testimonials.id, id));
+    return testimonial;
+  }
+
+  async createTestimonial(data: InsertTestimonial): Promise<Testimonial> {
+    const [created] = await db.insert(testimonials).values(data).returning();
+    return created;
+  }
+
+  async updateTestimonial(id: number, data: Partial<InsertTestimonial>): Promise<Testimonial | undefined> {
+    const [updated] = await db.update(testimonials)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(testimonials.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTestimonial(id: number): Promise<void> {
+    await db.delete(testimonials).where(eq(testimonials.id, id));
+  }
+
+  // ============================================
+  // TEAM MEMBERS
+  // ============================================
+
+  async getTeamMembers(): Promise<TeamMember[]> {
+    return db.select().from(teamMembers).where(eq(teamMembers.isActive, true)).orderBy(asc(teamMembers.sortOrder));
+  }
+
+  async getTeamMember(id: number): Promise<TeamMember | undefined> {
+    const [member] = await db.select().from(teamMembers).where(eq(teamMembers.id, id));
+    return member;
+  }
+
+  async createTeamMember(data: InsertTeamMember): Promise<TeamMember> {
+    const [created] = await db.insert(teamMembers).values(data).returning();
+    return created;
+  }
+
+  async updateTeamMember(id: number, data: Partial<InsertTeamMember>): Promise<TeamMember | undefined> {
+    const [updated] = await db.update(teamMembers)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(teamMembers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTeamMember(id: number): Promise<void> {
+    await db.delete(teamMembers).where(eq(teamMembers.id, id));
   }
 }
 
