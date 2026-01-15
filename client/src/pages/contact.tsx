@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { insertContactSchema, type InsertContact, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 import { 
   Mail, 
   Phone, 
@@ -26,6 +27,13 @@ import {
   ArrowRight,
   Loader2
 } from "lucide-react";
+
+const contactFormSchema = insertContactSchema.extend({
+  name: z.string().min(2, "Please enter your full name"),
+  email: z.string().email("Please enter a valid email address"),
+  subject: z.string().min(3, "Please provide a subject for your message"),
+  message: z.string().min(10, "Please provide more details in your message"),
+});
 
 export default function Contact() {
   return (
@@ -57,7 +65,7 @@ function ContactSection() {
   const [submitted, setSubmitted] = useState(false);
 
   const form = useForm<InsertContact>({
-    resolver: zodResolver(insertContactSchema),
+    resolver: zodResolver(contactFormSchema),
     defaultValues: {
       name: "",
       email: "",

@@ -1,7 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { AlertCircle, RefreshCw, WifiOff } from "lucide-react";
+import { AlertCircle, RefreshCw, WifiOff, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 export function DealCardSkeleton() {
   return (
@@ -186,23 +187,65 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  actionLabel?: string;
+  actionHref?: string;
+  variant?: "default" | "compact" | "card";
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+export function EmptyState({ 
+  icon, 
+  title, 
+  description, 
+  action, 
+  actionLabel, 
+  actionHref,
+  variant = "default" 
+}: EmptyStateProps) {
+  const isCompact = variant === "compact";
+  const isCard = variant === "card";
+  
+  const content = (
+    <div className={`flex flex-col items-center justify-center text-center ${
+      isCompact ? "py-8 px-4" : "py-12 px-6"
+    }`}>
       {icon && (
-        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          {icon}
+        <div className={`rounded-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-4 ${
+          isCompact ? "h-12 w-12" : "h-16 w-16"
+        }`}>
+          <div className="text-muted-foreground">
+            {icon}
+          </div>
         </div>
       )}
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <h3 className={`font-semibold mb-2 ${isCompact ? "text-base" : "text-lg"}`}>
+        {title}
+      </h3>
       {description && (
-        <p className="text-muted-foreground max-w-md mb-6">{description}</p>
+        <p className={`text-muted-foreground max-w-md ${isCompact ? "text-sm mb-4" : "mb-6"}`}>
+          {description}
+        </p>
       )}
       {action}
+      {!action && actionLabel && actionHref && (
+        <Link href={actionHref}>
+          <Button className="gap-2" data-testid="button-empty-state-action">
+            <Sparkles className="w-4 h-4" />
+            {actionLabel}
+          </Button>
+        </Link>
+      )}
     </div>
   );
+  
+  if (isCard) {
+    return (
+      <Card className="border-dashed">
+        {content}
+      </Card>
+    );
+  }
+  
+  return content;
 }
 
 export function LoadingSpinner({ size = "default" }: { size?: "sm" | "default" | "lg" }) {

@@ -31,6 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { insertSellerLeadSchema, type InsertSellerLead, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 import { 
   MessageSquare, 
   Search, 
@@ -43,6 +44,13 @@ import {
   Loader2
 } from "lucide-react";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+
+const sellerFormSchema = insertSellerLeadSchema.extend({
+  name: z.string().min(2, "Please enter your full name"),
+  phone: z.string().min(10, "Please enter a valid phone number"),
+  email: z.string().email("Please enter a valid email address"),
+  propertyAddress: z.string().min(5, "Please enter the property address"),
+});
 
 export default function Sell() {
   return (
@@ -168,7 +176,7 @@ function LeadFormSection() {
   const [submitted, setSubmitted] = useState(false);
   
   const form = useForm<InsertSellerLead>({
-    resolver: zodResolver(insertSellerLeadSchema),
+    resolver: zodResolver(sellerFormSchema),
     defaultValues: {
       name: "",
       phone: "",

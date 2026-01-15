@@ -105,7 +105,8 @@ import {
   ClipboardList,
   Folder,
   FolderOpen,
-  Plus
+  Plus,
+  RefreshCw
 } from "lucide-react";
 
 interface WholesaleDeal {
@@ -1068,12 +1069,26 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
 
   if (deals.length === 0) {
     return (
-      <Card className="p-12 text-center">
-        <Home className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Deals Found</h3>
-        <p className="text-muted-foreground">
-          Try adjusting your search criteria or check back later.
+      <Card className="p-12 text-center border-dashed">
+        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+          <Home className="w-8 h-8 text-primary/60" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">No Deals Match Your Criteria</h3>
+        <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+          Try adjusting your filters or expanding your search to discover more investment opportunities.
         </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button variant="outline" onClick={() => window.location.reload()} data-testid="button-reset-filters">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Reset Filters
+          </Button>
+          <Link href="/marketflow/submit">
+            <Button data-testid="button-submit-deal-empty">
+              <Plus className="w-4 h-4 mr-2" />
+              Submit a Deal
+            </Button>
+          </Link>
+        </div>
       </Card>
     );
   }

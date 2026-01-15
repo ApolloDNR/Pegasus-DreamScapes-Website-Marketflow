@@ -280,17 +280,19 @@ function InvestorDashboard() {
 
         <TabsContent value="saved" className="space-y-4">
           {mockSavedDeals.length === 0 ? (
-            <Card>
+            <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Bookmark className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">No Saved Deals</h3>
-                <p className="text-muted-foreground mb-4">
-                  Browse deals and save the ones you're interested in.
+                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+                  <Bookmark className="w-8 h-8 text-primary/60" />
+                </div>
+                <h3 className="font-semibold mb-2">No Saved Deals Yet</h3>
+                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                  Save deals you're interested in to track them and receive updates on price changes.
                 </p>
                 <Link href="/marketflow/deals">
-                  <Button data-testid="button-browse-deals-empty">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Browse Deals
+                  <Button className="gap-2" data-testid="button-browse-deals-empty">
+                    <Sparkles className="w-4 h-4" />
+                    Explore Deals
                   </Button>
                 </Link>
               </CardContent>
@@ -346,17 +348,19 @@ function InvestorDashboard() {
 
         <TabsContent value="active" className="space-y-4">
           {mockActiveInvestments.length === 0 ? (
-            <Card>
+            <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Activity className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">No Active Investments</h3>
-                <p className="text-muted-foreground mb-4">
-                  Start investing to track your active deals here.
+                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center mx-auto mb-4">
+                  <Activity className="w-8 h-8 text-blue-500/60" />
+                </div>
+                <h3 className="font-semibold mb-2">No Active Investments Yet</h3>
+                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                  Your active investments and negotiations will appear here once you start engaging with deals.
                 </p>
                 <Link href="/marketflow/deals">
-                  <Button data-testid="button-browse-deals-active-empty">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Browse Deals
+                  <Button className="gap-2" data-testid="button-browse-deals-active-empty">
+                    <Target className="w-4 h-4" />
+                    Find Investment Opportunities
                   </Button>
                 </Link>
               </CardContent>
@@ -421,12 +425,14 @@ function InvestorDashboard() {
 
         <TabsContent value="exited" className="space-y-4">
           {mockExitedDeals.length === 0 ? (
-            <Card>
+            <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <CheckCircle2 className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">No Exited Investments</h3>
-                <p className="text-muted-foreground">
-                  Completed investments will appear here.
+                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-green-500/60" />
+                </div>
+                <h3 className="font-semibold mb-2">No Completed Investments Yet</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Your successfully completed investments and their returns will be tracked here.
                 </p>
               </CardContent>
             </Card>
