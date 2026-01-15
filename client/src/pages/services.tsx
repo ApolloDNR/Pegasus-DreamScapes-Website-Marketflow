@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSEO } from "@/hooks/use-seo";
 import { 
   Home, 
   TrendingUp, 
@@ -11,6 +12,11 @@ import {
 } from "lucide-react";
 
 export default function Services() {
+  useSEO({
+    title: "Our Services - Real Estate Investment & Renovation",
+    description: "Explore Pegasus Dreamscapes services: fix & flip acquisitions, buy & hold rentals, design & renovation management, and expert consulting."
+  });
+
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />

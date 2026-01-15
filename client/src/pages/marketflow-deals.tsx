@@ -1429,7 +1429,7 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
           <h3 className="font-semibold text-lg truncate">{address}</h3>
           <p className="text-sm text-muted-foreground flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {cityState || 'Location TBD'}
+            {cityState || 'Location pending'}
           </p>
         </div>
 
@@ -1733,7 +1733,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           <h3 className="font-semibold truncate" data-testid={`text-deal-address-${deal.id}`}>{address}</h3>
           <p className="text-sm text-muted-foreground flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {cityState || 'Location TBD'}
+            {cityState || 'Location pending'}
           </p>
         </div>
 
@@ -2062,7 +2062,7 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           </h3>
           <p className="text-sm text-muted-foreground flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {project.location || 'Location TBD'}
+            {project.location || 'Location pending'}
           </p>
         </div>
 
@@ -2085,22 +2085,22 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
               <>
                 <div>
                   <span className="text-muted-foreground">Interest: </span>
-                  <span className="font-medium">{project.askingInterestRate || "TBD"}</span>
+                  <span className="font-medium">{project.askingInterestRate || "Negotiable"}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Duration: </span>
-                  <span className="font-medium">{project.askingLoanDuration || "TBD"}</span>
+                  <span className="font-medium">{project.askingLoanDuration || "Negotiable"}</span>
                 </div>
               </>
             ) : (
               <>
                 <div>
                   <span className="text-muted-foreground">Return: </span>
-                  <span className="font-medium">{project.projectedReturn || "TBD"}</span>
+                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Split: </span>
-                  <span className="font-medium">{project.askingProfitSplit || "TBD"}</span>
+                  <span className="font-medium">{project.askingProfitSplit || "Negotiable"}</span>
                 </div>
               </>
             )}
@@ -2416,7 +2416,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           <h3 className="font-semibold text-lg truncate">{project.title}</h3>
           <p className="text-sm text-muted-foreground flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {project.location || 'Location TBD'}
+            {project.location || 'Location pending'}
           </p>
         </div>
 
@@ -2439,22 +2439,22 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
               <>
                 <div>
                   <span className="text-muted-foreground">Interest: </span>
-                  <span className="font-medium">{project.askingInterestRate || "TBD"}</span>
+                  <span className="font-medium">{project.askingInterestRate || "Negotiable"}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Duration: </span>
-                  <span className="font-medium">{project.askingLoanDuration || "TBD"}</span>
+                  <span className="font-medium">{project.askingLoanDuration || "Negotiable"}</span>
                 </div>
               </>
             ) : (
               <>
                 <div>
                   <span className="text-muted-foreground">Return: </span>
-                  <span className="font-medium">{project.projectedReturn || "TBD"}</span>
+                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Split: </span>
-                  <span className="font-medium">{project.askingProfitSplit || "TBD"}</span>
+                  <span className="font-medium">{project.askingProfitSplit || "Negotiable"}</span>
                 </div>
               </>
             )}
@@ -2569,7 +2569,7 @@ interface ListingCardProps {
 
 function ListingCard({ listing, onView, onRequestInfo, onScheduleShowing, isSaved, onSave }: ListingCardProps) {
   const formatCurrency = (amount: number | null | undefined) => {
-    if (!amount) return "Price TBD";
+    if (!amount) return "Contact for pricing";
     if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
     if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
     return `$${amount.toLocaleString()}`;

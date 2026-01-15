@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useSEO } from "@/hooks/use-seo";
 import { 
   Target, 
   Eye, 
@@ -30,6 +31,11 @@ import {
 } from "lucide-react";
 
 export default function About() {
+  useSEO({
+    title: "About Us - Pegasus Dreamscapes Corp",
+    description: "Learn about Pegasus Dreamscapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
+  });
+
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />

@@ -390,7 +390,7 @@ function DashboardTab({
                       <p className="font-medium">{project.title}</p>
                       <Badge className="bg-green-600">Open</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">{project.location || "Location TBD"}</p>
+                    <p className="text-sm text-muted-foreground mb-3">{project.location || "Location pending"}</p>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>{formatCurrency(project.amountRaised)}</span>
@@ -450,7 +450,7 @@ function ProjectsTab({ projects }: { projects: CapitalProject[] }) {
                     <CardTitle className="text-lg">{project.title}</CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <MapPin className="w-3 h-3" />
-                      {project.location || "Location TBD"}
+                      {project.location || "Location pending"}
                     </CardDescription>
                   </div>
                   <Badge className={`${STATUS_STYLES[project.status]?.bg} ${STATUS_STYLES[project.status]?.text}`}>
@@ -477,11 +477,11 @@ function ProjectsTab({ projects }: { projects: CapitalProject[] }) {
                   </div>
                   <div className="p-2 rounded bg-secondary/50">
                     <p className="text-muted-foreground">Projected Return</p>
-                    <p className="font-medium">{project.projectedReturn || "TBD"}</p>
+                    <p className="font-medium">{project.projectedReturn || "Negotiable"}</p>
                   </div>
                   <div className="p-2 rounded bg-secondary/50">
                     <p className="text-muted-foreground">Hold Period</p>
-                    <p className="font-medium">{project.holdPeriod || "TBD"}</p>
+                    <p className="font-medium">{project.holdPeriod || "Flexible"}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -675,7 +675,7 @@ function OffersTab({ offers }: { offers: InvestmentOffer[] }) {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-lg">{project?.title || `Project #${offer.projectId}`}</CardTitle>
-                      <CardDescription>{project?.location || "Location TBD"}</CardDescription>
+                      <CardDescription>{project?.location || "Location pending"}</CardDescription>
                     </div>
                     <Badge variant="secondary">Pending Review</Badge>
                   </div>
@@ -696,7 +696,7 @@ function OffersTab({ offers }: { offers: InvestmentOffer[] }) {
                     </div>
                     <div className="p-3 rounded bg-secondary/50">
                       <p className="text-sm text-muted-foreground">Hold Period</p>
-                      <p className="font-medium">{offer.holdPeriod || "TBD"}</p>
+                      <p className="font-medium">{offer.holdPeriod || "Flexible"}</p>
                     </div>
                   </div>
                   {offer.notes && (

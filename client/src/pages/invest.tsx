@@ -144,19 +144,19 @@ function ProjectSnapshotSection() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div className="p-4 bg-secondary/50 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Acquisition</p>
-                <p className="text-2xl font-bold">$XXX,XXX</p>
+                <p className="text-2xl font-bold">$385,000</p>
               </div>
               <div className="p-4 bg-secondary/50 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Rehab Budget</p>
-                <p className="text-2xl font-bold">$XX,XXX</p>
+                <p className="text-2xl font-bold">$75,000</p>
               </div>
               <div className="p-4 bg-secondary/50 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Total Project</p>
-                <p className="text-2xl font-bold">$XXX,XXX</p>
+                <p className="text-2xl font-bold">$460,000</p>
               </div>
               <div className="p-4 bg-primary/10 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Resale Target</p>
-                <p className="text-2xl font-bold text-primary">$XXX,XXX</p>
+                <p className="text-2xl font-bold text-primary">$575,000</p>
               </div>
             </div>
             <div className="mt-6 pt-6 border-t border-border flex flex-wrap justify-center gap-6 text-sm">

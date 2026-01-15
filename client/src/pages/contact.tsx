@@ -230,7 +230,7 @@ function ContactSection() {
                           <FormItem>
                             <FormLabel>Phone Number (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="(555) 123-4567" {...field} data-testid="input-contact-phone" />
+                              <Input placeholder="(555) 123-4567" {...field} value={field.value ?? ""} data-testid="input-contact-phone" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
