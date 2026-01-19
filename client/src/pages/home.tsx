@@ -351,52 +351,82 @@ function FeaturedDealsSection() {
   );
 }
 
+interface Testimonial {
+  id: number;
+  quote: string;
+  author: string;
+  role: string | null;
+  location: string | null;
+  rating: number;
+  imageUrl: string | null;
+  isActive: boolean;
+}
+
+const defaultTestimonials = [
+  {
+    quote: "Pegasus Dreamscapes made selling my inherited property stress-free. They gave me a fair offer and closed in two weeks. I couldn't have asked for a better experience.",
+    author: "Sarah M.",
+    role: "Property Seller",
+    location: "Oakland, CA",
+    rating: 5,
+    initials: "SM",
+  },
+  {
+    quote: "As an investor, I appreciate their transparent underwriting and consistent returns. The team's expertise in identifying value-add opportunities is unmatched.",
+    author: "Michael R.",
+    role: "Investment Partner",
+    location: "San Francisco, CA",
+    rating: 5,
+    initials: "MR",
+  },
+  {
+    quote: "They transformed our neighborhood. The property next door went from an eyesore to the most beautiful house on the block. Thank you for caring about our community.",
+    author: "Linda T.",
+    role: "Community Member",
+    location: "San Jose, CA",
+    rating: 5,
+    initials: "LT",
+  },
+  {
+    quote: "The MarketFlow platform made it easy to find off-market deals. I've closed three wholesale assignments in my first quarter. Outstanding deal flow quality.",
+    author: "James K.",
+    role: "Wholesale Investor",
+    location: "Los Angeles, CA",
+    rating: 5,
+    initials: "JK",
+  },
+  {
+    quote: "Professional, responsive, and fair. They bought my rental property as-is and handled all the paperwork. Made a stressful situation manageable.",
+    author: "Maria G.",
+    role: "Property Seller",
+    location: "Fresno, CA",
+    rating: 5,
+    initials: "MG",
+  },
+];
+
+function getInitials(name: string): string {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
 function TestimonialsSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   
-  const testimonials = [
-    {
-      quote: "Pegasus Dreamscapes made selling my inherited property stress-free. They gave me a fair offer and closed in two weeks. I couldn't have asked for a better experience.",
-      author: "Sarah M.",
-      role: "Property Seller",
-      location: "Oakland, CA",
-      rating: 5,
-      initials: "SM",
-    },
-    {
-      quote: "As an investor, I appreciate their transparent underwriting and consistent returns. The team's expertise in identifying value-add opportunities is unmatched.",
-      author: "Michael R.",
-      role: "Investment Partner",
-      location: "San Francisco, CA",
-      rating: 5,
-      initials: "MR",
-    },
-    {
-      quote: "They transformed our neighborhood. The property next door went from an eyesore to the most beautiful house on the block. Thank you for caring about our community.",
-      author: "Linda T.",
-      role: "Community Member",
-      location: "San Jose, CA",
-      rating: 5,
-      initials: "LT",
-    },
-    {
-      quote: "The MarketFlow platform made it easy to find off-market deals. I've closed three wholesale assignments in my first quarter. Outstanding deal flow quality.",
-      author: "James K.",
-      role: "Wholesale Investor",
-      location: "Los Angeles, CA",
-      rating: 5,
-      initials: "JK",
-    },
-    {
-      quote: "Professional, responsive, and fair. They bought my rental property as-is and handled all the paperwork. Made a stressful situation manageable.",
-      author: "Maria G.",
-      role: "Property Seller",
-      location: "Fresno, CA",
-      rating: 5,
-      initials: "MG",
-    },
-  ];
+  const { data: cmsTestimonials = [] } = useQuery<Testimonial[]>({
+    queryKey: ["/api/testimonials"],
+  });
+  
+  const testimonials = cmsTestimonials.length > 0
+    ? cmsTestimonials.filter(t => t.isActive).map(t => ({
+        quote: t.quote,
+        author: t.author,
+        role: t.role || "Client",
+        location: t.location || "",
+        rating: t.rating,
+        initials: getInitials(t.author),
+      }))
+    : defaultTestimonials;
 
   // Auto-advance carousel
   useEffect(() => {
@@ -1729,33 +1759,50 @@ function CommunityImpactSection() {
   );
 }
 
+interface FAQ {
+  id: number;
+  question: string;
+  answer: string;
+  category: string | null;
+  order: number;
+  isActive: boolean;
+}
+
+const defaultFaqs = [
+  {
+    question: "How does the wholesale assignment process work?",
+    answer: "Our MarketFlow platform connects you with verified wholesale deals. Once you find a property that fits your criteria, you can submit an offer directly through the platform. Our team handles the assignment process, ensuring a smooth transaction from contract to close."
+  },
+  {
+    question: "What is the minimum investment amount?",
+    answer: "Investment minimums vary by deal type. Wholesale assignments typically require earnest money deposits starting at $5,000. Capital raise opportunities may have higher minimums depending on the project structure. Contact us for specific deal requirements."
+  },
+  {
+    question: "How are deals vetted before listing?",
+    answer: "Every deal on MarketFlow goes through our rigorous underwriting process. We verify property ownership, assess repair estimates, confirm ARV calculations with local comps, and ensure all contracts are legally sound before listing any opportunity."
+  },
+  {
+    question: "Can I sell my property directly to Pegasus Dreamscapes?",
+    answer: "Yes! We purchase properties in any condition. Whether you're facing foreclosure, dealing with an inherited property, or simply want a fast, hassle-free sale, we can provide a fair cash offer within 24-48 hours."
+  },
+  {
+    question: "What types of properties do you focus on?",
+    answer: "We specialize in residential properties suitable for fix-and-flip or rental strategies, including single-family homes, duplexes, and small multi-family buildings. We focus on the California market, particularly the Bay Area and Central Valley regions."
+  },
+  {
+    question: "How quickly can deals close?",
+    answer: "Our average closing time is 14-21 days for wholesale assignments and 7-14 days for direct purchases. For cash buyers with proof of funds ready, we can often close even faster depending on title work and inspections."
+  },
+];
+
 function FAQSection() {
-  const faqs = [
-    {
-      question: "How does the wholesale assignment process work?",
-      answer: "Our MarketFlow platform connects you with verified wholesale deals. Once you find a property that fits your criteria, you can submit an offer directly through the platform. Our team handles the assignment process, ensuring a smooth transaction from contract to close."
-    },
-    {
-      question: "What is the minimum investment amount?",
-      answer: "Investment minimums vary by deal type. Wholesale assignments typically require earnest money deposits starting at $5,000. Capital raise opportunities may have higher minimums depending on the project structure. Contact us for specific deal requirements."
-    },
-    {
-      question: "How are deals vetted before listing?",
-      answer: "Every deal on MarketFlow goes through our rigorous underwriting process. We verify property ownership, assess repair estimates, confirm ARV calculations with local comps, and ensure all contracts are legally sound before listing any opportunity."
-    },
-    {
-      question: "Can I sell my property directly to Pegasus Dreamscapes?",
-      answer: "Yes! We purchase properties in any condition. Whether you're facing foreclosure, dealing with an inherited property, or simply want a fast, hassle-free sale, we can provide a fair cash offer within 24-48 hours."
-    },
-    {
-      question: "What types of properties do you focus on?",
-      answer: "We specialize in residential properties suitable for fix-and-flip or rental strategies, including single-family homes, duplexes, and small multi-family buildings. We focus on the California market, particularly the Bay Area and Central Valley regions."
-    },
-    {
-      question: "How quickly can deals close?",
-      answer: "Our average closing time is 14-21 days for wholesale assignments and 7-14 days for direct purchases. For cash buyers with proof of funds ready, we can often close even faster depending on title work and inspections."
-    },
-  ];
+  const { data: cmsFaqs = [] } = useQuery<FAQ[]>({
+    queryKey: ["/api/faqs"],
+  });
+  
+  const faqs = cmsFaqs.length > 0 
+    ? cmsFaqs.filter(f => f.isActive).sort((a, b) => a.order - b.order).map(f => ({ question: f.question, answer: f.answer }))
+    : defaultFaqs;
 
   return (
     <section className="py-24 lg:py-32 bg-background relative">
