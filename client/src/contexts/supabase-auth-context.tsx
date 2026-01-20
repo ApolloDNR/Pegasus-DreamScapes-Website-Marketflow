@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { getSupabase, type UserRole, type UserProfile } from '@/lib/supabase';
 import { 
@@ -12,6 +12,12 @@ import {
   type MarketplaceRole,
   type MarketplacePermission
 } from '@shared/schema';
+
+// Admin email allowlist for site editing
+const ADMIN_EMAILS = [
+  "apollosynd@gmail.com",
+  "admin@pegasusdreamscapes.com",
+];
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -44,6 +50,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Store backend's authoritative isAdmin flag separately
+  const [backendIsAdmin, setBackendIsAdmin] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(() => {
     try {
       return localStorage.getItem('guestMode') === 'true';
@@ -94,23 +102,35 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             
             // If profile fetch fails, construct from Replit Auth user data
             if (!profileData) {
-              const primaryRole = replitUser.roles?.[0] || replitUser.role || 'investor';
-              const isPegasus = primaryRole.startsWith('pegasus_');
+              const primaryRole = replitUser.isAdmin ? 'admin' : (replitUser.roles?.[0] || replitUser.role || 'investor');
+              const isPegasus = primaryRole.startsWith('pegasus_') || replitUser.isAdmin;
               profileData = {
                 id: replitUser.id,
                 user_id: replitUser.id,
                 primary_role: primaryRole as UserRole,
                 display_name: `${replitUser.firstName || ''} ${replitUser.lastName || ''}`.trim() || replitUser.email?.split('@')[0] || 'User',
                 avatar_url: replitUser.profileImageUrl || undefined,
-                is_pegasus_badged: isPegasus || replitUser.isStaff || replitUser.role === 'admin',
+                is_pegasus_badged: isPegasus || replitUser.isStaff || replitUser.isAdmin,
                 pegasus_role_type: isPegasus ? primaryRole : undefined,
                 created_at: replitUser.createdAt || new Date().toISOString(),
                 updated_at: replitUser.updatedAt || new Date().toISOString()
               };
             }
             
+            // Also create a synthetic user object with email for admin detection
             if (mounted) {
+              const syntheticUser = {
+                id: replitUser.id,
+                email: replitUser.email,
+                app_metadata: {},
+                user_metadata: {},
+                aud: 'authenticated',
+                created_at: replitUser.createdAt || new Date().toISOString()
+              } as User;
+              setUser(syntheticUser);
               setProfile(profileData);
+              // Use backend's authoritative isAdmin flag
+              setBackendIsAdmin(Boolean(replitUser.isAdmin));
               setIsLoading(false);
             }
             return;
@@ -271,6 +291,23 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const currentRole = profile?.primary_role ?? null;
   const effectiveRole = isGuestMode ? guestRole : currentRole;
   
+  // Check admin status - use backend's authoritative flag as primary source
+  const isAdminUser = useMemo(() => {
+    // Backend's isAdmin flag is the source of truth (set from OIDC/Replit Auth)
+    if (backendIsAdmin) {
+      return true;
+    }
+    // Fallback checks for Supabase Auth users
+    const userEmail = user?.email?.toLowerCase() || profile?.display_name?.toLowerCase();
+    if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
+      return true;
+    }
+    if (effectiveRole && isAdminRole(effectiveRole)) {
+      return true;
+    }
+    return false;
+  }, [backendIsAdmin, user?.email, profile?.display_name, effectiveRole]);
+  
   const hasPermission = useCallback((permission: MarketplacePermission): boolean => {
     if (!effectiveRole) return false;
     return hasMarketplacePermission(effectiveRole as MarketplaceRole, permission);
@@ -307,7 +344,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     isGuestMode,
     guestRole,
     userRole: effectiveRole,
-    isAdmin: effectiveRole ? isAdminRole(effectiveRole) : false,
+    isAdmin: isAdminUser,
     isWholesaler: effectiveRole ? isWholesalerRole(effectiveRole) : false,
     isDreamscaper: effectiveRole ? isDreamscaperRole(effectiveRole) : false,
     isInvestor: effectiveRole ? isInvestorRole(effectiveRole) : false,

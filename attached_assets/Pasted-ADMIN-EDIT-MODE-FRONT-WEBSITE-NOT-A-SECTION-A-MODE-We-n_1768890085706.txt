@@ -1,0 +1,83 @@
+ADMIN EDIT MODE (FRONT WEBSITE) — NOT A SECTION, A MODE
+We need a global “Edit Mode” for admins on the public marketing website. Editing must NOT be a separate page/section. It should be a toggle overlay.
+
+Requirements
+
+Only admins can see Edit Mode toggle
+
+Use auth role check (Supabase) or admin email allowlist.
+
+Non-admin users never see editing UI.
+
+Edit Mode Toggle
+
+Small fixed toggle top-right (or admin bar).
+
+States: OFF (normal site) / ON (editable overlay).
+
+When ON: show subtle outlines on editable components on hover, and a “Click to edit” cursor.
+
+Click-to-edit any content
+Implement a wrapper like:
+
+<EditableText contentKey="home.hero.title" />
+
+<EditableImage contentKey="home.hero.image" />
+
+<EditableLink contentKey="home.hero.ctaPrimary" />
+
+When Edit Mode ON:
+
+EditableText becomes inline contentEditable OR opens a right-side panel editor.
+
+EditableImage opens file picker / URL input.
+
+EditableLink lets admin edit label + href.
+
+When Edit Mode OFF:
+
+Components render normal (no outlines, no editor, no extra padding).
+
+Content storage
+Create a site_content table:
+
+key (string, unique) e.g. "home.hero.title"
+
+value (jsonb or text)
+
+type ("text" | "richtext" | "image" | "link")
+
+updated_at, updated_by
+
+Load all content once (on app boot) into a ContentContext store.
+Edits update:
+
+local UI immediately (optimistic update)
+
+then persist to Supabase
+
+Publishing workflow
+
+Simple: save writes directly to production content
+OR
+
+Better: add status: draft|published so edits are draft until admin clicks “Publish changes”.
+(If time is limited, ship direct-save first.)
+
+UX
+
+Admin bar includes: Edit Mode toggle, Save status, Undo (optional), Publish (optional).
+
+Highlight boundaries of editable blocks (outline).
+
+Prevent accidental editing: require click + small edit popover.
+
+Acceptance Criteria
+
+Admin can toggle Edit Mode and click hero headline, subhead, buttons, and section text to edit directly on the page.
+
+All edits persist and appear on refresh.
+
+Non-admin never sees edit UI.
+
+Edit Mode does not change layout when OF

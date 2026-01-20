@@ -2750,3 +2750,24 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({
 });
 export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
 export type MediaFile = typeof mediaFiles.$inferSelect;
+
+// ============================================
+// SITE CONTENT - Admin inline editable content
+// ============================================
+
+export const siteContent = pgTable("site_content", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 255 }).notNull().unique(),
+  value: text("value").notNull(),
+  type: varchar("type", { length: 50 }).notNull().default("text"), // text, richtext, image, link
+  metadata: jsonb("metadata"), // For links: { href, label }, for images: { alt, width, height }
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedBy: varchar("updated_by", { length: 255 }),
+});
+
+export const insertSiteContentSchema = createInsertSchema(siteContent).omit({ 
+  id: true, 
+  updatedAt: true
+});
+export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
+export type SiteContent = typeof siteContent.$inferSelect;

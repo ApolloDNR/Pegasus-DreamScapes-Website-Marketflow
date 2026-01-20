@@ -33,6 +33,7 @@ import {
   insertTestimonialSchema,
   insertTeamMemberSchema,
   insertMediaFileSchema,
+  insertSiteContentSchema,
   STAFF_ROLES
 } from "@shared/schema";
 
@@ -84,12 +85,25 @@ import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLead
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
+// Admin email allowlist for site editing
+const ADMIN_EMAILS = [
+  "apollosynd@gmail.com",
+  "admin@pegasusdreamscapes.com",
+];
+
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.claims?.sub;
+    const userEmail = req.user?.claims?.email || req.user?.email;
+    
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Check admin email allowlist first
+    if (userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+      return next();
     }
     
     const hasStaffAccess = await storage.hasAnyStaffRole(userId);
@@ -1418,6 +1432,10 @@ export async function registerRoutes(
   app.get('/api/auth/user', isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userEmail = (req.user.claims.email || "").toLowerCase();
+      
+      // Check if user is in admin email allowlist
+      const isAdminEmail = ADMIN_EMAILS.includes(userEmail);
       
       const supabaseProfile = await getUserProfile(userId);
       
@@ -1435,7 +1453,8 @@ export async function registerRoutes(
           primaryRole: role,
           isPegasusBadged: isPegasus,
           roles: [role],
-          isStaff: role === 'admin' || isPegasus,
+          isStaff: role === 'admin' || isPegasus || isAdminEmail,
+          isAdmin: isAdminEmail || role === 'admin',
           isInvestor: role === 'investor',
           isWholesaler: role === 'wholesaler' || role === 'pegasus_wholesaler',
           isBuyer: role === 'buyer_retail' || role === 'buyer_investment',
@@ -1447,13 +1466,18 @@ export async function registerRoutes(
       const user = await storage.getUser(userId);
       const roles = await storage.getUserRoles(userId);
       const roleNames = roles.map(r => r.role);
-      const isStaff = roleNames.some(r => STAFF_ROLES.includes(r as any));
+      const isStaff = roleNames.some(r => STAFF_ROLES.includes(r as any)) || isAdminEmail;
       const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
       
       res.json({ 
-        ...user, 
+        ...user,
+        id: userId, // Always include id from claims
+        email: userEmail || user?.email || req.user.claims.email,
+        firstName: req.user.claims.first_name || user?.firstName || '',
+        lastName: req.user.claims.last_name || user?.lastName || '',
         roles: roleNames,
         isStaff,
+        isAdmin: isAdminEmail || roleNames.includes("admin"),
         isInvestor: roleNames.includes("investor"),
         isWholesaler: roleNames.includes("wholesaler"),
         isBuyer: roleNames.includes("buyer"),
@@ -2932,6 +2956,64 @@ export async function registerRoutes(
       return res.status(204).send();
     } catch (error) {
       console.error("Error deleting media file:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // SITE CONTENT - Inline Edit Mode
+  // ============================================
+
+  // Public: Get all site content (for initial load)
+  app.get("/api/site-content", async (req, res) => {
+    try {
+      const allContent = await storage.getAllSiteContent();
+      return res.json(allContent);
+    } catch (error) {
+      console.error("Error fetching site content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Public: Get specific site content by key
+  app.get("/api/site-content/:key", async (req, res) => {
+    try {
+      const content = await storage.getSiteContent(req.params.key);
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      return res.json(content);
+    } catch (error) {
+      console.error("Error fetching site content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Upsert site content (create or update)
+  app.put("/api/admin/site-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      const result = insertSiteContentSchema.safeParse({
+        ...req.body,
+        updatedBy: req.user?.claims?.email || req.user?.email || req.user?.claims?.sub,
+      });
+      if (!result.success) {
+        return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      const content = await storage.upsertSiteContent(result.data);
+      return res.json(content);
+    } catch (error) {
+      console.error("Error upserting site content:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Delete site content
+  app.delete("/api/admin/site-content/:key", isAuthenticated, requireStaffRole, async (req: any, res) => {
+    try {
+      await storage.deleteSiteContent(req.params.key);
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting site content:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

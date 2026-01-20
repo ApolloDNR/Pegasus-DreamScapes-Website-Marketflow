@@ -77,6 +77,7 @@ import {
   type Testimonial, type InsertTestimonial,
   type TeamMember, type InsertTeamMember,
   type MediaFile, type InsertMediaFile,
+  type SiteContent, type InsertSiteContent,
   featuredDeals,
   userActivity,
   homepageContent,
@@ -85,6 +86,7 @@ import {
   testimonials,
   teamMembers,
   mediaFiles,
+  siteContent,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -480,6 +482,12 @@ export interface IStorage {
   getMediaFile(id: number): Promise<MediaFile | undefined>;
   createMediaFile(data: InsertMediaFile): Promise<MediaFile>;
   deleteMediaFile(id: number): Promise<void>;
+
+  // Site Content (inline editing)
+  getAllSiteContent(): Promise<SiteContent[]>;
+  getSiteContent(key: string): Promise<SiteContent | undefined>;
+  upsertSiteContent(data: InsertSiteContent): Promise<SiteContent>;
+  deleteSiteContent(key: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2957,6 +2965,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMediaFile(id: number): Promise<void> {
     await db.delete(mediaFiles).where(eq(mediaFiles.id, id));
+  }
+
+  // ============================================
+  // SITE CONTENT (inline editing)
+  // ============================================
+
+  async getAllSiteContent(): Promise<SiteContent[]> {
+    return db.select().from(siteContent);
+  }
+
+  async getSiteContent(key: string): Promise<SiteContent | undefined> {
+    const [content] = await db.select().from(siteContent).where(eq(siteContent.key, key));
+    return content;
+  }
+
+  async upsertSiteContent(data: InsertSiteContent): Promise<SiteContent> {
+    const [upserted] = await db
+      .insert(siteContent)
+      .values({ ...data, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: siteContent.key,
+        set: {
+          value: data.value,
+          type: data.type,
+          metadata: data.metadata,
+          updatedBy: data.updatedBy,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return upserted;
+  }
+
+  async deleteSiteContent(key: string): Promise<void> {
+    await db.delete(siteContent).where(eq(siteContent.key, key));
   }
 }
 

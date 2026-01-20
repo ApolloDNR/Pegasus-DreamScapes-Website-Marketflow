@@ -29,6 +29,7 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **User Profiles & Role System**: Detailed profiles with stats, reviews, achievement badges, and an 8-tier role-based access control (`MARKETPLACE_ROLES`).
 *   **User Onboarding**: A 5-step guided flow covering role selection, property preferences, and goal setting.
 *   **Admin Content Management**: Allows admins to manage homepage content and featured deals.
+*   **Admin Edit Mode**: A system that allows admins to toggle inline editing on the public website. When enabled, editable content (text, images, links) shows a dashed outline and can be modified directly. Changes are persisted to the `site_content` database table. Admin detection uses an email allowlist (`ADMIN_EMAILS` in both `server/routes.ts` and frontend contexts) with the backend's `isAdmin` flag as the single source of truth.
 *   **Demo Mode**: Enables browsing with sample data for unregistered users.
 *   **Analytics Tracking**: Tracks user activity across deals, projects, listings, and pages.
 *   **SEO Support**: Dynamic meta tag management for page-specific titles and descriptions.

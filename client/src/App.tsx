@@ -14,6 +14,9 @@ import { DemoModeProvider } from "@/contexts/demo-mode-context";
 import { ErrorBoundary, PageLoader } from "@/components/error-boundary";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NotificationProvider } from "@/contexts/notification-context";
+import { SiteContentProvider } from "@/contexts/site-content-context";
+import { EditModeProvider } from "@/contexts/edit-mode-context";
+import { AdminBar } from "@/components/AdminBar";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -199,28 +202,33 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="pegasus-ui-theme">
         <SupabaseAuthProvider>
-          <DemoModeProvider>
-            <TooltipProvider>
-              <DealActionProvider>
-                <PeggyProvider>
-                  <NotificationProvider>
-                    <ScrollToTop />
-                    <div className="min-h-screen flex flex-col bg-background text-foreground">
-                      <Navigation />
-                      <main className="flex-1">
-                        <ErrorBoundary>
-                          <Router />
-                        </ErrorBoundary>
-                      </main>
-                      <Footer />
-                    </div>
-                    <PeggyDock />
-                    <Toaster />
-                  </NotificationProvider>
-                </PeggyProvider>
-              </DealActionProvider>
-            </TooltipProvider>
-          </DemoModeProvider>
+          <SiteContentProvider>
+            <EditModeProvider>
+              <DemoModeProvider>
+                <TooltipProvider>
+                  <DealActionProvider>
+                    <PeggyProvider>
+                      <NotificationProvider>
+                        <ScrollToTop />
+                        <AdminBar />
+                        <div className="min-h-screen flex flex-col bg-background text-foreground">
+                          <Navigation />
+                          <main className="flex-1">
+                            <ErrorBoundary>
+                              <Router />
+                            </ErrorBoundary>
+                          </main>
+                          <Footer />
+                        </div>
+                        <PeggyDock />
+                        <Toaster />
+                      </NotificationProvider>
+                    </PeggyProvider>
+                  </DealActionProvider>
+                </TooltipProvider>
+              </DemoModeProvider>
+            </EditModeProvider>
+          </SiteContentProvider>
         </SupabaseAuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

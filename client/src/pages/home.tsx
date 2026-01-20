@@ -71,6 +71,9 @@ import logoImage from "@assets/image_1765405939117.png";
 import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
 import serviceImage1 from "@assets/generated_images/real_estate_investor_consultation.png";
 import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
+import { EditableText } from "@/components/editable";
+import { useEditMode } from "@/contexts/edit-mode-context";
+import { useSiteContent } from "@/contexts/site-content-context";
 
 export default function Home() {
   useSEO({
@@ -594,6 +597,17 @@ function TestimonialsSection() {
 }
 
 function HeroSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const heroKicker = getValue("home.hero.kicker", "Distressed Properties → Profitable Investments");
+  const heroLine1 = getValue("home.hero.line1", "Designed Profits.");
+  const heroLine2 = getValue("home.hero.line2", "Elevated");
+  const heroLine3 = getValue("home.hero.line3", "Communities.");
+  const heroSubheadline = getValue("home.hero.subheadline", "Sell your property fast for cash, or invest in off-market deals with proven returns. Our MarketFlow platform connects sellers and investors for seamless transactions.");
+  const heroCtaPrimary = getValue("home.hero.cta_primary", "Get a Cash Offer");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "Browse Deals");
+  
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Full-bleed background image with parallax effect */}
@@ -661,9 +675,17 @@ function HeroSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
-              <p className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium" data-testid="text-hero-kicker">
-                Distressed Properties → Profitable Investments
-              </p>
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.hero.kicker" 
+                  fallback="Distressed Properties → Profitable Investments"
+                  className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium"
+                />
+              ) : (
+                <p className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium" data-testid="text-hero-kicker">
+                  {heroKicker}
+                </p>
+              )}
             </motion.div>
             
             {/* Premium headline with refined typography */}
@@ -674,7 +696,9 @@ function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
               >
-                Designed Profits.
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.line1" fallback="Designed Profits." />
+                ) : heroLine1}
               </motion.span>
               <motion.span 
                 className="block"
@@ -682,7 +706,9 @@ function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.5 }}
               >
-                Elevated
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.line2" fallback="Elevated" />
+                ) : heroLine2}
               </motion.span>
               <motion.span 
                 className="block bg-gradient-to-r from-champagne via-tan to-primary bg-clip-text text-transparent"
@@ -690,20 +716,30 @@ function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.7 }}
               >
-                Communities.
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.line3" fallback="Communities." />
+                ) : heroLine3}
               </motion.span>
             </h1>
             
             {/* Refined subheadline with better spacing */}
-            <motion.p 
+            <motion.div 
               className="text-lg sm:text-xl text-white/75 max-w-2xl mb-14 leading-relaxed font-light"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.9 }}
               data-testid="text-hero-subheadline"
             >
-              Sell your property fast for cash, or invest in off-market deals with proven returns. Our MarketFlow platform connects sellers and investors for seamless transactions.
-            </motion.p>
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.hero.subheadline" 
+                  fallback="Sell your property fast for cash, or invest in off-market deals with proven returns. Our MarketFlow platform connects sellers and investors for seamless transactions."
+                  multiline
+                />
+              ) : (
+                <p>{heroSubheadline}</p>
+              )}
+            </motion.div>
             
             {/* Premium CTAs with enhanced styling */}
             <motion.div 
@@ -714,13 +750,17 @@ function HeroSection() {
             >
               <a href="#sell">
                 <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-foreground hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
-                  Get a Cash Offer
+                  {isEditMode ? (
+                    <EditableText contentKey="home.hero.cta_primary" fallback="Get a Cash Offer" />
+                  ) : heroCtaPrimary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <Link href="/marketplace">
+              <Link href="/marketflow">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
-                  Browse Deals
+                  {isEditMode ? (
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="Browse Deals" />
+                  ) : heroCtaSecondary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
