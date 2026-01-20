@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useEditMode } from "@/contexts/edit-mode-context";
 import { useSiteContent } from "@/contexts/site-content-context";
 import { cn } from "@/lib/utils";
@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ImageIcon, Pencil } from "lucide-react";
+import { ImageIcon, Pencil, Loader2, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditableImageProps {
   contentKey: string;
@@ -14,6 +15,16 @@ interface EditableImageProps {
   alt?: string;
   className?: string;
   imgClassName?: string;
+}
+
+function isValidUrl(url: string): boolean {
+  if (url.startsWith("/")) return true;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function EditableImage({
@@ -25,9 +36,12 @@ export function EditableImage({
 }: EditableImageProps) {
   const { isEditMode } = useEditMode();
   const { getValue, getMetadata, updateContent, isSaving } = useSiteContent();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editUrl, setEditUrl] = useState("");
   const [editAlt, setEditAlt] = useState("");
+  const [localSaving, setLocalSaving] = useState(false);
+  const [errors, setErrors] = useState<{ url?: string; alt?: string }>({});
 
   const currentUrl = getValue(contentKey, fallback);
   const metadata = getMetadata(contentKey) as { alt?: string } | null;
@@ -37,14 +51,56 @@ export function EditableImage({
     if (isEditMode) {
       setEditUrl(currentUrl);
       setEditAlt(currentAlt);
+      setErrors({});
       setIsDialogOpen(true);
     }
   };
 
-  const handleSave = async () => {
-    await updateContent(contentKey, editUrl, "image", { alt: editAlt });
-    setIsDialogOpen(false);
+  const validate = (): boolean => {
+    const newErrors: { url?: string; alt?: string } = {};
+    
+    if (!editUrl.trim()) {
+      newErrors.url = "Image URL is required";
+    } else if (!isValidUrl(editUrl.trim())) {
+      newErrors.url = "Please enter a valid URL";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+
+    setLocalSaving(true);
+    
+    try {
+      await updateContent(contentKey, editUrl.trim(), "image", { alt: editAlt.trim() });
+      toast({
+        title: "Image saved",
+        description: "Your image has been updated successfully.",
+      });
+      setIsDialogOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save image";
+      toast({
+        title: "Save failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setLocalSaving(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!localSaving) {
+      setIsDialogOpen(false);
+      setErrors({});
+    }
+  };
+
+  const isProcessing = localSaving || isSaving;
 
   if (!isEditMode) {
     return (
@@ -72,7 +128,7 @@ export function EditableImage({
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -87,24 +143,36 @@ export function EditableImage({
               <Input
                 id="image-url"
                 value={editUrl}
-                onChange={(e) => setEditUrl(e.target.value)}
-                placeholder="https://..."
+                onChange={(e) => {
+                  setEditUrl(e.target.value);
+                  if (errors.url) setErrors({ ...errors, url: undefined });
+                }}
+                placeholder="https://... or /path/to/image"
+                disabled={isProcessing}
+                className={errors.url ? "border-destructive" : ""}
                 data-testid="input-image-url"
               />
+              {errors.url && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.url}
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="image-alt">Alt Text</Label>
+              <Label htmlFor="image-alt">Alt Text (optional)</Label>
               <Input
                 id="image-alt"
                 value={editAlt}
                 onChange={(e) => setEditAlt(e.target.value)}
-                placeholder="Image description"
+                placeholder="Image description for accessibility"
+                disabled={isProcessing}
                 data-testid="input-image-alt"
               />
             </div>
             
-            {editUrl && (
+            {editUrl && isValidUrl(editUrl) && (
               <div className="border rounded p-2">
                 <p className="text-xs text-muted-foreground mb-2">Preview:</p>
                 <img 
@@ -120,11 +188,18 @@ export function EditableImage({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={handleClose} disabled={isProcessing}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving} data-testid="button-save-image">
-              Save
+            <Button onClick={handleSave} disabled={isProcessing} data-testid="button-save-image">
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
