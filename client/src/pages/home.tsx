@@ -71,7 +71,7 @@ import logoImage from "@assets/image_1765405939117.png";
 import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
 import serviceImage1 from "@assets/generated_images/real_estate_investor_consultation.png";
 import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
-import { EditableText } from "@/components/editable";
+import { EditableText, EditableImage, EditableLink } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
 import { useSiteContent } from "@/contexts/site-content-context";
 
@@ -1017,6 +1017,7 @@ const sellerFormSchema = z.object({
 
 function SellPropertySection() {
   const { toast } = useToast();
+  const { isEditMode } = useEditMode();
   const form = useForm<z.infer<typeof sellerFormSchema>>({
     resolver: zodResolver(sellerFormSchema),
     defaultValues: {
@@ -1077,13 +1078,28 @@ function SellPropertySection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-2 gap-20 items-start">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">For Sellers</p>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-sell-title">
-              Sell Your Property
-            </h2>
-            <p className="text-base text-muted-foreground leading-relaxed mb-10">
-              Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees.
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">
+              {isEditMode ? (
+                <EditableText contentKey="home.sell.kicker" fallback="For Sellers" />
+              ) : "For Sellers"}
             </p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-sell-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.sell.title" fallback="Sell Your Property" />
+              ) : "Sell Your Property"}
+            </h2>
+            <div className="text-base text-muted-foreground leading-relaxed mb-10">
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.sell.description" 
+                  fallback="Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees."
+                  multiline
+                  as="p"
+                />
+              ) : (
+                <p>Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees.</p>
+              )}
+            </div>
             
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -1249,6 +1265,7 @@ const investorFormSchema = z.object({
 
 function InvestSection() {
   const { toast } = useToast();
+  const { isEditMode } = useEditMode();
   const form = useForm<z.infer<typeof investorFormSchema>>({
     resolver: zodResolver(investorFormSchema),
     defaultValues: {
@@ -1409,13 +1426,28 @@ function InvestSection() {
           </div>
 
           <div className="lg:order-1">
-            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">For Investors</p>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-invest-title">
-              Partner With Pegasus
-            </h2>
-            <p className="text-base text-muted-foreground leading-relaxed mb-10">
-              Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real.
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">
+              {isEditMode ? (
+                <EditableText contentKey="home.invest.kicker" fallback="For Investors" />
+              ) : "For Investors"}
             </p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-invest-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.invest.title" fallback="Partner With Pegasus" />
+              ) : "Partner With Pegasus"}
+            </h2>
+            <div className="text-base text-muted-foreground leading-relaxed mb-10">
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.invest.description" 
+                  fallback="Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real."
+                  multiline
+                  as="p"
+                />
+              ) : (
+                <p>Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real.</p>
+              )}
+            </div>
             
             <div className="space-y-6">
               <div className="flex items-start gap-4">
