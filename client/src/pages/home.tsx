@@ -138,11 +138,14 @@ function AnimatedCounter({ end, duration = 2000, prefix = "", suffix = "" }: { e
 }
 
 function StatsSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const stats = [
-    { value: 47, suffix: "+", label: "Properties Transformed", icon: Building },
-    { value: 12, suffix: "M+", prefix: "$", label: "Investment Volume", icon: DollarSign },
-    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Star },
-    { value: 14, suffix: "", label: "Day Avg Close", icon: Clock },
+    { value: 47, suffix: "+", label: "Properties Transformed", icon: Building, key: "stats.0" },
+    { value: 12, suffix: "M+", prefix: "$", label: "Investment Volume", icon: DollarSign, key: "stats.1" },
+    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Star, key: "stats.2" },
+    { value: 14, suffix: "", label: "Day Avg Close", icon: Clock, key: "stats.3" },
   ];
 
   return (
@@ -152,27 +155,48 @@ function StatsSection() {
       
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
-          {stats.map((stat, index) => (
-            <StaggerItem key={index}>
-              <motion.div 
-                className="text-center group cursor-default py-8 px-4 relative"
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Decorative top accent */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors duration-300">
-                  <stat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-                </div>
-                
-                <p className="font-serif text-4xl sm:text-5xl lg:text-5xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
-                  <SharedAnimatedCounter end={stat.value} prefix={stat.prefix || ""} suffix={stat.suffix} />
-                </p>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">{stat.label}</p>
-              </motion.div>
-            </StaggerItem>
-          ))}
+          {stats.map((stat, index) => {
+            const displayValue = getValue(`home.${stat.key}.value`) || `${stat.prefix || ""}${stat.value}${stat.suffix}`;
+            const displayLabel = getValue(`home.${stat.key}.label`) || stat.label;
+            
+            return (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className="text-center group cursor-default py-8 px-4 relative"
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Decorative top accent */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors duration-300">
+                    <stat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                  </div>
+                  
+                  <div className="font-serif text-4xl sm:text-5xl lg:text-5xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
+                    {isEditMode ? (
+                      <EditableText 
+                        contentKey={`home.${stat.key}.value`} 
+                        fallback={`${stat.prefix || ""}${stat.value}${stat.suffix}`}
+                      />
+                    ) : (
+                      displayValue
+                    )}
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
+                    {isEditMode ? (
+                      <EditableText 
+                        contentKey={`home.${stat.key}.label`} 
+                        fallback={stat.label}
+                      />
+                    ) : (
+                      displayLabel
+                    )}
+                  </div>
+                </motion.div>
+              </StaggerItem>
+            );
+          })}
         </StaggerChildren>
       </div>
     </section>
@@ -195,6 +219,9 @@ interface WholesaleDeal {
 }
 
 function FeaturedDealsSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const { data: deals = [], isLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/supabase/wholesale-deals'],
   });
@@ -226,15 +253,25 @@ function FeaturedDealsSection() {
           <ScrollReveal className="text-center">
             <div className="flex items-center justify-center gap-4 mb-4">
               <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">MarketFlow</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.deals.kicker" fallback="MarketFlow" />
+                ) : (getValue("home.deals.kicker") || "MarketFlow")}
+              </p>
               <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-[-0.02em] mb-4">
-              Fresh Deals Coming Soon
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.emptyTitle" fallback="Fresh Deals Coming Soon" />
+              ) : (getValue("home.deals.emptyTitle") || "Fresh Deals Coming Soon")}
             </h2>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Our team is sourcing new investment opportunities. Sign up for alerts to be notified when deals are available.
-            </p>
+            <div className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.emptyDescription" fallback="Our team is sourcing new investment opportunities. Sign up for alerts to be notified when deals are available." as="p" multiline />
+              ) : (
+                <p>{getValue("home.deals.emptyDescription") || "Our team is sourcing new investment opportunities. Sign up for alerts to be notified when deals are available."}</p>
+              )}
+            </div>
             <Link href="/marketflow" data-testid="link-explore-marketplace">
               <Button className="group" data-testid="button-explore-marketplace">
                 Explore Marketplace
@@ -254,14 +291,24 @@ function FeaturedDealsSection() {
           <div>
             <div className="flex items-center gap-4 mb-4">
               <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">MarketFlow</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.deals.kicker" fallback="MarketFlow" />
+                ) : (getValue("home.deals.kicker") || "MarketFlow")}
+              </p>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-deals-title">
-              Featured Opportunities
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.title" fallback="Featured Opportunities" />
+              ) : (getValue("home.deals.title") || "Featured Opportunities")}
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-              Browse our latest investment-ready properties. Each deal is vetted and underwritten by our team.
-            </p>
+            <div className="mt-4 text-lg text-muted-foreground max-w-2xl">
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.description" fallback="Browse our latest investment-ready properties. Each deal is vetted and underwritten by our team." as="p" multiline />
+              ) : (
+                <p>{getValue("home.deals.description") || "Browse our latest investment-ready properties. Each deal is vetted and underwritten by our team."}</p>
+              )}
+            </div>
           </div>
           <Link href="/marketflow">
             <Button variant="outline" className="group whitespace-nowrap" data-testid="button-view-all-deals">
@@ -415,6 +462,8 @@ function getInitials(name: string): string {
 function TestimonialsSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
   
   const { data: cmsTestimonials = [] } = useQuery<Testimonial[]>({
     queryKey: ["/api/testimonials"],
@@ -449,11 +498,23 @@ function TestimonialsSection() {
       
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="text-center mb-16">
-          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Client Experiences</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">
+            {isEditMode ? (
+              <EditableText contentKey="home.testimonials.kicker" fallback="Client Experiences" />
+            ) : (getValue("home.testimonials.kicker") || "Client Experiences")}
+          </p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
-            Trusted by Sellers & Investors
+            {isEditMode ? (
+              <EditableText contentKey="home.testimonials.title" fallback="Trusted by Sellers & Investors" />
+            ) : (getValue("home.testimonials.title") || "Trusted by Sellers & Investors")}
           </h2>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">Real stories from clients who have partnered with us to achieve their real estate goals.</p>
+          <div className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.testimonials.description" fallback="Real stories from clients who have partnered with us to achieve their real estate goals." as="p" multiline />
+            ) : (
+              <p>{getValue("home.testimonials.description") || "Real stories from clients who have partnered with us to achieve their real estate goals."}</p>
+            )}
+          </div>
         </ScrollReveal>
 
         {/* Testimonials Carousel */}
@@ -547,7 +608,11 @@ function TestimonialsSection() {
         {/* Trust badges - enhanced styling */}
         <ScrollReveal className="mt-24" delay={0.3}>
           <div className="bg-muted/30 rounded-2xl p-8 lg:p-12">
-            <p className="text-center text-sm uppercase tracking-[0.2em] text-muted-foreground font-medium mb-10">Why Choose Us</p>
+            <div className="text-center text-sm uppercase tracking-[0.2em] text-muted-foreground font-medium mb-10">
+              {isEditMode ? (
+                <EditableText contentKey="home.whyChooseUs.title" fallback="Why Choose Us" />
+              ) : (getValue("home.whyChooseUs.title") || "Why Choose Us")}
+            </div>
             <div className="grid sm:grid-cols-3 gap-8 lg:gap-12">
               <motion.div 
                 className="flex items-center gap-5"
@@ -558,8 +623,16 @@ function TestimonialsSection() {
                   <CheckCircle2 className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-base">Licensed & Insured</p>
-                  <p className="text-sm text-muted-foreground">CA DRE #02145678</p>
+                  <div className="font-semibold text-base">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.0.title" fallback="Licensed & Insured" />
+                    ) : (getValue("home.whyChooseUs.0.title") || "Licensed & Insured")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.0.description" fallback="CA DRE #02145678" />
+                    ) : (getValue("home.whyChooseUs.0.description") || "CA DRE #02145678")}
+                  </div>
                 </div>
               </motion.div>
               <motion.div 
@@ -571,8 +644,16 @@ function TestimonialsSection() {
                   <Award className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-base">BBB Accredited</p>
-                  <p className="text-sm text-muted-foreground">A+ Rating</p>
+                  <div className="font-semibold text-base">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.1.title" fallback="BBB Accredited" />
+                    ) : (getValue("home.whyChooseUs.1.title") || "BBB Accredited")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.1.description" fallback="A+ Rating" />
+                    ) : (getValue("home.whyChooseUs.1.description") || "A+ Rating")}
+                  </div>
                 </div>
               </motion.div>
               <motion.div 
@@ -584,8 +665,16 @@ function TestimonialsSection() {
                   <BarChart3 className="w-6 h-6 text-tan" />
                 </div>
                 <div>
-                  <p className="font-semibold text-base">Proven Track Record</p>
-                  <p className="text-sm text-muted-foreground">5+ Years Experience</p>
+                  <div className="font-semibold text-base">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.2.title" fallback="Proven Track Record" />
+                    ) : (getValue("home.whyChooseUs.2.title") || "Proven Track Record")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.2.description" fallback="5+ Years Experience" />
+                    ) : (getValue("home.whyChooseUs.2.description") || "5+ Years Experience")}
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -813,6 +902,9 @@ function HeroSection() {
 }
 
 function ServicesSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const services = [
     {
       image: serviceImage1,
@@ -821,6 +913,7 @@ function ServicesSection() {
       cta: "Book Consultation",
       ctaLink: "#contact",
       accent: "Personalized Strategy",
+      key: "service.0",
     },
     {
       image: serviceImage2,
@@ -829,6 +922,7 @@ function ServicesSection() {
       cta: "Request Valuation",
       ctaLink: "#sell",
       accent: "Free Assessment",
+      key: "service.1",
     },
   ];
 
@@ -842,53 +936,84 @@ function ServicesSection() {
         <ScrollReveal className="mb-20">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">What We Offer</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              {isEditMode ? (
+                <EditableText contentKey="home.services.kicker" fallback="What We Offer" />
+              ) : (getValue("home.services.kicker") || "What We Offer")}
+            </p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
-            Premium Services
+            {isEditMode ? (
+              <EditableText contentKey="home.services.title" fallback="Premium Services" />
+            ) : (getValue("home.services.title") || "Premium Services")}
           </h2>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl">Expert guidance and valuation services to help you make informed real estate decisions.</p>
+          <div className="mt-6 text-lg text-muted-foreground max-w-2xl">
+            {isEditMode ? (
+              <EditableText contentKey="home.services.description" fallback="Expert guidance and valuation services to help you make informed real estate decisions." as="p" multiline />
+            ) : (
+              <p>{getValue("home.services.description") || "Expert guidance and valuation services to help you make informed real estate decisions."}</p>
+            )}
+          </div>
         </ScrollReveal>
 
         <div className="space-y-8">
-          {services.map((service, index) => (
-            <ScrollReveal key={index} delay={index * 0.2} direction={index % 2 === 0 ? "left" : "right"}>
-              <motion.div 
-                className={`grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden border border-border/50 shadow-sm ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}
-                data-testid={`card-service-${index}`}
-                whileHover={{ y: -4, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.12)" }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className={`aspect-[4/3] lg:aspect-auto relative overflow-hidden group ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
-                  <motion.img 
-                    src={service.image} 
-                    alt={service.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  {/* Overlay with accent badge */}
-                  <div className="absolute top-6 left-6">
-                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-foreground text-xs font-semibold uppercase tracking-wider rounded-md shadow-sm">
-                      {service.accent}
-                    </span>
+          {services.map((service, index) => {
+            const displayTitle = getValue(`home.${service.key}.title`) || service.title;
+            const displayDesc = getValue(`home.${service.key}.description`) || service.description;
+            const displayCta = getValue(`home.${service.key}.cta`) || service.cta;
+            const displayAccent = getValue(`home.${service.key}.accent`) || service.accent;
+            
+            return (
+              <ScrollReveal key={index} delay={index * 0.2} direction={index % 2 === 0 ? "left" : "right"}>
+                <motion.div 
+                  className={`grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden border border-border/50 shadow-sm ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}
+                  data-testid={`card-service-${index}`}
+                  whileHover={{ y: -4, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.12)" }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className={`aspect-[4/3] lg:aspect-auto relative overflow-hidden group ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                    <motion.img 
+                      src={service.image} 
+                      alt={displayTitle}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    {/* Overlay with accent badge */}
+                    <div className="absolute top-6 left-6">
+                      <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-foreground text-xs font-semibold uppercase tracking-wider rounded-md shadow-sm">
+                        {isEditMode ? (
+                          <EditableText contentKey={`home.${service.key}.accent`} fallback={service.accent} />
+                        ) : displayAccent}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                
-                <div className={`p-10 lg:p-14 flex flex-col justify-center ${index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
-                  <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">{service.title}</h3>
-                  <p className="text-muted-foreground text-base leading-relaxed mb-10">{service.description}</p>
-                  <div>
-                    <a href={service.ctaLink}>
-                      <Button size="lg" className="px-8 text-sm uppercase tracking-[0.12em] font-semibold">
-                        {service.cta}
-                        <ArrowRight className="ml-3 w-4 h-4" />
-                      </Button>
-                    </a>
+                  
+                  <div className={`p-10 lg:p-14 flex flex-col justify-center ${index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
+                    <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">
+                      {isEditMode ? (
+                        <EditableText contentKey={`home.${service.key}.title`} fallback={service.title} />
+                      ) : displayTitle}
+                    </h3>
+                    <div className="text-muted-foreground text-base leading-relaxed mb-10">
+                      {isEditMode ? (
+                        <EditableText contentKey={`home.${service.key}.description`} fallback={service.description} as="p" multiline />
+                      ) : <p>{displayDesc}</p>}
+                    </div>
+                    <div>
+                      <a href={service.ctaLink}>
+                        <Button size="lg" className="px-8 text-sm uppercase tracking-[0.12em] font-semibold">
+                          {isEditMode ? (
+                            <EditableText contentKey={`home.${service.key}.cta`} fallback={service.cta} />
+                          ) : displayCta}
+                          <ArrowRight className="ml-3 w-4 h-4" />
+                        </Button>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </ScrollReveal>
-          ))}
+                </motion.div>
+              </ScrollReveal>
+            );
+          })}
         </div>
 
         <ScrollReveal className="mt-28" delay={0.2}>
@@ -1486,30 +1611,37 @@ function InvestSection() {
 }
 
 function InvestmentPhilosophySection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const principles = [
     {
       number: "01",
       title: "Disciplined Analysis",
       description: "Every property undergoes rigorous underwriting. We evaluate market dynamics, renovation costs, and exit strategies before committing capital.",
       icon: Target,
+      key: "philosophy.principle.0",
     },
     {
       number: "02", 
       title: "Transparent Partnership",
       description: "Full visibility into deal structures, regular updates, and clear communication. Our partners always know exactly where their investment stands.",
       icon: Users,
+      key: "philosophy.principle.1",
     },
     {
       number: "03",
       title: "Community-Centered Design",
       description: "We don't just renovate properties—we elevate neighborhoods. Every project considers its impact on the surrounding community.",
       icon: Heart,
+      key: "philosophy.principle.2",
     },
     {
       number: "04",
       title: "Sustainable Returns",
       description: "We balance aggressive opportunity pursuit with risk management. Our goal is consistent, long-term wealth building—not quick wins.",
       icon: TrendingUp,
+      key: "philosophy.principle.3",
     },
   ];
 
@@ -1530,23 +1662,37 @@ function InvestmentPhilosophySection() {
           <ScrollReveal className="lg:sticky lg:top-32">
             <div className="flex items-center gap-4 mb-6">
               <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Our Approach</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.philosophy.kicker" fallback="Our Approach" />
+                ) : (getValue("home.philosophy.kicker") || "Our Approach")}
+              </p>
             </div>
             <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-philosophy-title">
-              Investment Philosophy
+              {isEditMode ? (
+                <EditableText contentKey="home.philosophy.title" fallback="Investment Philosophy" />
+              ) : (getValue("home.philosophy.title") || "Investment Philosophy")}
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-10">
-              We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders.
-            </p>
+            <div className="text-lg text-muted-foreground leading-relaxed mb-10">
+              {isEditMode ? (
+                <EditableText contentKey="home.philosophy.description" fallback="We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders." as="p" multiline />
+              ) : (
+                <p>{getValue("home.philosophy.description") || "We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders."}</p>
+              )}
+            </div>
             
             {/* Mission statement card */}
             <div className="p-8 bg-card rounded-lg border border-border/50 relative">
               <div className="absolute -top-3 -left-3 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Quote className="w-4 h-4 text-primary" />
               </div>
-              <p className="text-base text-foreground leading-relaxed italic">
-                "We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve."
-              </p>
+              <div className="text-base text-foreground leading-relaxed italic">
+                {isEditMode ? (
+                  <EditableText contentKey="home.philosophy.quote" fallback="We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve." as="p" multiline />
+                ) : (
+                  <p>"{getValue("home.philosophy.quote") || "We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve."}"</p>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-4">— Pegasus Dreamscapes</p>
             </div>
           </ScrollReveal>
@@ -1586,30 +1732,37 @@ function InvestmentPhilosophySection() {
 }
 
 function HowItWorksSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const steps = [
     {
       number: "01",
       title: "Explore Opportunities",
       description: "Browse our curated marketplace of wholesale deals, capital raises, and listings. Use AI-powered matching to find deals that align with your investment goals.",
       icon: Search,
+      key: "howitworks.step.0",
     },
     {
       number: "02",
       title: "Due Diligence",
       description: "Access comprehensive property data, financials, and market analysis. Our team provides transparent underwriting on every opportunity.",
       icon: FileCheck,
+      key: "howitworks.step.1",
     },
     {
       number: "03",
       title: "Make Your Move",
       description: "Submit offers, negotiate terms, or commit capital directly through our platform. Real-time updates keep you informed every step of the way.",
       icon: Handshake,
+      key: "howitworks.step.2",
     },
     {
       number: "04",
       title: "Close & Grow",
       description: "Complete transactions with our streamlined closing process. Track your portfolio performance and reinvest in new opportunities.",
       icon: Key,
+      key: "howitworks.step.3",
     },
   ];
 
@@ -1619,15 +1772,25 @@ function HowItWorksSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-20">
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Process</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              {isEditMode ? (
+                <EditableText contentKey="home.howitworks.kicker" fallback="The Process" />
+              ) : (getValue("home.howitworks.kicker") || "The Process")}
+            </p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-how-it-works-title">
-            How It Works
+            {isEditMode ? (
+              <EditableText contentKey="home.howitworks.title" fallback="How It Works" />
+            ) : (getValue("home.howitworks.title") || "How It Works")}
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            From discovery to closing, our platform streamlines the entire investment process. Here's how to get started.
-          </p>
+          <div className="text-lg text-muted-foreground leading-relaxed">
+            {isEditMode ? (
+              <EditableText contentKey="home.howitworks.description" fallback="From discovery to closing, our platform streamlines the entire investment process. Here's how to get started." as="p" multiline />
+            ) : (
+              <p>{getValue("home.howitworks.description") || "From discovery to closing, our platform streamlines the entire investment process. Here's how to get started."}</p>
+            )}
+          </div>
         </ScrollReveal>
 
         <div className="relative">
@@ -1681,36 +1844,52 @@ function HowItWorksSection() {
 }
 
 function TrustLogosSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const trustItems = [
-    { icon: Shield, label: "Secure Transactions", description: "Bank-level encryption" },
-    { icon: Award, label: "Verified Deals", description: "Vetted opportunities" },
-    { icon: Users, label: "100+ Partners", description: "Growing network" },
-    { icon: CheckCircle2, label: "$12M+ Funded", description: "Proven track record" },
+    { icon: Shield, label: "Secure Transactions", description: "Bank-level encryption", key: "trust.0" },
+    { icon: Award, label: "Verified Deals", description: "Vetted opportunities", key: "trust.1" },
+    { icon: Users, label: "100+ Partners", description: "Growing network", key: "trust.2" },
+    { icon: CheckCircle2, label: "$12M+ Funded", description: "Proven track record", key: "trust.3" },
   ];
 
   return (
     <section className="py-16 bg-muted/30 border-y border-border/50">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {trustItems.map((item, index) => (
-            <motion.div 
-              key={index}
-              className="flex items-center gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              data-testid={`trust-item-${index}`}
-            >
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <item.icon className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
-              </div>
-            </motion.div>
-          ))}
+          {trustItems.map((item, index) => {
+            const displayLabel = getValue(`home.${item.key}.label`) || item.label;
+            const displayDesc = getValue(`home.${item.key}.description`) || item.description;
+            
+            return (
+              <motion.div 
+                key={index}
+                className="flex items-center gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                data-testid={`trust-item-${index}`}
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold text-sm">
+                    {isEditMode ? (
+                      <EditableText contentKey={`home.${item.key}.label`} fallback={item.label} />
+                    ) : displayLabel}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey={`home.${item.key}.description`} fallback={item.description} />
+                    ) : displayDesc}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1718,33 +1897,40 @@ function TrustLogosSection() {
 }
 
 function CommunityImpactSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const impactStats = [
-    { value: "$2.4M", label: "Invested in Community Projects" },
-    { value: "47", label: "Properties Transformed" },
-    { value: "120+", label: "Local Jobs Created" },
-    { value: "15", label: "Neighborhoods Revitalized" },
+    { value: "$2.4M", label: "Invested in Community Projects", key: "community.stat.0" },
+    { value: "47", label: "Properties Transformed", key: "community.stat.1" },
+    { value: "120+", label: "Local Jobs Created", key: "community.stat.2" },
+    { value: "15", label: "Neighborhoods Revitalized", key: "community.stat.3" },
   ];
 
   const values = [
     {
       icon: Heart,
       title: "Community First",
-      description: "Every investment we make considers the impact on local communities. We don't just flip houses—we help revitalize neighborhoods."
+      description: "Every investment we make considers the impact on local communities. We don't just flip houses—we help revitalize neighborhoods.",
+      key: "community.value.0",
     },
     {
       icon: Shield,
       title: "Transparency Always",
-      description: "Clear communication, honest valuations, and no hidden fees. Our reputation is built on trust and integrity."
+      description: "Clear communication, honest valuations, and no hidden fees. Our reputation is built on trust and integrity.",
+      key: "community.value.1",
     },
     {
       icon: Sparkles,
       title: "Excellence in Execution",
-      description: "From acquisition to renovation to sale, we maintain the highest standards of quality and professionalism."
+      description: "From acquisition to renovation to sale, we maintain the highest standards of quality and professionalism.",
+      key: "community.value.2",
     },
     {
       icon: Users,
       title: "Partnership Mindset",
-      description: "Whether you're a seller, investor, or fellow professional, we approach every relationship as a true partnership."
+      description: "Whether you're a seller, investor, or fellow professional, we approach every relationship as a true partnership.",
+      key: "community.value.3",
     },
   ];
 
@@ -1758,15 +1944,25 @@ function CommunityImpactSection() {
         <ScrollReveal className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
             <Heart className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary uppercase tracking-wider">Our Commitment</span>
+            <span className="text-sm font-semibold text-primary uppercase tracking-wider">
+              {isEditMode ? (
+                <EditableText contentKey="home.community.kicker" fallback="Our Commitment" />
+              ) : (getValue("home.community.kicker") || "Our Commitment")}
+            </span>
           </div>
           
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-community-title">
-            The Dreamscaper Creed
+            {isEditMode ? (
+              <EditableText contentKey="home.community.title" fallback="The Dreamscaper Creed" />
+            ) : (getValue("home.community.title") || "The Dreamscaper Creed")}
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-            At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve.
-          </p>
+          <div className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.community.description" fallback="At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve." as="p" multiline />
+            ) : (
+              <p>{getValue("home.community.description") || "At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve."}</p>
+            )}
+          </div>
         </ScrollReveal>
 
         {/* Impact stats */}
@@ -1868,6 +2064,9 @@ const defaultFaqs = [
 ];
 
 function FAQSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const { data: cmsFaqs = [] } = useQuery<FAQ[]>({
     queryKey: ["/api/faqs"],
   });
@@ -1885,15 +2084,25 @@ function FAQSection() {
         <ScrollReveal className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full mb-6">
             <HelpCircle className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Common Questions</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              {isEditMode ? (
+                <EditableText contentKey="home.faq.kicker" fallback="Common Questions" />
+              ) : (getValue("home.faq.kicker") || "Common Questions")}
+            </span>
           </div>
           
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-faq-title">
-            Frequently Asked Questions
+            {isEditMode ? (
+              <EditableText contentKey="home.faq.title" fallback="Frequently Asked Questions" />
+            ) : (getValue("home.faq.title") || "Frequently Asked Questions")}
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Find answers to common questions about our investment process, deal flow, and how we can help you achieve your real estate goals.
-          </p>
+          <div className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.faq.description" fallback="Find answers to common questions about our investment process, deal flow, and how we can help you achieve your real estate goals." as="p" multiline />
+            ) : (
+              <p>{getValue("home.faq.description") || "Find answers to common questions about our investment process, deal flow, and how we can help you achieve your real estate goals."}</p>
+            )}
+          </div>
         </ScrollReveal>
 
         <ScrollReveal delay={0.2}>
@@ -1939,6 +2148,9 @@ const newsletterSchema = z.object({
 
 function NewsletterSection() {
   const { toast } = useToast();
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const form = useForm<z.infer<typeof newsletterSchema>>({
     resolver: zodResolver(newsletterSchema),
     defaultValues: {
@@ -1987,15 +2199,25 @@ function NewsletterSection() {
         <ScrollReveal>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
             <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">Stay Ahead</span>
+            <span className="text-sm font-semibold text-primary">
+              {isEditMode ? (
+                <EditableText contentKey="home.newsletter.kicker" fallback="Stay Ahead" />
+              ) : (getValue("home.newsletter.kicker") || "Stay Ahead")}
+            </span>
           </div>
           
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-newsletter-title">
-            Get Exclusive Deal Alerts
+            {isEditMode ? (
+              <EditableText contentKey="home.newsletter.title" fallback="Get Exclusive Deal Alerts" />
+            ) : (getValue("home.newsletter.title") || "Get Exclusive Deal Alerts")}
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
-            Be the first to know about new investment opportunities. Join our newsletter for market insights, featured deals, and expert tips.
-          </p>
+          <div className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.newsletter.description" fallback="Be the first to know about new investment opportunities. Join our newsletter for market insights, featured deals, and expert tips." as="p" multiline />
+            ) : (
+              <p>{getValue("home.newsletter.description") || "Be the first to know about new investment opportunities. Join our newsletter for market insights, featured deals, and expert tips."}</p>
+            )}
+          </div>
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
@@ -2052,6 +2274,9 @@ const contactFormSchema = z.object({
 
 function ContactSection() {
   const { toast } = useToast();
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
   const form = useForm<z.infer<typeof contactFormSchema>>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -2113,18 +2338,28 @@ function ContactSection() {
           <ScrollReveal>
             <div className="flex items-center gap-4 mb-6">
               <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Get In Touch</p>
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.contact.kicker" fallback="Get In Touch" />
+                ) : (getValue("home.contact.kicker") || "Get In Touch")}
+              </p>
             </div>
             <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-contact-title">
-              Let's Connect
+              {isEditMode ? (
+                <EditableText contentKey="home.contact.title" fallback="Let's Connect" />
+              ) : (getValue("home.contact.title") || "Let's Connect")}
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-12">
-              Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you.
-            </p>
+            <div className="text-lg text-muted-foreground leading-relaxed mb-12">
+              {isEditMode ? (
+                <EditableText contentKey="home.contact.description" fallback="Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you." as="p" multiline />
+              ) : (
+                <p>{getValue("home.contact.description") || "Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you."}</p>
+              )}
+            </div>
             
             <div className="space-y-6">
               <motion.a 
-                href="tel:5551234567"
+                href={`tel:${(getValue("home.contact.phone") || "(555) 123-4567").replace(/[^0-9+]/g, '')}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-phone"
@@ -2134,11 +2369,15 @@ function ContactSection() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Phone</p>
-                  <p className="font-semibold text-lg">(555) 123-4567</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.phone" fallback="(555) 123-4567" />
+                    ) : (getValue("home.contact.phone") || "(555) 123-4567")}
+                  </div>
                 </div>
               </motion.a>
               <motion.a 
-                href="mailto:hello@pegasusdreamscapes.com"
+                href={`mailto:${(getValue("home.contact.email") || "hello@pegasusdreamscapes.com").trim()}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-email"
@@ -2148,7 +2387,11 @@ function ContactSection() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Email</p>
-                  <p className="font-semibold text-lg">hello@pegasusdreamscapes.com</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.email" fallback="hello@pegasusdreamscapes.com" />
+                    ) : (getValue("home.contact.email") || "hello@pegasusdreamscapes.com")}
+                  </div>
                 </div>
               </motion.a>
               <motion.div 
@@ -2161,7 +2404,11 @@ function ContactSection() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Location</p>
-                  <p className="font-semibold text-lg">Bay Area, California</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.location" fallback="Bay Area, California" />
+                    ) : (getValue("home.contact.location") || "Bay Area, California")}
+                  </div>
                 </div>
               </motion.div>
             </div>

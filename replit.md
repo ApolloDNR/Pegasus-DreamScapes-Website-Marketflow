@@ -29,7 +29,19 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **User Profiles & Role System**: Detailed profiles with stats, reviews, achievement badges, and an 8-tier role-based access control (`MARKETPLACE_ROLES`).
 *   **User Onboarding**: A 5-step guided flow covering role selection, property preferences, and goal setting.
 *   **Admin Content Management**: Allows admins to manage homepage content and featured deals.
-*   **Admin Edit Mode**: A system that allows admins to toggle inline editing on the public website. When enabled, editable content (text, images, links) shows a dashed outline and can be modified directly. Changes are persisted to the `site_content` database table. Admin detection uses an email allowlist (`ADMIN_EMAILS` in both `server/routes.ts` and frontend contexts) with the backend's `isAdmin` flag as the single source of truth.
+*   **Admin Edit Mode**: A comprehensive inline content management system for admins (email allowlist: `apollosynd@gmail.com`, `admin@pegasusdreamscapes.com`). Backend's `isAdmin` flag is the authoritative source. Editable content spans nearly the entire homepage including:
+    - **Hero Section**: Main headline, subheadline, CTAs
+    - **Stats Section**: All 4 stat values and labels
+    - **Featured Deals**: Section kicker, title, description (both populated and empty states)
+    - **Services Section**: Headers and 2 service cards (titles, descriptions, CTAs, accent badges)
+    - **Testimonials**: Section headers (note: actual testimonials are managed via database CMS)
+    - **Why Choose Us**: Section header and all 3 trust badges (titles and descriptions)
+    - **Investment Philosophy, How It Works, Community Impact**: All section headers and quotes
+    - **Trust Logos**: All 4 trust item labels and descriptions
+    - **FAQ Section**: Section headers
+    - **Contact Section**: Title, description, phone, email, and location
+    - **Newsletter Section**: Headers
+    Changes persist to the `site_content` PostgreSQL table with content keys following the pattern `home.{section}.{field}` or `home.{section}.{index}.{field}` for array items.
 *   **Demo Mode**: Enables browsing with sample data for unregistered users.
 *   **Analytics Tracking**: Tracks user activity across deals, projects, listings, and pages.
 *   **SEO Support**: Dynamic meta tag management for page-specific titles and descriptions.
