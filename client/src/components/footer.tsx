@@ -101,9 +101,19 @@ export function Footer() {
             <p className="text-sm text-muted-foreground" data-testid="text-copyright">
               &copy; {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.
             </p>
-            <p className="text-xs text-muted-foreground text-center md:text-right" data-testid="text-disclosure">
-              Pegasus Dreamscapes Corp · Real Estate Investment Company · Bay Area, California
-            </p>
+            <div className="flex items-center gap-4 text-sm">
+              <Link href="/privacy">
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-privacy">
+                  Privacy Policy
+                </span>
+              </Link>
+              <span className="text-muted-foreground">·</span>
+              <Link href="/terms">
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-terms">
+                  Terms of Service
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

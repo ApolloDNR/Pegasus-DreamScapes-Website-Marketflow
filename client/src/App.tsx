@@ -85,6 +85,8 @@ const MyDealsPage = lazy(() => import("@/pages/my-deals"));
 const OfferStudioPage = lazy(() => import("@/pages/offer-studio"));
 const AnalyticsPage = lazy(() => import("@/pages/analytics"));
 const MyAnalyticsPage = lazy(() => import("@/pages/my-analytics"));
+const Privacy = lazy(() => import("@/pages/privacy"));
+const Terms = lazy(() => import("@/pages/terms"));
 
 const legacyRedirects: [string, string][] = [
   ["/dealflow/hq", "/marketflow/admin"],
@@ -146,6 +148,8 @@ function Router() {
       <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
       <Route path="/partner" component={Partner} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route path="/submit-deal" component={SubmitDeal} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/capital-raising" component={CapitalRaising} />
