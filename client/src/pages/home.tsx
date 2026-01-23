@@ -619,8 +619,8 @@ function TestimonialsSection() {
                 whileHover={{ x: 4 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <div className="font-semibold text-base">
