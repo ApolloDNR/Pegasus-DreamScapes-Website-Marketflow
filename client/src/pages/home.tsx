@@ -800,7 +800,7 @@ function HeroSection() {
                 ) : heroLine2}
               </motion.span>
               <motion.span 
-                className="block bg-gradient-to-r from-champagne via-tan to-primary bg-clip-text text-transparent"
+                className="block bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent"
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.7 }}
@@ -838,7 +838,7 @@ function HeroSection() {
               transition={{ duration: 0.6, delay: 1.1 }}
             >
               <a href="#sell">
-                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-foreground hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
+                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_primary" fallback="Get a Cash Offer" />
                   ) : heroCtaPrimary}
