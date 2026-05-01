@@ -32,7 +32,6 @@ import {
   Heart,
   Sparkles,
   Users,
-  Phone,
   Mail,
   Star,
   Quote,
@@ -87,7 +86,7 @@ export default function Home() {
       <StatsSection />
       <FeaturedDealsSection />
       <ServicesSection />
-      <TestimonialsSection />
+      <OperatingPrinciplesSection />
       <FeaturedProjectSection />
       <SellPropertySection />
       <InvestSection />
@@ -377,22 +376,22 @@ function FeaturedDealsSection() {
 
         <ScrollReveal delay={0.3} className="text-center mt-12">
           <p className="text-sm text-muted-foreground mb-4">
-            New deals added weekly. Sign up for alerts to be notified first.
+            Deal submissions are open in private beta. Visibility and matching features may be limited during rollout.
           </p>
           <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>Vetted Deals</span>
+              <span>Private Beta</span>
             </div>
             <span className="text-border">|</span>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary" />
-              <span>Secure Platform</span>
+              <span>Role-Based Workflows</span>
             </div>
             <span className="text-border">|</span>
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary" />
-              <span>Fast Closing</span>
+              <span>Disciplined Review</span>
             </div>
           </div>
         </ScrollReveal>
@@ -414,44 +413,36 @@ interface Testimonial {
 
 const defaultTestimonials = [
   {
-    quote: "Pegasus Dreamscapes made selling my inherited property stress-free. They gave me a fair offer and closed in two weeks. I couldn't have asked for a better experience.",
-    author: "Sarah M.",
-    role: "Property Seller",
-    location: "Oakland, CA",
+    quote: "We prioritize process quality, underwriting discipline, and execution standards before growth metrics.",
+    author: "Discipline Before Scale",
+    role: "Operating Principle",
+    location: null,
     rating: 5,
-    initials: "SM",
+    initials: "DS",
   },
   {
-    quote: "As an investor, I appreciate their transparent underwriting and consistent returns. The team's expertise in identifying value-add opportunities is unmatched.",
-    author: "Michael R.",
-    role: "Investment Partner",
-    location: "San Francisco, CA",
+    quote: "Every opportunity is reviewed with clear numbers, assumptions, and next-step documentation.",
+    author: "Clear Numbers, Clear Process",
+    role: "Operating Principle",
+    location: null,
     rating: 5,
-    initials: "MR",
+    initials: "CP",
   },
   {
-    quote: "They transformed our neighborhood. The property next door went from an eyesore to the most beautiful house on the block. Thank you for caring about our community.",
-    author: "Linda T.",
-    role: "Community Member",
-    location: "San Jose, CA",
+    quote: "We focus on durable value creation through disciplined project planning and accountable execution.",
+    author: "Built for Long-Term Value",
+    role: "Operating Principle",
+    location: null,
     rating: 5,
-    initials: "LT",
+    initials: "LV",
   },
   {
-    quote: "The MarketFlow platform made it easy to find off-market deals. I've closed three wholesale assignments in my first quarter. Outstanding deal flow quality.",
-    author: "James K.",
-    role: "Wholesale Investor",
-    location: "Los Angeles, CA",
+    quote: "Pegasus is founder-led and accountability stays close to decision-making from intake through delivery.",
+    author: "Founder-Led Accountability",
+    role: "Operating Principle",
+    location: null,
     rating: 5,
-    initials: "JK",
-  },
-  {
-    quote: "Professional, responsive, and fair. They bought my rental property as-is and handled all the paperwork. Made a stressful situation manageable.",
-    author: "Maria G.",
-    role: "Property Seller",
-    location: "Fresno, CA",
-    rating: 5,
-    initials: "MG",
+    initials: "FA",
   },
 ];
 
@@ -459,7 +450,7 @@ function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function TestimonialsSection() {
+function OperatingPrinciplesSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const { isEditMode } = useEditMode();
@@ -672,8 +663,8 @@ function TestimonialsSection() {
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {isEditMode ? (
-                      <EditableText contentKey="home.whyChooseUs.2.description" fallback="5+ Years Experience" />
-                    ) : (getValue("home.whyChooseUs.2.description") || "5+ Years Experience")}
+                      <EditableText contentKey="home.whyChooseUs.2.description" fallback="Execution Focus" />
+                    ) : (getValue("home.whyChooseUs.2.description") || "Execution Focus")}
                   </div>
                 </div>
               </motion.div>
@@ -689,13 +680,13 @@ function HeroSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
   
-  const heroKicker = getValue("home.hero.kicker", "Distressed Properties → Profitable Investments");
-  const heroLine1 = getValue("home.hero.line1", "Designed Profits.");
-  const heroLine2 = getValue("home.hero.line2", "Elevated");
-  const heroLine3 = getValue("home.hero.line3", "Communities.");
-  const heroSubheadline = getValue("home.hero.subheadline", "Sell your property fast for cash, or invest in off-market deals with proven returns. Our MarketFlow platform connects sellers and investors for seamless transactions.");
-  const heroCtaPrimary = getValue("home.hero.cta_primary", "Get a Cash Offer");
-  const heroCtaSecondary = getValue("home.hero.cta_secondary", "Browse Deals");
+  const heroKicker = getValue("home.hero.kicker", "Development • Investments • Systems");
+  const heroLine1 = getValue("home.hero.line1", "Real estate execution,");
+  const heroLine2 = getValue("home.hero.line2", "built with");
+  const heroLine3 = getValue("home.hero.line3", "discipline.");
+  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.");
+  const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "Explore MarketFlow");
   
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
@@ -767,7 +758,7 @@ function HeroSection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.hero.kicker" 
-                  fallback="Distressed Properties → Profitable Investments"
+                  fallback="Development • Investments • Systems"
                   className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium"
                 />
               ) : (
@@ -786,7 +777,7 @@ function HeroSection() {
                 transition={{ duration: 0.7, delay: 0.3 }}
               >
                 {isEditMode ? (
-                  <EditableText contentKey="home.hero.line1" fallback="Designed Profits." />
+                  <EditableText contentKey="home.hero.line1" fallback="Real estate execution," />
                 ) : heroLine1}
               </motion.span>
               <motion.span 
@@ -796,7 +787,7 @@ function HeroSection() {
                 transition={{ duration: 0.7, delay: 0.5 }}
               >
                 {isEditMode ? (
-                  <EditableText contentKey="home.hero.line2" fallback="Elevated" />
+                  <EditableText contentKey="home.hero.line2" fallback="built with" />
                 ) : heroLine2}
               </motion.span>
               <motion.span 
@@ -806,7 +797,7 @@ function HeroSection() {
                 transition={{ duration: 0.7, delay: 0.7 }}
               >
                 {isEditMode ? (
-                  <EditableText contentKey="home.hero.line3" fallback="Communities." />
+                  <EditableText contentKey="home.hero.line3" fallback="discipline." />
                 ) : heroLine3}
               </motion.span>
             </h1>
@@ -822,7 +813,7 @@ function HeroSection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.hero.subheadline" 
-                  fallback="Sell your property fast for cash, or invest in off-market deals with proven returns. Our MarketFlow platform connects sellers and investors for seamless transactions."
+                  fallback="Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value."
                   multiline
                 />
               ) : (
@@ -837,10 +828,10 @@ function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.1 }}
             >
-              <a href="#sell">
+              <a href="/sell">
                 <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_primary" fallback="Get a Cash Offer" />
+                    <EditableText contentKey="home.hero.cta_primary" fallback="Submit a Property" />
                   ) : heroCtaPrimary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
@@ -848,12 +839,16 @@ function HeroSection() {
               <Link href="/marketflow">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_secondary" fallback="Browse Deals" />
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="Explore MarketFlow" />
                   ) : heroCtaSecondary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
             </motion.div>
+
+            <p className="mt-5 text-sm text-white/70" data-testid="text-hero-support-line">
+              Built in the East Bay. Designed for disciplined real estate execution.
+            </p>
 
             {/* Quick stats preview */}
             <motion.div 
@@ -1565,12 +1560,12 @@ function InvestSection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.invest.description" 
-                  fallback="Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real."
+                  fallback="Private partner conversations are available for aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability."
                   multiline
                   as="p"
                 />
               ) : (
-                <p>Looking for a hands-on operator to partner with? We combine designed profits with disciplined execution and transparent underwriting. Every deal is analyzed, every update is clear, every number is real.</p>
+                <p>Private partner conversations are available for aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability.</p>
               )}
             </div>
             
@@ -1580,8 +1575,8 @@ function InvestSection() {
                   <TrendingUp className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Designed Profits</h4>
-                  <p className="text-sm text-muted-foreground">Strategic analysis on every deal opportunity</p>
+                  <h4 className="font-semibold mb-1">Disciplined Analysis</h4>
+                  <p className="text-sm text-muted-foreground">Clear underwriting and execution planning on every opportunity</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -1590,7 +1585,7 @@ function InvestSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-1">Transparent Underwriting</h4>
-                  <p className="text-sm text-muted-foreground">Full visibility into deal structure and returns</p>
+                  <p className="text-sm text-muted-foreground">Transparent process and documentation standards</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -2358,25 +2353,7 @@ function ContactSection() {
             </div>
             
             <div className="space-y-6">
-              <motion.a 
-                href={`tel:${(getValue("home.contact.phone") || "Email us for contact options").replace(/[^0-9+]/g, '')}`}
-                className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
-                whileHover={{ x: 4 }}
-                data-testid="link-contact-phone"
-              >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
-                  <Phone className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Phone</p>
-                  <div className="font-semibold text-lg">
-                    {isEditMode ? (
-                      <EditableText contentKey="home.contact.phone" fallback="Email us for contact options" />
-                    ) : (getValue("home.contact.phone") || "Email us for contact options")}
-                  </div>
-                </div>
-              </motion.a>
-              <motion.a 
+                            <motion.a 
                 href={`mailto:${(getValue("home.contact.email") || "hello@pegasusdreamscapes.com").trim()}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
