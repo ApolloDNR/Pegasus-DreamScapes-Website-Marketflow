@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -101,58 +101,65 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-/* DARK MODE - Deep Navy & Copper Theme */
+/* DARK MODE - Pegasus Premium: Deep Navy + Copper */
+/* Bg: #070B12 ink, #0B1220 charcoal navy. Accent: #B8783E copper, #C89557 bronze. Text: #F5F0E8 ivory. */
 .dark {
-  --button-outline: rgba(255,255,255, .10);
+  --button-outline: rgba(255,255,255, .08);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-  --background: 215 35% 10%;
-  --foreground: 38 20% 92%;
-  --border: 215 25% 20%;
-  --card: 215 30% 14%;
-  --card-foreground: 38 20% 92%;
-  --card-border: 215 25% 22%;
-  --tan: 35 40% 72%;
-  --tan-foreground: 215 35% 10%;
-  --navy: 215 65% 35%;
-  --navy-foreground: 0 0% 100%;
-  --copper: 22 80% 55%;
-  --copper-foreground: 215 35% 10%;
-  --champagne: 215 30% 18%;
-  --champagne-foreground: 38 20% 92%;
-  --warm-glow: 22 80% 55%;
-  --stone: 215 30% 16%;
-  --stone-foreground: 38 20% 92%;
-  --sidebar: 215 30% 12%;
-  --sidebar-foreground: 38 20% 92%;
-  --sidebar-border: 215 25% 20%;
-  --sidebar-primary: 22 80% 55%;
-  --sidebar-primary-foreground: 215 35% 10%;
-  --sidebar-accent: 215 25% 20%;
-  --sidebar-accent-foreground: 38 20% 88%;
-  --sidebar-ring: 22 80% 55%;
-  --popover: 215 30% 14%;
-  --popover-foreground: 38 20% 92%;
-  --popover-border: 215 25% 22%;
-  --primary: 22 80% 55%;
-  --primary-foreground: 215 35% 10%;
-  --secondary: 215 45% 35%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 215 25% 18%;
-  --muted-foreground: 38 15% 60%;
-  --accent: 22 80% 55%;
-  --accent-foreground: 215 35% 10%;
-  --destructive: 0 72% 50%;
+  --elevate-1: rgba(255,255,255, .03);
+  --elevate-2: rgba(255,255,255, .07);
+  --background: 218 30% 6%;
+  --foreground: 36 30% 93%;
+  --border: 218 22% 16%;
+  --card: 220 30% 9%;
+  --card-foreground: 36 30% 93%;
+  --card-border: 28 30% 28%;
+  --tan: 35 45% 70%;
+  --tan-foreground: 218 30% 6%;
+  --navy: 218 35% 14%;
+  --navy-foreground: 36 30% 93%;
+  --copper: 28 49% 48%;
+  --copper-foreground: 218 30% 6%;
+  --bronze: 28 50% 56%;
+  --bronze-foreground: 218 30% 6%;
+  --gold: 38 50% 63%;
+  --gold-foreground: 218 30% 6%;
+  --champagne: 220 30% 12%;
+  --champagne-foreground: 36 30% 93%;
+  --warm-glow: 28 60% 50%;
+  --stone: 220 25% 11%;
+  --stone-foreground: 36 30% 93%;
+  --ink: 220 35% 4%;
+  --ink-foreground: 36 30% 93%;
+  --sidebar: 220 30% 8%;
+  --sidebar-foreground: 36 30% 93%;
+  --sidebar-border: 218 22% 16%;
+  --sidebar-primary: 28 49% 48%;
+  --sidebar-primary-foreground: 218 30% 6%;
+  --sidebar-accent: 218 25% 14%;
+  --sidebar-accent-foreground: 36 30% 90%;
+  --sidebar-ring: 28 49% 48%;
+  --popover: 220 30% 10%;
+  --popover-foreground: 36 30% 93%;
+  --popover-border: 218 22% 18%;
+  --primary: 28 49% 48%;
+  --primary-foreground: 218 30% 6%;
+  --secondary: 218 30% 16%;
+  --secondary-foreground: 36 30% 93%;
+  --muted: 218 22% 12%;
+  --muted-foreground: 218 12% 60%;
+  --accent: 28 50% 56%;
+  --accent-foreground: 218 30% 6%;
+  --destructive: 0 65% 48%;
   --destructive-foreground: 0 0% 98%;
-  --input: 215 25% 24%;
-  --ring: 22 80% 55%;
-  --chart-1: 22 80% 58%;
-  --chart-2: 215 50% 50%;
-  --chart-3: 35 45% 55%;
-  --chart-4: 215 40% 45%;
-  --chart-5: 22 70% 48%;
+  --input: 218 22% 14%;
+  --ring: 28 49% 48%;
+  --chart-1: 28 49% 50%;
+  --chart-2: 218 35% 45%;
+  --chart-3: 38 50% 60%;
+  --chart-4: 218 25% 30%;
+  --chart-5: 28 60% 40%;
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
@@ -578,6 +585,258 @@ html {
 .counter-number {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+}
+
+/* ==========================================================================
+   PEGASUS PREMIUM BRAND LAYER
+   Editorial typography, copper accents, dark-canvas atmospherics.
+   ========================================================================== */
+
+.font-display {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.font-display-uppercase {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Small uppercase eyebrow / kicker */
+.kicker {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: hsl(var(--copper));
+}
+
+/* Body lead — slightly looser, ivory tinted */
+.lead {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Thin copper hairline divider with diamond pip */
+.copper-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: hsl(var(--copper) / 0.7);
+}
+.copper-rule::before,
+.copper-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--copper) / 0.5),
+    transparent
+  );
+}
+.copper-rule .pip {
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  background: hsl(var(--copper));
+}
+
+/* Subtle film grain overlay for premium dark canvases */
+.bg-grain {
+  position: relative;
+}
+.bg-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.92 0 0 0 0 0.85 0 0 0 0 0.77 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Deep navy radial vignette canvas */
+.bg-canvas {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, hsl(28 49% 48% / 0.10), transparent 60%),
+    radial-gradient(900px 500px at 0% 100%, hsl(218 35% 18% / 0.55), transparent 60%),
+    linear-gradient(180deg, hsl(220 35% 5%) 0%, hsl(218 30% 6%) 100%);
+}
+
+/* Hero atmosphere — deeper, more cinematic */
+.bg-hero {
+  background:
+    radial-gradient(1000px 500px at 75% 20%, hsl(28 49% 50% / 0.16), transparent 65%),
+    radial-gradient(700px 700px at 10% 80%, hsl(28 60% 40% / 0.08), transparent 70%),
+    linear-gradient(180deg, hsl(220 40% 4%) 0%, hsl(218 32% 7%) 70%, hsl(218 28% 9%) 100%);
+}
+
+/* Pillar card surface */
+.pillar-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    hsl(220 30% 11% / 1) 0%,
+    hsl(220 30% 8% / 1) 100%
+  );
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.pillar-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--copper) / 0.0) 0%,
+    hsl(var(--copper) / 0.0) 60%,
+    hsl(var(--copper) / 0.06) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.pillar-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--copper) / 0.55),
+    transparent
+  );
+  opacity: 0.4;
+  transition: opacity 0.5s ease;
+}
+.pillar-card:hover {
+  transform: translateY(-2px);
+  border-color: hsl(var(--copper) / 0.55);
+  box-shadow:
+    0 1px 0 hsl(var(--copper) / 0.15) inset,
+    0 30px 60px -30px hsl(220 50% 0% / 0.6);
+}
+.pillar-card:hover::before { opacity: 1; }
+.pillar-card:hover::after { opacity: 1; }
+
+/* Outline copper button */
+.btn-copper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--copper-foreground));
+  background: linear-gradient(180deg, hsl(28 50% 52%), hsl(28 49% 44%));
+  border: 1px solid hsl(28 55% 58% / 0.5);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 0 hsl(38 60% 70% / 0.25) inset, 0 10px 30px -12px hsl(28 60% 30% / 0.55);
+}
+.btn-copper:hover {
+  background: linear-gradient(180deg, hsl(28 55% 56%), hsl(28 50% 46%));
+  transform: translateY(-1px);
+}
+.btn-ghost-copper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(36 30% 90%);
+  background: transparent;
+  border: 1px solid hsl(var(--copper) / 0.45);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.btn-ghost-copper:hover {
+  border-color: hsl(var(--copper));
+  color: hsl(var(--copper));
+  background: hsl(var(--copper) / 0.06);
+}
+
+/* Section paddings */
+.section-y { padding-top: 6rem; padding-bottom: 6rem; }
+@media (min-width: 768px) {
+  .section-y { padding-top: 8rem; padding-bottom: 8rem; }
+}
+
+/* Container premium */
+.container-premium {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (min-width: 768px) {
+  .container-premium { padding-left: 2.5rem; padding-right: 2.5rem; }
+}
+
+/* Vertical accent line on left */
+.accent-rail {
+  position: relative;
+  padding-left: 1.25rem;
+}
+.accent-rail::before {
+  content: '';
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--copper) / 0),
+    hsl(var(--copper) / 0.7),
+    hsl(var(--copper) / 0)
+  );
+}
+
+/* Subtle architectural grid background */
+.bg-architect {
+  background-image:
+    linear-gradient(hsl(var(--copper) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--copper) / 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.text-ivory { color: hsl(36 30% 93%); }
+.text-copper { color: hsl(var(--copper)); }
+.text-bronze { color: hsl(28 50% 56%); }
+.text-muted-ivory { color: hsl(36 12% 65%); }
+
+.border-copper { border-color: hsl(var(--copper)); }
+.border-copper-soft { border-color: hsl(var(--copper) / 0.3); }
+
+/* Reveal on intersection (used with IntersectionObserver in components) */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1), transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Print Styles - Clean PDF-friendly layout */

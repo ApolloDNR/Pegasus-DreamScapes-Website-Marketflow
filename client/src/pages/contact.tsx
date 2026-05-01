@@ -1,67 +1,98 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { insertContactSchema, type InsertContact, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
-import { 
-  Mail, 
-  MapPin,
-  Clock,
-  CheckCircle,
-  ArrowRight,
-  Loader2
-} from "lucide-react";
+import { Mail, MapPin, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  Section,
+  Kicker,
+  DisplayHeading,
+  Reveal,
+  CTAButton,
+} from "@/components/brand/atoms";
+import { PegasusWatermark } from "@/components/brand/pegasus-mark";
 
 const contactFormSchema = insertContactSchema.extend({
   name: z.string().min(2, "Please enter your full name"),
   email: z.string().email("Please enter a valid email address"),
-  subject: z.string().min(3, "Please provide a subject for your message"),
-  message: z.string().min(10, "Please provide more details in your message"),
+  subject: z.string().min(3, "Please add a subject"),
+  message: z.string().min(10, "Please add a bit more detail"),
 });
 
+const SUBJECT_PRESETS: Record<string, { label: string; preset: string }> = {
+  partnership: { label: "Strategic Partnership", preset: "Partnership inquiry" },
+  partner: { label: "Strategic Partnership", preset: "Partnership inquiry" },
+  buyer: { label: "Buy a Pegasus Home", preset: "Interested in a renovated home" },
+  contractor: { label: "Contractor & Trades", preset: "Contractor / trade introduction" },
+  development: { label: "Development Project", preset: "Development project inquiry" },
+  investments: { label: "Investments / Capital", preset: "Investment partnership inquiry" },
+  systems: { label: "Pegasus Systems", preset: "Pegasus Systems inquiry" },
+  "marketflow-access": {
+    label: "MarketFlow Beta Access",
+    preset: "Request MarketFlow beta access",
+  },
+};
+
+function useSubjectPreset(): { label?: string; preset?: string } {
+  if (typeof window === "undefined") return {};
+  const params = new URLSearchParams(window.location.search);
+  const subject = params.get("subject");
+  if (!subject) return {};
+  return SUBJECT_PRESETS[subject] ?? {};
+}
+
 export default function Contact() {
+  useEffect(() => {
+    document.title = "Contact — Pegasus Dreamscapes";
+  }, []);
+
   return (
-    <div className="min-h-screen pt-20">
-      <HeroSection />
+    <div className="bg-[hsl(220_35%_5%)]">
+      <Hero />
       <ContactSection />
     </div>
   );
 }
 
-function HeroSection() {
+function Hero() {
+  const { label } = useSubjectPreset();
   return (
-    <section className="py-20 lg:py-32 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="relative max-w-7xl mx-auto px-6 text-center">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6" data-testid="text-contact-hero">
-          Get In Touch
-        </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Submit a property, start a private partner conversation, or ask a question about Pegasus Dreamscapes.
-        </p>
+    <Section variant="hero" className="overflow-hidden">
+      <div className="absolute inset-0 bg-architect opacity-[0.16]" aria-hidden />
+      <PegasusWatermark className="pointer-events-none absolute -right-24 top-12 h-[420px] w-[700px] opacity-25" />
+      <div className="container-premium relative pt-36 pb-16 md:pt-44 md:pb-20">
+        <Reveal>
+          <Kicker>{label ?? "Contact Pegasus"}</Kicker>
+        </Reveal>
+        <Reveal delay={80}>
+          <DisplayHeading
+            as="h1"
+            className="mt-6 max-w-3xl text-[44px] sm:text-[58px] md:text-[68px]"
+          >
+            Real messages get real responses.
+          </DisplayHeading>
+        </Reveal>
+        <Reveal delay={140}>
+          <p className="lead mt-8 max-w-2xl">
+            Submit a property, send a deal, request MarketFlow access, or open
+            a partnership conversation. Every channel is reviewed seriously —
+            we'd rather move slowly on the right relationship than quickly on
+            the wrong one.
+          </p>
+        </Reveal>
       </div>
-    </section>
+    </Section>
   );
 }
 
 function ContactSection() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const { preset } = useSubjectPreset();
 
   const form = useForm<InsertContact>({
     resolver: zodResolver(contactFormSchema),
@@ -69,235 +100,222 @@ function ContactSection() {
       name: "",
       email: "",
       phone: "",
-      subject: "",
+      subject: preset ?? "",
       message: "",
     },
   });
 
   const mutation = useMutation({
     mutationFn: async (data: InsertContact) => {
-      const nameParts = data.name.split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      
+      const nameParts = data.name.split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
       const unifiedLead: Partial<InsertLead> = {
-        leadType: 'contact',
-        source: 'contact_page',
+        leadType: "contact",
+        source: "contact_page",
         firstName,
         lastName,
         email: data.email,
         phone: data.phone || undefined,
-        leadData: {
-          subject: data.subject,
-          message: data.message,
-        },
+        leadData: { subject: data.subject, message: data.message },
         notes: data.message,
       };
-      
-      const response = await apiRequest("POST", "/api/leads", unifiedLead);
-      return response;
+      return apiRequest("POST", "/api/leads", unifiedLead);
     },
     onSuccess: () => {
       setSubmitted(true);
       toast({
-        title: "Message Sent!",
-        description: "We'll get back to you as soon as possible.",
+        title: "Message sent",
+        description: "We'll be in touch shortly.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Something went wrong",
+        description: "Please try again, or email hello@pegasusdreamscapes.com directly.",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: InsertContact) => {
-    mutation.mutate(data);
-  };
+  const onSubmit = (data: InsertContact) => mutation.mutate(data);
 
-  const contactInfo = [
-    {
-      icon: Mail,
-      label: "Email",
-      value: "info@pegasusdreamscapes.com",
-      href: "mailto:info@pegasusdreamscapes.com",
-    },
-    {
-      icon: MapPin,
-      label: "Location",
-      value: "East Bay, California",
-      href: null,
-    },
-    {
-      icon: Clock,
-      label: "Response Time",
-      value: "Typically within 1-2 business days",
-      href: null,
-    },
-  ];
+  const inputCls =
+    "w-full bg-[hsl(220_30%_7%)] border border-copper/20 rounded-sm px-4 py-3 text-[14.5px] text-ivory placeholder:text-ivory/30 outline-none transition focus:border-copper focus:ring-1 focus:ring-copper/40";
 
   return (
-    <section className="py-20 lg:py-32 border-t border-border">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12">
-          <div>
-            <span className="text-primary font-medium text-sm uppercase tracking-wide">Contact Us</span>
-            <h2 className="text-3xl sm:text-4xl font-semibold mt-2 mb-6" data-testid="text-contact-info-title">
-              Let's Start a Conversation
-            </h2>
-            <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-              Whether you're looking to sell a property, explore investment opportunities, or just have questions about what we do, we're here to help.
+    <Section variant="canvas">
+      <div className="container-premium pb-24 md:pb-32">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          {/* Side */}
+          <Reveal className="lg:col-span-5">
+            <Kicker>Direct Channels</Kicker>
+            <DisplayHeading className="mt-4 text-3xl md:text-4xl">
+              Open a conversation with Pegasus.
+            </DisplayHeading>
+            <p className="lead mt-6">
+              Use the form, or write directly. We read everything.
             </p>
 
-            <div className="space-y-6">
-              {contactInfo.map((item, index) => (
-                <div key={index} className="flex items-start gap-4" data-testid={`contact-info-${index}`}>
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-5 h-5 text-primary" />
+            <ul className="mt-10 space-y-6">
+              <li className="flex items-start gap-4 border-l border-copper/30 pl-5">
+                <Mail className="mt-1 h-4 w-4 text-copper" />
+                <div>
+                  <p className="kicker text-copper/80">Email</p>
+                  <a
+                    href="mailto:hello@pegasusdreamscapes.com"
+                    className="mt-1 block text-[15px] text-ivory hover:text-copper"
+                  >
+                    hello@pegasusdreamscapes.com
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-4 border-l border-copper/30 pl-5">
+                <MapPin className="mt-1 h-4 w-4 text-copper" />
+                <div>
+                  <p className="kicker text-copper/80">Office</p>
+                  <p className="mt-1 text-[15px] text-ivory">East Bay, California</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-4 border-l border-copper/30 pl-5">
+                <Clock className="mt-1 h-4 w-4 text-copper" />
+                <div>
+                  <p className="kicker text-copper/80">Response</p>
+                  <p className="mt-1 text-[15px] text-ivory">
+                    We typically respond within 1–2 business days.
+                  </p>
+                </div>
+              </li>
+            </ul>
+
+            <div className="mt-12 grid gap-3">
+              <CTAButton href="/sell" variant="ghost">Submit a Property</CTAButton>
+              <CTAButton href="/submit-deal" variant="ghost">Submit a Deal</CTAButton>
+            </div>
+          </Reveal>
+
+          {/* Form */}
+          <Reveal delay={120} className="lg:col-span-7">
+            <div className="rounded-sm border border-copper/25 bg-[hsl(220_30%_8%)] p-8 md:p-10">
+              {submitted ? (
+                <div className="py-8 text-center">
+                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-sm border border-copper/40 text-copper">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </span>
+                  <h3 className="font-display mt-6 text-3xl text-ivory">
+                    Message received.
+                  </h3>
+                  <p className="lead mt-4">
+                    Thanks for reaching out. We'll review and follow up
+                    personally within a few business days.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <Kicker>Send a Message</Kicker>
+                  <h3 className="font-display text-2xl text-ivory md:text-3xl">
+                    Tell us what you're working on.
+                  </h3>
+
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="kicker text-copper/80">Name</label>
+                      <input
+                        {...form.register("name")}
+                        className={`${inputCls} mt-2`}
+                        placeholder="Full name"
+                        data-testid="input-contact-name"
+                      />
+                      {form.formState.errors.name && (
+                        <p className="mt-1.5 text-[12px] text-destructive">
+                          {form.formState.errors.name.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="kicker text-copper/80">Email</label>
+                      <input
+                        type="email"
+                        {...form.register("email")}
+                        className={`${inputCls} mt-2`}
+                        placeholder="you@email.com"
+                        data-testid="input-contact-email"
+                      />
+                      {form.formState.errors.email && (
+                        <p className="mt-1.5 text-[12px] text-destructive">
+                          {form.formState.errors.email.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="kicker text-copper/80">Phone (optional)</label>
+                      <input
+                        {...form.register("phone")}
+                        className={`${inputCls} mt-2`}
+                        placeholder="(555) 555-5555"
+                        data-testid="input-contact-phone"
+                      />
+                    </div>
+                    <div>
+                      <label className="kicker text-copper/80">Subject</label>
+                      <input
+                        {...form.register("subject")}
+                        className={`${inputCls} mt-2`}
+                        placeholder="What's this about?"
+                        data-testid="input-contact-subject"
+                      />
+                      {form.formState.errors.subject && (
+                        <p className="mt-1.5 text-[12px] text-destructive">
+                          {form.formState.errors.subject.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
-                    <p className="text-sm text-muted-foreground">{item.label}</p>
-                    {item.href ? (
-                      <a 
-                        href={item.href} 
-                        className="font-medium hover:text-primary transition-colors"
-                        data-testid={`link-contact-${item.label.toLowerCase()}`}
-                      >
-                        {item.value}
-                      </a>
-                    ) : (
-                      <p className="font-medium">{item.value}</p>
+                    <label className="kicker text-copper/80">Message</label>
+                    <textarea
+                      rows={6}
+                      {...form.register("message")}
+                      className={`${inputCls} mt-2 resize-y`}
+                      placeholder="Tell us about the property, the deal, the partnership, or the question."
+                      data-testid="input-contact-message"
+                    />
+                    {form.formState.errors.message && (
+                      <p className="mt-1.5 text-[12px] text-destructive">
+                        {form.formState.errors.message.message}
+                      </p>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div>
-            {submitted ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle className="w-10 h-10 text-primary" />
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-ivory/40">
+                      Your information is reviewed personally. No spam, ever.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={mutation.isPending}
+                      className="btn-copper disabled:cursor-not-allowed disabled:opacity-60"
+                      data-testid="button-contact-submit"
+                    >
+                      {mutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+                        </>
+                      ) : (
+                        "Send Message"
+                      )}
+                    </button>
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4" data-testid="text-contact-success">Thank You!</h3>
-                  <p className="text-muted-foreground">
-                    Your message has been received. We'll review your message and follow up as soon as possible.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-8">
-                  <h3 className="text-xl font-semibold mb-6" data-testid="text-contact-form-title">Send Us a Message</h3>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Full Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="John Smith" {...field} data-testid="input-contact-name" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email Address</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="john@example.com" {...field} data-testid="input-contact-email" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone Number (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your best callback number" {...field} value={field.value ?? ""} data-testid="input-contact-phone" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="subject"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <FormControl>
-                              <Input placeholder="What is this regarding?" {...field} data-testid="input-contact-subject" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Message</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Tell us how we can help..."
-                                className="min-h-32 resize-none"
-                                {...field}
-                                data-testid="textarea-contact-message"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button 
-                        type="submit" 
-                        size="lg" 
-                        className="w-full"
-                        disabled={mutation.isPending}
-                        data-testid="button-send-message"
-                      >
-                        {mutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            Send Message
-                            <ArrowRight className="ml-2 w-4 h-4" />
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                </form>
+              )}
+            </div>
+          </Reveal>
         </div>
       </div>
-    </section>
+    </Section>
   );
 }
