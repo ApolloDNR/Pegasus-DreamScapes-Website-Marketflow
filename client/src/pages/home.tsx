@@ -141,10 +141,10 @@ function StatsSection() {
   const { getValue } = useSiteContent();
   
   const stats = [
-    { value: 47, suffix: "+", label: "Properties Transformed", icon: Building, key: "stats.0" },
-    { value: 12, suffix: "M+", prefix: "$", label: "Investment Volume", icon: DollarSign, key: "stats.1" },
-    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Star, key: "stats.2" },
-    { value: 14, suffix: "", label: "Day Avg Close", icon: Clock, key: "stats.3" },
+    { value: "Founder-Led", label: "Execution Focus", icon: Building, key: "stats.0" },
+    { value: "East Bay", label: "Local Roots", icon: DollarSign, key: "stats.1" },
+    { value: "Three Pillars", label: "Development • Investments • Systems", icon: Star, key: "stats.2" },
+    { value: "Private Beta", label: "MarketFlow in Active Development", icon: Clock, key: "stats.3" },
   ];
 
   return (
@@ -155,7 +155,7 @@ function StatsSection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
           {stats.map((stat, index) => {
-            const displayValue = getValue(`home.${stat.key}.value`) || `${stat.prefix || ""}${stat.value}${stat.suffix}`;
+            const displayValue = getValue(`home.${stat.key}.value`) || stat.value;
             const displayLabel = getValue(`home.${stat.key}.label`) || stat.label;
             
             return (
@@ -176,7 +176,7 @@ function StatsSection() {
                     {isEditMode ? (
                       <EditableText 
                         contentKey={`home.${stat.key}.value`} 
-                        fallback={`${stat.prefix || ""}${stat.value}${stat.suffix}`}
+                        fallback={String(stat.value)}
                       />
                     ) : (
                       displayValue
@@ -406,7 +406,6 @@ interface Testimonial {
   author: string;
   role: string | null;
   location: string | null;
-  rating: number;
   imageUrl: string | null;
   isActive: boolean;
 }
@@ -417,7 +416,6 @@ const defaultTestimonials = [
     author: "Discipline Before Scale",
     role: "Operating Principle",
     location: null,
-    rating: 5,
     initials: "DS",
   },
   {
@@ -425,7 +423,6 @@ const defaultTestimonials = [
     author: "Clear Numbers, Clear Process",
     role: "Operating Principle",
     location: null,
-    rating: 5,
     initials: "CP",
   },
   {
@@ -433,7 +430,6 @@ const defaultTestimonials = [
     author: "Built for Long-Term Value",
     role: "Operating Principle",
     location: null,
-    rating: 5,
     initials: "LV",
   },
   {
@@ -441,7 +437,6 @@ const defaultTestimonials = [
     author: "Founder-Led Accountability",
     role: "Operating Principle",
     location: null,
-    rating: 5,
     initials: "FA",
   },
 ];
@@ -456,20 +451,7 @@ function OperatingPrinciplesSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
   
-  const { data: cmsTestimonials = [] } = useQuery<Testimonial[]>({
-    queryKey: ["/api/testimonials"],
-  });
-  
-  const testimonials = cmsTestimonials.length > 0
-    ? cmsTestimonials.filter(t => t.isActive).map(t => ({
-        quote: t.quote,
-        author: t.author,
-        role: t.role || "Client",
-        location: t.location || "",
-        rating: t.rating,
-        initials: getInitials(t.author),
-      }))
-    : defaultTestimonials;
+  const testimonials = defaultTestimonials;
 
   // Auto-advance carousel
   useEffect(() => {
@@ -491,19 +473,19 @@ function OperatingPrinciplesSection() {
         <ScrollReveal className="text-center mb-16">
           <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">
             {isEditMode ? (
-              <EditableText contentKey="home.testimonials.kicker" fallback="Client Experiences" />
-            ) : (getValue("home.testimonials.kicker") || "Client Experiences")}
+              <EditableText contentKey="home.testimonials.kicker" fallback="Operating Principles" />
+            ) : (getValue("home.testimonials.kicker") || "Operating Principles")}
           </p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
             {isEditMode ? (
-              <EditableText contentKey="home.testimonials.title" fallback="Trusted by Sellers & Investors" />
-            ) : (getValue("home.testimonials.title") || "Trusted by Sellers & Investors")}
+              <EditableText contentKey="home.testimonials.title" fallback="Discipline Before Scale" />
+            ) : (getValue("home.testimonials.title") || "Discipline Before Scale")}
           </h2>
           <div className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
             {isEditMode ? (
-              <EditableText contentKey="home.testimonials.description" fallback="Real stories from clients who have partnered with us to achieve their real estate goals." as="p" multiline />
+              <EditableText contentKey="home.testimonials.description" fallback="The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution." as="p" multiline />
             ) : (
-              <p>{getValue("home.testimonials.description") || "Real stories from clients who have partnered with us to achieve their real estate goals."}</p>
+              <p>{getValue("home.testimonials.description") || "The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution."}</p>
             )}
           </div>
         </ScrollReveal>
@@ -534,13 +516,6 @@ function OperatingPrinciplesSection() {
                     <div className="absolute -top-5 left-10 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
                       <Quote className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    
-                    <div className="flex gap-1 mb-8 mt-4 justify-center">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-primary text-primary" />
-                      ))}
-                    </div>
-                    
                     <p className="text-foreground leading-relaxed text-lg lg:text-xl text-center italic mb-10">
                       "{testimonial.quote}"
                     </p>
