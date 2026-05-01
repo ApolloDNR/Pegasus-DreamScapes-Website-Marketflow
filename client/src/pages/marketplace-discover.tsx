@@ -105,13 +105,17 @@ function DiscoverPage() {
       title: "Guest Preview Mode",
       description: `Previewing as ${role.replace(/_/g, ' ')}. Sign in to take actions.`,
     });
-    const dashboardPath = {
+    const dashboardPathByRole: Record<UserRole, string> = {
+      admin: '/marketflow/admin',
+      pegasus_dreamscaper: '/marketflow/dreamscaper',
+      pegasus_wholesaler: '/marketflow/wholesaler',
       wholesaler: '/marketflow/wholesaler',
       investor: '/marketflow/investor',
       dreamscaper: '/marketflow/dreamscaper',
       buyer_investment: '/marketflow/buyer',
       buyer_retail: '/marketflow/buyer',
-    }[role] || '/marketflow';
+    };
+    const dashboardPath = dashboardPathByRole[role] || '/marketflow';
     setTimeout(() => setLocation(dashboardPath), 50);
   };
 

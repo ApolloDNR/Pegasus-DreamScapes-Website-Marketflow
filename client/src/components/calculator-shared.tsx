@@ -36,14 +36,14 @@ import {
 interface CalculatorResult {
   calculatorType: string;
   inputs: Record<string, number | string>;
-  outputs: Record<string, number | string>;
+  outputs: Record<string, number | string | boolean>;
   timestamp?: string;
 }
 
 interface CalculatorActionsProps {
   calculatorType: string;
   inputs: Record<string, number | string>;
-  outputs: Record<string, number | string>;
+  outputs: Record<string, number | string | boolean>;
   onAskPeggy?: () => void;
   disabled?: boolean;
 }
