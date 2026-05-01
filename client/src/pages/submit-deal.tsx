@@ -21,10 +21,16 @@ import {
   Clock,
   Award
 } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function SubmitDeal() {
   const { user, isLoading } = useSupabaseAuth();
-  
+
+  useSEO({
+    title: "Submit a Deal | Pegasus Dreamscapes",
+    description: "Wholesalers and deal sources: submit real estate opportunities to Pegasus Dreamscapes for review. We evaluate wholesale deals, capital structures, and acquisition opportunities.",
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-20">

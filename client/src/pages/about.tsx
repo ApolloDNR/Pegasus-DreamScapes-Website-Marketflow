@@ -33,7 +33,7 @@ import {
 export default function About() {
   useSEO({
     title: "About Us - Pegasus Dreamscapes Corp",
-    description: "Learn about Pegasus Dreamscapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
+    description: "Pegasus Dreamscapes is a real estate development, investment, and systems company. We exist to bring discipline, vision, and operational clarity to real estate execution in the East Bay and beyond."
   });
 
   return (
@@ -129,7 +129,7 @@ function OurStorySection() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center p-8">
                   <Building2 className="w-16 h-16 text-tan mx-auto mb-4" />
-                  <p className="text-2xl font-bold mb-2">Bay Area Based</p>
+                  <p className="text-2xl font-bold mb-2">East Bay Based</p>
                   <p className="text-muted-foreground">Serving Oakland, San Francisco, San Jose & Surrounding Areas</p>
                 </div>
               </div>
@@ -142,7 +142,7 @@ function OurStorySection() {
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Local Expertise</p>
-                  <p className="text-xs text-muted-foreground">Deep Bay Area Knowledge</p>
+                  <p className="text-xs text-muted-foreground">Deep East Bay Roots</p>
                 </div>
               </div>
             </div>
@@ -359,8 +359,8 @@ function CredentialsSection() {
     {
       icon: Users,
       title: "Industry Network",
-      description: "Connected with top real estate professionals across the Bay Area.",
-      detail: "East Bay and Bay Area aligned network",
+      description: "Connected with top real estate professionals across the East Bay and beyond.",
+      detail: "East Bay-rooted professional network",
     },
   ];
 

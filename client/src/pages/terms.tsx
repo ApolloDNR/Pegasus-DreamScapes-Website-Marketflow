@@ -148,7 +148,7 @@ export default function Terms() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">14. Governing Law</h2>
             <p className="text-muted-foreground leading-relaxed">
-              These Terms shall be governed by and construed in accordance with the laws of the State of Arizona, without regard to its conflict of law provisions.
+              These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions.
             </p>
           </section>
 
@@ -160,7 +160,7 @@ export default function Terms() {
             <div className="mt-4 p-4 bg-muted rounded-lg">
               <p className="font-medium">Pegasus Dreamscapes Corp</p>
               <p className="text-muted-foreground">Email: legal@pegasusdreamscapes.com</p>
-                          </div>
+            </div>
           </section>
         </div>
       </div>

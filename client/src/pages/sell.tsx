@@ -44,6 +44,7 @@ import {
   Loader2
 } from "lucide-react";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { useSEO } from "@/hooks/use-seo";
 
 const sellerFormSchema = insertSellerLeadSchema.extend({
   name: z.string().min(2, "Please enter your full name"),
@@ -53,6 +54,11 @@ const sellerFormSchema = insertSellerLeadSchema.extend({
 });
 
 export default function Sell() {
+  useSEO({
+    title: "Submit a Property | Pegasus Dreamscapes",
+    description: "Submit your property to Pegasus Dreamscapes for review. We evaluate as-is, inherited, distressed, and value-add properties in the East Bay and surrounding areas.",
+  });
+
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />

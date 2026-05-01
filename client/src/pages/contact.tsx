@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSEO } from "@/hooks/use-seo";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -35,6 +36,11 @@ const contactFormSchema = insertContactSchema.extend({
 });
 
 export default function Contact() {
+  useSEO({
+    title: "Contact | Pegasus Dreamscapes",
+    description: "Open a conversation with Pegasus Dreamscapes. Submit a property, send a deal, request MarketFlow access, or discuss a partnership. Real messages get real responses.",
+  });
+
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />
@@ -121,8 +127,8 @@ function ContactSection() {
     {
       icon: Mail,
       label: "Email",
-      value: "info@pegasusdreamscapes.com",
-      href: "mailto:info@pegasusdreamscapes.com",
+      value: "hello@pegasusdreamscapes.com",
+      href: "mailto:hello@pegasusdreamscapes.com",
     },
     {
       icon: MapPin,

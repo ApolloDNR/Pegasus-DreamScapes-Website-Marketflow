@@ -87,7 +87,7 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
                 <span className="text-sm text-muted-foreground" data-testid="text-footer-location">
-                  Bay Area, California
+                  East Bay, California
                 </span>
               </li>
             </ul>

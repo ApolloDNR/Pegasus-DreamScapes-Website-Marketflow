@@ -429,8 +429,8 @@ function InvestorSection() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Fixed interest rate returns with defined terms. First position security.
                   </p>
-                  <div className="text-2xl font-bold text-blue-600">8-12%</div>
-                  <p className="text-xs text-muted-foreground">Typical annual returns</p>
+                  <div className="text-2xl font-bold text-blue-600">Deal-by-deal</div>
+                  <p className="text-xs text-muted-foreground">Reviewed privately per deal</p>
                 </CardContent>
               </Card>
 
@@ -443,8 +443,8 @@ function InvestorSection() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Profit participation with upside potential. Share in the success.
                   </p>
-                  <div className="text-2xl font-bold text-green-600">15-30%+</div>
-                  <p className="text-xs text-muted-foreground">Potential returns</p>
+                  <div className="text-2xl font-bold text-green-600">Case-by-case</div>
+                  <p className="text-xs text-muted-foreground">Discussed per project</p>
                 </CardContent>
               </Card>
             </div>
