@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Layers,
   Sparkles,
@@ -8,6 +7,7 @@ import {
   Building,
   ArrowUpRight,
 } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import { Link } from "wouter";
 import {
   Section,
@@ -74,9 +74,11 @@ const principles = [
 ];
 
 export default function Systems() {
-  useEffect(() => {
-    document.title = "Systems — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "Systems",
+    description:
+      "Pegasus Systems is the internal product organization inside Pegasus Dreamscapes — building tools that bring governance, intelligence, and operational control to real estate execution.",
+  });
 
   return (
     <div className="bg-[hsl(220_35%_5%)]">

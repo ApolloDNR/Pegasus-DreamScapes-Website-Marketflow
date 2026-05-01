@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Sparkles,
   Inbox,
@@ -8,6 +7,7 @@ import {
   Workflow,
   ArrowUpRight,
 } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import {
   Section,
   Kicker,
@@ -67,9 +67,11 @@ const lanes = [
 ];
 
 export default function MarketFlowBeta() {
-  useEffect(() => {
-    document.title = "MarketFlow Beta — Pegasus Systems";
-  }, []);
+  useSEO({
+    title: "MarketFlow Beta",
+    description:
+      "MarketFlow is the deal-flow command center inside Pegasus Systems. Currently in invitation-only private beta with a small group of selected operators and partners.",
+  });
 
   return (
     <div className="bg-[hsl(220_35%_5%)]">
@@ -103,8 +105,8 @@ export default function MarketFlowBeta() {
             </p>
             <p className="lead mt-4 max-w-2xl">
               MarketFlow is currently in invitation-only private beta. We're
-              working closely with a small group of trusted operators and
-              capital partners before opening access more broadly.
+              working closely with a small group of selected operators and
+              partners before opening access more broadly.
             </p>
           </Reveal>
           <Reveal delay={220}>
@@ -196,14 +198,17 @@ export default function MarketFlowBeta() {
               </DisplayHeading>
               <div className="mt-8 space-y-5 text-[15.5px] leading-relaxed text-ivory/85">
                 <p>
-                  MarketFlow is real software, used inside Pegasus every day.
-                  Because it touches real deals and real partners, we don't
-                  open access publicly until a feature is genuinely ready.
+                  MarketFlow is being built from the real operating workflow
+                  Pegasus needs to manage deal intake, review, and execution.
+                  Because that workflow touches real conversations and real
+                  partners, we don't open access publicly until a feature is
+                  genuinely ready.
                 </p>
                 <p>
-                  During beta, we're working with a small group of operators
-                  and capital partners. If MarketFlow could fit how you work,
-                  request access and we'll follow up with a real conversation.
+                  During beta, we're working with a small group of selected
+                  operators and partners. If MarketFlow could fit how you
+                  work, request access and we'll follow up with a real
+                  conversation.
                 </p>
               </div>
               <div className="mt-10 flex flex-wrap items-center gap-4">

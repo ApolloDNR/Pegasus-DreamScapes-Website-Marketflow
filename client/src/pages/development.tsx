@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Hammer,
   ClipboardList,
@@ -7,6 +6,7 @@ import {
   Wrench,
   CheckCircle2,
 } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import {
   Section,
   Kicker,
@@ -76,9 +76,11 @@ const services = [
 ];
 
 export default function Development() {
-  useEffect(() => {
-    document.title = "Development — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "Development",
+    description:
+      "Pegasus Development transforms real estate opportunities through disciplined renovation, project planning, and value-add execution — from acquisition strategy to project coordination.",
+  });
 
   return (
     <div className="bg-[hsl(220_35%_5%)]">

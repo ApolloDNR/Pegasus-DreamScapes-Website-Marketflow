@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Section,
   Kicker,
@@ -6,11 +5,14 @@ import {
   Reveal,
 } from "@/components/brand/atoms";
 import { PegasusWatermark } from "@/components/brand/pegasus-mark";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Terms() {
-  useEffect(() => {
-    document.title = "Terms of Service — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "Terms of Service",
+    description:
+      "Terms governing use of the Pegasus Dreamscapes website. Nothing on this site is an offer or solicitation to buy or sell any security.",
+  });
 
   const updated = "January 2026";
 

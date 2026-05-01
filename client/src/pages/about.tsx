@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { Compass, Target, ShieldCheck, Eye, Heart, Award } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import {
   Section,
   Kicker,
@@ -11,9 +11,11 @@ import {
 import { PegasusWatermark } from "@/components/brand/pegasus-mark";
 
 export default function About() {
-  useEffect(() => {
-    document.title = "About — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "About",
+    description:
+      "Pegasus Dreamscapes is a real estate development, investment, and systems company. We exist to bring discipline, vision, and operational clarity to real estate execution.",
+  });
 
   const principles = [
     {

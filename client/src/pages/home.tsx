@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSEO } from "@/hooks/use-seo";
 import { Link } from "wouter";
 import {
   ArrowUpRight,
@@ -638,10 +639,11 @@ function ContactCTA() {
    PAGE
    ============================================================================ */
 export default function Home() {
-  useEffect(() => {
-    document.title =
-      "Pegasus Dreamscapes — Real Estate Development, Investments & Systems";
-  }, []);
+  useSEO({
+    title: "Real Estate Development, Investments & Systems",
+    description:
+      "Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.",
+  });
 
   return (
     <div className="bg-[hsl(220_35%_5%)]">

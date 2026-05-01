@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   LineChart,
   ShieldCheck,
@@ -7,6 +6,7 @@ import {
   Layers3,
   Receipt,
 } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import {
   Section,
   Kicker,
@@ -43,19 +43,19 @@ const philosophy = [
 const structures = [
   {
     title: "Joint Ventures",
-    body: "Deal-by-deal partnerships where Pegasus brings sourcing, underwriting, and execution; the partner brings capital, expertise, or both.",
+    body: "Deal-by-deal partnership conversations where Pegasus may contribute sourcing, underwriting, or execution, and the partner may contribute capital, expertise, or both. Specifics are reviewed privately on a per-deal basis.",
   },
   {
-    title: "Debt & Preferred Equity",
-    body: "Structured capital positions on Pegasus-led projects — defined returns, defined timelines, defined collateral.",
+    title: "Debt / Preferred-Style Structures",
+    body: "Potential deal-specific capital structures may be reviewed privately, subject to diligence, documentation, legal review, suitability, and applicable law.",
   },
   {
-    title: "Co-Investment",
-    body: "Selective opportunities to invest alongside Pegasus on specific projects with clear underwriting and reporting.",
+    title: "Co-Investment Conversations",
+    body: "Selective opportunities to discuss participating alongside Pegasus on specific projects, with underwriting and reporting handled deal by deal.",
   },
   {
-    title: "Capital Stack Advisory",
-    body: "For partners structuring their own deals — Pegasus reviews, advises, and where appropriate, participates.",
+    title: "Capital Stack Review",
+    body: "For partners structuring their own deals, Pegasus may review, discuss, and where appropriate explore participation — always subject to diligence and documentation.",
   },
 ];
 
@@ -68,9 +68,11 @@ const reporting = [
 ];
 
 export default function Investments() {
-  useEffect(() => {
-    document.title = "Investments — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "Investments",
+    description:
+      "Pegasus Investments evaluates, structures, and partners on real estate opportunities with a focus on clarity, risk awareness, and long-term value. Nothing on this page is an offer of securities.",
+  });
 
   return (
     <div className="bg-[hsl(220_35%_5%)]">
@@ -153,14 +155,15 @@ export default function Investments() {
         <div className="container-premium section-y">
           <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
             <Reveal className="lg:col-span-5">
-              <Kicker>How We Structure Capital</Kicker>
+              <Kicker>How We Think About Capital</Kicker>
               <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-                Structures we actually use.
+                The shapes a Pegasus conversation can take.
               </DisplayHeading>
               <p className="lead mt-6">
-                Every deal is different, but we work in a set of clean,
-                well-understood structures. No exotic vehicles, no opaque
-                paperwork, no surprises later.
+                Every deal is different. The structures below are the kinds of
+                conversations we're open to — clean, well-understood, and
+                always subject to diligence and documentation. Nothing here is
+                an offer.
               </p>
             </Reveal>
             <div className="lg:col-span-7">

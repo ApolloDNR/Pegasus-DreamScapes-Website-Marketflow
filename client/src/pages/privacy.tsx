@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Section,
   Kicker,
@@ -6,11 +5,14 @@ import {
   Reveal,
 } from "@/components/brand/atoms";
 import { PegasusWatermark } from "@/components/brand/pegasus-mark";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Privacy() {
-  useEffect(() => {
-    document.title = "Privacy Policy — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "Privacy Policy",
+    description:
+      "How Pegasus Dreamscapes collects, uses, and protects information through this website and our platforms.",
+  });
 
   const updated = "January 2026";
 

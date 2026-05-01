@@ -28,7 +28,8 @@ const PUBLIC_LINKS: { href: string; label: string }[] = [
  *  navigation should still exist but stay quietly out of the way. */
 function isAppShellRoute(pathname: string): boolean {
   return (
-    pathname.startsWith("/marketflow") ||
+    pathname === "/marketflow" ||
+    pathname.startsWith("/marketflow/") ||
     pathname.startsWith("/dealflow") ||
     pathname.startsWith("/marketplace") ||
     pathname.startsWith("/portal") ||

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSEO } from "@/hooks/use-seo";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -46,9 +47,11 @@ function useSubjectPreset(): { label?: string; preset?: string } {
 }
 
 export default function Contact() {
-  useEffect(() => {
-    document.title = "Contact — Pegasus Dreamscapes";
-  }, []);
+  useSEO({
+    title: "Contact",
+    description:
+      "Submit a property, send a deal, request MarketFlow access, or open a partnership conversation with Pegasus Dreamscapes. Real messages get real responses.",
+  });
 
   return (
     <div className="bg-[hsl(220_35%_5%)]">
@@ -255,7 +258,7 @@ function ContactSection() {
                       <input
                         {...form.register("phone")}
                         className={`${inputCls} mt-2`}
-                        placeholder="(555) 555-5555"
+                        placeholder="Best phone number"
                         data-testid="input-contact-phone"
                       />
                     </div>
