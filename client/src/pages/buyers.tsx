@@ -875,7 +875,7 @@ function InquiryDialogContent({ form, mutation, title, description }: {
                 <FormItem>
                   <FormLabel>Phone</FormLabel>
                   <FormControl>
-                    <Input placeholder="(555) 123-4567" {...field} data-testid="input-inquiry-phone" />
+                    <Input placeholder="Your best callback number" {...field} data-testid="input-inquiry-phone" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

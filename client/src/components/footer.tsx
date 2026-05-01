@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import logoImage from "@assets/image_1765405939117.png";
 
 const quickLinks = [
@@ -10,10 +10,10 @@ const quickLinks = [
 ];
 
 const serviceLinks = [
-  { href: "/services", label: "Fix & Flip Acquisitions" },
-  { href: "/services", label: "Buy & Hold Rentals" },
-  { href: "/services", label: "Design & Renovation" },
-  { href: "/services", label: "New Construction" },
+  { href: "/services", label: "Development & Renovation Execution" },
+  { href: "/services", label: "Property Acquisition Conversations" },
+  { href: "/services", label: "Deal Analysis & Underwriting Support" },
+  { href: "/services", label: "Partnership & Operator Support" },
 ];
 
 export function Footer() {
@@ -31,10 +31,10 @@ export function Footer() {
               />
             </Link>
             <p className="text-primary text-sm font-medium">
-              "Where Designed Profits Are Crafted."
+              Dream it. Build it. Live it.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              We design profits with intention and elevate communities through real estate.
+              Pegasus Dreamscapes is a real estate development, investment, and systems company building disciplined infrastructure for modern real estate execution.
             </p>
           </div>
 
@@ -81,10 +81,6 @@ export function Footer() {
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <Phone className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-                <a href="tel:+15551234567" className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-phone">
-                  (555) 123-4567
-                </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />

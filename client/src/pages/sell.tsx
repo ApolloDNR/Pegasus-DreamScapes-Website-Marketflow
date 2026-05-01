@@ -285,7 +285,7 @@ function LeadFormSection() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="(555) 123-4567" {...field} data-testid="input-seller-phone" />
+                          <Input placeholder="Your best callback number" {...field} data-testid="input-seller-phone" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

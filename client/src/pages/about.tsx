@@ -62,8 +62,8 @@ function HeroSection() {
           About Pegasus Dreamscapes
         </Badge>
         <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight" data-testid="text-about-hero">
-          WHERE DESIGNED PROFITS<br />
-          <span className="text-tan">ARE CRAFTED</span>
+          Dream it. Build it.<br />
+          <span className="text-tan">Live it.</span>
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
           We transform distressed properties into stunning investments while elevating communities and creating lasting partnerships.
@@ -75,10 +75,10 @@ function HeroSection() {
 
 function StatsSection() {
   const stats = [
-    { value: "$12M+", label: "Investment Volume", icon: DollarSign },
-    { value: "47+", label: "Properties Transformed", icon: Building2 },
-    { value: "5+", label: "Years Experience", icon: Clock },
-    { value: "100%", label: "Partner Satisfaction", icon: Star },
+    { value: "Founder-Led", label: "Execution Focus", icon: DollarSign },
+    { value: "East Bay", label: "Local Roots", icon: Building2 },
+    { value: "Three Pillars", label: "Development • Investments • Systems", icon: Clock },
+    { value: "Private Beta", label: "MarketFlow in Active Development", icon: Star },
   ];
 
   return (
@@ -342,19 +342,19 @@ function CredentialsSection() {
       icon: Shield,
       title: "Licensed & Insured",
       description: "Fully licensed real estate professionals with comprehensive insurance coverage.",
-      detail: "CA DRE #02145678",
+      detail: "Licensing and brokerage relationships handled per applicable requirements",
     },
     {
       icon: Award,
-      title: "BBB Accredited",
+      title: "Partner Network",
       description: "Better Business Bureau accredited business with A+ rating.",
-      detail: "A+ Rating",
+      detail: "Built for disciplined execution",
     },
     {
       icon: CheckCircle2,
       title: "Verified Track Record",
       description: "Documented history of successful projects and satisfied partners.",
-      detail: "47+ Completed Projects",
+      detail: "Private review conversations available",
     },
     {
       icon: Users,

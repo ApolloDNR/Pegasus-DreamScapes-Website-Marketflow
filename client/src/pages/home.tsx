@@ -77,8 +77,8 @@ import { useSiteContent } from "@/contexts/site-content-context";
 
 export default function Home() {
   useSEO({
-    title: "Real Estate Investment & Design",
-    description: "Transform distressed properties into beautiful, high-performing assets. Sell your property fast or invest with Pegasus Dreamscapes Corp."
+    title: "Pegasus Dreamscapes | Development • Investments • Systems",
+    description: "Real estate execution, built with discipline. Pegasus Dreamscapes is a founder-led real estate development, investment, and systems company."
   });
   
   return (
@@ -630,8 +630,8 @@ function TestimonialsSection() {
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {isEditMode ? (
-                      <EditableText contentKey="home.whyChooseUs.0.description" fallback="CA DRE #02145678" />
-                    ) : (getValue("home.whyChooseUs.0.description") || "CA DRE #02145678")}
+                      <EditableText contentKey="home.whyChooseUs.0.description" fallback="Licensing handled per applicable requirements" />
+                    ) : (getValue("home.whyChooseUs.0.description") || "Licensing handled per applicable requirements")}
                   </div>
                 </div>
               </motion.div>
@@ -646,13 +646,13 @@ function TestimonialsSection() {
                 <div>
                   <div className="font-semibold text-base">
                     {isEditMode ? (
-                      <EditableText contentKey="home.whyChooseUs.1.title" fallback="BBB Accredited" />
-                    ) : (getValue("home.whyChooseUs.1.title") || "BBB Accredited")}
+                      <EditableText contentKey="home.whyChooseUs.1.title" fallback="Disciplined operations" />
+                    ) : (getValue("home.whyChooseUs.1.title") || "Disciplined operations")}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {isEditMode ? (
-                      <EditableText contentKey="home.whyChooseUs.1.description" fallback="A+ Rating" />
-                    ) : (getValue("home.whyChooseUs.1.description") || "A+ Rating")}
+                      <EditableText contentKey="home.whyChooseUs.1.description" fallback="Built for long-term value" />
+                    ) : (getValue("home.whyChooseUs.1.description") || "Built for long-term value")}
                   </div>
                 </div>
               </motion.div>
@@ -864,7 +864,7 @@ function HeroSection() {
               data-testid="hero-stats-preview"
             >
               <div data-testid="hero-stat-properties">
-                <p className="text-3xl font-bold text-white">47+</p>
+                <p className="text-3xl font-bold text-white">Private</p>
                 <p className="text-sm text-white/50 uppercase tracking-wider">Properties</p>
               </div>
               <div data-testid="hero-stat-invested">
@@ -872,7 +872,7 @@ function HeroSection() {
                 <p className="text-sm text-white/50 uppercase tracking-wider">Invested</p>
               </div>
               <div data-testid="hero-stat-satisfaction">
-                <p className="text-3xl font-bold text-white">98%</p>
+                <p className="text-3xl font-bold text-white">Focused</p>
                 <p className="text-sm text-white/50 uppercase tracking-wider">Satisfaction</p>
               </div>
             </motion.div>
@@ -1295,7 +1295,7 @@ function SellPropertySection() {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input type="tel" placeholder="(555) 123-4567" {...field} data-testid="input-sell-phone" />
+                            <Input type="tel" placeholder="Your best callback number" {...field} data-testid="input-sell-phone" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1485,7 +1485,7 @@ function InvestSection() {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input type="tel" placeholder="(555) 123-4567" {...field} data-testid="input-invest-phone" />
+                            <Input type="tel" placeholder="Your best callback number" {...field} data-testid="input-invest-phone" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -2359,7 +2359,7 @@ function ContactSection() {
             
             <div className="space-y-6">
               <motion.a 
-                href={`tel:${(getValue("home.contact.phone") || "(555) 123-4567").replace(/[^0-9+]/g, '')}`}
+                href={`tel:${(getValue("home.contact.phone") || "Your best callback number").replace(/[^0-9+]/g, '')}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-phone"
@@ -2371,8 +2371,8 @@ function ContactSection() {
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Phone</p>
                   <div className="font-semibold text-lg">
                     {isEditMode ? (
-                      <EditableText contentKey="home.contact.phone" fallback="(555) 123-4567" />
-                    ) : (getValue("home.contact.phone") || "(555) 123-4567")}
+                      <EditableText contentKey="home.contact.phone" fallback="Your best callback number" />
+                    ) : (getValue("home.contact.phone") || "Your best callback number")}
                   </div>
                 </div>
               </motion.a>
@@ -2453,7 +2453,7 @@ function ContactSection() {
                         <FormItem>
                           <FormLabel>Phone (optional)</FormLabel>
                           <FormControl>
-                            <Input type="tel" placeholder="(555) 123-4567" {...field} data-testid="input-contact-phone" />
+                            <Input type="tel" placeholder="Your best callback number" {...field} data-testid="input-contact-phone" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

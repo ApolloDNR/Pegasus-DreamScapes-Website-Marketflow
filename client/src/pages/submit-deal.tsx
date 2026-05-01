@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LegalDisclaimer } from "@/components/legal-disclaimer";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
 import { Link } from "wouter";
@@ -47,6 +48,7 @@ function PublicSubmitDeal({ isLoggedIn, userRole }: { isLoggedIn: boolean; userR
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />
+      <section className="max-w-7xl mx-auto px-6 pt-6"><LegalDisclaimer /></section>
       <HowItWorksSection />
       <WholesalerTypesSection />
       <BenefitsSection />
@@ -190,15 +192,14 @@ function HeroSection() {
       <div className="relative max-w-7xl mx-auto px-6 text-center">
         <Badge variant="secondary" className="mb-6 text-xs uppercase tracking-wide">
           <Sparkles className="w-3 h-3 mr-2" />
-          Wholesaler Marketplace
+          MarketFlow Private Beta
         </Badge>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6" data-testid="text-submit-deal-hero">
           Submit Your
           <span className="block text-primary">Wholesale Deals</span>
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-10">
-          Join our network of wholesalers and get your deals in front of vetted dreamscapers, 
-          investors, and buyers looking for their next opportunity.
+          Submit a deal for Pegasus review. Visibility and matching features may be limited during private beta.
         </p>
         <Link href="/signup?role=wholesaler">
           <Button size="lg" className="text-base px-8 py-6" data-testid="button-get-started">
@@ -299,7 +300,7 @@ function WholesalerTypesSection() {
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Access to qualified buyers and investors</span>
+                  <span>Access to operators and investor interest</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -419,7 +420,7 @@ function CTASection({ isLoggedIn, userRole }: { isLoggedIn: boolean; userRole: s
         <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
           {isLoggedIn 
             ? "Log in as a wholesaler to access the deal submission form and start listing your properties."
-            : "Create a wholesaler account to submit deals and access our marketplace of qualified buyers."
+            : "Create a wholesaler account to submit deals and participate in our private beta review network."
           }
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
