@@ -625,8 +625,8 @@ function TestimonialsSection() {
                 <div>
                   <div className="font-semibold text-base">
                     {isEditMode ? (
-                      <EditableText contentKey="home.whyChooseUs.0.title" fallback="Licensed & Insured" />
-                    ) : (getValue("home.whyChooseUs.0.title") || "Licensed & Insured")}
+                      <EditableText contentKey="home.whyChooseUs.0.title" fallback="Compliance-Aware Operations" />
+                    ) : (getValue("home.whyChooseUs.0.title") || "Compliance-Aware Operations")}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {isEditMode ? (
@@ -667,8 +667,8 @@ function TestimonialsSection() {
                 <div>
                   <div className="font-semibold text-base">
                     {isEditMode ? (
-                      <EditableText contentKey="home.whyChooseUs.2.title" fallback="Proven Track Record" />
-                    ) : (getValue("home.whyChooseUs.2.title") || "Proven Track Record")}
+                      <EditableText contentKey="home.whyChooseUs.2.title" fallback="Disciplined Partner Network" />
+                    ) : (getValue("home.whyChooseUs.2.title") || "Disciplined Partner Network")}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {isEditMode ? (
@@ -2359,7 +2359,7 @@ function ContactSection() {
             
             <div className="space-y-6">
               <motion.a 
-                href={`tel:${(getValue("home.contact.phone") || "Your best callback number").replace(/[^0-9+]/g, '')}`}
+                href={`tel:${(getValue("home.contact.phone") || "Email us for contact options").replace(/[^0-9+]/g, '')}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-phone"
@@ -2371,8 +2371,8 @@ function ContactSection() {
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Phone</p>
                   <div className="font-semibold text-lg">
                     {isEditMode ? (
-                      <EditableText contentKey="home.contact.phone" fallback="Your best callback number" />
-                    ) : (getValue("home.contact.phone") || "Your best callback number")}
+                      <EditableText contentKey="home.contact.phone" fallback="Email us for contact options" />
+                    ) : (getValue("home.contact.phone") || "Email us for contact options")}
                   </div>
                 </div>
               </motion.a>

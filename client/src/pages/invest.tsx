@@ -190,9 +190,9 @@ function PartnershipTypesSection() {
     {
       icon: DollarSign,
       title: "Debt Investment",
-      description: "Provide a loan secured by real estate. Receive fixed interest payments regardless of project outcome. Lower risk with predictable cash flow, with terms subject to diligence, documentation, legal review, and suitability.",
-      benefits: ["Fixed monthly income", "Principal protected by property", "First position on capital stack"],
-      risks: ["Lower upside than equity", "Returns capped at agreed rate"],
+      description: "Provide a loan secured by real estate. Structured debt participation may be considered on select projects, subject to diligence, documentation, legal review, and suitability.",
+      benefits: ["Structured terms defined per project", "Risk reviewed through diligence", "Documentation and legal review required"],
+      risks: ["Potentially lower upside than equity", "Terms vary by project"],
       note: "Available",
     },
     {
@@ -402,7 +402,7 @@ function InvestorFormSection() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="(555) 123-4567" {...field} data-testid="input-investor-phone" />
+                          <Input placeholder="Best phone number" {...field} data-testid="input-investor-phone" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

@@ -340,27 +340,27 @@ function CredentialsSection() {
   const credentials = [
     {
       icon: Shield,
-      title: "Licensed & Insured",
-      description: "Fully licensed real estate professionals with comprehensive insurance coverage.",
+      title: "Compliance-Aware Operations",
+      description: "Operations are structured with role clarity, documentation, and process discipline.",
       detail: "Licensing and brokerage relationships handled per applicable requirements",
     },
     {
       icon: Award,
       title: "Partner Network",
-      description: "Better Business Bureau accredited business with A+ rating.",
+      description: "We emphasize transparent communication and disciplined execution standards.",
       detail: "Built for disciplined execution",
     },
     {
       icon: CheckCircle2,
-      title: "Verified Track Record",
-      description: "Documented history of successful projects and satisfied partners.",
+      title: "Execution Discipline",
+      description: "Project decisions are grounded in underwriting, execution planning, and accountability.",
       detail: "Private review conversations available",
     },
     {
       icon: Users,
       title: "Industry Network",
       description: "Connected with top real estate professionals across the Bay Area.",
-      detail: "100+ Network Partners",
+      detail: "East Bay and Bay Area aligned network",
     },
   ];
 

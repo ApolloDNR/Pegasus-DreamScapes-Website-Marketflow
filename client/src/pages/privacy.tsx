@@ -133,8 +133,7 @@ export default function Privacy() {
             <div className="mt-4 p-4 bg-muted rounded-lg">
               <p className="font-medium">Pegasus Dreamscapes Corp</p>
               <p className="text-muted-foreground">Email: privacy@pegasusdreamscapes.com</p>
-              <p className="text-muted-foreground"></p>
-            </div>
+                          </div>
           </section>
         </div>
       </div>

@@ -20,7 +20,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { 
   Mail, 
-  Phone, 
   MapPin,
   Clock,
   CheckCircle,
@@ -124,12 +123,6 @@ function ContactSection() {
       label: "Email",
       value: "info@pegasusdreamscapes.com",
       href: "mailto:info@pegasusdreamscapes.com",
-    },
-    {
-      icon: Phone,
-      label: "Phone",
-      value: "Your best callback number",
-      href: "tel:+15551234567",
     },
     {
       icon: MapPin,
