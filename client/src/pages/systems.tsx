@@ -1,3 +1,9 @@
+import { Link } from "wouter";
+import { useSEO } from "@/hooks/use-seo";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import {
   Layers,
   Sparkles,
@@ -5,55 +11,45 @@ import {
   Banknote,
   Bot,
   Building,
+  ArrowRight,
   ArrowUpRight,
 } from "lucide-react";
-import { useSEO } from "@/hooks/use-seo";
-import { Link } from "wouter";
-import {
-  Section,
-  Kicker,
-  CopperRule,
-  DisplayHeading,
-  CTAButton,
-  Reveal,
-} from "@/components/brand/atoms";
-import { PegasusWatermark } from "@/components/brand/pegasus-mark";
 
 const products = [
   {
-    icon: <Building className="h-5 w-5" />,
+    icon: Building,
     name: "Pegasus HQ",
     role: "Operating Spine",
-    status: "Internal",
+    status: "Internal" as const,
     body: "The internal command center for Pegasus operations — projects, partners, capital, and decisions all flow through HQ.",
   },
   {
-    icon: <Sparkles className="h-5 w-5" />,
+    icon: Sparkles,
     name: "MarketFlow",
     role: "Deal-Flow Platform",
-    status: "Private Beta",
+    status: "Private Beta" as const,
     body: "Structured deal intake, underwriting, scoring, negotiation, and decisioning across wholesale, capital, and listing lanes.",
     href: "/marketflow-beta",
   },
   {
-    icon: <HardHat className="h-5 w-5" />,
+    icon: HardHat,
     name: "BuildForge",
     role: "Project Execution",
-    status: "In Development",
+    status: "In Development" as const,
     body: "Coordinating renovations and construction projects — scope, vendors, materials, change orders, and timelines, all in one place.",
   },
   {
-    icon: <Banknote className="h-5 w-5" />,
+    icon: Banknote,
     name: "CapStack",
     role: "Capital Operations",
-    status: "In Development",
+    status: "In Development" as const,
     body: "Tracking the capital structure of every Pegasus-led project — equity, debt, distributions, and partner reporting.",
   },
   {
-    icon: <Bot className="h-5 w-5" />,
+    icon: Bot,
     name: "Peggy",
     role: "Operating Intelligence",
-    status: "Internal",
+    status: "Internal" as const,
     body: "An AI assistant trained on Pegasus methodology — for context, analysis, and faster decisions across the operating system.",
   },
 ];
@@ -73,191 +69,212 @@ const principles = [
   },
 ];
 
+const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
+  "Private Beta": "default",
+  Internal: "outline",
+  "In Development": "secondary",
+};
+
 export default function Systems() {
   useSEO({
-    title: "Systems",
+    title: "Systems | Pegasus Dreamscapes",
     description:
       "Pegasus Systems is the internal product organization inside Pegasus Dreamscapes — building tools that bring governance, intelligence, and operational control to real estate execution.",
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="min-h-screen pt-16">
       {/* Hero */}
-      <Section variant="hero" className="overflow-hidden">
-        <div className="absolute inset-0 bg-architect opacity-[0.18]" aria-hidden />
-        <PegasusWatermark className="pointer-events-none absolute -right-24 top-12 h-[440px] w-[720px] opacity-25" />
-        <div className="container-premium relative pt-36 pb-20 md:pt-44 md:pb-28">
-          <Reveal>
-            <Kicker>Pegasus Dreamscapes · Systems</Kicker>
-          </Reveal>
-          <Reveal delay={80}>
-            <DisplayHeading
-              as="h1"
-              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px]"
-            >
-              The operating system behind disciplined real estate.
-            </DisplayHeading>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="lead mt-8 max-w-2xl">
-              Pegasus Systems is the internal product organization inside
-              Pegasus Dreamscapes. We build the tools that bring governance,
-              intelligence, and operational control to real estate execution —
-              for ourselves, and for the operators we work with closely.
-            </p>
-          </Reveal>
-          <Reveal delay={220}>
-            <div className="mt-10 flex flex-wrap gap-4">
-              <CTAButton href="/marketflow-beta" testId="cta-sys-marketflow">
-                Explore MarketFlow Beta
-              </CTAButton>
-              <CTAButton href="/contact?subject=systems" variant="ghost" testId="cta-sys-contact">
-                Talk to Pegasus Systems
-              </CTAButton>
+      <section className="py-24 lg:py-32 bg-gradient-to-br from-secondary/5 via-background to-muted/30">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <ScrollReveal>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                Pegasus Dreamscapes · Systems
+              </p>
             </div>
-          </Reveal>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 max-w-3xl">
+              The operating system behind disciplined real estate.
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mb-8 leading-relaxed">
+              Pegasus Systems is the internal product organization inside Pegasus
+              Dreamscapes. We build the tools that bring governance, intelligence,
+              and operational control to real estate execution — for ourselves, and
+              for the operators we work with closely.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/marketflow-beta">
+                <Button size="lg" data-testid="cta-sys-marketflow">
+                  Explore MarketFlow Beta
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/contact?subject=systems">
+                <Button variant="outline" size="lg" data-testid="cta-sys-contact">
+                  Talk to Pegasus Systems
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
-      </Section>
+      </section>
 
       {/* Why */}
-      <Section variant="canvas">
-        <div className="container-premium section-y">
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-            <Reveal className="lg:col-span-5">
-              <Kicker>Why Pegasus Systems Exists</Kicker>
-              <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-                Operations are the product.
-              </DisplayHeading>
-            </Reveal>
-            <Reveal delay={100} className="lg:col-span-7">
-              <div className="accent-rail space-y-6">
-                <p className="lead">
-                  Most real estate operations are duct-taped together — a
-                  spreadsheet here, a CRM there, a chat thread for the
-                  important parts, and tribal knowledge in someone's head.
-                </p>
-                <p className="lead">
-                  Pegasus Systems exists because that approach doesn't scale
-                  and doesn't compound. We build the platform we need ourselves
-                  — and where appropriate, we open access to a small group of
-                  operators who care about the same things we do.
+      <section className="py-20 lg:py-28 bg-card">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+            <ScrollReveal>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+                <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                  Why Pegasus Systems Exists
                 </p>
               </div>
-            </Reveal>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">
+                Operations are the product.
+              </h2>
+            </ScrollReveal>
+            <ScrollReveal>
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
+                <p>
+                  Most real estate operations are duct-taped together — a spreadsheet
+                  here, a CRM there, a chat thread for the important parts, and tribal
+                  knowledge in someone's head.
+                </p>
+                <p>
+                  Pegasus Systems exists because that approach doesn't scale and
+                  doesn't compound. We build the platform we need ourselves — and
+                  where appropriate, we open access to a small group of operators who
+                  care about the same things we do.
+                </p>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
-      </Section>
+      </section>
 
       {/* Products */}
-      <Section variant="ink">
-        <div className="container-premium section-y">
-          <Reveal className="mx-auto max-w-3xl text-center">
-            <Kicker>Pegasus Systems · Product Family</Kicker>
-            <DisplayHeading className="mt-4 text-4xl md:text-5xl">
+      <section className="py-20 lg:py-28 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <ScrollReveal className="text-center mb-14">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                Product Family
+              </p>
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">
               Five connected products. One operating standard.
-            </DisplayHeading>
-            <CopperRule className="mt-10" />
-          </Reveal>
+            </h2>
+          </ScrollReveal>
 
-          <div className="mt-14 space-y-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15">
-            {products.map((p, i) => (
-              <Reveal key={p.name} delay={i * 50}>
-                <div className="grid items-start gap-6 bg-[hsl(220_30%_8%)] p-8 md:grid-cols-12 md:items-center">
-                  <div className="md:col-span-1">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-copper/35 text-copper">
-                      {p.icon}
-                    </span>
-                  </div>
-                  <div className="md:col-span-3">
-                    <h4 className="font-display text-2xl text-ivory">{p.name}</h4>
-                    <p className="mt-1 text-[12px] uppercase tracking-[0.2em] text-copper/80">
-                      {p.role}
-                    </p>
-                  </div>
-                  <div className="md:col-span-6">
-                    <p className="text-[14.5px] leading-relaxed text-muted-ivory">{p.body}</p>
-                  </div>
-                  <div className="md:col-span-2 md:text-right">
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] ${
-                        p.status === "Private Beta"
-                          ? "border-copper/40 bg-copper/10 text-copper"
-                          : p.status === "Internal"
-                          ? "border-copper/15 text-ivory/60"
-                          : "border-copper/20 text-bronze"
-                      }`}
-                    >
-                      {p.status}
-                    </span>
-                    {p.href && (
-                      <Link
-                        href={p.href}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-copper hover:text-bronze"
-                      >
-                        Learn More
-                        <ArrowUpRight className="h-3 w-3" />
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </Reveal>
+          <StaggerChildren className="space-y-4" staggerDelay={0.08}>
+            {products.map((p) => (
+              <StaggerItem key={p.name}>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4 md:items-center">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <p.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0 md:grid md:grid-cols-12 md:items-center md:gap-4">
+                        <div className="md:col-span-3">
+                          <h3 className="font-semibold">{p.name}</h3>
+                          <p className="text-xs text-primary font-medium uppercase tracking-wide mt-0.5">
+                            {p.role}
+                          </p>
+                        </div>
+                        <p className="mt-2 md:mt-0 text-sm text-muted-foreground leading-relaxed md:col-span-7">
+                          {p.body}
+                        </p>
+                        <div className="mt-3 md:mt-0 md:col-span-2 md:text-right flex md:flex-col items-center md:items-end gap-3">
+                          <Badge variant={statusVariant[p.status]}>
+                            {p.status}
+                          </Badge>
+                          {p.href && (
+                            <Link href={p.href}>
+                              <span className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                Learn More
+                                <ArrowUpRight className="h-3 w-3" />
+                              </span>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerChildren>
         </div>
-      </Section>
+      </section>
 
       {/* Principles */}
-      <Section variant="canvas">
-        <div className="container-premium section-y">
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-            <Reveal className="lg:col-span-4">
-              <Kicker>How Pegasus Systems Works</Kicker>
-              <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-                Built for operators, not for headlines.
-              </DisplayHeading>
-            </Reveal>
-            <div className="lg:col-span-8">
-              <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-3">
-                {principles.map((p, i) => (
-                  <Reveal key={p.title} delay={i * 80}>
-                    <div className="h-full bg-[hsl(220_30%_8%)] p-7">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
-                        <Layers className="h-5 w-5" />
-                      </span>
-                      <h4 className="font-display mt-5 text-xl text-ivory">{p.title}</h4>
-                      <p className="mt-3 text-[14px] leading-relaxed text-muted-ivory">
-                        {p.body}
-                      </p>
-                    </div>
-                  </Reveal>
-                ))}
+      <section className="py-20 lg:py-28 bg-card">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-3 gap-12 lg:gap-16">
+            <ScrollReveal>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+                <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                  How Pegasus Systems Works
+                </p>
               </div>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">
+                Built for operators, not for headlines.
+              </h2>
+            </ScrollReveal>
+
+            <div className="lg:col-span-2">
+              <StaggerChildren className="grid sm:grid-cols-3 gap-6" staggerDelay={0.1}>
+                {principles.map((p) => (
+                  <StaggerItem key={p.title}>
+                    <Card className="h-full">
+                      <CardContent className="p-6">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                          <Layers className="h-4 w-4 text-primary" />
+                        </div>
+                        <h3 className="font-semibold mb-2">{p.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
+                      </CardContent>
+                    </Card>
+                  </StaggerItem>
+                ))}
+              </StaggerChildren>
             </div>
           </div>
         </div>
-      </Section>
+      </section>
 
       {/* CTA */}
-      <Section variant="ink">
-        <div className="container-premium section-y">
-          <Reveal className="mx-auto max-w-3xl text-center">
-            <DisplayHeading className="text-4xl md:text-5xl">
+      <section className="py-20 lg:py-28 bg-secondary text-secondary-foreground">
+        <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
+          <ScrollReveal>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight mb-6">
               Want a closer look at Pegasus Systems?
-            </DisplayHeading>
-            <p className="lead mt-6">
-              MarketFlow is the public-facing product to start with. The rest
-              of the family is intentionally private until it's ready for the
-              right operators.
+            </h2>
+            <p className="text-secondary-foreground/80 mb-10 leading-relaxed">
+              MarketFlow is the public-facing product to start with. The rest of the
+              family is intentionally private until it's ready for the right operators.
             </p>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <CTAButton href="/marketflow-beta">Explore MarketFlow</CTAButton>
-              <CTAButton href="/contact?subject=systems" variant="ghost">
-                Talk to Pegasus Systems
-              </CTAButton>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link href="/marketflow-beta">
+                <Button size="lg" variant="secondary" className="bg-white text-secondary hover:bg-white/90">
+                  Explore MarketFlow
+                </Button>
+              </Link>
+              <Link href="/contact?subject=systems">
+                <Button size="lg" variant="outline" className="border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10">
+                  Talk to Pegasus Systems
+                </Button>
+              </Link>
             </div>
-          </Reveal>
+          </ScrollReveal>
         </div>
-      </Section>
+      </section>
     </div>
   );
 }
