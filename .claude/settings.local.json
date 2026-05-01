@@ -15,7 +15,10 @@
       "Bash(git merge *)",
       "Bash(git rebase *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(netstat -tlnp)",
+      "Bash(fuser 5000/tcp)",
+      "Bash(ps *)"
     ]
   }
 }

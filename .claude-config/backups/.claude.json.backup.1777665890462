@@ -1,5 +1,12 @@
 {
   "numStartups": 1,
+  "tipsHistory": {
+    "new-user-warmup": 1,
+    "plan-mode-for-complex-tasks": 1,
+    "terminal-setup": 1,
+    "memory-command": 1
+  },
+  "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {
     "tengu_marble_sandcastle": false,
     "tengu_vellum_lantern": false,
