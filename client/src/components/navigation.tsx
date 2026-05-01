@@ -138,8 +138,8 @@ export function Navigation() {
       <div
         className={`transition-all duration-500 ${
           scrolled || onAppShell
-            ? "bg-[hsl(220_35%_5%)]/85 backdrop-blur-xl border-b border-copper/15"
-            : "bg-gradient-to-b from-[hsl(220_40%_4%)]/80 via-[hsl(220_35%_5%)]/40 to-transparent"
+            ? "bg-[hsl(38_32%_96%)]/95 backdrop-blur-xl border-b border-[hsl(35_18%_84%)]"
+            : "bg-gradient-to-b from-[hsl(220_40%_4%)]/70 via-[hsl(220_35%_5%)]/30 to-transparent"
         }`}
       >
         <div className="container-premium flex h-20 items-center justify-between gap-6">
@@ -151,7 +151,7 @@ export function Navigation() {
           >
             <PegasusMark size={42} />
             <div className="hidden sm:flex flex-col leading-none">
-              <span className="font-display-uppercase text-[15px] text-ivory">
+              <span className={`font-display-uppercase text-[15px] ${scrolled || onAppShell ? "text-foreground" : "text-ivory"}`}>
                 Pegasus Dreamscapes
               </span>
               <span className="kicker mt-1.5 text-[10px] tracking-[0.28em] text-copper/80">
@@ -173,6 +173,8 @@ export function Navigation() {
                   className={`relative px-4 py-2 text-[13px] tracking-[0.04em] transition ${
                     active
                       ? "text-copper"
+                      : scrolled || onAppShell
+                      ? "text-foreground/80 hover:text-foreground"
                       : "text-ivory/80 hover:text-ivory"
                   }`}
                 >
@@ -200,7 +202,7 @@ export function Navigation() {
           <div className="flex items-center gap-3">
             <Link
               href="/sell"
-              className="hidden md:inline-flex items-center gap-2 rounded-sm border border-copper/40 px-4 py-2 text-[12px] uppercase tracking-[0.18em] text-copper transition hover:border-copper hover:bg-copper/5"
+              className="hidden md:inline-flex items-center gap-2 rounded-sm border border-copper/50 bg-copper/5 px-4 py-2 text-[12px] uppercase tracking-[0.18em] text-copper transition hover:border-copper hover:bg-copper/10"
               data-testid="button-nav-submit"
             >
               Submit an Opportunity
@@ -212,7 +214,11 @@ export function Navigation() {
             ) : (
               <a
                 href="/api/login"
-                className="hidden lg:inline-flex items-center gap-1.5 px-2 py-2 text-[12px] uppercase tracking-[0.18em] text-ivory/70 transition hover:text-ivory"
+                className={`hidden lg:inline-flex items-center gap-1.5 px-2 py-2 text-[12px] uppercase tracking-[0.18em] transition ${
+                  scrolled || onAppShell
+                    ? "text-foreground/60 hover:text-foreground"
+                    : "text-ivory/70 hover:text-ivory"
+                }`}
                 data-testid="link-nav-signin"
               >
                 <LogIn className="h-3.5 w-3.5" />
@@ -223,7 +229,9 @@ export function Navigation() {
             {/* Mobile toggle */}
             <button
               onClick={() => setOpen((v) => !v)}
-              className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-sm border border-copper/30 text-ivory transition hover:bg-white/5"
+              className={`lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-sm border border-copper/30 transition hover:bg-copper/5 ${
+                scrolled || onAppShell ? "text-foreground" : "text-ivory"
+              }`}
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
               data-testid="button-mobile-menu"
@@ -244,7 +252,7 @@ export function Navigation() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="lg:hidden bg-[hsl(220_35%_5%)] border-b border-copper/15 backdrop-blur-xl"
+            className="lg:hidden bg-[hsl(38_32%_96%)] border-b border-[hsl(35_18%_84%)] backdrop-blur-xl"
           >
             <div className="container-premium py-6">
               <div className="flex flex-col">
@@ -254,8 +262,8 @@ export function Navigation() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`flex items-center justify-between border-b border-copper/10 py-4 text-[15px] tracking-wide transition ${
-                        active ? "text-copper" : "text-ivory hover:text-copper"
+                      className={`flex items-center justify-between border-b border-[hsl(35_18%_84%)] py-4 text-[15px] tracking-wide transition ${
+                        active ? "text-copper" : "text-foreground/80 hover:text-copper"
                       }`}
                       data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                     >

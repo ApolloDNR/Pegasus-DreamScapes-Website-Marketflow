@@ -75,7 +75,7 @@ export default function Investments() {
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       {/* Hero */}
       <Section variant="hero" className="overflow-hidden">
         <div className="absolute inset-0 bg-architect opacity-[0.18]" aria-hidden />
@@ -87,13 +87,13 @@ export default function Investments() {
           <Reveal delay={80}>
             <DisplayHeading
               as="h1"
-              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px]"
+              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px] text-ivory"
             >
               Real estate capital, structured with clarity.
             </DisplayHeading>
           </Reveal>
           <Reveal delay={140}>
-            <p className="lead mt-8 max-w-2xl">
+            <p className="lead mt-8 max-w-2xl text-muted-ivory">
               Pegasus Investments evaluates, structures, and partners on real
               estate opportunities with a focus on clarity, risk awareness, and
               long-term value. Every conversation starts with the numbers, the
@@ -112,7 +112,7 @@ export default function Investments() {
           </Reveal>
 
           <Reveal delay={280}>
-            <p className="mt-12 max-w-2xl text-[12px] uppercase tracking-[0.22em] text-ivory/40">
+            <p className="mt-12 max-w-2xl text-[12px] uppercase tracking-[0.22em] text-ivory/50">
               Note · Pegasus Dreamscapes does not offer or sell securities to
               the public. Any investment relationship is private, deal-specific,
               and subject to formal documentation and applicable law.
@@ -132,15 +132,15 @@ export default function Investments() {
             <CopperRule className="mt-10" />
           </Reveal>
 
-          <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2">
+          <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)] sm:grid-cols-2">
             {philosophy.map((p, i) => (
               <Reveal key={p.title} delay={i * 80}>
-                <div className="h-full bg-[hsl(220_30%_8%)] p-9">
+                <div className="h-full warm-cell p-9">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
                     {p.icon}
                   </span>
-                  <h4 className="font-display mt-5 text-2xl text-ivory">{p.title}</h4>
-                  <p className="mt-3 text-[15px] leading-relaxed text-muted-ivory">
+                  <h4 className="font-display mt-5 text-2xl text-foreground">{p.title}</h4>
+                  <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
                     {p.body}
                   </p>
                 </div>
@@ -167,15 +167,15 @@ export default function Investments() {
               </p>
             </Reveal>
             <div className="lg:col-span-7">
-              <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2">
+              <div className="grid gap-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)] sm:grid-cols-2">
                 {structures.map((s, i) => (
                   <Reveal key={s.title} delay={i * 60}>
-                    <div className="h-full bg-[hsl(220_30%_8%)] p-7">
+                    <div className="h-full warm-cell p-7">
                       <span className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-copper/40 text-copper">
                         <LineChart className="h-3.5 w-3.5" />
                       </span>
-                      <h4 className="font-display mt-4 text-xl text-ivory">{s.title}</h4>
-                      <p className="mt-3 text-[14px] leading-relaxed text-muted-ivory">
+                      <h4 className="font-display mt-4 text-xl text-foreground">{s.title}</h4>
+                      <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
                         {s.body}
                       </p>
                     </div>
@@ -203,16 +203,16 @@ export default function Investments() {
               </p>
             </Reveal>
             <Reveal delay={120} className="lg:col-span-6">
-              <div className="rounded-sm border border-copper/25 bg-[hsl(220_30%_8%)] p-9">
+              <div className="rounded-sm border border-[hsl(35_18%_82%)] bg-white p-9 shadow-sm">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/40 text-copper">
                   <Receipt className="h-5 w-5" />
                 </span>
-                <h4 className="font-display mt-5 text-2xl text-ivory">
+                <h4 className="font-display mt-5 text-2xl text-foreground">
                   Standard reporting on every Pegasus-led deal
                 </h4>
                 <ul className="mt-6 space-y-3">
                   {reporting.map((r) => (
-                    <li key={r} className="flex gap-3 text-[15px] text-ivory/85">
+                    <li key={r} className="flex gap-3 text-[15px] text-foreground/80">
                       <span className="mt-2 inline-block h-1 w-1 flex-shrink-0 rotate-45 bg-copper" />
                       <span>{r}</span>
                     </li>
@@ -244,7 +244,7 @@ export default function Investments() {
                 Submit a Deal
               </CTAButton>
             </div>
-            <p className="mt-10 text-[11px] uppercase tracking-[0.22em] text-ivory/40">
+            <p className="mt-10 text-[11px] uppercase tracking-[0.22em] text-muted-foreground/60">
               Nothing on this page constitutes an offer or solicitation to buy or sell any security.
             </p>
           </Reveal>

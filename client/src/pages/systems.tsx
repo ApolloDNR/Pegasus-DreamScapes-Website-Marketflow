@@ -81,7 +81,7 @@ export default function Systems() {
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       {/* Hero */}
       <Section variant="hero" className="overflow-hidden">
         <div className="absolute inset-0 bg-architect opacity-[0.18]" aria-hidden />
@@ -93,13 +93,13 @@ export default function Systems() {
           <Reveal delay={80}>
             <DisplayHeading
               as="h1"
-              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px]"
+              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px] text-ivory"
             >
               The operating system behind disciplined real estate.
             </DisplayHeading>
           </Reveal>
           <Reveal delay={140}>
-            <p className="lead mt-8 max-w-2xl">
+            <p className="lead mt-8 max-w-2xl text-muted-ivory">
               Pegasus Systems is the internal product organization inside
               Pegasus Dreamscapes. We build the tools that bring governance,
               intelligence, and operational control to real estate execution —
@@ -159,23 +159,23 @@ export default function Systems() {
             <CopperRule className="mt-10" />
           </Reveal>
 
-          <div className="mt-14 space-y-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15">
+          <div className="mt-14 space-y-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)]">
             {products.map((p, i) => (
               <Reveal key={p.name} delay={i * 50}>
-                <div className="grid items-start gap-6 bg-[hsl(220_30%_8%)] p-8 md:grid-cols-12 md:items-center">
+                <div className="grid items-start gap-6 warm-cell p-8 md:grid-cols-12 md:items-center">
                   <div className="md:col-span-1">
                     <span className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-copper/35 text-copper">
                       {p.icon}
                     </span>
                   </div>
                   <div className="md:col-span-3">
-                    <h4 className="font-display text-2xl text-ivory">{p.name}</h4>
+                    <h4 className="font-display text-2xl text-foreground">{p.name}</h4>
                     <p className="mt-1 text-[12px] uppercase tracking-[0.2em] text-copper/80">
                       {p.role}
                     </p>
                   </div>
                   <div className="md:col-span-6">
-                    <p className="text-[14.5px] leading-relaxed text-muted-ivory">{p.body}</p>
+                    <p className="text-[14.5px] leading-relaxed text-muted-foreground">{p.body}</p>
                   </div>
                   <div className="md:col-span-2 md:text-right">
                     <span
@@ -183,8 +183,8 @@ export default function Systems() {
                         p.status === "Private Beta"
                           ? "border-copper/40 bg-copper/10 text-copper"
                           : p.status === "Internal"
-                          ? "border-copper/15 text-ivory/60"
-                          : "border-copper/20 text-bronze"
+                          ? "border-[hsl(35_18%_78%)] text-foreground/50"
+                          : "border-copper/20 text-[hsl(28_50%_56%)]"
                       }`}
                     >
                       {p.status}
@@ -192,7 +192,7 @@ export default function Systems() {
                     {p.href && (
                       <Link
                         href={p.href}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-copper hover:text-bronze"
+                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-copper hover:text-[hsl(28_50%_56%)]"
                       >
                         Learn More
                         <ArrowUpRight className="h-3 w-3" />
@@ -217,15 +217,15 @@ export default function Systems() {
               </DisplayHeading>
             </Reveal>
             <div className="lg:col-span-8">
-              <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-3">
+              <div className="grid gap-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)] sm:grid-cols-3">
                 {principles.map((p, i) => (
                   <Reveal key={p.title} delay={i * 80}>
-                    <div className="h-full bg-[hsl(220_30%_8%)] p-7">
+                    <div className="h-full warm-cell p-7">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
                         <Layers className="h-5 w-5" />
                       </span>
-                      <h4 className="font-display mt-5 text-xl text-ivory">{p.title}</h4>
-                      <p className="mt-3 text-[14px] leading-relaxed text-muted-ivory">
+                      <h4 className="font-display mt-5 text-xl text-foreground">{p.title}</h4>
+                      <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
                         {p.body}
                       </p>
                     </div>

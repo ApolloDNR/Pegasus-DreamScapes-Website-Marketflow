@@ -662,15 +662,25 @@ html {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.92 0 0 0 0 0.85 0 0 0 0 0.77 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Deep navy radial vignette canvas */
+/* Warm ivory canvas — default section background */
 .bg-canvas {
+  background: linear-gradient(180deg, hsl(38 40% 96%) 0%, hsl(38 32% 94%) 100%);
+}
+
+/* Slightly deeper ivory/cream for alternating sections */
+.bg-canvas-alt {
+  background: hsl(38 28% 93%);
+}
+
+/* Deep navy section — used selectively for contrast (hero, CTA blocks, footer) */
+.bg-navy-deep {
   background:
     radial-gradient(1200px 600px at 80% -10%, hsl(28 49% 48% / 0.10), transparent 60%),
     radial-gradient(900px 500px at 0% 100%, hsl(218 35% 18% / 0.55), transparent 60%),
     linear-gradient(180deg, hsl(220 35% 5%) 0%, hsl(218 30% 6%) 100%);
 }
 
-/* Hero atmosphere — deeper, more cinematic */
+/* Hero atmosphere — deep navy, cinematic */
 .bg-hero {
   background:
     radial-gradient(1000px 500px at 75% 20%, hsl(28 49% 50% / 0.16), transparent 65%),
@@ -678,16 +688,17 @@ html {
     linear-gradient(180deg, hsl(220 40% 4%) 0%, hsl(218 32% 7%) 70%, hsl(218 28% 9%) 100%);
 }
 
-/* Pillar card surface */
+/* MarketFlow Beta — dark but not black-on-black */
+.bg-tech-dark {
+  background: linear-gradient(180deg, hsl(218 30% 10%) 0%, hsl(218 28% 8%) 100%);
+}
+
+/* Pillar card surface — warm cream/ivory with navy text and copper accents */
 .pillar-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(
-    180deg,
-    hsl(220 30% 11% / 1) 0%,
-    hsl(220 30% 8% / 1) 100%
-  );
-  border: 1px solid hsl(var(--border));
+  background: hsl(0 0% 100%);
+  border: 1px solid hsl(35 18% 86%);
   border-radius: 4px;
   transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -700,7 +711,7 @@ html {
     180deg,
     hsl(var(--copper) / 0.0) 0%,
     hsl(var(--copper) / 0.0) 60%,
-    hsl(var(--copper) / 0.06) 100%
+    hsl(var(--copper) / 0.04) 100%
   );
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -711,25 +722,25 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
-    hsl(var(--copper) / 0.55),
+    hsl(var(--copper) / 0.6),
     transparent
   );
-  opacity: 0.4;
+  opacity: 0.3;
   transition: opacity 0.5s ease;
 }
 .pillar-card:hover {
-  transform: translateY(-2px);
-  border-color: hsl(var(--copper) / 0.55);
+  transform: translateY(-3px);
+  border-color: hsl(var(--copper) / 0.4);
   box-shadow:
-    0 1px 0 hsl(var(--copper) / 0.15) inset,
-    0 30px 60px -30px hsl(220 50% 0% / 0.6);
+    0 0 0 1px hsl(var(--copper) / 0.08) inset,
+    0 12px 32px -8px hsl(215 40% 20% / 0.12);
 }
 .pillar-card:hover::before { opacity: 1; }
-.pillar-card:hover::after { opacity: 1; }
+.pillar-card:hover::after { opacity: 0.9; }
 
 /* Outline copper button */
 .btn-copper {
@@ -761,13 +772,35 @@ html {
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: hsl(36 30% 90%);
+  color: hsl(var(--copper));
   background: transparent;
   border: 1px solid hsl(var(--copper) / 0.45);
   border-radius: 2px;
   transition: all 0.3s ease;
 }
 .btn-ghost-copper:hover {
+  border-color: hsl(var(--copper));
+  color: hsl(var(--copper));
+  background: hsl(var(--copper) / 0.06);
+}
+
+/* Ghost copper variant on dark backgrounds */
+.btn-ghost-copper-on-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(36 30% 90%);
+  background: transparent;
+  border: 1px solid hsl(var(--copper) / 0.45);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.btn-ghost-copper-on-dark:hover {
   border-color: hsl(var(--copper));
   color: hsl(var(--copper));
   background: hsl(var(--copper) / 0.06);
@@ -815,9 +848,25 @@ html {
 /* Subtle architectural grid background */
 .bg-architect {
   background-image:
-    linear-gradient(hsl(var(--copper) / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--copper) / 0.05) 1px, transparent 1px);
+    linear-gradient(hsl(var(--copper) / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--copper) / 0.08) 1px, transparent 1px);
   background-size: 64px 64px;
+}
+
+/* Warm card — for "grid" sections on light backgrounds */
+.warm-cell {
+  background: hsl(0 0% 100%);
+  transition: background 0.3s ease;
+}
+.warm-cell:hover {
+  background: hsl(38 30% 98%);
+}
+.warm-cell-alt {
+  background: hsl(38 20% 97%);
+  transition: background 0.3s ease;
+}
+.warm-cell-alt:hover {
+  background: hsl(38 25% 99%);
 }
 
 .text-ivory { color: hsl(36 30% 93%); }
@@ -825,8 +874,13 @@ html {
 .text-bronze { color: hsl(28 50% 56%); }
 .text-muted-ivory { color: hsl(36 12% 65%); }
 
+/* Warm palette text — for light section usage */
+.text-navy { color: hsl(215 55% 18%); }
+.text-warm-muted { color: hsl(215 20% 42%); }
+
 .border-copper { border-color: hsl(var(--copper)); }
 .border-copper-soft { border-color: hsl(var(--copper) / 0.3); }
+.border-warm { border-color: hsl(35 18% 82%); }
 
 /* Reveal on intersection (used with IntersectionObserver in components) */
 .reveal {

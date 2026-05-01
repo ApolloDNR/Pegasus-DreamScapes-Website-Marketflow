@@ -54,7 +54,7 @@ export default function Contact() {
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       <Hero />
       <ContactSection />
     </div>
@@ -74,7 +74,7 @@ function Hero() {
         <Reveal delay={80}>
           <DisplayHeading
             as="h1"
-            className="mt-6 max-w-3xl text-[44px] sm:text-[58px] md:text-[68px]"
+            className="mt-6 max-w-3xl text-[44px] sm:text-[58px] md:text-[68px] text-ivory"
           >
             Real messages get real responses.
           </DisplayHeading>
@@ -144,7 +144,7 @@ function ContactSection() {
   const onSubmit = (data: InsertContact) => mutation.mutate(data);
 
   const inputCls =
-    "w-full bg-[hsl(220_30%_7%)] border border-copper/20 rounded-sm px-4 py-3 text-[14.5px] text-ivory placeholder:text-ivory/30 outline-none transition focus:border-copper focus:ring-1 focus:ring-copper/40";
+    "w-full bg-white border border-[hsl(35_18%_84%)] rounded-sm px-4 py-3 text-[14.5px] text-foreground placeholder:text-muted-foreground/40 outline-none transition focus:border-copper focus:ring-1 focus:ring-copper/30";
 
   return (
     <Section variant="canvas">
@@ -167,7 +167,7 @@ function ContactSection() {
                   <p className="kicker text-copper/80">Email</p>
                   <a
                     href="mailto:hello@pegasusdreamscapes.com"
-                    className="mt-1 block text-[15px] text-ivory hover:text-copper"
+                    className="mt-1 block text-[15px] text-foreground/80 hover:text-copper"
                   >
                     hello@pegasusdreamscapes.com
                   </a>
@@ -177,14 +177,14 @@ function ContactSection() {
                 <MapPin className="mt-1 h-4 w-4 text-copper" />
                 <div>
                   <p className="kicker text-copper/80">Office</p>
-                  <p className="mt-1 text-[15px] text-ivory">East Bay, California</p>
+                  <p className="mt-1 text-[15px] text-foreground/80">East Bay, California</p>
                 </div>
               </li>
               <li className="flex items-start gap-4 border-l border-copper/30 pl-5">
                 <Clock className="mt-1 h-4 w-4 text-copper" />
                 <div>
                   <p className="kicker text-copper/80">Response</p>
-                  <p className="mt-1 text-[15px] text-ivory">
+                  <p className="mt-1 text-[15px] text-foreground/80">
                     We typically respond within 1–2 business days.
                   </p>
                 </div>
@@ -199,13 +199,13 @@ function ContactSection() {
 
           {/* Form */}
           <Reveal delay={120} className="lg:col-span-7">
-            <div className="rounded-sm border border-copper/25 bg-[hsl(220_30%_8%)] p-8 md:p-10">
+            <div className="rounded-sm border border-[hsl(35_18%_82%)] bg-white p-8 md:p-10 shadow-sm">
               {submitted ? (
                 <div className="py-8 text-center">
                   <span className="inline-flex h-12 w-12 items-center justify-center rounded-sm border border-copper/40 text-copper">
                     <CheckCircle2 className="h-6 w-6" />
                   </span>
-                  <h3 className="font-display mt-6 text-3xl text-ivory">
+                  <h3 className="font-display mt-6 text-3xl text-foreground">
                     Message received.
                   </h3>
                   <p className="lead mt-4">
@@ -216,7 +216,7 @@ function ContactSection() {
               ) : (
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <Kicker>Send a Message</Kicker>
-                  <h3 className="font-display text-2xl text-ivory md:text-3xl">
+                  <h3 className="font-display text-2xl text-foreground md:text-3xl">
                     Tell us what you're working on.
                   </h3>
 
@@ -295,7 +295,7 @@ function ContactSection() {
                   </div>
 
                   <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-ivory/40">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60">
                       Your information is reviewed personally. No spam, ever.
                     </p>
                     <button

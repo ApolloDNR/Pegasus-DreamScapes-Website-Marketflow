@@ -74,7 +74,7 @@ export default function MarketFlowBeta() {
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       {/* Hero */}
       <Section variant="hero" className="overflow-hidden">
         <div className="absolute inset-0 bg-architect opacity-[0.16]" aria-hidden />
@@ -89,7 +89,7 @@ export default function MarketFlowBeta() {
           <Reveal delay={80}>
             <DisplayHeading
               as="h1"
-              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px]"
+              className="mt-6 max-w-4xl text-[44px] sm:text-[58px] md:text-[72px] text-ivory"
             >
               MarketFlow.
               <br />
@@ -97,7 +97,7 @@ export default function MarketFlowBeta() {
             </DisplayHeading>
           </Reveal>
           <Reveal delay={140}>
-            <p className="lead mt-8 max-w-2xl">
+            <p className="lead mt-8 max-w-2xl text-muted-ivory">
               MarketFlow is the deal-flow command center inside Pegasus
               Systems. It exists to give operators, investors, and partners a
               clear, accountable view of real estate opportunities — from
@@ -133,15 +133,15 @@ export default function MarketFlowBeta() {
             <CopperRule className="mt-10" />
           </Reveal>
 
-          <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)] sm:grid-cols-2 lg:grid-cols-3">
             {capabilities.map((c, i) => (
               <Reveal key={c.title} delay={i * 60}>
-                <div className="h-full bg-[hsl(220_30%_8%)] p-8">
+                <div className="h-full warm-cell p-8">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
                     {c.icon}
                   </span>
-                  <h4 className="font-display mt-5 text-2xl text-ivory">{c.title}</h4>
-                  <p className="mt-3 text-[14.5px] leading-relaxed text-muted-ivory">
+                  <h4 className="font-display mt-5 text-2xl text-foreground">{c.title}</h4>
+                  <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
                     {c.body}
                   </p>
                 </div>
@@ -167,15 +167,15 @@ export default function MarketFlowBeta() {
               </p>
             </Reveal>
             <div className="lg:col-span-7">
-              <div className="space-y-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15">
+              <div className="space-y-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)]">
                 {lanes.map((l, i) => (
                   <Reveal key={l.name} delay={i * 80}>
-                    <div className="bg-[hsl(220_30%_8%)] p-7">
+                    <div className="warm-cell p-7">
                       <div className="flex items-center justify-between gap-4">
-                        <h4 className="font-display text-2xl text-ivory">{l.name}</h4>
+                        <h4 className="font-display text-2xl text-foreground">{l.name}</h4>
                         <ArrowUpRight className="h-4 w-4 text-copper/70" />
                       </div>
-                      <p className="mt-3 text-[14.5px] leading-relaxed text-muted-ivory">
+                      <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
                         {l.body}
                       </p>
                     </div>
@@ -191,12 +191,12 @@ export default function MarketFlowBeta() {
       <Section variant="canvas">
         <div className="container-premium section-y">
           <Reveal className="mx-auto max-w-4xl">
-            <div className="rounded-sm border border-copper/30 bg-[hsl(220_30%_8%)] p-10 md:p-14">
+            <div className="rounded-sm border border-copper/30 bg-[hsl(218_30%_10%)] p-10 md:p-14">
               <Kicker>Beta Status</Kicker>
-              <DisplayHeading className="mt-4 text-3xl md:text-4xl">
+              <DisplayHeading className="mt-4 text-3xl md:text-4xl text-ivory">
                 Why MarketFlow is private — for now.
               </DisplayHeading>
-              <div className="mt-8 space-y-5 text-[15.5px] leading-relaxed text-ivory/85">
+              <div className="mt-8 space-y-5 text-[15.5px] leading-relaxed text-muted-ivory">
                 <p>
                   MarketFlow is being built from the real operating workflow
                   Pegasus needs to manage deal intake, review, and execution.

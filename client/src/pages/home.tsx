@@ -257,22 +257,22 @@ function WhoWeServe() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)] sm:grid-cols-2 lg:grid-cols-3">
           {audiences.map((a, i) => (
             <Reveal key={a.title} delay={i * 60}>
-              <div className="group h-full bg-[hsl(220_30%_8%)] p-8 transition hover:bg-[hsl(220_30%_10%)]">
+              <div className="group h-full warm-cell p-8">
                 <div className="flex items-center gap-3">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/40 text-copper">
                     {a.icon}
                   </span>
-                  <h3 className="font-display text-2xl text-ivory">{a.title}</h3>
+                  <h3 className="font-display text-2xl text-foreground">{a.title}</h3>
                 </div>
-                <p className="mt-5 text-[14.5px] leading-relaxed text-muted-ivory">
+                <p className="mt-5 text-[14.5px] leading-relaxed text-muted-foreground">
                   {a.body}
                 </p>
                 <Link
                   href={a.cta.href}
-                  className="mt-6 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] text-copper transition group-hover:text-bronze"
+                  className="mt-6 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] text-copper transition group-hover:text-[hsl(28_50%_56%)]"
                   data-testid={`audience-cta-${a.title.toLowerCase().replace(/\s+/g, "-")}`}
                 >
                   {a.cta.label}
@@ -319,7 +319,7 @@ function MarketFlowFeature() {
                 "Negotiation rooms with offer history and counter-offer ladders",
                 "Role-aware portals for investors, wholesalers, buyers, and admins",
               ].map((item) => (
-                <li key={item} className="flex gap-3 text-[15px] text-ivory/85">
+                <li key={item} className="flex gap-3 text-[15px] text-foreground/80">
                   <span className="mt-2 inline-block h-1 w-1 flex-shrink-0 rotate-45 bg-copper" />
                   <span>{item}</span>
                 </li>
@@ -455,17 +455,17 @@ function Discipline() {
             </p>
           </Reveal>
           <div className="lg:col-span-7">
-            <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2">
+            <div className="grid gap-px overflow-hidden rounded-sm border border-[hsl(35_18%_84%)] bg-[hsl(35_18%_84%)] sm:grid-cols-2">
               {items.map((it, i) => (
                 <Reveal key={it.title} delay={i * 80}>
-                  <div className="h-full bg-[hsl(220_30%_8%)] p-7">
+                  <div className="h-full warm-cell p-7">
                     <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
                       {it.icon}
                     </span>
-                    <h4 className="font-display mt-5 text-2xl text-ivory">
+                    <h4 className="font-display mt-5 text-2xl text-foreground">
                       {it.title}
                     </h4>
-                    <p className="mt-3 text-[14px] leading-relaxed text-muted-ivory">
+                    <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
                       {it.body}
                     </p>
                   </div>
@@ -489,7 +489,7 @@ function Founder() {
         <Reveal className="mx-auto max-w-4xl">
           <CopperRule className="mb-10" />
           <Kicker className="block text-center">A Note From The Founder</Kicker>
-          <blockquote className="mt-6 text-balance text-center font-display text-[28px] leading-[1.25] text-ivory md:text-[36px]">
+          <blockquote className="mt-6 text-balance text-center font-display text-[28px] leading-[1.25] text-foreground md:text-[36px]">
             "We started Pegasus to bring real discipline to real estate. Not
             hype, not shortcuts — careful underwriting, careful execution, and
             careful relationships. The systems we're building are the ones we
@@ -499,7 +499,7 @@ function Founder() {
             <p className="font-display-uppercase text-[12px] tracking-[0.32em] text-copper">
               Founder · Pegasus Dreamscapes
             </p>
-            <p className="text-[12px] uppercase tracking-[0.18em] text-ivory/50">
+            <p className="text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
               East Bay, California
             </p>
           </div>
@@ -560,7 +560,7 @@ function FAQ() {
           </Reveal>
 
           <div className="lg:col-span-8">
-            <ul className="divide-y divide-copper/10 border-y border-copper/10">
+            <ul className="divide-y divide-[hsl(35_18%_84%)] border-y border-[hsl(35_18%_84%)]">
               {faqs.map((f, idx) => {
                 const isOpen = open === idx;
                 return (
@@ -570,7 +570,7 @@ function FAQ() {
                       className="flex w-full items-center justify-between gap-6 py-6 text-left transition hover:text-copper"
                       data-testid={`faq-question-${idx}`}
                     >
-                      <span className="font-display text-[20px] text-ivory md:text-[22px]">
+                      <span className="font-display text-[20px] text-foreground md:text-[22px]">
                         {f.q}
                       </span>
                       <span
@@ -584,7 +584,7 @@ function FAQ() {
                       </span>
                     </button>
                     {isOpen && (
-                      <div className="pb-7 pr-12 text-[15px] leading-relaxed text-muted-ivory">
+                      <div className="pb-7 pr-12 text-[15px] leading-relaxed text-muted-foreground">
                         {f.a}
                       </div>
                     )}
@@ -606,16 +606,16 @@ function ContactCTA() {
   return (
     <Section variant="canvas">
       <div className="container-premium section-y">
-        <Reveal className="relative overflow-hidden rounded-sm border border-copper/30 bg-[hsl(220_35%_5%)] p-10 md:p-16">
+        <Reveal className="relative overflow-hidden rounded-sm border border-copper/30 bg-[hsl(218_35%_9%)] p-10 md:p-16">
           <div className="absolute inset-0 bg-architect opacity-[0.12]" aria-hidden />
           <PegasusWatermark className="pointer-events-none absolute -bottom-12 -right-12 h-72 w-[520px] opacity-30" />
           <div className="relative grid gap-10 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <Kicker>Open A Conversation</Kicker>
-              <DisplayHeading className="mt-4 text-4xl md:text-5xl">
+              <DisplayHeading className="mt-4 text-4xl md:text-5xl text-ivory">
                 If your project is real, we'd like to hear about it.
               </DisplayHeading>
-              <p className="lead mt-6 max-w-xl">
+              <p className="lead mt-6 max-w-xl text-muted-ivory">
                 Submit a property, send a deal, or simply tell us what you're
                 trying to build. Real messages get real responses.
               </p>
@@ -646,7 +646,7 @@ export default function Home() {
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       <Hero />
       <Pillars />
       <WhoWeServe />
