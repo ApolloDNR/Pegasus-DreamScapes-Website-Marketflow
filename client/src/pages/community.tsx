@@ -159,7 +159,7 @@ export default function CommunityPage() {
 
   const filteredPosts = posts.filter(post => 
     searchQuery === "" || 
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (post.title ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

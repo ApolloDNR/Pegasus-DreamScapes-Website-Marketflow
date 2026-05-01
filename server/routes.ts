@@ -5782,8 +5782,9 @@ export async function registerRoutes(
         recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'offers@pegasusdreamscapes.com',
         recipientName: 'Buyer',
         dealTitle: `Wholesale Deal #${offer.dealId}`,
-        offerAmount: offer.amount || 0,
-        status: status,
+        dealAddress: 'Address available in dashboard',
+        offerAmount: offer.offerAmount || 0,
+        offerType: status === "accepted" ? "accepted" : status === "rejected" ? "declined" : "counter",
       }).catch(err => console.error('Failed to send offer status email:', err));
       
       res.json(offer);
@@ -7947,11 +7948,12 @@ export async function registerRoutes(
         const message = JSON.parse(data.toString());
         
         if (message.type === 'subscribe' && message.payload?.userId) {
-          userId = message.payload.userId;
-          if (!clients.has(userId)) {
-            clients.set(userId, new Set());
+          const subscribedUserId = String(message.payload.userId);
+          userId = subscribedUserId;
+          if (!clients.has(subscribedUserId)) {
+            clients.set(subscribedUserId, new Set());
           }
-          clients.get(userId)?.add(ws);
+          clients.get(subscribedUserId)?.add(ws);
           
           ws.send(JSON.stringify({ 
             type: 'subscribed', 

@@ -1742,13 +1742,13 @@ function MediaLibrary() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const handleUploadComplete = async (result: { successful?: Array<{ name?: string; size?: number; type?: string; meta?: { objectPath?: string }; uploadURL?: string }> }) => {
+  const handleUploadComplete = async (result: { successful?: Array<{ name?: string; size?: number | null; type?: string; meta?: Record<string, unknown>; uploadURL?: string }> }) => {
     if (result.successful && result.successful.length > 0) {
       for (const uploadedFile of result.successful) {
         const filename = uploadedFile.name || 'uploaded-file';
         const contentType = uploadedFile.type || 'application/octet-stream';
         const fileSize = uploadedFile.size || 0;
-        const objectPath = uploadedFile.meta?.objectPath || '';
+        const objectPath = typeof uploadedFile.meta?.objectPath === 'string' ? uploadedFile.meta.objectPath : '';
         
         if (objectPath) {
           await createMediaMutation.mutateAsync({

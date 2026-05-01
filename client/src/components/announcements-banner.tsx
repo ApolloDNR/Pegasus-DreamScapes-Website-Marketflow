@@ -25,7 +25,7 @@ export function AnnouncementsBanner({ className = "", audience }: AnnouncementsB
   const visibleAnnouncements = announcements.filter((a) => {
     if (dismissedIds.includes(a.id)) return false;
     if (!audience) return true;
-    return a.targetAudience === "ALL" || a.targetAudience === audience;
+    return a.audience === "ALL" || a.audience === audience;
   });
 
   const pinnedAnnouncements = visibleAnnouncements.filter((a) => a.isPinned);

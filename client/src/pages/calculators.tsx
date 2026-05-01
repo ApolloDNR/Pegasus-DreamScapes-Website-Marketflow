@@ -1437,7 +1437,7 @@ function CashFlowCalculator() {
                 vacancy: parseFloat(vacancy) || 5,
                 propertyTax: parseFloat(propertyTax) || 0,
                 insurance: parseFloat(insurance) || 0,
-                repairs: parseFloat(repairs) || 0,
+                otherExpenses: parseFloat(otherExpenses) || 0,
                 management: parseFloat(management) || 0,
                 utilities: parseFloat(utilities) || 0,
                 mortgage: parseFloat(mortgage) || 0,
@@ -1787,7 +1787,7 @@ function WholesaleCalculator() {
                 buyerProfit: parseFloat(buyerProfit) || 25,
                 closingCosts: parseFloat(closingCosts) || 6,
                 holdingCosts: parseFloat(holdingCosts) || 0,
-                assignmentFee: parseFloat(assignmentFee) || 10000,
+                assignmentFee: parseFloat(desiredAssignmentFee) || 10000,
               }}
               outputs={{
                 ...results,
@@ -1799,7 +1799,7 @@ function WholesaleCalculator() {
                 <p className="text-sm text-muted-foreground">
                   Looking for wholesale deals?
                 </p>
-                <DealGradeBadge grade={calculateDealGrade(results.spreadPercentage)} />
+                <DealGradeBadge grade={calculateDealGrade(results.assignmentFeePercent)} />
               </div>
               <Link href="/dealflow/deals">
                 <Button className="bg-green-600 text-white hover:bg-green-700" data-testid="button-wholesale-cta">
