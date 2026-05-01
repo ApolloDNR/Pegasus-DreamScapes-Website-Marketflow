@@ -285,7 +285,7 @@ function LeadFormSection() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="(555) 123-4567" {...field} data-testid="input-seller-phone" />
+                          <Input placeholder="Your best callback number" {...field} data-testid="input-seller-phone" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -450,7 +450,7 @@ function FAQSection() {
   const faqs = [
     {
       question: "Will you list or buy my house?",
-      answer: "We offer both options. We can provide a direct cash offer for a quick, hassle-free sale, or once fully licensed, we can list your property on the market to potentially get a higher price. We'll discuss both options with you.",
+      answer: "We review acquisition and partnership paths based on your timeline, property condition, and goals. If a listing path is ever considered, it is handled only through appropriate licensed relationships.",
     },
     {
       question: "Do I have to make repairs?",
@@ -462,7 +462,7 @@ function FAQSection() {
     },
     {
       question: "Are there fees or commissions?",
-      answer: "When we buy directly, there are no agent commissions or fees for you. The offer we make is what you receive. If you choose to list with us (once licensed), standard listing fees would apply.",
+      answer: "When we buy directly, there are no agent commissions or fees for you. The offer we make is what you receive. If a listing path is considered, it would be handled through the appropriate licensed relationship and documented terms.",
     },
     {
       question: "What types of properties do you buy?",

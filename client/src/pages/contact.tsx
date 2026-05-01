@@ -20,7 +20,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { 
   Mail, 
-  Phone, 
   MapPin,
   Clock,
   CheckCircle,
@@ -53,7 +52,7 @@ function HeroSection() {
           Get In Touch
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Have a property to sell? Want to invest? Or just have questions? We'd love to hear from you.
+          Submit a property, start a private partner conversation, or ask a question about Pegasus Dreamscapes.
         </p>
       </div>
     </section>
@@ -126,21 +125,15 @@ function ContactSection() {
       href: "mailto:info@pegasusdreamscapes.com",
     },
     {
-      icon: Phone,
-      label: "Phone",
-      value: "(555) 123-4567",
-      href: "tel:+15551234567",
-    },
-    {
       icon: MapPin,
       label: "Location",
-      value: "California, USA",
+      value: "East Bay, California",
       href: null,
     },
     {
       icon: Clock,
       label: "Response Time",
-      value: "Within 24-48 hours",
+      value: "Typically within 1-2 business days",
       href: null,
     },
   ];
@@ -192,7 +185,7 @@ function ContactSection() {
                   </div>
                   <h3 className="text-2xl font-semibold mb-4" data-testid="text-contact-success">Thank You!</h3>
                   <p className="text-muted-foreground">
-                    Your message has been received. We'll get back to you within 24-48 hours.
+                    Your message has been received. We'll review your message and follow up as soon as possible.
                   </p>
                 </CardContent>
               </Card>
@@ -238,7 +231,7 @@ function ContactSection() {
                           <FormItem>
                             <FormLabel>Phone Number (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="(555) 123-4567" {...field} value={field.value ?? ""} data-testid="input-contact-phone" />
+                              <Input placeholder="Your best callback number" {...field} value={field.value ?? ""} data-testid="input-contact-phone" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

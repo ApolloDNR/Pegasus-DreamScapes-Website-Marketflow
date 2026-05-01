@@ -7,6 +7,7 @@ import { useFeatureFlags } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LegalDisclaimer } from "@/components/legal-disclaimer";
 import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import {
   Loader2,
@@ -68,6 +69,7 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-background">
       <HeroSection />
+      <section className="max-w-7xl mx-auto px-6 pt-6"><LegalDisclaimer /></section>
       <BetaFeaturesSection />
       <StatsSection />
       <RolesSection />
@@ -94,19 +96,18 @@ function HeroSection() {
           <div className="text-center max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-6">
               <Sparkles className="w-3 h-3 mr-1" />
-              Real Estate Marketplace
+              MarketFlow by Pegasus Systems
             </Badge>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6" data-testid="text-marketplace-title">
-              The Pegasus Marketplace
+              MarketFlow Private Beta
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto mb-8" data-testid="text-marketplace-subtitle">
-              Connect with vetted wholesalers, operators, investors, and buyers. 
-              Find your next deal, raise capital, or invest in real estate—all in one platform.
+              A private beta dealflow environment for real estate operators, wholesalers, buyers, and investors.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/signup">
                 <Button size="lg" data-testid="button-join-marketplace">
-                  Join the Marketplace
+                  Request Beta Access
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -121,7 +122,7 @@ function HeroSection() {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              Explore the marketplace without an account—demo mode allows browsing with limited features
+              MarketFlow is currently in private beta. Access and features may be limited while the platform evolves.
             </p>
           </div>
         </FadeIn>
@@ -208,10 +209,10 @@ function BetaFeaturesSection() {
 
 function StatsSection() {
   const stats = [
-    { value: "250+", label: "Active Deals", icon: Building2 },
-    { value: "$45M+", label: "Capital Raised", icon: TrendingUp },
-    { value: "500+", label: "Active Members", icon: Users },
-    { value: "98%", label: "Satisfaction Rate", icon: Award },
+    { value: "Private Beta", label: "Access by review", icon: Building2 },
+    { value: "Submissions Open", label: "Deal intake available", icon: TrendingUp },
+    { value: "Role-Based", label: "Workflows in progress", icon: Users },
+    { value: "Disciplined", label: "Execution-focused system", icon: Award },
   ];
 
   return (
@@ -242,7 +243,7 @@ function RolesSection() {
     {
       title: "Wholesalers",
       icon: Building2,
-      description: "Submit off-market deals and connect with qualified buyers and operators.",
+      description: "Submit off-market deals and connect with operators and investor interest.",
       features: ["Submit deals for approval", "Set assignment fees", "Track deal status", "Build reputation"],
       cta: "Join as Wholesaler",
       href: "/signup?role=wholesaler",

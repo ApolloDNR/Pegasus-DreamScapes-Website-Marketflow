@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { LegalDisclaimer } from "@/components/legal-disclaimer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ export default function Invest() {
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />
+      <section className="max-w-7xl mx-auto px-6 pt-6"><LegalDisclaimer /></section>
       <WhatInvestorsGainSection />
       <ProjectSnapshotSection />
       <PartnershipTypesSection />
@@ -188,15 +190,15 @@ function PartnershipTypesSection() {
     {
       icon: DollarSign,
       title: "Debt Investment",
-      description: "Provide a loan secured by real estate. Receive fixed interest payments regardless of project outcome. Lower risk with predictable cash flow, typically 8-12% annual returns.",
-      benefits: ["Fixed monthly income", "Principal protected by property", "First position on capital stack"],
-      risks: ["Lower upside than equity", "Returns capped at agreed rate"],
+      description: "Provide a loan secured by real estate. Structured debt participation may be considered on select projects, subject to diligence, documentation, legal review, and suitability.",
+      benefits: ["Structured terms defined per project", "Risk reviewed through diligence", "Documentation and legal review required"],
+      risks: ["Potentially lower upside than equity", "Terms vary by project"],
       note: "Available",
     },
     {
       icon: TrendingUp,
       title: "Equity Investment",
-      description: "Share in the profits (and risks) of property flips or hold strategies. Higher potential returns tied directly to project success, typically 15-30% annualized.",
+      description: "Share in the profits (and risks) of property flips or hold strategies. Higher potential returns tied directly to project success, with outcomes dependent on project execution and legal structure.",
       benefits: ["Higher profit potential", "Share in property appreciation", "Tax advantages on gains"],
       risks: ["Returns tied to project success", "Longer hold periods possible"],
       note: "Available",
@@ -400,7 +402,7 @@ function InvestorFormSection() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="(555) 123-4567" {...field} data-testid="input-investor-phone" />
+                          <Input placeholder="Best phone number" {...field} data-testid="input-investor-phone" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
