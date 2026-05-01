@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s http://localhost:5000/api/projects)",
+      "Bash(curl *)",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(node_modules/.bin/tsx --version)",
+      "Bash(pkill -f \"tsx server/index.ts\")",
+      "Bash(node -e ' *)",
+      "Bash(gh pr *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
