@@ -66,7 +66,7 @@ function HeroSection() {
           <span className="text-tan">Live it.</span>
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          We transform distressed properties into stunning investments while elevating communities and creating lasting partnerships.
+          Pegasus Dreamscapes is a real estate development, investment, and systems company. We exist to bring discipline, vision, and operational clarity to real estate execution.
         </p>
       </div>
     </section>
@@ -108,7 +108,7 @@ function OurStorySection() {
           <div>
             <span className="text-tan font-medium text-sm uppercase tracking-wider">Our Story</span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-8 tracking-tight" data-testid="text-story-title">
-              FROM FIRST FLIP TO<br />PEGASUS EMPIRE
+              BORN FROM<br />REAL WORK
             </h2>
             <div className="space-y-6 text-muted-foreground leading-relaxed">
               <p className="text-lg">
@@ -118,7 +118,7 @@ function OurStorySection() {
                 After managing projects for a general contractor and successfully completing his own flip, Paolo saw a gap: properties that needed more than paint and staging—they needed vision, systems, and a team that cared about both profit and the people involved.
               </p>
               <p>
-                What started as a passion for transforming neglected properties has grown into a full-service real estate operation. Today, Pegasus Dreamscapes combines construction expertise with design sensibility to create spaces that not only look beautiful but perform as solid investments.
+                Pegasus Dreamscapes started with one project, a clear vision, and a commitment to build something more disciplined than what we'd seen. Over time, we kept noticing the same gaps: opportunities that needed real underwriting, projects that needed serious coordination, and operational systems that simply didn't exist for the way modern real estate actually works.
               </p>
             </div>
           </div>
@@ -271,23 +271,9 @@ function TeamSection() {
     {
       name: "Paolo Duran",
       role: "Founder & Principal",
-      description: "Real estate entrepreneur with 5+ years in construction project management. Background in design-driven renovations and value-add investments.",
-      expertise: ["Deal Analysis", "Project Management", "Investor Relations"],
+      description: "Real estate entrepreneur and project manager with a background in construction, design-driven renovations, and value-add investments in the East Bay.",
+      expertise: ["Deal Analysis", "Project Management", "Execution"],
       icon: User,
-    },
-    {
-      name: "Construction Partner",
-      role: "General Contractor",
-      description: "Licensed GC with 15+ years experience in residential renovations. Expert in timeline management and quality execution.",
-      expertise: ["Renovations", "Code Compliance", "Subcontractor Management"],
-      icon: Wrench,
-    },
-    {
-      name: "Design Partner",
-      role: "Interior Design Lead",
-      description: "Creative director with keen eye for market-appropriate design. Specializes in maximizing ROI through strategic finishes.",
-      expertise: ["Interior Design", "Staging", "Material Selection"],
-      icon: Palette,
     },
   ];
 
@@ -329,7 +315,7 @@ function TeamSection() {
         </div>
 
         <p className="text-center text-muted-foreground mt-12 text-sm">
-          We also work with a trusted network of real estate agents, lenders, inspectors, and trades professionals.
+          Pegasus is founder-led and works with a trusted network of agents, contractors, lenders, and trades professionals.
         </p>
       </div>
     </section>
@@ -410,10 +396,10 @@ function CTASection() {
               Sell Your Property
             </Button>
           </Link>
-          <Link href="/invest">
+          <Link href="/contact?subject=investments">
             <Button size="lg" variant="outline" className="gap-2" data-testid="button-about-invest">
               <TrendingUp className="w-5 h-5" />
-              Become an Investor
+              Partner Inquiries
             </Button>
           </Link>
           <Link href="/#contact">
