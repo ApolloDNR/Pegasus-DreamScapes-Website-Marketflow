@@ -49,7 +49,8 @@ import {
   Send,
   ChevronRight,
   HelpCircle,
-  ChevronLeft
+  ChevronLeft,
+  Layers
 } from "lucide-react";
 import {
   Form,
@@ -77,7 +78,7 @@ import { useSiteContent } from "@/contexts/site-content-context";
 export default function Home() {
   useSEO({
     title: "Pegasus Dreamscapes | Development • Investments • Systems",
-    description: "Real estate execution, built with discipline. Pegasus Dreamscapes is a founder-led real estate development, investment, and systems company."
+    description: "Dream it. Build it. Live it. Pegasus Dreamscapes is a founder-led real estate development, investment, and systems company built to source opportunities, structure deals, and create long-term value."
   });
   
   return (
@@ -656,9 +657,9 @@ function HeroSection() {
   const { getValue } = useSiteContent();
   
   const heroKicker = getValue("home.hero.kicker", "Development • Investments • Systems");
-  const heroLine1 = getValue("home.hero.line1", "Real estate execution,");
-  const heroLine2 = getValue("home.hero.line2", "built with");
-  const heroLine3 = getValue("home.hero.line3", "discipline.");
+  const heroLine1 = getValue("home.hero.line1", "Dream it.");
+  const heroLine2 = getValue("home.hero.line2", "Build it.");
+  const heroLine3 = getValue("home.hero.line3", "Live it.");
   const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
   const heroCtaSecondary = getValue("home.hero.cta_secondary", "Explore MarketFlow");
@@ -833,17 +834,17 @@ function HeroSection() {
               transition={{ duration: 0.8, delay: 1.4 }}
               data-testid="hero-stats-preview"
             >
-              <div data-testid="hero-stat-properties">
-                <p className="text-3xl font-bold text-white">Private</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Properties</p>
+              <div data-testid="hero-stat-roots">
+                <p className="text-3xl font-bold text-white">East Bay</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Local Roots</p>
               </div>
-              <div data-testid="hero-stat-invested">
-                <p className="text-3xl font-bold text-white">$12M+</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Invested</p>
+              <div data-testid="hero-stat-led">
+                <p className="text-3xl font-bold text-white">Founder-Led</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Execution First</p>
               </div>
-              <div data-testid="hero-stat-satisfaction">
-                <p className="text-3xl font-bold text-white">Focused</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Satisfaction</p>
+              <div data-testid="hero-stat-beta">
+                <p className="text-3xl font-bold text-white">Beta</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">MarketFlow Active</p>
               </div>
             </motion.div>
           </div>
@@ -1187,12 +1188,12 @@ function SellPropertySection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.sell.description" 
-                  fallback="Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees."
+                  fallback="We review property submissions across the East Bay and surrounding areas. Submit your property for a confidential review — no obligations, no pressure."
                   multiline
                   as="p"
                 />
               ) : (
-                <p>Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees.</p>
+                <p>We review property submissions across the East Bay and surrounding areas. Submit your property for a confidential review — no obligations, no pressure.</p>
               )}
             </div>
             
@@ -1202,8 +1203,8 @@ function SellPropertySection() {
                   <Shield className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Fair Cash Offers</h4>
-                  <p className="text-sm text-muted-foreground">Transparent pricing based on real market data</p>
+                  <h4 className="font-semibold mb-1">Serious Review</h4>
+                  <p className="text-sm text-muted-foreground">Every submission is evaluated with real market data</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -1211,8 +1212,8 @@ function SellPropertySection() {
                   <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Sell As-Is</h4>
-                  <p className="text-sm text-muted-foreground">No repairs, cleaning, or staging required</p>
+                  <h4 className="font-semibold mb-1">As-Is Consideration</h4>
+                  <p className="text-sm text-muted-foreground">We review properties in their current condition</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -1220,8 +1221,8 @@ function SellPropertySection() {
                   <Clock className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Flexible Timeline</h4>
-                  <p className="text-sm text-muted-foreground">Close on your schedule — as fast as 7 days</p>
+                  <h4 className="font-semibold mb-1">Flexible Timelines</h4>
+                  <p className="text-sm text-muted-foreground">We work around your schedule and situation</p>
                 </div>
               </div>
             </div>
@@ -1818,10 +1819,10 @@ function TrustLogosSection() {
   const { getValue } = useSiteContent();
   
   const trustItems = [
-    { icon: Shield, label: "Secure Transactions", description: "Bank-level encryption", key: "trust.0" },
-    { icon: Award, label: "Verified Deals", description: "Vetted opportunities", key: "trust.1" },
-    { icon: Users, label: "100+ Partners", description: "Growing network", key: "trust.2" },
-    { icon: CheckCircle2, label: "$12M+ Funded", description: "Proven track record", key: "trust.3" },
+    { icon: Building, label: "East Bay Roots", description: "Founded and operating locally", key: "trust.0" },
+    { icon: Shield, label: "Founder-Led", description: "Accountable from intake to exit", key: "trust.1" },
+    { icon: Layers, label: "Three Pillars", description: "Development · Investments · Systems", key: "trust.2" },
+    { icon: Sparkles, label: "MarketFlow Beta", description: "Deal-flow platform in development", key: "trust.3" },
   ];
 
   return (
@@ -1870,36 +1871,31 @@ function CommunityImpactSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
   
-  const impactStats = [
-    { value: "$2.4M", label: "Invested in Community Projects", key: "community.stat.0" },
-    { value: "47", label: "Properties Transformed", key: "community.stat.1" },
-    { value: "120+", label: "Local Jobs Created", key: "community.stat.2" },
-    { value: "15", label: "Neighborhoods Revitalized", key: "community.stat.3" },
-  ];
+  const impactStats: { value: string; label: string; key: string }[] = [];
 
   const values = [
     {
-      icon: Heart,
-      title: "Community First",
-      description: "Every investment we make considers the impact on local communities. We don't just flip houses—we help revitalize neighborhoods.",
+      icon: Target,
+      title: "Discipline Before Scale",
+      description: "We prioritize process quality, underwriting discipline, and execution standards before chasing growth metrics.",
       key: "community.value.0",
     },
     {
       icon: Shield,
-      title: "Transparency Always",
-      description: "Clear communication, honest valuations, and no hidden fees. Our reputation is built on trust and integrity.",
+      title: "Clear Numbers, Clear Process",
+      description: "Every opportunity is reviewed with clear numbers, assumptions, and next-step documentation — no black boxes.",
       key: "community.value.1",
     },
     {
-      icon: Sparkles,
-      title: "Excellence in Execution",
-      description: "From acquisition to renovation to sale, we maintain the highest standards of quality and professionalism.",
+      icon: Building,
+      title: "Built for Long-Term Value",
+      description: "We focus on durable value creation through disciplined project planning and accountable execution.",
       key: "community.value.2",
     },
     {
       icon: Users,
-      title: "Partnership Mindset",
-      description: "Whether you're a seller, investor, or fellow professional, we approach every relationship as a true partnership.",
+      title: "Founder-Led Accountability",
+      description: "Pegasus is founder-led and accountability stays close to decision-making — from intake through delivery.",
       key: "community.value.3",
     },
   ];
@@ -1916,21 +1912,21 @@ function CommunityImpactSection() {
             <Heart className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold text-primary uppercase tracking-wider">
               {isEditMode ? (
-                <EditableText contentKey="home.community.kicker" fallback="Our Commitment" />
+                <EditableText contentKey="home.community.kicker" fallback="How We Operate" />
               ) : (getValue("home.community.kicker") || "Our Commitment")}
             </span>
           </div>
           
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-community-title">
             {isEditMode ? (
-              <EditableText contentKey="home.community.title" fallback="The Dreamscaper Creed" />
+              <EditableText contentKey="home.community.title" fallback="How We Approach Real Estate" />
             ) : (getValue("home.community.title") || "The Dreamscaper Creed")}
           </h2>
           <div className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
             {isEditMode ? (
-              <EditableText contentKey="home.community.description" fallback="At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve." as="p" multiline />
+              <EditableText contentKey="home.community.description" fallback="Every project, partnership, and system we build is guided by the same principles: discipline over speed, clarity over hype, and long-term value over short-term gains." as="p" multiline />
             ) : (
-              <p>{getValue("home.community.description") || "At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve."}</p>
+              <p>{getValue("home.community.description") || "Every project, partnership, and system we build is guided by the same principles: discipline over speed, clarity over hype, and long-term value over short-term gains."}</p>
             )}
           </div>
         </ScrollReveal>
@@ -1977,17 +1973,17 @@ function CommunityImpactSection() {
 
         {/* CTA */}
         <ScrollReveal delay={0.4} className="text-center mt-16">
-          <p className="text-muted-foreground mb-6">Ready to explore investment opportunities?</p>
+          <p className="text-muted-foreground mb-6">Want to work with Pegasus Dreamscapes?</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/marketflow">
+            <Link href="/marketflow-beta">
               <Button size="lg" className="group" data-testid="button-community-explore">
-                Explore MarketFlow
+                Explore MarketFlow Beta
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link href="/contact">
               <Button variant="outline" size="lg" data-testid="button-community-contact">
-                Schedule a Call
+                Contact Us
               </Button>
             </Link>
           </div>
@@ -2008,28 +2004,28 @@ interface FAQ {
 
 const defaultFaqs = [
   {
-    question: "How does the wholesale assignment process work?",
-    answer: "Our MarketFlow platform connects you with verified wholesale deals. Once you find a property that fits your criteria, you can submit an offer directly through the platform. Our team handles the assignment process, ensuring a smooth transaction from contract to close."
+    question: "What does Pegasus Dreamscapes do?",
+    answer: "Pegasus Dreamscapes is a real estate development, investment, and systems company. We source opportunities, structure deals, manage project execution, and build the operational tools that support this work — including MarketFlow, our deal-flow platform currently in private beta."
   },
   {
-    question: "What is the minimum investment amount?",
-    answer: "Investment minimums vary by deal type. Wholesale assignments typically require earnest money deposits starting at $5,000. Capital raise opportunities may have higher minimums depending on the project structure. Contact us for specific deal requirements."
+    question: "How does MarketFlow work?",
+    answer: "MarketFlow is the deal-flow layer of Pegasus Systems. It's currently in invitation-only private beta. Wholesalers can submit deals, operators can review and underwrite, and partners can track activity across lanes. If you'd like to request access, reach out through our contact page."
   },
   {
-    question: "How are deals vetted before listing?",
-    answer: "Every deal on MarketFlow goes through our rigorous underwriting process. We verify property ownership, assess repair estimates, confirm ARV calculations with local comps, and ensure all contracts are legally sound before listing any opportunity."
+    question: "Can I submit a property for review?",
+    answer: "Yes. We review property submissions in the East Bay and surrounding areas. You can submit directly through our site or contact us to start a conversation. Every submission is reviewed seriously — we follow up on opportunities that fit our acquisition criteria."
   },
   {
-    question: "Can I sell my property directly to Pegasus Dreamscapes?",
-    answer: "Yes! We purchase properties in any condition. Whether you're facing foreclosure, dealing with an inherited property, or simply want a fast, hassle-free sale, we can provide a fair cash offer within 24-48 hours."
+    question: "What types of properties does Pegasus focus on?",
+    answer: "We focus on residential and small multifamily opportunities in the East Bay and broader Bay Area. Single-family, duplex, small multifamily, and value-add projects where disciplined renovation and execution can create real long-term value."
   },
   {
-    question: "What types of properties do you focus on?",
-    answer: "We specialize in residential properties suitable for fix-and-flip or rental strategies, including single-family homes, duplexes, and small multi-family buildings. We focus on the California market, particularly the Bay Area and Central Valley regions."
+    question: "How do capital partnerships work at Pegasus?",
+    answer: "Capital partnerships at Pegasus are private, deal-specific, and subject to diligence, documentation, legal review, and suitability. We don't offer or solicit public securities. If you're interested in exploring a partnership conversation, contact us directly."
   },
   {
-    question: "How quickly can deals close?",
-    answer: "Our average closing time is 14-21 days for wholesale assignments and 7-14 days for direct purchases. For cash buyers with proof of funds ready, we can often close even faster depending on title work and inspections."
+    question: "How is Pegasus Dreamscapes structured?",
+    answer: "Pegasus operates across three divisions: Development (project execution and renovation), Investments (deal structuring and capital partnerships), and Systems (the internal product organization, including MarketFlow). The company is founder-led and intentionally focused on disciplined, accountable execution."
   },
 ];
 
