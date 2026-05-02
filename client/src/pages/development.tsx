@@ -83,7 +83,7 @@ export default function Development() {
   });
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       {/* Hero */}
       <Section variant="hero" className="overflow-hidden">
         <div className="absolute inset-0 bg-architect opacity-[0.18]" aria-hidden />
@@ -165,15 +165,15 @@ export default function Development() {
           <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2 lg:grid-cols-3">
             {phases.map((p, i) => (
               <Reveal key={p.n} delay={i * 60}>
-                <div className="relative h-full bg-[hsl(220_30%_8%)] p-8">
+                <div className="relative h-full bg-card p-8">
                   <p className="font-display text-[40px] leading-none text-copper/30">
                     {p.n}
                   </p>
                   <span className="mt-4 inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
                     {p.icon}
                   </span>
-                  <h4 className="font-display mt-5 text-2xl text-ivory">{p.title}</h4>
-                  <p className="mt-3 text-[14.5px] leading-relaxed text-muted-ivory">
+                  <h4 className="font-display mt-5 text-2xl text-foreground">{p.title}</h4>
+                  <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
                     {p.body}
                   </p>
                 </div>
@@ -203,9 +203,9 @@ export default function Development() {
               <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2">
                 {services.map((s, i) => (
                   <Reveal key={s.title} delay={i * 80}>
-                    <div className="h-full bg-[hsl(220_30%_8%)] p-7">
-                      <h4 className="font-display text-2xl text-ivory">{s.title}</h4>
-                      <p className="mt-3 text-[14.5px] leading-relaxed text-muted-ivory">
+                    <div className="h-full bg-card p-7">
+                      <h4 className="font-display text-2xl text-foreground">{s.title}</h4>
+                      <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
                         {s.body}
                       </p>
                     </div>

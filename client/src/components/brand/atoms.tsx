@@ -40,7 +40,7 @@ interface DisplayHeadingProps {
 export function DisplayHeading({ children, className = "", as: Tag = "h2" }: DisplayHeadingProps) {
   return (
     <Tag
-      className={`font-display text-ivory text-balance leading-[1.05] tracking-tight ${className}`}
+      className={`font-display text-foreground text-balance leading-[1.05] tracking-tight ${className}`}
       style={{ textWrap: "balance" as any }}
     >
       {children}
@@ -58,12 +58,12 @@ interface SectionProps {
 export function Section({ id, children, className = "", variant = "canvas" }: SectionProps) {
   const variantClass =
     variant === "hero"
-      ? "bg-hero bg-grain"
+      ? "bg-hero"
       : variant === "ink"
-      ? "bg-[hsl(220_35%_4%)] bg-grain"
+      ? "bg-muted/50"
       : variant === "card"
-      ? "bg-[hsl(220_30%_8%)]"
-      : "bg-canvas bg-grain";
+      ? "bg-card"
+      : "bg-canvas";
 
   return (
     <section id={id} className={`relative ${variantClass} ${className}`}>
@@ -187,10 +187,10 @@ export function PillarCard({
           <Kicker>{kicker}</Kicker>
         </div>
       )}
-      <h3 className="font-display text-3xl md:text-[2rem] leading-tight text-ivory mb-4">
+      <h3 className="font-display text-3xl md:text-[2rem] leading-tight text-foreground mb-4">
         {title}
       </h3>
-      <p className="text-muted-ivory text-[15px] leading-relaxed mb-8">{body}</p>
+      <p className="text-muted-foreground text-[15px] leading-relaxed mb-8">{body}</p>
       <span className="inline-flex items-center gap-2 text-[12px] tracking-[0.18em] uppercase text-copper">
         {ctaLabel}
         <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">

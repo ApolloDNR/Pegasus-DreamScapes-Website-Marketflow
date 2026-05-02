@@ -662,31 +662,24 @@ html {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.92 0 0 0 0 0.85 0 0 0 0 0.77 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Deep navy radial vignette canvas */
+/* Warm cream canvas — main section background */
 .bg-canvas {
-  background:
-    radial-gradient(1200px 600px at 80% -10%, hsl(28 49% 48% / 0.10), transparent 60%),
-    radial-gradient(900px 500px at 0% 100%, hsl(218 35% 18% / 0.55), transparent 60%),
-    linear-gradient(180deg, hsl(220 35% 5%) 0%, hsl(218 30% 6%) 100%);
+  background: hsl(var(--background));
 }
 
-/* Hero atmosphere — deeper, more cinematic */
+/* Warm hero — slightly richer cream with copper glow */
 .bg-hero {
   background:
-    radial-gradient(1000px 500px at 75% 20%, hsl(28 49% 50% / 0.16), transparent 65%),
-    radial-gradient(700px 700px at 10% 80%, hsl(28 60% 40% / 0.08), transparent 70%),
-    linear-gradient(180deg, hsl(220 40% 4%) 0%, hsl(218 32% 7%) 70%, hsl(218 28% 9%) 100%);
+    radial-gradient(900px 400px at 80% 20%, hsl(var(--copper) / 0.06), transparent 65%),
+    radial-gradient(600px 500px at 0% 100%, hsl(var(--navy) / 0.04), transparent 70%),
+    hsl(var(--stone));
 }
 
 /* Pillar card surface */
 .pillar-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(
-    180deg,
-    hsl(220 30% 11% / 1) 0%,
-    hsl(220 30% 8% / 1) 100%
-  );
+  background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: 4px;
   transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
@@ -726,7 +719,7 @@ html {
   border-color: hsl(var(--copper) / 0.55);
   box-shadow:
     0 1px 0 hsl(var(--copper) / 0.15) inset,
-    0 30px 60px -30px hsl(220 50% 0% / 0.6);
+    0 12px 32px -8px hsl(var(--copper) / 0.12);
 }
 .pillar-card:hover::before { opacity: 1; }
 .pillar-card:hover::after { opacity: 1; }
@@ -761,7 +754,7 @@ html {
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: hsl(36 30% 90%);
+  color: hsl(var(--foreground));
   background: transparent;
   border: 1px solid hsl(var(--copper) / 0.45);
   border-radius: 2px;
@@ -820,10 +813,10 @@ html {
   background-size: 64px 64px;
 }
 
-.text-ivory { color: hsl(36 30% 93%); }
+.text-ivory { color: hsl(var(--foreground)); }
 .text-copper { color: hsl(var(--copper)); }
 .text-bronze { color: hsl(28 50% 56%); }
-.text-muted-ivory { color: hsl(36 12% 65%); }
+.text-muted-ivory { color: hsl(var(--muted-foreground)); }
 
 .border-copper { border-color: hsl(var(--copper)); }
 .border-copper-soft { border-color: hsl(var(--copper) / 0.3); }

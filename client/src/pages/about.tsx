@@ -51,7 +51,7 @@ export default function About() {
   ];
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
+    <div className="bg-background">
       {/* Hero */}
       <Section variant="hero" className="overflow-hidden">
         <div className="absolute inset-0 bg-architect opacity-[0.16]" aria-hidden />
@@ -120,9 +120,9 @@ export default function About() {
         <div className="container-premium section-y">
           <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 lg:grid-cols-2">
             <Reveal>
-              <div className="h-full bg-[hsl(220_30%_8%)] p-10">
+              <div className="h-full bg-card p-10">
                 <Kicker>Our Mission</Kicker>
-                <h3 className="font-display mt-5 text-3xl text-ivory md:text-4xl">
+                <h3 className="font-display mt-5 text-3xl text-foreground md:text-4xl">
                   Bring discipline, vision, and operational clarity to real estate execution.
                 </h3>
                 <p className="lead mt-6">
@@ -134,9 +134,9 @@ export default function About() {
               </div>
             </Reveal>
             <Reveal delay={100}>
-              <div className="h-full bg-[hsl(220_30%_9%)] p-10">
+              <div className="h-full bg-card p-10">
                 <Kicker>Our Vision</Kicker>
-                <h3 className="font-display mt-5 text-3xl text-ivory md:text-4xl">
+                <h3 className="font-display mt-5 text-3xl text-foreground md:text-4xl">
                   Become the operating standard for serious real estate execution.
                 </h3>
                 <p className="lead mt-6">
@@ -165,12 +165,12 @@ export default function About() {
           <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2 lg:grid-cols-3">
             {principles.map((p, i) => (
               <Reveal key={p.title} delay={i * 60}>
-                <div className="h-full bg-[hsl(220_30%_8%)] p-8">
+                <div className="h-full bg-card p-8">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
                     {p.icon}
                   </span>
-                  <h4 className="font-display mt-5 text-2xl text-ivory">{p.title}</h4>
-                  <p className="mt-3 text-[14.5px] leading-relaxed text-muted-ivory">
+                  <h4 className="font-display mt-5 text-2xl text-foreground">{p.title}</h4>
+                  <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
                     {p.body}
                   </p>
                 </div>
@@ -195,7 +195,7 @@ export default function About() {
               feature, not the limitation.
             </p>
             <CopperRule className="mt-10" />
-            <blockquote className="mt-10 text-balance font-display text-[26px] leading-[1.3] text-ivory md:text-[32px]">
+            <blockquote className="mt-10 text-balance font-display text-[26px] leading-[1.3] text-foreground md:text-[32px]">
               "We started Pegasus to bring real discipline to real estate. The
               systems we're building are the ones we wished existed when we
               started."
