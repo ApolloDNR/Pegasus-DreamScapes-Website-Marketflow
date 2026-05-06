@@ -1,0 +1,523 @@
+/home/runner/workspace/client/src/pages/dreamspace.tsx:export default function Dreamspace() {
+/home/runner/workspace/client/src/pages/dreamspace.tsx:        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mt-4 mb-6" data-testid="text-dreamspace-hero">
+/home/runner/workspace/client/src/pages/dreamspace.tsx:          Dreamspace Studio
+/home/runner/workspace/client/src/pages/dreamspace.tsx:          <h2 className="text-3xl sm:text-4xl font-semibold mt-2" data-testid="text-dreamspace-services">
+/home/runner/workspace/client/src/pages/dreamspace.tsx:            <h2 className="text-3xl sm:text-4xl font-semibold mt-2 mb-6" data-testid="text-dreamspace-cta">
+/home/runner/workspace/client/src/pages/dreamspace.tsx:              <Button size="lg" data-testid="button-dreamspace-contact">
+/home/runner/workspace/client/src/pages/dreamspace.tsx:              <p className="text-sm text-muted-foreground/70">Dreamspace Studio</p>
+/home/runner/workspace/client/src/pages/project-detail.tsx:                <span>{project.address}, {project.city}, {project.state}</span>
+/home/runner/workspace/client/src/pages/wholesale.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/wholesale.tsx:    resolver: zodResolver(requestFormSchema),
+/home/runner/workspace/client/src/pages/wholesale.tsx:  const potentialProfit = deal.arv && deal.contractPrice && deal.estimatedRepairs
+/home/runner/workspace/client/src/pages/wholesale.tsx:    ? deal.arv - deal.contractPrice - deal.estimatedRepairs - deal.assignmentFee
+/home/runner/workspace/client/src/pages/wholesale.tsx:            alt={deal.propertyAddress}
+/home/runner/workspace/client/src/pages/wholesale.tsx:          <p className="text-white font-semibold text-lg">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/wholesale.tsx:            <p className="text-lg font-bold text-foreground">{formatCurrency(deal.estimatedRepairs)}</p>
+/home/runner/workspace/client/src/pages/partner.tsx:import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+/home/runner/workspace/client/src/pages/partner.tsx:      <DreamscaperSection />
+/home/runner/workspace/client/src/pages/partner.tsx:      title: "Dreamscaper", 
+/home/runner/workspace/client/src/pages/partner.tsx:        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/partner.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/partner.tsx:    "Access our network of vetted Dreamscapers and investors",
+/home/runner/workspace/client/src/pages/partner.tsx:                access to qualified Dreamscapers and cash investors actively seeking 
+/home/runner/workspace/client/src/pages/partner.tsx:                    <h4 className="font-semibold mb-1">Dreamscapers Request Access</h4>
+/home/runner/workspace/client/src/pages/partner.tsx:function DreamscaperSection() {
+/home/runner/workspace/client/src/pages/partner.tsx:    "Opportunity to become a Pegasus Dreamscaper",
+/home/runner/workspace/client/src/pages/partner.tsx:    <section id="dreamscaper" className="py-20 lg:py-24 bg-background">
+/home/runner/workspace/client/src/pages/partner.tsx:                  What Dreamscapers Do
+/home/runner/workspace/client/src/pages/partner.tsx:              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" data-testid="text-dreamscaper-title">
+/home/runner/workspace/client/src/pages/partner.tsx:                Dreamscapers
+/home/runner/workspace/client/src/pages/partner.tsx:                Build your reputation as a trusted Dreamscaper.
+/home/runner/workspace/client/src/pages/partner.tsx:                <Link href="/signup?role=dreamscaper">
+/home/runner/workspace/client/src/pages/partner.tsx:                  <Button size="lg" data-testid="button-dreamscaper-signup">
+/home/runner/workspace/client/src/pages/partner.tsx:                    Create Dreamscaper Account
+/home/runner/workspace/client/src/pages/partner.tsx:                <Link href="/login?role=dreamscaper">
+/home/runner/workspace/client/src/pages/partner.tsx:                  <Button variant="outline" size="lg" data-testid="button-dreamscaper-login">
+/home/runner/workspace/client/src/pages/partner.tsx:                    Log In as Dreamscaper
+/home/runner/workspace/client/src/pages/partner.tsx:                  <p className="text-xs text-muted-foreground">Typical annual returns</p>
+/home/runner/workspace/client/src/pages/partner.tsx:            Whether you're looking for your dream home or your next investment property, 
+/home/runner/workspace/client/src/pages/partner.tsx:                <strong className="text-foreground"> Pegasus Dreamscapers</strong> are our 
+/home/runner/workspace/client/src/pages/partner.tsx:                  <h3 className="font-semibold mb-2">Pegasus Dreamscaper</h3>
+/home/runner/workspace/client/src/pages/partner.tsx:            Choose your path and start building your real estate success story with Pegasus Dreamscapes. 
+/home/runner/workspace/client/src/pages/buy.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/buy.tsx:          <span className="block text-primary">Dream Property</span>
+/home/runner/workspace/client/src/pages/buy.tsx:    resolver: zodResolver(insertBuyerLeadSchema),
+/home/runner/workspace/client/src/pages/buy.tsx:                        <FormLabel>Email Address</FormLabel>
+/home/runner/workspace/client/src/pages/dealflow-messages.tsx:            Direct conversations with investors, Dreamscapers, and partners
+/home/runner/workspace/client/src/pages/dealflow-community.tsx:    authorName: post.authorName || "Dreamscaper",
+/home/runner/workspace/client/src/pages/dealflow-community.tsx:    { name: "Sarah Williams", role: "Dreamscaper", avatar: "", deals: 18 },
+/home/runner/workspace/client/src/pages/portal-select.tsx:  const { profile, isLoading, isAuthenticated, isAdmin, isInvestor, isWholesaler, isBuyer, isDreamscaper } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/portal-select.tsx:      title: "Dreamscaper HQ",
+/home/runner/workspace/client/src/pages/portal-select.tsx:      description: "Access the Pegasus Dreamscapes headquarters dashboard for lead management, deal tracking, and team operations.",
+/home/runner/workspace/client/src/pages/portal-select.tsx:      id: "dreamscaper",
+/home/runner/workspace/client/src/pages/portal-select.tsx:      title: "Dreamscaper Portal",
+/home/runner/workspace/client/src/pages/portal-select.tsx:      href: "/portal/dreamscaper",
+/home/runner/workspace/client/src/pages/portal-select.tsx:      available: isDreamscaper,
+/home/runner/workspace/client/src/pages/portal-select.tsx:      registerHref: "/dreamspace",
+/home/runner/workspace/client/src/pages/hq.tsx:          <h1 className="text-3xl font-bold" data-testid="text-hq-title">Dreamscaper HQ</h1>
+/home/runner/workspace/client/src/pages/hq.tsx:const LEAD_TYPES = ["seller", "investor", "buyer", "contact", "wholesaler", "dreamscaper"] as const;
+/home/runner/workspace/client/src/pages/hq.tsx:  dreamscaper: Building,
+/home/runner/workspace/client/src/pages/hq.tsx:  dreamscaper: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+/home/runner/workspace/client/src/pages/hq.tsx:                        {lead.address && (
+/home/runner/workspace/client/src/pages/hq.tsx:                            {lead.address}
+/home/runner/workspace/client/src/pages/hq.tsx:          {lead.address && (
+/home/runner/workspace/client/src/pages/hq.tsx:              <p className="text-xs text-muted-foreground uppercase tracking-wide">Address</p>
+/home/runner/workspace/client/src/pages/hq.tsx:              <p className="font-medium">{lead.address}</p>
+/home/runner/workspace/client/src/pages/hq.tsx:                  <span className="text-muted-foreground">Address</span>
+/home/runner/workspace/client/src/pages/hq.tsx:                  <p className="font-medium truncate">{lead.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/hq.tsx:                          <CardTitle className="text-lg">{deal.propertyAddress}</CardTitle>
+/home/runner/workspace/client/src/pages/hq.tsx:                      <p className="font-bold">{formatCurrency(deal.estimatedRepairs)}</p>
+/home/runner/workspace/client/src/pages/hq.tsx:    propertyAddress: "",
+/home/runner/workspace/client/src/pages/hq.tsx:    estimatedRepairs: "",
+/home/runner/workspace/client/src/pages/hq.tsx:      estimatedRepairs: formData.estimatedRepairs ? parseInt(formData.estimatedRepairs) : null,
+/home/runner/workspace/client/src/pages/hq.tsx:          <Label>Property Address</Label>
+/home/runner/workspace/client/src/pages/hq.tsx:            value={formData.propertyAddress} 
+/home/runner/workspace/client/src/pages/hq.tsx:            onChange={(e) => setFormData(p => ({ ...p, propertyAddress: e.target.value }))}
+/home/runner/workspace/client/src/pages/hq.tsx:            data-testid="input-deal-address"
+/home/runner/workspace/client/src/pages/hq.tsx:            value={formData.estimatedRepairs} 
+/home/runner/workspace/client/src/pages/hq.tsx:            onChange={(e) => setFormData(p => ({ ...p, estimatedRepairs: e.target.value }))}
+/home/runner/workspace/client/src/pages/hq.tsx:  const [projectedReturn, setProjectedReturn] = useState("");
+/home/runner/workspace/client/src/pages/hq.tsx:        projectedReturn: projectedReturn || undefined,
+/home/runner/workspace/client/src/pages/hq.tsx:      setProjectedReturn("");
+/home/runner/workspace/client/src/pages/hq.tsx:              <Label htmlFor="projectedReturn">Projected Return</Label>
+/home/runner/workspace/client/src/pages/hq.tsx:              <Input id="projectedReturn" value={projectedReturn} onChange={(e) => setProjectedReturn(e.target.value)} placeholder="e.g., 15-20% IRR" data-testid="input-project-return" />
+/home/runner/workspace/client/src/pages/capital-raising.tsx:          {project.projectedReturn && (
+/home/runner/workspace/client/src/pages/capital-raising.tsx:              <p className="font-semibold text-green-600">{project.projectedReturn}</p>
+/home/runner/workspace/client/src/pages/capital-raising.tsx:            {(project.structure === "EQUITY" || project.structure === "HYBRID") && project.askingPreferredReturn && (
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                {project.askingPreferredReturn} Pref
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                {project.projectedReturn && (
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                    <p className="font-semibold text-green-600">{project.projectedReturn}</p>
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                      {project.askingPreferredReturn && (
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                          <p className="font-bold text-lg">{project.askingPreferredReturn}</p>
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                    {project.askingPreferredReturn && (
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                        {project.askingPreferredReturn} Pref
+/home/runner/workspace/client/src/pages/capital-raising.tsx:                placeholder={offerType === "counter" ? "Explain why you're proposing different terms..." : "Any additional notes for the Dreamscaper team..."}
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:    propertyAddress?: string;
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:  projectedReturn?: string;
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:  const { user, profile, isAdmin, isInvestor, isWholesaler, isBuyer, isDreamscaper } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:    const title = bookmark.deal?.title || bookmark.deal?.propertyAddress || `Deal #${bookmark.dealId}`;
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:    if (isAdmin || isDreamscaper) roles.push("Dreamscaper");
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                        role === "Dreamscaper" ? "border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30" :
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                  const projectedReturn = investment.projectedReturn ? parseFloat(investment.projectedReturn) : 0;
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                  const performanceStatus = projectedReturn > 0 
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                    ? (currentReturn >= projectedReturn ? "ahead" : currentReturn >= projectedReturn * 0.9 ? "on-track" : "behind")
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                          {projectedReturn > 0 && (
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                              <span className="font-medium text-foreground">Target:</span> {projectedReturn}% ROI
+/home/runner/workspace/client/src/pages/dealflow-office.tsx:                                {project.projectedReturn}
+/home/runner/workspace/client/src/pages/investor-portal.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/investor-portal.tsx:                      <p className="font-medium">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/investor-portal.tsx:                    const estimatedReturn = investment.structureType === "debt" 
+/home/runner/workspace/client/src/pages/investor-portal.tsx:                        <td className="py-3 px-4 font-bold text-green-600">{formatCurrency(estimatedReturn)}</td>
+/home/runner/workspace/client/src/pages/investor-portal.tsx:            <CardTitle className="text-lg mt-2">{deal.propertyAddress}</CardTitle>
+/home/runner/workspace/client/src/pages/investor-portal.tsx:                <p className="font-bold">{formatCurrency(deal.estimatedRepairs)}</p>
+/home/runner/workspace/client/src/pages/investor-portal.tsx:    resolver: zodResolver(profileFormSchema),
+/home/runner/workspace/client/src/pages/investor-portal.tsx:    resolver: zodResolver(wantedDealFormSchema),
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:                        <p className="font-medium text-sm">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:                  <p className="font-medium">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:              <CardTitle className="text-lg mt-2">{deal.propertyAddress}</CardTitle>
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:            <CardTitle className="text-lg mt-2">{deal.propertyAddress}</CardTitle>
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:                <p className="font-bold">{formatCurrency(deal.estimatedRepairs)}</p>
+/home/runner/workspace/client/src/pages/wholesaler-portal.tsx:    resolver: zodResolver(profileFormSchema),
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:                        <p className="font-medium">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:                        <p className="font-medium">{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:                      <img src={deal.images[0]} alt={deal.propertyAddress} className="w-full h-full object-cover" />
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:                    <p className="text-sm font-medium">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:                      <img src={listing.images[0]} alt={listing.propertyAddress} className="w-full h-full object-cover" />
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:                    <p className="text-sm font-medium">{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:              <p className="text-sm font-medium">{property.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyer-portal.tsx:    resolver: zodResolver(profileFormSchema),
+/home/runner/workspace/client/src/pages/login.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/login.tsx:  email: z.string().email("Please enter a valid email address"),
+/home/runner/workspace/client/src/pages/login.tsx:    resolver: zodResolver(loginSchema),
+/home/runner/workspace/client/src/pages/login.tsx:            Sign in to access your Pegasus Dreamscapes marketplace
+/home/runner/workspace/client/src/pages/signup.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/signup.tsx:  email: z.string().email("Please enter a valid email address"),
+/home/runner/workspace/client/src/pages/signup.tsx:    "dreamscaper",
+/home/runner/workspace/client/src/pages/signup.tsx:    value: "dreamscaper",
+/home/runner/workspace/client/src/pages/signup.tsx:    label: "DreamScaper",
+/home/runner/workspace/client/src/pages/signup.tsx:    resolver: zodResolver(signupSchema),
+/home/runner/workspace/client/src/pages/signup.tsx:            Join Pegasus Dreamscapes
+/home/runner/workspace/client/src/pages/dashboard.tsx:      case "pegasus_dreamscaper":
+/home/runner/workspace/client/src/pages/dashboard.tsx:      case "dreamscaper":
+/home/runner/workspace/client/src/pages/dashboard.tsx:        setLocation("/marketflow/dreamscaper");
+/home/runner/workspace/client/src/pages/marketplace-investor.tsx:                              {project.projectedReturn ? ` | ${project.projectedReturn} return` : ""}
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:              : "Find your perfect home with Pegasus Dreamscapes"}
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:                  const address = 'propertyAddress' in property ? property.propertyAddress : '';
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:                            <p className="font-medium line-clamp-1">{address}</p>
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:                  const address = property && 'propertyAddress' in property ? property.propertyAddress : `Property #${offer.propertyId}`;
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:                          <p className="font-medium line-clamp-1">{address}</p>
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:            const address = 'propertyAddress' in property ? property.propertyAddress : '';
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:                    <p className="font-medium line-clamp-1">{address}</p>
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:            const address = property && 'propertyAddress' in property ? property.propertyAddress : `Property #${offer.propertyId}`;
+/home/runner/workspace/client/src/pages/marketplace-buyer.tsx:                        <p className="font-medium">{address}</p>
+/home/runner/workspace/client/src/pages/marketplace-wholesaler.tsx:import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketplace-wholesaler.tsx:                            <p className="font-medium">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/marketplace-wholesaler.tsx:                <CardDescription>Dreamscapers interested in your deals</CardDescription>
+/home/runner/workspace/client/src/pages/marketplace-wholesaler.tsx:                      When Dreamscapers want to partner on your deals, they'll appear here
+/home/runner/workspace/client/src/pages/marketplace-wholesaler.tsx:                  List a new wholesale deal for our network of Dreamscapers and investors.
+/home/runner/workspace/client/src/pages/marketplace-wholesaler.tsx:                  Connect with verified Dreamscapers and investors in our network.
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:export default function MarketplaceDreamscaperPage() {
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:    queryKey: ["/api/supabase/marketflow/dreamscaper/stats"],
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:    <AuthGuard requiredRoles={["admin", "pegasus_dreamscaper", "dreamscaper"]}>
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:                DreamScaper Dashboard
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:              <Link href="/marketflow/dreamscaper/projects/new">
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:                    <Link href="/marketflow/dreamscaper/projects/new">
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:                <Link href="/marketflow/dreamscaper/projects">
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:                <CardDescription>Manage your DreamScaper activities</CardDescription>
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:                <Link href="/marketflow/dreamscaper/projects/new" className="block">
+/home/runner/workspace/client/src/pages/marketplace-dreamscaper.tsx:                <Link href="/marketflow/dreamscaper/capital" className="block">
+/home/runner/workspace/client/src/pages/marketplace-capital.tsx:import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketplace-capital.tsx:            Browse investment opportunities from verified Dreamscapers. Choose between debt and equity structures that match your investment criteria.
+/home/runner/workspace/client/src/pages/marketplace-capital.tsx:        <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.05}>
+/home/runner/workspace/client/src/pages/marketplace-capital.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace-capital.tsx:                    {project.projectedReturn || "15-20%"}
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:        deal.propertyAddress?.toLowerCase().includes(query) ||
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:            placeholder="Search by address, city, or title..."
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.05}>
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:                alt={deal.propertyAddress || "Property"} 
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:              <CardTitle className="text-lg line-clamp-1">{deal.propertyAddress}</CardTitle>
+/home/runner/workspace/client/src/pages/marketplace-deals.tsx:              <p className="font-semibold">{formatCurrency(deal.estimatedRepairs)}</p>
+/home/runner/workspace/client/src/pages/marketplace-properties.tsx:        !listing.propertyAddress.toLowerCase().includes(query) &&
+/home/runner/workspace/client/src/pages/marketplace-properties.tsx:                placeholder="Search by address or city..."
+/home/runner/workspace/client/src/pages/marketplace-properties.tsx:            alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/marketplace-properties.tsx:        <p className="font-medium mb-1 line-clamp-1" data-testid={`address-${listing.id}`}>{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/marketplace-properties.tsx:              alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/marketplace-properties.tsx:                <p className="font-medium" data-testid={`address-${listing.id}`}>{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/offer-studio.tsx:  address?: string;
+/home/runner/workspace/client/src/pages/offer-studio.tsx:    propertyAddress: capitalProject.title || capitalProject.address || "Capital Project",
+/home/runner/workspace/client/src/pages/offer-studio.tsx:        preferredReturn: data.preferredReturn,
+/home/runner/workspace/client/src/pages/dealflow-project.tsx:  projectedReturn?: string;
+/home/runner/workspace/client/src/pages/dealflow-project.tsx:        projectedReturn: project.projectedReturn,
+/home/runner/workspace/client/src/pages/dealflow-project.tsx:                      <p className="text-xl font-bold text-green-600">{project.projectedReturn || "15-20%"}</p>
+/home/runner/workspace/client/src/pages/dealflow-project.tsx:                    <span className="font-medium text-green-600">{project.projectedReturn}</span>
+/home/runner/workspace/client/src/pages/dealflow-project.tsx:                    <p className="font-semibold">Pegasus Dreamscapes</p>
+/home/runner/workspace/client/src/pages/dealflow-project.tsx:                      Certified Dreamscaper
+/home/runner/workspace/client/src/pages/dealflow-deals.tsx:  const { user, profile, isAdmin, isWholesaler, isDreamscaper, isInvestor, isBuyer } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/dealflow-deals.tsx:  const getUserRole = (): "dreamscaper" | "wholesaler" | "investor" | "buyer" | "admin" | undefined => {
+/home/runner/workspace/client/src/pages/dealflow-deals.tsx:    if (isDreamscaper) return "dreamscaper";
+/home/runner/workspace/client/src/pages/dealflow-deals.tsx:    if (searchQuery !== "" && !d.propertyAddress?.toLowerCase().includes(searchQuery.toLowerCase()) && !d.city?.toLowerCase().includes(searchQuery.toLowerCase())) {
+/home/runner/workspace/client/src/pages/dealflow-deals.tsx:  // Handler for Dreamscaper/Investor to invest in a wholesale deal
+/home/runner/workspace/client/src/pages/dealflow-deals.tsx:      description: `Opening investment dialog for ${deal.propertyAddress}`,
+/home/runner/workspace/client/src/pages/my-deals.tsx:                  <h3 className="font-medium truncate">{deal.propertyAddress}</h3>
+/home/runner/workspace/client/src/pages/my-deals.tsx:                  <h3 className="font-medium truncate">{listing.propertyAddress}</h3>
+/home/runner/workspace/client/src/pages/my-deals.tsx:    estimatedRepairs: deal.estimatedRepairs || 0,
+/home/runner/workspace/client/src/pages/my-deals.tsx:            Update the details for {deal.propertyAddress}
+/home/runner/workspace/client/src/pages/my-deals.tsx:              <Label htmlFor="estimatedRepairs">Estimated Repairs</Label>
+/home/runner/workspace/client/src/pages/my-deals.tsx:                id="estimatedRepairs"
+/home/runner/workspace/client/src/pages/my-deals.tsx:                value={formData.estimatedRepairs}
+/home/runner/workspace/client/src/pages/my-deals.tsx:                onChange={(e) => setFormData({ ...formData, estimatedRepairs: Number(e.target.value) })}
+/home/runner/workspace/client/src/pages/my-deals.tsx:    projectedReturn: project.projectedReturn || "",
+/home/runner/workspace/client/src/pages/my-deals.tsx:            <Label htmlFor="projectedReturn">Projected Return</Label>
+/home/runner/workspace/client/src/pages/my-deals.tsx:              id="projectedReturn"
+/home/runner/workspace/client/src/pages/my-deals.tsx:              value={formData.projectedReturn}
+/home/runner/workspace/client/src/pages/my-deals.tsx:              onChange={(e) => setFormData({ ...formData, projectedReturn: e.target.value })}
+/home/runner/workspace/client/src/pages/my-deals.tsx:            Update the details for {listing.propertyAddress}
+/home/runner/workspace/client/src/pages/marketflow-submit.tsx:  const { user, isLoading, isWholesaler, isDreamscaper, userRole, isGuestMode } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/marketflow-submit.tsx:  const canSubmit = isWholesaler || isDreamscaper;
+/home/runner/workspace/client/src/pages/marketflow-submit.tsx:                    Only verified <span className="font-semibold text-foreground">Dreamscapers</span> and{" "}
+/home/runner/workspace/client/src/pages/analytics.tsx:    document.title = "Analytics Dashboard | Pegasus Dreamscapes";
+/home/runner/workspace/client/src/pages/analytics.tsx:                      Dreamscapers
+/home/runner/workspace/client/src/pages/analytics.tsx:                    <div className="text-2xl font-bold" data-testid="stat-dreamscapers">95</div>
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:  sender: "investor" | "dreamscaper" | "admin";
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:    sender: isCurrentUser ? "investor" : "dreamscaper",
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:      case "dreamscaper":
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:            <p className="text-sm text-muted-foreground">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:                  <img src={deal.images[0]} alt={deal.propertyAddress || ""} className="w-full h-full object-cover" />
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:                <h3 className="font-semibold">{deal.propertyAddress}</h3>
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:              propertyAddress: deal?.propertyAddress || "",
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:            propertyAddress: deal.propertyAddress || "",
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:            propertyAddress: deal.propertyAddress || "",
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:    propertyAddress: string;
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:    if (latestOffer?.sender === "dreamscaper" && latestOffer?.status === "pending") {
+/home/runner/workspace/client/src/pages/marketflow-negotiate.tsx:Deal: ${dealInfo.propertyAddress}
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:    title: deal?.propertyAddress ? `${deal.propertyAddress} - Wholesale Deal` : "Deal Details",
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:    description: deal ? `Wholesale deal: ${deal.propertyAddress || "Property"} - ARV $${deal.arv?.toLocaleString() || "N/A"}, Asking $${deal.askingPrice?.toLocaleString() || "N/A"}` : "View wholesale deal details and make an offer.",
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:                      {deal.propertyAddress}
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:                      {deal.propertyAddress}, {deal.city}, {deal.state} {deal.zipCode}
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:                      title={`Wholesale Deal: ${deal.propertyAddress}`}
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:                      description={`Check out this wholesale deal at ${deal.propertyAddress}, ${deal.city}, ${deal.state} - ARV $${deal.arv?.toLocaleString() || "N/A"}`}
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:                      alt={deal.propertyAddress || "Property"} 
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:          {deal.propertyAddress && (
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:              address={deal.propertyAddress}
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:                    <span className="font-semibold">{formatCurrency(deal.estimatedRepairs)}</span>
+/home/runner/workspace/client/src/pages/marketplace-deal-detail.tsx:          Updates are posted by the Dreamscaper/Wholesaler
+/home/runner/workspace/client/src/pages/marketplace-capital-detail.tsx:    <AuthGuard requiredRoles={["investor", "admin", "dreamscaper", "pegasus_dreamscaper"]}>
+/home/runner/workspace/client/src/pages/marketplace-capital-detail.tsx:              address={project.location}
+/home/runner/workspace/client/src/pages/marketplace-capital-detail.tsx:                    <p className="font-semibold text-green-600">{project.projectedReturn || "15-20%"}</p>
+/home/runner/workspace/client/src/pages/marketplace-capital-detail.tsx:                      {project.askingPreferredReturn && (
+/home/runner/workspace/client/src/pages/marketplace-capital-detail.tsx:                          <p className="font-semibold text-green-600">{project.askingPreferredReturn}</p>
+/home/runner/workspace/client/src/pages/marketplace-capital-detail.tsx:                    <p className="font-medium">Dreamscaper</p>
+/home/runner/workspace/client/src/pages/marketplace-property-detail.tsx:                alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/marketplace-property-detail.tsx:                <p className="font-medium">{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/marketplace-property-detail.tsx:                <span>info@pegasusdreamscapes.com</span>
+/home/runner/workspace/client/src/pages/marketplace-property-detail.tsx:            Submit your offer for {listing.propertyAddress}
+/home/runner/workspace/client/src/pages/services.tsx:    description: "Explore Pegasus Dreamscapes services: fix & flip acquisitions, buy & hold rentals, design & renovation management, and expert consulting."
+/home/runner/workspace/client/src/pages/services.tsx:          Pegasus Dreamscapes offers a blend of acquisitions, renovations, and design services tailored to sellers, investors, and property owners.
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:import { sampleCapitalProjects, sampleDreamscaperStats, sampleCommittedInvestments, samplePendingOffers } from "@/lib/sample-data";
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:export default function DreamscaperPortal() {
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:  const { profile, isLoading: authLoading, isAuthenticated, isDreamscaper, isGuestMode, exitGuestMode } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:    queryKey: ["/api/portal/dreamscaper/my-projects"],
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:    queryKey: ["/api/portal/dreamscaper/pending-offers"],
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:    queryKey: ["/api/portal/dreamscaper/all-investments"],
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:          <h1 className="text-3xl font-bold mb-4">Dreamscaper Portal</h1>
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:          <a href="/api/login?returnTo=/portal/dreamscaper">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <Button size="lg" data-testid="button-dreamscaper-login">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:  if (!isDreamscaper && !isGuestMode) {
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:          <h1 className="text-3xl font-bold mb-4">Become a Dreamscaper</h1>
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            To access the Dreamscaper Portal, you need to apply to become an operator. Submit your application to raise capital for your real estate projects.
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:          <Link href="/dreamspace">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <Button size="lg" data-testid="button-apply-dreamscaper">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:              Apply to Become a Dreamscaper
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:              <span className="text-sm font-medium">Guest Preview Mode - Viewing as Dreamscaper</span>
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <h1 className="text-3xl font-bold" data-testid="text-dreamscaper-welcome">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:              Welcome, {isGuestMode ? "Guest Dreamscaper" : (profile?.display_name || "Dreamscaper")}
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:          <PortalHeader currentPortal="dreamscaper" />
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <TabsTrigger value="dashboard" data-testid="tab-dreamscaper-dashboard">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <TabsTrigger value="projects" data-testid="tab-dreamscaper-projects">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <TabsTrigger value="investors" data-testid="tab-dreamscaper-investors">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:            <TabsTrigger value="offers" data-testid="tab-dreamscaper-offers">
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:                    <p className="font-medium">{project.projectedReturn || "Negotiable"}</p>
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:      queryClient.invalidateQueries({ queryKey: ["/api/portal/dreamscaper/pending-offers"] });
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:      queryClient.invalidateQueries({ queryKey: ["/api/portal/dreamscaper/all-investments"] });
+/home/runner/workspace/client/src/pages/dreamscaper-portal.tsx:      queryClient.invalidateQueries({ queryKey: ["/api/portal/dreamscaper/pending-offers"] });
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  propertyAddress?: string;
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  address?: string;
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  estimatedRepairs?: number;
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  propertyAddress: string;
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:      const address = deal.propertyAddress || deal.address || '';
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:        address.toLowerCase().includes(query) ||
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            placeholder="Search by address or city..."
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:              address: deal.propertyAddress || deal.address || '',
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            showInvest={isDreamscaper || isInvestor || isAdmin}
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            showInvest={isDreamscaper || isInvestor || isAdmin}
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:          address: d.propertyAddress || d.address || '',
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:          repairEstimate: d.repairEstimate || d.estimatedRepairs || 0,
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:        dealAddress={addToFolderDeal?.propertyAddress || addToFolderDeal?.address || ''}
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:    <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:    </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  const address = deal.propertyAddress || deal.address || 'Property Address';
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            alt={address}
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:          <h3 className="font-semibold text-lg truncate">{address}</h3>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  const address = deal.propertyAddress || deal.address || 'Property Address';
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:      const subject = encodeURIComponent(`Check out this deal: ${address}`);
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:      const body = encodeURIComponent(`I found this investment opportunity:\n\n${address}\n${cityState}\nAsking: $${askPrice.toLocaleString()}\nARV: $${arv.toLocaleString()}\nProfit: $${profit.toLocaleString()}\n\nView details: ${dealUrl}`);
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            alt={address}
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:          <h3 className="font-semibold truncate" data-testid={`text-deal-address-${deal.id}`}>{address}</h3>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            estimatedRepairs: deal.estimatedRepairs,
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:    <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:    </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:    <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:    </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:          <h3 className="font-semibold truncate" data-testid={`text-listing-address-${listing.id}`}>
+/home/runner/workspace/client/src/pages/marketflow-deals.tsx:            {listing.propertyAddress}
+/home/runner/workspace/client/src/pages/marketflow-dashboard.tsx:  deal: Partial<WholesaleDeal> & { id: number; propertyAddress?: string };
+/home/runner/workspace/client/src/pages/marketflow-dashboard.tsx:      propertyAddress: "123 Oak Street",
+/home/runner/workspace/client/src/pages/marketflow-dashboard.tsx:      propertyAddress: "456 Maple Ave",
+/home/runner/workspace/client/src/pages/marketflow-dashboard.tsx:                      <h3 className="font-semibold">{saved.deal.propertyAddress}</h3>
+/home/runner/workspace/client/src/pages/buyers.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/buyers.tsx:          Pegasus Dreamscapes has the inventory to match your investment goals.
+/home/runner/workspace/client/src/pages/buyers.tsx:              Exclusive off-market deals and MLS listings - all available through Pegasus Dreamscapes.
+/home/runner/workspace/client/src/pages/buyers.tsx:            Exclusive off-market deals and MLS listings - all available through Pegasus Dreamscapes.
+/home/runner/workspace/client/src/pages/buyers.tsx:                            alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/buyers.tsx:                          <p className="text-sm text-muted-foreground truncate">{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyers.tsx:                            alt={deal.propertyAddress}
+/home/runner/workspace/client/src/pages/buyers.tsx:                          <p className="text-sm text-muted-foreground truncate">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyers.tsx:                            alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/buyers.tsx:                          <p className="text-sm text-muted-foreground truncate">{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyers.tsx:    resolver: zodResolver(inquiryFormSchema),
+/home/runner/workspace/client/src/pages/buyers.tsx:            alt={listing.propertyAddress}
+/home/runner/workspace/client/src/pages/buyers.tsx:          <p className="text-white/90 font-medium">{listing.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyers.tsx:            description={`Interested in ${listing.propertyAddress}? Fill out this form and we'll contact you to schedule a private showing.`}
+/home/runner/workspace/client/src/pages/buyers.tsx:    resolver: zodResolver(inquiryFormSchema),
+/home/runner/workspace/client/src/pages/buyers.tsx:  const potentialProfit = deal.arv && deal.contractPrice && deal.estimatedRepairs
+/home/runner/workspace/client/src/pages/buyers.tsx:    ? deal.arv - deal.contractPrice - deal.estimatedRepairs - deal.assignmentFee
+/home/runner/workspace/client/src/pages/buyers.tsx:            alt={deal.propertyAddress}
+/home/runner/workspace/client/src/pages/buyers.tsx:          <p className="text-white font-semibold text-lg">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/buyers.tsx:            <p className="text-lg font-bold text-foreground">{formatCurrency(deal.estimatedRepairs)}</p>
+/home/runner/workspace/client/src/pages/buyers.tsx:            Pegasus Dreamscapes stands behind every property we sell.
+/home/runner/workspace/client/src/pages/buyers.tsx:          Whether you're an investor looking for your next flip or a homebuyer searching for your dream home, 
+/home/runner/workspace/client/src/pages/community.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/community.tsx:    resolver: zodResolver(postSchema),
+/home/runner/workspace/client/src/pages/community.tsx:    resolver: zodResolver(replySchema),
+/home/runner/workspace/client/src/pages/invest.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/invest.tsx:    resolver: zodResolver(insertInvestorLeadSchema),
+/home/runner/workspace/client/src/pages/invest.tsx:                        <FormLabel>Email Address</FormLabel>
+/home/runner/workspace/client/src/pages/marketplace-admin.tsx:  ipAddress: string | null;
+/home/runner/workspace/client/src/pages/marketplace-admin.tsx:  propertyAddress: string;
+/home/runner/workspace/client/src/pages/marketplace-admin.tsx:              placeholder="Transform Distressed Assets Into Dream Investments"
+/home/runner/workspace/client/src/pages/marketplace-admin.tsx:                            {deal?.propertyAddress || `Deal #${fd.dealId}`}
+/home/runner/workspace/client/src/pages/marketplace-admin.tsx:                              <p className="font-medium truncate">{deal.propertyAddress}</p>
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  propertyAddress?: string;
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  address?: string;
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  estimatedRepairs?: number;
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  projectedReturn?: string;
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, enterGuestMode, exitGuestMode } = useSupabaseAuth();
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:      pegasus_dreamscaper: '/marketflow/dreamscaper',
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:      dreamscaper: '/marketflow/dreamscaper',
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:      const address = deal.propertyAddress || deal.address || '';
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:        address.toLowerCase().includes(query) ||
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:                  onClick={() => handleGuestPreview('dreamscaper')}
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:                  data-testid="button-preview-dreamscaper"
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:                  Dreamscaper
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            placeholder="Search by address, city, or project name..."
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:                      showInvest={isDreamscaper || isInvestor || isAdmin}
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            <StaggerChildren className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  const address = deal.propertyAddress || deal.address || 'Unknown Address';
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            alt={address}
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:        <h3 className="font-semibold text-lg mb-1 line-clamp-1">{address}</h3>
+/home/runner/workspace/client/src/pages/marketplace-discover.tsx:            <span>{project.projectedReturn || 'N/A'}</span>
+/home/runner/workspace/client/src/pages/marketplace.tsx:import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketplace.tsx:        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/marketplace.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace.tsx:      title: "Dreamscapers",
+/home/runner/workspace/client/src/pages/marketplace.tsx:      cta: "Join as Dreamscaper",
+/home/runner/workspace/client/src/pages/marketplace.tsx:      href: "/signup?role=dreamscaper",
+/home/runner/workspace/client/src/pages/marketplace.tsx:        <StaggerChildren className="grid md:grid-cols-2 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/marketplace.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace.tsx:        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/marketplace.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketplace.tsx:            Join hundreds of real estate professionals who are finding deals, raising capital, 
+/home/runner/workspace/client/src/pages/sell.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/sell.tsx:import { AddressAutocomplete } from "@/components/address-autocomplete";
+/home/runner/workspace/client/src/pages/sell.tsx:  email: z.string().email("Please enter a valid email address"),
+/home/runner/workspace/client/src/pages/sell.tsx:  propertyAddress: z.string().min(5, "Please enter the property address"),
+/home/runner/workspace/client/src/pages/sell.tsx:      description: "Share the address, condition, and your timeline.",
+/home/runner/workspace/client/src/pages/sell.tsx:    resolver: zodResolver(sellerFormSchema),
+/home/runner/workspace/client/src/pages/sell.tsx:      propertyAddress: "",
+/home/runner/workspace/client/src/pages/sell.tsx:        address: data.propertyAddress,
+/home/runner/workspace/client/src/pages/sell.tsx:                      <FormLabel>Email Address</FormLabel>
+/home/runner/workspace/client/src/pages/sell.tsx:                  name="propertyAddress"
+/home/runner/workspace/client/src/pages/sell.tsx:                      <FormLabel>Property Address</FormLabel>
+/home/runner/workspace/client/src/pages/sell.tsx:                        <AddressAutocomplete
+/home/runner/workspace/client/src/pages/sell.tsx:                          placeholder="Start typing an address..."
+/home/runner/workspace/client/src/pages/sell.tsx:                          data-testid="input-seller-address"
+/home/runner/workspace/client/src/pages/submit-deal.tsx:              for dreamscapers and investors to discover.
+/home/runner/workspace/client/src/pages/submit-deal.tsx:      description: "Approved deals are listed and matched with qualified dreamscapers and investors.",
+/home/runner/workspace/client/src/pages/submit-deal.tsx:                Part of the Pegasus Dreamscapes acquisitions team
+/home/runner/workspace/client/src/pages/submit-deal.tsx:      description: "Access our network of qualified investors, dreamscapers, and cash buyers actively looking for deals."
+/home/runner/workspace/client/src/pages/about.tsx:    title: "About Us - Pegasus Dreamscapes Corp",
+/home/runner/workspace/client/src/pages/about.tsx:    description: "Learn about Pegasus Dreamscapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
+/home/runner/workspace/client/src/pages/about.tsx:          About Pegasus Dreamscapes
+/home/runner/workspace/client/src/pages/about.tsx:          Dream it. Build it.<br />
+/home/runner/workspace/client/src/pages/about.tsx:                Pegasus Dreamscapes was founded by Paolo Duran, a real estate entrepreneur and project manager with a background in construction and design-driven renovations.
+/home/runner/workspace/client/src/pages/about.tsx:                What started as a passion for transforming neglected properties has grown into a full-service real estate operation. Today, Pegasus Dreamscapes combines construction expertise with design sensibility to create spaces that not only look beautiful but perform as solid investments.
+/home/runner/workspace/client/src/pages/about.tsx:      title: "Design the Dreamscape",
+/home/runner/workspace/client/src/pages/about.tsx:            MEET THE DREAMSCAPERS
+/home/runner/workspace/client/src/pages/contact.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/contact.tsx:  email: z.string().email("Please enter a valid email address"),
+/home/runner/workspace/client/src/pages/contact.tsx:          Submit a property, start a private partner conversation, or ask a question about Pegasus Dreamscapes.
+/home/runner/workspace/client/src/pages/contact.tsx:    resolver: zodResolver(contactFormSchema),
+/home/runner/workspace/client/src/pages/contact.tsx:      value: "info@pegasusdreamscapes.com",
+/home/runner/workspace/client/src/pages/contact.tsx:      href: "mailto:info@pegasusdreamscapes.com",
+/home/runner/workspace/client/src/pages/contact.tsx:                              <FormLabel>Email Address</FormLabel>
+/home/runner/workspace/client/src/pages/home.tsx:import { zodResolver } from "@hookform/resolvers/zod";
+/home/runner/workspace/client/src/pages/home.tsx:import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift, AnimatedCounter as SharedAnimatedCounter } from "@/components/animations";
+/home/runner/workspace/client/src/pages/home.tsx:    title: "Pegasus Dreamscapes | Development • Investments • Systems",
+/home/runner/workspace/client/src/pages/home.tsx:    description: "Real estate execution, built with discipline. Pegasus Dreamscapes is a founder-led real estate development, investment, and systems company."
+/home/runner/workspace/client/src/pages/home.tsx:        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
+/home/runner/workspace/client/src/pages/home.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/home.tsx:  propertyAddress: string;
+/home/runner/workspace/client/src/pages/home.tsx:        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/home.tsx:                    <h3 className="font-semibold text-base mb-3 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-deal-address-${index}`}>
+/home/runner/workspace/client/src/pages/home.tsx:                      {deal.propertyAddress}
+/home/runner/workspace/client/src/pages/home.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/home.tsx:              <EditableText contentKey="home.testimonials.description" fallback="The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution." as="p" multiline />
+/home/runner/workspace/client/src/pages/home.tsx:              <p>{getValue("home.testimonials.description") || "The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution."}</p>
+/home/runner/workspace/client/src/pages/home.tsx:  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.");
+/home/runner/workspace/client/src/pages/home.tsx:                  fallback="Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value."
+/home/runner/workspace/client/src/pages/home.tsx:          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/home.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/home.tsx:  propertyAddress: z.string().min(5, "Property address is required"),
+/home/runner/workspace/client/src/pages/home.tsx:    resolver: zodResolver(sellerFormSchema),
+/home/runner/workspace/client/src/pages/home.tsx:      propertyAddress: "",
+/home/runner/workspace/client/src/pages/home.tsx:        address: data.propertyAddress,
+/home/runner/workspace/client/src/pages/home.tsx:                    name="propertyAddress"
+/home/runner/workspace/client/src/pages/home.tsx:                        <FormLabel>Property Address</FormLabel>
+/home/runner/workspace/client/src/pages/home.tsx:                          <Input placeholder="123 Main St, City, State ZIP" {...field} data-testid="input-sell-address" />
+/home/runner/workspace/client/src/pages/home.tsx:    resolver: zodResolver(investorFormSchema),
+/home/runner/workspace/client/src/pages/home.tsx:              <p className="text-sm text-muted-foreground mt-4">— Pegasus Dreamscapes</p>
+/home/runner/workspace/client/src/pages/home.tsx:          <StaggerChildren className="space-y-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/home.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/home.tsx:          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.15}>
+/home/runner/workspace/client/src/pages/home.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/home.tsx:              <EditableText contentKey="home.community.title" fallback="The Dreamscaper Creed" />
+/home/runner/workspace/client/src/pages/home.tsx:            ) : (getValue("home.community.title") || "The Dreamscaper Creed")}
+/home/runner/workspace/client/src/pages/home.tsx:              <EditableText contentKey="home.community.description" fallback="At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve." as="p" multiline />
+/home/runner/workspace/client/src/pages/home.tsx:              <p>{getValue("home.community.description") || "At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve."}</p>
+/home/runner/workspace/client/src/pages/home.tsx:        <StaggerChildren className="grid md:grid-cols-2 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/home.tsx:        </StaggerChildren>
+/home/runner/workspace/client/src/pages/home.tsx:    question: "Can I sell my property directly to Pegasus Dreamscapes?",
+/home/runner/workspace/client/src/pages/home.tsx:  email: z.string().email("Please enter a valid email address"),
+/home/runner/workspace/client/src/pages/home.tsx:    resolver: zodResolver(newsletterSchema),
+/home/runner/workspace/client/src/pages/home.tsx:    resolver: zodResolver(contactFormSchema),
+/home/runner/workspace/client/src/pages/home.tsx:                href={`mailto:${(getValue("home.contact.email") || "hello@pegasusdreamscapes.com").trim()}`}
+/home/runner/workspace/client/src/pages/home.tsx:                      <EditableText contentKey="home.contact.email" fallback="hello@pegasusdreamscapes.com" />
+/home/runner/workspace/client/src/pages/home.tsx:                    ) : (getValue("home.contact.email") || "hello@pegasusdreamscapes.com")}
+/home/runner/workspace/client/src/pages/privacy.tsx:    title: "Privacy Policy | Pegasus Dreamscapes Corp",
+/home/runner/workspace/client/src/pages/privacy.tsx:    description: "Privacy policy for Pegasus Dreamscapes Corp real estate investment platform.",
+/home/runner/workspace/client/src/pages/privacy.tsx:              Pegasus Dreamscapes Corp ("Company," "we," "our," or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our real estate investment platform services.
+/home/runner/workspace/client/src/pages/privacy.tsx:              This information may include your name, email address, phone number, mailing address, property details, investment preferences, and financial information relevant to investment transactions.
+/home/runner/workspace/client/src/pages/privacy.tsx:              When you access our platform, we automatically collect certain information including your IP address, browser type, operating system, access times, and the pages you view. We use cookies and similar tracking technologies to enhance your experience.
+/home/runner/workspace/client/src/pages/privacy.tsx:              To exercise these rights, please contact us at privacy@pegasusdreamscapes.com.
+/home/runner/workspace/client/src/pages/privacy.tsx:            <h2 className="text-2xl font-semibold mb-4">9. Children's Privacy</h2>
+/home/runner/workspace/client/src/pages/privacy.tsx:              Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.
+/home/runner/workspace/client/src/pages/privacy.tsx:              <p className="font-medium">Pegasus Dreamscapes Corp</p>
+/home/runner/workspace/client/src/pages/privacy.tsx:              <p className="text-muted-foreground">Email: privacy@pegasusdreamscapes.com</p>
+/home/runner/workspace/client/src/pages/terms.tsx:    title: "Terms of Service | Pegasus Dreamscapes Corp",
+/home/runner/workspace/client/src/pages/terms.tsx:    description: "Terms of service for using the Pegasus Dreamscapes Corp real estate investment platform.",
+/home/runner/workspace/client/src/pages/terms.tsx:              By accessing or using the Pegasus Dreamscapes Corp website and platform ("Services"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use our Services. These Terms constitute a legally binding agreement between you and Pegasus Dreamscapes Corp ("Company," "we," "our," or "us").
+/home/runner/workspace/client/src/pages/terms.tsx:              Pegasus Dreamscapes Corp operates a real estate investment platform that connects property sellers with investors. Our Services include, but are not limited to:
+/home/runner/workspace/client/src/pages/terms.tsx:              <li>Rental income and returns are not guaranteed</li>
+/home/runner/workspace/client/src/pages/terms.tsx:              All content, features, and functionality of our Services, including but not limited to text, graphics, logos, and software, are owned by Pegasus Dreamscapes Corp and are protected by intellectual property laws.
+/home/runner/workspace/client/src/pages/terms.tsx:              TO THE MAXIMUM EXTENT PERMITTED BY LAW, PEGASUS DREAMSCAPES CORP SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF OUR SERVICES. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU TO US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+/home/runner/workspace/client/src/pages/terms.tsx:              You agree to indemnify and hold harmless Pegasus Dreamscapes Corp, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including attorney's fees) arising out of your use of our Services, your violation of these Terms, or your violation of any rights of a third party.
+/home/runner/workspace/client/src/pages/terms.tsx:              <p className="font-medium">Pegasus Dreamscapes Corp</p>
+/home/runner/workspace/client/src/pages/terms.tsx:              <p className="text-muted-foreground">Email: legal@pegasusdreamscapes.com</p>
+/home/runner/workspace/client/src/pages/development.tsx:import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+/home/runner/workspace/client/src/pages/development.tsx:    title: "Development | Pegasus Dreamscapes",
+/home/runner/workspace/client/src/pages/development.tsx:                Pegasus Dreamscapes · Development
+/home/runner/workspace/client/src/pages/development.tsx:              Pegasus Development is the execution arm of Pegasus Dreamscapes.
+/home/runner/workspace/client/src/pages/development.tsx:          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/development.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/development.tsx:              <StaggerChildren className="grid sm:grid-cols-2 gap-5" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/development.tsx:              </StaggerChildren>
+/home/runner/workspace/client/src/pages/investments.tsx:import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+/home/runner/workspace/client/src/pages/investments.tsx:    title: "Investments | Pegasus Dreamscapes",
+/home/runner/workspace/client/src/pages/investments.tsx:                Pegasus Dreamscapes · Investments
+/home/runner/workspace/client/src/pages/investments.tsx:              Note · Pegasus Dreamscapes does not offer or sell securities to the public.
+/home/runner/workspace/client/src/pages/investments.tsx:          <StaggerChildren className="grid sm:grid-cols-2 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/investments.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/investments.tsx:              <StaggerChildren className="grid sm:grid-cols-2 gap-5" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/investments.tsx:              </StaggerChildren>
+/home/runner/workspace/client/src/pages/systems.tsx:import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+/home/runner/workspace/client/src/pages/systems.tsx:    title: "Systems | Pegasus Dreamscapes",
+/home/runner/workspace/client/src/pages/systems.tsx:      "Pegasus Systems is the internal product organization inside Pegasus Dreamscapes — building tools that bring governance, intelligence, and operational control to real estate execution.",
+/home/runner/workspace/client/src/pages/systems.tsx:                Pegasus Dreamscapes · Systems
+/home/runner/workspace/client/src/pages/systems.tsx:              Dreamscapes. We build the tools that bring governance, intelligence,
+/home/runner/workspace/client/src/pages/systems.tsx:          <StaggerChildren className="space-y-4" staggerDelay={0.08}>
+/home/runner/workspace/client/src/pages/systems.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/systems.tsx:              <StaggerChildren className="grid sm:grid-cols-3 gap-6" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/systems.tsx:              </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketflow-beta.tsx:import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+/home/runner/workspace/client/src/pages/marketflow-beta.tsx:    title: "MarketFlow Beta | Pegasus Dreamscapes",
+/home/runner/workspace/client/src/pages/marketflow-beta.tsx:          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
+/home/runner/workspace/client/src/pages/marketflow-beta.tsx:          </StaggerChildren>
+/home/runner/workspace/client/src/pages/marketflow-beta.tsx:              <StaggerChildren className="space-y-4" staggerDelay={0.1}>
+/home/runner/workspace/client/src/pages/marketflow-beta.tsx:              </StaggerChildren>

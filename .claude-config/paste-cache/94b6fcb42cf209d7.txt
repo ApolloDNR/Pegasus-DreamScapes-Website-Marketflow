@@ -1,0 +1,139 @@
+Yes. That’s the right correction:
+
+**Go back to the original Replit design/feel, but keep the safer, better Pegasus wording.**
+
+So we should **not** restore the full old copy. We should only undo the big visual redesign from PR #4.
+
+What you want is:
+
+```txt
+Old Replit layout, colors, warmth, and page feel
++
+newer safer text
++
+no fake stats
++
+no fake testimonials
++
+no fake DRE/BBB
++
+MarketFlow private beta language
++
+TypeScript/build fixes stay
+```
+
+## Tell Claude this
+
+```txt
+Create a new branch from main:
+
+claude/restore-replit-design-keep-copy
+
+Goal:
+Undo the visual redesign from PR #4 and restore the original Replit website design/feel, while keeping the safer text/copy improvements from PR #1, TypeScript fixes from PR #2, and deployment docs from PR #3.
+
+Important:
+I do NOT want the dark command-center redesign.
+I DO want the website to feel like the original Replit version again:
+- warmer
+- lighter
+- more real estate
+- more approachable
+- less dark
+- less SaaS
+- less black/copper everywhere
+- less heavy
+
+But I do NOT want to bring back risky old wording.
+
+The target state:
+Use the visual design and layout style from before PR #4, but keep copy safer and customized to Pegasus Dreamscapes.
+
+Do:
+1. Revert the visual/design changes introduced by PR #4.
+2. Restore the old Replit-style public pages and theme feel.
+3. Restore the previous navigation/footer style if needed.
+4. Restore the old color feel and light/warm default theme.
+5. Remove or stop using the new PR #4 dark brand system:
+   - client/src/components/brand/atoms.tsx
+   - client/src/components/brand/pegasus-mark.tsx
+   - PR #4 dark utility classes if no longer used
+   - new dark-only page layouts
+6. Keep the safer copy and positioning from before PR #4:
+   - Pegasus Dreamscapes as Development • Investments • Systems
+   - MarketFlow as private beta
+   - founder-led, disciplined execution
+   - no fake maturity
+7. Keep PR #2 TypeScript fixes.
+8. Keep PR #3 README and .env deployment docs.
+
+Do NOT bring back:
+- fake stats like 47+, $12M+, 98%, 14 Day Avg Close
+- fake testimonials
+- fake DRE numbers
+- BBB / A+ claims
+- placeholder public phone numbers
+- public return claims
+- “guaranteed,” “principal protected,” or “typical annual returns”
+- generic “sell fast for cash” language as the main brand message
+
+If an old section needs text, use safe replacement copy.
+
+Suggested safe homepage copy:
+Hero kicker:
+Development • Investments • Systems
+
+Hero headline:
+Dream it. Build it. Live it.
+
+Hero subheadline:
+Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.
+
+Primary CTA:
+Submit a Property
+
+Secondary CTA:
+Explore MarketFlow
+
+Stats / trust section should use:
+- Founder-Led / Execution Focus
+- East Bay / Local Roots
+- Three Pillars / Development • Investments • Systems
+- Private Beta / MarketFlow in Active Development
+
+Testimonials section:
+Do not use fake testimonials.
+Either hide it or replace with “Operating Principles”:
+- Discipline Before Scale
+- Clear Numbers, Clear Process
+- Built for Long-Term Value
+- Founder-Led Accountability
+
+MarketFlow section:
+MarketFlow is the dealflow layer of Pegasus Systems, currently in private beta. Access and features may be limited while the platform is being developed.
+
+Investment language:
+Use private partner inquiry language only. Nothing on the site should sound like a public securities offering.
+
+Technical:
+Run:
+npx tsc --noEmit
+npm run build
+
+Open a PR titled:
+Restore Replit design while keeping safer Pegasus copy
+
+Do not merge automatically. I want to preview it first.
+```
+
+## The key instruction
+
+If Claude asks whether to revert PR #4 completely, say:
+
+```txt
+Yes, revert the visual/design changes from PR #4, but do not revert PR #1, PR #2, or PR #3.
+
+Keep the copy safety improvements, TypeScript fixes, and deployment docs.
+```
+
+This should get you back to the version that felt familiar, but with the words cleaned up and customized to Pegasus.
