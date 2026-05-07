@@ -1,88 +1,36 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
-type Theme = "dark" | "light" | "system";
+import { createContext, useContext, useEffect } from "react";
 
 interface ThemeProviderContextProps {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  resolvedTheme: "dark" | "light";
+  theme: "dark";
+  resolvedTheme: "dark";
 }
 
-const ThemeProviderContext = createContext<ThemeProviderContextProps | undefined>(undefined);
+const ThemeProviderContext = createContext<ThemeProviderContextProps>({
+  theme: "dark",
+  resolvedTheme: "dark",
+});
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  defaultTheme?: Theme;
+  defaultTheme?: string;
   storageKey?: string;
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-  storageKey = "pegasus-ui-theme",
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
-    }
-    return defaultTheme;
-  });
-
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("light");
-
+export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-
-    let effectiveTheme: "dark" | "light";
-    if (theme === "system") {
-      effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    } else {
-      effectiveTheme = theme;
-    }
-
-    root.classList.add(effectiveTheme);
-    setResolvedTheme(effectiveTheme);
-  }, [theme]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      if (theme === "system") {
-        const root = window.document.documentElement;
-        root.classList.remove("light", "dark");
-        const effectiveTheme = mediaQuery.matches ? "dark" : "light";
-        root.classList.add(effectiveTheme);
-        setResolvedTheme(effectiveTheme);
-      }
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [theme]);
-
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
-    },
-    resolvedTheme,
-  };
+    root.classList.remove("light", "system");
+    root.classList.add("dark");
+    localStorage.removeItem("pegasus-ui-theme");
+  }, []);
 
   return (
-    <ThemeProviderContext.Provider value={value}>
+    <ThemeProviderContext.Provider value={{ theme: "dark", resolvedTheme: "dark" }}>
       {children}
     </ThemeProviderContext.Provider>
   );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeProviderContext);
-
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-
-  return context;
+  return useContext(ThemeProviderContext);
 }
