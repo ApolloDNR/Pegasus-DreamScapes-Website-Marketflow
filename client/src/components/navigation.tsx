@@ -48,12 +48,13 @@ import { ThemeToggle } from "./theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 
 const homeLinks = [
-  { href: "#services", label: "Services" },
-  { href: "#sell", label: "Sell" },
-  { href: "/buyers", label: "Buy", isPage: true },
-  { href: "#invest", label: "Invest" },
-  { href: "#creed", label: "Dreamscaper" },
-  { href: "#contact", label: "Contact" },
+  { href: "#services", label: "Pillars" },
+  { href: "#development-pathway", label: "Pathway" },
+  { href: "#projects", label: "Projects" },
+  { href: "#marketflow-beta", label: "MarketFlow" },
+  { href: "/sell", label: "Sell", isPage: true },
+  { href: "/invest", label: "Invest", isPage: true },
+  { href: "/contact", label: "Contact", isPage: true },
 ];
 
 import { Handshake } from "lucide-react";
@@ -370,7 +371,7 @@ export function Navigation() {
                   <div className="flex items-center gap-1">
                     <Zap className={`w-3 h-3 ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`} />
                     <span className={`text-[11px] font-medium ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`}>
-                      AI-Powered
+                      The Deal Architect
                     </span>
                   </div>
                 </div>
@@ -523,9 +524,6 @@ export function Navigation() {
             </div>
 
             <div className="flex items-center gap-2 lg:gap-3">
-              <div className="hidden sm:block">
-                <ThemeToggle />
-              </div>
               <CommandTrigger className={scrolled || !isHomePage ? '' : 'border-white/20 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/30'} />
               
               {isAuthenticated ? (
@@ -547,10 +545,16 @@ export function Navigation() {
                   </Link>
                   
                   <NotificationBell scrolled={scrolled} isHomePage={isHomePage} />
+                  <div className={`hidden sm:block ${(scrolled || !isHomePage) ? '' : '[&_button]:text-white [&_button]:hover:bg-white/10'}`} data-testid="nav-theme-toggle">
+                    <ThemeToggle />
+                  </div>
                   <UserMenu profile={profile} userEmail={user?.email || ''} scrolled={scrolled} isHomePage={isHomePage} isAdmin={isAdmin} />
                 </>
               ) : (
                 <>
+                  <div className={`hidden sm:block ${(scrolled || !isHomePage) ? '' : '[&_button]:text-white [&_button]:hover:bg-white/10'}`} data-testid="nav-theme-toggle">
+                    <ThemeToggle />
+                  </div>
                   <a 
                     href="/api/login"
                     className={`hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
@@ -719,6 +723,10 @@ export function Navigation() {
                       </Link>
                     </>
                   )}
+                  <div className="pt-3 mt-3 border-t border-border/40 flex items-center justify-between px-1">
+                    <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Appearance</span>
+                    <ThemeToggle />
+                  </div>
                 </div>
               </div>
             </motion.div>

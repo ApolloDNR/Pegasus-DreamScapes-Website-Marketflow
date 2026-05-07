@@ -1,7 +1,7 @@
-# Pegasus Dreamscapes Corp - Real Estate Investment Platform
+# Pegasus Dreamscapes Corp — Strategy-First Real Estate Operating Company
 
 ## Overview
-Pegasus Dreamscapes Corp is a real estate investment platform connecting property sellers with investors, focusing on distressed properties for fix-and-flip or rental strategies. It aims to transform distressed assets into profitable ventures. Key capabilities include a premium design, an 8-tier role system, community features, direct messaging, a wholesale deals marketplace, and an AI assistant. The platform facilitates deal negotiation, advanced analytics, and personalized user experiences.
+Pegasus Dreamscapes Corp is a strategy-first real estate operating company. Positioning: **"The Deal Architect"** — "Where others see impossible, we see a path." The platform operates across three pillars (Development, Investments, Systems) and eight outcome lanes, routing distressed and complex property situations to the best structural path. Private beta / private network only. No lead dies doctrine — every property gets a path.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,7 +9,23 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend
-The frontend uses **React 18, TypeScript, and Vite**, with **Wouter** for routing. It features a unified **MarketFlow** portal at `/marketflow` with role-based dashboards. **TanStack Query** manages server state. UI components are built with **Radix UI** primitives and **Tailwind CSS** (shadcn/ui pattern), featuring a light editorial theme with cream/white backgrounds, dark text, and bronze/blood-orange accents. Forms are managed with **React Hook Form** and validated with **Zod**. Authentication is via **Supabase Auth**. Lazy loading and route-level code splitting are implemented for performance.
+The frontend uses **React 18, TypeScript, and Vite**, with **Wouter** for routing. It features a unified **MarketFlow** portal at `/marketflow` with role-based dashboards. **TanStack Query** manages server state. UI components are built with **Radix UI** primitives and **Tailwind CSS** (shadcn/ui pattern), featuring a dark editorial theme with a sophisticated typographic hierarchy. Forms are managed with **React Hook Form** and validated with **Zod**. Authentication is via **Supabase Auth**. Lazy loading and route-level code splitting are implemented for performance.
+
+**Brand Identity (May 2026 — applied from official brand sheet)**:
+- **Founder**: Paolo "Apollo" Duran — Founder & Principal, Pegasus Dreamscapes Corp
+- **Real contact**: `apollo@pegasusdreamscapes.com` / `925-948-6566` (replaced legacy `hello@`/`info@` variants across footer, contact, home, marketplace-property-detail)
+- **Palette** (HSL tokens in `client/src/index.css`):
+  - Deep Navy `#0D1B2A` → `--navy: 213 53% 11%` (also `--foreground` light, `--background` dark)
+  - Rich Copper `#C77A35` → `--copper: 26 58% 50%` (also `--primary`, `--accent`, `--ring`)
+  - Warm Cream `#F6F1E6` → `--cream: 38 50% 94%` (also `--background` light)
+  - Charcoal `#22262E` → `--charcoal: 218 16% 16%`
+  - New tailwind tokens: `cream`, `charcoal` (added to `tailwind.config.ts` alongside existing `navy`, `copper`)
+- **Type system** (4 tiers, all imported via Google Fonts in `index.css`):
+  - **Cinzel** → `font-display` / `var(--font-display)` — Trajan-substitute caps for wordmark labels
+  - **Cormorant Garamond** → `font-serif` / `var(--font-serif)` — editorial display headlines
+  - **Montserrat** → `font-supporting` / `var(--font-supporting)` — letterspaced kicker labels
+  - **Inter** → `font-sans` / `var(--font-sans)` — body
+- **Brand utilities** (in `index.css`): `.text-headline-gold` (signature cream→copper headline gradient), `.brand-divider` (copper-to-navy hairline), `.brand-stripe` (6px hero footer accent stripe)
 
 ### Backend
 The backend is built with **Express.js on Node.js with TypeScript**, providing RESTful API endpoints under `/api`. **Zod schemas** ensure validation. Authentication is primarily handled by **Supabase Auth**. Rate limiting is applied to API endpoints. Email notifications are integrated via SendGrid, and WebSocket services provide real-time updates.
@@ -49,7 +65,18 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **Feature Flags System**: Environment-based feature flags for controlled rollout of new features, configured in `shared/featureFlags.ts` and consumed via `useFeatureFlags` hook.
 *   **Print-Friendly Layouts**: CSS for optimizing deal summaries for printing to PDF.
 *   **Saved Searches Infrastructure**: Allows users to save search criteria with optional email alerts, backed by both local storage and database persistence.
-*   **Dark Mode**: Theme toggling with a navy/copper theme.
+*   **Theme**: Light / Dark / System toggle is restored in navigation (desktop right-side cluster + mobile menu "Appearance" row). Default theme is `light`. `ThemeProvider` (`client/src/components/theme-provider.tsx`) supports all three modes; toggle lives in `client/src/components/theme-toggle.tsx`. On the hero (transparent nav) the toggle button is forced white via a wrapper class so it stays legible against the dark hero image.
+*   **Visual Upgrade (May 2026)**: Full typographic and component refinement — Cormorant Garamond font, architectural `divide-x` stats strip (no icon circles), hero bottom stat bar with pipe dividers, strategy-question cards with left-accent-bar hover, outcome-lane cards with bare icons (no containers), HowItWorks ghosted large numbers (no pill badge), sell/invest feature lists with left-border treatment, Operating Principles carousel with editorial horizontal-rule attribution (no avatar circles), services sub-tiles cleaned up.
+*   **Launch Polish Pass (May 2026)**: Three targeted readability/positioning fixes applied to PR #6:
+    - **Hero glass-panels** on `/sell` ("The Doctrine") and `/invest` ("How we work with capital") strengthened: panel bg `bg-white/5` → `bg-black/55`, blur `backdrop-blur-md` → `backdrop-blur-2xl`, border `border-white/15` → `border-champagne/25`, added outer dark blur halo (`-inset-8 bg-black/50 blur-3xl`) and `shadow-2xl shadow-black/40`, body text contrast bumped (white/60-75 → white/85-90, champagne/80 → champagne).
+    - **Home hero body readability**: philosophical line + subheadline + support line now use `text-white/95` with arbitrary `[text-shadow:0_2px_14px_rgba(0,0,0,0.6)]` for clean readability over the lit-window section of the hero photo without darkening the whole hero.
+    - **Development Pathway elevated to "the spine"**: section padding bumped (`py-24` → `py-28 lg:py-36`), kicker reframed "Development Pathway" → "Pegasus Development · The Spine", headline rewritten "Where we are. Where we're going." → "Development is the spine. Built phase by phase." (with copper-gradient on second line), intro paragraph now leads with "Pegasus Dreamscapes is, at its core, a real estate development company. Investments and Systems exist to feed and support what gets built." Trajectory disclaimer preserved as italic ledge. The 4 phases (Today/Next/Growth/Legacy) themselves are unchanged.
+*   **Inner Pages Premium Pass (May 2026)**: `/sell`, `/invest`, `/contact`, `/projects`, `/projects/:slug` rebuilt to match homepage editorial standard — dark cinematic hero with bg image + golden-gradient headline word + Cormorant Garamond, kicker labels with hairline rules, asymmetric 7/5 hero layouts with right-side glassmorphic info panel (sell = "The Doctrine" stats, invest = "How we work with capital"), bare-icon outcome cards, ScrollReveal/StaggerChildren motion. `/sell` adds OutcomeRoutingSection (No Lead Dies — 6 lanes), MarketFlowConnectionSection (cross-link), and OperatorSection (founder-by-name + direct line). `/invest` reframes as "Capital meets structure" private-network inquiry (no public offering language) with three structures (Debt/Equity/JV), illustrative project snapshot card, FounderSection (Paolo "Apollo" Duran name card with copper-frame brand treatment, philosophy quote, direct line / email / entity divide-x strip), and MarketFlowConnectionSection. `/contact` adds ContactRoutingSection (3 lanes). `/projects` adds filter bar (status + strategy), image-first ProjectCards, and skeleton-loading state. `/projects/:slug` (`project-detail.tsx`) is fully rebuilt — dark hero with afterImage bg + copper kicker badges + brand-stripe footer, 7/5 asymmetric body with editorial "The Situation/After/Before/Scope of Work" sections (left) + sticky "The Asset / Project Economics" cards with divide-y rows + navy/charcoal "Next Project" CTA card (right), and a "Continue the conversation" routing section linking to Projects + MarketFlow. All form schemas, mutations, and `/api/leads` payloads preserved exactly — visual rework only.
+*   **Brand Identity**: "The Deal Architect" positioning throughout. Nav subtitle = "The Deal Architect". Hero philosophical line = "Where others see impossible, we see a path." No fake stats, no cash-buyer clichés, no BBB/DRE claims.
+*   **Homepage Sections** (10-section strategic order, May 2026): Hero → EveryPropertyGetsAPath → Services (Three Pillars: Development, Investments, Systems) → DevelopmentPathway (4 phases — Today/Next/Growth/Legacy, framed as trajectory not current state) → StrategyStructureStacks (Strategy Stack + Structure Stack side-by-side) → OutcomeLanes (No Lead Dies, 4+4 lanes) → FeaturedProject → MarketFlowBeta (private-beta pitch + sample-lane mock card) → OperatingPrinciples → FinalCTA ("Dream it. Build it. Live it." with sell/invest/contact CTAs). Sell/Invest/HowItWorks/TrustLogos/FeaturedDeals/FAQ/Newsletter/Contact components still exist in the file but are unmounted from the homepage — they live on their dedicated `/sell`, `/invest`, `/contact` routes for funnel clarity.
+*   **Hero**: Tagline "Dream it. Build it. Live it." displayed beneath philosophical line "Where others see impossible, we see a path." Secondary CTA jumps to `#development-pathway`. Stat strip is 4-up: Strategy First · 3 Pillars · 8 Lanes · 4 Phases.
+*   **Development Pathway language discipline**: Phase 1 = today's actual scope (ADU/flips/BRRRR/small-scale). Phases 2–4 are explicitly framed as trajectory ("Where we are. Where we're going.") with a footer disclaimer "Each phase is earned, not assumed." Do NOT overclaim large-scale development as current capability.
+*   **Footer**: 12-column layout — 5/3/4 split (brand block / Explore links / Start a Conversation + contact). Includes "Dream it. Build it. Live it." tagline, expanded disclosures line ("not an offer to buy or sell securities…"), and a Disclosures link.
 
 ## External Dependencies
 

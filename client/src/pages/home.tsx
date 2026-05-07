@@ -33,6 +33,7 @@ import {
   Sparkles,
   Users,
   Mail,
+  Phone,
   Star,
   Quote,
   Award,
@@ -49,7 +50,15 @@ import {
   Send,
   ChevronRight,
   HelpCircle,
-  ChevronLeft
+  ChevronLeft,
+  Hammer,
+  Layers,
+  Compass,
+  Network,
+  Lock,
+  Briefcase,
+  GitBranch,
+  Eye
 } from "lucide-react";
 import {
   Form,
@@ -83,21 +92,375 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <StatsSection />
-      <FeaturedDealsSection />
+      <EveryPropertyGetsAPathSection />
       <ServicesSection />
-      <OperatingPrinciplesSection />
+      <DevelopmentPathwaySection />
+      <StrategyStructureStacksSection />
+      <OutcomeLanesSection />
       <FeaturedProjectSection />
-      <SellPropertySection />
-      <InvestSection />
-      <InvestmentPhilosophySection />
-      <HowItWorksSection />
-      <TrustLogosSection />
-      <CommunityImpactSection />
-      <FAQSection />
-      <NewsletterSection />
-      <ContactSection />
+      <MarketFlowBetaSection />
+      <OperatingPrinciplesSection />
+      <FinalCTASection />
     </div>
+  );
+}
+
+function DevelopmentPathwaySection() {
+  const phases = [
+    {
+      tag: "Phase 1",
+      label: "Today",
+      title: "Foundation",
+      icon: Hammer,
+      items: [
+        "ADU additions and forced-value rehabs",
+        "Fix-and-flip projects",
+        "BRRRR acquisitions",
+        "Small-scale development",
+      ],
+    },
+    {
+      tag: "Phase 2",
+      label: "Next",
+      title: "Expansion",
+      icon: Layers,
+      items: [
+        "Small multi-unit conversions",
+        "2–4 unit projects",
+        "Co-developer relationships",
+        "Expanded Pegasus Development scope",
+      ],
+    },
+    {
+      tag: "Phase 3",
+      label: "Growth",
+      title: "Vertical Integration",
+      icon: Building,
+      items: [
+        "Ground-up infill construction on Pegasus-controlled lots",
+        "BuildForge-supported project management",
+        "Multiple active construction projects",
+      ],
+    },
+    {
+      tag: "Phase 4",
+      label: "Legacy",
+      title: "Generational",
+      icon: Compass,
+      items: [
+        "Master-planned classical neighborhoods",
+        "Larger-scale development",
+        "A generational real estate company",
+      ],
+    },
+  ];
+
+  return (
+    <section id="development-pathway" className="py-28 lg:py-36 bg-background relative overflow-hidden scroll-mt-24">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute -top-32 -right-32 w-[28rem] h-[28rem] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-[28rem] h-[28rem] bg-champagne/[0.05] rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="max-w-3xl mb-16">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">Pegasus Development · The Spine</p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6">
+            Development is the spine.<br />
+            <span className="text-headline-gold">Built phase by phase.</span>
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+            Pegasus Dreamscapes is, at its core, a real estate development company. Investments and Systems exist to feed and support what gets built. Today the work is small-scale and disciplined; the trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods.
+          </p>
+          <p className="text-base text-muted-foreground/85 leading-relaxed italic">
+            This is the path — not a claim of where we already stand.
+          </p>
+        </ScrollReveal>
+
+        <div className="relative">
+          <div className="hidden lg:block absolute top-12 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-5" staggerDelay={0.1}>
+            {phases.map((phase, index) => (
+              <StaggerItem key={index}>
+                <motion.div
+                  className="relative h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 group"
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.25 }}
+                  data-testid={`phase-card-${index}`}
+                >
+                  <div className="flex items-baseline justify-between mb-6">
+                    <span className="font-serif text-3xl text-primary/30 group-hover:text-primary/60 transition-colors">
+                      0{index + 1}
+                    </span>
+                    <phase.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold mb-1">
+                    {phase.tag} — {phase.label}
+                  </p>
+                  <h3 className="font-serif text-2xl font-semibold mb-5 tracking-tight">{phase.title}</h3>
+                  <ul className="space-y-2.5">
+                    {phase.items.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground leading-relaxed">
+                        <span className="mt-2 w-1 h-1 rounded-full bg-primary/50 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </div>
+
+        <ScrollReveal delay={0.3} className="mt-12 max-w-3xl">
+          <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-5">
+            Each phase is earned, not assumed. We graduate to the next stage when the prior stage is consistently profitable, well-documented, and operationally repeatable.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function StrategyStructureStacksSection() {
+  const strategyStack = [
+    { icon: HomeIcon, title: "Fix & Flip", desc: "Forced-value renovation with disciplined resale execution." },
+    { icon: TrendingUp, title: "BRRRR / Buy & Hold", desc: "Long-term wealth through strategic acquisition and management." },
+    { icon: Hammer, title: "ADU & Development", desc: "Additions, conversions, and small-scale ground-up projects." },
+    { icon: Zap, title: "Wholesale / Assignment", desc: "Off-market assignment to vetted buyers in our network." },
+  ];
+
+  const structureStack = [
+    { icon: Briefcase, title: "Direct Acquisition", desc: "Pegasus purchases for its own balance sheet where the path is clear." },
+    { icon: Handshake, title: "JV / Co-GP", desc: "Joint venture and co-general-partner structures with aligned operators." },
+    { icon: GitBranch, title: "Creative Finance", desc: "Sub-to, seller-finance, wraps, and lease-options where they fit the situation." },
+    { icon: Network, title: "Referral / Listing", desc: "Routed to a trusted partner or KW listing lane when that's the right answer." },
+  ];
+
+  const StackBlock = ({ kicker, title, desc, items, testIdPrefix }: { kicker: string; title: string; desc: string; items: typeof strategyStack; testIdPrefix: string }) => (
+    <div>
+      <div className="mb-8">
+        <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold mb-3">{kicker}</p>
+        <h3 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight mb-3">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{desc}</p>
+      </div>
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <motion.div
+            key={index}
+            className="group flex items-start gap-5 p-5 bg-card rounded-lg border border-border/40 hover:border-primary/25 transition-all duration-300"
+            whileHover={{ x: 4 }}
+            transition={{ duration: 0.2 }}
+            data-testid={`${testIdPrefix}-${index}`}
+          >
+            <div className="w-10 h-10 rounded-md border border-border/60 group-hover:border-primary/40 flex items-center justify-center flex-shrink-0 transition-colors">
+              <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">{item.title}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="py-24 lg:py-32 bg-muted/20 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Operating Stack</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            Strategy meets structure.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Two dimensions to every Pegasus deal: <span className="text-foreground/80">what</span> we do with the property, and <span className="text-foreground/80">how</span> we get it done.
+          </p>
+        </ScrollReveal>
+
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          <ScrollReveal direction="left">
+            <StackBlock
+              kicker="Strategy Stack"
+              title="What we do with the property."
+              desc="Each property is matched to the strategy with the cleanest economics for the situation in front of us."
+              items={strategyStack}
+              testIdPrefix="strategy-item"
+            />
+          </ScrollReveal>
+          <ScrollReveal direction="right">
+            <StackBlock
+              kicker="Structure Stack"
+              title="How the deal gets done."
+              desc="Capital structure and ownership form are matched to the strategy, not the other way around."
+              items={structureStack}
+              testIdPrefix="structure-item"
+            />
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MarketFlowBetaSection() {
+  return (
+    <section id="marketflow-beta" className="py-24 lg:py-32 bg-background relative overflow-hidden scroll-mt-24">
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-champagne/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <ScrollReveal className="lg:col-span-7" direction="left">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5">
+                <Lock className="w-3 h-3 text-primary" />
+                <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold">Private Beta</span>
+              </span>
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Invite-only network</span>
+            </div>
+
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6">
+              MarketFlow.<br />
+              <span className="text-primary/85">Where deals find their architects.</span>
+            </h2>
+
+            <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl">
+              MarketFlow is the private deal-flow operating layer behind Pegasus — a curated network where vetted properties are routed to the operators, capital partners, and end-buyers best positioned to close them.
+            </p>
+
+            <ul className="grid sm:grid-cols-2 gap-4 mb-10">
+              {[
+                { icon: Eye, text: "Curated, role-gated deal visibility" },
+                { icon: Target, text: "Compatibility-scored matching" },
+                { icon: Network, text: "Direct-to-operator messaging" },
+                { icon: Shield, text: "Private, vetted network only" },
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3" data-testid={`marketflow-feature-${i}`}>
+                  <item.icon className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <span className="text-sm text-foreground/85 leading-relaxed">{item.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/marketflow">
+                <Button size="lg" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-marketflow-explore">
+                  Enter MarketFlow
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-marketflow-request-access">
+                  Request Access
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal className="lg:col-span-5" direction="right" delay={0.2}>
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/10 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="relative p-8 lg:p-10 bg-card rounded-2xl border border-border/50 shadow-xl">
+                <div className="flex items-center justify-between mb-6 pb-5 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Live Now</span>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-semibold">MarketFlow</span>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { lane: "Wholesale", title: "Off-market SFR · East Bay", meta: "3/2 · ARV ~$X · Below-market basis" },
+                    { lane: "JV / Capital", title: "ADU value-add · South Bay", meta: "Operator + capital partner needed" },
+                    { lane: "Listing", title: "Estate sale · Peninsula", meta: "MLS lane via KW partnership" },
+                  ].map((deal, i) => (
+                    <div
+                      key={i}
+                      className="p-4 rounded-lg border border-border/40 hover:border-primary/30 transition-colors group"
+                      data-testid={`marketflow-deal-${i}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/80 font-semibold">{deal.lane}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                      <h4 className="font-semibold text-sm mb-1 font-serif">{deal.title}</h4>
+                      <p className="text-xs text-muted-foreground">{deal.meta}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-6 pt-5 border-t border-border/40 text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-center">
+                  Sample lanes · Live deals visible to network members
+                </p>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCTASection() {
+  return (
+    <section id="final-cta" className="py-28 lg:py-40 bg-card relative overflow-hidden scroll-mt-24">
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] bg-gradient-radial from-primary/10 via-primary/0 to-transparent rounded-full blur-3xl" />
+      </div>
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <div className="max-w-5xl mx-auto px-6 lg:px-12 relative text-center">
+        <ScrollReveal>
+          <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-8">The Deal Architect</p>
+          <h2 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[0.95] mb-8">
+            Dream it.<br />
+            <span className="text-primary/90">Build it.</span><br />
+            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Live it.</span>
+          </h2>
+
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
+            Whether you have a property, a partnership, or a project worth reviewing — every conversation starts the same way: with a real, structural look at what's possible.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+            <Link href="/sell">
+              <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-sell">
+                Submit a Property
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/invest">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-invest">
+                Partner Inquiry
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto px-8 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-contact">
+                Just Say Hello
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-10 border-t border-border/40 text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            <span>Private network</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <span>Invite-only deal flow</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <span>Bay Area, California</span>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
   );
 }
 
@@ -136,67 +499,186 @@ function AnimatedCounter({ end, duration = 2000, prefix = "", suffix = "" }: { e
   return <span ref={countRef}>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
+function EveryPropertyGetsAPathSection() {
+  const questions = [
+    { q: "What is the property?", desc: "Type, condition, location, and basic characteristics." },
+    { q: "What is the situation?", desc: "Motivation, urgency, encumbrances, and owner circumstances." },
+    { q: "What does the owner want?", desc: "Speed, price, flexibility, certainty, or something else." },
+    { q: "What is the best economic path?", desc: "Acquisition, wholesale, hold, list, or hybrid strategy." },
+    { q: "What is the safest structure?", desc: "Cash, creative finance, JV, assignment, or referral." },
+    { q: "Should Pegasus participate?", desc: "Honest assessment of fit, capacity, and value-add." },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Strategy Review</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
+            Every property gets a path.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Pegasus is not locked to one real estate strategy. We review each property based on the situation, seller goals, economic path, safest structure, and whether Pegasus is the right participant.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
+          {questions.map((item, index) => (
+            <StaggerItem key={index}>
+              <motion.div
+                className="group p-7 bg-card rounded-lg border border-border/40 hover:border-primary/20 transition-all duration-300 h-full relative overflow-hidden"
+                whileHover={{ y: -3 }}
+                transition={{ duration: 0.25 }}
+                data-testid={`strategy-question-${index}`}
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/0 group-hover:bg-primary/50 transition-all duration-400 rounded-full" />
+                <span className="text-[10px] text-primary/50 font-semibold tracking-[0.25em] uppercase mb-4 block">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <h3 className="font-semibold text-base mb-2.5 group-hover:text-primary transition-colors duration-300">{item.q}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.3} className="text-center mt-12">
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Not every property gets an offer. <span className="text-foreground font-medium">Every property gets a serious review.</span> If there is a path, Pegasus helps identify it. If there is not, we tell the truth and route the opportunity to its next best lawful path.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function OutcomeLanesSection() {
+  const primaryLanes = [
+    { icon: Building, title: "Pegasus Acquisition", desc: "We purchase directly where the numbers, scope, and execution path are clear." },
+    { icon: Handshake, title: "Wholesale Assignment", desc: "Off-market assignment to a qualified buyer in our private network." },
+    { icon: Users, title: "JV / Partnership", desc: "Joint venture or co-GP structure for aligned operator and capital arrangements." },
+    { icon: TrendingUp, title: "KW Listing Lane", desc: "Traditional MLS listing through our Keller Williams partnership where appropriate." },
+  ];
+
+  const secondaryLanes = [
+    { title: "Referral Lane", desc: "Routed to a trusted professional when Pegasus is not the right fit." },
+    { title: "MarketFlow Distribution", desc: "Private deal distribution to vetted network participants." },
+    { title: "Incubation / Nurture", desc: "Long-horizon situations held and revisited as conditions change." },
+    { title: "Archive Intelligence", desc: "Documented and stored — every deal informs the next." },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-muted/20 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="mb-14">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">No Lead Dies</p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-4">
+            One property. Multiple possible paths.
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Every accepted property routes to one of eight monetization lanes within 24 business hours. Pegasus does not compete by making the fastest lowball offer — we compete by seeing what others miss.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6" staggerDelay={0.08}>
+          {primaryLanes.map((lane, index) => (
+            <StaggerItem key={index}>
+              <motion.div
+                className="group p-7 bg-card rounded-lg border border-border/40 hover:border-primary/25 hover:shadow-lg transition-all duration-300 h-full"
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.25 }}
+                data-testid={`outcome-lane-${index}`}
+              >
+                <lane.icon className="w-5 h-5 text-primary/55 mb-6 group-hover:text-primary transition-colors duration-300" />
+                <h3 className="font-semibold text-base mb-2.5 group-hover:text-primary transition-colors duration-300">{lane.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{lane.desc}</p>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.2}>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {secondaryLanes.map((lane, index) => (
+              <motion.div
+                key={index}
+                className="p-5 bg-card/60 rounded-lg border border-border/30 hover:border-primary/20 transition-all duration-300"
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
+                data-testid={`secondary-lane-${index}`}
+              >
+                <h4 className="font-medium text-sm mb-1.5">{lane.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{lane.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
 function StatsSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
   
   const stats = [
-    { value: "Founder-Led", label: "Execution Focus", icon: Building, key: "stats.0" },
-    { value: "East Bay", label: "Local Roots", icon: DollarSign, key: "stats.1" },
+    { value: "No Lead Dies", label: "Every Property Gets a Path", icon: Target, key: "stats.0" },
+    { value: "East Bay", label: "Founder-Led, Locally Rooted", icon: Building, key: "stats.1" },
     { value: "Three Pillars", label: "Development • Investments • Systems", icon: Star, key: "stats.2" },
-    { value: "Private Beta", label: "MarketFlow in Active Development", icon: Clock, key: "stats.3" },
+    { value: "Private Beta", label: "MarketFlow — Private Network Only", icon: Clock, key: "stats.3" },
   ];
 
   return (
-    <section className="py-24 lg:py-28 bg-card relative overflow-hidden">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-      
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
-        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
+    <section className="py-0 bg-card border-b border-border/30 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-border/40">
           {stats.map((stat, index) => {
             const displayValue = getValue(`home.${stat.key}.value`) || stat.value;
             const displayLabel = getValue(`home.${stat.key}.label`) || stat.label;
             
             return (
-              <StaggerItem key={index}>
-                <motion.div 
-                  className="text-center group cursor-default py-8 px-4 relative"
-                  whileHover={{ y: -4 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {/* Decorative top accent */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors duration-300">
-                    <stat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-                  </div>
-                  
-                  <div className="font-serif text-4xl sm:text-5xl lg:text-5xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
-                    {isEditMode ? (
-                      <EditableText 
-                        contentKey={`home.${stat.key}.value`} 
-                        fallback={String(stat.value)}
-                      />
-                    ) : (
-                      displayValue
-                    )}
-                  </div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
-                    {isEditMode ? (
-                      <EditableText 
-                        contentKey={`home.${stat.key}.label`} 
-                        fallback={stat.label}
-                      />
-                    ) : (
-                      displayLabel
-                    )}
-                  </div>
-                </motion.div>
-              </StaggerItem>
+              <motion.div
+                key={index}
+                className="px-6 lg:px-10 xl:px-14 py-12 group cursor-default"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+              >
+                <div className="font-serif text-2xl sm:text-3xl lg:text-[1.85rem] font-semibold text-foreground mb-3 tracking-tight leading-tight group-hover:text-primary transition-colors duration-300" data-testid={`stat-value-${index}`}>
+                  {isEditMode ? (
+                    <EditableText 
+                      contentKey={`home.${stat.key}.value`} 
+                      fallback={String(stat.value)}
+                    />
+                  ) : (
+                    displayValue
+                  )}
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-medium leading-relaxed">
+                  {isEditMode ? (
+                    <EditableText 
+                      contentKey={`home.${stat.key}.label`} 
+                      fallback={stat.label}
+                    />
+                  ) : (
+                    displayLabel
+                  )}
+                </div>
+              </motion.div>
             );
           })}
-        </StaggerChildren>
+        </div>
       </div>
     </section>
   );
@@ -509,25 +991,18 @@ function OperatingPrinciplesSection() {
                   className="w-full flex-shrink-0 px-4"
                 >
                   <motion.div 
-                    className="max-w-3xl mx-auto p-10 lg:p-14 bg-background rounded-2xl border border-border/50 relative"
+                    className="max-w-3xl mx-auto p-12 lg:p-16 bg-background rounded-lg border border-border/40 relative"
                     data-testid={`testimonial-card-${index}`}
                   >
-                    {/* Large quote icon */}
-                    <div className="absolute -top-5 left-10 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                      <Quote className="w-5 h-5 text-primary-foreground" />
-                    </div>
-                    <p className="text-foreground leading-relaxed text-lg lg:text-xl text-center italic mb-10">
+                    <Quote className="w-6 h-6 text-primary/30 mx-auto mb-8" />
+                    <p className="font-serif text-foreground leading-relaxed text-xl lg:text-2xl text-center italic mb-10 font-light tracking-wide">
                       "{testimonial.quote}"
                     </p>
                     
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold">
-                        {testimonial.initials}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold text-foreground text-lg">{testimonial.author}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
-                      </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-px bg-primary/40 mx-auto" />
+                      <p className="font-semibold text-foreground text-base tracking-wide">{testimonial.author}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-[0.2em]">{testimonial.role}</p>
                     </div>
                   </motion.div>
                 </div>
@@ -656,12 +1131,13 @@ function HeroSection() {
   const { getValue } = useSiteContent();
   
   const heroKicker = getValue("home.hero.kicker", "Development • Investments • Systems");
-  const heroLine1 = getValue("home.hero.line1", "Real estate execution,");
-  const heroLine2 = getValue("home.hero.line2", "built with");
-  const heroLine3 = getValue("home.hero.line3", "discipline.");
-  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.");
+  const heroLine1 = getValue("home.hero.line1", "The Deal");
+  const heroLine2 = getValue("home.hero.line2", "Architect");
+  const heroLine3 = getValue("home.hero.line3", "");
+  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a strategy-first real estate operating company. We help turn property situations into structured outcomes through strategy review, creative deal design, and disciplined execution.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
-  const heroCtaSecondary = getValue("home.hero.cta_secondary", "Explore MarketFlow");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "See the Pathway");
+  const heroPhilosophical = "Where others see impossible, we see a path.";
   
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
@@ -744,7 +1220,7 @@ function HeroSection() {
             </motion.div>
             
             {/* Premium headline with refined typography */}
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.85] mb-10 tracking-[-0.03em] text-white" data-testid="text-hero-headline">
+            <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-semibold leading-[0.88] mb-10 tracking-[-0.02em] text-white" data-testid="text-hero-headline">
               <motion.span 
                 className="block"
                 initial={{ opacity: 0, y: 40 }}
@@ -777,12 +1253,33 @@ function HeroSection() {
               </motion.span>
             </h1>
             
-            {/* Refined subheadline with better spacing */}
-            <motion.div 
-              className="text-lg sm:text-xl text-white/75 max-w-2xl mb-14 leading-relaxed font-light"
+            {/* Philosophical line + brand tagline */}
+            <motion.div
+              className="mb-8 space-y-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
+              transition={{ duration: 0.8, delay: 0.85 }}
+            >
+              <p
+                className="font-serif text-xl sm:text-2xl text-white/95 italic tracking-wide leading-snug [text-shadow:0_2px_16px_rgba(0,0,0,0.55)]"
+                data-testid="text-hero-philosophical"
+              >
+                {heroPhilosophical}
+              </p>
+              <div className="flex items-center gap-3" data-testid="text-hero-tagline">
+                <span className="h-px w-8 bg-champagne/60" />
+                <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-champagne/80 font-medium">
+                  Dream it. Build it. Live it.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Refined subheadline with better spacing */}
+            <motion.div 
+              className="text-lg sm:text-xl text-white/95 max-w-2xl mb-14 leading-relaxed font-normal [text-shadow:0_2px_14px_rgba(0,0,0,0.6)]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.0 }}
               data-testid="text-hero-subheadline"
             >
               {isEditMode ? (
@@ -811,39 +1308,43 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <Link href="/marketflow">
+              <a href="#development-pathway">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_secondary" fallback="Explore MarketFlow" />
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="See the Pathway" />
                   ) : heroCtaSecondary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
-              </Link>
+              </a>
             </motion.div>
 
-            <p className="mt-5 text-sm text-white/70" data-testid="text-hero-support-line">
-              Built in the East Bay. Designed for disciplined real estate execution.
+            <p className="mt-5 text-sm text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]" data-testid="text-hero-support-line">
+              Every property gets a path. Every deal gets a plan.
             </p>
 
-            {/* Quick stats preview */}
+            {/* Quick stats preview — architectural strip */}
             <motion.div 
-              className="mt-20 pt-10 border-t border-white/10 flex flex-wrap gap-12"
+              className="mt-16 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 sm:gap-x-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.4 }}
               data-testid="hero-stats-preview"
             >
-              <div data-testid="hero-stat-properties">
-                <p className="text-3xl font-bold text-white">Private</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Properties</p>
+              <div className="sm:pr-6 sm:border-r sm:border-white/15" data-testid="hero-stat-strategy">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">Strategy First</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Operating Doctrine</p>
               </div>
-              <div data-testid="hero-stat-invested">
-                <p className="text-3xl font-bold text-white">$12M+</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Invested</p>
+              <div className="sm:pl-6 sm:pr-6 sm:border-r sm:border-white/15" data-testid="hero-stat-pillars">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">3 Pillars</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Development · Investments · Systems</p>
               </div>
-              <div data-testid="hero-stat-satisfaction">
-                <p className="text-3xl font-bold text-white">Focused</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Satisfaction</p>
+              <div className="sm:pl-6 sm:pr-6 sm:border-r sm:border-white/15" data-testid="hero-stat-lanes">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">8 Lanes</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Outcome Paths</p>
+              </div>
+              <div className="sm:pl-6" data-testid="hero-stat-pathway">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">4 Phases</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Development Pathway</p>
               </div>
             </motion.div>
           </div>
@@ -878,21 +1379,30 @@ function ServicesSection() {
   const services = [
     {
       image: serviceImage1,
-      title: "Property Investment Consultation",
-      description: "Strategic guidance for real estate investments. We analyze opportunities, evaluate risks, and provide expert consultation to help you make informed decisions.",
-      cta: "Book Consultation",
-      ctaLink: "#contact",
-      accent: "Personalized Strategy",
+      title: "Real Estate Development",
+      description: "We execute value-add, fix-and-flip, BRRRR, ADU, and development strategies where the numbers, scope, and execution path are clear. Every project goes through disciplined underwriting before a dollar is committed.",
+      cta: "View Projects",
+      ctaLink: "/projects",
+      accent: "Development",
       key: "service.0",
     },
     {
       image: serviceImage2,
-      title: "Home Valuation",
-      description: "Get an accurate assessment of your property's value. Our comprehensive valuation considers market conditions, comparable sales, and property condition.",
-      cta: "Request Valuation",
-      ctaLink: "#sell",
-      accent: "Free Assessment",
+      title: "Strategic Investments",
+      description: "We structure private, deal-specific capital and partnership conversations around real opportunities, documented risks, and lawful execution. Private partner conversations only — no public investment offering.",
+      cta: "Partner Inquiry",
+      ctaLink: "/invest",
+      accent: "Investments",
       key: "service.1",
+    },
+    {
+      image: serviceImage1,
+      title: "Pegasus Systems",
+      description: "MarketFlow, intake workflows, and the operating layer behind every Pegasus deal. The infrastructure that turns scattered situations into routed outcomes — and the foundation we build the rest of the company on.",
+      cta: "Enter MarketFlow",
+      ctaLink: "/marketflow",
+      accent: "Systems",
+      key: "service.2",
     },
   ];
 
@@ -908,20 +1418,20 @@ function ServicesSection() {
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
               {isEditMode ? (
-                <EditableText contentKey="home.services.kicker" fallback="What We Offer" />
-              ) : (getValue("home.services.kicker") || "What We Offer")}
+                <EditableText contentKey="home.services.kicker" fallback="The Three Pillars" />
+              ) : (getValue("home.services.kicker") || "The Three Pillars")}
             </p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em]" data-testid="text-services-title">
             {isEditMode ? (
-              <EditableText contentKey="home.services.title" fallback="Premium Services" />
-            ) : (getValue("home.services.title") || "Premium Services")}
+              <EditableText contentKey="home.services.title" fallback="Development. Investments. Systems." />
+            ) : (getValue("home.services.title") || "Development. Investments. Systems.")}
           </h2>
-          <div className="mt-6 text-lg text-muted-foreground max-w-2xl">
+          <div className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed">
             {isEditMode ? (
-              <EditableText contentKey="home.services.description" fallback="Expert guidance and valuation services to help you make informed real estate decisions." as="p" multiline />
+              <EditableText contentKey="home.services.description" fallback="Three pillars, one operating company. We design, fund, and execute real estate projects with the discipline of a developer, the structure of an investment firm, and the systems of a tech operator." as="p" multiline />
             ) : (
-              <p>{getValue("home.services.description") || "Expert guidance and valuation services to help you make informed real estate decisions."}</p>
+              <p>{getValue("home.services.description") || "Three pillars, one operating company. We design, fund, and execute real estate projects with the discipline of a developer, the structure of an investment firm, and the systems of a tech operator."}</p>
             )}
           </div>
         </ScrollReveal>
@@ -986,44 +1496,6 @@ function ServicesSection() {
           })}
         </div>
 
-        <ScrollReveal className="mt-28" delay={0.2}>
-          <div className="text-center mb-12">
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Investment Strategies</p>
-            <h3 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">How We Create Value</h3>
-          </div>
-          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
-            {[
-              { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties into profitable assets" },
-              { icon: TrendingUp, title: "Buy & Hold", desc: "Build wealth through strategic rental investments" },
-              { icon: Palette, title: "Design & Reno", desc: "Full-service renovation and design management" },
-              { icon: Building, title: "New Construction", desc: "Ground-up development coming soon", comingSoon: true },
-            ].map((item, index) => (
-              <StaggerItem key={index}>
-                <motion.div 
-                  className={`p-8 bg-card rounded-lg border border-border/50 h-full transition-all duration-300 ${item.comingSoon ? 'opacity-70' : ''}`}
-                  whileHover={!item.comingSoon ? { y: -6, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.1)" } : {}}
-                >
-                  <motion.div 
-                    className={`w-14 h-14 rounded-lg flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10'}`}
-                    whileHover={!item.comingSoon ? { scale: 1.05 } : {}}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
-                  </motion.div>
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <h4 className="font-serif font-semibold text-lg">{item.title}</h4>
-                    {item.comingSoon && (
-                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                        Soon
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </motion.div>
-              </StaggerItem>
-            ))}
-          </StaggerChildren>
-        </ScrollReveal>
       </div>
     </section>
   );
@@ -1037,7 +1509,7 @@ function FeaturedProjectSection() {
         <div className="mb-16">
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Case Study</p>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-title">
-            Featured Project
+            Featured Project: Nelson Dr
           </h2>
         </div>
 
@@ -1064,7 +1536,7 @@ function FeaturedProjectSection() {
             </div>
             
             <p className="text-muted-foreground text-base leading-relaxed" data-testid="text-featured-description">
-              Full cosmetic renovation and repositioning. Complete transformation including kitchen remodel, bathroom updates, new flooring, fresh paint, exterior refresh, and landscaping — all designed to maximize value and elevate the neighborhood.
+              A value-add residential project used to sharpen the Pegasus operating model — acquisition strategy, renovation planning, capital discipline, and resale execution. Every phase documented, every decision deliberate.
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -1075,16 +1547,16 @@ function FeaturedProjectSection() {
 
             <div className="grid grid-cols-3 gap-8 py-8 border-t border-border/30">
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Property Type</p>
-                <p className="font-semibold">Single Family</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Strategy</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Strategy Model</p>
                 <p className="font-semibold">Fix & Flip</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Status</p>
-                <p className="font-semibold text-primary">Completed</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Structure</p>
+                <p className="font-semibold">Direct Acquisition</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Stage</p>
+                <p className="font-semibold text-primary">Execution</p>
               </div>
             </div>
 
@@ -1175,54 +1647,39 @@ function SellPropertySection() {
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">
               {isEditMode ? (
-                <EditableText contentKey="home.sell.kicker" fallback="For Sellers" />
-              ) : "For Sellers"}
+                <EditableText contentKey="home.sell.kicker" fallback="Property Owners" />
+              ) : "Property Owners"}
             </p>
             <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-sell-title">
               {isEditMode ? (
-                <EditableText contentKey="home.sell.title" fallback="Sell Your Property" />
-              ) : "Sell Your Property"}
+                <EditableText contentKey="home.sell.title" fallback="Submit Your Property" />
+              ) : "Submit Your Property"}
             </h2>
             <div className="text-base text-muted-foreground leading-relaxed mb-10">
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.sell.description" 
-                  fallback="Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees."
+                  fallback="Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path — whether that's acquisition, wholesale, listing, or a referral to the best next resource."
                   multiline
                   as="p"
                 />
               ) : (
-                <p>Need to sell quickly? We provide as-is cash offers with flexible closing timelines and completely transparent numbers. No repairs needed, no agent commissions, no hidden fees.</p>
+                <p>Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path — whether that's acquisition, wholesale, listing, or a referral to the best next resource.</p>
               )}
             </div>
             
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Fair Cash Offers</h4>
-                  <p className="text-sm text-muted-foreground">Transparent pricing based on real market data</p>
-                </div>
+            <div className="space-y-7">
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Honest Strategy Review</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Transparent assessment based on real market data and your actual situation</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Sell As-Is</h4>
-                  <p className="text-sm text-muted-foreground">No repairs, cleaning, or staging required</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Multi-Path Underwriting</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">We evaluate every option — not just the one that's fastest for us</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Flexible Timeline</h4>
-                  <p className="text-sm text-muted-foreground">Close on your schedule — as fast as 7 days</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">24-Hour Response</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Every submission reviewed and routed within one business day</p>
               </div>
             </div>
           </div>
@@ -1339,7 +1796,7 @@ function SellPropertySection() {
                   </div>
 
                   <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-sell-submit">
-                    {mutation.isPending ? "Submitting..." : "Get My Cash Offer"}
+                    {mutation.isPending ? "Submitting..." : "Submit for Strategy Review"}
                   </Button>
                 </form>
               </Form>
@@ -1523,13 +1980,13 @@ function InvestSection() {
           <div className="lg:order-1">
             <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">
               {isEditMode ? (
-                <EditableText contentKey="home.invest.kicker" fallback="For Investors" />
-              ) : "For Investors"}
+                <EditableText contentKey="home.invest.kicker" fallback="Private Partner Inquiry" />
+              ) : "Private Partner Inquiry"}
             </p>
             <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-invest-title">
               {isEditMode ? (
-                <EditableText contentKey="home.invest.title" fallback="Partner With Pegasus" />
-              ) : "Partner With Pegasus"}
+                <EditableText contentKey="home.invest.title" fallback="Deal-Specific Conversations" />
+              ) : "Deal-Specific Conversations"}
             </h2>
             <div className="text-base text-muted-foreground leading-relaxed mb-10">
               {isEditMode ? (
@@ -1544,33 +2001,18 @@ function InvestSection() {
               )}
             </div>
             
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Disciplined Analysis</h4>
-                  <p className="text-sm text-muted-foreground">Clear underwriting and execution planning on every opportunity</p>
-                </div>
+            <div className="space-y-7">
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Disciplined Analysis</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Clear underwriting and execution planning on every opportunity</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Transparent Underwriting</h4>
-                  <p className="text-sm text-muted-foreground">Transparent process and documentation standards</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Transparent Underwriting</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Transparent process and documentation standards</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Partner-First Approach</h4>
-                  <p className="text-sm text-muted-foreground">We succeed when our partners succeed</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Partner-First Approach</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">We succeed when our partners succeed</p>
               </div>
             </div>
           </div>
@@ -1708,29 +2150,29 @@ function HowItWorksSection() {
   const steps = [
     {
       number: "01",
-      title: "Explore Opportunities",
-      description: "Browse our curated marketplace of wholesale deals, capital raises, and listings. Use AI-powered matching to find deals that align with your investment goals.",
-      icon: Search,
+      title: "Submit Your Situation",
+      description: "Property owners submit their situation. Wholesalers and deal sources submit opportunities. Every intake is reviewed seriously within one business day.",
+      icon: FileCheck,
       key: "howitworks.step.0",
     },
     {
       number: "02",
-      title: "Due Diligence",
-      description: "Access comprehensive property data, financials, and market analysis. Our team provides transparent underwriting on every opportunity.",
-      icon: FileCheck,
+      title: "Strategy Review",
+      description: "Pegasus evaluates the property, situation, owner goals, economic path, and safest structure. Six questions. Honest answers. No performance for the seller.",
+      icon: Search,
       key: "howitworks.step.1",
     },
     {
       number: "03",
-      title: "Make Your Move",
-      description: "Submit offers, negotiate terms, or commit capital directly through our platform. Real-time updates keep you informed every step of the way.",
-      icon: Handshake,
+      title: "Route to Best Path",
+      description: "Every accepted opportunity routes to one of eight monetization lanes within 24 business hours — acquisition, wholesale, JV, listing, referral, MarketFlow, incubation, or archive.",
+      icon: Target,
       key: "howitworks.step.2",
     },
     {
       number: "04",
-      title: "Close & Grow",
-      description: "Complete transactions with our streamlined closing process. Track your portfolio performance and reinvest in new opportunities.",
+      title: "Execute with Discipline",
+      description: "The selected lane gets a documented plan, assigned ownership, and accountable execution. Every dollar has a place. Every action has an owner.",
       icon: Key,
       key: "howitworks.step.3",
     },
@@ -1751,14 +2193,14 @@ function HowItWorksSection() {
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-how-it-works-title">
             {isEditMode ? (
-              <EditableText contentKey="home.howitworks.title" fallback="How It Works" />
-            ) : (getValue("home.howitworks.title") || "How It Works")}
+              <EditableText contentKey="home.howitworks.title" fallback="The Pegasus Process" />
+            ) : (getValue("home.howitworks.title") || "The Pegasus Process")}
           </h2>
           <div className="text-lg text-muted-foreground leading-relaxed">
             {isEditMode ? (
-              <EditableText contentKey="home.howitworks.description" fallback="From discovery to closing, our platform streamlines the entire investment process. Here's how to get started." as="p" multiline />
+              <EditableText contentKey="home.howitworks.description" fallback="Every property situation enters a structured intake, review, routing, and execution process. No lead dies. Every deal gets a plan." as="p" multiline />
             ) : (
-              <p>{getValue("home.howitworks.description") || "From discovery to closing, our platform streamlines the entire investment process. Here's how to get started."}</p>
+              <p>{getValue("home.howitworks.description") || "Every property situation enters a structured intake, review, routing, and execution process. No lead dies. Every deal gets a plan."}</p>
             )}
           </div>
         </ScrollReveal>
@@ -1767,33 +2209,23 @@ function HowItWorksSection() {
           {/* Connection line */}
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent -translate-y-1/2" />
           
-          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.15}>
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.12}>
             {steps.map((step, index) => (
               <StaggerItem key={index}>
                 <motion.div 
-                  className="group relative bg-card p-8 rounded-lg border border-border/50 hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full"
+                  className="group relative bg-card p-8 rounded-lg border border-border/40 hover:border-primary/20 hover:shadow-lg transition-all duration-300 h-full overflow-hidden"
                   data-testid={`how-it-works-step-${index}`}
-                  whileHover={{ y: -8 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ y: -5 }}
+                  transition={{ duration: 0.25 }}
                 >
-                  {/* Step number badge */}
-                  <div className="absolute -top-4 left-8 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
-                    Step {step.number}
-                  </div>
+                  {/* Large ghosted step number */}
+                  <span className="absolute -top-3 -right-1 font-serif text-8xl font-bold text-foreground/[0.04] group-hover:text-primary/[0.07] transition-colors duration-500 select-none pointer-events-none leading-none">
+                    {step.number}
+                  </span>
                   
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:shadow-lg transition-all duration-300 mt-2">
-                    <step.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
-                  </div>
-                  
-                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                  <step.icon className="w-5 h-5 text-primary/55 mb-6 group-hover:text-primary transition-colors duration-300" />
+                  <h3 className="text-lg font-semibold mb-2.5">{step.title}</h3>
                   <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
-                  
-                  {/* Arrow indicator on larger screens */}
-                  {index < steps.length - 1 && (
-                    <div className="hidden lg:flex absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-background border border-border rounded-full items-center justify-center z-10">
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  )}
                 </motion.div>
               </StaggerItem>
             ))}
@@ -1801,12 +2233,12 @@ function HowItWorksSection() {
         </div>
 
         <ScrollReveal delay={0.4} className="text-center mt-16">
-          <Link href="/marketflow">
-            <Button size="lg" className="text-sm uppercase tracking-widest font-medium group" data-testid="button-explore-marketplace">
-              Explore MarketFlow
+          <a href="#sell">
+            <Button size="lg" className="text-sm uppercase tracking-widest font-medium group" data-testid="button-submit-property">
+              Submit a Property
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </Link>
+          </a>
         </ScrollReveal>
       </div>
     </section>
@@ -1818,10 +2250,10 @@ function TrustLogosSection() {
   const { getValue } = useSiteContent();
   
   const trustItems = [
-    { icon: Shield, label: "Secure Transactions", description: "Bank-level encryption", key: "trust.0" },
-    { icon: Award, label: "Verified Deals", description: "Vetted opportunities", key: "trust.1" },
-    { icon: Users, label: "100+ Partners", description: "Growing network", key: "trust.2" },
-    { icon: CheckCircle2, label: "$12M+ Funded", description: "Proven track record", key: "trust.3" },
+    { icon: Shield, label: "Compliance-Aware", description: "Licensing handled per applicable requirements", key: "trust.0" },
+    { icon: Award, label: "Vetted Review", description: "Every deal undergoes disciplined underwriting", key: "trust.1" },
+    { icon: Users, label: "Private Network", description: "MarketFlow is invite-only in v1", key: "trust.2" },
+    { icon: CheckCircle2, label: "Founder-Led", description: "Accountability stays close to every decision", key: "trust.3" },
   ];
 
   return (
@@ -1871,35 +2303,35 @@ function CommunityImpactSection() {
   const { getValue } = useSiteContent();
   
   const impactStats = [
-    { value: "$2.4M", label: "Invested in Community Projects", key: "community.stat.0" },
-    { value: "47", label: "Properties Transformed", key: "community.stat.1" },
-    { value: "120+", label: "Local Jobs Created", key: "community.stat.2" },
-    { value: "15", label: "Neighborhoods Revitalized", key: "community.stat.3" },
+    { value: "Strategy", label: "First — Always", key: "community.stat.0" },
+    { value: "Every", label: "Property Gets a Path", key: "community.stat.1" },
+    { value: "Every", label: "Deal Gets a Plan", key: "community.stat.2" },
+    { value: "Every", label: "Dollar Has a Place", key: "community.stat.3" },
   ];
 
   const values = [
     {
       icon: Heart,
-      title: "Community First",
-      description: "Every investment we make considers the impact on local communities. We don't just flip houses—we help revitalize neighborhoods.",
+      title: "Discipline Before Scale",
+      description: "We prioritize process quality, underwriting discipline, and execution standards before growth metrics. Scale follows discipline.",
       key: "community.value.0",
     },
     {
       icon: Shield,
-      title: "Transparency Always",
-      description: "Clear communication, honest valuations, and no hidden fees. Our reputation is built on trust and integrity.",
+      title: "Clear Numbers, Clear Process",
+      description: "Every opportunity is reviewed with clear numbers, assumptions, and next-step documentation. No performance. No pressure.",
       key: "community.value.1",
     },
     {
       icon: Sparkles,
-      title: "Excellence in Execution",
-      description: "From acquisition to renovation to sale, we maintain the highest standards of quality and professionalism.",
+      title: "Built for Long-Term Value",
+      description: "Durable value creation through disciplined project planning and accountable execution — not quick wins or inflated numbers.",
       key: "community.value.2",
     },
     {
       icon: Users,
-      title: "Partnership Mindset",
-      description: "Whether you're a seller, investor, or fellow professional, we approach every relationship as a true partnership.",
+      title: "Founder-Led Accountability",
+      description: "Pegasus is founder-led and accountability stays close to decision-making from intake through delivery. Every action has an owner.",
       key: "community.value.3",
     },
   ];
@@ -1923,14 +2355,14 @@ function CommunityImpactSection() {
           
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-community-title">
             {isEditMode ? (
-              <EditableText contentKey="home.community.title" fallback="The Dreamscaper Creed" />
-            ) : (getValue("home.community.title") || "The Dreamscaper Creed")}
+              <EditableText contentKey="home.community.title" fallback="Operating Principles" />
+            ) : (getValue("home.community.title") || "Operating Principles")}
           </h2>
           <div className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
             {isEditMode ? (
-              <EditableText contentKey="home.community.description" fallback="At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve." as="p" multiline />
+              <EditableText contentKey="home.community.description" fallback="We find opportunity where others see impossible. Every property gets a path. Every deal gets a plan. Every dollar has a place. Every action has an owner." as="p" multiline />
             ) : (
-              <p>{getValue("home.community.description") || "At Pegasus Dreamscapes, we believe real estate investing should create value for everyone—sellers, investors, and the communities we serve."}</p>
+              <p>{getValue("home.community.description") || "We find opportunity where others see impossible. Every property gets a path. Every deal gets a plan. Every dollar has a place. Every action has an owner."}</p>
             )}
           </div>
         </ScrollReveal>
@@ -1977,19 +2409,19 @@ function CommunityImpactSection() {
 
         {/* CTA */}
         <ScrollReveal delay={0.4} className="text-center mt-16">
-          <p className="text-muted-foreground mb-6">Ready to explore investment opportunities?</p>
+          <p className="text-muted-foreground mb-6">Have a property situation worth reviewing?</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/marketflow">
-              <Button size="lg" className="group" data-testid="button-community-explore">
-                Explore MarketFlow
+            <a href="#sell">
+              <Button size="lg" className="group" data-testid="button-community-submit">
+                Submit a Property
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
-            </Link>
-            <Link href="/contact">
+            </a>
+            <a href="#contact">
               <Button variant="outline" size="lg" data-testid="button-community-contact">
-                Schedule a Call
+                Contact Pegasus
               </Button>
-            </Link>
+            </a>
           </div>
         </ScrollReveal>
       </div>
@@ -2008,28 +2440,28 @@ interface FAQ {
 
 const defaultFaqs = [
   {
-    question: "How does the wholesale assignment process work?",
-    answer: "Our MarketFlow platform connects you with verified wholesale deals. Once you find a property that fits your criteria, you can submit an offer directly through the platform. Our team handles the assignment process, ensuring a smooth transaction from contract to close."
+    question: "Does Pegasus buy every property it reviews?",
+    answer: "No. Not every property gets an offer — but every property gets a serious review. Pegasus evaluates each situation and routes it to the best lawful path. If we are not the right operator, we will tell you that directly and help you find the next best option."
   },
   {
-    question: "What is the minimum investment amount?",
-    answer: "Investment minimums vary by deal type. Wholesale assignments typically require earnest money deposits starting at $5,000. Capital raise opportunities may have higher minimums depending on the project structure. Contact us for specific deal requirements."
+    question: "What is the strategy review process?",
+    answer: "When you submit a property, we evaluate six questions: What is the property? What is the situation? What does the owner want? What is the best economic path? What is the safest structure? And should Pegasus participate? Honest answers drive every decision."
   },
   {
-    question: "How are deals vetted before listing?",
-    answer: "Every deal on MarketFlow goes through our rigorous underwriting process. We verify property ownership, assess repair estimates, confirm ARV calculations with local comps, and ensure all contracts are legally sound before listing any opportunity."
+    question: "What are the eight outcome lanes?",
+    answer: "Every accepted property routes to one of eight lanes within 24 business hours: Pegasus Acquisition, Wholesale Assignment, JV/Partnership, KW Listing Lane, Referral Lane, MarketFlow Private Distribution, Incubation/Nurture, or Archive Intelligence. No lead dies."
   },
   {
-    question: "Can I sell my property directly to Pegasus Dreamscapes?",
-    answer: "Yes! We purchase properties in any condition. Whether you're facing foreclosure, dealing with an inherited property, or simply want a fast, hassle-free sale, we can provide a fair cash offer within 24-48 hours."
+    question: "What is MarketFlow and is it public?",
+    answer: "MarketFlow is the private dealflow layer of Pegasus Systems. In v1, it is a private network and controlled review system — not a public marketplace. Access is by invitation or role-based approval. Public marketplace launch is gated on broker compliance review."
   },
   {
-    question: "What types of properties do you focus on?",
-    answer: "We specialize in residential properties suitable for fix-and-flip or rental strategies, including single-family homes, duplexes, and small multi-family buildings. We focus on the California market, particularly the Bay Area and Central Valley regions."
+    question: "How does Pegasus handle investor partnerships?",
+    answer: "Pegasus conducts private, deal-specific conversations with aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability. Nothing should sound like a public investment offering — because it is not one."
   },
   {
-    question: "How quickly can deals close?",
-    answer: "Our average closing time is 14-21 days for wholesale assignments and 7-14 days for direct purchases. For cash buyers with proof of funds ready, we can often close even faster depending on title work and inspections."
+    question: "What types of properties does Pegasus work with?",
+    answer: "Pegasus focuses on residential properties in the East Bay and broader Bay Area where a clear value-add, acquisition, or disposition path exists. We also review distressed, inherited, and off-market properties. If there is a path, we help identify it."
   },
 ];
 
@@ -2178,14 +2610,14 @@ function NewsletterSection() {
           
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-newsletter-title">
             {isEditMode ? (
-              <EditableText contentKey="home.newsletter.title" fallback="Get Exclusive Deal Alerts" />
-            ) : (getValue("home.newsletter.title") || "Get Exclusive Deal Alerts")}
+              <EditableText contentKey="home.newsletter.title" fallback="Stay Inside the Network" />
+            ) : (getValue("home.newsletter.title") || "Stay Inside the Network")}
           </h2>
           <div className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
             {isEditMode ? (
-              <EditableText contentKey="home.newsletter.description" fallback="Be the first to know about new investment opportunities. Join our newsletter for market insights, featured deals, and expert tips." as="p" multiline />
+              <EditableText contentKey="home.newsletter.description" fallback="Get updates on deal flow, strategy insights, and MarketFlow private beta access. No spam. No hype. Just disciplined real estate intelligence." as="p" multiline />
             ) : (
-              <p>{getValue("home.newsletter.description") || "Be the first to know about new investment opportunities. Join our newsletter for market insights, featured deals, and expert tips."}</p>
+              <p>{getValue("home.newsletter.description") || "Get updates on deal flow, strategy insights, and MarketFlow private beta access. No spam. No hype. Just disciplined real estate intelligence."}</p>
             )}
           </div>
           
@@ -2316,20 +2748,20 @@ function ContactSection() {
             </div>
             <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-contact-title">
               {isEditMode ? (
-                <EditableText contentKey="home.contact.title" fallback="Let's Connect" />
-              ) : (getValue("home.contact.title") || "Let's Connect")}
+                <EditableText contentKey="home.contact.title" fallback="Have a Property Worth Reviewing?" />
+              ) : (getValue("home.contact.title") || "Have a Property Worth Reviewing?")}
             </h2>
             <div className="text-lg text-muted-foreground leading-relaxed mb-12">
               {isEditMode ? (
-                <EditableText contentKey="home.contact.description" fallback="Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you." as="p" multiline />
+                <EditableText contentKey="home.contact.description" fallback="Submit a property situation, inquire about a private partnership, or reach out about wholesale deals and MarketFlow access. Every message gets a direct, honest response." as="p" multiline />
               ) : (
-                <p>{getValue("home.contact.description") || "Ready to talk about a property, potential partnership, or have questions about what we do? We'd love to hear from you."}</p>
+                <p>{getValue("home.contact.description") || "Submit a property situation, inquire about a private partnership, or reach out about wholesale deals and MarketFlow access. Every message gets a direct, honest response."}</p>
               )}
             </div>
             
             <div className="space-y-6">
                             <motion.a 
-                href={`mailto:${(getValue("home.contact.email") || "hello@pegasusdreamscapes.com").trim()}`}
+                href={`mailto:${(getValue("home.contact.email") || "apollo@pegasusdreamscapes.com").trim()}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-email"
@@ -2341,8 +2773,26 @@ function ContactSection() {
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Email</p>
                   <div className="font-semibold text-lg">
                     {isEditMode ? (
-                      <EditableText contentKey="home.contact.email" fallback="hello@pegasusdreamscapes.com" />
-                    ) : (getValue("home.contact.email") || "hello@pegasusdreamscapes.com")}
+                      <EditableText contentKey="home.contact.email" fallback="apollo@pegasusdreamscapes.com" />
+                    ) : (getValue("home.contact.email") || "apollo@pegasusdreamscapes.com")}
+                  </div>
+                </div>
+              </motion.a>
+              <motion.a
+                href={`tel:${(getValue("home.contact.phone") || "+19259486566").replace(/[^+\d]/g, "")}`}
+                className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
+                whileHover={{ x: 4 }}
+                data-testid="link-contact-phone"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                  <Phone className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Direct Line</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.phone" fallback="925-948-6566" />
+                    ) : (getValue("home.contact.phone") || "925-948-6566")}
                   </div>
                 </div>
               </motion.a>
