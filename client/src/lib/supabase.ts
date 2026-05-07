@@ -90,39 +90,23 @@ export interface SavedItem {
   created_at: string;
 }
 
-function createDummyClient(): SupabaseClient {
-  return {
-    auth: {
-      getSession: async () => ({ data: { session: null }, error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      signUp: async () => ({ data: null, error: new Error('Supabase not configured') }),
-      signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
-      signOut: async () => ({ error: null }),
-      getUser: async () => ({ data: { user: null }, error: null }),
-    },
-    from: () => ({
-      select: () => ({ eq: () => ({ single: async () => ({ data: null, error: { code: 'NOT_CONFIGURED' } }) }) }),
-      insert: async () => ({ error: { code: 'NOT_CONFIGURED' } }),
-      update: async () => ({ data: null, error: { code: 'NOT_CONFIGURED' } }),
-    }),
-  } as unknown as SupabaseClient;
-}
-
 async function initializeSupabase(): Promise<SupabaseClient> {
   try {
     const response = await fetch('/api/config/supabase');
     if (!response.ok) {
-      return createDummyClient();
+      throw new Error('Failed to fetch Supabase config');
     }
     const config = await response.json();
     
     if (!config.url || !config.anonKey) {
-      return createDummyClient();
+      console.warn('Supabase configuration not available');
+      return createClient('', '');
     }
     
     return createClient(config.url, config.anonKey);
   } catch (error) {
-    return createDummyClient();
+    console.error('Failed to initialize Supabase:', error);
+    return createClient('', '');
   }
 }
 

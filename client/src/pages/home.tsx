@@ -1,660 +1,2591 @@
-import { useState } from "react";
-import { useSEO } from "@/hooks/use-seo";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
-  ArrowUpRight,
-  Building2,
-  Compass,
-  LineChart,
-  Layers,
-  ShieldCheck,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/use-seo";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { InsertLead } from "@shared/schema";
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift, AnimatedCounter as SharedAnimatedCounter } from "@/components/animations";
+import { 
+  Home as HomeIcon, 
+  TrendingUp, 
+  Palette,
+  Building,
+  MapPin,
+  ArrowRight,
+  Shield,
+  Heart,
+  Sparkles,
   Users,
-  ScrollText,
-  Hammer,
-  Home as HomeIcon,
-  Briefcase,
-  KeyRound,
-  Network,
+  Mail,
+  Star,
+  Quote,
+  Award,
+  CheckCircle2,
+  BarChart3,
+  DollarSign,
+  Clock,
+  Target,
+  Search,
+  FileCheck,
+  Handshake,
+  Key,
+  Zap,
+  Send,
+  ChevronRight,
+  HelpCircle,
+  ChevronLeft
 } from "lucide-react";
 import {
-  Section,
-  Kicker,
-  CopperRule,
-  DisplayHeading,
-  CTAButton,
-  Reveal,
-  PillarCard,
-} from "@/components/brand/atoms";
-import { PegasusWatermark } from "@/components/brand/pegasus-mark";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import logoImage from "@assets/image_1765405939117.png";
+import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import serviceImage1 from "@assets/generated_images/real_estate_investor_consultation.png";
+import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
+import { EditableText, EditableImage, EditableLink } from "@/components/editable";
+import { useEditMode } from "@/contexts/edit-mode-context";
+import { useSiteContent } from "@/contexts/site-content-context";
 
-/* ============================================================================
-   HERO
-   ============================================================================ */
-function Hero() {
-  return (
-    <Section variant="hero" className="overflow-hidden">
-      <div className="absolute inset-0 bg-architect opacity-[0.18]" aria-hidden />
-      <PegasusWatermark className="pointer-events-none absolute -right-24 top-12 h-[460px] w-[760px] opacity-[0.28]" />
-
-      <div className="container-premium relative pt-36 pb-24 md:pt-44 md:pb-32">
-        <div className="grid items-center gap-14 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-7">
-            <Reveal>
-              <Kicker>Development · Investments · Systems</Kicker>
-            </Reveal>
-
-            <Reveal delay={80}>
-              <h1 className="font-display mt-6 text-balance text-[44px] leading-[0.98] tracking-tight text-ivory sm:text-[58px] md:text-[72px] lg:text-[84px]">
-                Dream it.
-                <br />
-                <span className="text-copper">Build it.</span> Live it.
-              </h1>
-            </Reveal>
-
-            <Reveal delay={140}>
-              <div className="accent-rail mt-8 max-w-xl">
-                <p className="font-display text-[22px] leading-snug text-ivory/90 md:text-[26px]">
-                  Real estate execution, built with discipline.
-                </p>
-                <p className="lead mt-4">
-                  Pegasus Dreamscapes is a real estate development, investment,
-                  and systems company built to source opportunities, structure
-                  deals, manage execution, and create long-term value.
-                </p>
-              </div>
-            </Reveal>
-
-            <Reveal delay={220}>
-              <div className="mt-10 flex flex-wrap items-center gap-4">
-                <CTAButton href="/sell" testId="cta-hero-submit">
-                  Submit an Opportunity
-                </CTAButton>
-                <CTAButton href="/marketflow-beta" variant="ghost" testId="cta-hero-marketflow">
-                  Explore MarketFlow Beta
-                </CTAButton>
-              </div>
-            </Reveal>
-
-            <Reveal delay={280}>
-              <p className="mt-10 text-[12px] uppercase tracking-[0.28em] text-ivory/50">
-                Built in the East Bay · Designed for disciplined real estate execution
-              </p>
-            </Reveal>
-          </div>
-
-          <Reveal delay={200} className="lg:col-span-5">
-            <div className="relative">
-              <div
-                className="absolute -inset-px rounded-sm bg-gradient-to-br from-copper/40 via-transparent to-transparent opacity-60 blur-sm"
-                aria-hidden
-              />
-              <div className="relative rounded-sm border border-copper/30 bg-[hsl(220_35%_6%)]/90 p-8 backdrop-blur-md">
-                <Kicker>The Pegasus Operating Model</Kicker>
-                <h3 className="font-display mt-4 text-3xl leading-tight text-ivory">
-                  Three divisions.
-                  <br /> One operating discipline.
-                </h3>
-
-                <ul className="mt-7 space-y-5">
-                  {[
-                    {
-                      icon: <Hammer className="h-4 w-4" />,
-                      title: "Development",
-                      body: "Transform real property with disciplined execution.",
-                    },
-                    {
-                      icon: <LineChart className="h-4 w-4" />,
-                      title: "Investments",
-                      body: "Structure opportunities with clarity and control.",
-                    },
-                    {
-                      icon: <Layers className="h-4 w-4" />,
-                      title: "Systems",
-                      body: "Build the tools that keep execution accountable.",
-                    },
-                  ].map((row) => (
-                    <li
-                      key={row.title}
-                      className="flex items-start gap-4 border-l border-copper/30 pl-4"
-                    >
-                      <span className="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-sm border border-copper/40 text-copper">
-                        {row.icon}
-                      </span>
-                      <div>
-                        <p className="font-display-uppercase text-[12px] tracking-[0.22em] text-ivory">
-                          {row.title}
-                        </p>
-                        <p className="mt-1 text-[14px] text-muted-ivory">{row.body}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   PILLARS
-   ============================================================================ */
-function Pillars() {
-  return (
-    <Section id="pillars" variant="canvas">
-      <div className="container-premium section-y">
-        <Reveal className="mx-auto max-w-3xl text-center">
-          <Kicker>The Pegasus Architecture</Kicker>
-          <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-            Three divisions. One operating discipline.
-          </DisplayHeading>
-          <p className="lead mt-6">
-            Pegasus Dreamscapes is built around the full lifecycle of real
-            estate execution — finding opportunities, creating value, and
-            building the systems that keep every move accountable.
-          </p>
-          <CopperRule className="mt-10" />
-        </Reveal>
-
-        <div className="mt-16 grid gap-6 lg:grid-cols-3">
-          <Reveal>
-            <PillarCard
-              testId="pillar-development"
-              kicker="01 · Development"
-              title="Development"
-              body="We transform real estate opportunities through disciplined renovation, project planning, and value-add execution. From acquisition strategy to material decisions and project coordination, development is where vision becomes physical value."
-              href="/development"
-              ctaLabel="Explore Development"
-              icon={<Hammer className="h-7 w-7" />}
-            />
-          </Reveal>
-          <Reveal delay={100}>
-            <PillarCard
-              testId="pillar-investments"
-              kicker="02 · Investments"
-              title="Investments"
-              body="We evaluate, structure, and partner on real estate opportunities with a focus on clarity, risk awareness, and long-term value. Every conversation starts with the numbers, the strategy, and the execution path."
-              href="/investments"
-              ctaLabel="Explore Investments"
-              icon={<LineChart className="h-7 w-7" />}
-            />
-          </Reveal>
-          <Reveal delay={200}>
-            <PillarCard
-              testId="pillar-systems"
-              kicker="03 · Systems"
-              title="Systems"
-              body="Pegasus Systems brings governance, intelligence, and operational control to real estate execution. Pegasus HQ, MarketFlow, BuildForge, CapStack, and Peggy are designed to support disciplined operators."
-              href="/systems"
-              ctaLabel="Explore Systems"
-              icon={<Layers className="h-7 w-7" />}
-            />
-          </Reveal>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   WHO WE SERVE
-   ============================================================================ */
-const audiences = [
-  {
-    icon: <HomeIcon className="h-5 w-5" />,
-    title: "Property Sellers",
-    body: "Have an as-is, inherited, distressed, outdated, or underutilized property? Submit it for review and we'll evaluate possible acquisition or partnership paths.",
-    cta: { href: "/sell", label: "Submit a Property" },
-  },
-  {
-    icon: <ScrollText className="h-5 w-5" />,
-    title: "Wholesalers & Deal Sources",
-    body: "Have a real opportunity that needs review, structure, or capital? Send the deal — we move quickly on numbers, exit strategy, and execution path.",
-    cta: { href: "/submit-deal", label: "Submit a Deal" },
-  },
-  {
-    icon: <Briefcase className="h-5 w-5" />,
-    title: "Investors & Capital Partners",
-    body: "Looking for disciplined real estate exposure? We structure deal-by-deal partnerships and joint ventures with clear underwriting and reporting.",
-    cta: { href: "/investments", label: "Partner With Pegasus" },
-  },
-  {
-    icon: <KeyRound className="h-5 w-5" />,
-    title: "Buyers & End Users",
-    body: "Looking for a renovated home with intent and craft behind it? Pegasus delivers homes designed to live in, not just to flip.",
-    cta: { href: "/contact?subject=buyer", label: "Inquire About a Home" },
-  },
-  {
-    icon: <Hammer className="h-5 w-5" />,
-    title: "Contractors & Trades",
-    body: "We work with disciplined contractors who care about scope, quality, and timelines. Tell us what you build and let's open a conversation.",
-    cta: { href: "/contact?subject=contractor", label: "Work With Us" },
-  },
-  {
-    icon: <Network className="h-5 w-5" />,
-    title: "Strategic Partners",
-    body: "Operators, agents, lenders, attorneys, and platforms who want to move real estate forward together. Long-term relationships, real execution.",
-    cta: { href: "/contact?subject=partner", label: "Open a Conversation" },
-  },
-];
-
-function WhoWeServe() {
-  return (
-    <Section id="serve" variant="ink">
-      <div className="container-premium section-y">
-        <Reveal>
-          <Kicker>Opportunities Start Here</Kicker>
-          <DisplayHeading className="mt-4 max-w-3xl text-4xl md:text-5xl">
-            Built for the people who move real estate forward.
-          </DisplayHeading>
-          <p className="lead mt-6 max-w-2xl">
-            Pegasus works with sellers, deal sources, investors, buyers,
-            contractors, and strategic partners who value clear communication,
-            serious execution, and a disciplined path from opportunity to
-            outcome.
-          </p>
-        </Reveal>
-
-        <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2 lg:grid-cols-3">
-          {audiences.map((a, i) => (
-            <Reveal key={a.title} delay={i * 60}>
-              <div className="group h-full bg-[hsl(220_30%_8%)] p-8 transition hover:bg-[hsl(220_30%_10%)]">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/40 text-copper">
-                    {a.icon}
-                  </span>
-                  <h3 className="font-display text-2xl text-ivory">{a.title}</h3>
-                </div>
-                <p className="mt-5 text-[14.5px] leading-relaxed text-muted-ivory">
-                  {a.body}
-                </p>
-                <Link
-                  href={a.cta.href}
-                  className="mt-6 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] text-copper transition group-hover:text-bronze"
-                  data-testid={`audience-cta-${a.title.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  {a.cta.label}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   MARKETFLOW
-   ============================================================================ */
-function MarketFlowFeature() {
-  return (
-    <Section id="marketflow" variant="canvas">
-      <div className="container-premium section-y">
-        <div className="grid items-center gap-14 lg:grid-cols-12">
-          <Reveal className="lg:col-span-6">
-            <Kicker>Pegasus Systems · MarketFlow</Kicker>
-            <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-              A disciplined deal-flow command center.
-            </DisplayHeading>
-            <p className="lead mt-6">
-              MarketFlow is the private beta product inside Pegasus Systems. It
-              gives operators, investors, and partners a clear, accountable
-              view of real estate opportunities — from intake to decision to
-              execution.
-            </p>
-            <p className="lead mt-4">
-              MarketFlow is currently in invitation-only beta. We're working
-              with a small group of trusted operators and capital partners
-              before opening access more broadly.
-            </p>
-
-            <ul className="mt-8 space-y-4">
-              {[
-                "Structured deal intake across wholesale, capital, and listing lanes",
-                "Underwriting, scoring, and documentation in one workspace",
-                "Negotiation rooms with offer history and counter-offer ladders",
-                "Role-aware portals for investors, wholesalers, buyers, and admins",
-              ].map((item) => (
-                <li key={item} className="flex gap-3 text-[15px] text-ivory/85">
-                  <span className="mt-2 inline-block h-1 w-1 flex-shrink-0 rotate-45 bg-copper" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <CTAButton href="/marketflow-beta" testId="cta-marketflow-learn">
-                Learn About MarketFlow
-              </CTAButton>
-              <CTAButton
-                href="/contact?subject=marketflow-access"
-                variant="ghost"
-                testId="cta-marketflow-access"
-              >
-                Request Access
-              </CTAButton>
-            </div>
-          </Reveal>
-
-          <Reveal delay={120} className="lg:col-span-6">
-            <div className="relative">
-              <div
-                className="absolute -inset-3 rounded-sm bg-gradient-to-br from-copper/30 via-transparent to-transparent opacity-50 blur-2xl"
-                aria-hidden
-              />
-              <div className="relative overflow-hidden rounded-sm border border-copper/25 bg-[hsl(220_35%_5%)]">
-                <div className="flex items-center gap-2 border-b border-copper/15 px-5 py-3">
-                  <span className="h-2 w-2 rounded-full bg-copper/70" />
-                  <span className="h-2 w-2 rounded-full bg-copper/40" />
-                  <span className="h-2 w-2 rounded-full bg-copper/20" />
-                  <span className="ml-3 text-[10px] uppercase tracking-[0.32em] text-ivory/50">
-                    MarketFlow / Deal Pipeline
-                  </span>
-                </div>
-                <div className="grid grid-cols-12 gap-px bg-copper/10">
-                  <div className="col-span-4 bg-[hsl(220_35%_6%)] p-5 sm:col-span-3">
-                    <p className="kicker text-copper/70">Lanes</p>
-                    {["Wholesale", "Capital", "Listings", "Acquisition"].map((l, i) => (
-                      <div
-                        key={l}
-                        className={`mt-3 rounded-sm border px-3 py-2 text-[12px] ${
-                          i === 0
-                            ? "border-copper/60 bg-copper/10 text-ivory"
-                            : "border-copper/10 text-ivory/60"
-                        }`}
-                      >
-                        {l}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="col-span-8 bg-[hsl(220_30%_7%)] p-5 sm:col-span-9">
-                    <div className="flex items-center justify-between">
-                      <p className="kicker text-copper/70">Active Pipeline</p>
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-ivory/40">
-                        Beta
-                      </p>
-                    </div>
-                    <div className="mt-4 grid gap-3">
-                      {[
-                        { id: "PD-0142", name: "Mixed-Use · Oakland", status: "Underwriting" },
-                        { id: "PD-0139", name: "SFR Flip · Hayward", status: "Negotiation" },
-                        { id: "PD-0136", name: "Capital Stack · Concord", status: "Diligence" },
-                        { id: "PD-0131", name: "Buy-and-Hold · Vallejo", status: "Decision" },
-                      ].map((d) => (
-                        <div
-                          key={d.id}
-                          className="flex items-center justify-between rounded-sm border border-copper/10 bg-[hsl(220_30%_8%)] px-4 py-3 text-[12.5px]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-[11px] text-copper/80">{d.id}</span>
-                            <span className="text-ivory">{d.name}</span>
-                          </div>
-                          <span className="text-[10px] uppercase tracking-[0.18em] text-bronze">
-                            {d.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-4 text-[11px] uppercase tracking-[0.28em] text-ivory/40">
-                Illustrative · Production data is private to invited operators
-              </p>
-            </div>
-          </Reveal>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   OPERATING DISCIPLINE
-   ============================================================================ */
-function Discipline() {
-  const items = [
-    {
-      icon: <Compass className="h-5 w-5" />,
-      title: "Strategy First",
-      body: "Every project begins with the strategy and execution path before any commitment is made.",
-    },
-    {
-      icon: <ShieldCheck className="h-5 w-5" />,
-      title: "Risk Awareness",
-      body: "We underwrite to a clear thesis and protect downside before chasing upside.",
-    },
-    {
-      icon: <Building2 className="h-5 w-5" />,
-      title: "Operational Clarity",
-      body: "Scope, budgets, timelines, and decisions stay documented and accountable.",
-    },
-    {
-      icon: <Users className="h-5 w-5" />,
-      title: "Founder-Led",
-      body: "Every relationship runs through real operators who own the outcome.",
-    },
-  ];
-  return (
-    <Section variant="ink">
-      <div className="container-premium section-y">
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-          <Reveal className="lg:col-span-5">
-            <Kicker>Operating Discipline</Kicker>
-            <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-              Quietly powerful, deliberately disciplined.
-            </DisplayHeading>
-            <p className="lead mt-6">
-              Pegasus is built for operators who care about how things actually
-              get done. The work is in the underwriting, the coordination, and
-              the follow-through — not the announcements.
-            </p>
-          </Reveal>
-          <div className="lg:col-span-7">
-            <div className="grid gap-px overflow-hidden rounded-sm border border-copper/15 bg-copper/15 sm:grid-cols-2">
-              {items.map((it, i) => (
-                <Reveal key={it.title} delay={i * 80}>
-                  <div className="h-full bg-[hsl(220_30%_8%)] p-7">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-copper/35 text-copper">
-                      {it.icon}
-                    </span>
-                    <h4 className="font-display mt-5 text-2xl text-ivory">
-                      {it.title}
-                    </h4>
-                    <p className="mt-3 text-[14px] leading-relaxed text-muted-ivory">
-                      {it.body}
-                    </p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   FOUNDER STATEMENT
-   ============================================================================ */
-function Founder() {
-  return (
-    <Section variant="canvas">
-      <div className="container-premium section-y">
-        <Reveal className="mx-auto max-w-4xl">
-          <CopperRule className="mb-10" />
-          <Kicker className="block text-center">A Note From The Founder</Kicker>
-          <blockquote className="mt-6 text-balance text-center font-display text-[28px] leading-[1.25] text-ivory md:text-[36px]">
-            "We started Pegasus to bring real discipline to real estate. Not
-            hype, not shortcuts — careful underwriting, careful execution, and
-            careful relationships. The systems we're building are the ones we
-            wished existed when we started."
-          </blockquote>
-          <div className="mt-10 flex flex-col items-center gap-1">
-            <p className="font-display-uppercase text-[12px] tracking-[0.32em] text-copper">
-              Founder · Pegasus Dreamscapes
-            </p>
-            <p className="text-[12px] uppercase tracking-[0.18em] text-ivory/50">
-              East Bay, California
-            </p>
-          </div>
-          <CopperRule className="mt-12" />
-        </Reveal>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   FAQ
-   ============================================================================ */
-const faqs = [
-  {
-    q: "What does Pegasus Dreamscapes actually do?",
-    a: "Pegasus is a real estate development, investment, and systems company. We source opportunities, structure deals, manage execution on renovation and value-add projects, and build operational systems that keep real estate execution accountable.",
-  },
-  {
-    q: "Are you a wholesaler, a flipper, or an investment fund?",
-    a: "None of those labels fully fit. Pegasus runs three connected divisions — Development for execution, Investments for capital and structure, and Systems for the operational tools that support both. We engage on a deal-by-deal and partnership basis.",
-  },
-  {
-    q: "What is MarketFlow?",
-    a: "MarketFlow is a private beta product inside Pegasus Systems. It is the deal-flow command center we use internally and with a small group of invited operators. Public access will open in stages as the platform matures.",
-  },
-  {
-    q: "Where do you operate?",
-    a: "Our base is the East Bay, California. We focus on opportunities where we can underwrite carefully, execute with discipline, and stay close to the work.",
-  },
-  {
-    q: "How can I work with Pegasus?",
-    a: "Submit a property, submit a deal, request access to MarketFlow, or open a partnership conversation. Every channel is reviewed seriously — we'd rather move slowly on the right relationship than quickly on the wrong one.",
-  },
-];
-
-function FAQ() {
-  const [open, setOpen] = useState<number | null>(0);
-  return (
-    <Section variant="ink">
-      <div className="container-premium section-y">
-        <div className="grid gap-12 lg:grid-cols-12">
-          <Reveal className="lg:col-span-4">
-            <Kicker>Frequently Asked</Kicker>
-            <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-              The questions worth answering up front.
-            </DisplayHeading>
-            <p className="lead mt-6">
-              If you don't see what you're looking for, write us directly at{" "}
-              <a
-                href="mailto:hello@pegasusdreamscapes.com"
-                className="text-copper hover:text-bronze"
-              >
-                hello@pegasusdreamscapes.com
-              </a>
-              . We answer real messages personally.
-            </p>
-          </Reveal>
-
-          <div className="lg:col-span-8">
-            <ul className="divide-y divide-copper/10 border-y border-copper/10">
-              {faqs.map((f, idx) => {
-                const isOpen = open === idx;
-                return (
-                  <li key={f.q}>
-                    <button
-                      onClick={() => setOpen(isOpen ? null : idx)}
-                      className="flex w-full items-center justify-between gap-6 py-6 text-left transition hover:text-copper"
-                      data-testid={`faq-question-${idx}`}
-                    >
-                      <span className="font-display text-[20px] text-ivory md:text-[22px]">
-                        {f.q}
-                      </span>
-                      <span
-                        className={`inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-sm border transition ${
-                          isOpen
-                            ? "border-copper text-copper"
-                            : "border-copper/30 text-copper/70"
-                        }`}
-                      >
-                        {isOpen ? "–" : "+"}
-                      </span>
-                    </button>
-                    {isOpen && (
-                      <div className="pb-7 pr-12 text-[15px] leading-relaxed text-muted-ivory">
-                        {f.a}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   CONTACT CTA
-   ============================================================================ */
-function ContactCTA() {
-  return (
-    <Section variant="canvas">
-      <div className="container-premium section-y">
-        <Reveal className="relative overflow-hidden rounded-sm border border-copper/30 bg-[hsl(220_35%_5%)] p-10 md:p-16">
-          <div className="absolute inset-0 bg-architect opacity-[0.12]" aria-hidden />
-          <PegasusWatermark className="pointer-events-none absolute -bottom-12 -right-12 h-72 w-[520px] opacity-30" />
-          <div className="relative grid gap-10 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-7">
-              <Kicker>Open A Conversation</Kicker>
-              <DisplayHeading className="mt-4 text-4xl md:text-5xl">
-                If your project is real, we'd like to hear about it.
-              </DisplayHeading>
-              <p className="lead mt-6 max-w-xl">
-                Submit a property, send a deal, or simply tell us what you're
-                trying to build. Real messages get real responses.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
-              <CTAButton href="/sell" testId="cta-foot-submit">
-                Submit an Opportunity
-              </CTAButton>
-              <CTAButton href="/contact" variant="ghost" testId="cta-foot-contact">
-                Contact Pegasus
-              </CTAButton>
-            </div>
-          </div>
-        </Reveal>
-      </div>
-    </Section>
-  );
-}
-
-/* ============================================================================
-   PAGE
-   ============================================================================ */
 export default function Home() {
   useSEO({
-    title: "Real Estate Development, Investments & Systems",
-    description:
-      "Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.",
+    title: "Pegasus Dreamscapes | Development • Investments • Systems",
+    description: "Real estate execution, built with discipline. Pegasus Dreamscapes is a founder-led real estate development, investment, and systems company."
   });
+  
+  return (
+    <div className="min-h-screen">
+      <HeroSection />
+      <StatsSection />
+      <EveryPropertyGetsAPathSection />
+      <ServicesSection />
+      <OutcomeLanesSection />
+      <FeaturedProjectSection />
+      <SellPropertySection />
+      <InvestSection />
+      <OperatingPrinciplesSection />
+      <HowItWorksSection />
+      <TrustLogosSection />
+      <FeaturedDealsSection />
+      <FAQSection />
+      <NewsletterSection />
+      <ContactSection />
+    </div>
+  );
+}
+
+function AnimatedCounter({ end, duration = 2000, prefix = "", suffix = "" }: { end: number; duration?: number; prefix?: string; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const countRef = useRef<HTMLSpanElement>(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          let startTime: number;
+          const animate = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            setCount(Math.floor(progress * end));
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [end, duration, hasAnimated]);
+
+  return <span ref={countRef}>{prefix}{count.toLocaleString()}{suffix}</span>;
+}
+
+function EveryPropertyGetsAPathSection() {
+  const questions = [
+    { q: "What is the property?", desc: "Type, condition, location, and basic characteristics." },
+    { q: "What is the situation?", desc: "Motivation, urgency, encumbrances, and owner circumstances." },
+    { q: "What does the owner want?", desc: "Speed, price, flexibility, certainty, or something else." },
+    { q: "What is the best economic path?", desc: "Acquisition, wholesale, hold, list, or hybrid strategy." },
+    { q: "What is the safest structure?", desc: "Cash, creative finance, JV, assignment, or referral." },
+    { q: "Should Pegasus participate?", desc: "Honest assessment of fit, capacity, and value-add." },
+  ];
 
   return (
-    <div className="bg-[hsl(220_35%_5%)]">
-      <Hero />
-      <Pillars />
-      <WhoWeServe />
-      <MarketFlowFeature />
-      <Discipline />
-      <Founder />
-      <FAQ />
-      <ContactCTA />
-    </div>
+    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Strategy Review</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
+            Every property gets a path.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Pegasus is not locked to one real estate strategy. We review each property based on the situation, seller goals, economic path, safest structure, and whether Pegasus is the right participant.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
+          {questions.map((item, index) => (
+            <StaggerItem key={index}>
+              <motion.div
+                className="group p-7 bg-card rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-300 h-full"
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.25 }}
+                data-testid={`strategy-question-${index}`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary transition-colors duration-300">
+                    <span className="text-xs font-bold text-primary group-hover:text-primary-foreground transition-colors">{String(index + 1).padStart(2, '0')}</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base mb-2 group-hover:text-primary transition-colors duration-300">{item.q}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.3} className="text-center mt-12">
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Not every property gets an offer. <span className="text-foreground font-medium">Every property gets a serious review.</span> If there is a path, Pegasus helps identify it. If there is not, we tell the truth and route the opportunity to its next best lawful path.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function OutcomeLanesSection() {
+  const primaryLanes = [
+    { icon: Building, title: "Pegasus Acquisition", desc: "We purchase directly where the numbers, scope, and execution path are clear." },
+    { icon: Handshake, title: "Wholesale Assignment", desc: "Off-market assignment to a qualified buyer in our private network." },
+    { icon: Users, title: "JV / Partnership", desc: "Joint venture or co-GP structure for aligned operator and capital arrangements." },
+    { icon: TrendingUp, title: "KW Listing Lane", desc: "Traditional MLS listing through our Keller Williams partnership where appropriate." },
+  ];
+
+  const secondaryLanes = [
+    { title: "Referral Lane", desc: "Routed to a trusted professional when Pegasus is not the right fit." },
+    { title: "MarketFlow Distribution", desc: "Private deal distribution to vetted network participants." },
+    { title: "Incubation / Nurture", desc: "Long-horizon situations held and revisited as conditions change." },
+    { title: "Archive Intelligence", desc: "Documented and stored — every deal informs the next." },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-muted/20 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="mb-14">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">No Lead Dies</p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-4">
+            One property. Multiple possible paths.
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Every accepted property routes to one of eight monetization lanes within 24 business hours. Pegasus does not compete by making the fastest lowball offer — we compete by seeing what others miss.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" staggerDelay={0.1}>
+          {primaryLanes.map((lane, index) => (
+            <StaggerItem key={index}>
+              <motion.div
+                className="group p-7 bg-card rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 h-full"
+                whileHover={{ y: -6 }}
+                transition={{ duration: 0.3 }}
+                data-testid={`outcome-lane-${index}`}
+              >
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                  <lane.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                </div>
+                <h3 className="font-semibold text-base mb-2">{lane.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{lane.desc}</p>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.2}>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {secondaryLanes.map((lane, index) => (
+              <motion.div
+                key={index}
+                className="p-5 bg-card/60 rounded-lg border border-border/30 hover:border-primary/20 transition-all duration-300"
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
+                data-testid={`secondary-lane-${index}`}
+              >
+                <h4 className="font-medium text-sm mb-1.5">{lane.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{lane.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function StatsSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const stats = [
+    { value: "No Lead Dies", label: "Every Property Gets a Path", icon: Target, key: "stats.0" },
+    { value: "East Bay", label: "Founder-Led, Locally Rooted", icon: Building, key: "stats.1" },
+    { value: "Three Pillars", label: "Development • Investments • Systems", icon: Star, key: "stats.2" },
+    { value: "Private Beta", label: "MarketFlow — Private Network Only", icon: Clock, key: "stats.3" },
+  ];
+
+  return (
+    <section className="py-24 lg:py-28 bg-card relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
+          {stats.map((stat, index) => {
+            const displayValue = getValue(`home.${stat.key}.value`) || stat.value;
+            const displayLabel = getValue(`home.${stat.key}.label`) || stat.label;
+            
+            return (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className="text-center group cursor-default py-8 px-4 relative"
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Decorative top accent */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors duration-300">
+                    <stat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                  </div>
+                  
+                  <div className="font-serif text-4xl sm:text-5xl lg:text-5xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
+                    {isEditMode ? (
+                      <EditableText 
+                        contentKey={`home.${stat.key}.value`} 
+                        fallback={String(stat.value)}
+                      />
+                    ) : (
+                      displayValue
+                    )}
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
+                    {isEditMode ? (
+                      <EditableText 
+                        contentKey={`home.${stat.key}.label`} 
+                        fallback={stat.label}
+                      />
+                    ) : (
+                      displayLabel
+                    )}
+                  </div>
+                </motion.div>
+              </StaggerItem>
+            );
+          })}
+        </StaggerChildren>
+      </div>
+    </section>
+  );
+}
+
+interface WholesaleDeal {
+  id: number;
+  propertyAddress: string;
+  city: string;
+  state: string;
+  contractPrice: number;
+  assignmentFee: number;
+  arv: number;
+  propertyType: string;
+  status: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFootage?: number;
+}
+
+function FeaturedDealsSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const { data: deals = [], isLoading } = useQuery<WholesaleDeal[]>({
+    queryKey: ['/api/supabase/wholesale-deals'],
+  });
+
+  const featuredDeals = deals.filter(d => d.status === 'listed' || d.status === 'approved').slice(0, 4);
+
+  if (isLoading) {
+    return (
+      <section className="py-24 lg:py-32 bg-muted/20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="text-center mb-12">
+            <div className="h-4 w-32 bg-muted rounded mx-auto mb-4 animate-pulse" />
+            <div className="h-8 w-64 bg-muted rounded mx-auto animate-pulse" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-card rounded-lg h-80 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredDeals.length === 0) {
+    return (
+      <section id="featured-deals" className="py-24 lg:py-32 bg-muted/20 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <ScrollReveal className="text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.deals.kicker" fallback="MarketFlow" />
+                ) : (getValue("home.deals.kicker") || "MarketFlow")}
+              </p>
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-[-0.02em] mb-4">
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.emptyTitle" fallback="Fresh Deals Coming Soon" />
+              ) : (getValue("home.deals.emptyTitle") || "Fresh Deals Coming Soon")}
+            </h2>
+            <div className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.emptyDescription" fallback="Our team is sourcing new investment opportunities. Sign up for alerts to be notified when deals are available." as="p" multiline />
+              ) : (
+                <p>{getValue("home.deals.emptyDescription") || "Our team is sourcing new investment opportunities. Sign up for alerts to be notified when deals are available."}</p>
+              )}
+            </div>
+            <Link href="/marketflow" data-testid="link-explore-marketplace">
+              <Button className="group" data-testid="button-explore-marketplace">
+                Explore Marketplace
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="featured-deals" className="py-24 lg:py-32 bg-muted/20 scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
+          <div>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.deals.kicker" fallback="MarketFlow" />
+                ) : (getValue("home.deals.kicker") || "MarketFlow")}
+              </p>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-deals-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.title" fallback="Featured Opportunities" />
+              ) : (getValue("home.deals.title") || "Featured Opportunities")}
+            </h2>
+            <div className="mt-4 text-lg text-muted-foreground max-w-2xl">
+              {isEditMode ? (
+                <EditableText contentKey="home.deals.description" fallback="Browse our latest investment-ready properties. Each deal is vetted and underwritten by our team." as="p" multiline />
+              ) : (
+                <p>{getValue("home.deals.description") || "Browse our latest investment-ready properties. Each deal is vetted and underwritten by our team."}</p>
+              )}
+            </div>
+          </div>
+          <Link href="/marketflow">
+            <Button variant="outline" className="group whitespace-nowrap" data-testid="button-view-all-deals">
+              View All Deals
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+          {featuredDeals.map((deal, index) => (
+            <StaggerItem key={deal.id}>
+              <Link href={`/marketflow/deals/${deal.id}`} data-testid={`link-featured-deal-${index}`}>
+                <motion.div 
+                  className="group bg-card rounded-lg border border-border/50 overflow-hidden hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full cursor-pointer"
+                  data-testid={`card-featured-deal-${index}`}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Property type badge */}
+                  <div className="relative h-36 bg-gradient-to-br from-primary/10 to-champagne/10 flex items-center justify-center">
+                    <Building className="w-12 h-12 text-primary/30" />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2 py-1 bg-primary text-primary-foreground text-xs font-bold rounded" data-testid={`text-deal-type-${index}`}>
+                        {deal.propertyType || 'Residential'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-5">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1" data-testid={`text-deal-location-${index}`}>
+                      {deal.city}, {deal.state}
+                    </p>
+                    <h3 className="font-semibold text-base mb-3 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-deal-address-${index}`}>
+                      {deal.propertyAddress}
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Contract Price</span>
+                        <span className="font-semibold" data-testid={`text-deal-price-${index}`}>${(deal.contractPrice || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Assignment Fee</span>
+                        <span className="font-semibold text-primary" data-testid={`text-deal-fee-${index}`}>${(deal.assignmentFee || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">ARV</span>
+                        <span className="font-semibold" data-testid={`text-deal-arv-${index}`}>${(deal.arv || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    
+                    {(deal.bedrooms || deal.squareFootage) && (
+                      <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border/50 text-xs text-muted-foreground" data-testid={`text-deal-specs-${index}`}>
+                        {deal.bedrooms && <span>{deal.bedrooms} bed</span>}
+                        {deal.bathrooms && <span>{deal.bathrooms} bath</span>}
+                        {deal.squareFootage && <span>{deal.squareFootage.toLocaleString()} sqft</span>}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </Link>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.3} className="text-center mt-12">
+          <p className="text-sm text-muted-foreground mb-4">
+            Deal submissions are open in private beta. Visibility and matching features may be limited during rollout.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <span>Private Beta</span>
+            </div>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />
+              <span>Role-Based Workflows</span>
+            </div>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              <span>Disciplined Review</span>
+            </div>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+interface Testimonial {
+  id: number;
+  quote: string;
+  author: string;
+  role: string | null;
+  location: string | null;
+  imageUrl: string | null;
+  isActive: boolean;
+}
+
+const defaultTestimonials = [
+  {
+    quote: "We prioritize process quality, underwriting discipline, and execution standards before growth metrics.",
+    author: "Discipline Before Scale",
+    role: "Operating Principle",
+    location: null,
+    initials: "DS",
+  },
+  {
+    quote: "Every opportunity is reviewed with clear numbers, assumptions, and next-step documentation.",
+    author: "Clear Numbers, Clear Process",
+    role: "Operating Principle",
+    location: null,
+    initials: "CP",
+  },
+  {
+    quote: "We focus on durable value creation through disciplined project planning and accountable execution.",
+    author: "Built for Long-Term Value",
+    role: "Operating Principle",
+    location: null,
+    initials: "LV",
+  },
+  {
+    quote: "Pegasus is founder-led and accountability stays close to decision-making from intake through delivery.",
+    author: "Founder-Led Accountability",
+    role: "Operating Principle",
+    location: null,
+    initials: "FA",
+  },
+];
+
+function getInitials(name: string): string {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function OperatingPrinciplesSection() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const testimonials = defaultTestimonials;
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [isPaused, testimonials.length]);
+
+  return (
+    <section id="testimonials" className="py-32 lg:py-40 bg-card relative overflow-hidden">
+      {/* Enhanced background decoration */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/3 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-80 h-80 bg-champagne/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/3 to-transparent rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center mb-16">
+          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">
+            {isEditMode ? (
+              <EditableText contentKey="home.testimonials.kicker" fallback="Operating Principles" />
+            ) : (getValue("home.testimonials.kicker") || "Operating Principles")}
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-testimonials-title">
+            {isEditMode ? (
+              <EditableText contentKey="home.testimonials.title" fallback="Discipline Before Scale" />
+            ) : (getValue("home.testimonials.title") || "Discipline Before Scale")}
+          </h2>
+          <div className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.testimonials.description" fallback="The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution." as="p" multiline />
+            ) : (
+              <p>{getValue("home.testimonials.description") || "The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution."}</p>
+            )}
+          </div>
+        </ScrollReveal>
+
+        {/* Testimonials Carousel */}
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Main carousel container */}
+          <div className="overflow-hidden">
+            <motion.div 
+              className="flex"
+              animate={{ x: `-${currentSlide * 100}%` }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+            >
+              {testimonials.map((testimonial, index) => (
+                <div 
+                  key={index}
+                  className="w-full flex-shrink-0 px-4"
+                >
+                  <motion.div 
+                    className="max-w-3xl mx-auto p-10 lg:p-14 bg-background rounded-2xl border border-border/50 relative"
+                    data-testid={`testimonial-card-${index}`}
+                  >
+                    {/* Large quote icon */}
+                    <div className="absolute -top-5 left-10 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                      <Quote className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <p className="text-foreground leading-relaxed text-lg lg:text-xl text-center italic mb-10">
+                      "{testimonial.quote}"
+                    </p>
+                    
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold">
+                        {testimonial.initials}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold text-foreground text-lg">{testimonial.author}</p>
+                        <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Carousel dots */}
+          <div className="flex justify-center gap-2 mt-10">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  currentSlide === index 
+                    ? 'w-8 bg-primary' 
+                    : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+                data-testid={`button-testimonial-dot-${index}`}
+                aria-label={`Go to testimonial ${index + 1}`}
+              />
+            ))}
+          </div>
+
+          {/* Navigation arrows */}
+          <button 
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 shadow-lg"
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+            data-testid="button-testimonial-prev"
+            aria-label="Previous testimonial"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button 
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 shadow-lg"
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % testimonials.length)}
+            data-testid="button-testimonial-next"
+            aria-label="Next testimonial"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Trust badges - enhanced styling */}
+        <ScrollReveal className="mt-24" delay={0.3}>
+          <div className="bg-muted/30 rounded-2xl p-8 lg:p-12">
+            <div className="text-center text-sm uppercase tracking-[0.2em] text-muted-foreground font-medium mb-10">
+              {isEditMode ? (
+                <EditableText contentKey="home.whyChooseUs.title" fallback="Why Choose Us" />
+              ) : (getValue("home.whyChooseUs.title") || "Why Choose Us")}
+            </div>
+            <div className="grid sm:grid-cols-3 gap-8 lg:gap-12">
+              <motion.div 
+                className="flex items-center gap-5"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold text-base">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.0.title" fallback="Compliance-Aware Operations" />
+                    ) : (getValue("home.whyChooseUs.0.title") || "Compliance-Aware Operations")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.0.description" fallback="Licensing handled per applicable requirements" />
+                    ) : (getValue("home.whyChooseUs.0.description") || "Licensing handled per applicable requirements")}
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-5"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Award className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold text-base">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.1.title" fallback="Disciplined operations" />
+                    ) : (getValue("home.whyChooseUs.1.title") || "Disciplined operations")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.1.description" fallback="Built for long-term value" />
+                    ) : (getValue("home.whyChooseUs.1.description") || "Built for long-term value")}
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-5"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-14 h-14 rounded-xl bg-tan/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-6 h-6 text-tan" />
+                </div>
+                <div>
+                  <div className="font-semibold text-base">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.2.title" fallback="Disciplined Partner Network" />
+                    ) : (getValue("home.whyChooseUs.2.title") || "Disciplined Partner Network")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.whyChooseUs.2.description" fallback="Execution Focus" />
+                    ) : (getValue("home.whyChooseUs.2.description") || "Execution Focus")}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function HeroSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const heroKicker = getValue("home.hero.kicker", "Development • Investments • Systems");
+  const heroLine1 = getValue("home.hero.line1", "The Deal");
+  const heroLine2 = getValue("home.hero.line2", "Architect");
+  const heroLine3 = getValue("home.hero.line3", "");
+  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a strategy-first real estate operating company. We help turn property situations into structured outcomes through strategy review, creative deal design, and disciplined execution.");
+  const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "Explore Strategy Lanes");
+  const heroPhilosophical = "Where others see impossible, we see a path.";
+  
+  return (
+    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
+      {/* Full-bleed background image with parallax effect */}
+      <motion.div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
+        style={{ backgroundImage: `url(${heroImage})` }}
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1.05 }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+      />
+      
+      {/* Premium cinematic overlay - luxury gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+      
+      {/* Enhanced animated gradient orbs */}
+      <div className="absolute inset-0 opacity-40 overflow-hidden">
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/25 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            x: [0, -40, 0],
+            y: [0, 30, 0],
+            opacity: [0.4, 0.6, 0.4]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+        <motion.div 
+          className="absolute top-1/2 right-1/3 w-48 h-48 bg-tan/15 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.3, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div 
+          className="absolute bottom-1/3 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+          animate={{ 
+            y: [0, -50, 0],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+      </div>
+      
+      {/* Content - centered for more impact */}
+      <div className="relative z-10 w-full py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="max-w-4xl">
+            {/* Luxury kicker with decorative line */}
+            <motion.div 
+              className="flex items-center gap-4 mb-8"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.hero.kicker" 
+                  fallback="Development • Investments • Systems"
+                  className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium"
+                />
+              ) : (
+                <p className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium" data-testid="text-hero-kicker">
+                  {heroKicker}
+                </p>
+              )}
+            </motion.div>
+            
+            {/* Premium headline with refined typography */}
+            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.85] mb-10 tracking-[-0.03em] text-white" data-testid="text-hero-headline">
+              <motion.span 
+                className="block"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+              >
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.line1" fallback="Real estate execution," />
+                ) : heroLine1}
+              </motion.span>
+              <motion.span 
+                className="block"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
+              >
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.line2" fallback="built with" />
+                ) : heroLine2}
+              </motion.span>
+              <motion.span 
+                className="block bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.7 }}
+              >
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.line3" fallback="discipline." />
+                ) : heroLine3}
+              </motion.span>
+            </h1>
+            
+            {/* Philosophical line */}
+            <motion.p
+              className="text-base sm:text-lg text-white/60 mb-6 italic tracking-wide"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.85 }}
+              data-testid="text-hero-philosophical"
+            >
+              {heroPhilosophical}
+            </motion.p>
+
+            {/* Refined subheadline with better spacing */}
+            <motion.div 
+              className="text-lg sm:text-xl text-white/75 max-w-2xl mb-14 leading-relaxed font-light"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.0 }}
+              data-testid="text-hero-subheadline"
+            >
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.hero.subheadline" 
+                  fallback="Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value."
+                  multiline
+                />
+              ) : (
+                <p>{heroSubheadline}</p>
+              )}
+            </motion.div>
+            
+            {/* Premium CTAs with enhanced styling */}
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-5"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.1 }}
+            >
+              <a href="/sell">
+                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
+                  {isEditMode ? (
+                    <EditableText contentKey="home.hero.cta_primary" fallback="Submit a Property" />
+                  ) : heroCtaPrimary}
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
+              </a>
+              <a href="#services">
+                <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
+                  {isEditMode ? (
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="Explore Strategy Lanes" />
+                  ) : heroCtaSecondary}
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
+              </a>
+            </motion.div>
+
+            <p className="mt-5 text-sm text-white/70" data-testid="text-hero-support-line">
+              Every property gets a path. Every deal gets a plan.
+            </p>
+
+            {/* Quick stats preview */}
+            <motion.div 
+              className="mt-20 pt-10 border-t border-white/10 flex flex-wrap gap-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.4 }}
+              data-testid="hero-stats-preview"
+            >
+              <div data-testid="hero-stat-strategy">
+                <p className="text-3xl font-bold text-white">Strategy</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">First</p>
+              </div>
+              <div data-testid="hero-stat-pillars">
+                <p className="text-3xl font-bold text-white">3</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Core Pillars</p>
+              </div>
+              <div data-testid="hero-stat-lanes">
+                <p className="text-3xl font-bold text-white">8</p>
+                <p className="text-sm text-white/50 uppercase tracking-wider">Outcome Lanes</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium accent bar at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
+      
+      {/* Scroll indicator */}
+      <motion.div 
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50"
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+          <motion.div 
+            className="w-1.5 h-3 bg-white/50 rounded-full"
+            animate={{ y: [0, 8, 0], opacity: [1, 0, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+function ServicesSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const services = [
+    {
+      image: serviceImage1,
+      title: "Real Estate Development",
+      description: "We execute value-add, fix-and-flip, BRRRR, ADU, and development strategies where the numbers, scope, and execution path are clear. Every project goes through disciplined underwriting before a dollar is committed.",
+      cta: "View Projects",
+      ctaLink: "/projects",
+      accent: "Development",
+      key: "service.0",
+    },
+    {
+      image: serviceImage2,
+      title: "Strategic Investments",
+      description: "We structure private, deal-specific capital and partnership conversations around real opportunities, documented risks, and lawful execution. Private partner conversations only — no public investment offering.",
+      cta: "Partner Inquiry",
+      ctaLink: "#invest",
+      accent: "Investments",
+      key: "service.1",
+    },
+  ];
+
+  return (
+    <section id="services" className="py-32 lg:py-40 bg-muted/30 scroll-mt-24 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-primary/5 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-gradient-to-tr from-champagne/10 to-transparent rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="mb-20">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              {isEditMode ? (
+                <EditableText contentKey="home.services.kicker" fallback="The Three Pillars" />
+              ) : (getValue("home.services.kicker") || "The Three Pillars")}
+            </p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
+            {isEditMode ? (
+              <EditableText contentKey="home.services.title" fallback="Development. Investments. Systems." />
+            ) : (getValue("home.services.title") || "Development. Investments. Systems.")}
+          </h2>
+          <div className="mt-6 text-lg text-muted-foreground max-w-2xl">
+            {isEditMode ? (
+              <EditableText contentKey="home.services.description" fallback="Pegasus Dreamscapes is a strategy-first real estate operating company built around three core pillars and disciplined execution across every lane." as="p" multiline />
+            ) : (
+              <p>{getValue("home.services.description") || "Pegasus Dreamscapes is a strategy-first real estate operating company built around three core pillars and disciplined execution across every lane."}</p>
+            )}
+          </div>
+        </ScrollReveal>
+
+        <div className="space-y-8">
+          {services.map((service, index) => {
+            const displayTitle = getValue(`home.${service.key}.title`) || service.title;
+            const displayDesc = getValue(`home.${service.key}.description`) || service.description;
+            const displayCta = getValue(`home.${service.key}.cta`) || service.cta;
+            const displayAccent = getValue(`home.${service.key}.accent`) || service.accent;
+            
+            return (
+              <ScrollReveal key={index} delay={index * 0.2} direction={index % 2 === 0 ? "left" : "right"}>
+                <motion.div 
+                  className={`grid lg:grid-cols-2 gap-0 bg-card rounded-lg overflow-hidden border border-border/50 shadow-sm ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}
+                  data-testid={`card-service-${index}`}
+                  whileHover={{ y: -4, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.12)" }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className={`aspect-[4/3] lg:aspect-auto relative overflow-hidden group ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                    <motion.img 
+                      src={service.image} 
+                      alt={displayTitle}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    {/* Overlay with accent badge */}
+                    <div className="absolute top-6 left-6">
+                      <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-foreground text-xs font-semibold uppercase tracking-wider rounded-md shadow-sm">
+                        {isEditMode ? (
+                          <EditableText contentKey={`home.${service.key}.accent`} fallback={service.accent} />
+                        ) : displayAccent}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className={`p-10 lg:p-14 flex flex-col justify-center ${index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
+                    <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-5 tracking-tight">
+                      {isEditMode ? (
+                        <EditableText contentKey={`home.${service.key}.title`} fallback={service.title} />
+                      ) : displayTitle}
+                    </h3>
+                    <div className="text-muted-foreground text-base leading-relaxed mb-10">
+                      {isEditMode ? (
+                        <EditableText contentKey={`home.${service.key}.description`} fallback={service.description} as="p" multiline />
+                      ) : <p>{displayDesc}</p>}
+                    </div>
+                    <div>
+                      <a href={service.ctaLink}>
+                        <Button size="lg" className="px-8 text-sm uppercase tracking-[0.12em] font-semibold">
+                          {isEditMode ? (
+                            <EditableText contentKey={`home.${service.key}.cta`} fallback={service.cta} />
+                          ) : displayCta}
+                          <ArrowRight className="ml-3 w-4 h-4" />
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+
+        <ScrollReveal className="mt-28" delay={0.2}>
+          <div className="text-center mb-12">
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Strategy Stack</p>
+            <h3 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">How Pegasus Creates Value</h3>
+          </div>
+          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+            {[
+              { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties through value-add renovation and disciplined resale execution." },
+              { icon: TrendingUp, title: "BRRRR / Buy & Hold", desc: "Build long-term portfolio wealth through strategic acquisition and rental management." },
+              { icon: Zap, title: "Wholesale / Assignment", desc: "Off-market assignment to qualified buyers in our private MarketFlow network." },
+              { icon: Building, title: "Pegasus Systems", desc: "MarketFlow, intake workflows, and the operating infrastructure behind every deal.", comingSoon: false },
+            ].map((item, index) => (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className={`p-8 bg-card rounded-lg border border-border/50 h-full transition-all duration-300 ${item.comingSoon ? 'opacity-70' : ''}`}
+                  whileHover={!item.comingSoon ? { y: -6, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.1)" } : {}}
+                >
+                  <motion.div 
+                    className={`w-14 h-14 rounded-lg flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10'}`}
+                    whileHover={!item.comingSoon ? { scale: 1.05 } : {}}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
+                  </motion.div>
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <h4 className="font-serif font-semibold text-lg">{item.title}</h4>
+                    {item.comingSoon && (
+                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                        Soon
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedProjectSection() {
+  return (
+    <section id="projects" className="py-32 lg:py-40 bg-stone scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        {/* Section header */}
+        <div className="mb-16">
+          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Case Study</p>
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-title">
+            Featured Project: Nelson Dr
+          </h2>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="relative">
+            <div className="aspect-[4/3] rounded-lg overflow-hidden">
+              <img 
+                src={serviceImage2} 
+                alt="Featured Project - Nelson Dr"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium text-sm shadow-lg">
+              Featured Flip
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
+                Nelson Dr, Richmond, CA
+              </h3>
+            </div>
+            
+            <p className="text-muted-foreground text-base leading-relaxed" data-testid="text-featured-description">
+              A value-add residential project used to sharpen the Pegasus operating model — acquisition strategy, renovation planning, capital discipline, and resale execution. Every phase documented, every decision deliberate.
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {["Kitchen Remodel", "Bath Updates", "New Flooring", "Exterior Refresh"].map((tag, i) => (
+                <span key={i} className="px-4 py-2 bg-background text-foreground border border-border/50 rounded-md text-sm font-medium">{tag}</span>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-8 py-8 border-t border-border/30">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Strategy Model</p>
+                <p className="font-semibold">Fix & Flip</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Structure</p>
+                <p className="font-semibold">Direct Acquisition</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Stage</p>
+                <p className="font-semibold text-primary">Execution</p>
+              </div>
+            </div>
+
+            <Link href="/projects">
+              <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium" data-testid="button-view-projects">
+                View All Projects
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const sellerFormSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Valid phone number is required"),
+  propertyAddress: z.string().min(5, "Property address is required"),
+  condition: z.string().min(1, "Please select property condition"),
+  timeline: z.string().min(1, "Please select your timeline"),
+});
+
+function SellPropertySection() {
+  const { toast } = useToast();
+  const { isEditMode } = useEditMode();
+  const form = useForm<z.infer<typeof sellerFormSchema>>({
+    resolver: zodResolver(sellerFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      propertyAddress: "",
+      condition: "",
+      timeline: "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof sellerFormSchema>) => {
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'seller',
+        source: 'sell_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone,
+        address: data.propertyAddress,
+        leadData: {
+          condition: data.condition,
+          timeline: data.timeline,
+          propertyType: "Single Family",
+        },
+      };
+      
+      return apiRequest("POST", "/api/leads", unifiedLead);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thank you!",
+        description: "We've received your information and will be in touch within 24 hours.",
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof sellerFormSchema>) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <section id="sell" className="py-32 lg:py-40 bg-background scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-2 gap-20 items-start">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">
+              {isEditMode ? (
+                <EditableText contentKey="home.sell.kicker" fallback="Property Owners" />
+              ) : "Property Owners"}
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-sell-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.sell.title" fallback="Submit Your Property" />
+              ) : "Submit Your Property"}
+            </h2>
+            <div className="text-base text-muted-foreground leading-relaxed mb-10">
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.sell.description" 
+                  fallback="Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path — whether that's acquisition, wholesale, listing, or a referral to the best next resource."
+                  multiline
+                  as="p"
+                />
+              ) : (
+                <p>Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path — whether that's acquisition, wholesale, listing, or a referral to the best next resource.</p>
+              )}
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Honest Strategy Review</h4>
+                  <p className="text-sm text-muted-foreground">Transparent assessment based on real market data and your actual situation</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Target className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Multi-Path Underwriting</h4>
+                  <p className="text-sm text-muted-foreground">We evaluate every option — not just the one that's fastest for us</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">24-Hour Response</h4>
+                  <p className="text-sm text-muted-foreground">Every submission reviewed and routed within one business day</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-10 sleek-card rounded-lg">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Doe" {...field} data-testid="input-sell-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="john@example.com" {...field} data-testid="input-sell-email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="Your best callback number" {...field} data-testid="input-sell-phone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="propertyAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Property Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123 Main St, City, State ZIP" {...field} data-testid="input-sell-address" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="condition"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Property Condition</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-sell-condition">
+                                <SelectValue placeholder="Select condition" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="excellent">Excellent</SelectItem>
+                              <SelectItem value="good">Good</SelectItem>
+                              <SelectItem value="fair">Fair - Needs Some Work</SelectItem>
+                              <SelectItem value="poor">Poor - Major Repairs Needed</SelectItem>
+                              <SelectItem value="distressed">Distressed / Uninhabitable</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="timeline"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Timeline to Sell</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-sell-timeline">
+                                <SelectValue placeholder="Select timeline" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="asap">ASAP</SelectItem>
+                              <SelectItem value="30days">Within 30 Days</SelectItem>
+                              <SelectItem value="60days">Within 60 Days</SelectItem>
+                              <SelectItem value="90days">Within 90 Days</SelectItem>
+                              <SelectItem value="flexible">Flexible</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-sell-submit">
+                    {mutation.isPending ? "Submitting..." : "Submit for Strategy Review"}
+                  </Button>
+                </form>
+              </Form>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const investorFormSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Valid phone number is required"),
+  capitalRange: z.string().min(1, "Please select your capital range"),
+  investmentPreference: z.string().min(1, "Please select your investment preference"),
+});
+
+function InvestSection() {
+  const { toast } = useToast();
+  const { isEditMode } = useEditMode();
+  const form = useForm<z.infer<typeof investorFormSchema>>({
+    resolver: zodResolver(investorFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      capitalRange: "",
+      investmentPreference: "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof investorFormSchema>) => {
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'investor',
+        source: 'invest_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone,
+        leadData: {
+          capitalRange: data.capitalRange,
+          investmentPreference: data.investmentPreference,
+        },
+      };
+      
+      return apiRequest("POST", "/api/leads", unifiedLead);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thank you!",
+        description: "We've received your information and will be in touch within 24 hours.",
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof investorFormSchema>) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <section id="invest" className="py-32 lg:py-40 bg-stone scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-2 gap-20 items-start">
+          <div className="p-10 sleek-card rounded-lg lg:order-2">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Doe" {...field} data-testid="input-invest-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="john@example.com" {...field} data-testid="input-invest-email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="Your best callback number" {...field} data-testid="input-invest-phone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="capitalRange"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Available Capital</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-invest-capital">
+                              <SelectValue placeholder="Select capital range" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="25k-50k">$25,000 - $50,000</SelectItem>
+                            <SelectItem value="50k-100k">$50,000 - $100,000</SelectItem>
+                            <SelectItem value="100k-250k">$100,000 - $250,000</SelectItem>
+                            <SelectItem value="250k-500k">$250,000 - $500,000</SelectItem>
+                            <SelectItem value="500k+">$500,000+</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="investmentPreference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Investment Preference</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-invest-preference">
+                              <SelectValue placeholder="Select preference" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="fix-flip">Fix & Flip (Short-term)</SelectItem>
+                            <SelectItem value="buy-hold">Buy & Hold (Long-term Rental)</SelectItem>
+                            <SelectItem value="both">Both Strategies</SelectItem>
+                            <SelectItem value="new-construction">New Construction</SelectItem>
+                            <SelectItem value="not-sure">Not Sure Yet</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-invest-submit">
+                    {mutation.isPending ? "Submitting..." : "Start Investing"}
+                  </Button>
+                </form>
+              </Form>
+          </div>
+
+          <div className="lg:order-1">
+            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">
+              {isEditMode ? (
+                <EditableText contentKey="home.invest.kicker" fallback="Private Partner Inquiry" />
+              ) : "Private Partner Inquiry"}
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-invest-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.invest.title" fallback="Deal-Specific Conversations" />
+              ) : "Deal-Specific Conversations"}
+            </h2>
+            <div className="text-base text-muted-foreground leading-relaxed mb-10">
+              {isEditMode ? (
+                <EditableText 
+                  contentKey="home.invest.description" 
+                  fallback="Private partner conversations are available for aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability."
+                  multiline
+                  as="p"
+                />
+              ) : (
+                <p>Private partner conversations are available for aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability.</p>
+              )}
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Disciplined Analysis</h4>
+                  <p className="text-sm text-muted-foreground">Clear underwriting and execution planning on every opportunity</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Transparent Underwriting</h4>
+                  <p className="text-sm text-muted-foreground">Transparent process and documentation standards</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Partner-First Approach</h4>
+                  <p className="text-sm text-muted-foreground">We succeed when our partners succeed</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InvestmentPhilosophySection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const principles = [
+    {
+      number: "01",
+      title: "Disciplined Analysis",
+      description: "Every property undergoes rigorous underwriting. We evaluate market dynamics, renovation costs, and exit strategies before committing capital.",
+      icon: Target,
+      key: "philosophy.principle.0",
+    },
+    {
+      number: "02", 
+      title: "Transparent Partnership",
+      description: "Full visibility into deal structures, regular updates, and clear communication. Our partners always know exactly where their investment stands.",
+      icon: Users,
+      key: "philosophy.principle.1",
+    },
+    {
+      number: "03",
+      title: "Community-Centered Design",
+      description: "We don't just renovate properties—we elevate neighborhoods. Every project considers its impact on the surrounding community.",
+      icon: Heart,
+      key: "philosophy.principle.2",
+    },
+    {
+      number: "04",
+      title: "Sustainable Returns",
+      description: "We balance aggressive opportunity pursuit with risk management. Our goal is consistent, long-term wealth building—not quick wins.",
+      icon: TrendingUp,
+      key: "philosophy.principle.3",
+    },
+  ];
+
+  return (
+    <section id="philosophy" className="py-32 lg:py-40 bg-gradient-to-b from-background to-muted/10 scroll-mt-24 relative overflow-hidden">
+      {/* Section divider at top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{
+        backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
+        backgroundSize: '80px 80px'
+      }} />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+          {/* Left column - Header content */}
+          <ScrollReveal className="lg:sticky lg:top-32">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.philosophy.kicker" fallback="Our Approach" />
+                ) : (getValue("home.philosophy.kicker") || "Our Approach")}
+              </p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-philosophy-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.philosophy.title" fallback="Investment Philosophy" />
+              ) : (getValue("home.philosophy.title") || "Investment Philosophy")}
+            </h2>
+            <div className="text-lg text-muted-foreground leading-relaxed mb-10">
+              {isEditMode ? (
+                <EditableText contentKey="home.philosophy.description" fallback="We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders." as="p" multiline />
+              ) : (
+                <p>{getValue("home.philosophy.description") || "We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders."}</p>
+              )}
+            </div>
+            
+            {/* Mission statement card */}
+            <div className="p-8 bg-card rounded-lg border border-border/50 relative">
+              <div className="absolute -top-3 -left-3 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Quote className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-base text-foreground leading-relaxed italic">
+                {isEditMode ? (
+                  <EditableText contentKey="home.philosophy.quote" fallback="We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve." as="p" multiline />
+                ) : (
+                  <p>"{getValue("home.philosophy.quote") || "We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve."}"</p>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">— Pegasus Dreamscapes</p>
+            </div>
+          </ScrollReveal>
+
+          {/* Right column - Principles */}
+          <StaggerChildren className="space-y-6" staggerDelay={0.1}>
+            {principles.map((principle, index) => (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className="group p-6 lg:p-8 bg-card rounded-lg border border-border/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300"
+                  data-testid={`philosophy-principle-${index}`}
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex items-start gap-5">
+                    <div className="flex-shrink-0">
+                      <span className="text-4xl font-serif font-bold text-primary/20 group-hover:text-primary/40 transition-colors">{principle.number}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-md transition-all duration-300">
+                          <principle.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                        </div>
+                        <h3 className="text-xl font-semibold">{principle.title}</h3>
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed">{principle.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorksSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const steps = [
+    {
+      number: "01",
+      title: "Submit Your Situation",
+      description: "Property owners submit their situation. Wholesalers and deal sources submit opportunities. Every intake is reviewed seriously within one business day.",
+      icon: FileCheck,
+      key: "howitworks.step.0",
+    },
+    {
+      number: "02",
+      title: "Strategy Review",
+      description: "Pegasus evaluates the property, situation, owner goals, economic path, and safest structure. Six questions. Honest answers. No performance for the seller.",
+      icon: Search,
+      key: "howitworks.step.1",
+    },
+    {
+      number: "03",
+      title: "Route to Best Path",
+      description: "Every accepted opportunity routes to one of eight monetization lanes within 24 business hours — acquisition, wholesale, JV, listing, referral, MarketFlow, incubation, or archive.",
+      icon: Target,
+      key: "howitworks.step.2",
+    },
+    {
+      number: "04",
+      title: "Execute with Discipline",
+      description: "The selected lane gets a documented plan, assigned ownership, and accountable execution. Every dollar has a place. Every action has an owner.",
+      icon: Key,
+      key: "howitworks.step.3",
+    },
+  ];
+
+  return (
+    <section id="how-it-works" className="py-32 lg:py-40 bg-stone scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-20">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              {isEditMode ? (
+                <EditableText contentKey="home.howitworks.kicker" fallback="The Process" />
+              ) : (getValue("home.howitworks.kicker") || "The Process")}
+            </p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-how-it-works-title">
+            {isEditMode ? (
+              <EditableText contentKey="home.howitworks.title" fallback="The Pegasus Process" />
+            ) : (getValue("home.howitworks.title") || "The Pegasus Process")}
+          </h2>
+          <div className="text-lg text-muted-foreground leading-relaxed">
+            {isEditMode ? (
+              <EditableText contentKey="home.howitworks.description" fallback="Every property situation enters a structured intake, review, routing, and execution process. No lead dies. Every deal gets a plan." as="p" multiline />
+            ) : (
+              <p>{getValue("home.howitworks.description") || "Every property situation enters a structured intake, review, routing, and execution process. No lead dies. Every deal gets a plan."}</p>
+            )}
+          </div>
+        </ScrollReveal>
+
+        <div className="relative">
+          {/* Connection line */}
+          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent -translate-y-1/2" />
+          
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.15}>
+            {steps.map((step, index) => (
+              <StaggerItem key={index}>
+                <motion.div 
+                  className="group relative bg-card p-8 rounded-lg border border-border/50 hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full"
+                  data-testid={`how-it-works-step-${index}`}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Step number badge */}
+                  <div className="absolute -top-4 left-8 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                    Step {step.number}
+                  </div>
+                  
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:shadow-lg transition-all duration-300 mt-2">
+                    <step.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
+                  
+                  {/* Arrow indicator on larger screens */}
+                  {index < steps.length - 1 && (
+                    <div className="hidden lg:flex absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-background border border-border rounded-full items-center justify-center z-10">
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </div>
+
+        <ScrollReveal delay={0.4} className="text-center mt-16">
+          <a href="#sell">
+            <Button size="lg" className="text-sm uppercase tracking-widest font-medium group" data-testid="button-submit-property">
+              Submit a Property
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </a>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function TrustLogosSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const trustItems = [
+    { icon: Shield, label: "Compliance-Aware", description: "Licensing handled per applicable requirements", key: "trust.0" },
+    { icon: Award, label: "Vetted Review", description: "Every deal undergoes disciplined underwriting", key: "trust.1" },
+    { icon: Users, label: "Private Network", description: "MarketFlow is invite-only in v1", key: "trust.2" },
+    { icon: CheckCircle2, label: "Founder-Led", description: "Accountability stays close to every decision", key: "trust.3" },
+  ];
+
+  return (
+    <section className="py-16 bg-muted/30 border-y border-border/50">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {trustItems.map((item, index) => {
+            const displayLabel = getValue(`home.${item.key}.label`) || item.label;
+            const displayDesc = getValue(`home.${item.key}.description`) || item.description;
+            
+            return (
+              <motion.div 
+                key={index}
+                className="flex items-center gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                data-testid={`trust-item-${index}`}
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-semibold text-sm">
+                    {isEditMode ? (
+                      <EditableText contentKey={`home.${item.key}.label`} fallback={item.label} />
+                    ) : displayLabel}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {isEditMode ? (
+                      <EditableText contentKey={`home.${item.key}.description`} fallback={item.description} />
+                    ) : displayDesc}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CommunityImpactSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const impactStats = [
+    { value: "Strategy", label: "First — Always", key: "community.stat.0" },
+    { value: "Every", label: "Property Gets a Path", key: "community.stat.1" },
+    { value: "Every", label: "Deal Gets a Plan", key: "community.stat.2" },
+    { value: "Every", label: "Dollar Has a Place", key: "community.stat.3" },
+  ];
+
+  const values = [
+    {
+      icon: Heart,
+      title: "Discipline Before Scale",
+      description: "We prioritize process quality, underwriting discipline, and execution standards before growth metrics. Scale follows discipline.",
+      key: "community.value.0",
+    },
+    {
+      icon: Shield,
+      title: "Clear Numbers, Clear Process",
+      description: "Every opportunity is reviewed with clear numbers, assumptions, and next-step documentation. No performance. No pressure.",
+      key: "community.value.1",
+    },
+    {
+      icon: Sparkles,
+      title: "Built for Long-Term Value",
+      description: "Durable value creation through disciplined project planning and accountable execution — not quick wins or inflated numbers.",
+      key: "community.value.2",
+    },
+    {
+      icon: Users,
+      title: "Founder-Led Accountability",
+      description: "Pegasus is founder-led and accountability stays close to decision-making from intake through delivery. Every action has an owner.",
+      key: "community.value.3",
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-gradient-to-b from-background to-muted/20 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-80 h-80 bg-champagne/10 rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
+            <Heart className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary uppercase tracking-wider">
+              {isEditMode ? (
+                <EditableText contentKey="home.community.kicker" fallback="Our Commitment" />
+              ) : (getValue("home.community.kicker") || "Our Commitment")}
+            </span>
+          </div>
+          
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-community-title">
+            {isEditMode ? (
+              <EditableText contentKey="home.community.title" fallback="Operating Principles" />
+            ) : (getValue("home.community.title") || "Operating Principles")}
+          </h2>
+          <div className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.community.description" fallback="We find opportunity where others see impossible. Every property gets a path. Every deal gets a plan. Every dollar has a place. Every action has an owner." as="p" multiline />
+            ) : (
+              <p>{getValue("home.community.description") || "We find opportunity where others see impossible. Every property gets a path. Every deal gets a plan. Every dollar has a place. Every action has an owner."}</p>
+            )}
+          </div>
+        </ScrollReveal>
+
+        {/* Impact stats */}
+        <ScrollReveal delay={0.2} className="mb-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {impactStats.map((stat, index) => (
+              <motion.div
+                key={index}
+                className="text-center p-6 bg-card rounded-lg border border-border/50"
+                whileHover={{ y: -4, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.1)" }}
+                transition={{ duration: 0.3 }}
+                data-testid={`community-stat-${index}`}
+              >
+                <p className="font-serif text-3xl sm:text-4xl font-bold text-primary mb-2">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        {/* Core values */}
+        <StaggerChildren className="grid md:grid-cols-2 gap-6" staggerDelay={0.1}>
+          {values.map((value, index) => (
+            <StaggerItem key={index}>
+              <motion.div 
+                className="flex gap-5 p-6 bg-card rounded-lg border border-border/50 h-full"
+                whileHover={{ y: -4, borderColor: "rgba(var(--primary), 0.2)" }}
+                transition={{ duration: 0.3 }}
+                data-testid={`community-value-${index}`}
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <value.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">{value.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{value.description}</p>
+                </div>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        {/* CTA */}
+        <ScrollReveal delay={0.4} className="text-center mt-16">
+          <p className="text-muted-foreground mb-6">Have a property situation worth reviewing?</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#sell">
+              <Button size="lg" className="group" data-testid="button-community-submit">
+                Submit a Property
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </a>
+            <a href="#contact">
+              <Button variant="outline" size="lg" data-testid="button-community-contact">
+                Contact Pegasus
+              </Button>
+            </a>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+interface FAQ {
+  id: number;
+  question: string;
+  answer: string;
+  category: string | null;
+  order: number;
+  isActive: boolean;
+}
+
+const defaultFaqs = [
+  {
+    question: "Does Pegasus buy every property it reviews?",
+    answer: "No. Not every property gets an offer — but every property gets a serious review. Pegasus evaluates each situation and routes it to the best lawful path. If we are not the right operator, we will tell you that directly and help you find the next best option."
+  },
+  {
+    question: "What is the strategy review process?",
+    answer: "When you submit a property, we evaluate six questions: What is the property? What is the situation? What does the owner want? What is the best economic path? What is the safest structure? And should Pegasus participate? Honest answers drive every decision."
+  },
+  {
+    question: "What are the eight outcome lanes?",
+    answer: "Every accepted property routes to one of eight lanes within 24 business hours: Pegasus Acquisition, Wholesale Assignment, JV/Partnership, KW Listing Lane, Referral Lane, MarketFlow Private Distribution, Incubation/Nurture, or Archive Intelligence. No lead dies."
+  },
+  {
+    question: "What is MarketFlow and is it public?",
+    answer: "MarketFlow is the private dealflow layer of Pegasus Systems. In v1, it is a private network and controlled review system — not a public marketplace. Access is by invitation or role-based approval. Public marketplace launch is gated on broker compliance review."
+  },
+  {
+    question: "How does Pegasus handle investor partnerships?",
+    answer: "Pegasus conducts private, deal-specific conversations with aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability. Nothing should sound like a public investment offering — because it is not one."
+  },
+  {
+    question: "What types of properties does Pegasus work with?",
+    answer: "Pegasus focuses on residential properties in the East Bay and broader Bay Area where a clear value-add, acquisition, or disposition path exists. We also review distressed, inherited, and off-market properties. If there is a path, we help identify it."
+  },
+];
+
+function FAQSection() {
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const { data: cmsFaqs = [] } = useQuery<FAQ[]>({
+    queryKey: ["/api/faqs"],
+  });
+  
+  const faqs = cmsFaqs.length > 0 
+    ? cmsFaqs.filter(f => f.isActive).sort((a, b) => a.order - b.order).map(f => ({ question: f.question, answer: f.answer }))
+    : defaultFaqs;
+
+  return (
+    <section className="py-24 lg:py-32 bg-background relative">
+      {/* Section divider at top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full mb-6">
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">
+              {isEditMode ? (
+                <EditableText contentKey="home.faq.kicker" fallback="Common Questions" />
+              ) : (getValue("home.faq.kicker") || "Common Questions")}
+            </span>
+          </div>
+          
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-faq-title">
+            {isEditMode ? (
+              <EditableText contentKey="home.faq.title" fallback="Frequently Asked Questions" />
+            ) : (getValue("home.faq.title") || "Frequently Asked Questions")}
+          </h2>
+          <div className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.faq.description" fallback="Find answers to common questions about our investment process, deal flow, and how we can help you achieve your real estate goals." as="p" multiline />
+            ) : (
+              <p>{getValue("home.faq.description") || "Find answers to common questions about our investment process, deal flow, and how we can help you achieve your real estate goals."}</p>
+            )}
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.2}>
+          <Accordion type="single" collapsible className="space-y-4" data-testid="accordion-faq">
+            {faqs.map((faq, index) => (
+              <AccordionItem 
+                key={index} 
+                value={`item-${index}`}
+                className="bg-card border border-border/50 rounded-lg px-6 data-[state=open]:border-primary/30 transition-colors"
+                data-testid={`faq-item-${index}`}
+              >
+                <AccordionTrigger className="text-left font-semibold text-base py-5 hover:no-underline hover:text-primary transition-colors" data-testid={`button-faq-trigger-${index}`}>
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5" data-testid={`text-faq-answer-${index}`}>
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.4} className="text-center mt-12">
+          <p className="text-muted-foreground mb-4">Still have questions?</p>
+          <Link href="#contact">
+            <Button variant="outline" className="group" data-testid="button-faq-contact">
+              Contact Our Team
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </ScrollReveal>
+      </div>
+      
+      {/* Section divider at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+    </section>
+  );
+}
+
+const newsletterSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+function NewsletterSection() {
+  const { toast } = useToast();
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const form = useForm<z.infer<typeof newsletterSchema>>({
+    resolver: zodResolver(newsletterSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof newsletterSchema>) => {
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'newsletter',
+        source: 'newsletter_signup',
+        email: data.email,
+        firstName: '',
+        lastName: '',
+      };
+      return apiRequest("POST", "/api/leads", unifiedLead);
+    },
+    onSuccess: () => {
+      toast({
+        title: "You're in!",
+        description: "You'll receive our latest deals and insights.",
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof newsletterSchema>) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <section className="py-24 lg:py-32 bg-gradient-to-br from-primary/5 via-background to-champagne/5 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-champagne/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+      
+      <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center relative">
+        <ScrollReveal>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
+            <Zap className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">
+              {isEditMode ? (
+                <EditableText contentKey="home.newsletter.kicker" fallback="Stay Ahead" />
+              ) : (getValue("home.newsletter.kicker") || "Stay Ahead")}
+            </span>
+          </div>
+          
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-[-0.02em]" data-testid="text-newsletter-title">
+            {isEditMode ? (
+              <EditableText contentKey="home.newsletter.title" fallback="Stay Inside the Network" />
+            ) : (getValue("home.newsletter.title") || "Stay Inside the Network")}
+          </h2>
+          <div className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
+            {isEditMode ? (
+              <EditableText contentKey="home.newsletter.description" fallback="Get updates on deal flow, strategy insights, and MarketFlow private beta access. No spam. No hype. Just disciplined real estate intelligence." as="p" multiline />
+            ) : (
+              <p>{getValue("home.newsletter.description") || "Get updates on deal flow, strategy insights, and MarketFlow private beta access. No spam. No hype. Just disciplined real estate intelligence."}</p>
+            )}
+          </div>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="Enter your email" 
+                        className="h-12 px-5 bg-card border-border/50"
+                        {...field} 
+                        data-testid="input-newsletter-email" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="h-12 px-8 text-sm uppercase tracking-widest font-medium group whitespace-nowrap" 
+                disabled={mutation.isPending}
+                data-testid="button-newsletter-submit"
+              >
+                {mutation.isPending ? "Subscribing..." : (
+                  <>
+                    Subscribe
+                    <Send className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+          
+          <p className="text-xs text-muted-foreground mt-4">
+            No spam, unsubscribe anytime. We respect your privacy.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+const contactFormSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().optional(),
+  message: z.string().min(10, "Please enter a message"),
+});
+
+function ContactSection() {
+  const { toast } = useToast();
+  const { isEditMode } = useEditMode();
+  const { getValue } = useSiteContent();
+  
+  const form = useForm<z.infer<typeof contactFormSchema>>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      message: "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof contactFormSchema>) => {
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const unifiedLead: Partial<InsertLead> = {
+        leadType: 'contact',
+        source: 'contact_page',
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.phone || undefined,
+        leadData: {
+          message: data.message,
+        },
+        notes: data.message,
+      };
+      
+      return apiRequest("POST", "/api/leads", unifiedLead);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message sent!",
+        description: "We'll get back to you as soon as possible.",
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof contactFormSchema>) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <section id="contact" className="py-32 lg:py-40 bg-muted/20 scroll-mt-24 relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-primary/3 to-transparent rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-start">
+          <ScrollReveal>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+                {isEditMode ? (
+                  <EditableText contentKey="home.contact.kicker" fallback="Get In Touch" />
+                ) : (getValue("home.contact.kicker") || "Get In Touch")}
+              </p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-8 tracking-[-0.02em]" data-testid="text-contact-title">
+              {isEditMode ? (
+                <EditableText contentKey="home.contact.title" fallback="Have a Property Worth Reviewing?" />
+              ) : (getValue("home.contact.title") || "Have a Property Worth Reviewing?")}
+            </h2>
+            <div className="text-lg text-muted-foreground leading-relaxed mb-12">
+              {isEditMode ? (
+                <EditableText contentKey="home.contact.description" fallback="Submit a property situation, inquire about a private partnership, or reach out about wholesale deals and MarketFlow access. Every message gets a direct, honest response." as="p" multiline />
+              ) : (
+                <p>{getValue("home.contact.description") || "Submit a property situation, inquire about a private partnership, or reach out about wholesale deals and MarketFlow access. Every message gets a direct, honest response."}</p>
+              )}
+            </div>
+            
+            <div className="space-y-6">
+                            <motion.a 
+                href={`mailto:${(getValue("home.contact.email") || "hello@pegasusdreamscapes.com").trim()}`}
+                className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
+                whileHover={{ x: 4 }}
+                data-testid="link-contact-email"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                  <Mail className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Email</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.email" fallback="hello@pegasusdreamscapes.com" />
+                    ) : (getValue("home.contact.email") || "hello@pegasusdreamscapes.com")}
+                  </div>
+                </div>
+              </motion.a>
+              <motion.div 
+                className="flex items-center gap-5 p-4 rounded-lg"
+                whileHover={{ x: 4 }}
+                data-testid="text-contact-location"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Location</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.location" fallback="Bay Area, California" />
+                    ) : (getValue("home.contact.location") || "Bay Area, California")}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={0.2}>
+            <div className="p-8 lg:p-10 bg-card rounded-lg border border-border/50 shadow-sm">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Doe" {...field} data-testid="input-contact-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="john@example.com" {...field} data-testid="input-contact-email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone (optional)</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="Your best callback number" {...field} data-testid="input-contact-phone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Message</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="How can we help you?" 
+                            className="min-h-32 resize-none"
+                            {...field} 
+                            data-testid="textarea-contact-message" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full text-sm uppercase tracking-widest font-medium" size="lg" disabled={mutation.isPending} data-testid="button-contact-submit">
+                    {mutation.isPending ? "Sending..." : "Send Message"}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
   );
 }
