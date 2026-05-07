@@ -9,7 +9,9 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend
-The frontend uses **React 18, TypeScript, and Vite**, with **Wouter** for routing. It features a unified **MarketFlow** portal at `/marketflow` with role-based dashboards. **TanStack Query** manages server state. UI components are built with **Radix UI** primitives and **Tailwind CSS** (shadcn/ui pattern), featuring a light editorial theme with cream/white backgrounds, dark text, and bronze/blood-orange accents. Forms are managed with **React Hook Form** and validated with **Zod**. Authentication is via **Supabase Auth**. Lazy loading and route-level code splitting are implemented for performance.
+The frontend uses **React 18, TypeScript, and Vite**, with **Wouter** for routing. It features a unified **MarketFlow** portal at `/marketflow` with role-based dashboards. **TanStack Query** manages server state. UI components are built with **Radix UI** primitives and **Tailwind CSS** (shadcn/ui pattern), featuring a dark editorial theme with a sophisticated typographic hierarchy. Forms are managed with **React Hook Form** and validated with **Zod**. Authentication is via **Supabase Auth**. Lazy loading and route-level code splitting are implemented for performance.
+
+**Typography**: Display font is **Cormorant Garamond** (300–700 weight, italic variants imported) — ultra-refined editorial serif. Body is **Inter**. `--font-serif` points to Cormorant Garamond in index.css. Optical sizing enabled on all headings and `.font-serif` elements.
 
 ### Backend
 The backend is built with **Express.js on Node.js with TypeScript**, providing RESTful API endpoints under `/api`. **Zod schemas** ensure validation. Authentication is primarily handled by **Supabase Auth**. Rate limiting is applied to API endpoints. Email notifications are integrated via SendGrid, and WebSocket services provide real-time updates.
@@ -50,6 +52,7 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **Print-Friendly Layouts**: CSS for optimizing deal summaries for printing to PDF.
 *   **Saved Searches Infrastructure**: Allows users to save search criteria with optional email alerts, backed by both local storage and database persistence.
 *   **Dark Mode**: Theme is hard-locked to dark canvas — `ThemeProvider` always applies `.dark` class. `ThemeToggle` component is NOT used in navigation.
+*   **Visual Upgrade (May 2026)**: Full typographic and component refinement — Cormorant Garamond font, architectural `divide-x` stats strip (no icon circles), hero bottom stat bar with pipe dividers, strategy-question cards with left-accent-bar hover, outcome-lane cards with bare icons (no containers), HowItWorks ghosted large numbers (no pill badge), sell/invest feature lists with left-border treatment, Operating Principles carousel with editorial horizontal-rule attribution (no avatar circles), services sub-tiles cleaned up.
 *   **Brand Identity**: "The Deal Architect" positioning throughout. Nav subtitle = "The Deal Architect". Hero philosophical line = "Where others see impossible, we see a path." No fake stats, no cash-buyer clichés, no BBB/DRE claims.
 *   **Homepage Sections** (order): Hero → Stats (No Lead Dies doctrine) → EveryPropertyGetsAPath (6 strategy questions) → Services (Three Pillars) → OutcomeLanes (4+4 lanes) → FeaturedProject → SellProperty → Invest → HowItWorks → TrustLogos → FeaturedDeals → FAQ → Newsletter → Contact.
 
