@@ -39,6 +39,10 @@ vite.config.ts.*
 __backup__/
 __scratch__/
 
+# Replit pasted transcripts (chat artifacts, never website assets)
+attached_assets/Pasted-*.txt
+attached_assets/Pasted-*.md
+
 # Logs
 *.log
 npm-debug.log*
