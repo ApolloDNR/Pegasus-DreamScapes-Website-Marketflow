@@ -1,69 +1,58 @@
 import { Link } from "wouter";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, ArrowUpRight } from "lucide-react";
 import logoImage from "@assets/image_1765405939117.png";
 
-const quickLinks = [
-  { href: "/", label: "Home" },
-  { href: "/sell", label: "Sell" },
-  { href: "/invest", label: "Invest" },
-  { href: "/contact", label: "Contact" },
+const exploreLinks = [
+  { href: "/#development-pathway", label: "Development Pathway" },
+  { href: "/#marketflow-beta", label: "MarketFlow Beta" },
+  { href: "/projects", label: "Featured Projects" },
+  { href: "/services", label: "Services" },
 ];
 
-const serviceLinks = [
-  { href: "/services", label: "Development & Renovation Execution" },
-  { href: "/services", label: "Property Acquisition Conversations" },
-  { href: "/services", label: "Deal Analysis & Underwriting Support" },
-  { href: "/services", label: "Partnership & Operator Support" },
+const engageLinks = [
+  { href: "/sell", label: "Submit a Property" },
+  { href: "/invest", label: "Partner Inquiry" },
+  { href: "/contact", label: "General Contact" },
+  { href: "/marketflow", label: "Enter MarketFlow" },
 ];
 
 export function Footer() {
   return (
-    <footer className="bg-card border-t border-border">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          <div className="space-y-4">
+    <footer className="bg-card border-t border-border/60">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-12">
+          <div className="md:col-span-5 space-y-5">
             <Link href="/" className="block">
-              <img 
-                src={logoImage} 
-                alt="Pegasus Dreamscapes" 
-                className="h-20 w-auto"
+              <img
+                src={logoImage}
+                alt="Pegasus Dreamscapes"
+                className="h-16 w-auto"
                 data-testid="img-footer-logo"
               />
             </Link>
-            <p className="text-primary text-sm font-medium">
-              Dream it. Build it. Live it.
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Pegasus Dreamscapes is a real estate development, investment, and systems company building disciplined infrastructure for modern real estate execution.
+            <div>
+              <p className="font-serif text-2xl text-foreground tracking-tight">The Deal Architect.</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium">
+                Dream it. Build it. Live it.
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+              Pegasus Dreamscapes is a strategy-first real estate operating company and emerging vertically integrated developer — building from disciplined small-scale execution toward a generational development practice.
             </p>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide text-foreground/70">Quick Links</h3>
-            <ul className="space-y-2">
-              {quickLinks.map((link) => (
+          <div className="md:col-span-3">
+            <h3 className="font-semibold mb-5 text-xs uppercase tracking-[0.25em] text-foreground/60">Explore</h3>
+            <ul className="space-y-3">
+              {exploreLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link href={link.href}>
-                    <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid={`link-footer-${link.label.toLowerCase()}`}>
-                      {link.label}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide text-foreground/70">Services</h3>
-            <ul className="space-y-2">
-              {serviceLinks.map((service, index) => (
-                <li key={service.label + index}>
-                  <Link href={service.href}>
-                    <span 
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                      data-testid={`link-footer-service-${service.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    <span
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-1.5 group"
+                      data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
                     >
-                      {service.label}
+                      {link.label}
+                      <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </span>
                   </Link>
                 </li>
@@ -71,40 +60,66 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide text-foreground/70">Contact</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <Mail className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-                <a href="mailto:hello@pegasusdreamscapes.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-email">
-                  hello@pegasusdreamscapes.com
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-                <span className="text-sm text-muted-foreground" data-testid="text-footer-location">
-                  Bay Area, California
-                </span>
-              </li>
+          <div className="md:col-span-4">
+            <h3 className="font-semibold mb-5 text-xs uppercase tracking-[0.25em] text-foreground/60">Start a Conversation</h3>
+            <ul className="space-y-3 mb-8">
+              {engageLinks.map((link) => (
+                <li key={link.href + link.label}>
+                  <Link href={link.href}>
+                    <span
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-1.5 group"
+                      data-testid={`link-footer-engage-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      {link.label}
+                      <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
+            <div className="space-y-3 pt-5 border-t border-border/50">
+              <a
+                href="mailto:hello@pegasusdreamscapes.com"
+                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                data-testid="link-footer-email"
+              >
+                <Mail className="w-4 h-4 text-primary/70 group-hover:text-primary flex-shrink-0" />
+                hello@pegasusdreamscapes.com
+              </a>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground" data-testid="text-footer-location">
+                <MapPin className="w-4 h-4 text-primary/70 flex-shrink-0" />
+                Bay Area, California
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground" data-testid="text-copyright">
-              &copy; {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4 text-sm">
+        <div className="mt-14 pt-8 border-t border-border/50">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground" data-testid="text-copyright">
+                &copy; {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.
+              </p>
+              <p className="text-[11px] text-muted-foreground/70 mt-1.5 max-w-2xl leading-relaxed">
+                Private network · Invite-only deal flow. Information on this site is for general purposes only and is not an offer to buy or sell securities, real property, or investment products.
+              </p>
+            </div>
+            <div className="flex items-center gap-5 text-xs">
               <Link href="/privacy">
                 <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-privacy">
-                  Privacy Policy
+                  Privacy
                 </span>
               </Link>
-              <span className="text-muted-foreground">·</span>
+              <span className="text-border">·</span>
               <Link href="/terms">
                 <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-terms">
-                  Terms of Service
+                  Terms
+                </span>
+              </Link>
+              <span className="text-border">·</span>
+              <Link href="/contact">
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-disclosures">
+                  Disclosures
                 </span>
               </Link>
             </div>

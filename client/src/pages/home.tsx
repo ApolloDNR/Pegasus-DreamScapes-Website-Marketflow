@@ -49,7 +49,15 @@ import {
   Send,
   ChevronRight,
   HelpCircle,
-  ChevronLeft
+  ChevronLeft,
+  Hammer,
+  Layers,
+  Compass,
+  Network,
+  Lock,
+  Briefcase,
+  GitBranch,
+  Eye
 } from "lucide-react";
 import {
   Form,
@@ -83,21 +91,369 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <StatsSection />
       <EveryPropertyGetsAPathSection />
       <ServicesSection />
+      <DevelopmentPathwaySection />
+      <StrategyStructureStacksSection />
       <OutcomeLanesSection />
       <FeaturedProjectSection />
-      <SellPropertySection />
-      <InvestSection />
+      <MarketFlowBetaSection />
       <OperatingPrinciplesSection />
-      <HowItWorksSection />
-      <TrustLogosSection />
-      <FeaturedDealsSection />
-      <FAQSection />
-      <NewsletterSection />
-      <ContactSection />
+      <FinalCTASection />
     </div>
+  );
+}
+
+function DevelopmentPathwaySection() {
+  const phases = [
+    {
+      tag: "Phase 1",
+      label: "Today",
+      title: "Foundation",
+      icon: Hammer,
+      items: [
+        "ADU additions and forced-value rehabs",
+        "Fix-and-flip projects",
+        "BRRRR acquisitions",
+        "Small-scale development",
+      ],
+    },
+    {
+      tag: "Phase 2",
+      label: "Next",
+      title: "Expansion",
+      icon: Layers,
+      items: [
+        "Small multi-unit conversions",
+        "2–4 unit projects",
+        "Co-developer relationships",
+        "Expanded Pegasus Development scope",
+      ],
+    },
+    {
+      tag: "Phase 3",
+      label: "Growth",
+      title: "Vertical Integration",
+      icon: Building,
+      items: [
+        "Ground-up infill construction on Pegasus-controlled lots",
+        "BuildForge-supported project management",
+        "Multiple active construction projects",
+      ],
+    },
+    {
+      tag: "Phase 4",
+      label: "Legacy",
+      title: "Generational",
+      icon: Compass,
+      items: [
+        "Master-planned classical neighborhoods",
+        "Larger-scale development",
+        "A generational real estate company",
+      ],
+    },
+  ];
+
+  return (
+    <section id="development-pathway" className="py-24 lg:py-32 bg-background relative overflow-hidden scroll-mt-24">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="max-w-3xl mb-16">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Development Pathway</p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6">
+            Where we are. Where we're going.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Pegasus Dreamscapes is an emerging vertically integrated developer. Today we operate at small scale with discipline; the trajectory is to build, project by project, into a generational development company. This is the path — not a claim of where we already stand.
+          </p>
+        </ScrollReveal>
+
+        <div className="relative">
+          <div className="hidden lg:block absolute top-12 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-5" staggerDelay={0.1}>
+            {phases.map((phase, index) => (
+              <StaggerItem key={index}>
+                <motion.div
+                  className="relative h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 group"
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.25 }}
+                  data-testid={`phase-card-${index}`}
+                >
+                  <div className="flex items-baseline justify-between mb-6">
+                    <span className="font-serif text-3xl text-primary/30 group-hover:text-primary/60 transition-colors">
+                      0{index + 1}
+                    </span>
+                    <phase.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold mb-1">
+                    {phase.tag} — {phase.label}
+                  </p>
+                  <h3 className="font-serif text-2xl font-semibold mb-5 tracking-tight">{phase.title}</h3>
+                  <ul className="space-y-2.5">
+                    {phase.items.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground leading-relaxed">
+                        <span className="mt-2 w-1 h-1 rounded-full bg-primary/50 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </div>
+
+        <ScrollReveal delay={0.3} className="mt-12 max-w-3xl">
+          <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-5">
+            Each phase is earned, not assumed. We graduate to the next stage when the prior stage is consistently profitable, well-documented, and operationally repeatable.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function StrategyStructureStacksSection() {
+  const strategyStack = [
+    { icon: HomeIcon, title: "Fix & Flip", desc: "Forced-value renovation with disciplined resale execution." },
+    { icon: TrendingUp, title: "BRRRR / Buy & Hold", desc: "Long-term wealth through strategic acquisition and management." },
+    { icon: Hammer, title: "ADU & Development", desc: "Additions, conversions, and small-scale ground-up projects." },
+    { icon: Zap, title: "Wholesale / Assignment", desc: "Off-market assignment to vetted buyers in our network." },
+  ];
+
+  const structureStack = [
+    { icon: Briefcase, title: "Direct Acquisition", desc: "Pegasus purchases for its own balance sheet where the path is clear." },
+    { icon: Handshake, title: "JV / Co-GP", desc: "Joint venture and co-general-partner structures with aligned operators." },
+    { icon: GitBranch, title: "Creative Finance", desc: "Sub-to, seller-finance, wraps, and lease-options where they fit the situation." },
+    { icon: Network, title: "Referral / Listing", desc: "Routed to a trusted partner or KW listing lane when that's the right answer." },
+  ];
+
+  const StackBlock = ({ kicker, title, desc, items, testIdPrefix }: { kicker: string; title: string; desc: string; items: typeof strategyStack; testIdPrefix: string }) => (
+    <div>
+      <div className="mb-8">
+        <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold mb-3">{kicker}</p>
+        <h3 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight mb-3">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{desc}</p>
+      </div>
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <motion.div
+            key={index}
+            className="group flex items-start gap-5 p-5 bg-card rounded-lg border border-border/40 hover:border-primary/25 transition-all duration-300"
+            whileHover={{ x: 4 }}
+            transition={{ duration: 0.2 }}
+            data-testid={`${testIdPrefix}-${index}`}
+          >
+            <div className="w-10 h-10 rounded-md border border-border/60 group-hover:border-primary/40 flex items-center justify-center flex-shrink-0 transition-colors">
+              <item.icon className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">{item.title}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="py-24 lg:py-32 bg-muted/20 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Operating Stack</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            Strategy meets structure.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Two dimensions to every Pegasus deal: <span className="text-foreground/80">what</span> we do with the property, and <span className="text-foreground/80">how</span> we get it done.
+          </p>
+        </ScrollReveal>
+
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          <ScrollReveal direction="left">
+            <StackBlock
+              kicker="Strategy Stack"
+              title="What we do with the property."
+              desc="Each property is matched to the strategy with the cleanest economics for the situation in front of us."
+              items={strategyStack}
+              testIdPrefix="strategy-item"
+            />
+          </ScrollReveal>
+          <ScrollReveal direction="right">
+            <StackBlock
+              kicker="Structure Stack"
+              title="How the deal gets done."
+              desc="Capital structure and ownership form are matched to the strategy, not the other way around."
+              items={structureStack}
+              testIdPrefix="structure-item"
+            />
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MarketFlowBetaSection() {
+  return (
+    <section id="marketflow-beta" className="py-24 lg:py-32 bg-background relative overflow-hidden scroll-mt-24">
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-champagne/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <ScrollReveal className="lg:col-span-7" direction="left">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5">
+                <Lock className="w-3 h-3 text-primary" />
+                <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold">Private Beta</span>
+              </span>
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Invite-only network</span>
+            </div>
+
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6">
+              MarketFlow.<br />
+              <span className="text-primary/85">Where deals find their architects.</span>
+            </h2>
+
+            <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl">
+              MarketFlow is the private deal-flow operating layer behind Pegasus — a curated network where vetted properties are routed to the operators, capital partners, and end-buyers best positioned to close them.
+            </p>
+
+            <ul className="grid sm:grid-cols-2 gap-4 mb-10">
+              {[
+                { icon: Eye, text: "Curated, role-gated deal visibility" },
+                { icon: Target, text: "Compatibility-scored matching" },
+                { icon: Network, text: "Direct-to-operator messaging" },
+                { icon: Shield, text: "Private, vetted network only" },
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3" data-testid={`marketflow-feature-${i}`}>
+                  <item.icon className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <span className="text-sm text-foreground/85 leading-relaxed">{item.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/marketflow">
+                <Button size="lg" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-marketflow-explore">
+                  Enter MarketFlow
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-marketflow-request-access">
+                  Request Access
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal className="lg:col-span-5" direction="right" delay={0.2}>
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/10 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="relative p-8 lg:p-10 bg-card rounded-2xl border border-border/50 shadow-xl">
+                <div className="flex items-center justify-between mb-6 pb-5 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Live Now</span>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-semibold">MarketFlow</span>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { lane: "Wholesale", title: "Off-market SFR · East Bay", meta: "3/2 · ARV ~$X · Below-market basis" },
+                    { lane: "JV / Capital", title: "ADU value-add · South Bay", meta: "Operator + capital partner needed" },
+                    { lane: "Listing", title: "Estate sale · Peninsula", meta: "MLS lane via KW partnership" },
+                  ].map((deal, i) => (
+                    <div
+                      key={i}
+                      className="p-4 rounded-lg border border-border/40 hover:border-primary/30 transition-colors group"
+                      data-testid={`marketflow-deal-${i}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/80 font-semibold">{deal.lane}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                      <h4 className="font-semibold text-sm mb-1 font-serif">{deal.title}</h4>
+                      <p className="text-xs text-muted-foreground">{deal.meta}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-6 pt-5 border-t border-border/40 text-[11px] uppercase tracking-[0.2em] text-muted-foreground text-center">
+                  Sample lanes · Live deals visible to network members
+                </p>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCTASection() {
+  return (
+    <section id="final-cta" className="py-28 lg:py-40 bg-card relative overflow-hidden scroll-mt-24">
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] bg-gradient-radial from-primary/10 via-primary/0 to-transparent rounded-full blur-3xl" />
+      </div>
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <div className="max-w-5xl mx-auto px-6 lg:px-12 relative text-center">
+        <ScrollReveal>
+          <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-8">The Deal Architect</p>
+          <h2 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[0.95] mb-8">
+            Dream it.<br />
+            <span className="text-primary/90">Build it.</span><br />
+            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Live it.</span>
+          </h2>
+
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
+            Whether you have a property, a partnership, or a project worth reviewing — every conversation starts the same way: with a real, structural look at what's possible.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+            <Link href="/sell">
+              <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-sell">
+                Submit a Property
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/invest">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-invest">
+                Partner Inquiry
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto px-8 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-contact">
+                Just Say Hello
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-10 border-t border-border/40 text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            <span>Private network</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <span>Invite-only deal flow</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <span>Bay Area, California</span>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
   );
 }
 
@@ -773,7 +1129,7 @@ function HeroSection() {
   const heroLine3 = getValue("home.hero.line3", "");
   const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a strategy-first real estate operating company. We help turn property situations into structured outcomes through strategy review, creative deal design, and disciplined execution.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
-  const heroCtaSecondary = getValue("home.hero.cta_secondary", "Explore Strategy Lanes");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "See the Pathway");
   const heroPhilosophical = "Where others see impossible, we see a path.";
   
   return (
@@ -890,16 +1246,26 @@ function HeroSection() {
               </motion.span>
             </h1>
             
-            {/* Philosophical line */}
-            <motion.p
-              className="text-base sm:text-lg text-white/60 mb-6 italic tracking-wide"
+            {/* Philosophical line + brand tagline */}
+            <motion.div
+              className="mb-8 space-y-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.85 }}
-              data-testid="text-hero-philosophical"
             >
-              {heroPhilosophical}
-            </motion.p>
+              <p
+                className="font-serif text-xl sm:text-2xl text-white/85 italic tracking-wide leading-snug"
+                data-testid="text-hero-philosophical"
+              >
+                {heroPhilosophical}
+              </p>
+              <div className="flex items-center gap-3" data-testid="text-hero-tagline">
+                <span className="h-px w-8 bg-champagne/60" />
+                <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-champagne/80 font-medium">
+                  Dream it. Build it. Live it.
+                </p>
+              </div>
+            </motion.div>
 
             {/* Refined subheadline with better spacing */}
             <motion.div 
@@ -935,10 +1301,10 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="#services">
+              <a href="#development-pathway">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_secondary" fallback="Explore Strategy Lanes" />
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="See the Pathway" />
                   ) : heroCtaSecondary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
@@ -951,23 +1317,27 @@ function HeroSection() {
 
             {/* Quick stats preview — architectural strip */}
             <motion.div 
-              className="mt-16 pt-8 border-t border-white/10 flex flex-wrap items-stretch"
+              className="mt-16 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-4 sm:gap-x-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.4 }}
               data-testid="hero-stats-preview"
             >
-              <div className="pr-8 sm:pr-12 border-r border-white/15 mr-8 sm:mr-12" data-testid="hero-stat-strategy">
-                <p className="font-serif text-xl sm:text-2xl font-medium text-white leading-none mb-2">Strategy First</p>
+              <div className="sm:pr-6 sm:border-r sm:border-white/15" data-testid="hero-stat-strategy">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">Strategy First</p>
                 <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Operating Doctrine</p>
               </div>
-              <div className="pr-8 sm:pr-12 border-r border-white/15 mr-8 sm:mr-12" data-testid="hero-stat-pillars">
-                <p className="font-serif text-xl sm:text-2xl font-medium text-white leading-none mb-2">3 Pillars</p>
-                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Development · Investment · Systems</p>
+              <div className="sm:pl-6 sm:pr-6 sm:border-r sm:border-white/15" data-testid="hero-stat-pillars">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">3 Pillars</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Development · Investments · Systems</p>
               </div>
-              <div data-testid="hero-stat-lanes">
-                <p className="font-serif text-xl sm:text-2xl font-medium text-white leading-none mb-2">8 Lanes</p>
+              <div className="sm:pl-6 sm:pr-6 sm:border-r sm:border-white/15" data-testid="hero-stat-lanes">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">8 Lanes</p>
                 <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Outcome Paths</p>
+              </div>
+              <div className="sm:pl-6" data-testid="hero-stat-pathway">
+                <p className="font-serif text-lg sm:text-xl font-medium text-white leading-none mb-2">4 Phases</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Development Pathway</p>
               </div>
             </motion.div>
           </div>
@@ -1014,9 +1384,18 @@ function ServicesSection() {
       title: "Strategic Investments",
       description: "We structure private, deal-specific capital and partnership conversations around real opportunities, documented risks, and lawful execution. Private partner conversations only — no public investment offering.",
       cta: "Partner Inquiry",
-      ctaLink: "#invest",
+      ctaLink: "/invest",
       accent: "Investments",
       key: "service.1",
+    },
+    {
+      image: serviceImage1,
+      title: "Pegasus Systems",
+      description: "MarketFlow, intake workflows, and the operating layer behind every Pegasus deal. The infrastructure that turns scattered situations into routed outcomes — and the foundation we build the rest of the company on.",
+      cta: "Enter MarketFlow",
+      ctaLink: "/marketflow",
+      accent: "Systems",
+      key: "service.2",
     },
   ];
 
@@ -1036,16 +1415,16 @@ function ServicesSection() {
               ) : (getValue("home.services.kicker") || "The Three Pillars")}
             </p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.02em]" data-testid="text-services-title">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em]" data-testid="text-services-title">
             {isEditMode ? (
               <EditableText contentKey="home.services.title" fallback="Development. Investments. Systems." />
             ) : (getValue("home.services.title") || "Development. Investments. Systems.")}
           </h2>
-          <div className="mt-6 text-lg text-muted-foreground max-w-2xl">
+          <div className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed">
             {isEditMode ? (
-              <EditableText contentKey="home.services.description" fallback="Pegasus Dreamscapes is a strategy-first real estate operating company built around three core pillars and disciplined execution across every lane." as="p" multiline />
+              <EditableText contentKey="home.services.description" fallback="Three pillars, one operating company. We design, fund, and execute real estate projects with the discipline of a developer, the structure of an investment firm, and the systems of a tech operator." as="p" multiline />
             ) : (
-              <p>{getValue("home.services.description") || "Pegasus Dreamscapes is a strategy-first real estate operating company built around three core pillars and disciplined execution across every lane."}</p>
+              <p>{getValue("home.services.description") || "Three pillars, one operating company. We design, fund, and execute real estate projects with the discipline of a developer, the structure of an investment firm, and the systems of a tech operator."}</p>
             )}
           </div>
         </ScrollReveal>
@@ -1110,39 +1489,6 @@ function ServicesSection() {
           })}
         </div>
 
-        <ScrollReveal className="mt-28" delay={0.2}>
-          <div className="text-center mb-12">
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Strategy Stack</p>
-            <h3 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">How Pegasus Creates Value</h3>
-          </div>
-          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.08}>
-            {[
-              { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties through value-add renovation and disciplined resale execution." },
-              { icon: TrendingUp, title: "BRRRR / Buy & Hold", desc: "Build long-term portfolio wealth through strategic acquisition and rental management." },
-              { icon: Zap, title: "Wholesale / Assignment", desc: "Off-market assignment to qualified buyers in our private MarketFlow network." },
-              { icon: Building, title: "Pegasus Systems", desc: "MarketFlow, intake workflows, and the operating infrastructure behind every deal.", comingSoon: false },
-            ].map((item, index) => (
-              <StaggerItem key={index}>
-                <motion.div 
-                  className={`p-7 bg-card rounded-lg border border-border/40 h-full transition-all duration-300 group ${item.comingSoon ? 'opacity-60' : ''}`}
-                  whileHover={!item.comingSoon ? { y: -4 } : {}}
-                  transition={{ duration: 0.2 }}
-                >
-                  <item.icon className={`w-5 h-5 mb-6 transition-colors duration-300 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary/55 group-hover:text-primary'}`} />
-                  <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                    <h4 className="font-semibold text-base group-hover:text-primary transition-colors duration-300">{item.title}</h4>
-                    {item.comingSoon && (
-                      <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
-                        Soon
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </motion.div>
-              </StaggerItem>
-            ))}
-          </StaggerChildren>
-        </ScrollReveal>
       </div>
     </section>
   );
