@@ -44,7 +44,6 @@ import {
 import logoImage from "@assets/image_1765405939117.png";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { CommandTrigger, CommandPalette } from "./command-palette";
-import { ThemeToggle } from "./theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 
 const homeLinks = [
@@ -370,7 +369,7 @@ export function Navigation() {
                   <div className="flex items-center gap-1">
                     <Zap className={`w-3 h-3 ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`} />
                     <span className={`text-[11px] font-medium ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`}>
-                      AI-Powered
+                      The Deal Architect
                     </span>
                   </div>
                 </div>
@@ -523,9 +522,6 @@ export function Navigation() {
             </div>
 
             <div className="flex items-center gap-2 lg:gap-3">
-              <div className="hidden sm:block">
-                <ThemeToggle />
-              </div>
               <CommandTrigger className={scrolled || !isHomePage ? '' : 'border-white/20 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/30'} />
               
               {isAuthenticated ? (

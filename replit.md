@@ -1,7 +1,7 @@
-# Pegasus Dreamscapes Corp - Real Estate Investment Platform
+# Pegasus Dreamscapes Corp — Strategy-First Real Estate Operating Company
 
 ## Overview
-Pegasus Dreamscapes Corp is a real estate investment platform connecting property sellers with investors, focusing on distressed properties for fix-and-flip or rental strategies. It aims to transform distressed assets into profitable ventures. Key capabilities include a premium design, an 8-tier role system, community features, direct messaging, a wholesale deals marketplace, and an AI assistant. The platform facilitates deal negotiation, advanced analytics, and personalized user experiences.
+Pegasus Dreamscapes Corp is a strategy-first real estate operating company. Positioning: **"The Deal Architect"** — "Where others see impossible, we see a path." The platform operates across three pillars (Development, Investments, Systems) and eight outcome lanes, routing distressed and complex property situations to the best structural path. Private beta / private network only. No lead dies doctrine — every property gets a path.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -49,7 +49,9 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **Feature Flags System**: Environment-based feature flags for controlled rollout of new features, configured in `shared/featureFlags.ts` and consumed via `useFeatureFlags` hook.
 *   **Print-Friendly Layouts**: CSS for optimizing deal summaries for printing to PDF.
 *   **Saved Searches Infrastructure**: Allows users to save search criteria with optional email alerts, backed by both local storage and database persistence.
-*   **Dark Mode**: Theme toggling with a navy/copper theme.
+*   **Dark Mode**: Theme is hard-locked to dark canvas — `ThemeProvider` always applies `.dark` class. `ThemeToggle` component is NOT used in navigation.
+*   **Brand Identity**: "The Deal Architect" positioning throughout. Nav subtitle = "The Deal Architect". Hero philosophical line = "Where others see impossible, we see a path." No fake stats, no cash-buyer clichés, no BBB/DRE claims.
+*   **Homepage Sections** (order): Hero → Stats (No Lead Dies doctrine) → EveryPropertyGetsAPath (6 strategy questions) → Services (Three Pillars) → OutcomeLanes (4+4 lanes) → FeaturedProject → SellProperty → Invest → HowItWorks → TrustLogos → FeaturedDeals → FAQ → Newsletter → Contact.
 
 ## External Dependencies
 
