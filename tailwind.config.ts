@@ -71,6 +71,14 @@ export default {
           DEFAULT: "hsl(var(--copper) / <alpha-value>)",
           foreground: "hsl(var(--copper-foreground) / <alpha-value>)",
         },
+        cream: {
+          DEFAULT: "hsl(var(--cream) / <alpha-value>)",
+          foreground: "hsl(var(--cream-foreground) / <alpha-value>)",
+        },
+        charcoal: {
+          DEFAULT: "hsl(var(--charcoal) / <alpha-value>)",
+          foreground: "hsl(var(--charcoal-foreground) / <alpha-value>)",
+        },
         "warm-glow": "hsl(var(--warm-glow) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
         chart: {
@@ -106,6 +114,8 @@ export default {
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
+        display: ["var(--font-display)"],
+        supporting: ["var(--font-supporting)"],
         mono: ["var(--font-mono)"],
       },
       keyframes: {

@@ -11,7 +11,6 @@ import {
   Calendar,
   TrendingUp,
   ArrowRight,
-  Loader2,
   Building,
 } from "lucide-react";
 import type { Project } from "@shared/schema";
@@ -125,10 +124,33 @@ function ProjectsGrid() {
 
   if (isLoading) {
     return (
-      <section className="py-32 bg-background">
-        <div className="flex items-center justify-center gap-3 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
-          <span className="text-sm uppercase tracking-[0.2em]">Loading projects</span>
+      <section className="py-24 lg:py-32 bg-background">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="mb-14 pb-6 border-b border-border/40">
+            <div className="h-3 w-20 bg-muted rounded mb-3 animate-skeleton" />
+            <div className="h-7 w-64 bg-muted rounded animate-skeleton" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="bg-card rounded-xl border border-border/40 overflow-hidden">
+                <div className="aspect-[16/10] bg-muted animate-skeleton" />
+                <div className="p-7 space-y-4">
+                  <div className="h-4 w-full bg-muted rounded animate-skeleton" />
+                  <div className="h-4 w-5/6 bg-muted rounded animate-skeleton" />
+                  <div className="grid grid-cols-2 gap-5 pt-6 border-t border-border/40">
+                    <div className="space-y-2">
+                      <div className="h-2.5 w-16 bg-muted rounded animate-skeleton" />
+                      <div className="h-5 w-24 bg-muted rounded animate-skeleton" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-2.5 w-16 bg-muted rounded animate-skeleton" />
+                      <div className="h-5 w-24 bg-muted rounded animate-skeleton" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );

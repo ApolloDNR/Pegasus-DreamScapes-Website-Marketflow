@@ -53,12 +53,101 @@ export default function Invest() {
   return (
     <div className="min-h-screen">
       <HeroSection />
+      <FounderSection />
       <PrinciplesSection />
       <PartnershipStructuresSection />
       <ProjectSnapshotSection />
+      <MarketFlowConnectionSection />
       <InvestorFormSection />
       <DisclaimerSection />
     </div>
+  );
+}
+
+function FounderSection() {
+  return (
+    <section className="py-24 lg:py-32 bg-background relative overflow-hidden border-b border-border/40">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] bg-gradient-radial from-copper/8 via-transparent to-transparent rounded-full blur-3xl" />
+      <div className="max-w-5xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-4">
+            <div className="relative aspect-square rounded-2xl bg-gradient-to-br from-navy via-charcoal to-navy p-10 flex flex-col items-center justify-center text-center overflow-hidden">
+              <div className="absolute inset-3 border border-copper/30 rounded-xl pointer-events-none" />
+              <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-copper/60 rounded-tl-lg" />
+              <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-copper/60 rounded-tr-lg" />
+              <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-copper/60 rounded-bl-lg" />
+              <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-copper/60 rounded-br-lg" />
+              <p className="font-display text-copper text-xs uppercase tracking-[0.3em] mb-4">Pegasus</p>
+              <p className="font-display text-cream text-2xl uppercase tracking-[0.18em] leading-tight mb-4">
+                Paolo<br />&ldquo;Apollo&rdquo;<br />Duran
+              </p>
+              <div className="brand-divider w-16 mb-4 opacity-70" />
+              <p className="text-[11px] uppercase tracking-[0.25em] text-cream/85 font-supporting">Founder · Principal</p>
+            </div>
+          </div>
+          <div className="lg:col-span-8">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold font-supporting">The Operator</p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-6" data-testid="text-founder-name">
+              You'll talk to a real person.
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed mb-6">
+              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span> — founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
+            </p>
+            <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-copper pl-5">
+              "Capital partners aren't a pipeline metric. The relationship outlasts the deal — that's why we paper everything, name the downside, and only structure things we'd put our own capital into."
+            </p>
+            <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40 border-y border-border/40">
+              <a href="tel:+19259486566" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-phone">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Direct</p>
+                <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors">925-948-6566</p>
+              </a>
+              <a href="mailto:apollo@pegasusdreamscapes.com" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-email">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Email</p>
+                <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors break-all">apollo@pegasusdreamscapes.com</p>
+              </a>
+              <div className="px-5 py-4">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Entity</p>
+                <p className="font-serif text-base text-foreground">Pegasus Dreamscapes Corp</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MarketFlowConnectionSection() {
+  return (
+    <section className="py-20 lg:py-24 bg-background border-t border-border/40">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-5">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold font-supporting">Live deal flow</p>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em]">
+              See active opportunities in MarketFlow.
+            </h2>
+          </div>
+          <div className="lg:col-span-7">
+            <p className="text-base text-muted-foreground leading-relaxed mb-6">
+              MarketFlow is our private, invite-only deal-flow network where active wholesale and JV opportunities are presented to vetted partners. Inquiry-first access — your partner profile must be reviewed before MarketFlow is unlocked.
+            </p>
+            <Link href="/marketflow">
+              <Button variant="outline" className="text-sm uppercase tracking-[0.15em] font-semibold px-7 py-6" data-testid="button-invest-marketflow">
+                Request MarketFlow access
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

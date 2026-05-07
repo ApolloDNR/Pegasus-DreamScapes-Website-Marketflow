@@ -31,6 +31,7 @@ import {
   Building,
   Briefcase,
   MessageSquare,
+  Phone,
 } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
 
@@ -225,7 +226,8 @@ function ContactFormSection() {
   });
 
   const contactInfo = [
-    { icon: Mail, label: "Email", value: "hello@pegasusdreamscapes.com", href: "mailto:hello@pegasusdreamscapes.com" },
+    { icon: Mail, label: "Email", value: "apollo@pegasusdreamscapes.com", href: "mailto:apollo@pegasusdreamscapes.com" },
+    { icon: Phone, label: "Direct", value: "925-948-6566", href: "tel:+19259486566" },
     { icon: MapPin, label: "Based in", value: "Bay Area, California", href: null },
     { icon: Clock, label: "Response Time", value: "Within 1–2 business days", href: null },
   ];

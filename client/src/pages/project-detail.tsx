@@ -1,307 +1,399 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  MapPin, 
+import { motion } from "framer-motion";
+import {
+  MapPin,
   Calendar,
   TrendingUp,
   ArrowLeft,
   ArrowRight,
-  DollarSign,
   Ruler,
   BedDouble,
   Bath,
-  Home,
-  CheckCircle,
-  Loader2
+  Home as HomeIcon,
+  CheckCircle2,
+  Building,
+  Briefcase,
 } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useSEO } from "@/hooks/use-seo";
+import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import type { Project } from "@shared/schema";
+
+const STRATEGY_LABEL: Record<string, string> = {
+  "fix-flip": "Fix & Flip",
+  "buy-hold": "Buy & Hold",
+  "brrrr": "BRRRR",
+  "adu": "ADU",
+  "development": "Development",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  "completed": "Completed",
+  "active": "In Progress",
+  "planning": "In Planning",
+};
+
+const formatCurrency = (value: number | null | undefined) => {
+  if (!value) return null;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
 
 export default function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
-  
+
   const { data: project, isLoading, error } = useQuery<Project>({
     queryKey: ["/api/projects", slug],
     enabled: !!slug,
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  useSEO({
+    title: project ? `${project.name} — Pegasus Dreamscapes Case Study` : "Project — Pegasus Dreamscapes",
+    description: project?.description || "Documented real estate case study from Pegasus Dreamscapes.",
+  });
 
-  if (error || !project) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-semibold mb-4">Project Not Found</h2>
-            <p className="text-muted-foreground mb-6">The project you're looking for doesn't exist or has been removed.</p>
-            <Link href="/projects">
-              <Button>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Projects
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const getStrategyLabel = (strategy: string) => {
-    switch (strategy) {
-      case "fix-flip": return "Fix & Flip";
-      case "buy-hold": return "Buy & Hold";
-      default: return strategy;
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "completed": return "Completed";
-      case "active": return "In Progress";
-      default: return status;
-    }
-  };
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (!value) return "N/A";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  if (isLoading) return <ProjectSkeleton />;
+  if (error || !project) return <NotFound />;
 
   return (
-    <div className="min-h-screen pt-20">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <Link href="/projects">
-          <Button variant="ghost" className="mb-6" data-testid="button-back-projects">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Projects
-          </Button>
-        </Link>
+    <div className="min-h-screen">
+      <HeroSection project={project} />
+      <BodySection project={project} />
+      <RoutingSection />
+    </div>
+  );
+}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div>
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <Badge variant={project.status === "completed" ? "default" : "secondary"} className="text-sm">
-                  {getStatusLabel(project.status)}
-                </Badge>
-                <Badge variant="outline" className="text-sm">
-                  {getStrategyLabel(project.strategy)}
-                </Badge>
+function HeroSection({ project }: { project: Project }) {
+  const heroImg = project.afterImages?.[0];
+
+  return (
+    <section className="relative min-h-[80vh] flex items-end overflow-hidden pt-20">
+      {heroImg ? (
+        <motion.div
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{ backgroundImage: `url(${heroImg})` }}
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1.05 }}
+          transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-navy to-charcoal" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-black/90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
+
+      <div className="relative z-10 w-full pb-20 pt-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/80 hover:text-white transition-colors mb-10 group cursor-pointer"
+            data-testid="button-back-projects"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+            Back to The Record
+          </Link>
+
+          <motion.div
+            className="flex items-center gap-3 mb-5 flex-wrap"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <span className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold bg-white/95 text-charcoal rounded-md">
+              {STATUS_LABEL[project.status] || project.status}
+            </span>
+            <span className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold bg-white/10 text-white rounded-md border border-white/20 backdrop-blur-sm">
+              {STRATEGY_LABEL[project.strategy] || project.strategy}
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.25em] text-white/85 ml-1 font-supporting">
+              Case Study · {project.city}
+            </span>
+          </motion.div>
+
+          <motion.h1
+            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-6 max-w-4xl"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            data-testid="text-project-name"
+          >
+            {project.name}
+          </motion.h1>
+
+          <motion.div
+            className="flex items-center gap-2 text-base text-white/75"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <MapPin className="w-4 h-4 text-copper" />
+            <span>{project.address}, {project.city}, {project.state}</span>
+          </motion.div>
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 brand-stripe" />
+    </section>
+  );
+}
+
+function BodySection({ project }: { project: Project }) {
+  const propertyDetails = [
+    { icon: BedDouble, label: "Bedrooms", value: project.bedrooms },
+    { icon: Bath, label: "Bathrooms", value: project.bathrooms },
+    { icon: Ruler, label: "Square Feet", value: project.sqft?.toLocaleString() },
+    { icon: HomeIcon, label: "Year Built", value: project.yearBuilt },
+    { icon: Calendar, label: "Timeline", value: project.holdTime },
+  ].filter((d) => d.value);
+
+  const investmentMetrics = [
+    { label: "Acquisition", value: formatCurrency(project.purchasePrice) },
+    { label: "Rehab Investment", value: formatCurrency(project.rehabCost) },
+    { label: "ARV", value: formatCurrency(project.arv) },
+    { label: "Sale Price", value: formatCurrency(project.salePrice), accent: true },
+    { label: "Profit", value: formatCurrency(project.profit), accent: true },
+    { label: "ROI", value: project.roi, accent: true },
+  ].filter((m) => m.value);
+
+  return (
+    <section className="py-24 lg:py-32 bg-background">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          {/* Left column — narrative + galleries */}
+          <div className="lg:col-span-7 space-y-16">
+            <ScrollReveal>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+                <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">The Situation</p>
               </div>
-              
-              <h1 className="text-4xl sm:text-5xl font-bold mb-4" data-testid="text-project-name">
-                {project.name}
-              </h1>
-              
-              <div className="flex items-center gap-2 text-lg text-muted-foreground">
-                <MapPin className="w-5 h-5 text-primary" />
-                <span>{project.address}, {project.city}, {project.state}</span>
-              </div>
-            </div>
+              <p className="font-serif text-2xl sm:text-3xl text-foreground/90 leading-snug tracking-tight">
+                {project.description}
+              </p>
+            </ScrollReveal>
 
             {project.afterImages && project.afterImages.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold">After Renovation</h2>
+              <ScrollReveal>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+                  <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">After</p>
+                </div>
+                <h2 className="font-serif text-3xl font-semibold mb-7 tracking-tight">The result.</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {project.afterImages.map((image, index) => (
-                    <div key={index} className="aspect-video rounded-lg overflow-hidden border border-border">
-                      <img 
-                        src={image} 
-                        alt={`${project.name} after renovation ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        data-testid={`img-after-${index}`}
-                      />
-                    </div>
+                  {project.afterImages.map((image, i) => (
+                    <motion.div
+                      key={i}
+                      className="aspect-[4/3] rounded-lg overflow-hidden bg-muted"
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <img src={image} alt={`${project.name} after ${i + 1}`} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" data-testid={`img-after-${i}`} />
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+              </ScrollReveal>
             )}
 
             {project.beforeImages && project.beforeImages.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold">Before Renovation</h2>
+              <ScrollReveal>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-px w-12 bg-gradient-to-r from-foreground/40 to-transparent" />
+                  <p className="text-xs uppercase tracking-[0.28em] text-foreground/55 font-semibold font-supporting">Before</p>
+                </div>
+                <h2 className="font-serif text-3xl font-semibold mb-7 tracking-tight">What we started with.</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {project.beforeImages.map((image, index) => (
-                    <div key={index} className="aspect-video rounded-lg overflow-hidden border border-border">
-                      <img 
-                        src={image} 
-                        alt={`${project.name} before renovation ${index + 1}`}
-                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
-                        data-testid={`img-before-${index}`}
-                      />
+                  {project.beforeImages.map((image, i) => (
+                    <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
+                      <img src={image} alt={`${project.name} before ${i + 1}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" data-testid={`img-before-${i}`} />
                     </div>
                   ))}
                 </div>
-              </div>
+              </ScrollReveal>
             )}
-
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">About This Project</h2>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                {project.description}
-              </p>
-            </div>
 
             {project.highlights && project.highlights.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold">Project Highlights</h2>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {project.highlights.map((highlight, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{highlight}</span>
-                    </li>
+              <ScrollReveal>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+                  <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">Scope of Work</p>
+                </div>
+                <h2 className="font-serif text-3xl font-semibold mb-7 tracking-tight">What we did.</h2>
+                <StaggerChildren className="grid grid-cols-1 sm:grid-cols-2 gap-3" staggerDelay={0.05}>
+                  {project.highlights.map((highlight, i) => (
+                    <StaggerItem key={i}>
+                      <div className="flex items-start gap-3 p-4 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-colors" data-testid={`highlight-${i}`}>
+                        <CheckCircle2 className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                        <span className="text-sm text-foreground/85 leading-relaxed">{highlight}</span>
+                      </div>
+                    </StaggerItem>
                   ))}
-                </ul>
-              </div>
+                </StaggerChildren>
+              </ScrollReveal>
             )}
           </div>
 
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Property Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {project.bedrooms && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <BedDouble className="w-5 h-5" />
-                      <span>Bedrooms</span>
+          {/* Right column — sticky stats */}
+          <aside className="lg:col-span-5">
+            <div className="lg:sticky lg:top-28 space-y-6">
+              {propertyDetails.length > 0 && (
+                <ScrollReveal>
+                  <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-lg">
+                    <div className="px-7 py-6 border-b border-border/40">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold font-supporting mb-1">The Asset</p>
+                      <h3 className="font-serif text-2xl font-semibold tracking-tight">Property</h3>
                     </div>
-                    <span className="font-medium">{project.bedrooms}</span>
-                  </div>
-                )}
-                {project.bathrooms && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Bath className="w-5 h-5" />
-                      <span>Bathrooms</span>
+                    <div className="divide-y divide-border/40">
+                      {propertyDetails.map((d, i) => (
+                        <div key={i} className="px-7 py-4 flex items-center justify-between" data-testid={`detail-${d.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            <d.icon className="w-4 h-4 text-primary/60" />
+                            <span className="text-sm">{d.label}</span>
+                          </div>
+                          <span className="font-serif text-lg font-medium tabular-nums">{d.value}</span>
+                        </div>
+                      ))}
                     </div>
-                    <span className="font-medium">{project.bathrooms}</span>
                   </div>
-                )}
-                {project.sqft && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Ruler className="w-5 h-5" />
-                      <span>Square Feet</span>
-                    </div>
-                    <span className="font-medium">{project.sqft.toLocaleString()}</span>
-                  </div>
-                )}
-                {project.yearBuilt && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Home className="w-5 h-5" />
-                      <span>Year Built</span>
-                    </div>
-                    <span className="font-medium">{project.yearBuilt}</span>
-                  </div>
-                )}
-                {project.holdTime && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="w-5 h-5" />
-                      <span>Timeline</span>
-                    </div>
-                    <span className="font-medium">{project.holdTime}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </ScrollReveal>
+              )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Investment Metrics</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {project.purchasePrice && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Purchase Price</span>
-                    <span className="font-medium">{formatCurrency(project.purchasePrice)}</span>
-                  </div>
-                )}
-                {project.rehabCost && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Rehab Cost</span>
-                    <span className="font-medium">{formatCurrency(project.rehabCost)}</span>
-                  </div>
-                )}
-                {project.arv && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">ARV</span>
-                    <span className="font-medium">{formatCurrency(project.arv)}</span>
-                  </div>
-                )}
-                {project.salePrice && (
-                  <div className="flex items-center justify-between border-t border-border pt-4">
-                    <span className="text-muted-foreground">Sale Price</span>
-                    <span className="font-medium text-lg">{formatCurrency(project.salePrice)}</span>
-                  </div>
-                )}
-                {project.profit && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Profit</span>
-                    <span className="font-medium text-primary text-lg">{formatCurrency(project.profit)}</span>
-                  </div>
-                )}
-                {project.roi && (
-                  <div className="flex items-center justify-between bg-primary/10 rounded-lg p-4 -mx-2">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-primary" />
-                      <span className="font-medium">ROI</span>
+              {investmentMetrics.length > 0 && (
+                <ScrollReveal delay={0.1}>
+                  <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-lg">
+                    <div className="px-7 py-6 border-b border-border/40">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold font-supporting mb-1">The Numbers</p>
+                      <h3 className="font-serif text-2xl font-semibold tracking-tight">Project Economics</h3>
                     </div>
-                    <span className="font-bold text-xl text-primary">{project.roi}</span>
+                    <div className="divide-y divide-border/40">
+                      {investmentMetrics.map((m, i) => (
+                        <div key={i} className={`px-7 py-4 flex items-center justify-between ${m.accent ? 'bg-primary/[0.03]' : ''}`} data-testid={`metric-${m.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <span className="text-sm text-muted-foreground">{m.label}</span>
+                          <span className={`font-serif text-lg font-semibold tabular-nums ${m.accent ? 'text-primary' : ''}`}>
+                            {m.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-7 py-4 bg-muted/40 border-t border-border/40">
+                      <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                        Documented for transparency. Real partner conversations include the full capital stack, contingency budgets, and exit assumptions.
+                      </p>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </ScrollReveal>
+              )}
 
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Interested in Similar Projects?</h3>
-                <p className="text-muted-foreground text-sm">
-                  Partner with us on our next investment opportunity and earn attractive returns.
-                </p>
-                <Link href="/invest">
-                  <Button className="w-full" data-testid="button-invest-cta">
-                    Become an Investor
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-dashed">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Have a Property to Sell?</h3>
-                <p className="text-muted-foreground text-sm">
-                  We buy properties in any condition. Get a fair cash offer today.
-                </p>
-                <Link href="/sell">
-                  <Button variant="outline" className="w-full" data-testid="button-sell-cta">
-                    Submit Your Property
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
+              <ScrollReveal delay={0.2}>
+                <div className="relative p-8 rounded-2xl bg-gradient-to-br from-navy to-charcoal text-cream overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-copper via-cream to-copper opacity-80" />
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-copper font-semibold font-supporting mb-3">Next Project</p>
+                  <h4 className="font-serif text-2xl font-semibold mb-3 tracking-tight">Have one to add to the record?</h4>
+                  <p className="text-sm text-cream/90 leading-relaxed mb-6">
+                    Submit a property, or open a private partner conversation about the next project.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <Link href="/sell">
+                      <Button className="w-full bg-cream text-charcoal hover:bg-cream/95 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-sell">
+                        Submit a Property
+                        <ArrowRight className="ml-2 w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                    <Link href="/invest">
+                      <Button variant="outline" className="w-full bg-transparent border-cream/30 text-cream hover:bg-cream/10 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-invest">
+                        Partner Inquiry
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+          </aside>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function RoutingSection() {
+  const lanes = [
+    { icon: Building, kicker: "More Projects", title: "See the full record", desc: "Browse other documented case studies.", href: "/projects", cta: "Open The Record" },
+    { icon: Briefcase, kicker: "MarketFlow", title: "Live deal flow", desc: "Vetted, off-market opportunities for our private network.", href: "/marketflow", cta: "Enter MarketFlow" },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-card border-t border-border/40">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center mb-12">
+          <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold font-supporting mb-4">Where to next</p>
+          <h2 className="font-serif text-4xl font-semibold tracking-[-0.02em]">Continue the conversation.</h2>
+        </ScrollReveal>
+        <div className="grid sm:grid-cols-2 gap-5">
+          {lanes.map((lane, i) => (
+            <Link key={i} href={lane.href}>
+              <motion.div
+                className="group h-full p-8 bg-background rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.25 }}
+                data-testid={`route-${i}`}
+              >
+                <div className="flex items-baseline justify-between mb-6">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold font-supporting">{lane.kicker}</p>
+                  <lane.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
+                </div>
+                <h3 className="font-serif text-2xl font-semibold mb-3 tracking-tight">{lane.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6">{lane.desc}</p>
+                <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold inline-flex items-center gap-2">
+                  {lane.cta}
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </motion.div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProjectSkeleton() {
+  return (
+    <div className="min-h-screen pt-20">
+      <section className="relative min-h-[60vh] bg-gradient-to-br from-navy to-charcoal animate-skeleton">
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
+      </section>
+      <section className="py-24 max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="h-8 w-2/3 bg-muted rounded animate-skeleton" />
+          <div className="h-4 w-full bg-muted rounded animate-skeleton" />
+          <div className="h-4 w-5/6 bg-muted rounded animate-skeleton" />
+        </div>
+        <div className="lg:col-span-5">
+          <div className="h-96 bg-muted rounded-2xl animate-skeleton" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="min-h-screen pt-32 pb-24 flex items-center">
+      <div className="max-w-md mx-auto px-6 text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold font-supporting mb-4">404</p>
+        <h2 className="font-serif text-4xl font-semibold mb-5 tracking-tight">Project not found.</h2>
+        <p className="text-muted-foreground leading-relaxed mb-8">
+          The case study you're looking for may have moved or been removed.
+        </p>
+        <Link href="/projects">
+          <Button className="text-sm uppercase tracking-[0.15em] font-semibold px-8 py-6">
+            <ArrowLeft className="mr-2 w-4 h-4" />
+            Back to The Record
+          </Button>
+        </Link>
       </div>
     </div>
   );
