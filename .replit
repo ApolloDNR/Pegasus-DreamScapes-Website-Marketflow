@@ -8,7 +8,7 @@ channel = "stable-24_05"
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
-run = ["node", "./dist/index.cjs"]
+run = ["npm", "run", "start"]
 
 [[ports]]
 localPort = 5000
@@ -39,9 +39,7 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
-integrations = ["javascript_mem_db:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_openai_ai_integrations:2.0.0", "javascript_object_storage:2.0.0"]
-stack = "FULLSTACK_JS"
-expertMode = true
+integrations = ["javascript_mem_db:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_openai_ai_integrations:1.0.0", "javascript_object_storage:2.0.0"]
 
 [userenv]
 

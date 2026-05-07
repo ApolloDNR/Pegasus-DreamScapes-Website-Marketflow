@@ -33,10 +33,6 @@ import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 
 const About = lazy(() => import("@/pages/about"));
-const Development = lazy(() => import("@/pages/development"));
-const Investments = lazy(() => import("@/pages/investments"));
-const SystemsPage = lazy(() => import("@/pages/systems"));
-const MarketFlowBeta = lazy(() => import("@/pages/marketflow-beta"));
 const Services = lazy(() => import("@/pages/services"));
 const Sell = lazy(() => import("@/pages/sell"));
 const Invest = lazy(() => import("@/pages/invest"));
@@ -138,10 +134,6 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
-      <Route path="/development" component={Development} />
-      <Route path="/investments" component={Investments} />
-      <Route path="/systems" component={SystemsPage} />
-      <Route path="/marketflow-beta" component={MarketFlowBeta} />
       <Route path="/services" component={Services} />
       <Route path="/sell" component={Sell} />
       <Route path="/invest" component={Invest} />
@@ -212,7 +204,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="pegasus-ui-theme">
+      <ThemeProvider defaultTheme="light" storageKey="pegasus-ui-theme">
         <SupabaseAuthProvider>
           <SiteContentProvider>
             <EditModeProvider>
