@@ -219,9 +219,10 @@ function HeroSection() {
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             <div className="relative">
+              <div className="absolute -inset-8 bg-gradient-to-br from-black/50 via-black/30 to-transparent blur-3xl rounded-[2rem]" />
               <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-3xl" />
-              <div className="relative p-8 lg:p-10 bg-white/5 border border-white/15 rounded-2xl backdrop-blur-md">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-champagne/80 font-semibold mb-6">
+              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-2xl backdrop-blur-2xl shadow-2xl shadow-black/40">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-semibold mb-6">
                   The Doctrine
                 </p>
                 <div className="space-y-6">
@@ -230,11 +231,11 @@ function HeroSection() {
                     { num: "8", label: "Outcome lanes — never one-size-fits-all" },
                     { num: "0", label: "Pressure. Honest answers, every time" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-baseline gap-5 pb-5 border-b border-white/10 last:border-0 last:pb-0">
+                    <div key={i} className="flex items-baseline gap-5 pb-5 border-b border-white/15 last:border-0 last:pb-0">
                       <p className="font-serif text-4xl font-semibold text-white tabular-nums" style={{ minWidth: "3rem" }}>
                         {item.num}
                       </p>
-                      <p className="text-sm text-white/75 leading-relaxed">{item.label}</p>
+                      <p className="text-sm text-white/90 leading-relaxed">{item.label}</p>
                     </div>
                   ))}
                 </div>

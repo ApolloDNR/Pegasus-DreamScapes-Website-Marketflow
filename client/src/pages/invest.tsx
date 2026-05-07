@@ -243,9 +243,10 @@ function HeroSection() {
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             <div className="relative">
+              <div className="absolute -inset-8 bg-gradient-to-br from-black/50 via-black/30 to-transparent blur-3xl rounded-[2rem]" />
               <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-3xl" />
-              <div className="relative p-8 lg:p-10 bg-white/5 border border-white/15 rounded-2xl backdrop-blur-md">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-champagne/80 font-semibold mb-6">
+              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-2xl backdrop-blur-2xl shadow-2xl shadow-black/40">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-semibold mb-6">
                   How we work with capital
                 </p>
                 <div className="space-y-5">
@@ -254,10 +255,10 @@ function HeroSection() {
                     { kicker: "Documented", title: "Real underwriting, real papers", desc: "Comps, scope, capital stack, exit — on paper, before any commitment." },
                     { kicker: "Suited", title: "Suitability comes first", desc: "If the structure isn't right for you, we say so." },
                   ].map((item, i) => (
-                    <div key={i} className="pb-5 border-b border-white/10 last:border-0 last:pb-0">
-                      <p className="text-[10px] uppercase tracking-[0.25em] text-champagne/80 font-semibold mb-1.5">{item.kicker}</p>
+                    <div key={i} className="pb-5 border-b border-white/15 last:border-0 last:pb-0">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-champagne font-semibold mb-1.5">{item.kicker}</p>
                       <p className="font-serif text-lg text-white mb-1">{item.title}</p>
-                      <p className="text-xs text-white/60 leading-relaxed">{item.desc}</p>
+                      <p className="text-sm text-white/85 leading-relaxed">{item.desc}</p>
                     </div>
                   ))}
                 </div>

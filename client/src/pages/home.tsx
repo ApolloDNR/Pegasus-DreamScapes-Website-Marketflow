@@ -156,19 +156,25 @@ function DevelopmentPathwaySection() {
   ];
 
   return (
-    <section id="development-pathway" className="py-24 lg:py-32 bg-background relative overflow-hidden scroll-mt-24">
+    <section id="development-pathway" className="py-28 lg:py-36 bg-background relative overflow-hidden scroll-mt-24">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute -top-32 -right-32 w-[28rem] h-[28rem] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-[28rem] h-[28rem] bg-champagne/[0.05] rounded-full blur-3xl pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="max-w-3xl mb-16">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Development Pathway</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">Pegasus Development · The Spine</p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6">
-            Where we are. Where we're going.
+            Development is the spine.<br />
+            <span className="text-headline-gold">Built phase by phase.</span>
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Pegasus Dreamscapes is an emerging vertically integrated developer. Today we operate at small scale with discipline; the trajectory is to build, project by project, into a generational development company. This is the path — not a claim of where we already stand.
+          <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+            Pegasus Dreamscapes is, at its core, a real estate development company. Investments and Systems exist to feed and support what gets built. Today the work is small-scale and disciplined; the trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods.
+          </p>
+          <p className="text-base text-muted-foreground/85 leading-relaxed italic">
+            This is the path — not a claim of where we already stand.
           </p>
         </ScrollReveal>
 
@@ -1255,7 +1261,7 @@ function HeroSection() {
               transition={{ duration: 0.8, delay: 0.85 }}
             >
               <p
-                className="font-serif text-xl sm:text-2xl text-white/85 italic tracking-wide leading-snug"
+                className="font-serif text-xl sm:text-2xl text-white/95 italic tracking-wide leading-snug [text-shadow:0_2px_16px_rgba(0,0,0,0.55)]"
                 data-testid="text-hero-philosophical"
               >
                 {heroPhilosophical}
@@ -1270,7 +1276,7 @@ function HeroSection() {
 
             {/* Refined subheadline with better spacing */}
             <motion.div 
-              className="text-lg sm:text-xl text-white/75 max-w-2xl mb-14 leading-relaxed font-light"
+              className="text-lg sm:text-xl text-white/95 max-w-2xl mb-14 leading-relaxed font-normal [text-shadow:0_2px_14px_rgba(0,0,0,0.6)]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.0 }}
@@ -1312,7 +1318,7 @@ function HeroSection() {
               </a>
             </motion.div>
 
-            <p className="mt-5 text-sm text-white/70" data-testid="text-hero-support-line">
+            <p className="mt-5 text-sm text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]" data-testid="text-hero-support-line">
               Every property gets a path. Every deal gets a plan.
             </p>
 
