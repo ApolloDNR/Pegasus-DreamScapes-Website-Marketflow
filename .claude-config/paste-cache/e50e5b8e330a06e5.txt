@@ -1,0 +1,91 @@
+
+❯ can you revert the pull#3 or before we made changes to the UI design?                            
+                                                                        
+● Let me check the git log to find the relevant commits.                                           
+                                                                                                 
+● Bash(git log --oneline --all | head -30)                                                         
+  ⎿  bef2b5f Clean up about.tsx: remove fake claims and fix broken link
+     641dd46 Update home page copy: restore Replit headline, remove fake stats                     
+     1b3bfa4 Switch brand pages from dark canvas to warm light theme                             
+     … +20 lines (ctrl+o to expand)                                                                
+                                                                                                   
+● Bash(git log --oneline --all | tail -20)     
+  ⎿  47cbe73 Saved progress at the end of the loop                                                 
+     844ff3e Add functionality to log and view lead activities on the HQ page                      
+     a5b31fd Add functionality to log and view lead activities on the HQ page
+     … +13 lines (ctrl+o to expand)                                                                
+                                                                                                   
+● Bash(git show fa71c9c --stat | head -20)     
+  ⎿  commit fa71c9cffed5d134854f8b83a34a687127157467                                               
+     Merge: b6d5fd1 4023504                                                                        
+     Author: ApolloDNR <apollosynd@gmail.com>  
+     … +9 lines (ctrl+o to expand)                                                                 
+                                                                                                   
+● Bash(git show cc11b1c --stat | head -30)            
+  ⎿  commit cc11b1cf3e02886bd5400ccd0a0b7c9312bbef6e                                               
+     Merge: fa71c9c 60c5797                                                                        
+     Author: ApolloDNR <apollosynd@gmail.com>         
+     … +19 lines (ctrl+o to expand)                                                                
+                                                                                                   
+● Bash(git show 0bae76e --stat | head -20)            
+  ⎿  commit 0bae76e887fed74071e39b43ff5863693093bbb7                                               
+     Merge: 5d648c0 c6cf4d4                                                                        
+     Author: ApolloDNR <apollosynd@gmail.com>         
+     … +17 lines (ctrl+o to expand)                                                                
+                                                                                                   
+● Here's what I found. Let me clarify what's available:
+                                                                                                   
+  - PR #3 (fa71c9c) — only changed .env.example and README.md (deployment prep, no UI changes)     
+  - PR #4 (cc11b1c) — this was the big UI redesign: "Premium public website redesign: Pegasus brand
+   system and pillar pages" (16 files, new brand components, complete page overhaul)               
+  - After PR #4 — several more commits tweaked the theme (warm/light colors, copy changes, etc.)   
+  - PR #4 (cc11b1c) — this was the big UI redesign: "Premium public website redesign: Pegasus brand system and pillar pages" (16
+  files, new brand components, complete page overhaul)
+  - After PR #4 — several more commits tweaked the theme (warm/light colors, copy changes, etc.)
+
+  So the UI design changes started with PR #4. If you want to revert to before the UI redesign, that means going back to the state
+  right after PR #3 (fa71c9c).
+
+  That would undo all of these commits:
+  bef2b5f Clean up about.tsx
+  641dd46 Update home page copy
+  1b3bfa4 Switch brand pages from dark canvas to warm light theme
+  03ce0a3 Launch-readiness polish pass
+  ba87721 Restore Replit design while keeping safer Pegasus copy
+  e2a9cd0/46e0bfa Update website theme to warm ivory
+  d8c8462/cb56b15 Saved progress
+  08b6c74 Pegasus Classic Premium visual retune
+  39166af/23eabce Add debugging tools
+  7b096fe/8bc5be8 Update changelog
+  a53f3e3 Fix server crash and dark-theme flash
+  cc11b1c Merge PR #4 (the big redesign)
+  60c5797 Pre-merge polish pass for PR #4
+  811e62a Rebuild public website: premium dark brand
+
+  This is a hard reset — it will permanently discard all those changes on main. Do you want to:
+  1. Hard reset main to fa71c9c (destructive, loses all above)
+  2. Create a new branch at fa71c9c to preview the old state without losing current work
+
+  Which would you prefer?
+
+✻ Cooked for 45s
+
+❯ 1                                                                                                                                 
+
+● Running the hard reset to fa71c9c (state after PR #3, before any UI redesign).
+
+● Bash(git reset --hard fa71c9c)
+  ⎿  HEAD is now at fa71c9c Merge pull request #3 from ApolloDNR/codex/prepare-for-final-deployment-audit
+  ⎿  Not logged in · Please run /login
+
+✻ Worked for 6s
+
+❯ Hello?                                                                                                                            
+  ⎿  Not logged in · Please run /login
+
+✻ Worked for 0s
+
+❯ claude?                                                                                                                           
+  ⎿  Not logged in · Please run /login
+                                                                                                                                    
+✻ Baked for 0s                                                                                                                    
