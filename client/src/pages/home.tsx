@@ -168,20 +168,17 @@ function EveryPropertyGetsAPathSection() {
           {questions.map((item, index) => (
             <StaggerItem key={index}>
               <motion.div
-                className="group p-7 bg-card rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-300 h-full"
-                whileHover={{ y: -4 }}
+                className="group p-7 bg-card rounded-lg border border-border/40 hover:border-primary/20 transition-all duration-300 h-full relative overflow-hidden"
+                whileHover={{ y: -3 }}
                 transition={{ duration: 0.25 }}
                 data-testid={`strategy-question-${index}`}
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary transition-colors duration-300">
-                    <span className="text-xs font-bold text-primary group-hover:text-primary-foreground transition-colors">{String(index + 1).padStart(2, '0')}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-base mb-2 group-hover:text-primary transition-colors duration-300">{item.q}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/0 group-hover:bg-primary/50 transition-all duration-400 rounded-full" />
+                <span className="text-[10px] text-primary/50 font-semibold tracking-[0.25em] uppercase mb-4 block">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <h3 className="font-semibold text-base mb-2.5 group-hover:text-primary transition-colors duration-300">{item.q}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
               </motion.div>
             </StaggerItem>
           ))}
@@ -229,19 +226,17 @@ function OutcomeLanesSection() {
           </p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" staggerDelay={0.1}>
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6" staggerDelay={0.08}>
           {primaryLanes.map((lane, index) => (
             <StaggerItem key={index}>
               <motion.div
-                className="group p-7 bg-card rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 h-full"
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.3 }}
+                className="group p-7 bg-card rounded-lg border border-border/40 hover:border-primary/25 hover:shadow-lg transition-all duration-300 h-full"
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.25 }}
                 data-testid={`outcome-lane-${index}`}
               >
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
-                  <lane.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                </div>
-                <h3 className="font-semibold text-base mb-2">{lane.title}</h3>
+                <lane.icon className="w-5 h-5 text-primary/55 mb-6 group-hover:text-primary transition-colors duration-300" />
+                <h3 className="font-semibold text-base mb-2.5 group-hover:text-primary transition-colors duration-300">{lane.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{lane.desc}</p>
               </motion.div>
             </StaggerItem>
@@ -281,55 +276,46 @@ function StatsSection() {
   ];
 
   return (
-    <section className="py-24 lg:py-28 bg-card relative overflow-hidden">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-      
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
-        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4" staggerDelay={0.15}>
+    <section className="py-0 bg-card border-b border-border/30 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-border/40">
           {stats.map((stat, index) => {
             const displayValue = getValue(`home.${stat.key}.value`) || stat.value;
             const displayLabel = getValue(`home.${stat.key}.label`) || stat.label;
             
             return (
-              <StaggerItem key={index}>
-                <motion.div 
-                  className="text-center group cursor-default py-8 px-4 relative"
-                  whileHover={{ y: -4 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {/* Decorative top accent */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors duration-300">
-                    <stat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-                  </div>
-                  
-                  <div className="font-serif text-4xl sm:text-5xl lg:text-5xl font-bold text-foreground mb-3 tracking-tight transition-colors duration-300 group-hover:text-primary" data-testid={`stat-value-${index}`}>
-                    {isEditMode ? (
-                      <EditableText 
-                        contentKey={`home.${stat.key}.value`} 
-                        fallback={String(stat.value)}
-                      />
-                    ) : (
-                      displayValue
-                    )}
-                  </div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
-                    {isEditMode ? (
-                      <EditableText 
-                        contentKey={`home.${stat.key}.label`} 
-                        fallback={stat.label}
-                      />
-                    ) : (
-                      displayLabel
-                    )}
-                  </div>
-                </motion.div>
-              </StaggerItem>
+              <motion.div
+                key={index}
+                className="px-6 lg:px-10 xl:px-14 py-12 group cursor-default"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+              >
+                <div className="font-serif text-2xl sm:text-3xl lg:text-[1.85rem] font-semibold text-foreground mb-3 tracking-tight leading-tight group-hover:text-primary transition-colors duration-300" data-testid={`stat-value-${index}`}>
+                  {isEditMode ? (
+                    <EditableText 
+                      contentKey={`home.${stat.key}.value`} 
+                      fallback={String(stat.value)}
+                    />
+                  ) : (
+                    displayValue
+                  )}
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-medium leading-relaxed">
+                  {isEditMode ? (
+                    <EditableText 
+                      contentKey={`home.${stat.key}.label`} 
+                      fallback={stat.label}
+                    />
+                  ) : (
+                    displayLabel
+                  )}
+                </div>
+              </motion.div>
             );
           })}
-        </StaggerChildren>
+        </div>
       </div>
     </section>
   );
@@ -642,25 +628,18 @@ function OperatingPrinciplesSection() {
                   className="w-full flex-shrink-0 px-4"
                 >
                   <motion.div 
-                    className="max-w-3xl mx-auto p-10 lg:p-14 bg-background rounded-2xl border border-border/50 relative"
+                    className="max-w-3xl mx-auto p-12 lg:p-16 bg-background rounded-lg border border-border/40 relative"
                     data-testid={`testimonial-card-${index}`}
                   >
-                    {/* Large quote icon */}
-                    <div className="absolute -top-5 left-10 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                      <Quote className="w-5 h-5 text-primary-foreground" />
-                    </div>
-                    <p className="text-foreground leading-relaxed text-lg lg:text-xl text-center italic mb-10">
+                    <Quote className="w-6 h-6 text-primary/30 mx-auto mb-8" />
+                    <p className="font-serif text-foreground leading-relaxed text-xl lg:text-2xl text-center italic mb-10 font-light tracking-wide">
                       "{testimonial.quote}"
                     </p>
                     
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold">
-                        {testimonial.initials}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold text-foreground text-lg">{testimonial.author}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role} · {testimonial.location}</p>
-                      </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-px bg-primary/40 mx-auto" />
+                      <p className="font-semibold text-foreground text-base tracking-wide">{testimonial.author}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-[0.2em]">{testimonial.role}</p>
                     </div>
                   </motion.div>
                 </div>
@@ -878,7 +857,7 @@ function HeroSection() {
             </motion.div>
             
             {/* Premium headline with refined typography */}
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.85] mb-10 tracking-[-0.03em] text-white" data-testid="text-hero-headline">
+            <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-semibold leading-[0.88] mb-10 tracking-[-0.02em] text-white" data-testid="text-hero-headline">
               <motion.span 
                 className="block"
                 initial={{ opacity: 0, y: 40 }}
@@ -970,25 +949,25 @@ function HeroSection() {
               Every property gets a path. Every deal gets a plan.
             </p>
 
-            {/* Quick stats preview */}
+            {/* Quick stats preview — architectural strip */}
             <motion.div 
-              className="mt-20 pt-10 border-t border-white/10 flex flex-wrap gap-12"
+              className="mt-16 pt-8 border-t border-white/10 flex flex-wrap items-stretch"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.4 }}
               data-testid="hero-stats-preview"
             >
-              <div data-testid="hero-stat-strategy">
-                <p className="text-3xl font-bold text-white">Strategy</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">First</p>
+              <div className="pr-8 sm:pr-12 border-r border-white/15 mr-8 sm:mr-12" data-testid="hero-stat-strategy">
+                <p className="font-serif text-xl sm:text-2xl font-medium text-white leading-none mb-2">Strategy First</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Operating Doctrine</p>
               </div>
-              <div data-testid="hero-stat-pillars">
-                <p className="text-3xl font-bold text-white">3</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Core Pillars</p>
+              <div className="pr-8 sm:pr-12 border-r border-white/15 mr-8 sm:mr-12" data-testid="hero-stat-pillars">
+                <p className="font-serif text-xl sm:text-2xl font-medium text-white leading-none mb-2">3 Pillars</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Development · Investment · Systems</p>
               </div>
               <div data-testid="hero-stat-lanes">
-                <p className="text-3xl font-bold text-white">8</p>
-                <p className="text-sm text-white/50 uppercase tracking-wider">Outcome Lanes</p>
+                <p className="font-serif text-xl sm:text-2xl font-medium text-white leading-none mb-2">8 Lanes</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.22em]">Outcome Paths</p>
               </div>
             </motion.div>
           </div>
@@ -1136,7 +1115,7 @@ function ServicesSection() {
             <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">Strategy Stack</p>
             <h3 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">How Pegasus Creates Value</h3>
           </div>
-          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+          <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.08}>
             {[
               { icon: HomeIcon, title: "Fix & Flip", desc: "Transform distressed properties through value-add renovation and disciplined resale execution." },
               { icon: TrendingUp, title: "BRRRR / Buy & Hold", desc: "Build long-term portfolio wealth through strategic acquisition and rental management." },
@@ -1145,20 +1124,15 @@ function ServicesSection() {
             ].map((item, index) => (
               <StaggerItem key={index}>
                 <motion.div 
-                  className={`p-8 bg-card rounded-lg border border-border/50 h-full transition-all duration-300 ${item.comingSoon ? 'opacity-70' : ''}`}
-                  whileHover={!item.comingSoon ? { y: -6, boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.1)" } : {}}
+                  className={`p-7 bg-card rounded-lg border border-border/40 h-full transition-all duration-300 group ${item.comingSoon ? 'opacity-60' : ''}`}
+                  whileHover={!item.comingSoon ? { y: -4 } : {}}
+                  transition={{ duration: 0.2 }}
                 >
-                  <motion.div 
-                    className={`w-14 h-14 rounded-lg flex items-center justify-center mb-6 ${item.comingSoon ? 'bg-muted' : 'bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10'}`}
-                    whileHover={!item.comingSoon ? { scale: 1.05 } : {}}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <item.icon className={`w-6 h-6 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary'}`} />
-                  </motion.div>
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <h4 className="font-serif font-semibold text-lg">{item.title}</h4>
+                  <item.icon className={`w-5 h-5 mb-6 transition-colors duration-300 ${item.comingSoon ? 'text-muted-foreground' : 'text-primary/55 group-hover:text-primary'}`} />
+                  <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                    <h4 className="font-semibold text-base group-hover:text-primary transition-colors duration-300">{item.title}</h4>
                     {item.comingSoon && (
-                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                      <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
                         Soon
                       </span>
                     )}
@@ -1341,33 +1315,18 @@ function SellPropertySection() {
               )}
             </div>
             
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Honest Strategy Review</h4>
-                  <p className="text-sm text-muted-foreground">Transparent assessment based on real market data and your actual situation</p>
-                </div>
+            <div className="space-y-7">
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Honest Strategy Review</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Transparent assessment based on real market data and your actual situation</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Target className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Multi-Path Underwriting</h4>
-                  <p className="text-sm text-muted-foreground">We evaluate every option — not just the one that's fastest for us</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Multi-Path Underwriting</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">We evaluate every option — not just the one that's fastest for us</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">24-Hour Response</h4>
-                  <p className="text-sm text-muted-foreground">Every submission reviewed and routed within one business day</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">24-Hour Response</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Every submission reviewed and routed within one business day</p>
               </div>
             </div>
           </div>
@@ -1689,33 +1648,18 @@ function InvestSection() {
               )}
             </div>
             
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Disciplined Analysis</h4>
-                  <p className="text-sm text-muted-foreground">Clear underwriting and execution planning on every opportunity</p>
-                </div>
+            <div className="space-y-7">
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Disciplined Analysis</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Clear underwriting and execution planning on every opportunity</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Transparent Underwriting</h4>
-                  <p className="text-sm text-muted-foreground">Transparent process and documentation standards</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Transparent Underwriting</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Transparent process and documentation standards</p>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Partner-First Approach</h4>
-                  <p className="text-sm text-muted-foreground">We succeed when our partners succeed</p>
-                </div>
+              <div className="pl-5 border-l border-primary/25">
+                <h4 className="font-semibold mb-1.5">Partner-First Approach</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">We succeed when our partners succeed</p>
               </div>
             </div>
           </div>
@@ -1912,33 +1856,23 @@ function HowItWorksSection() {
           {/* Connection line */}
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent -translate-y-1/2" />
           
-          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.15}>
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.12}>
             {steps.map((step, index) => (
               <StaggerItem key={index}>
                 <motion.div 
-                  className="group relative bg-card p-8 rounded-lg border border-border/50 hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full"
+                  className="group relative bg-card p-8 rounded-lg border border-border/40 hover:border-primary/20 hover:shadow-lg transition-all duration-300 h-full overflow-hidden"
                   data-testid={`how-it-works-step-${index}`}
-                  whileHover={{ y: -8 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ y: -5 }}
+                  transition={{ duration: 0.25 }}
                 >
-                  {/* Step number badge */}
-                  <div className="absolute -top-4 left-8 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
-                    Step {step.number}
-                  </div>
+                  {/* Large ghosted step number */}
+                  <span className="absolute -top-3 -right-1 font-serif text-8xl font-bold text-foreground/[0.04] group-hover:text-primary/[0.07] transition-colors duration-500 select-none pointer-events-none leading-none">
+                    {step.number}
+                  </span>
                   
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:shadow-lg transition-all duration-300 mt-2">
-                    <step.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
-                  </div>
-                  
-                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                  <step.icon className="w-5 h-5 text-primary/55 mb-6 group-hover:text-primary transition-colors duration-300" />
+                  <h3 className="text-lg font-semibold mb-2.5">{step.title}</h3>
                   <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
-                  
-                  {/* Arrow indicator on larger screens */}
-                  {index < steps.length - 1 && (
-                    <div className="hidden lg:flex absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-background border border-border rounded-full items-center justify-center z-10">
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  )}
                 </motion.div>
               </StaggerItem>
             ))}
