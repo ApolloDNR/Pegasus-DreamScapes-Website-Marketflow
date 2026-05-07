@@ -78,6 +78,9 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **Development Pathway language discipline**: Phase 1 = today's actual scope (ADU/flips/BRRRR/small-scale). Phases 2–4 are explicitly framed as trajectory ("Where we are. Where we're going.") with a footer disclaimer "Each phase is earned, not assumed." Do NOT overclaim large-scale development as current capability.
 *   **Footer**: 12-column layout — 5/3/4 split (brand block / Explore links / Start a Conversation + contact). Includes "Dream it. Build it. Live it." tagline, expanded disclosures line ("not an offer to buy or sell securities…"), and a Disclosures link.
 
+### Website → Pegasus HQ Integration Contract
+The website-side lead routing/status pipeline is prototype/outbox-only until the Website → Pegasus HQ contract is approved. Pegasus HQ is the system of record for canonical Submissions, Opportunities, lane assignment, War Rooms, RACI, money, and audit history. See `docs/architecture/website-to-hq-integration-contract.md` for the Phase 1 contract spec. Do not treat website-side `outcome_lane`, `status`, `responded_at`, or `within_sla` fields as canonical after HQ integration goes live.
+
 ## External Dependencies
 
 ### UI and Styling
