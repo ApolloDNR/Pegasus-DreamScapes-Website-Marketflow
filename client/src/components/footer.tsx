@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Mail, MapPin, ArrowUpRight } from "lucide-react";
+import { Mail, MapPin, ArrowUpRight, Phone } from "lucide-react";
 import logoImage from "@assets/image_1765405939117.png";
 
 const exploreLinks = [
@@ -31,13 +31,16 @@ export function Footer() {
               />
             </Link>
             <div>
-              <p className="font-serif text-2xl text-foreground tracking-tight">The Deal Architect.</p>
-              <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium">
+              <p className="font-display text-xl text-foreground tracking-[0.18em] uppercase">The Deal Architect</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium font-supporting">
                 Dream it. Build it. Live it.
               </p>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
               Pegasus Dreamscapes is a strategy-first real estate operating company and emerging vertically integrated developer — building from disciplined small-scale execution toward a generational development practice.
+            </p>
+            <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium pt-1">
+              Founder · Paolo &ldquo;Apollo&rdquo; Duran
             </p>
           </div>
 
@@ -79,12 +82,20 @@ export function Footer() {
             </ul>
             <div className="space-y-3 pt-5 border-t border-border/50">
               <a
-                href="mailto:hello@pegasusdreamscapes.com"
+                href="mailto:apollo@pegasusdreamscapes.com"
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 data-testid="link-footer-email"
               >
                 <Mail className="w-4 h-4 text-primary/70 group-hover:text-primary flex-shrink-0" />
-                hello@pegasusdreamscapes.com
+                apollo@pegasusdreamscapes.com
+              </a>
+              <a
+                href="tel:+19259486566"
+                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                data-testid="link-footer-phone"
+              >
+                <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary flex-shrink-0" />
+                925-948-6566
               </a>
               <div className="flex items-center gap-3 text-sm text-muted-foreground" data-testid="text-footer-location">
                 <MapPin className="w-4 h-4 text-primary/70 flex-shrink-0" />

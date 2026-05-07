@@ -69,9 +69,62 @@ export default function Sell() {
       <HeroSection />
       <HowItWorksSection />
       <OutcomeRoutingSection />
+      <MarketFlowConnectionSection />
       <LeadFormSection />
+      <OperatorSection />
       <FAQSection />
     </div>
+  );
+}
+
+function MarketFlowConnectionSection() {
+  return (
+    <section className="py-20 lg:py-24 bg-background border-y border-border/40">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-5">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold font-supporting">Where it might land</p>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em]">
+              Your property may end up in MarketFlow.
+            </h2>
+          </div>
+          <div className="lg:col-span-7">
+            <p className="text-base text-muted-foreground leading-relaxed mb-6">
+              MarketFlow is our private, invite-only deal-flow network. When wholesale or JV is the right lane, your property is matched to vetted buyers and operators inside that network — never blasted to a public list, never shopped on social media.
+            </p>
+            <Link href="/marketflow">
+              <Button variant="outline" className="text-sm uppercase tracking-[0.15em] font-semibold px-7 py-6" data-testid="button-sell-marketflow">
+                See how MarketFlow works
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OperatorSection() {
+  return (
+    <section className="py-20 lg:py-24 bg-background">
+      <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold font-supporting mb-5">Operated by</p>
+        <p className="font-display text-2xl sm:text-3xl uppercase tracking-[0.16em] mb-3" data-testid="text-sell-operator">
+          Paolo &ldquo;Apollo&rdquo; Duran
+        </p>
+        <div className="brand-divider w-32 mx-auto mb-5" />
+        <p className="text-sm text-muted-foreground italic font-serif">
+          Founder &amp; Principal · Pegasus Dreamscapes Corp
+        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed mt-6 max-w-xl mx-auto">
+          A real person reviews every submission. Direct line: <a href="tel:+19259486566" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-948-6566</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>
+        </p>
+      </div>
+    </section>
   );
 }
 

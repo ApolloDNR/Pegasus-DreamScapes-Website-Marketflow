@@ -33,6 +33,7 @@ import {
   Sparkles,
   Users,
   Mail,
+  Phone,
   Star,
   Quote,
   Award,
@@ -2754,7 +2755,7 @@ function ContactSection() {
             
             <div className="space-y-6">
                             <motion.a 
-                href={`mailto:${(getValue("home.contact.email") || "hello@pegasusdreamscapes.com").trim()}`}
+                href={`mailto:${(getValue("home.contact.email") || "apollo@pegasusdreamscapes.com").trim()}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-email"
@@ -2766,8 +2767,26 @@ function ContactSection() {
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Email</p>
                   <div className="font-semibold text-lg">
                     {isEditMode ? (
-                      <EditableText contentKey="home.contact.email" fallback="hello@pegasusdreamscapes.com" />
-                    ) : (getValue("home.contact.email") || "hello@pegasusdreamscapes.com")}
+                      <EditableText contentKey="home.contact.email" fallback="apollo@pegasusdreamscapes.com" />
+                    ) : (getValue("home.contact.email") || "apollo@pegasusdreamscapes.com")}
+                  </div>
+                </div>
+              </motion.a>
+              <motion.a
+                href={`tel:${(getValue("home.contact.phone") || "+19259486566").replace(/[^+\d]/g, "")}`}
+                className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
+                whileHover={{ x: 4 }}
+                data-testid="link-contact-phone"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                  <Phone className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Direct Line</p>
+                  <div className="font-semibold text-lg">
+                    {isEditMode ? (
+                      <EditableText contentKey="home.contact.phone" fallback="925-948-6566" />
+                    ) : (getValue("home.contact.phone") || "925-948-6566")}
                   </div>
                 </div>
               </motion.a>

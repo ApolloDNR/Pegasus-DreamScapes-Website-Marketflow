@@ -393,10 +393,22 @@ function PropertyDetailContent() {
                   Request Info
                 </Button>
               )}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <a
+                href="mailto:apollo@pegasusdreamscapes.com"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                data-testid="link-property-email"
+              >
                 <Mail className="h-4 w-4" />
-                <span>info@pegasusdreamscapes.com</span>
-              </div>
+                <span>apollo@pegasusdreamscapes.com</span>
+              </a>
+              <a
+                href="tel:+19259486566"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                data-testid="link-property-phone"
+              >
+                <Phone className="h-4 w-4" />
+                <span>925-948-6566</span>
+              </a>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span>Response within 24 hours</span>
