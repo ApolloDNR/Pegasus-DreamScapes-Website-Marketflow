@@ -77,6 +77,7 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
 *   **Hero**: Tagline "Dream it. Build it. Live it." displayed beneath philosophical line "Where others see impossible, we see a path." Secondary CTA jumps to `#development-pathway`. Stat strip is 4-up: Strategy First · 3 Pillars · 8 Lanes · 4 Phases.
 *   **Development Pathway language discipline**: Phase 1 = today's actual scope (ADU/flips/BRRRR/small-scale). Phases 2–4 are explicitly framed as trajectory ("Where we are. Where we're going.") with a footer disclaimer "Each phase is earned, not assumed." Do NOT overclaim large-scale development as current capability.
 *   **Footer**: 12-column layout — 5/3/4 split (brand block / Explore links / Start a Conversation + contact). Includes "Dream it. Build it. Live it." tagline, expanded disclosures line ("not an offer to buy or sell securities…"), and a Disclosures link.
+*   **Website Experience Blueprint v1.0**: The public website doctrine is documented in `docs/architecture/website-experience-blueprint-v1.md`. This blueprint locks the public sitemap, homepage order, role-mode router, page jobs, CTA paths, PR #6 visual rules, copy guardrails, compliance placement, Website-vs-HQ ownership boundary, and QA checklist. Future website visual, copy, routing, or page-structure changes should cite the blueprint and preserve the Website → HQ boundary from PR #7.
 
 ## External Dependencies
 
