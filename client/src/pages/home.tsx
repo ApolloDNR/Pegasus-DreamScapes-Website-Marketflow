@@ -2300,14 +2300,14 @@ function InvestmentPhilosophySection() {
     {
       number: "03",
       title: "Community-Centered Design",
-      description: "We don't just renovate properties—we elevate neighborhoods. Every project considers its impact on the surrounding community.",
+      description: "We don't just renovate properties. We elevate neighborhoods. Every project considers its impact on the surrounding community.",
       icon: Heart,
       key: "philosophy.principle.2",
     },
     {
       number: "04",
       title: "Sustainable Returns",
-      description: "We balance aggressive opportunity pursuit with risk management. Our goal is consistent, long-term wealth building—not quick wins.",
+      description: "We balance aggressive opportunity pursuit with risk management. Our goal is consistent, long-term wealth building, not quick wins.",
       icon: TrendingUp,
       key: "philosophy.principle.3",
     },
@@ -2343,9 +2343,9 @@ function InvestmentPhilosophySection() {
             </h2>
             <div className="text-lg text-muted-foreground leading-relaxed mb-10">
               {isEditMode ? (
-                <EditableText contentKey="home.philosophy.description" fallback="We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders." as="p" multiline />
+                <EditableText contentKey="home.philosophy.description" fallback="We believe successful real estate investing requires more than capital. It demands discipline, transparency, and a commitment to creating lasting value for all stakeholders." as="p" multiline />
               ) : (
-                <p>{getValue("home.philosophy.description") || "We believe successful real estate investing requires more than capital—it demands discipline, transparency, and a commitment to creating lasting value for all stakeholders."}</p>
+                <p>{getValue("home.philosophy.description") || "We believe successful real estate investing requires more than capital. It demands discipline, transparency, and a commitment to creating lasting value for all stakeholders."}</p>
               )}
             </div>
             
@@ -2356,9 +2356,9 @@ function InvestmentPhilosophySection() {
               </div>
               <div className="text-base text-foreground leading-relaxed italic">
                 {isEditMode ? (
-                  <EditableText contentKey="home.philosophy.quote" fallback="We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve." as="p" multiline />
+                  <EditableText contentKey="home.philosophy.quote" fallback="We design profits with intention, creating win–win outcomes for sellers, investors, and the communities we serve." as="p" multiline />
                 ) : (
-                  <p>"{getValue("home.philosophy.quote") || "We design profits with intention—creating win–win outcomes for sellers, investors, and the communities we serve."}"</p>
+                  <p>"{getValue("home.philosophy.quote") || "We design profits with intention, creating win–win outcomes for sellers, investors, and the communities we serve."}"</p>
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-4">— Pegasus Dreamscapes</p>
