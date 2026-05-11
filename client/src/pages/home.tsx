@@ -1915,12 +1915,12 @@ function SellPropertySection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.sell.description" 
-                  fallback="Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path, whether that's acquisition, wholesale, listing, or a referral to the best next resource."
+                  fallback="Every property gets a serious review. Not every property gets an offer. Submit your situation and Pegasus will assess the right path, whether that's acquisition, wholesale, listing, or a referral to the best next resource."
                   multiline
                   as="p"
                 />
               ) : (
-                <p>Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path, whether that's acquisition, wholesale, listing, or a referral to the best next resource.</p>
+                <p>Every property gets a serious review. Not every property gets an offer. Submit your situation and Pegasus will assess the right path, whether that's acquisition, wholesale, listing, or a referral to the best next resource.</p>
               )}
             </div>
             
