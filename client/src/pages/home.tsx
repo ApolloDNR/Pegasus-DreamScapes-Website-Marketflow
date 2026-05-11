@@ -23,6 +23,7 @@ import { motion } from "framer-motion";
 import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift, AnimatedCounter as SharedAnimatedCounter } from "@/components/animations";
 import { 
   Home as HomeIcon, 
+  BookOpen as BookOpenIcon,
   TrendingUp, 
   Palette,
   Building,
@@ -92,14 +93,11 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <EveryPropertyGetsAPathSection />
-      <ServicesSection />
-      <DevelopmentPathwaySection />
-      <StrategyStructureStacksSection />
-      <OutcomeLanesSection />
+      <WhatBringsYouHereSection />
+      <FreeSnapshotSection />
+      <PegasusStandardSection />
       <FeaturedProjectSection />
       <MarketFlowBetaSection />
-      <OperatingPrinciplesSection />
       <FinalCTASection />
     </div>
   );
@@ -459,6 +457,187 @@ function FinalCTASection() {
             <span>Bay Area, California</span>
           </div>
         </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function WhatBringsYouHereSection() {
+  const cards = [
+    { icon: HomeIcon, title: "I have a property", desc: "Distressed, complex, or just exploring options. Get a structured review.", href: "/sell", testId: "router-property" },
+    { icon: GitBranch, title: "I have a deal or JV idea", desc: "Wholesale, assignment, or partnership opportunity to route.", href: "/submit-deal", testId: "router-deal" },
+    { icon: DollarSign, title: "I represent capital", desc: "Private capital or partnership inquiry — by conversation, not public offering.", href: "/invest", testId: "router-capital" },
+    { icon: Hammer, title: "I'm exploring ADU / development", desc: "Build, add, or reposition. Pre-development scope and feasibility.", href: "/development", testId: "router-development" },
+    { icon: BookOpenIcon, title: "I want to learn the strategies", desc: "Plain-language strategy library — no hype, no shortcuts.", href: "/education", testId: "router-education" },
+    { icon: Network, title: "I'm a vendor or operator", desc: "Join the disciplined network behind Pegasus execution.", href: "/vendor-network", testId: "router-vendor" },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Where to Start</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
+            What brings you here?
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Pegasus serves six distinct paths. Pick the one that fits — we'll route the rest.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.06}>
+          {cards.map((card, index) => (
+            <StaggerItem key={index}>
+              <Link href={card.href} data-testid={`link-${card.testId}`}>
+                <motion.div
+                  className="group h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                  whileHover={{ y: -3 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/0 group-hover:bg-primary/60 transition-all duration-400" />
+                  <card.icon className="w-5 h-5 text-primary/55 mb-5 group-hover:text-primary transition-colors duration-300" />
+                  <h3 className="font-semibold text-base mb-2.5 group-hover:text-primary transition-colors duration-300">{card.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">{card.desc}</p>
+                  <div className="flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary/70 font-semibold">
+                    Continue
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
+                </motion.div>
+              </Link>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+      </div>
+    </section>
+  );
+}
+
+function FreeSnapshotSection() {
+  const included = [
+    "Quick read on the property type and likely situation",
+    "Lane direction (acquire, wholesale, list, JV, refer, hold)",
+    "What questions a serious buyer or partner will ask next",
+    "Plain-language summary you can act on",
+  ];
+  const notIncluded = [
+    "A binding offer, valuation, or appraisal",
+    "Legal, tax, or licensed real estate advice",
+    "Underwriting of a specific transaction",
+    "Any commitment from Pegasus to participate",
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-muted/20 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-6xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Free · No Obligation</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
+            Free Property Strategy Snapshot
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            A short, human-reviewed read on what a property could become. We use it to triage every situation that reaches us — so you leave the conversation with direction, even if Pegasus is not the right participant.
+          </p>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.15}>
+          <div className="grid md:grid-cols-2 gap-6 mb-12">
+            <div className="p-8 bg-card rounded-lg border border-border/40" data-testid="snapshot-included">
+              <div className="flex items-center gap-3 mb-6">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <p className="text-xs uppercase tracking-[0.22em] font-semibold text-foreground">What's Included</p>
+              </div>
+              <ul className="space-y-3">
+                {included.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground leading-relaxed">
+                    <span className="mt-2 w-1 h-1 rounded-full bg-primary/60 flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-8 bg-card/60 rounded-lg border border-border/30" data-testid="snapshot-not-included">
+              <div className="flex items-center gap-3 mb-6">
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                <p className="text-xs uppercase tracking-[0.22em] font-semibold text-muted-foreground">What It Is Not</p>
+              </div>
+              <ul className="space-y-3">
+                {notIncluded.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground/80 leading-relaxed">
+                    <span className="mt-2 w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link href="/sell">
+              <Button size="lg" className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-snapshot-cta">
+                Start a Strategy Review
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+function PegasusStandardSection() {
+  const principles = [
+    { title: "Clarity over confusion", desc: "Every situation gets a plain-language read. No jargon, no hidden steps." },
+    { title: "Discipline over hype", desc: "Underwriting and process come before growth. We say no often." },
+    { title: "Stewardship over extraction", desc: "We protect long-term value — for owners, partners, and neighborhoods." },
+    { title: "Honor over pressure", desc: "No urgency tactics, no pushed offers. The right path or no path." },
+    { title: "Truth over easy promises", desc: "If we can't help, we say so — and route to who can." },
+    { title: "Human review over blind automation", desc: "Software supports the work. People still make the calls." },
+  ];
+
+  return (
+    <section id="pegasus-standard" className="py-24 lg:py-32 bg-card relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
+          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">The Pegasus Standard</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
+            Six commitments. Every conversation.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            The non-negotiables behind every review, every offer, and every routed outcome.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.07}>
+          {principles.map((p, index) => (
+            <StaggerItem key={index}>
+              <motion.div
+                className="group h-full p-8 bg-background rounded-lg border border-border/40 hover:border-primary/25 transition-all duration-300 relative overflow-hidden"
+                whileHover={{ y: -3 }}
+                transition={{ duration: 0.25 }}
+                data-testid={`pegasus-principle-${index}`}
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/0 group-hover:bg-primary/60 transition-all duration-400" />
+                <span className="text-[10px] text-primary/50 font-semibold tracking-[0.25em] uppercase mb-5 block">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <h3 className="font-serif text-xl font-semibold mb-3 group-hover:text-primary transition-colors duration-300">{p.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
       </div>
     </section>
   );
@@ -1130,14 +1309,14 @@ function HeroSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
   
-  const heroKicker = getValue("home.hero.kicker", "Development • Investments • Systems");
-  const heroLine1 = getValue("home.hero.line1", "The Deal");
-  const heroLine2 = getValue("home.hero.line2", "Architect");
+  const heroKicker = getValue("home.hero.kicker", "Pegasus DreamScapes Corp. · Development · Investments · Systems");
+  const heroLine1 = getValue("home.hero.line1", "Complex property.");
+  const heroLine2 = getValue("home.hero.line2", "Structured opportunity.");
   const heroLine3 = getValue("home.hero.line3", "");
-  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus Dreamscapes is a strategy-first real estate operating company. We help turn property situations into structured outcomes through strategy review, creative deal design, and disciplined execution.");
-  const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
-  const heroCtaSecondary = getValue("home.hero.cta_secondary", "See the Pathway");
-  const heroPhilosophical = "Where others see impossible, we see a path.";
+  const heroSubheadline = getValue("home.hero.subheadline", "Pegasus DreamScapes Corp. is a strategy-first real estate operating company. We review property, development, capital, and partnership opportunities, then design the right path forward.");
+  const heroCtaPrimary = getValue("home.hero.cta_primary", "Start a Strategy Review");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "View Featured Project");
+  const heroPhilosophical = "Built on strategy. Governed by virtue. Executed with discipline.";
   
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
@@ -1209,7 +1388,7 @@ function HeroSection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.hero.kicker" 
-                  fallback="Development • Investments • Systems"
+                  fallback="Pegasus DreamScapes Corp. · Development · Investments · Systems"
                   className="text-sm uppercase tracking-[0.3em] text-white/70 font-medium"
                 />
               ) : (
@@ -1217,6 +1396,20 @@ function HeroSection() {
                   {heroKicker}
                 </p>
               )}
+            </motion.div>
+
+            {/* Identity badge */}
+            <motion.div
+              className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-champagne/40 bg-white/5 backdrop-blur-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              data-testid="badge-deal-architect"
+            >
+              <Zap className="w-3 h-3 text-champagne" />
+              <span className="text-[11px] uppercase tracking-[0.3em] text-champagne font-semibold">
+                The Deal Architect
+              </span>
             </motion.div>
             
             {/* Premium headline with refined typography */}
@@ -1228,29 +1421,31 @@ function HeroSection() {
                 transition={{ duration: 0.7, delay: 0.3 }}
               >
                 {isEditMode ? (
-                  <EditableText contentKey="home.hero.line1" fallback="Real estate execution," />
+                  <EditableText contentKey="home.hero.line1" fallback="Complex property." />
                 ) : heroLine1}
-              </motion.span>
-              <motion.span 
-                className="block"
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.5 }}
-              >
-                {isEditMode ? (
-                  <EditableText contentKey="home.hero.line2" fallback="built with" />
-                ) : heroLine2}
               </motion.span>
               <motion.span 
                 className="block bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent"
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.7 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
               >
                 {isEditMode ? (
-                  <EditableText contentKey="home.hero.line3" fallback="discipline." />
-                ) : heroLine3}
+                  <EditableText contentKey="home.hero.line2" fallback="Structured opportunity." />
+                ) : heroLine2}
               </motion.span>
+              {(isEditMode || heroLine3) && (
+                <motion.span 
+                  className="block"
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.7 }}
+                >
+                  {isEditMode ? (
+                    <EditableText contentKey="home.hero.line3" fallback="" />
+                  ) : heroLine3}
+                </motion.span>
+              )}
             </h1>
             
             {/* Philosophical line + brand tagline */}
@@ -1285,7 +1480,7 @@ function HeroSection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.hero.subheadline" 
-                  fallback="Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value."
+                  fallback="Pegasus DreamScapes Corp. is a strategy-first real estate operating company. We review property, development, capital, and partnership opportunities, then design the right path forward."
                   multiline
                 />
               ) : (
@@ -1303,15 +1498,15 @@ function HeroSection() {
               <a href="/sell">
                 <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 transition-all duration-300 hover:shadow-white/20 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_primary" fallback="Submit a Property" />
+                    <EditableText contentKey="home.hero.cta_primary" fallback="Start a Strategy Review" />
                   ) : heroCtaPrimary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="#development-pathway">
+              <a href="#projects">
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_secondary" fallback="See the Pathway" />
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="View Featured Project" />
                   ) : heroCtaSecondary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
