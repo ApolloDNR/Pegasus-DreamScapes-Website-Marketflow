@@ -1,5 +1,7 @@
 # Website Experience Blueprint v1.0
 
+> **Superseded by `website-marketflow-blueprint-v1.3.1.md` for the public website + MarketFlow scope.** This v1.0 doc remains as historical reference for sections v1.3.1 does not restate.
+
 ## Purpose
 
 This blueprint locks the public Pegasus Dreamscapes website experience before further voice, differentiation, and polish work. It is the governing document for the marketing website: what the website says, how it routes users, what each page is responsible for, where compliance language belongs, and where the public website ends and HQ / MarketFlow begins.
