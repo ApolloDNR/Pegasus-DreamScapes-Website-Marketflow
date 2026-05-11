@@ -127,7 +127,7 @@ function MarketFlowConnectionSection() {
           </div>
           <div className="lg:col-span-7">
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              MarketFlow is our private, invite-only deal-flow network. When wholesale or JV is the right lane, your property is matched to vetted buyers and operators inside that network — never blasted to a public list, never shopped on social media.
+              MarketFlow is our private, invite-only deal-flow network. When wholesale or JV is the right lane, your property is matched to vetted buyers and operators inside that network, never blasted to a public list, never shopped on social media.
             </p>
             <Link href="/marketflow">
               <Button variant="outline" className="text-sm uppercase tracking-[0.15em] font-semibold px-7 py-6" data-testid="button-sell-marketflow">
@@ -216,7 +216,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Tell us about the property and the situation. A real person reviews every submission and routes it to the cleanest path — acquisition, wholesale, JV, listing, or honest referral. The Snapshot is preliminary and free; no offer figures, no pressure, no spam.
+              Tell us about the property and the situation. A real person reviews every submission and routes it to the cleanest path: acquisition, wholesale, JV, listing, or honest referral. The Snapshot is preliminary and free; no offer figures, no pressure, no spam.
             </motion.p>
 
             <motion.div
@@ -262,7 +262,7 @@ function HeroSection() {
                 <div className="space-y-6">
                   {[
                     { num: "24h", label: "Routed within 24 business hours" },
-                    { num: "8", label: "Outcome lanes — never one-size-fits-all" },
+                    { num: "8", label: "Outcome lanes. Never one-size-fits-all" },
                     { num: "0", label: "Pressure. Honest answers, every time" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-baseline gap-5 pb-5 border-b border-white/15 last:border-0 last:pb-0">
@@ -288,7 +288,7 @@ function HowItWorksSection() {
     {
       icon: MessageSquare,
       title: "Submit the situation.",
-      desc: "Address, condition, motivation, timeline — whatever you know. The more context, the sharper the review.",
+      desc: "Address, condition, motivation, timeline. Whatever you know. The more context, the sharper the review.",
     },
     {
       icon: Search,
@@ -352,7 +352,7 @@ function OutcomeRoutingSection() {
     { icon: Users, title: "JV / Partnership", desc: "Co-GP or operator-aligned structure when value-add scope demands it." },
     { icon: TrendingUp, title: "Listing Lane", desc: "Traditional MLS through our KW partnership when that's the right answer." },
     { icon: Shield, title: "Referral", desc: "Routed to a trusted professional when Pegasus isn't the best fit." },
-    { icon: Clock, title: "Incubation", desc: "Held and revisited as conditions change — long-horizon situations welcome." },
+    { icon: Clock, title: "Incubation", desc: "Held and revisited as conditions change, long-horizon situations welcome." },
   ];
 
   return (
@@ -368,7 +368,7 @@ function OutcomeRoutingSection() {
             What happens after you submit.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Your property is reviewed against six possible outcomes. Whichever lane fits best is the lane we recommend — even when that means routing you somewhere else.
+            Your property is reviewed against six possible outcomes. Whichever lane fits best is the lane we recommend, even when that means routing you somewhere else.
           </p>
         </ScrollReveal>
 
@@ -490,7 +490,7 @@ function LeadFormSection() {
             Your Strategy Snapshot is being prepared.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
-            A real person reviews every submission. We'll be in touch within 1–2 business days with the Snapshot and the recommended path. The Snapshot is preliminary — not an offer, valuation, or guarantee.
+            A real person reviews every submission. We'll be in touch within 1–2 business days with the Snapshot and the recommended path. The Snapshot is preliminary. Not an offer, valuation, or guarantee.
           </p>
         </div>
       </section>
@@ -510,7 +510,7 @@ function LeadFormSection() {
             Tell us what you have.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
-            Five minutes. Real review. Real answer. Whatever you know about the property is enough to start — we'll fill in the rest.
+            Five minutes. Real review. Real answer. Whatever you know about the property is enough to start. We'll fill in the rest.
           </p>
           <ul className="space-y-4">
             {[
@@ -654,7 +654,7 @@ function LeadFormSection() {
                     <FormLabel>The situation <span className="text-muted-foreground font-normal">(optional but encouraged)</span></FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="What's going on with the property — motivation, encumbrances, liens, code issues, family dynamics, what you've already tried."
+                        placeholder="What's going on with the property: motivation, encumbrances, liens, code issues, family dynamics, what you've already tried."
                         className="min-h-28 resize-none"
                         {...field}
                         value={field.value ?? ""}
@@ -670,7 +670,7 @@ function LeadFormSection() {
                     <FormLabel>What does a good outcome look like?</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Cash sale, list it, partner on a build, hand it to a family member, walk away clean — describe what success looks like for you."
+                        placeholder="Cash sale, list it, partner on a build, hand it to a family member, walk away clean. Describe what success looks like for you."
                         className="min-h-24 resize-none"
                         {...field}
                         value={field.value ?? ""}
@@ -724,7 +724,7 @@ function LeadFormSection() {
                 {/* Photo upload — optional, encouraged */}
                 <div className="space-y-3">
                   <div className="flex items-baseline justify-between">
-                    <label className="text-sm font-medium">Photos <span className="text-muted-foreground font-normal">(optional, encouraged — helps us route faster)</span></label>
+                    <label className="text-sm font-medium">Photos <span className="text-muted-foreground font-normal">(optional, encouraged, helps us route faster)</span></label>
                     <span className="text-xs text-muted-foreground">{photos.length} attached</span>
                   </div>
                   {photos.length > 0 && (
@@ -828,7 +828,7 @@ function LeadFormSection() {
                       </FormControl>
                       <div className="space-y-1">
                         <FormLabel className="text-sm font-normal cursor-pointer">
-                          I understand the Strategy Snapshot is preliminary — not an offer, valuation, or guarantee.
+                          I understand the Strategy Snapshot is preliminary. Not an offer, valuation, or guarantee.
                         </FormLabel>
                         <FormMessage />
                       </div>
@@ -865,15 +865,15 @@ function FAQSection() {
   const faqs = [
     {
       question: "What actually happens after I submit?",
-      answer: "Within 24 business hours, your property is reviewed against eight possible outcomes — direct acquisition, wholesale, JV, listing through our KW partnership, referral, and others. Whichever lane fits best is the one we recommend. We reach out with a real answer, not a templated lowball.",
+      answer: "Within 24 business hours, your property is reviewed against eight possible outcomes: direct acquisition, wholesale, JV, listing through our KW partnership, referral, and others. Whichever lane fits best is the one we recommend. We reach out with a real answer, not a templated lowball.",
     },
     {
       question: "Will Pegasus always be the buyer?",
-      answer: "No — and that's the point. Pegasus participates only when the numbers, scope, and structure are clean. Otherwise we wholesale to a vetted buyer in our network, route to a JV partner, or refer you to a trusted professional. The 'No Lead Dies' doctrine means every property gets a path, not necessarily a Pegasus path.",
+      answer: "No. And that's the point. Pegasus participates only when the numbers, scope, and structure are clean. Otherwise we wholesale to a vetted buyer in our network, route to a JV partner, or refer you to a trusted professional. The 'No Lead Dies' doctrine means every property gets a path, not necessarily a Pegasus path.",
     },
     {
       question: "Do I need to make repairs first?",
-      answer: "No. We review properties in any condition. Distressed, occupied, mid-rehab, raw land — submit it and we'll evaluate based on the situation as it stands.",
+      answer: "No. We review properties in any condition. Distressed, occupied, mid-rehab, raw land. Submit it and we'll evaluate based on the situation as it stands.",
     },
     {
       question: "How fast can a transaction close?",
@@ -885,7 +885,7 @@ function FAQSection() {
     },
     {
       question: "What kinds of properties do you review?",
-      answer: "Single-family homes, condos, 2–4 unit multi-family, raw and infill lots, and select commercial situations across California — primarily Bay Area and Northern California. Out-of-area submissions are still reviewed for referral routing.",
+      answer: "Single-family homes, condos, 2–4 unit multi-family, raw and infill lots, and select commercial situations across California, primarily Bay Area and Northern California. Out-of-area submissions are still reviewed for referral routing.",
     },
   ];
 

@@ -197,8 +197,8 @@ function getQuickPrompts(page?: string): QuickPrompt[] {
     { icon: GitBranch, label: "I have a deal or JV idea", prompt: "I have a deal or JV idea to route.", context: "router", href: "/submit-deal" },
     { icon: DollarSign, label: "I want to discuss capital", prompt: "I want to discuss a private capital or partnership conversation.", context: "router", href: "/invest" },
     { icon: Hammer, label: "ADU / development", prompt: "I want to explore ADU or development potential.", context: "router", href: "/services" },
-    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies — point me to the Strategy Library.", context: "router", href: "/education" },
-    { icon: Network, label: "Vendor or operator", prompt: "I'm a vendor or operator interested in the Pegasus network — what's the right way in?", context: "router", href: "/vendor-network" },
+    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies. Point me to the Strategy Library.", context: "router", href: "/education" },
+    { icon: Network, label: "Vendor or operator", prompt: "I'm a vendor or operator interested in the Pegasus network. What's the right way in?", context: "router", href: "/vendor-network" },
   ];
 
   if (page?.includes('calculator')) {

@@ -113,10 +113,10 @@ function FounderSection() {
               You'll talk to a real person.
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span> — founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
+              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
             </p>
             <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-copper pl-5">
-              "Capital partners aren't a pipeline metric. The relationship outlasts the deal — that's why we paper everything, name the downside, and only structure things we'd put our own capital into."
+              "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."
             </p>
             <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40 border-y border-border/40">
               <a href="tel:+19259486566" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-phone">
@@ -155,7 +155,7 @@ function MarketFlowConnectionSection() {
           </div>
           <div className="lg:col-span-7">
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              MarketFlow is our private, invite-only deal-flow network where active wholesale and JV opportunities are presented to vetted partners. Inquiry-first access — your partner profile must be reviewed before MarketFlow is unlocked.
+              MarketFlow is our private, invite-only deal-flow network where active wholesale and JV opportunities are presented to vetted partners. Inquiry-first access. Your partner profile must be reviewed before MarketFlow is unlocked.
             </p>
             <Link href="/marketflow">
               <Button variant="outline" className="text-sm uppercase tracking-[0.15em] font-semibold px-7 py-6" data-testid="button-invest-marketflow">
@@ -271,7 +271,7 @@ function HeroSection() {
                 <div className="space-y-5">
                   {[
                     { kicker: "Private", title: "Deal-specific conversations", desc: "Never a pooled fund pitch. Always a real, named project." },
-                    { kicker: "Documented", title: "Real underwriting, real papers", desc: "Comps, scope, capital stack, exit — on paper, before any commitment." },
+                    { kicker: "Documented", title: "Real underwriting, real papers", desc: "Comps, scope, capital stack, exit, on paper, before any commitment." },
                     { kicker: "Suited", title: "Suitability comes first", desc: "If the structure isn't right for you, we say so." },
                   ].map((item, i) => (
                     <div key={i} className="pb-5 border-b border-white/15 last:border-0 last:pb-0">
@@ -296,7 +296,7 @@ function PrinciplesSection() {
     { icon: Eye, title: "Transparent Underwriting", desc: "You see the comps, the scope, the capital stack, and the exit. No black-box returns, no hand-waving on assumptions." },
     { icon: Shield, title: "Documented Risk", desc: "Every structure comes with a written risk profile and the conditions under which it can break. We name the downside before the upside." },
     { icon: FileCheck, title: "Lawful Execution", desc: "Deal-specific, individually-papered structures with proper legal review. No public solicitation, no general advertising of terms." },
-    { icon: Target, title: "Defined Exit", desc: "Sale, refinance, or hold — every project has a planned exit, a timeline, and a contingency path." },
+    { icon: Target, title: "Defined Exit", desc: "Sale, refinance, or hold. Every project has a planned exit, a timeline, and a contingency path." },
   ];
 
   return (
@@ -312,7 +312,7 @@ function PrinciplesSection() {
             How we treat your capital.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Capital partners aren't a line item — they're a long-term relationship. Four principles guide every conversation.
+            Capital partners aren't a line item. They're a long-term relationship. Four principles guide every conversation.
           </p>
         </ScrollReveal>
 
@@ -355,7 +355,7 @@ function PartnershipStructuresSection() {
       icon: TrendingUp,
       kicker: "Equity",
       title: "Equity Investment",
-      desc: "Share in the outcomes (and exposure) of an active project — flips, value-add, or hold strategies.",
+      desc: "Share in the outcomes (and exposure) of an active project: flips, value-add, or hold strategies.",
       attributes: ["Aligned with project outcome", "Share in appreciation and improvements", "Tax treatment per individual situation"],
       considerations: ["Returns tied to project success", "Hold period dependent on exit"],
     },
@@ -382,7 +382,7 @@ function PartnershipStructuresSection() {
             Three ways capital participates.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Each structure is matched to a specific project and a specific partner. We don't fit you to a product — we design the structure to fit the situation.
+            Each structure is matched to a specific project and a specific partner. We don't fit you to a product. We design the structure to fit the situation.
           </p>
         </ScrollReveal>
 
@@ -459,7 +459,7 @@ function ProjectSnapshotSection() {
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold mb-2">Case Study Format</p>
-                  <h3 className="font-serif text-3xl font-semibold tracking-tight">Nelson Dr — Richmond, CA</h3>
+                  <h3 className="font-serif text-3xl font-semibold tracking-tight">Nelson Dr, Richmond, CA</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {["Fix & Flip", "3 Bed · 2 Bath", "~3 Month Timeline"].map((tag) => (
@@ -582,13 +582,13 @@ function InvestorFormSection() {
             Start with context.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
-            This is a starting point, not a commitment. The information below helps us frame the right structure and right conversation — or tell you honestly if Pegasus isn't the right fit yet.
+            This is a starting point, not a commitment. The information below helps us frame the right structure and right conversation, or tell you honestly if Pegasus isn't the right fit yet.
           </p>
           <ul className="space-y-4">
             {[
               { icon: Lock, text: "Private conversation, never publicly solicited" },
               { icon: FileCheck, text: "Documented suitability before structure discussion" },
-              { icon: Users, text: "Direct call with our team — not a sales sequence" },
+              { icon: Users, text: "Direct call with our team. Not a sales sequence" },
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-3 text-sm text-foreground/85">
                 <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />

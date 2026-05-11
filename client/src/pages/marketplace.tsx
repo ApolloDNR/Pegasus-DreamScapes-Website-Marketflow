@@ -108,9 +108,9 @@ function HeroSection() {
             <div className="max-w-2xl mx-auto mb-8 text-sm text-muted-foreground/80 leading-relaxed border border-border/40 rounded-lg px-5 py-4 bg-card/40 text-left" data-testid="text-marketplace-not">
               <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-2">What MarketFlow is not</p>
               <ul className="space-y-1">
-                <li>· Not raw intake — every property is routed through Pegasus HQ first.</li>
-                <li>· Not a public marketplace — access is private, role-gated, and invite-only.</li>
-                <li>· Not an investment solicitation platform — capital conversations happen privately, never as a public offering.</li>
+                <li>· Not raw intake. Every property is routed through Pegasus HQ first.</li>
+                <li>· Not a public marketplace. Access is private, role-gated, and invite-only.</li>
+                <li>· Not an investment solicitation platform. Capital conversations happen privately, never as a public offering.</li>
               </ul>
             </div>
             <div className="flex flex-wrap justify-center gap-4">

@@ -99,7 +99,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            Submit a property, open a private partner conversation, or just ask a question. Every message gets a direct, honest response — no funnels, no auto-replies.
+            Submit a property, open a private partner conversation, or just ask a question. Every message gets a direct, honest response. No funnels, no auto-replies.
           </motion.p>
         </div>
       </div>
@@ -130,7 +130,7 @@ function ContactRoutingSection() {
       icon: MessageSquare,
       kicker: "Everything else",
       title: "General question?",
-      desc: "Press, partnerships, MarketFlow access requests, or anything that doesn't fit a box — use the form below.",
+      desc: "Press, partnerships, MarketFlow access requests, or anything that doesn't fit a box, use the form below.",
       cta: "Use the Form",
       href: "#contact-form",
     },

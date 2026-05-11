@@ -172,7 +172,7 @@ function DevelopmentPathwaySection() {
             Pegasus Dreamscapes is, at its core, a real estate development company. Investments and Systems exist to feed and support what gets built. Today the work is small-scale and disciplined; the trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods.
           </p>
           <p className="text-base text-muted-foreground/85 leading-relaxed italic">
-            This is the path — not a claim of where we already stand.
+            This is the path. Not a claim of where we already stand.
           </p>
         </ScrollReveal>
 
@@ -194,7 +194,7 @@ function DevelopmentPathwaySection() {
                     <phase.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
                   </div>
                   <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold mb-1">
-                    {phase.tag} — {phase.label}
+                    {phase.tag} · {phase.label}
                   </p>
                   <h3 className="font-serif text-2xl font-semibold mb-5 tracking-tight">{phase.title}</h3>
                   <ul className="space-y-2.5">
@@ -338,15 +338,15 @@ function MarketFlowBetaSection() {
             <div className="mb-8 border-l-2 border-primary/40 pl-5 text-sm text-muted-foreground/85 leading-relaxed max-w-2xl" data-testid="marketflow-not">
               <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-2">What MarketFlow is not</p>
               <ul className="space-y-1">
-                <li>· Not raw intake — every property is routed through Pegasus HQ first.</li>
-                <li>· Not a public marketplace — access is private, role-gated, and invite-only.</li>
-                <li>· Not an investment solicitation platform — capital conversations stay private.</li>
+                <li>· Not raw intake. Every property is routed through Pegasus HQ first.</li>
+                <li>· Not a public marketplace. Access is private, role-gated, and invite-only.</li>
+                <li>· Not an investment solicitation platform. Capital conversations stay private.</li>
               </ul>
             </div>
 
             <ul className="grid sm:grid-cols-2 gap-4 mb-10">
               {[
-                { icon: Shield, text: "Reviewed before listed — never raw intake" },
+                { icon: Shield, text: "Reviewed before listed. Never raw intake" },
                 { icon: Eye, text: "Role-gated visibility for vetted members" },
                 { icon: Target, text: "Compatibility-scored to operator + capital fit" },
                 { icon: Network, text: "Direct-to-operator messaging in-network" },
@@ -478,7 +478,7 @@ function FinalCTASection() {
           </h2>
 
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
-            Whether you have a property, a partnership, or a project worth reviewing — every conversation starts the same way: with a real, structural look at what's possible.
+            Whether you have a property, a partnership, or a project worth reviewing, every conversation starts the same way: with a real, structural look at what's possible.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
@@ -517,9 +517,9 @@ function WhatBringsYouHereSection() {
   const cards = [
     { icon: HomeIcon, title: "I have a property", desc: "Distressed, complex, or just exploring options. Get a structured review.", href: "/sell", testId: "router-property" },
     { icon: GitBranch, title: "I have a deal or JV idea", desc: "Wholesale, assignment, or partnership opportunity to route.", href: "/submit-deal", testId: "router-deal" },
-    { icon: DollarSign, title: "I represent capital", desc: "Private capital or partnership inquiry — by conversation, not public offering.", href: "/invest", testId: "router-capital" },
+    { icon: DollarSign, title: "I represent capital", desc: "Private capital or partnership inquiry, by conversation, not public offering.", href: "/invest", testId: "router-capital" },
     { icon: Hammer, title: "I'm exploring ADU / development", desc: "Build, add, or reposition. Pre-development scope and feasibility.", href: "/development", testId: "router-development" },
-    { icon: BookOpenIcon, title: "I want to learn the strategies", desc: "Plain-language strategy library — no hype, no shortcuts.", href: "/education", testId: "router-education" },
+    { icon: BookOpenIcon, title: "I want to learn the strategies", desc: "Plain-language strategy library. No hype, no shortcuts.", href: "/education", testId: "router-education" },
     { icon: Network, title: "I'm a vendor or operator", desc: "Join the disciplined network behind Pegasus execution.", href: "/vendor-network", testId: "router-vendor" },
   ];
 
@@ -537,7 +537,7 @@ function WhatBringsYouHereSection() {
             What brings you here?
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Pegasus serves six distinct paths. Pick the one that fits — we'll route the rest.
+            Pegasus serves six distinct paths. Pick the one that fits. We'll route the rest.
           </p>
         </ScrollReveal>
 
@@ -596,7 +596,7 @@ function FreeSnapshotSection() {
             Free Property Strategy Snapshot
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            A short, human-reviewed read on what a property could become. We use it to triage every situation that reaches us — so you leave the conversation with direction, even if Pegasus is not the right participant.
+            A short, human-reviewed read on what a property could become. We use it to triage every situation that reaches us, so you leave the conversation with direction, even if Pegasus is not the right participant.
           </p>
         </ScrollReveal>
 
@@ -660,9 +660,9 @@ function PegasusStandardSection() {
   const principles = [
     { title: "Clarity over confusion", desc: "Every situation gets a plain-language read. No jargon, no hidden steps." },
     { title: "Discipline over hype", desc: "Underwriting and process come before growth. We say no often." },
-    { title: "Stewardship over extraction", desc: "We protect long-term value — for owners, partners, and neighborhoods." },
+    { title: "Stewardship over extraction", desc: "We protect long-term value: for owners, partners, and neighborhoods." },
     { title: "Honor over pressure", desc: "No urgency tactics, no pushed offers. The right path or no path." },
-    { title: "Truth over easy promises", desc: "If we can't help, we say so — and route to who can." },
+    { title: "Truth over easy promises", desc: "If we can't help, we say so, and route to who can." },
     { title: "Human review over blind automation", desc: "Software supports the work. People still make the calls." },
   ];
 
@@ -809,7 +809,7 @@ function OutcomeLanesSection() {
     { title: "Referral Lane", desc: "Routed to a trusted professional when Pegasus is not the right fit." },
     { title: "MarketFlow Distribution", desc: "Private deal distribution to vetted network participants." },
     { title: "Incubation / Nurture", desc: "Long-horizon situations held and revisited as conditions change." },
-    { title: "Archive Intelligence", desc: "Documented and stored — every deal informs the next." },
+    { title: "Archive Intelligence", desc: "Documented and stored. Every deal informs the next." },
   ];
 
   return (
@@ -825,7 +825,7 @@ function OutcomeLanesSection() {
             One property. Multiple possible paths.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            Every accepted property routes to one of eight monetization lanes within 24 business hours. Pegasus does not compete by making the fastest lowball offer — we compete by seeing what others miss.
+            Every accepted property routes to one of eight monetization lanes within 24 business hours. Pegasus does not compete by making the fastest lowball offer. We compete by seeing what others miss.
           </p>
         </ScrollReveal>
 
@@ -875,7 +875,7 @@ function StatsSection() {
     { value: "No Lead Dies", label: "Every Property Gets a Path", icon: Target, key: "stats.0" },
     { value: "East Bay", label: "Founder-Led, Locally Rooted", icon: Building, key: "stats.1" },
     { value: "Three Pillars", label: "Development • Investments • Systems", icon: Star, key: "stats.2" },
-    { value: "Private Beta", label: "MarketFlow — Private Network Only", icon: Clock, key: "stats.3" },
+    { value: "Private Beta", label: "MarketFlow · Private Network Only", icon: Clock, key: "stats.3" },
   ];
 
   return (
@@ -1645,7 +1645,7 @@ function ServicesSection() {
     {
       image: serviceImage2,
       title: "Strategic Investments",
-      description: "We structure private, deal-specific capital and partnership conversations around real opportunities, documented risks, and lawful execution. Private partner conversations only — no public investment offering.",
+      description: "We structure private, deal-specific capital and partnership conversations around real opportunities, documented risks, and lawful execution. Private partner conversations only. No public investment offering.",
       cta: "Partner Inquiry",
       ctaLink: "/invest",
       accent: "Investments",
@@ -1654,7 +1654,7 @@ function ServicesSection() {
     {
       image: serviceImage1,
       title: "Pegasus Systems",
-      description: "MarketFlow, intake workflows, and the operating layer behind every Pegasus deal. The infrastructure that turns scattered situations into routed outcomes — and the foundation we build the rest of the company on.",
+      description: "MarketFlow, intake workflows, and the operating layer behind every Pegasus deal. The infrastructure that turns scattered situations into routed outcomes, and the foundation we build the rest of the company on.",
       cta: "Enter MarketFlow",
       ctaLink: "/marketflow",
       accent: "Systems",
@@ -1792,7 +1792,7 @@ function FeaturedProjectSection() {
             </div>
             
             <p className="text-muted-foreground text-base leading-relaxed" data-testid="text-featured-description">
-              A value-add residential project used to sharpen the Pegasus operating model — acquisition strategy, renovation planning, capital discipline, and resale execution. Every phase documented, every decision deliberate.
+              A value-add residential project used to sharpen the Pegasus operating model: acquisition strategy, renovation planning, capital discipline, and resale execution. Every phase documented, every decision deliberate.
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -1915,12 +1915,12 @@ function SellPropertySection() {
               {isEditMode ? (
                 <EditableText 
                   contentKey="home.sell.description" 
-                  fallback="Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path — whether that's acquisition, wholesale, listing, or a referral to the best next resource."
+                  fallback="Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path, whether that's acquisition, wholesale, listing, or a referral to the best next resource."
                   multiline
                   as="p"
                 />
               ) : (
-                <p>Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path — whether that's acquisition, wholesale, listing, or a referral to the best next resource.</p>
+                <p>Not every property gets an offer. Every property gets a serious review. Submit your situation and Pegasus will assess the right path, whether that's acquisition, wholesale, listing, or a referral to the best next resource.</p>
               )}
             </div>
             
@@ -1931,7 +1931,7 @@ function SellPropertySection() {
               </div>
               <div className="pl-5 border-l border-primary/25">
                 <h4 className="font-semibold mb-1.5">Multi-Path Underwriting</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">We evaluate every option — not just the one that's fastest for us</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">We evaluate every option. Not just the one that's fastest for us</p>
               </div>
               <div className="pl-5 border-l border-primary/25">
                 <h4 className="font-semibold mb-1.5">24-Hour Response</h4>
@@ -2421,7 +2421,7 @@ function HowItWorksSection() {
     {
       number: "03",
       title: "Route to Best Path",
-      description: "Every accepted opportunity routes to one of eight monetization lanes within 24 business hours — acquisition, wholesale, JV, listing, referral, MarketFlow, incubation, or archive.",
+      description: "Every accepted opportunity routes to one of eight monetization lanes within 24 business hours: acquisition, wholesale, JV, listing, referral, MarketFlow, incubation, or archive.",
       icon: Target,
       key: "howitworks.step.2",
     },
@@ -2559,7 +2559,7 @@ function CommunityImpactSection() {
   const { getValue } = useSiteContent();
   
   const impactStats = [
-    { value: "Strategy", label: "First — Always", key: "community.stat.0" },
+    { value: "Strategy", label: "First, Always", key: "community.stat.0" },
     { value: "Every", label: "Property Gets a Path", key: "community.stat.1" },
     { value: "Every", label: "Deal Gets a Plan", key: "community.stat.2" },
     { value: "Every", label: "Dollar Has a Place", key: "community.stat.3" },
@@ -2581,7 +2581,7 @@ function CommunityImpactSection() {
     {
       icon: Sparkles,
       title: "Built for Long-Term Value",
-      description: "Durable value creation through disciplined project planning and accountable execution — not quick wins or inflated numbers.",
+      description: "Durable value creation through disciplined project planning and accountable execution. Not quick wins or inflated numbers.",
       key: "community.value.2",
     },
     {
@@ -2697,7 +2697,7 @@ interface FAQ {
 const defaultFaqs = [
   {
     question: "Does Pegasus buy every property it reviews?",
-    answer: "No. Not every property gets an offer — but every property gets a serious review. Pegasus evaluates each situation and routes it to the best lawful path. If we are not the right operator, we will tell you that directly and help you find the next best option."
+    answer: "No. Not every property gets an offer, but every property gets a serious review. Pegasus evaluates each situation and routes it to the best lawful path. If we are not the right operator, we will tell you that directly and help you find the next best option."
   },
   {
     question: "What is the strategy review process?",
@@ -2709,11 +2709,11 @@ const defaultFaqs = [
   },
   {
     question: "What is MarketFlow and is it public?",
-    answer: "MarketFlow is the private dealflow layer of Pegasus Systems. In v1, it is a private network and controlled review system — not a public marketplace. Access is by invitation or role-based approval. Public marketplace launch is gated on broker compliance review."
+    answer: "MarketFlow is the private dealflow layer of Pegasus Systems. In v1, it is a private network and controlled review system. Not a public marketplace. Access is by invitation or role-based approval. Public marketplace launch is gated on broker compliance review."
   },
   {
     question: "How does Pegasus handle investor partnerships?",
-    answer: "Pegasus conducts private, deal-specific conversations with aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability. Nothing should sound like a public investment offering — because it is not one."
+    answer: "Pegasus conducts private, deal-specific conversations with aligned operators and investors. Every opportunity is subject to diligence, documentation, legal review, and suitability. Nothing should sound like a public investment offering, because it is not one."
   },
   {
     question: "What types of properties does Pegasus work with?",

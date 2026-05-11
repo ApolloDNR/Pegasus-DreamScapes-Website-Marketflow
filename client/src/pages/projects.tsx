@@ -33,7 +33,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default function Projects() {
   useSEO({
     title: "Case Studies — Pegasus Dreamscapes",
-    description: "Documented real estate projects. Strategy, structure, and execution — every phase recorded.",
+    description: "Documented real estate projects. Strategy, structure, and execution. Every phase recorded.",
   });
 
   return (
@@ -87,7 +87,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            A growing record of the real estate situations we've taken on — from forced-value rehabs to small-scale development. Strategy, structure, and execution recorded for every property.
+            A growing record of the real estate situations we've taken on, from forced-value rehabs to small-scale development. Strategy, structure, and execution recorded for every property.
           </motion.p>
         </div>
       </div>
@@ -354,7 +354,7 @@ function CTASection() {
             Have one to add to the record?
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            Whether you have a property to submit, capital to deploy, or a partnership to discuss — every conversation starts the same way: with a real, structural review.
+            Whether you have a property to submit, capital to deploy, or a partnership to discuss, every conversation starts the same way: with a real, structural review.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/sell">
