@@ -6,12 +6,13 @@ const exploreLinks = [
   { href: "/#development-pathway", label: "Development Pathway" },
   { href: "/#marketflow-beta", label: "MarketFlow Beta" },
   { href: "/projects", label: "Featured Projects" },
+  { href: "/deal-blueprint", label: "Deal Blueprint" },
   { href: "/services", label: "Services" },
 ];
 
 const engageLinks = [
   { href: "/sell", label: "Submit a Property" },
-  { href: "/invest", label: "Partner Inquiry" },
+  { href: "/invest", label: "Capital & Partnerships" },
   { href: "/contact", label: "General Contact" },
   { href: "/marketflow", label: "Enter MarketFlow" },
 ];

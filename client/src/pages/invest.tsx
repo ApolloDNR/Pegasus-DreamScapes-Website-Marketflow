@@ -46,13 +46,14 @@ import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_li
 
 export default function Invest() {
   useSEO({
-    title: "Partner Inquiry — Pegasus Dreamscapes",
-    description: "Private capital and partnership conversations around real opportunities. Deal-specific structures only — no public investment offering.",
+    title: "Capital & Partnerships — Pegasus Dreamscapes",
+    description: "Capital meets structure. Private, deal-specific capital and partnership conversations around real estate projects Pegasus operates or co-develops. Not a public investment offering.",
   });
 
   return (
     <div className="min-h-screen">
       <HeroSection />
+      <NonOfferDisclaimerSection />
       <FounderSection />
       <PrinciplesSection />
       <PartnershipStructuresSection />
@@ -61,6 +62,24 @@ export default function Invest() {
       <InvestorFormSection />
       <DisclaimerSection />
     </div>
+  );
+}
+
+function NonOfferDisclaimerSection() {
+  return (
+    <section className="py-10 bg-muted/40 border-b border-border/40">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="flex items-start gap-4 p-5 rounded-lg border border-primary/20 bg-card">
+          <Lock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-semibold mb-1.5">Non-Offer Notice</p>
+            <p className="text-sm text-foreground/85 leading-relaxed" data-testid="text-invest-non-offer">
+              Nothing on this page is an offer to sell securities, a solicitation to invest, or a promise of returns.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -206,7 +225,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Pegasus structures private, deal-specific capital and partnership conversations around real estate projects we operate or co-develop. This is not a public investment offering — every conversation is individual, suitability-checked, and properly papered.
+              The Investments pillar of Pegasus supports deal-specific capital, partnership, and ownership conversations. Public conversations begin as relationship-based inquiries, not public offerings.
             </motion.p>
 
             <motion.div
@@ -219,20 +238,20 @@ function HeroSection() {
                 size="lg"
                 className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20"
                 onClick={() => document.getElementById('investor-form')?.scrollIntoView({ behavior: 'smooth' })}
-                data-testid="button-become-partner"
+                data-testid="button-start-capital-conversation"
               >
-                Start a Conversation
+                Start a Capital Conversation
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
-              <a href="#structures">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold"
-                >
-                  See Structures
-                </Button>
-              </a>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold"
+                onClick={() => document.getElementById('investor-form')?.scrollIntoView({ behavior: 'smooth' })}
+                data-testid="button-discuss-partnership"
+              >
+                Discuss a Partnership
+              </Button>
             </motion.div>
           </div>
 

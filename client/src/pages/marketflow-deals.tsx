@@ -2138,7 +2138,7 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           <div className="flex gap-2 mt-2">
             <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
               <DollarSign className="w-4 h-4 mr-2" />
-              Invest Now
+              Commit Capital
             </Button>
             <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
               <Handshake className="w-4 h-4 mr-2" />
@@ -2492,7 +2492,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           <div className="flex gap-2 mt-2">
             <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
               <DollarSign className="w-4 h-4 mr-2" />
-              Invest Now
+              Commit Capital
             </Button>
             <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
               <Handshake className="w-4 h-4 mr-2" />

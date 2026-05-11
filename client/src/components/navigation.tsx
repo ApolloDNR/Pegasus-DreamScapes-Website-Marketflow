@@ -68,7 +68,7 @@ const megaMenuSections = {
       { href: "/buyers", label: "Properties for Buyers", description: "Renovated homes & wholesale deals", icon: Home },
       { href: "/wholesale", label: "Wholesale Deals", description: "Off-market properties available", icon: Briefcase },
       { href: "/sell", label: "Sell Your Property", description: "Get a cash offer", icon: DollarSign },
-      { href: "/invest", label: "Invest With Us", description: "Partner on projects", icon: TrendingUp },
+      { href: "/invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp },
       { href: "/submit-deal", label: "Submit a Deal", description: "Wholesalers submit deals", icon: FileText },
     ]
   },
@@ -78,6 +78,7 @@ const megaMenuSections = {
     gradient: "from-blue-500/20 to-cyan-500/20",
     items: [
       { href: "/calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator, badge: "Pro" },
+      { href: "/deal-blueprint", label: "Deal Blueprint", description: "Strategic planning report — paid", icon: FileText, badge: "New" },
       { href: "/resources", label: "Investment Guides", description: "Learn the fundamentals", icon: FileText },
       { href: "/marketflow/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
       { href: "/projects", label: "Case Studies", description: "Real project examples", icon: Target },

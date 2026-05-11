@@ -154,7 +154,7 @@ function CTASection() {
           </Link>
           <Link href="/invest">
             <Button size="lg" variant="outline" data-testid="button-services-invest">
-              Invest With Us
+              Capital & Partnerships
             </Button>
           </Link>
           <Link href="/contact">

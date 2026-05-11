@@ -582,12 +582,22 @@ function FreeSnapshotSection() {
           </div>
 
           <div className="text-center">
-            <Link href="/sell">
-              <Button size="lg" className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-snapshot-cta">
-                Start a Strategy Review
-                <ArrowRight className="ml-3 w-4 h-4" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/sell">
+                <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-snapshot-cta">
+                  Start a Strategy Review
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/deal-blueprint">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-snapshot-blueprint">
+                  Next Step: Deal Blueprint
+                </Button>
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground mt-5 max-w-xl mx-auto leading-relaxed">
+              The free Snapshot comes first. The paid <Link href="/deal-blueprint" className="text-primary hover:underline">Pegasus Deal Blueprint</Link> follows when the situation warrants it.
+            </p>
           </div>
         </ScrollReveal>
       </div>
