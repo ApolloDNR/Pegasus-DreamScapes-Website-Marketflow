@@ -143,6 +143,8 @@ function Router() {
       <Route path="/projects/:slug" component={ProjectDetail} />
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />
+      <Route path="/education" component={Resources} />
+      <Route path="/vendor-network" component={Contact} />
       <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/wholesale" component={Wholesale} />
       <Route path="/buyers" component={Buyers} />

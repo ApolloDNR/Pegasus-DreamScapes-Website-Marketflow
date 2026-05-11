@@ -245,8 +245,8 @@ export default function SnapshotStatus() {
           {state === "submitted" && (
             <div className="space-y-4">
               <p className="text-base text-foreground leading-relaxed">
-                Your submission is in the queue. A real person — not an
-                automation — reviews every property that comes in.
+                Your submission is in the queue. A real person, not an
+                automation, reviews every property that comes in.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 We'll move it into review within one business day and reach out
@@ -259,7 +259,7 @@ export default function SnapshotStatus() {
           {state === "in-review" && (
             <div className="space-y-4">
               <p className="text-base text-foreground leading-relaxed">
-                We're working through the property right now — type, condition,
+                We're working through the property right now: type, condition,
                 location, scope, and which of the eight outcome lanes fits
                 cleanest.
               </p>
@@ -308,7 +308,7 @@ export default function SnapshotStatus() {
                 {fixture.snapshotSummary}
               </p>
               <p className="text-xs text-muted-foreground italic pt-2 border-t border-border/40">
-                The Strategy Snapshot is preliminary — a directional read of
+                The Strategy Snapshot is preliminary, a directional read of
                 paths and structure, not an offer, valuation, or guarantee.
               </p>
             </div>
@@ -341,21 +341,21 @@ export default function SnapshotStatus() {
                 href="/invest"
                 icon={Hammer}
                 title="Build with Pegasus"
-                desc="Explore a JV or partnership build — when the lot or scope warrants it."
+                desc="Explore a JV or partnership build, when the lot or scope warrants it."
                 testId="next-step-build"
               />
               <NextStepCard
                 href="/deal-blueprint"
                 icon={FileText}
                 title="Get the Deal Blueprint"
-                desc="Commission a paid Pegasus Deal Blueprint — a deeper, structured analysis."
+                desc="Commission a paid Pegasus Deal Blueprint, a deeper, structured analysis."
                 testId="next-step-blueprint"
               />
               <NextStepCard
                 href="#save"
                 icon={Bookmark}
                 title="Save and decide later"
-                desc="Keep the Snapshot on file. We'll check in periodically — no pressure."
+                desc="Keep the Snapshot on file. We'll check in periodically. No pressure."
                 testId="next-step-save"
               />
             </div>

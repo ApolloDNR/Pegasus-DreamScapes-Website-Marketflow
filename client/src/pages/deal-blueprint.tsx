@@ -90,7 +90,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.55 }}
             >
-              The strategic plan a complex property deserves — on paper.
+              The strategic plan a complex property deserves, on paper.
             </motion.p>
 
             <motion.p
@@ -99,7 +99,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              The Deal Blueprint is the paid roadmap that follows the free Property Strategy Snapshot. It documents the recommended strategy, the structures that fit, the market context, the scenario ranges, the scope assumptions, the budget framework, the risks, and the execution path — in one report you can read, share, and act on.
+              The Deal Blueprint is the paid roadmap that follows the free Property Strategy Snapshot. It documents the recommended strategy, the structures that fit, the market context, the scenario ranges, the scope assumptions, the budget framework, the risks, and the execution path, in one report you can read, share, and act on.
             </motion.p>
 
             <motion.div
@@ -146,9 +146,9 @@ function HeroSection() {
                 </p>
                 <div className="space-y-5">
                   {[
-                    { kicker: "Step 1", title: "Free Strategy Snapshot", desc: "We triage every property submitted through /sell — direction, lane, plain-language read." },
+                    { kicker: "Step 1", title: "Free Strategy Snapshot", desc: "We triage every property submitted through /sell: direction, lane, plain-language read." },
                     { kicker: "Step 2", title: "Pegasus Deal Blueprint", desc: "If the situation warrants it, you commission the full strategic plan in writing." },
-                    { kicker: "Step 3", title: "Execution Conversation", desc: "Pegasus operates, partners, refers, or steps aside — informed by the report." },
+                    { kicker: "Step 3", title: "Execution Conversation", desc: "Pegasus operates, partners, refers, or steps aside, informed by the report." },
                   ].map((item, i) => (
                     <div key={i} className="pb-5 border-b border-white/15 last:border-0 last:pb-0">
                       <p className="text-[10px] uppercase tracking-[0.25em] text-champagne font-semibold mb-1.5">{item.kicker}</p>
@@ -182,10 +182,10 @@ function WhatItIsSection() {
             <span className="text-headline-gold">Not advice. Not a transaction.</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-            The Pegasus Deal Blueprint is a written, structured plan — the kind of document we use internally before we put our own time, capital, or operators on a project. It documents how we would approach the situation, what the realistic paths look like, and what each path would require.
+            The Pegasus Deal Blueprint is a written, structured plan. The kind of document we use internally before we put our own time, capital, or operators on a project. It documents how we would approach the situation, what the realistic paths look like, and what each path would require.
           </p>
           <p className="text-base text-muted-foreground/85 leading-relaxed">
-            The Blueprint is built by humans who do this work. It is opinionated, specific, and grounded in the property in front of us — never a generic template.
+            The Blueprint is built by humans who do this work. It is opinionated, specific, and grounded in the property in front of us. Never a generic template.
           </p>
         </ScrollReveal>
 
@@ -193,7 +193,7 @@ function WhatItIsSection() {
           {[
             { icon: Compass, title: "Strategic, not tactical", desc: "How to think about the property, not which contractor to call on Tuesday." },
             { icon: FileText, title: "Documented, not verbal", desc: "A report you can re-read, share with a partner, and act on with discipline." },
-            { icon: Target, title: "Specific, not generic", desc: "Built around your address, your situation, your constraints — not a checklist." },
+            { icon: Target, title: "Specific, not generic", desc: "Built around your address, your situation, your constraints, not a checklist." },
           ].map((item, i) => (
             <StaggerItem key={i}>
               <div className="h-full p-7 bg-card rounded-lg border border-border/40" data-testid={`what-it-is-${i}`}>
@@ -227,7 +227,7 @@ function WhoItIsForSection() {
       icon: Briefcase,
       kicker: "Partners",
       title: "Capital and operating partners scoping a project",
-      desc: "Partners considering a project alongside Pegasus or independently who want a written, opinionated plan to underwrite against — before any structure is discussed.",
+      desc: "Partners considering a project alongside Pegasus or independently who want a written, opinionated plan to underwrite against, before any structure is discussed.",
     },
   ];
 
@@ -244,7 +244,7 @@ function WhoItIsForSection() {
             Three people benefit most.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            The Blueprint is built for situations where the answer is not obvious — and where getting it wrong is expensive.
+            The Blueprint is built for situations where the answer is not obvious, and where getting it wrong is expensive.
           </p>
         </ScrollReveal>
 
@@ -273,7 +273,7 @@ function TiersSection() {
       kicker: "Tier 1",
       name: "Single-Path Blueprint",
       tagline: "One strategy, fully scoped.",
-      desc: "The most likely path for this property, documented in full — strategy, structure, scope, budget, risks, exit. Built when the right path is already obvious and what's needed is the plan, not the comparison.",
+      desc: "The most likely path for this property, documented in full: strategy, structure, scope, budget, risks, exit. Built when the right path is already obvious and what's needed is the plan, not the comparison.",
       bullets: [
         "One recommended strategy, scoped end-to-end",
         "Structure options that fit that strategy",
@@ -384,13 +384,13 @@ function WhatsIncludedSection() {
   const items = [
     { icon: Compass, title: "Strategy recommendation", desc: "The recommended path for the property, with the reasoning behind it." },
     { icon: Layers, title: "Structure options", desc: "The ownership and capital structures that fit the recommended strategy." },
-    { icon: Map, title: "Market overview", desc: "The local market context the strategy depends on — submarket, comp set, demand signals." },
-    { icon: Target, title: "Preliminary scenario ranges", desc: "Ranges, not pinpoints — basis, exit, timeline, capital exposure across realistic scenarios." },
+    { icon: Map, title: "Market overview", desc: "The local market context the strategy depends on: submarket, comp set, demand signals." },
+    { icon: Target, title: "Preliminary scenario ranges", desc: "Ranges, not pinpoints: basis, exit, timeline, capital exposure across realistic scenarios." },
     { icon: ClipboardList, title: "Scope assumptions", desc: "What the strategy assumes about scope, condition, permitting, and access." },
-    { icon: Briefcase, title: "Budget framework", desc: "A structured framework for the budget, not a fixed-bid number — the categories and contingencies that matter." },
+    { icon: Briefcase, title: "Budget framework", desc: "A structured framework for the budget, not a fixed-bid number. The categories and contingencies that matter." },
     { icon: ShieldAlert, title: "Risk register", desc: "The risks that could break the strategy and the conditions under which each is most likely to materialize." },
     { icon: Route, title: "Exit paths", desc: "Primary exit, secondary exit, and the conditions that would force a path change." },
-    { icon: GitBranch, title: "Execution roadmap", desc: "The sequenced milestones from today to exit — what has to be true at each stage to keep the plan intact." },
+    { icon: GitBranch, title: "Execution roadmap", desc: "The sequenced milestones from today to exit. What has to be true at each stage to keep the plan intact." },
   ];
 
   return (
@@ -467,7 +467,7 @@ function CTASection() {
           </h2>
 
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
-            Submit the property through Strategy Review. We'll triage it, return your free Snapshot, and — if it warrants one — quote the Blueprint scoped to the situation.
+            Submit the property through Strategy Review. We'll triage it, return your free Snapshot, and, if it warrants one, quote the Blueprint scoped to the situation.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">

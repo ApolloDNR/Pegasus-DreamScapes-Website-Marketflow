@@ -519,8 +519,8 @@ function WhatBringsYouHereSection() {
     { icon: GitBranch, title: "I have a deal or JV idea", desc: "Wholesale, assignment, or partnership opportunity to route.", href: "/submit-deal", testId: "router-deal" },
     { icon: DollarSign, title: "I represent capital", desc: "Private capital or partnership inquiry, by conversation, not public offering.", href: "/invest", testId: "router-capital" },
     { icon: Hammer, title: "I'm exploring ADU / development", desc: "Build, add, or reposition. Pre-development scope and feasibility.", href: "/services", testId: "router-development" },
-    { icon: BookOpenIcon, title: "I want to learn the strategies", desc: "Plain-language strategy resources. No hype, no shortcuts.", href: "/resources", testId: "router-education" },
-    { icon: Network, title: "I'm a vendor or operator", desc: "Join the disciplined network behind Pegasus execution.", href: "/contact", testId: "router-vendor" },
+    { icon: BookOpenIcon, title: "I want to learn the strategies", desc: "Plain-language strategy library. No hype, no shortcuts.", href: "/education", testId: "router-education" },
+    { icon: Network, title: "I'm a vendor or operator", desc: "Join the disciplined network behind Pegasus execution.", href: "/vendor-network", testId: "router-vendor" },
   ];
 
   return (
