@@ -426,7 +426,7 @@ function MarketFlowBetaSection() {
               </p>
             </div>
 
-            <ol className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3" data-testid="marketflow-funnel">
+            <ol className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-9 gap-3" data-testid="marketflow-funnel">
               {[
                 { n: "01", label: "Website / Peggy intake", note: "Owner or operator submits" },
                 { n: "02", label: "Pegasus HQ submission", note: "Logged for internal review" },
@@ -435,7 +435,8 @@ function MarketFlowBetaSection() {
                 { n: "05", label: "Lane choice", note: "Owner picks a path" },
                 { n: "06", label: "Opportunity", note: "If approved by team" },
                 { n: "07", label: "MarketFlow candidate", note: "Curated for fit" },
-                { n: "08", label: "Listed in MarketFlow", note: "Approved for distribution" },
+                { n: "08", label: "Approved for distribution", note: "Cleared for the network" },
+                { n: "09", label: "MarketFlow Listing", note: "Visible to vetted members" },
               ].map((step, i) => (
                 <li
                   key={step.n}
