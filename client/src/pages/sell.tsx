@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -31,8 +33,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
-import { insertSellerLeadSchema, type InsertSellerLead, type InsertLead } from "@shared/schema";
+import type { InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useUpload } from "@/hooks/use-upload";
 import { z } from "zod";
 import {
   MessageSquare,
@@ -47,21 +51,51 @@ import {
   Shield,
   Clock,
   FileCheck,
+  ImagePlus,
+  X as XIcon,
 } from "lucide-react";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
 
-const sellerFormSchema = insertSellerLeadSchema.extend({
+const sellerFormSchema = z.object({
   name: z.string().min(2, "Please enter your full name"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   email: z.string().email("Please enter a valid email address"),
   propertyAddress: z.string().min(5, "Please enter the property address"),
+  submitterRole: z.enum(["owner", "agent", "wholesaler", "family", "other"], {
+    errorMap: () => ({ message: "Please select your relationship to the property" }),
+  }),
+  propertyType: z.string().min(1, "Please select a property type"),
+  condition: z.string().min(1, "Please select a condition"),
+  occupancy: z.enum(["vacant", "owner-occupied", "tenant-occupied", "mixed"], {
+    errorMap: () => ({ message: "Please select occupancy" }),
+  }),
+  timeline: z.string().min(1, "Please select a timeline"),
+  situation: z.string().optional().default(""),
+  desiredOutcome: z.string().optional().default(""),
+  proposedTerms: z.string().optional().default(""),
+  creativeFinanceOpenness: z.enum(["yes", "maybe", "no"], {
+    errorMap: () => ({ message: "Please make a selection" }),
+  }),
+  notes: z.string().optional().default(""),
+  photos: z.array(z.string()).optional().default([]),
+  consentContact: z.literal(true, {
+    errorMap: () => ({ message: "Required to proceed" }),
+  }),
+  consentSnapshot: z.literal(true, {
+    errorMap: () => ({ message: "Required to proceed" }),
+  }),
+  ackPreliminary: z.literal(true, {
+    errorMap: () => ({ message: "Required to proceed" }),
+  }),
 });
+
+type SellerFormValues = z.infer<typeof sellerFormSchema>;
 
 export default function Sell() {
   useSEO({
-    title: "Submit a Property — Pegasus Dreamscapes",
-    description: "Strategy-first review for your property. Every property gets a path — wholesale, acquisition, JV, listing, or referral.",
+    title: "Strategy Review · Pegasus DreamScapes",
+    description: "Submit a property and get a free Strategy Snapshot. Strategy-first review across acquisition, wholesale, JV, listing, or honest referral. No lead dies.",
   });
 
   return (
@@ -152,7 +186,7 @@ function HeroSection() {
             >
               <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
               <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 font-medium">
-                Submit a Property · Strategy Review
+                Strategy Review · Pegasus DreamScapes
               </p>
             </motion.div>
 
@@ -163,8 +197,8 @@ function HeroSection() {
               transition={{ duration: 0.7, delay: 0.3 }}
               data-testid="text-sell-hero"
             >
-              Every property<br />
-              <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">gets a path.</span>
+              Submit a property.<br />
+              <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Get a free Strategy Snapshot.</span>
             </motion.h1>
 
             <motion.p
@@ -182,7 +216,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Submit your property and we'll review the situation — type, condition, motivation, and timeline — then route it to the cleanest economic path. Acquisition, wholesale, JV, listing, or honest referral. No lead dies.
+              Tell us about the property and the situation. A real person reviews every submission and routes it to the cleanest path — acquisition, wholesale, JV, listing, or honest referral. The Snapshot is preliminary and free; no offer figures, no pressure, no spam.
             </motion.p>
 
             <motion.div
@@ -195,9 +229,9 @@ function HeroSection() {
                 size="lg"
                 className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20"
                 onClick={() => document.getElementById('seller-form')?.scrollIntoView({ behavior: 'smooth' })}
-                data-testid="button-request-offer"
+                data-testid="button-start-strategy-review"
               >
-                Submit Your Property
+                Start Strategy Review
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
               <a href="#how-it-works">
@@ -362,23 +396,35 @@ function OutcomeRoutingSection() {
 function LeadFormSection() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const { getUploadParameters } = useUpload();
 
-  const form = useForm<InsertSellerLead>({
+  const form = useForm<SellerFormValues>({
     resolver: zodResolver(sellerFormSchema),
     defaultValues: {
       name: "",
       phone: "",
       email: "",
       propertyAddress: "",
+      submitterRole: "owner",
       propertyType: "house",
       condition: "needs-tlc",
+      occupancy: "vacant",
       timeline: "30-60-days",
+      situation: "",
+      desiredOutcome: "",
+      proposedTerms: "",
+      creativeFinanceOpenness: "maybe",
       notes: "",
+      photos: [],
+      consentContact: undefined as unknown as true,
+      consentSnapshot: undefined as unknown as true,
+      ackPreliminary: undefined as unknown as true,
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: InsertSellerLead) => {
+    mutationFn: async (data: SellerFormValues) => {
       const nameParts = data.name.split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -392,9 +438,23 @@ function LeadFormSection() {
         phone: data.phone,
         address: data.propertyAddress,
         leadData: {
+          // Strategy Review v1.3.1 intake — all fields tucked into JSONB.
+          // No HQ canonical schema yet; this is transitional intake.
+          submitterRole: data.submitterRole,
           propertyType: data.propertyType,
           condition: data.condition,
+          occupancy: data.occupancy,
           timeline: data.timeline,
+          situation: data.situation,
+          desiredOutcome: data.desiredOutcome,
+          proposedTerms: data.proposedTerms,
+          creativeFinanceOpenness: data.creativeFinanceOpenness,
+          photos,
+          consents: {
+            consentContact: data.consentContact,
+            consentSnapshot: data.consentSnapshot,
+            ackPreliminary: data.ackPreliminary,
+          },
         },
         notes: data.notes,
       };
@@ -403,10 +463,17 @@ function LeadFormSection() {
     },
     onSuccess: () => {
       setSubmitted(true);
-      toast({ title: "Property Submitted", description: "We'll review your situation and reach out within 1–2 business days." });
+      toast({
+        title: "Submission received",
+        description: "Your Strategy Snapshot is being prepared.",
+      });
     },
     onError: () => {
-      toast({ title: "Something went wrong", description: "Please try again or email us directly.", variant: "destructive" });
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or email us directly.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -416,11 +483,14 @@ function LeadFormSection() {
         <div className="max-w-2xl mx-auto px-6 text-center">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-form-success">
-            Thank you.
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-3 tracking-[-0.02em]" data-testid="text-form-success">
+            Submission received.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Your property is in the queue. Our team will review the situation and route it to the right lane within 24 business hours, then reach out with a real answer.
+          <p className="font-serif text-2xl sm:text-3xl text-muted-foreground italic mb-8 tracking-[-0.01em]">
+            Your Strategy Snapshot is being prepared.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
+            A real person reviews every submission. We'll be in touch within 1–2 business days with the Snapshot and the recommended path. The Snapshot is preliminary — not an offer, valuation, or guarantee.
           </p>
         </div>
       </section>
@@ -495,17 +565,37 @@ function LeadFormSection() {
                   </FormItem>
                 )} />
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <FormField control={form.control} name="submitterRole" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your relationship to the property</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger data-testid="select-submitter-role"><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="owner">Owner</SelectItem>
+                        <SelectItem value="agent">Agent / Broker</SelectItem>
+                        <SelectItem value="wholesaler">Wholesaler</SelectItem>
+                        <SelectItem value="family">Family member / Trustee</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField control={form.control} name="propertyType" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Property Type</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger data-testid="select-property-type"><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
                         <SelectContent>
-                          <SelectItem value="house">House</SelectItem>
-                          <SelectItem value="condo">Condo</SelectItem>
-                          <SelectItem value="multi">Multi-Family</SelectItem>
-                          <SelectItem value="land">Land</SelectItem>
+                          <SelectItem value="house">Single-Family House</SelectItem>
+                          <SelectItem value="condo">Condo / Townhome</SelectItem>
+                          <SelectItem value="multi">Multi-Family (2–4)</SelectItem>
+                          <SelectItem value="multi-large">Multi-Family (5+)</SelectItem>
+                          <SelectItem value="land">Land / Lot</SelectItem>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -517,9 +607,26 @@ function LeadFormSection() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger data-testid="select-condition"><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
                         <SelectContent>
+                          <SelectItem value="move-in-ready">Move-in Ready</SelectItem>
                           <SelectItem value="needs-tlc">Needs TLC</SelectItem>
                           <SelectItem value="major-repairs">Major Repairs</SelectItem>
-                          <SelectItem value="move-in-ready">Move-in Ready</SelectItem>
+                          <SelectItem value="distressed">Distressed / Vacant Land</SelectItem>
+                          <SelectItem value="unknown">Not Sure</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="occupancy" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Occupancy</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger data-testid="select-occupancy"><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="vacant">Vacant</SelectItem>
+                          <SelectItem value="owner-occupied">Owner-Occupied</SelectItem>
+                          <SelectItem value="tenant-occupied">Tenant-Occupied</SelectItem>
+                          <SelectItem value="mixed">Mixed</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -534,6 +641,7 @@ function LeadFormSection() {
                           <SelectItem value="asap">ASAP</SelectItem>
                           <SelectItem value="30-60-days">30–60 Days</SelectItem>
                           <SelectItem value="3-plus-months">3+ Months</SelectItem>
+                          <SelectItem value="exploring">Just Exploring</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -541,13 +649,126 @@ function LeadFormSection() {
                   )} />
                 </div>
 
-                <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormField control={form.control} name="situation" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Anything we should know?</FormLabel>
+                    <FormLabel>The situation <span className="text-muted-foreground font-normal">(optional but encouraged)</span></FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="The situation, motivation, encumbrances, what you've tried — anything helps."
-                        className="min-h-32 resize-none"
+                        placeholder="What's going on with the property — motivation, encumbrances, liens, code issues, family dynamics, what you've already tried."
+                        className="min-h-28 resize-none"
+                        {...field}
+                        value={field.value ?? ""}
+                        data-testid="textarea-situation"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="desiredOutcome" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>What does a good outcome look like?</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Cash sale, list it, partner on a build, hand it to a family member, walk away clean — describe what success looks like for you."
+                        className="min-h-24 resize-none"
+                        {...field}
+                        value={field.value ?? ""}
+                        data-testid="textarea-desired-outcome"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="proposedTerms" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Proposed number or terms <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="If you have a number or structure in mind, share it here."
+                        {...field}
+                        value={field.value ?? ""}
+                        data-testid="input-proposed-terms"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="creativeFinanceOpenness" render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Open to creative-finance structures (subject-to, seller-finance, JV)?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-wrap gap-6"
+                      >
+                        {[
+                          { value: "yes", label: "Yes" },
+                          { value: "maybe", label: "Maybe / Want to learn" },
+                          { value: "no", label: "No, traditional only" },
+                        ].map((opt) => (
+                          <div key={opt.value} className="flex items-center gap-2">
+                            <RadioGroupItem value={opt.value} id={`creative-${opt.value}`} data-testid={`radio-creative-${opt.value}`} />
+                            <label htmlFor={`creative-${opt.value}`} className="text-sm cursor-pointer">{opt.label}</label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                {/* Photo upload — optional, encouraged */}
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <label className="text-sm font-medium">Photos <span className="text-muted-foreground font-normal">(optional, encouraged — helps us route faster)</span></label>
+                    <span className="text-xs text-muted-foreground">{photos.length} attached</span>
+                  </div>
+                  {photos.length > 0 && (
+                    <ul className="flex flex-wrap gap-2">
+                      {photos.map((p, i) => (
+                        <li key={p} className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md text-xs" data-testid={`photo-attached-${i}`}>
+                          <ImagePlus className="w-3 h-3 text-primary" />
+                          <span className="truncate max-w-[160px]">Photo {i + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => setPhotos((prev) => prev.filter((x) => x !== p))}
+                            className="text-muted-foreground hover:text-destructive"
+                            data-testid={`button-remove-photo-${i}`}
+                          >
+                            <XIcon className="w-3 h-3" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <ObjectUploader
+                    maxNumberOfFiles={10}
+                    maxFileSize={15 * 1024 * 1024}
+                    onGetUploadParameters={getUploadParameters}
+                    onComplete={(result) => {
+                      const newPaths = (result.successful || [])
+                        .map((f) => (f.meta as { objectPath?: string })?.objectPath)
+                        .filter((x): x is string => Boolean(x));
+                      if (newPaths.length) setPhotos((prev) => [...prev, ...newPaths]);
+                    }}
+                    buttonClassName="w-full sm:w-auto text-xs uppercase tracking-[0.15em] font-semibold"
+                  >
+                    <ImagePlus className="w-4 h-4 mr-2" />
+                    Add Photos
+                  </ObjectUploader>
+                </div>
+
+                <FormField control={form.control} name="notes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Anything else?</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Anything else we should know."
+                        className="min-h-20 resize-none"
                         {...field}
                         value={field.value ?? ""}
                         data-testid="textarea-seller-notes"
@@ -556,6 +777,64 @@ function LeadFormSection() {
                     <FormMessage />
                   </FormItem>
                 )} />
+
+                {/* Consents */}
+                <div className="space-y-4 pt-2 border-t border-border/50">
+                  <FormField control={form.control} name="consentContact" render={({ field }) => (
+                    <FormItem className="flex items-start gap-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value === true}
+                          onCheckedChange={(c) => field.onChange(c === true ? true : undefined)}
+                          data-testid="checkbox-consent-contact"
+                          className="mt-0.5"
+                        />
+                      </FormControl>
+                      <div className="space-y-1">
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          I consent to be contacted by Pegasus DreamScapes about this property.
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="consentSnapshot" render={({ field }) => (
+                    <FormItem className="flex items-start gap-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value === true}
+                          onCheckedChange={(c) => field.onChange(c === true ? true : undefined)}
+                          data-testid="checkbox-consent-snapshot"
+                          className="mt-0.5"
+                        />
+                      </FormControl>
+                      <div className="space-y-1">
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          I would like to receive a free Strategy Snapshot for this property.
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="ackPreliminary" render={({ field }) => (
+                    <FormItem className="flex items-start gap-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value === true}
+                          onCheckedChange={(c) => field.onChange(c === true ? true : undefined)}
+                          data-testid="checkbox-ack-preliminary"
+                          className="mt-0.5"
+                        />
+                      </FormControl>
+                      <div className="space-y-1">
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          I understand the Strategy Snapshot is preliminary — not an offer, valuation, or guarantee.
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )} />
+                </div>
 
                 <Button
                   type="submit"
@@ -567,11 +846,11 @@ function LeadFormSection() {
                   {mutation.isPending ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</>
                   ) : (
-                    <>Submit Property<ArrowRight className="ml-3 w-4 h-4" /></>
+                    <>Start Strategy Review<ArrowRight className="ml-3 w-4 h-4" /></>
                   )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center pt-2">
-                  By submitting, you consent to be contacted about your property. No spam, no resale of your data.
+                  No spam, no resale of your data. The Snapshot is preliminary and free.
                 </p>
               </form>
             </Form>

@@ -87,6 +87,7 @@ const AnalyticsPage = lazy(() => import("@/pages/analytics"));
 const MyAnalyticsPage = lazy(() => import("@/pages/my-analytics"));
 const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
+const SnapshotStatus = lazy(() => import("@/pages/snapshot-status"));
 
 const legacyRedirects: [string, string][] = [
   ["/dealflow/hq", "/marketflow/admin"],
@@ -151,6 +152,7 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/submit-deal" component={SubmitDeal} />
+      <Route path="/snapshot/:token" component={SnapshotStatus} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/capital-raising" component={CapitalRaising} />
       <Route path="/dealflow/project/:id" component={DealflowProject} />
