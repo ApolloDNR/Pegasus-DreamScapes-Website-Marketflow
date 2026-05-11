@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { apiRequest } from "@/lib/queryClient";
@@ -31,7 +32,12 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
-  Bot
+  Bot,
+  DollarSign,
+  Hammer,
+  BookOpen,
+  Network,
+  GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -182,14 +188,19 @@ interface QuickPrompt {
   label: string;
   prompt: string;
   context?: string;
+  href?: string;
 }
 
 function getQuickPrompts(page?: string): QuickPrompt[] {
-  const basePrompts: QuickPrompt[] = [
-    { icon: HelpCircle, label: "How it works", prompt: "How does this platform work?", context: "general" },
-    { icon: TrendingUp, label: "Best strategies", prompt: "What are the best real estate investment strategies for beginners?", context: "general" },
+  const routerPrompts: QuickPrompt[] = [
+    { icon: Home, label: "I have a property", prompt: "I have a property I'd like to discuss.", context: "router", href: "/sell" },
+    { icon: GitBranch, label: "I have a deal or JV idea", prompt: "I have a deal or JV idea to route.", context: "router", href: "/submit-deal" },
+    { icon: DollarSign, label: "I want to discuss capital", prompt: "I want to discuss a private capital or partnership conversation.", context: "router", href: "/invest" },
+    { icon: Hammer, label: "ADU / development", prompt: "I want to explore ADU or development potential.", context: "router", href: "/services" },
+    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies — point me to the Strategy Library.", context: "router" },
+    { icon: Network, label: "Vendor or operator", prompt: "I'm a vendor or operator interested in the Pegasus network — what's the right way in?", context: "router" },
   ];
-  
+
   if (page?.includes('calculator')) {
     return [
       { icon: Calculator, label: "Analyze results", prompt: "Can you analyze my calculation results and tell me if this is a good deal?", context: "calculator" },
@@ -197,33 +208,35 @@ function getQuickPrompts(page?: string): QuickPrompt[] {
       { icon: Lightbulb, label: "Deal tips", prompt: "What factors should I consider before proceeding with this investment?", context: "calculator" },
     ];
   }
-  
+
   if (page?.includes('deal') || page?.includes('wholesale') || page?.includes('capital')) {
     return [
-      { icon: Building2, label: "Analyze deal", prompt: "Can you analyze this deal and tell me if it's worth pursuing?", context: "deal" },
-      { icon: Target, label: "Negotiation tips", prompt: "What negotiation strategies should I use for this deal?", context: "deal" },
-      { icon: TrendingUp, label: "Market insight", prompt: "What's the current market outlook for this type of investment?", context: "deal" },
+      { icon: Building2, label: "Analyze deal", prompt: "Can you walk me through how Pegasus would review this deal?", context: "deal" },
+      { icon: Target, label: "Route this deal", prompt: "What's the right Pegasus path for this deal?", context: "deal" },
+      { icon: TrendingUp, label: "Strategy fit", prompt: "Which strategy lane fits this opportunity best?", context: "deal" },
     ];
   }
-  
+
   if (page?.includes('marketflow') || page?.includes('marketplace')) {
     return [
-      { icon: Building2, label: "Find deals", prompt: "Help me find the best deals that match my investment criteria", context: "marketplace" },
-      { icon: Target, label: "My strategy", prompt: "What investment strategy would work best for my goals?", context: "marketplace" },
-      ...basePrompts
+      { icon: Building2, label: "What is MarketFlow?", prompt: "What is MarketFlow and how do deals get in?", context: "marketplace" },
+      { icon: Target, label: "Request access", prompt: "How do I request access to MarketFlow?", context: "marketplace", href: "/contact" },
+      ...routerPrompts.slice(0, 2),
     ];
   }
-  
-  return basePrompts;
+
+  return routerPrompts;
 }
 
 function QuickPromptChips({ 
   prompts, 
   onSelect,
+  onNavigate,
   compact = false
 }: { 
   prompts: QuickPrompt[]; 
   onSelect: (prompt: string) => void;
+  onNavigate?: (href: string) => void;
   compact?: boolean;
 }) {
   return (
@@ -240,7 +253,13 @@ function QuickPromptChips({
             "gap-1.5 text-xs border-dashed hover:border-solid hover:bg-accent/50",
             compact && "h-7"
           )}
-          onClick={() => onSelect(prompt.prompt)}
+          onClick={() => {
+            if (prompt.href && onNavigate) {
+              onNavigate(prompt.href);
+            } else {
+              onSelect(prompt.prompt);
+            }
+          }}
           data-testid={`button-quick-prompt-${index}`}
         >
           <prompt.icon className="h-3 w-3" />
@@ -267,8 +286,16 @@ export function PeggyDock() {
   const constraintsRef = useRef<HTMLDivElement>(null);
   
   const { context, sessionId, isOpen, openChat, closeChat, toggleChat } = usePeggyContext();
+  const [, setLocation] = useLocation();
   
   const quickPrompts = getQuickPrompts(context.page);
+
+  const handleNavigate = useCallback((href: string) => {
+    setLocation(href);
+    closeChat();
+    setIsExpanded(false);
+    setIsFullscreen(false);
+  }, [setLocation, closeChat]);
   
   const createConversationMutation = useMutation({
     mutationFn: async (newContext: PeggyContextData) => {
@@ -510,10 +537,10 @@ export function PeggyDock() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm flex items-center gap-1.5">
-                      Peggy
+                      Peggy · Strategy Assistant
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">AI</Badge>
                     </h3>
-                    <p className="text-xs text-muted-foreground">Your MarketFlow assistant</p>
+                    <p className="text-xs text-muted-foreground">Pegasus Dreamscapes intake & routing</p>
                   </div>
                 </div>
                 
@@ -564,19 +591,20 @@ export function PeggyDock() {
                     >
                       <Bot className="h-10 w-10 text-amber-600" />
                     </motion.div>
-                    <h3 className="font-semibold text-lg mb-1">Hi, I'm Peggy!</h3>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-[280px] mx-auto">
-                      Your AI-powered assistant for real estate investing. Ask me anything about deals, strategies, or the MarketFlow platform.
+                    <h3 className="font-semibold text-lg mb-1">Hi, I'm Peggy.</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-[300px] mx-auto">
+                      I can help route your property, deal, or partnership idea to the right Pegasus review path.
                     </p>
                     
                     <div className="text-left">
                       <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
                         <Lightbulb className="h-3 w-3" />
-                        Quick questions
+                        Where would you like to start?
                       </p>
                       <QuickPromptChips 
                         prompts={quickPrompts} 
-                        onSelect={handleQuickPromptSelect} 
+                        onSelect={handleQuickPromptSelect}
+                        onNavigate={handleNavigate}
                       />
                     </div>
                   </div>
@@ -622,6 +650,7 @@ export function PeggyDock() {
                   <QuickPromptChips 
                     prompts={quickPrompts.slice(0, 2)} 
                     onSelect={handleQuickPromptSelect}
+                    onNavigate={handleNavigate}
                     compact
                   />
                 </div>

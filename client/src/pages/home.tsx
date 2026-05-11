@@ -328,19 +328,28 @@ function MarketFlowBetaSection() {
 
             <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6">
               MarketFlow.<br />
-              <span className="text-primary/85">Where deals find their architects.</span>
+              <span className="text-primary/85">The private dealflow layer.</span>
             </h2>
 
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl">
-              MarketFlow is the private deal-flow operating layer behind Pegasus — a curated network where vetted properties are routed to the operators, capital partners, and end-buyers best positioned to close them.
+            <p className="text-lg text-muted-foreground leading-relaxed mb-6 max-w-2xl">
+              MarketFlow is the private dealflow layer for reviewed opportunities, trusted operators, buyers, and capital relationships.
             </p>
+
+            <div className="mb-8 border-l-2 border-primary/40 pl-5 text-sm text-muted-foreground/85 leading-relaxed max-w-2xl" data-testid="marketflow-not">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-2">What MarketFlow is not</p>
+              <ul className="space-y-1">
+                <li>· Not raw intake — every property is routed through Pegasus HQ first.</li>
+                <li>· Not a public marketplace — access is private, role-gated, and invite-only.</li>
+                <li>· Not an investment solicitation platform — capital conversations stay private.</li>
+              </ul>
+            </div>
 
             <ul className="grid sm:grid-cols-2 gap-4 mb-10">
               {[
-                { icon: Eye, text: "Curated, role-gated deal visibility" },
-                { icon: Target, text: "Compatibility-scored matching" },
-                { icon: Network, text: "Direct-to-operator messaging" },
-                { icon: Shield, text: "Private, vetted network only" },
+                { icon: Shield, text: "Reviewed before listed — never raw intake" },
+                { icon: Eye, text: "Role-gated visibility for vetted members" },
+                { icon: Target, text: "Compatibility-scored to operator + capital fit" },
+                { icon: Network, text: "Direct-to-operator messaging in-network" },
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3" data-testid={`marketflow-feature-${i}`}>
                   <item.icon className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
@@ -404,6 +413,47 @@ function MarketFlowBetaSection() {
             </div>
           </ScrollReveal>
         </div>
+
+        <ScrollReveal className="mt-20 lg:mt-24" direction="up" delay={0.1}>
+          <div className="border-t border-border/40 pt-12">
+            <div className="text-center mb-10">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-semibold mb-3">How a property reaches MarketFlow</p>
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] max-w-2xl mx-auto">
+                Reviewed before listed. Always.
+              </h3>
+              <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
+                Nothing skips the review. Every opportunity passes through the same structural path before it ever sees the network.
+              </p>
+            </div>
+
+            <ol className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3" data-testid="marketflow-funnel">
+              {[
+                { n: "01", label: "Website / Peggy intake", note: "Owner or operator submits" },
+                { n: "02", label: "Pegasus HQ submission", note: "Logged for internal review" },
+                { n: "03", label: "Seed", note: "Initial qualification" },
+                { n: "04", label: "Strategy Snapshot", note: "Free structural read" },
+                { n: "05", label: "Lane choice", note: "Owner picks a path" },
+                { n: "06", label: "Opportunity", note: "If approved by team" },
+                { n: "07", label: "MarketFlow candidate", note: "Curated for fit" },
+                { n: "08", label: "Listed in MarketFlow", note: "Approved for distribution" },
+              ].map((step, i) => (
+                <li
+                  key={step.n}
+                  className="relative p-4 rounded-lg border border-border/50 bg-card/40 hover:border-primary/40 transition-colors"
+                  data-testid={`funnel-step-${i}`}
+                >
+                  <div className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-2">{step.n}</div>
+                  <div className="font-serif text-sm font-semibold leading-tight mb-1">{step.label}</div>
+                  <div className="text-[11px] text-muted-foreground leading-snug">{step.note}</div>
+                </li>
+              ))}
+            </ol>
+
+            <p className="text-center text-[11px] uppercase tracking-[0.25em] text-muted-foreground mt-8">
+              No raw intake reaches MarketFlow. The review is the doctrine.
+            </p>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );
