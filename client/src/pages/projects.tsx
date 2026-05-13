@@ -38,6 +38,7 @@ export default function Projects() {
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Projects and Case Studies — Pegasus Dreamscapes</h1>
       <HeroSection />
       <ProjectsGrid />
       <CTASection />

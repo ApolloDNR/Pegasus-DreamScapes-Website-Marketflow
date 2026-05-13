@@ -31,6 +31,7 @@ export default function DealBlueprint() {
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Pegasus Deal Blueprint</h1>
       <HeroSection />
       <WhatItIsSection />
       <WhoItIsForSection />

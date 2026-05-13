@@ -52,6 +52,7 @@ export default function Invest() {
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Capital and Partnership Inquiries — Pegasus Dreamscapes</h1>
       <HeroSection />
       <NonOfferDisclaimerSection />
       <FounderSection />

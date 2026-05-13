@@ -222,8 +222,9 @@ function App() {
                         <ScrollToTop />
                         <AdminBar />
                         <div className="min-h-screen flex flex-col bg-background text-foreground">
+                          <a href="#main-content" className="skip-to-content">Skip to main content</a>
                           <Navigation />
-                          <main className="flex-1">
+                          <main id="main-content" className="flex-1" tabIndex={-1}>
                             <ErrorBoundary>
                               <Router />
                             </ErrorBoundary>

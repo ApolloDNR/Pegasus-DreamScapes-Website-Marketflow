@@ -1474,7 +1474,7 @@ function HeroSection() {
             </motion.div>
             
             {/* Premium headline with refined typography */}
-            <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-semibold leading-[0.88] mb-10 tracking-[-0.02em] text-white" data-testid="text-hero-headline">
+            <h1 className="font-serif font-semibold mb-10 text-white [font-size:clamp(48px,7vw,96px)] [line-height:0.95] [letter-spacing:-0.02em]" data-testid="text-hero-headline">
               <motion.span 
                 className="block"
                 initial={{ opacity: 0, y: 40 }}

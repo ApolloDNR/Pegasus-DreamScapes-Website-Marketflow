@@ -100,6 +100,7 @@ export default function Sell() {
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Sell or Submit a Property — Pegasus Dreamscapes</h1>
       <HeroSection />
       <HowItWorksSection />
       <OutcomeRoutingSection />

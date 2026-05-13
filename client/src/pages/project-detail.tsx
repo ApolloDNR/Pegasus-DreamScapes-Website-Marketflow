@@ -62,6 +62,7 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Project Detail — Pegasus Dreamscapes</h1>
       <HeroSection project={project} />
       <BodySection project={project} />
       <RoutingSection />

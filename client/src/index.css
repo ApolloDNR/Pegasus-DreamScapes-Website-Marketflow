@@ -85,6 +85,15 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
+  /* === Semantic surface tokens (Website Craft Pass — May 2026) === */
+  /* Map editorial names to existing brand HSL values. */
+  --ink: var(--navy);              /* deep navy headlines + body */
+  --paper: var(--background);      /* warm cream page surface */
+  --bronze: var(--copper);         /* primary accent / CTA */
+  --bronze-soft: 26 58% 78%;       /* desaturated copper for soft hover */
+  --rule: var(--border);           /* hairline rules + dividers */
+  --muted-text: var(--muted-foreground);
+
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --sidebar-accent-border: hsl(var(--sidebar-accent));
@@ -103,6 +112,12 @@
 
 /* DARK MODE — Deep Navy bg with Warm Cream type, Rich Copper accents */
 .dark {
+  --ink: 38 38% 92%;
+  --paper: 213 53% 9%;
+  --bronze: 26 65% 56%;
+  --bronze-soft: 26 50% 38%;
+  --rule: 213 30% 20%;
+  --muted-text: 38 20% 65%;
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
@@ -218,6 +233,85 @@
 /* Smooth scrolling for single-page navigation */
 html {
   scroll-behavior: smooth;
+}
+
+/* === A11y baseline (Website Craft Pass) === */
+/* Skip link — invisible until focused */
+.skip-to-content {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  padding: 0.625rem 1rem;
+  background: hsl(var(--ink));
+  color: hsl(var(--paper));
+  font-family: var(--font-supporting);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 0.25rem;
+  transform: translateY(-150%);
+  transition: transform 0.2s ease;
+}
+.skip-to-content:focus {
+  transform: translateY(0);
+  outline: 2px solid hsl(var(--bronze));
+  outline-offset: 2px;
+}
+
+/* Bronze focus ring on every focusable surface */
+:focus-visible {
+  outline: 2px solid hsl(var(--bronze));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* === Locked 7-tier type scale (utility classes available for new use) === */
+.text-eyebrow {
+  font-family: var(--font-supporting);
+  font-size: 0.6875rem;       /* 11px */
+  line-height: 1;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.text-display {
+  font-family: var(--font-serif);
+  font-size: clamp(2.75rem, 6.5vw, 5.75rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.text-h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.text-h3 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.text-body-lg {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;        /* 18px */
+  line-height: 1.55;
+}
+.text-body {
+  font-family: var(--font-sans);
+  font-size: 1rem;            /* 16px */
+  line-height: 1.6;
+}
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;       /* 13px */
+  line-height: 1.5;
+  color: hsl(var(--muted-text));
 }
 
 /* Brand divider — copper-to-navy hairline */

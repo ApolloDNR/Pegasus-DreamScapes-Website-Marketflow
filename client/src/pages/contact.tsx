@@ -50,6 +50,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Contact Pegasus Dreamscapes</h1>
       <HeroSection />
       <ContactRoutingSection />
       <ContactFormSection />
