@@ -56,6 +56,7 @@ export default function ProjectDetail() {
     title: project ? `${project.name} · Projects` : "Project",
     description: project?.description || "Documented real estate case study from Pegasus DreamScapes Corp.",
     image: project?.afterImages?.[0],
+    noTagline: true,
   });
 
   if (isLoading) return <ProjectSkeleton />;

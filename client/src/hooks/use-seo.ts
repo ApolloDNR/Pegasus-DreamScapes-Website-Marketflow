@@ -6,6 +6,7 @@ interface SEOProps {
   type?: string;
   image?: string;
   noIndex?: boolean;
+  noTagline?: boolean;
 }
 
 const BRAND = "Pegasus DreamScapes Corp.";
@@ -36,9 +37,10 @@ function setLink(rel: string, href: string) {
   el.setAttribute("href", href);
 }
 
-export function useSEO({ title, description, type = "website", image, noIndex }: SEOProps = {}) {
+export function useSEO({ title, description, type = "website", image, noIndex, noTagline }: SEOProps = {}) {
   useEffect(() => {
-    const fullTitle = title ? `${title} · ${BASE_TITLE}` : BASE_TITLE;
+    const suffix = noTagline ? BRAND : BASE_TITLE;
+    const fullTitle = title ? `${title} · ${suffix}` : BASE_TITLE;
     const desc = description || BASE_DESCRIPTION;
     const ogImage = image || DEFAULT_OG_IMAGE;
     const url = typeof window !== "undefined" ? `${SITE_URL}${window.location.pathname}` : SITE_URL;
@@ -65,5 +67,5 @@ export function useSEO({ title, description, type = "website", image, noIndex }:
     return () => {
       document.title = BASE_TITLE;
     };
-  }, [title, description, type, image, noIndex]);
+  }, [title, description, type, image, noIndex, noTagline]);
 }

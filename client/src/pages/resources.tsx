@@ -18,11 +18,20 @@ import {
   Lightbulb,
   CheckCircle2
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useSEO } from "@/hooks/use-seo";
 import type { Article } from "@shared/schema";
 
 export default function Resources() {
+  const [location] = useLocation();
+  const isEducation = location.startsWith("/education");
+  useSEO({
+    title: isEducation ? "Education" : "Resources",
+    description: isEducation
+      ? "Strategy education for sellers, investors, and operators. Frameworks, calculators, and case-study walkthroughs from Pegasus DreamScapes Corp."
+      : "Articles, guides, and tools for navigating complex real estate. Strategy-first resources from Pegasus DreamScapes Corp.",
+  });
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />

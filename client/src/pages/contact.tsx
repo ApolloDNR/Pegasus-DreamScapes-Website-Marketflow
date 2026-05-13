@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
+import { useLocation } from "wouter";
 import { ScrollReveal } from "@/components/animations";
 import { insertContactSchema, type InsertContact, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -43,9 +44,13 @@ const contactFormSchema = insertContactSchema.extend({
 });
 
 export default function Contact() {
+  const [location] = useLocation();
+  const isVendor = location.startsWith("/vendor-network");
   useSEO({
-    title: "Contact",
-    description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
+    title: isVendor ? "Vendor Network" : "Contact",
+    description: isVendor
+      ? "Trusted contractors, lenders, agents, and operators routed into Pegasus DreamScapes Corp. deal flow. Apply to be considered for the private vendor network."
+      : "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
   });
 
   return (
