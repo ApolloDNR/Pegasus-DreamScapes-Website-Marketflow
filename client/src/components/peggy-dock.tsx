@@ -475,6 +475,7 @@ export function PeggyDock() {
                   isDragging && "ring-4 ring-amber-500/30"
                 )}
                 size="icon"
+                aria-label="Open Peggy strategy assistant"
                 data-testid="button-peggy-dock"
               >
                 <motion.div

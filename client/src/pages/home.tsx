@@ -448,7 +448,7 @@ function MarketFlowBetaSection() {
                         <span className="text-[10px] uppercase tracking-[0.2em] text-copper font-semibold">{deal.lane}</span>
                         <ArrowRight className="w-3.5 h-3.5 text-cream/50 group-hover:text-copper transition-colors" />
                       </div>
-                      <h4 className="font-semibold text-sm mb-1 font-serif text-cream">{deal.title}</h4>
+                      <h3 className="font-semibold text-sm mb-1 font-serif text-cream">{deal.title}</h3>
                       <p className="text-xs text-cream/60">{deal.meta}</p>
                     </div>
                   ))}
