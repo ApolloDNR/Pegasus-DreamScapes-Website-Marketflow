@@ -13,8 +13,8 @@ import {
 
 export default function Services() {
   useSEO({
-    title: "Our Services - Real Estate Investment & Renovation",
-    description: "Explore Pegasus DreamScapes services: fix & flip acquisitions, buy & hold rentals, design & renovation management, and expert consulting."
+    title: "Services",
+    description: "Three pillars: Development, Investments, Systems. Strategy-first execution across complex real estate situations."
   });
 
   return (

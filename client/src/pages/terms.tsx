@@ -2,8 +2,8 @@ import { useSEO } from "@/hooks/use-seo";
 
 export default function Terms() {
   useSEO({
-    title: "Terms of Service | Pegasus DreamScapes Corp",
-    description: "Terms of service for using the Pegasus DreamScapes Corp real estate investment platform.",
+    title: "Terms of Service",
+    description: "Terms of service for the Pegasus DreamScapes Corp. website and Strategy Review intake.",
   });
 
   return (

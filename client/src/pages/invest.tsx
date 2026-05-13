@@ -46,7 +46,7 @@ import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_li
 
 export default function Invest() {
   useSEO({
-    title: "Capital & Partnerships — Pegasus DreamScapes",
+    title: "Capital & Partnerships",
     description: "Capital meets structure. Private, deal-specific capital and partnership conversations around real estate projects Pegasus operates or co-develops. Not a public investment offering.",
   });
 

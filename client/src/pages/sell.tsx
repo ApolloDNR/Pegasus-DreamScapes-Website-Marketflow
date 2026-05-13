@@ -94,8 +94,8 @@ type SellerFormValues = z.infer<typeof sellerFormSchema>;
 
 export default function Sell() {
   useSEO({
-    title: "Strategy Review · Pegasus DreamScapes",
-    description: "Submit a property and get a free Strategy Snapshot. Strategy-first review across acquisition, wholesale, JV, listing, or honest referral. No lead dies.",
+    title: "Strategy Review",
+    description: "Submit a property and get a free Strategy Snapshot. Strategy-first review across acquisition, wholesale, JV, listing, or honest referral. Every property gets a serious review.",
   });
 
   return (

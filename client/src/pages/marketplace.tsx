@@ -38,8 +38,8 @@ export default function MarketplacePage() {
   const { isDemoMode } = useDemoMode();
 
   useSEO({
-    title: "MarketFlow - Deal Marketplace",
-    description: "Browse wholesale deals, capital projects, and property listings. Connect with vetted investors and close deals faster."
+    title: "MarketFlow Beta",
+    description: "MarketFlow is the private dealflow layer for reviewed opportunities, trusted operators, buyers, and capital relationships. Not a public marketplace."
   });
 
   useEffect(() => {

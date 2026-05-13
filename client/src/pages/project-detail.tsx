@@ -53,8 +53,9 @@ export default function ProjectDetail() {
   });
 
   useSEO({
-    title: project ? `${project.name} — Pegasus DreamScapes Case Study` : "Project — Pegasus DreamScapes",
-    description: project?.description || "Documented real estate case study from Pegasus DreamScapes.",
+    title: project ? `${project.name} · Projects` : "Project",
+    description: project?.description || "Documented real estate case study from Pegasus DreamScapes Corp.",
+    image: project?.afterImages?.[0],
   });
 
   if (isLoading) return <ProjectSkeleton />;

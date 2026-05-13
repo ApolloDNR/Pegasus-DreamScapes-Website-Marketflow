@@ -2,8 +2,8 @@ import { useSEO } from "@/hooks/use-seo";
 
 export default function Privacy() {
   useSEO({
-    title: "Privacy Policy | Pegasus DreamScapes Corp",
-    description: "Privacy policy for Pegasus DreamScapes Corp real estate investment platform.",
+    title: "Privacy Policy",
+    description: "Privacy policy for the Pegasus DreamScapes Corp. website and Strategy Review intake.",
   });
 
   return (

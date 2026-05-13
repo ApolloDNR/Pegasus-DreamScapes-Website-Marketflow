@@ -44,7 +44,7 @@ const contactFormSchema = insertContactSchema.extend({
 
 export default function Contact() {
   useSEO({
-    title: "Contact — Pegasus DreamScapes",
+    title: "Contact",
     description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
   });
 

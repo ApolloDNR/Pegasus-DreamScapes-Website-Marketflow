@@ -173,9 +173,10 @@ export default function SnapshotStatus() {
   const Icon = meta.icon;
 
   useSEO({
-    title: "Strategy Snapshot Status · Pegasus DreamScapes",
+    title: "Strategy Snapshot Status",
     description:
-      "Track the status of your Strategy Snapshot submission with Pegasus DreamScapes.",
+      "Track the status of your Strategy Snapshot submission with Pegasus DreamScapes Corp.",
+    noIndex: true,
   });
 
   // TODO(HQ): replace with real loading state from getSnapshotStatusByToken().

@@ -32,8 +32,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function Projects() {
   useSEO({
-    title: "Case Studies — Pegasus DreamScapes",
-    description: "Documented real estate projects. Strategy, structure, and execution. Every phase recorded.",
+    title: "Projects",
+    description: "Documented real estate case studies from Pegasus DreamScapes Corp. Strategy, structure, and execution recorded for every project.",
   });
 
   return (

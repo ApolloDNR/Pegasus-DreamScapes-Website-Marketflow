@@ -171,6 +171,74 @@ export async function registerRoutes(
   // Add Supabase auth middleware to extract user from JWT tokens
   app.use(supabaseAuthMiddleware);
 
+  // SEO: robots.txt
+  app.get('/robots.txt', (req, res) => {
+    const host = `${req.protocol}://${req.get('host')}`;
+    res.type('text/plain').send(
+      [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /api/',
+        'Disallow: /hq',
+        'Disallow: /admin',
+        'Disallow: /dashboard',
+        'Disallow: /login',
+        'Disallow: /signup',
+        'Disallow: /marketflow/admin',
+        'Disallow: /marketflow/dashboard',
+        'Disallow: /offer-studio',
+        'Disallow: /profile/',
+        '',
+        `Sitemap: ${host}/sitemap.xml`,
+        '',
+      ].join('\n'),
+    );
+  });
+
+  // SEO: sitemap.xml — public routes + project case studies
+  app.get('/sitemap.xml', async (req, res) => {
+    const host = `${req.protocol}://${req.get('host')}`;
+    const today = new Date().toISOString().split('T')[0];
+    const staticRoutes: { path: string; priority: string; changefreq: string }[] = [
+      { path: '/', priority: '1.0', changefreq: 'weekly' },
+      { path: '/sell', priority: '0.9', changefreq: 'monthly' },
+      { path: '/invest', priority: '0.9', changefreq: 'monthly' },
+      { path: '/projects', priority: '0.8', changefreq: 'weekly' },
+      { path: '/contact', priority: '0.7', changefreq: 'yearly' },
+      { path: '/marketflow', priority: '0.8', changefreq: 'weekly' },
+      { path: '/deal-blueprint', priority: '0.8', changefreq: 'monthly' },
+      { path: '/resources', priority: '0.6', changefreq: 'weekly' },
+      { path: '/education', priority: '0.5', changefreq: 'monthly' },
+      { path: '/vendor-network', priority: '0.5', changefreq: 'monthly' },
+      { path: '/about', priority: '0.6', changefreq: 'yearly' },
+      { path: '/terms', priority: '0.3', changefreq: 'yearly' },
+      { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+    ];
+
+    let projectUrls = '';
+    try {
+      const projects = await storage.getProjects();
+      projectUrls = projects
+        .map((p: any) =>
+          `  <url><loc>${host}/projects/${p.slug}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`,
+        )
+        .join('\n');
+    } catch (err) {
+      projectUrls = '';
+    }
+
+    const urls = staticRoutes
+      .map(
+        (r) =>
+          `  <url><loc>${host}${r.path}</loc><lastmod>${today}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
+      )
+      .join('\n');
+
+    res
+      .type('application/xml')
+      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}${projectUrls ? '\n' + projectUrls : ''}\n</urlset>\n`);
+  });
+
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
 

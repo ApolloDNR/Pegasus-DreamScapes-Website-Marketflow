@@ -86,8 +86,7 @@ import { useSiteContent } from "@/contexts/site-content-context";
 
 export default function Home() {
   useSEO({
-    title: "Pegasus DreamScapes | Development · Investments · Systems",
-    description: "Real estate execution, built with discipline. Pegasus DreamScapes is a founder-led real estate development, investment, and systems company."
+    description: "Pegasus DreamScapes Corp. is a strategy-first real estate operating company. Complex property, structured opportunity. Built on strategy. Governed by virtue. Executed with discipline."
   });
   
   return (

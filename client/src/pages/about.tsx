@@ -32,8 +32,8 @@ import {
 
 export default function About() {
   useSEO({
-    title: "About Us - Pegasus DreamScapes Corp",
-    description: "Learn about Pegasus DreamScapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
+    title: "About",
+    description: "Pegasus DreamScapes Corp. is a strategy-first real estate operating company based in the Bay Area. Founder-led, built on strategy, governed by virtue, executed with discipline."
   });
 
   return (
