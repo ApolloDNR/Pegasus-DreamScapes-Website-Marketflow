@@ -64,11 +64,47 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen">
+      <ProjectJsonLd project={project} />
       <h1 className="sr-only">Project Detail — Pegasus DreamScapes</h1>
       <HeroSection project={project} />
       <BodySection project={project} />
       <RoutingSection />
     </div>
+  );
+}
+
+function ProjectJsonLd({ project }: { project: Project }) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: project.name,
+    description: project.description || `${project.name} case study from Pegasus DreamScapes Corp.`,
+    url: `https://pegasusdreamscapes.com/projects/${project.slug}`,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: project.address,
+      addressLocality: project.city,
+      addressRegion: project.state,
+      addressCountry: "US",
+    },
+    image: project.afterImages?.[0],
+    provider: {
+      "@type": "Organization",
+      name: "Pegasus DreamScapes Corp.",
+      url: "https://pegasusdreamscapes.com",
+    },
+  };
+  if (project.bedrooms) data.numberOfBedrooms = project.bedrooms;
+  if (project.bathrooms) data.numberOfBathroomsTotal = project.bathrooms;
+  if (project.sqft) {
+    data.floorSize = { "@type": "QuantitativeValue", value: project.sqft, unitCode: "FTK" };
+  }
+  if (project.yearBuilt) data.yearBuilt = project.yearBuilt;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
   );
 }
 
@@ -79,12 +115,22 @@ function HeroSection({ project }: { project: Project }) {
     <section className="relative min-h-[80vh] flex items-end overflow-hidden pt-20">
       {heroImg ? (
         <motion.div
-          className="absolute inset-0 bg-cover bg-center scale-105"
-          style={{ backgroundImage: `url(${heroImg})` }}
+          className="absolute inset-0 scale-105"
           initial={{ scale: 1.1 }}
           animate={{ scale: 1.05 }}
           transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-        />
+        >
+          <img
+            src={heroImg}
+            alt={`${project.name} after photo`}
+            width={1920}
+            height={1080}
+            loading="eager"
+            decoding="sync"
+            {...({ fetchpriority: "high" } as Record<string, string>)}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </motion.div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-navy to-charcoal" />
       )}
@@ -194,7 +240,7 @@ function BodySection({ project }: { project: Project }) {
                       whileHover={{ y: -3 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <img src={image} alt={`${project.name} after ${i + 1}`} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" data-testid={`img-after-${i}`} />
+                      <img src={image} alt={`${project.name} after ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" decoding="async" data-testid={`img-after-${i}`} />
                     </motion.div>
                   ))}
                 </div>
@@ -211,7 +257,7 @@ function BodySection({ project }: { project: Project }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {project.beforeImages.map((image, i) => (
                     <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
-                      <img src={image} alt={`${project.name} before ${i + 1}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" data-testid={`img-before-${i}`} />
+                      <img src={image} alt={`${project.name} before ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" decoding="async" data-testid={`img-before-${i}`} />
                     </div>
                   ))}
                 </div>
