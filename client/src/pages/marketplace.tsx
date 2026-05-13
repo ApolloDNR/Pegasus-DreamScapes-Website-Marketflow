@@ -128,7 +128,7 @@ function HeroSection() {
               <ul className="space-y-1">
                 <li>· Not raw intake. Every property is routed through Pegasus HQ first.</li>
                 <li>· Not a public marketplace. Access is private, role-gated, and invite-only.</li>
-                <li>· Not an investment solicitation platform. Capital conversations stay private.</li>
+                <li>· Not an investment solicitation platform. Capital conversations happen privately, never as a public offering.</li>
               </ul>
             </div>
             <div className="flex flex-wrap justify-center gap-4">
