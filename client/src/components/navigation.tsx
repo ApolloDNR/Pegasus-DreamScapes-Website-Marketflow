@@ -475,11 +475,23 @@ export function Navigation() {
                           </Link>
                         </li>
                       ))}
+                      {!isAuthenticated && (
+                        <li>
+                          <a
+                            href="/api/login"
+                            className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                            data-testid="link-mobile-signin"
+                          >
+                            <LogIn className="w-4 h-4" aria-hidden="true" />
+                            Sign In
+                          </a>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </nav>
 
-                <div className="pt-6 border-t border-[hsl(var(--rule))] space-y-4">
+                <div className="pt-6 border-t border-[hsl(var(--rule))]">
                   <Link href={PRIMARY_CTA.href} onClick={() => setMobileOpen(false)}>
                     <Button
                       className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
@@ -489,16 +501,6 @@ export function Navigation() {
                       <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
                     </Button>
                   </Link>
-                  {!isAuthenticated && (
-                    <a
-                      href="/api/login"
-                      className="flex items-center justify-center gap-2 text-sm text-[hsl(var(--muted-text))] hover:text-[hsl(var(--ink))] transition-colors"
-                      data-testid="link-mobile-login"
-                    >
-                      <LogIn className="w-4 h-4" aria-hidden="true" />
-                      Sign In
-                    </a>
-                  )}
                 </div>
               </SheetContent>
             </Sheet>
