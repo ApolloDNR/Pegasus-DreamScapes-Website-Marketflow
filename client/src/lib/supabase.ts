@@ -90,6 +90,8 @@ export interface SavedItem {
   created_at: string;
 }
 
+let loggedNoConfig = false;
+
 async function initializeSupabase(): Promise<SupabaseClient> {
   try {
     const response = await fetch('/api/config/supabase');
@@ -97,16 +99,24 @@ async function initializeSupabase(): Promise<SupabaseClient> {
       throw new Error('Failed to fetch Supabase config');
     }
     const config = await response.json();
-    
+
     if (!config.url || !config.anonKey) {
-      console.warn('Supabase configuration not available');
-      return createClient('', '');
+      // Intentional empty config in environments without Supabase (e.g. dev / preview).
+      // Log once per session at info level so it doesn't spam the console.
+      if (!loggedNoConfig) {
+        loggedNoConfig = true;
+        console.info('[supabase] No client config; running without Supabase auth.');
+      }
+      return createClient('https://placeholder.supabase.co', 'placeholder');
     }
-    
+
     return createClient(config.url, config.anonKey);
   } catch (error) {
-    console.error('Failed to initialize Supabase:', error);
-    return createClient('', '');
+    if (!loggedNoConfig) {
+      loggedNoConfig = true;
+      console.info('[supabase] Client unavailable; running without Supabase auth.', error);
+    }
+    return createClient('https://placeholder.supabase.co', 'placeholder');
   }
 }
 

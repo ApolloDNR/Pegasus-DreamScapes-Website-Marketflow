@@ -14,7 +14,8 @@ import {
 export default function Services() {
   useSEO({
     title: "Services",
-    description: "Three pillars: Development, Investments, Systems. Strategy-first execution across complex real estate situations."
+    description: "Three pillars: Development, Investments, Systems. Strategy-first execution across complex real estate situations.",
+    noIndex: true,
   });
 
   return (

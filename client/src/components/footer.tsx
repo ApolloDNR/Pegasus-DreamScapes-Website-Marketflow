@@ -3,19 +3,23 @@ import { Mail, MapPin, ArrowUpRight, Phone, LogIn } from "lucide-react";
 import logoImage from "@assets/image_1765405939117.png";
 import { ThemeToggle } from "./theme-toggle";
 
+// Locked Pass D grouping — mirrors the desktop header order so users see one
+// consistent navigation map across header and footer.
 const exploreLinks = [
-  { href: "/#development-pathway", label: "Development Pathway" },
-  { href: "/#marketflow-beta", label: "MarketFlow Beta" },
-  { href: "/projects", label: "Featured Projects" },
-  { href: "/deal-blueprint", label: "Deal Blueprint" },
-  { href: "/services", label: "Services" },
+  { href: "/sell", label: "Approach" },
+  { href: "/projects", label: "Projects" },
+  { href: "/invest", label: "Capital" },
+  { href: "/marketflow", label: "MarketFlow" },
+  { href: "/about", label: "About" },
 ];
 
-const engageLinks = [
-  { href: "/sell", label: "Submit a Property" },
-  { href: "/invest", label: "Capital & Partnerships" },
-  { href: "/contact", label: "General Contact" },
-  { href: "/marketflow", label: "Enter MarketFlow" },
+const moreLinks = [
+  { href: "/resources", label: "Strategy Library" },
+  { href: "/calculators", label: "Calculators" },
+  { href: "/vendor-network", label: "Vendor Network" },
+  { href: "/contact", label: "Contact" },
+  { href: "/disclosures", label: "Disclosures" },
+  { href: "/deal-blueprint", label: "Deal Blueprint" },
 ];
 
 export function Footer() {
@@ -64,17 +68,14 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className="md:col-span-4">
-            <h3 className="font-semibold mb-5 text-xs uppercase tracking-[0.25em] text-foreground/60">Start a Conversation</h3>
-            <ul className="space-y-3 mb-8">
-              {engageLinks.map((link) => (
+            <h3 className="font-semibold mt-8 mb-5 text-xs uppercase tracking-[0.25em] text-foreground/60">More</h3>
+            <ul className="space-y-3">
+              {moreLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link href={link.href}>
                     <span
                       className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-1.5 group"
-                      data-testid={`link-footer-engage-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-testid={`link-footer-more-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       {link.label}
                       <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
@@ -83,6 +84,21 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="md:col-span-4">
+            <h3 className="font-semibold mb-5 text-xs uppercase tracking-[0.25em] text-foreground/60">Start a Conversation</h3>
+            <div className="space-y-3 mb-8">
+              <Link href="/sell">
+                <span
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-1.5 group"
+                  data-testid="link-footer-engage-submit-a-property"
+                >
+                  Submit a Property
+                  <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                </span>
+              </Link>
+            </div>
             <div className="space-y-3 pt-5 border-t border-border/50">
               <a
                 href="mailto:apollo@pegasusdreamscapes.com"
@@ -137,7 +153,7 @@ export function Footer() {
               <p className="text-xs text-muted-foreground" data-testid="text-copyright">
                 &copy; {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.
               </p>
-              <p className="text-[11px] text-muted-foreground/70 mt-1.5 max-w-2xl leading-relaxed">
+              <p className="text-[11px] text-muted-foreground/80 mt-1.5 max-w-2xl leading-relaxed">
                 Private network · Invite-only deal flow. Information on this site is for general purposes only and is not an offer to buy or sell securities, real property, or investment products.
               </p>
             </div>
@@ -154,7 +170,7 @@ export function Footer() {
                 </span>
               </Link>
               <span className="text-border">·</span>
-              <Link href="/contact">
+              <Link href="/disclosures">
                 <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-disclosures">
                   Disclosures
                 </span>

@@ -90,6 +90,20 @@ The platform is migrating to **Supabase** as its primary database, utilizing UUI
     - Forbidden public phrases: "Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," any AI-sounding phrasing, and generic luxury / guru language. Negative disclaimer use ("not an offer of guaranteed returns or principal protection") is preserved on `/invest` and `/terms` because it serves the disclosure, not a promise.
 - **Visual baseline**: Light mode runs warm cream (`--background: 38 50% 96%`, `--cream: 38 50% 94%`), not white SaaS. Type tiers stay Cinzel / Cormorant Garamond / Montserrat / Inter; primary CTAs stay copper, secondary stay outline. No fake stats, no fake testimonials, no glassmorphism overuse on the v1.3.1 pages.
 
+### Navigation grouping (locked Pass D — May 2026)
+This grouping is canonical across desktop header, mobile sheet, and footer. Any addition or rename must touch all three surfaces together.
+
+- **Desktop header (left → right)**: Approach (`/sell`) · Projects (`/projects`) · Capital (`/invest`) · MarketFlow [BETA] (`/marketflow`) · About (`/about`) · **More ▾** dropdown.
+- **More ▾ contents** (desktop dropdown + mobile sheet "More" group, 1-for-1): Strategy Library (`/resources`), Calculators (`/calculators`), Vendor Network (`/vendor-network`), Contact (`/contact`), Disclosures (`/disclosures`). When the user is unauthenticated, the desktop dropdown also shows a "Sign In" entry pointing to `/api/login`.
+- **Active-route highlighting**: The current page keeps high-contrast ink/white text, gains `font-semibold` and `aria-current="page"`, and is marked by a copper underline (or white underline on the dark hero). Mobile uses a left copper border for the same state. Bronze is reserved for the underline / hover, never for active text — bronze on cream fails WCAG AA at 13px. The `More ▾` trigger lights up the same way when any child route is active.
+- **"Development" removed from top nav**: It was a cross-page hash anchor (`/#development-pathway`) that fired unreliably from non-home routes and read like a destination. The Development Pathway section on the homepage is still reachable from the hero secondary CTA and inline links from `/sell`.
+- **Footer Explore column** mirrors the header order. A separate "More" sub-column under it carries the same five secondary links from the header dropdown (Strategy Library, Calculators, Vendor Network, Contact, Disclosures) plus Deal Blueprint. The legal-row "Disclosures" link also points to `/disclosures` (not `/contact`).
+- **Retired public funnel routes**: `/wholesale` → `/sell`, `/submit-deal` → `/sell`, `/buyers` + `/buy` → `/marketflow`, `/dreamspace` + `/partner` + `/capital-raising` → `/invest`. All redirects live in `App.tsx`'s `legacyRedirects` array. The original page components (`pages/wholesale.tsx`, `pages/buyers.tsx`, `pages/buy.tsx`, `pages/dreamspace.tsx`, `pages/partner.tsx`, `pages/capital-raising.tsx`, `pages/submit-deal.tsx`) are still on disk but no longer imported.
+- **`noIndex` on utility routes**: `/services` and `/dashboard` now set `useSEO({ noIndex: true })`. They remain reachable but won't be indexed.
+- **Theme on first paint**: `ThemeProvider` defaults to `system` so first paint follows OS `prefers-color-scheme` when no preference is stored. The manual Light / Dark / System toggle still wins and persists to `localStorage` under `pegasus-ui-theme`.
+- **Contrast tokens (WCAG AA pass)**: Light `--muted-foreground` moved 213 22% 38% → 213 30% 28% (~9:1 on cream). Dark `--muted-foreground` and `--muted-text` moved 38 20% 65% → 38 25% 78% (~10.5:1 on navy). Both clear AA for normal text; copper accents and headlines were already passing.
+- **Console hygiene**: `client/src/lib/supabase.ts` and `supabase-auth-context.tsx` now log a single `console.info` per session (instead of repeating `console.error`/`console.warn`) when `VITE_SUPABASE_URL` is empty, so Lighthouse "Best Practices" no longer takes a hit in environments without Supabase configured.
+
 ## External Dependencies
 
 ### UI and Styling

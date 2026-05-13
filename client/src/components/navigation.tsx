@@ -26,7 +26,6 @@ import {
   LogIn,
   MessageSquare,
   Bell,
-  Settings,
   LogOut,
   Shield,
   ArrowRight,
@@ -36,17 +35,34 @@ import logoImage from "@assets/image_1765405939117.png";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { CommandPalette } from "./command-palette";
 
-type NavItem = { href: string; label: string; useAnchor?: boolean };
+type NavItem = { href: string; label: string; useAnchor?: boolean; matchPrefix?: string };
+type MoreItem = { href: string; label: string; badge?: string };
 
+// Locked Pass D grouping. Header desktop = 5 noun items + a "More" dropdown.
+// Mobile sheet mirrors the same set under its "More" group for parity.
 const NAV_ITEMS: NavItem[] = [
-  { href: "/sell", label: "Approach" },
-  { href: "/#development-pathway", label: "Development", useAnchor: true },
-  { href: "/projects", label: "Projects" },
-  { href: "/invest", label: "Capital" },
-  { href: "/about", label: "About" },
+  { href: "/sell", label: "Approach", matchPrefix: "/sell" },
+  { href: "/projects", label: "Projects", matchPrefix: "/projects" },
+  { href: "/invest", label: "Capital", matchPrefix: "/invest" },
+  { href: "/marketflow", label: "MarketFlow", matchPrefix: "/marketflow" },
+  { href: "/about", label: "About", matchPrefix: "/about" },
+];
+
+const MORE_ITEMS: MoreItem[] = [
+  { href: "/resources", label: "Strategy Library" },
+  { href: "/calculators", label: "Calculators" },
+  { href: "/vendor-network", label: "Vendor Network" },
+  { href: "/contact", label: "Contact" },
+  { href: "/disclosures", label: "Disclosures" },
 ];
 
 const PRIMARY_CTA = { href: "/sell", label: "Start a Strategy Review" };
+
+function isItemActive(item: NavItem, location: string): boolean {
+  const prefix = item.matchPrefix ?? item.href;
+  if (prefix === "/") return location === "/";
+  return location === prefix || location.startsWith(prefix + "/");
+}
 
 function NotificationBell({ onLightSurface }: { onLightSurface: boolean }) {
   return (
@@ -154,12 +170,6 @@ function UserMenu({
           </>
         )}
         <DropdownMenuSeparator />
-        <Link href="/marketflow/settings">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <Settings className="w-4 h-4" aria-hidden="true" />
-            Settings
-          </DropdownMenuItem>
-        </Link>
         <a href="/api/logout">
           <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive">
             <LogOut className="w-4 h-4" aria-hidden="true" />
@@ -190,17 +200,37 @@ export function Navigation() {
   }, []);
 
   const navLinkBase =
-    "px-3 py-2 text-[13px] tracking-[0.04em] font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
+    "relative px-3 py-2 text-[13px] tracking-[0.04em] font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
 
   const renderNavLink = (item: NavItem, isMobile = false) => {
+    const active = isItemActive(item, location);
+    // Active state keeps high-contrast ink/white text (WCAG AA) and uses the
+    // copper underline + font weight for state. Bronze on cream is too light
+    // for normal text contrast.
+    const desktopColor = onLightSurface
+      ? active
+        ? "text-[hsl(var(--ink))] font-semibold"
+        : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+      : active
+        ? "text-white font-semibold"
+        : "text-white/85 hover:text-white";
     const className = isMobile
-      ? "block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-      : `${navLinkBase} ${
-          onLightSurface
-            ? "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
-            : "text-white/85 hover:text-white"
-        }`;
+      ? `relative block py-3 text-base transition-colors ${
+          active
+            ? "text-[hsl(var(--ink))] font-semibold border-l-2 border-[hsl(var(--bronze))] pl-3"
+            : "text-[hsl(var(--ink))] font-medium hover:text-[hsl(var(--bronze))]"
+        }`
+      : `${navLinkBase} ${desktopColor}`;
     const testId = `link-nav-${item.label.toLowerCase()}`;
+    const ariaCurrent = active ? "page" : undefined;
+    const underline = !isMobile && active ? (
+      <span
+        aria-hidden="true"
+        className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+          onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+        }`}
+      />
+    ) : null;
     if (item.useAnchor) {
       // Use a real anchor so browsers can navigate cross-page to the hash target.
       return (
@@ -209,9 +239,11 @@ export function Navigation() {
           href={item.href}
           className={className}
           data-testid={testId}
+          aria-current={ariaCurrent}
           onClick={() => isMobile && setMobileOpen(false)}
         >
           {item.label}
+          {underline}
         </a>
       );
     }
@@ -221,12 +253,23 @@ export function Navigation() {
         href={item.href}
         className={className}
         data-testid={testId}
+        aria-current={ariaCurrent}
         onClick={() => isMobile && setMobileOpen(false)}
       >
         {item.label}
+        {underline}
       </Link>
     );
   };
+
+  const moreActive = MORE_ITEMS.some((m) => location === m.href || location.startsWith(m.href + "/"));
+  const moreDesktopColor = onLightSurface
+    ? moreActive
+      ? "text-[hsl(var(--ink))] font-semibold"
+      : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+    : moreActive
+      ? "text-white font-semibold"
+      : "text-white/85 hover:text-white";
 
   return (
     <>
@@ -270,12 +313,89 @@ export function Navigation() {
             </span>
           </Link>
 
-          {/* Desktop nav — 5 noun items */}
+          {/* Desktop nav — 5 noun items + More dropdown */}
           <nav
             className="hidden lg:flex items-center gap-1"
             aria-label="Primary navigation"
           >
-            {NAV_ITEMS.map((item) => renderNavLink(item))}
+            {NAV_ITEMS.map((item) => {
+              if (item.label !== "MarketFlow") return renderNavLink(item);
+              const active = isItemActive(item, location);
+              const colorClass = onLightSurface
+                ? active
+                  ? "text-[hsl(var(--ink))] font-semibold"
+                  : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+                : active
+                  ? "text-white font-semibold"
+                  : "text-white/85 hover:text-white";
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`${navLinkBase} ${colorClass} inline-flex items-center gap-1.5`}
+                  data-testid="link-nav-marketflow"
+                  aria-current={active ? "page" : undefined}
+                >
+                  MarketFlow
+                  <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--bronze))] rounded">
+                    BETA
+                  </span>
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+                        onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+                      }`}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+
+            {/* More dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`${navLinkBase} ${moreDesktopColor} inline-flex items-center gap-1`}
+                  data-testid="button-nav-more"
+                  aria-label="More navigation"
+                >
+                  More
+                  <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
+                  {moreActive && (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+                        onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+                      }`}
+                    />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {MORE_ITEMS.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      data-testid={`link-nav-more-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {item.label}
+                    </DropdownMenuItem>
+                  </Link>
+                ))}
+                {!isAuthenticated && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <a href="/api/login">
+                      <DropdownMenuItem className="cursor-pointer gap-2" data-testid="link-nav-more-signin">
+                        <LogIn className="w-4 h-4" aria-hidden="true" />
+                        Sign In
+                      </DropdownMenuItem>
+                    </a>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* Right cluster — public state is exactly: bronze CTA. Auth state adds account utilities. */}
@@ -343,47 +463,18 @@ export function Navigation() {
                   <div className="mt-8 pt-6 border-t border-[hsl(var(--rule))]">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--muted-text))] font-supporting font-semibold mb-3">More</p>
                     <ul className="space-y-1">
-                      <li>
-                        <Link
-                          href="/marketflow"
-                          onClick={() => setMobileOpen(false)}
-                          className="flex items-center justify-between py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                          data-testid="link-mobile-marketflow"
-                        >
-                          MarketFlow
-                          <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-[hsl(var(--bronze)/0.1)] text-[hsl(var(--bronze))] rounded">BETA</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/resources"
-                          onClick={() => setMobileOpen(false)}
-                          className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                          data-testid="link-mobile-strategy-library"
-                        >
-                          Strategy Library
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/vendor-network"
-                          onClick={() => setMobileOpen(false)}
-                          className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                          data-testid="link-mobile-vendor-network"
-                        >
-                          Vendor Network
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/contact"
-                          onClick={() => setMobileOpen(false)}
-                          className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                          data-testid="link-mobile-contact"
-                        >
-                          Contact
-                        </Link>
-                      </li>
+                      {MORE_ITEMS.map((item) => (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                            data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                          >
+                            {item.label}
+                          </Link>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </nav>

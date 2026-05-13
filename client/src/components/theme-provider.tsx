@@ -23,7 +23,13 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+      const stored = localStorage.getItem(storageKey) as Theme | null;
+      if (stored === "light" || stored === "dark" || stored === "system") {
+        return stored;
+      }
+      // No stored preference: honour the OS-level preference on first paint.
+      // Manual toggle still wins (and persists to localStorage).
+      return defaultTheme;
     }
     return defaultTheme;
   });

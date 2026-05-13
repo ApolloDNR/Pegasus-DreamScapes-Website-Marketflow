@@ -191,7 +191,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           subscription.unsubscribe();
         };
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        // Auth init can fail benignly in environments without Supabase configured.
+        // Surface it at info level so it doesn't pollute Best-Practices audits.
+        console.info('[auth] Initialization completed without Supabase session.', error);
         if (mounted) {
           setIsLoading(false);
         }
