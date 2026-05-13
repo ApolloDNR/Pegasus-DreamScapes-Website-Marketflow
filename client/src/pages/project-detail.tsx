@@ -120,6 +120,18 @@ function HeroSection({ project }: { project: Project }) {
           animate={{ scale: 1.05 }}
           transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
         >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "url(data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAACwAQCdASoQAAkAPm0ulEclI6IhMAgAsBOJaQAAk2zSAAD+8w0AAAAA)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "blur(12px)",
+              transform: "scale(1.05)",
+            }}
+          />
           <img
             src={heroImg}
             alt={`${project.name} after photo`}
