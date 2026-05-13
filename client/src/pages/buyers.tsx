@@ -80,7 +80,7 @@ function HeroSection() {
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
           Whether you're looking for off-market wholesale deals or beautifully renovated move-in ready homes, 
-          Pegasus Dreamscapes has the inventory to match your investment goals.
+          Pegasus DreamScapes has the inventory to match your investment goals.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a href="#listings">
@@ -136,7 +136,7 @@ function FeaturedListingsSection() {
             <p className="text-xs uppercase tracking-[0.2em] text-tan font-medium mb-4">Our Listings</p>
             <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Current Properties</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Exclusive off-market deals and MLS listings - all available through Pegasus Dreamscapes.
+              Exclusive off-market deals and MLS listings - all available through Pegasus DreamScapes.
             </p>
           </div>
           <div className="text-center py-12">
@@ -175,7 +175,7 @@ function FeaturedListingsSection() {
           <p className="text-xs uppercase tracking-[0.2em] text-tan font-medium mb-4">Our Listings</p>
           <h2 className="text-3xl sm:text-4xl font-semibold mb-4" data-testid="text-featured-listings-title">Current Properties</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Exclusive off-market deals and MLS listings - all available through Pegasus Dreamscapes.
+            Exclusive off-market deals and MLS listings - all available through Pegasus DreamScapes.
           </p>
         </div>
 
@@ -1000,7 +1000,7 @@ function WhyBuyWithUs() {
           <p className="text-xs uppercase tracking-[0.2em] text-tan font-medium mb-4">Why Choose Us</p>
           <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Buy With Confidence</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Pegasus Dreamscapes stands behind every property we sell.
+            Pegasus DreamScapes stands behind every property we sell.
           </p>
         </div>
 

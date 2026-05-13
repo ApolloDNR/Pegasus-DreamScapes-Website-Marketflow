@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
   };
 
   useEffect(() => {
-    document.title = "Analytics Dashboard | Pegasus Dreamscapes";
+    document.title = "Analytics Dashboard | Pegasus DreamScapes";
   }, []);
 
   const handleRefresh = () => {

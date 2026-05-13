@@ -85,7 +85,7 @@ const initialArticles = [
     excerpt: "Learn how the 70% rule helps real estate investors quickly evaluate fix-and-flip opportunities.",
     content: `# The 70% Rule in Real Estate\n\nThe 70% rule is a fundamental tool for real estate investors. It provides a quick way to determine the maximum price you should pay for a fix-and-flip property.\n\n## Formula\nMaximum Purchase Price = (ARV x 0.70) - Repair Costs`,
     category: "Investment Strategies",
-    author: "Pegasus Dreamscapes Team",
+    author: "Pegasus DreamScapes Team",
     imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800",
     published: true,
     publishedAt: new Date("2024-11-15"),

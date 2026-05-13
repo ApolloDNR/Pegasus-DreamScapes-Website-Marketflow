@@ -324,7 +324,7 @@ function WholesalerTypesSection() {
                 <Badge variant="secondary" className="text-xs">Internal</Badge>
               </CardTitle>
               <CardDescription className="text-base">
-                Part of the Pegasus Dreamscapes acquisitions team
+                Part of the Pegasus DreamScapes acquisitions team
               </CardDescription>
             </CardHeader>
             <CardContent>

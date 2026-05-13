@@ -620,7 +620,7 @@ html {
   [data-testid="card-invest-action"] { display: none !important; }
   @page { margin: 2cm; size: letter; }
   body::before {
-    content: "Pegasus Dreamscapes Corp — Investment Summary";
+    content: "Pegasus DreamScapes Corp — Investment Summary";
     display: block;
     font-size: 10pt;
     color: #666 !important;

@@ -1109,7 +1109,7 @@ export default function DealflowProject() {
                     P
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold">Pegasus Dreamscapes</p>
+                    <p className="font-semibold">Pegasus DreamScapes</p>
                     <Badge variant="outline" className="text-xs mt-1">
                       <Star className="w-3 h-3 mr-1 fill-amber-500 text-amber-500" />
                       Certified Dreamscaper

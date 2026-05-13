@@ -536,7 +536,12 @@ export function PeggyDock() {
                         P
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white" />
+                    <motion.div
+                      className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-white/70"
+                      style={{ backgroundColor: "hsl(var(--copper))" }}
+                      animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    />
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm flex items-center gap-1.5">

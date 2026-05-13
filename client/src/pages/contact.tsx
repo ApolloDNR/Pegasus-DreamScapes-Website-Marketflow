@@ -78,9 +78,9 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
-            <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 font-medium">Open Channel</p>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-champagne" />
+            <div className="h-px w-10 bg-copper" />
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-copper font-semibold font-supporting">Open Channel</p>
+            <div className="h-px w-10 bg-copper" />
           </motion.div>
 
           <motion.h1

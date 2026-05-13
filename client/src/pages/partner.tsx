@@ -661,7 +661,7 @@ function CTASection() {
             Ready to Join?
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
-            Choose your path and start building your real estate success story with Pegasus Dreamscapes. 
+            Choose your path and start building your real estate success story with Pegasus DreamScapes. 
             Our marketplace is designed to help you find deals, raise capital, and grow your business.
           </p>
 

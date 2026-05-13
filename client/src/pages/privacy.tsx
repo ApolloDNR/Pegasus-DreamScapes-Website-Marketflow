@@ -2,8 +2,8 @@ import { useSEO } from "@/hooks/use-seo";
 
 export default function Privacy() {
   useSEO({
-    title: "Privacy Policy | Pegasus Dreamscapes Corp",
-    description: "Privacy policy for Pegasus Dreamscapes Corp real estate investment platform.",
+    title: "Privacy Policy | Pegasus DreamScapes Corp",
+    description: "Privacy policy for Pegasus DreamScapes Corp real estate investment platform.",
   });
 
   return (
@@ -16,7 +16,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Pegasus Dreamscapes Corp ("Company," "we," "our," or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our real estate investment platform services.
+              Pegasus DreamScapes Corp ("Company," "we," "our," or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our real estate investment platform services.
             </p>
           </section>
 
@@ -131,7 +131,7 @@ export default function Privacy() {
               If you have questions about this Privacy Policy or our data practices, please contact us at:
             </p>
             <div className="mt-4 p-4 bg-muted rounded-lg">
-              <p className="font-medium">Pegasus Dreamscapes Corp</p>
+              <p className="font-medium">Pegasus DreamScapes Corp</p>
               <p className="text-muted-foreground">Email: privacy@pegasusdreamscapes.com</p>
                           </div>
           </section>

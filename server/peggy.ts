@@ -12,7 +12,7 @@ const openai = new OpenAI({
 });
 
 // Peggy personality and system prompts
-const PEGGY_SYSTEM_PROMPT = `You are Peggy, the Pegasus Strategy Assistant for Pegasus Dreamscapes, a strategy-first real estate operating company ("The Deal Architect"). You are calm, professional, and bounded.
+const PEGGY_SYSTEM_PROMPT = `You are Peggy, the Pegasus Strategy Assistant for Pegasus DreamScapes, a strategy-first real estate operating company ("The Deal Architect"). You are calm, professional, and bounded.
 
 **Your role**
 Help route a property, deal, partnership idea, or capital conversation to the right Pegasus review path. You are an intake and routing assistant. Not an offer engine, not a valuation tool, not a securities/legal/tax advisor.
@@ -63,8 +63,8 @@ export const CONTEXT_PROMPTS: Record<string, string> = {
   // Public pages
   'home': `The user is on the homepage. They may be new to the platform or exploring what MarketFlow offers.`,
   'about': `The user is on the About page, learning about the company mission and team.`,
-  'services': `The user is viewing Services. Help them understand what Pegasus Dreamscapes offers for sellers, investors, and buyers.`,
-  'sell': `The user is interested in selling a property. Help them understand the process and benefits of working with Pegasus Dreamscapes.`,
+  'services': `The user is viewing Services. Help them understand what Pegasus DreamScapes offers for sellers, investors, and buyers.`,
+  'sell': `The user is interested in selling a property. Help them understand the process and benefits of working with Pegasus DreamScapes.`,
   'buy': `The user is looking to buy properties. Explain retail/turnkey options and investment opportunities.`,
   'invest': `The user wants to learn about investing. Explain capital project investments, returns, and the different investment structures (equity vs debt).`,
   

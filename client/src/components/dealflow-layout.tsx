@@ -597,7 +597,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
               <div className="flex items-center gap-4">
                 <span>Dreamscaper Dealflow</span>
                 <span className="text-border">|</span>
-                <span>Pegasus Dreamscapes Corp.</span>
+                <span>Pegasus DreamScapes Corp.</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-3 h-3 text-primary" />

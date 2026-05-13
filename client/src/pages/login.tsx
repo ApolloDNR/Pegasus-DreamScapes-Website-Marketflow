@@ -85,7 +85,7 @@ export default function LoginPage() {
             Welcome Back
           </CardTitle>
           <CardDescription>
-            Sign in to access your Pegasus Dreamscapes marketplace
+            Sign in to access your Pegasus DreamScapes marketplace
           </CardDescription>
         </CardHeader>
         <CardContent>

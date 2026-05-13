@@ -65,11 +65,11 @@ function HeroSection() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-champagne/40 bg-white/5 backdrop-blur-sm">
-                <FileText className="w-3 h-3 text-champagne" />
-                <span className="text-[10px] uppercase tracking-[0.25em] text-champagne font-semibold">Strategic Planning Report</span>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-copper/50 bg-copper/10 backdrop-blur-sm">
+                <FileText className="w-3 h-3 text-copper" />
+                <span className="text-[10px] uppercase tracking-[0.28em] text-copper font-semibold font-supporting">Strategic Planning Report</span>
               </span>
-              <span className="text-xs uppercase tracking-[0.25em] text-white/60">Paid · Follows the free Snapshot</span>
+              <span className="text-[11px] uppercase tracking-[0.28em] text-white/65 font-supporting">Paid · Follows the free Snapshot</span>
             </motion.div>
 
             <motion.h1

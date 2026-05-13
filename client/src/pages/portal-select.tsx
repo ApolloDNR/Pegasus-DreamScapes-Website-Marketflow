@@ -72,7 +72,7 @@ export default function PortalSelect() {
     {
       id: "staff",
       title: "Dreamscaper HQ",
-      description: "Access the Pegasus Dreamscapes headquarters dashboard for lead management, deal tracking, and team operations.",
+      description: "Access the Pegasus DreamScapes headquarters dashboard for lead management, deal tracking, and team operations.",
       icon: Shield,
       href: "/dealflow/hq",
       badge: "Staff Only",
