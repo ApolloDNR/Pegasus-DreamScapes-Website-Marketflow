@@ -1609,21 +1609,6 @@ function HeroSection() {
 
       {/* Premium accent bar at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
-      
-      {/* Scroll indicator */}
-      <motion.div 
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
-          <motion.div 
-            className="w-1.5 h-3 bg-white/50 rounded-full"
-            animate={{ y: [0, 8, 0], opacity: [1, 0, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-        </div>
-      </motion.div>
     </section>
   );
 }
