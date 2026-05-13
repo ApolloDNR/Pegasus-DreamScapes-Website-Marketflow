@@ -14,7 +14,7 @@ import {
   Building,
 } from "lucide-react";
 import type { Project } from "@shared/schema";
-import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import { HeroPicture } from "@/components/hero-picture";
 
 const STRATEGY_LABEL: Record<string, string> = {
   "fix-flip": "Fix & Flip",
@@ -50,12 +50,17 @@ function HeroSection() {
   return (
     <section className="relative min-h-[60vh] flex items-center overflow-hidden pt-20">
       <motion.div
-        className="absolute inset-0 bg-cover bg-center scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="absolute inset-0 scale-105"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1.05 }}
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      />
+      >
+        <HeroPicture
+          alt="Projects portfolio from Pegasus DreamScapes Corp."
+          className="absolute inset-0 w-full h-full object-cover"
+          priority
+        />
+      </motion.div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/65 to-black/85" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 

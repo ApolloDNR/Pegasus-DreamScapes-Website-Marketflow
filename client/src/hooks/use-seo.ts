@@ -15,7 +15,7 @@ const BASE_TITLE = `${BRAND} · ${TAGLINE}`;
 const BASE_DESCRIPTION =
   "Pegasus DreamScapes Corp. is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a serious review.";
 const SITE_URL = "https://pegasusdreamscapes.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 
 function setMeta(selector: string, attr: "name" | "property", key: string, value: string) {
   let el = document.head.querySelector<HTMLMetaElement>(selector);

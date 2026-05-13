@@ -213,14 +213,17 @@ export async function registerRoutes(
       { path: '/about', priority: '0.6', changefreq: 'yearly' },
       { path: '/terms', priority: '0.3', changefreq: 'yearly' },
       { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+      { path: '/disclosures', priority: '0.3', changefreq: 'yearly' },
+      { path: '/services', priority: '0.5', changefreq: 'yearly' },
     ];
 
     let projectUrls = '';
     try {
       const projects = await storage.getProjects();
       projectUrls = projects
-        .map((p: any) =>
-          `  <url><loc>${host}/projects/${p.slug}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`,
+        .map(
+          (p) =>
+            `  <url><loc>${host}/projects/${p.slug}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`,
         )
         .join('\n');
     } catch (err) {

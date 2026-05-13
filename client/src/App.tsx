@@ -154,6 +154,7 @@ function Router() {
       <Route path="/partner" component={Partner} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
+      <Route path="/disclosures" component={Terms} />
       <Route path="/submit-deal" component={SubmitDeal} />
       <Route path="/snapshot/:token" component={SnapshotStatus} />
       <Route path="/deal-blueprint" component={DealBlueprint} />

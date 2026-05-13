@@ -1,9 +1,14 @@
 import { useSEO } from "@/hooks/use-seo";
+import { useLocation } from "wouter";
 
 export default function Terms() {
+  const [location] = useLocation();
+  const isDisclosures = location.startsWith("/disclosures");
   useSEO({
-    title: "Terms of Service",
-    description: "Terms of service for the Pegasus DreamScapes Corp. website and Strategy Review intake.",
+    title: isDisclosures ? "Disclosures" : "Terms of Service",
+    description: isDisclosures
+      ? "Disclosures for Pegasus DreamScapes Corp. Not an offer to buy or sell securities. No guarantee of returns or principal protection."
+      : "Terms of service for the Pegasus DreamScapes Corp. website and Strategy Review intake.",
   });
 
   return (

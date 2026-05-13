@@ -77,7 +77,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import logoImage from "@assets/image_1765405939117.png";
-import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import { HeroPicture } from "@/components/hero-picture";
 import serviceImage1 from "@assets/generated_images/real_estate_investor_consultation.png";
 import serviceImage2 from "@assets/generated_images/renovated_home_curb_appeal.png";
 import { EditableText, EditableImage, EditableLink } from "@/components/editable";
@@ -1549,13 +1549,18 @@ function HeroSection() {
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Full-bleed background image with parallax effect */}
-      <motion.div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
+      <motion.div
+        className="absolute inset-0 scale-105"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1.05 }}
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      />
+      >
+        <HeroPicture
+          alt="Pegasus DreamScapes Corp. — luxury home at dusk with warm lighting"
+          className="absolute inset-0 w-full h-full object-cover"
+          priority
+        />
+      </motion.div>
       
       {/* Premium cinematic overlay - luxury gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
