@@ -6,7 +6,7 @@ interface SEOProps {
   type?: string;
 }
 
-const BASE_TITLE = "Pegasus Dreamscapes Corp";
+const BASE_TITLE = "Pegasus DreamScapes Corp";
 const BASE_DESCRIPTION = "Transform distressed properties into profitable investments. Browse wholesale deals, capital projects, and listings.";
 
 export function useSEO({ title, description, type = "website" }: SEOProps = {}) {

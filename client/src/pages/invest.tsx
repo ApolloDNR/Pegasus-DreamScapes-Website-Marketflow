@@ -46,13 +46,13 @@ import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_li
 
 export default function Invest() {
   useSEO({
-    title: "Capital & Partnerships — Pegasus Dreamscapes",
+    title: "Capital & Partnerships — Pegasus DreamScapes",
     description: "Capital meets structure. Private, deal-specific capital and partnership conversations around real estate projects Pegasus operates or co-develops. Not a public investment offering.",
   });
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Capital and Partnership Inquiries — Pegasus Dreamscapes</h1>
+      <h1 className="sr-only">Capital and Partnership Inquiries — Pegasus DreamScapes</h1>
       <HeroSection />
       <NonOfferDisclaimerSection />
       <FounderSection />
@@ -114,7 +114,7 @@ function FounderSection() {
               You'll talk to a real person.
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
+              Pegasus DreamScapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
             </p>
             <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-copper pl-5">
               "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."
@@ -130,7 +130,7 @@ function FounderSection() {
               </a>
               <div className="px-5 py-4">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Entity</p>
-                <p className="font-serif text-base text-foreground">Pegasus Dreamscapes Corp</p>
+                <p className="font-serif text-base text-foreground">Pegasus DreamScapes Corp</p>
               </div>
             </div>
           </div>
@@ -731,7 +731,7 @@ function DisclaimerSection() {
       <div className="max-w-3xl mx-auto px-6 lg:px-12">
         <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold mb-4 text-center">Important Disclosures</p>
         <p className="text-sm text-muted-foreground text-center leading-relaxed" data-testid="text-disclaimer">
-          This page is informational only and does not constitute an offer to sell or a solicitation of an offer to buy any security or investment product. Pegasus Dreamscapes does not make public investment offerings. Any partnership opportunities are discussed individually with prospective partners after suitability review and are documented under proper legal structure. All real estate investments involve risk including the potential loss of principal. Past project outcomes are not indicative of future results. Nothing on this page is an offer of guaranteed returns or principal protection.
+          This page is informational only and does not constitute an offer to sell or a solicitation of an offer to buy any security or investment product. Pegasus DreamScapes does not make public investment offerings. Any partnership opportunities are discussed individually with prospective partners after suitability review and are documented under proper legal structure. All real estate investments involve risk including the potential loss of principal. Past project outcomes are not indicative of future results. Nothing on this page is an offer of guaranteed returns or principal protection.
         </p>
         <div className="text-center mt-8">
           <Link href="/contact">

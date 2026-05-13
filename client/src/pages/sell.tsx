@@ -100,7 +100,7 @@ export default function Sell() {
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Sell or Submit a Property — Pegasus Dreamscapes</h1>
+      <h1 className="sr-only">Sell or Submit a Property — Pegasus DreamScapes</h1>
       <HeroSection />
       <HowItWorksSection />
       <OutcomeRoutingSection />
@@ -153,7 +153,7 @@ function OperatorSection() {
         </p>
         <div className="brand-divider w-32 mx-auto mb-5" />
         <p className="text-sm text-muted-foreground italic font-serif">
-          Founder &amp; Principal · Pegasus Dreamscapes Corp
+          Founder &amp; Principal · Pegasus DreamScapes Corp
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mt-6 max-w-xl mx-auto">
           A real person reviews every submission. Direct line: <a href="tel:+19259486566" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-948-6566</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>

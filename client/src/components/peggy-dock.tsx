@@ -492,13 +492,16 @@ export function PeggyDock() {
               </Button>
               
               <motion.div
-                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-white"
+                className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-white/70"
+                style={{ backgroundColor: "hsl(var(--copper))" }}
                 animate={{
-                  scale: [1, 1.2, 1],
+                  scale: [1, 1.25, 1],
+                  opacity: [0.7, 1, 0.7],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 2.4,
                   repeat: Infinity,
+                  ease: "easeInOut",
                 }}
               />
             </motion.div>
@@ -540,7 +543,7 @@ export function PeggyDock() {
                       Peggy · Strategy Assistant
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">AI</Badge>
                     </h3>
-                    <p className="text-xs text-muted-foreground">Pegasus Dreamscapes intake & routing</p>
+                    <p className="text-xs text-muted-foreground">Pegasus DreamScapes intake & routing</p>
                   </div>
                 </div>
                 

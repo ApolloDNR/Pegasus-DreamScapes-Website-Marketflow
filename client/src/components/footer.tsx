@@ -40,7 +40,7 @@ export function Footer() {
               </p>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-              Pegasus Dreamscapes is a strategy-first real estate operating company and emerging vertically integrated developer — building from disciplined small-scale execution toward a generational development practice.
+              Pegasus DreamScapes is a strategy-first real estate operating company and an emerging vertically integrated developer, building from disciplined small-scale execution toward a generational development practice.
             </p>
             <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium pt-1">
               Founder · Paolo &ldquo;Apollo&rdquo; Duran
@@ -135,7 +135,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <p className="text-xs text-muted-foreground" data-testid="text-copyright">
-                &copy; {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.
+                &copy; {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.
               </p>
               <p className="text-[11px] text-muted-foreground/70 mt-1.5 max-w-2xl leading-relaxed">
                 Private network · Invite-only deal flow. Information on this site is for general purposes only and is not an offer to buy or sell securities, real property, or investment products.

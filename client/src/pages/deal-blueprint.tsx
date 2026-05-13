@@ -24,7 +24,7 @@ import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_li
 
 export default function DealBlueprint() {
   useSEO({
-    title: "Pegasus Deal Blueprint — Strategic Planning Report | Pegasus Dreamscapes",
+    title: "Pegasus Deal Blueprint — Strategic Planning Report | Pegasus DreamScapes",
     description:
       "The Pegasus Deal Blueprint is a paid strategic planning report that follows the free Property Strategy Snapshot. Structured strategy, scenario ranges, scope, and execution roadmap on paper.",
   });

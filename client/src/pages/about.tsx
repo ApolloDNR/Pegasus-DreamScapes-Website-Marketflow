@@ -32,8 +32,8 @@ import {
 
 export default function About() {
   useSEO({
-    title: "About Us - Pegasus Dreamscapes Corp",
-    description: "Learn about Pegasus Dreamscapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
+    title: "About Us - Pegasus DreamScapes Corp",
+    description: "Learn about Pegasus DreamScapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
   });
 
   return (
@@ -59,7 +59,7 @@ function HeroSection() {
       
       <div className="relative max-w-7xl mx-auto px-6 text-center">
         <Badge variant="outline" className="mb-6 border-tan/30 text-tan">
-          About Pegasus Dreamscapes
+          About Pegasus DreamScapes
         </Badge>
         <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight" data-testid="text-about-hero">
           Dream it. Build it.<br />
@@ -112,13 +112,13 @@ function OurStorySection() {
             </h2>
             <div className="space-y-6 text-muted-foreground leading-relaxed">
               <p className="text-lg">
-                Pegasus Dreamscapes was founded by Paolo Duran, a real estate entrepreneur and project manager with a background in construction and design-driven renovations.
+                Pegasus DreamScapes was founded by Paolo Duran, a real estate entrepreneur and project manager with a background in construction and design-driven renovations.
               </p>
               <p>
                 After managing projects for a general contractor and successfully completing his own flip, Paolo saw a gap: properties that needed more than paint and staging—they needed vision, systems, and a team that cared about both profit and the people involved.
               </p>
               <p>
-                What started as a passion for transforming neglected properties has grown into a full-service real estate operation. Today, Pegasus Dreamscapes combines construction expertise with design sensibility to create spaces that not only look beautiful but perform as solid investments.
+                What started as a passion for transforming neglected properties has grown into a full-service real estate operation. Today, Pegasus DreamScapes combines construction expertise with design sensibility to create spaces that not only look beautiful but perform as solid investments.
               </p>
             </div>
           </div>

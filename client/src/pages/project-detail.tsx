@@ -53,8 +53,8 @@ export default function ProjectDetail() {
   });
 
   useSEO({
-    title: project ? `${project.name} — Pegasus Dreamscapes Case Study` : "Project — Pegasus Dreamscapes",
-    description: project?.description || "Documented real estate case study from Pegasus Dreamscapes.",
+    title: project ? `${project.name} — Pegasus DreamScapes Case Study` : "Project — Pegasus DreamScapes",
+    description: project?.description || "Documented real estate case study from Pegasus DreamScapes.",
   });
 
   if (isLoading) return <ProjectSkeleton />;
@@ -62,7 +62,7 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Project Detail — Pegasus Dreamscapes</h1>
+      <h1 className="sr-only">Project Detail — Pegasus DreamScapes</h1>
       <HeroSection project={project} />
       <BodySection project={project} />
       <RoutingSection />

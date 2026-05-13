@@ -44,13 +44,13 @@ const contactFormSchema = insertContactSchema.extend({
 
 export default function Contact() {
   useSEO({
-    title: "Contact — Pegasus Dreamscapes",
+    title: "Contact — Pegasus DreamScapes",
     description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
   });
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Contact Pegasus Dreamscapes</h1>
+      <h1 className="sr-only">Contact Pegasus DreamScapes</h1>
       <HeroSection />
       <ContactRoutingSection />
       <ContactFormSection />

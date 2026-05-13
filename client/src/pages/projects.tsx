@@ -32,13 +32,13 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function Projects() {
   useSEO({
-    title: "Case Studies — Pegasus Dreamscapes",
+    title: "Case Studies — Pegasus DreamScapes",
     description: "Documented real estate projects. Strategy, structure, and execution. Every phase recorded.",
   });
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Projects and Case Studies — Pegasus Dreamscapes</h1>
+      <h1 className="sr-only">Projects and Case Studies — Pegasus DreamScapes</h1>
       <HeroSection />
       <ProjectsGrid />
       <CTASection />
