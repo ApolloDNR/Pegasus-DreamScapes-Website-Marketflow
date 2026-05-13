@@ -384,7 +384,7 @@ function MarketFlowBetaSection() {
               <ul className="space-y-1">
                 <li>· Not raw intake. Every property is routed through Pegasus HQ first.</li>
                 <li>· Not a public marketplace. Access is private, role-gated, and invite-only.</li>
-                <li>· Not an investment solicitation platform. Capital conversations stay private.</li>
+                <li>· Not an investment solicitation platform. Capital conversations happen privately, never as a public offering.</li>
               </ul>
             </div>
 
@@ -710,11 +710,7 @@ function WhatBringsYouHereSection() {
           {cards.map((card, index) => (
             <StaggerItem key={index}>
               <Link href={card.href} data-testid={`link-${card.testId}`}>
-                <motion.div
-                  className="group h-full p-7 bg-card rounded-lg border border-border/40 hover:border-copper/40 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden"
-                  whileHover={{ y: -3 }}
-                  transition={{ duration: 0.25 }}
-                >
+                <Card className="group h-full p-7 bg-card border border-border/40 hover:border-copper/40 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden hover:-translate-y-[3px]">
                   {/* Bronze top rule on hover */}
                   <div className="absolute left-0 right-0 top-0 h-px bg-copper/0 group-hover:bg-copper transition-all duration-300" />
                   <div className="flex items-baseline justify-between mb-6">
@@ -727,7 +723,7 @@ function WhatBringsYouHereSection() {
                     Continue
                     <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
-                </motion.div>
+                </Card>
               </Link>
             </StaggerItem>
           ))}
