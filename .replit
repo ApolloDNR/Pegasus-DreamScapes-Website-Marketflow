@@ -47,3 +47,7 @@ expertMode = true
 [userenv.shared]
 STAFF_NOTIFICATION_EMAIL = "leads@pegasusdreamscapes.com"
 SITE_URL = "https://pegasusdreamscapes.com"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
