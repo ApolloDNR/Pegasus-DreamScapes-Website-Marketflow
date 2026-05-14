@@ -22,60 +22,24 @@ import {
 } from "lucide-react";
 import type { Article } from "@shared/schema";
 
-const CATEGORIES = [
-  { key: "all", label: "All", icon: Layers },
+export const LIBRARY_CATEGORIES = [
   { key: "creative-finance", label: "Creative Finance", icon: Coins },
   { key: "development", label: "Development Strategy", icon: Building2 },
   { key: "capital", label: "Capital & Partnerships", icon: Network },
   { key: "property", label: "Property Strategy", icon: Compass },
   { key: "pegasus-standard", label: "Pegasus Standard", icon: ShieldCheck },
   { key: "marketflow", label: "MarketFlow", icon: Sparkles },
+] as const;
+
+const CATEGORIES = [
+  { key: "all", label: "All", icon: Layers },
+  ...LIBRARY_CATEGORIES,
 ];
 
-const CURATED_ARTICLES = [
-  {
-    category: "Creative Finance",
-    categoryKey: "creative-finance",
-    title: "What is creative finance?",
-    excerpt:
-      "Why most distressed properties don't need cash buyers. The four levers (terms, time, structure, position) that unlock deals traditional financing kills.",
-  },
-  {
-    category: "Creative Finance",
-    categoryKey: "creative-finance",
-    title: "Seller financing explained.",
-    excerpt:
-      "How owner-carried notes actually work, where they protect both sides, and the variables that decide whether a seller-finance offer is real or theater.",
-  },
-  {
-    category: "Creative Finance",
-    categoryKey: "creative-finance",
-    title: "What does subject-to mean?",
-    excerpt:
-      "Taking title subject to existing financing. What it solves, what it risks, and the disclosures and protections that have to be in place before anyone signs.",
-  },
-  {
-    category: "Capital & Partnerships",
-    categoryKey: "capital",
-    title: "JV structures in real estate.",
-    excerpt:
-      "Equity splits, preferred returns, waterfall basics, and how decision rights get assigned when operator and capital are different people.",
-  },
-  {
-    category: "Property Strategy",
-    categoryKey: "property",
-    title: "What makes an ADU opportunity valuable?",
-    excerpt:
-      "Lot, zoning, access, utilities, and exit. The five filters we run before an ADU project is worth designing, let alone building.",
-  },
-  {
-    category: "Pegasus Standard",
-    categoryKey: "pegasus-standard",
-    title: "What is a Strategy Snapshot?",
-    excerpt:
-      "The free, written read every reviewed property gets. What goes in it, what doesn't, and how it leads to a Pegasus Deal Blueprint or a routed lane.",
-  },
-];
+const CATEGORY_LABEL: Record<string, string> = LIBRARY_CATEGORIES.reduce(
+  (acc, c) => ({ ...acc, [c.key]: c.label }),
+  {} as Record<string, string>,
+);
 
 const BEGINNER_PATH = [
   {
@@ -220,9 +184,13 @@ function CategoryNav({ active, onChange }: { active: string; onChange: (k: strin
 }
 
 function CuratedArticles({ active }: { active: string }) {
+  const { data: articles = [], isLoading } = useQuery<Article[]>({
+    queryKey: ["/api/articles/library"],
+  });
+
   const filtered = useMemo(
-    () => (active === "all" ? CURATED_ARTICLES : CURATED_ARTICLES.filter((a) => a.categoryKey === active)),
-    [active],
+    () => (active === "all" ? articles : articles.filter((a) => a.libraryCategoryKey === active)),
+    [active, articles],
   );
 
   return (
@@ -238,39 +206,54 @@ function CuratedArticles({ active }: { active: string }) {
             Start where you are.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Six structural reads. Pick the one closest to your situation, then move outward.
+            Structural reads, curated by Pegasus. Pick the one closest to your situation, then move outward.
           </p>
         </ScrollReveal>
 
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-12" data-testid="curated-loading">
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground" data-testid="text-no-curated">
             No articles in this category yet. Check back soon.
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((a, i) => (
-              <motion.article
-                key={a.title}
-                className="group h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 flex flex-col"
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.25 }}
-                data-testid={`curated-article-${i}`}
-              >
-                <Badge variant="outline" className="self-start mb-5 text-[10px] uppercase tracking-[0.2em] border-primary/30 text-primary">
-                  {a.category}
-                </Badge>
-                <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{a.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{a.excerpt}</p>
-                <div className="mt-6 pt-5 border-t border-border/40">
-                  <p className="text-[11px] text-muted-foreground/80 italic leading-relaxed">
-                    Have a property that may fit?{" "}
-                    <Link href="/sell" className="text-primary hover:underline font-medium not-italic">
-                      Start a Strategy Review →
-                    </Link>
-                  </p>
-                </div>
-              </motion.article>
-            ))}
+            {filtered.map((a, i) => {
+              const label = (a.libraryCategoryKey && CATEGORY_LABEL[a.libraryCategoryKey]) || a.category;
+              return (
+                <motion.article
+                  key={a.id}
+                  className="group h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 flex flex-col"
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.25 }}
+                  data-testid={`curated-article-${i}`}
+                >
+                  <Badge variant="outline" className="self-start mb-5 text-[10px] uppercase tracking-[0.2em] border-primary/30 text-primary">
+                    {label}
+                  </Badge>
+                  <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">
+                    {a.slug ? (
+                      <Link href={`/resources/${a.slug}`} className="hover:text-primary transition-colors">
+                        {a.title}
+                      </Link>
+                    ) : (
+                      a.title
+                    )}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{a.excerpt}</p>
+                  <div className="mt-6 pt-5 border-t border-border/40">
+                    <p className="text-[11px] text-muted-foreground/80 italic leading-relaxed">
+                      Have a property that may fit?{" "}
+                      <Link href="/sell" className="text-primary hover:underline font-medium not-italic">
+                        Start a Strategy Review →
+                      </Link>
+                    </p>
+                  </div>
+                </motion.article>
+              );
+            })}
           </div>
         )}
       </div>

@@ -38,7 +38,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { SellerLead, InvestorLead, Contact, LeadActivity, WholesaleDeal, WholesaleRequest, Lead } from "@shared/schema";
+import type { SellerLead, InvestorLead, Contact, LeadActivity, WholesaleDeal, WholesaleRequest, Lead, Article } from "@shared/schema";
+import { Switch } from "@/components/ui/switch";
+import { BookOpen, Edit3, Trash2 } from "lucide-react";
 import { 
   Inbox as InboxIcon,
   Filter,
@@ -692,6 +694,10 @@ function LeadsTabs() {
             <Building className="w-4 h-4 mr-2" />
             Projects
           </TabsTrigger>
+          <TabsTrigger value="library" data-testid="tab-library">
+            <BookOpen className="w-4 h-4 mr-2" />
+            Strategy Library
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue">
@@ -718,8 +724,480 @@ function LeadsTabs() {
         <TabsContent value="projects">
           <ProjectCapitalPanel />
         </TabsContent>
+        <TabsContent value="library">
+          <StrategyLibraryPanel />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+const LIBRARY_CATEGORY_OPTIONS = [
+  { key: "creative-finance", label: "Creative Finance" },
+  { key: "development", label: "Development Strategy" },
+  { key: "capital", label: "Capital & Partnerships" },
+  { key: "property", label: "Property Strategy" },
+  { key: "pegasus-standard", label: "Pegasus Standard" },
+  { key: "marketflow", label: "MarketFlow" },
+] as const;
+
+type ArticleFormState = {
+  id?: number;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  author: string;
+  imageUrl: string;
+  published: boolean;
+  featuredInLibrary: boolean;
+  libraryCategoryKey: string;
+  libraryOrder: number;
+};
+
+const EMPTY_ARTICLE: ArticleFormState = {
+  slug: "",
+  title: "",
+  excerpt: "",
+  content: "",
+  category: "Creative Finance",
+  author: "Pegasus DreamScapes",
+  imageUrl: "",
+  published: true,
+  featuredInLibrary: true,
+  libraryCategoryKey: "creative-finance",
+  libraryOrder: 0,
+};
+
+function StrategyLibraryPanel() {
+  const { toast } = useToast();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [form, setForm] = useState<ArticleFormState>(EMPTY_ARTICLE);
+
+  const { data: articlesList = [], isLoading } = useQuery<Article[]>({
+    queryKey: ["/api/hq/articles"],
+  });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/hq/articles"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/articles/library"] });
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: ArticleFormState) => {
+      const body = {
+        slug: payload.slug.trim(),
+        title: payload.title.trim(),
+        excerpt: payload.excerpt.trim(),
+        content: payload.content.trim(),
+        category: payload.category.trim() || "Strategy",
+        author: payload.author.trim() || "Pegasus DreamScapes",
+        imageUrl: payload.imageUrl.trim() || null,
+        published: payload.published,
+        featuredInLibrary: payload.featuredInLibrary,
+        libraryCategoryKey: payload.featuredInLibrary ? payload.libraryCategoryKey : null,
+        libraryOrder: payload.libraryOrder || 0,
+      };
+      if (payload.id) {
+        return apiRequest("PATCH", `/api/hq/articles/${payload.id}`, body);
+      }
+      return apiRequest("POST", "/api/hq/articles", body);
+    },
+    onSuccess: () => {
+      invalidate();
+      setEditorOpen(false);
+      setForm(EMPTY_ARTICLE);
+      toast({ title: "Saved", description: "Article saved." });
+    },
+    onError: (e: Error) => {
+      toast({ title: "Save failed", description: e?.message || "Try again.", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => apiRequest("DELETE", `/api/hq/articles/${id}`),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Deleted", description: "Article removed." });
+    },
+    onError: (e: Error) => {
+      toast({ title: "Delete failed", description: e?.message || "Try again.", variant: "destructive" });
+    },
+  });
+
+  const togglePublished = (a: Article) => {
+    saveMutation.mutate({
+      id: a.id,
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      content: a.content,
+      category: a.category,
+      author: a.author,
+      imageUrl: a.imageUrl ?? "",
+      published: !a.published,
+      featuredInLibrary: a.featuredInLibrary,
+      libraryCategoryKey: a.libraryCategoryKey ?? "creative-finance",
+      libraryOrder: a.libraryOrder ?? 0,
+    });
+  };
+
+  const toggleFeatured = (a: Article) => {
+    saveMutation.mutate({
+      id: a.id,
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      content: a.content,
+      category: a.category,
+      author: a.author,
+      imageUrl: a.imageUrl ?? "",
+      published: a.published,
+      featuredInLibrary: !a.featuredInLibrary,
+      libraryCategoryKey: a.libraryCategoryKey ?? "creative-finance",
+      libraryOrder: a.libraryOrder ?? 0,
+    });
+  };
+
+  const openEditor = (a?: Article) => {
+    if (a) {
+      setForm({
+        id: a.id,
+        slug: a.slug,
+        title: a.title,
+        excerpt: a.excerpt,
+        content: a.content,
+        category: a.category,
+        author: a.author,
+        imageUrl: a.imageUrl ?? "",
+        published: a.published,
+        featuredInLibrary: a.featuredInLibrary,
+        libraryCategoryKey: a.libraryCategoryKey ?? "creative-finance",
+        libraryOrder: a.libraryOrder ?? 0,
+      });
+    } else {
+      setForm(EMPTY_ARTICLE);
+    }
+    setEditorOpen(true);
+  };
+
+  const featured = articlesList.filter((a) => a.featuredInLibrary);
+  const others = articlesList.filter((a) => !a.featuredInLibrary);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="font-semibold">Strategy Library</h3>
+          <p className="text-sm text-muted-foreground">
+            Curated articles shown on /education. Toggle "In Library" to feature, set the category to control filtering.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => openEditor()} data-testid="button-new-article">
+          <Plus className="w-4 h-4 mr-2" />
+          New Article
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        </div>
+      ) : (
+        <>
+          <ArticleList
+            title={`Featured in Library (${featured.length})`}
+            items={featured}
+            onEdit={openEditor}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            onTogglePublished={togglePublished}
+            onToggleFeatured={toggleFeatured}
+            emptyText="No articles featured in the library yet. Create one or feature an existing draft."
+          />
+          <ArticleList
+            title={`Other Articles (${others.length})`}
+            items={others}
+            onEdit={openEditor}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            onTogglePublished={togglePublished}
+            onToggleFeatured={toggleFeatured}
+            emptyText="No other articles."
+          />
+        </>
+      )}
+
+      <ArticleEditorDialog
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        form={form}
+        setForm={setForm}
+        onSubmit={() => saveMutation.mutate(form)}
+        saving={saveMutation.isPending}
+      />
+    </div>
+  );
+}
+
+function ArticleList({
+  title,
+  items,
+  onEdit,
+  onDelete,
+  onTogglePublished,
+  onToggleFeatured,
+  emptyText,
+}: {
+  title: string;
+  items: Article[];
+  onEdit: (a: Article) => void;
+  onDelete: (id: number) => void;
+  onTogglePublished: (a: Article) => void;
+  onToggleFeatured: (a: Article) => void;
+  emptyText: string;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">{emptyText}</p>
+        ) : (
+          <div className="space-y-3">
+            {items.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-start justify-between gap-4 p-4 rounded-md border border-border/60"
+                data-testid={`row-article-${a.id}`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h4 className="font-semibold truncate">{a.title}</h4>
+                    <Badge variant={a.published ? "default" : "outline"}>
+                      {a.published ? "Published" : "Draft"}
+                    </Badge>
+                    {a.featuredInLibrary && (
+                      <Badge className="bg-amber-600 hover:bg-amber-600">In Library</Badge>
+                    )}
+                    {a.libraryCategoryKey && (
+                      <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
+                        {LIBRARY_CATEGORY_OPTIONS.find((c) => c.key === a.libraryCategoryKey)?.label || a.libraryCategoryKey}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-1">/{a.slug}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{a.excerpt}</p>
+                </div>
+                <div className="flex flex-col gap-2 items-end shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onEdit(a)}
+                      data-testid={`button-edit-article-${a.id}`}
+                    >
+                      <Edit3 className="w-3.5 h-3.5 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm(`Delete "${a.title}"? This cannot be undone.`)) onDelete(a.id);
+                      }}
+                      data-testid={`button-delete-article-${a.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1 text-destructive" />
+                      Delete
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Switch
+                        checked={a.published}
+                        onCheckedChange={() => onTogglePublished(a)}
+                        data-testid={`switch-published-${a.id}`}
+                      />
+                      <span>Published</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Switch
+                        checked={a.featuredInLibrary}
+                        onCheckedChange={() => onToggleFeatured(a)}
+                        data-testid={`switch-library-${a.id}`}
+                      />
+                      <span>In Library</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ArticleEditorDialog({
+  open,
+  onOpenChange,
+  form,
+  setForm,
+  onSubmit,
+  saving,
+}: {
+  open: boolean;
+  onOpenChange: (b: boolean) => void;
+  form: ArticleFormState;
+  setForm: (f: ArticleFormState) => void;
+  onSubmit: () => void;
+  saving: boolean;
+}) {
+  const isEdit = !!form.id;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit Article" : "New Article"}</DialogTitle>
+          <DialogDescription>
+            Strategy Library articles ship with the standard "Have a property that may fit?" CTA appended on /education.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="article-title">Title</Label>
+              <Input
+                id="article-title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                data-testid="input-article-title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="article-slug">Slug</Label>
+              <Input
+                id="article-slug"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                placeholder="seller-financing-explained"
+                data-testid="input-article-slug"
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="article-excerpt">Excerpt (shows on the card)</Label>
+            <Textarea
+              id="article-excerpt"
+              value={form.excerpt}
+              onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+              rows={2}
+              data-testid="input-article-excerpt"
+            />
+          </div>
+          <div>
+            <Label htmlFor="article-content">Content (Markdown)</Label>
+            <Textarea
+              id="article-content"
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              rows={10}
+              className="font-mono text-sm"
+              data-testid="input-article-content"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="article-author">Author</Label>
+              <Input
+                id="article-author"
+                value={form.author}
+                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                data-testid="input-article-author"
+              />
+            </div>
+            <div>
+              <Label htmlFor="article-category">Category label</Label>
+              <Input
+                id="article-category"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                placeholder="Creative Finance"
+                data-testid="input-article-category"
+              />
+            </div>
+            <div>
+              <Label htmlFor="article-image">Image URL (optional)</Label>
+              <Input
+                id="article-image"
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                data-testid="input-article-image"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+              <Label>Library category</Label>
+              <Select
+                value={form.libraryCategoryKey}
+                onValueChange={(v) => setForm({ ...form, libraryCategoryKey: v })}
+              >
+                <SelectTrigger data-testid="select-article-library-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LIBRARY_CATEGORY_OPTIONS.map((c) => (
+                    <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="article-order">Library sort order</Label>
+              <Input
+                id="article-order"
+                type="number"
+                value={form.libraryOrder}
+                onChange={(e) => setForm({ ...form, libraryOrder: parseInt(e.target.value) || 0 })}
+                data-testid="input-article-order"
+              />
+            </div>
+            <div className="flex flex-col gap-3 pb-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Switch
+                  checked={form.published}
+                  onCheckedChange={(v) => setForm({ ...form, published: v })}
+                  data-testid="switch-article-published"
+                />
+                <span className="text-sm">Published</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Switch
+                  checked={form.featuredInLibrary}
+                  onCheckedChange={(v) => setForm({ ...form, featuredInLibrary: v })}
+                  data-testid="switch-article-featured"
+                />
+                <span className="text-sm">Feature in Strategy Library</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={saving || !form.title || !form.slug || !form.excerpt || !form.content} data-testid="button-save-article">
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            {isEdit ? "Save Changes" : "Create Article"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

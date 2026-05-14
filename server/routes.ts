@@ -34,6 +34,7 @@ import {
   insertTeamMemberSchema,
   insertMediaFileSchema,
   insertSiteContentSchema,
+  insertArticleSchema,
   STAFF_ROLES
 } from "@shared/schema";
 
@@ -67,6 +68,7 @@ const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Res
   record.count++;
   return next();
 };
+import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
@@ -2053,6 +2055,90 @@ export async function registerRoutes(
       return res.json(articlesList);
     } catch (error) {
       console.error("Error fetching articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Strategy Library curated articles (public, published + featuredInLibrary)
+  app.get("/api/articles/library", async (_req, res) => {
+    try {
+      const list = await storage.getLibraryArticles();
+      return res.json(list);
+    } catch (error) {
+      console.error("Error fetching library articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: full Strategy Library management
+  app.get("/api/hq/articles", isAuthenticated, requireStaffRole, async (_req, res) => {
+    try {
+      const list = await storage.getArticles();
+      return res.json(list);
+    } catch (error) {
+      console.error("Error fetching all articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Accept ISO date strings from JSON clients by coercing publishedAt to Date.
+  const articleWriteSchema = insertArticleSchema.extend({
+    publishedAt: z.preprocess(
+      (v) => (typeof v === "string" && v.length > 0 ? new Date(v) : v),
+      z.date().nullable().optional(),
+    ),
+  });
+
+  app.post("/api/hq/articles", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const result = articleWriteSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid article", errors: result.error.flatten() });
+      }
+      const data = { ...result.data };
+      if (data.published && !data.publishedAt) data.publishedAt = new Date();
+      const created = await storage.createArticle(data);
+      return res.status(201).json(created);
+    } catch (error) {
+      if ((error as { code?: string })?.code === "23505") {
+        return res.status(409).json({ message: "An article with that slug already exists" });
+      }
+      console.error("Error creating article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/articles/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const result = articleWriteSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid article patch", errors: result.error.flatten() });
+      }
+      const data = { ...result.data };
+      if (data.published && !data.publishedAt) data.publishedAt = new Date();
+      const updated = await storage.updateArticle(id, data);
+      if (!updated) return res.status(404).json({ message: "Article not found" });
+      return res.json(updated);
+    } catch (error) {
+      if ((error as { code?: string })?.code === "23505") {
+        return res.status(409).json({ message: "An article with that slug already exists" });
+      }
+      console.error("Error updating article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/hq/articles/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const ok = await storage.deleteArticle(id);
+      if (!ok) return res.status(404).json({ message: "Article not found" });
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting article:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

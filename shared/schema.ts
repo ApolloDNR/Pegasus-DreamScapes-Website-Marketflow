@@ -657,6 +657,9 @@ export const articles = pgTable("articles", {
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(false),
   publishedAt: timestamp("published_at"),
+  featuredInLibrary: boolean("featured_in_library").notNull().default(false),
+  libraryCategoryKey: varchar("library_category_key", { length: 64 }),
+  libraryOrder: integer("library_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

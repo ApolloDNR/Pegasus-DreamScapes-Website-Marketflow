@@ -143,7 +143,11 @@ export interface IStorage {
   createArticle(article: InsertArticle): Promise<Article>;
   getArticles(): Promise<Article[]>;
   getPublishedArticles(): Promise<Article[]>;
+  getLibraryArticles(): Promise<Article[]>;
   getArticleBySlug(slug: string): Promise<Article | undefined>;
+  getArticleById(id: number): Promise<Article | undefined>;
+  updateArticle(id: number, patch: Partial<InsertArticle>): Promise<Article | undefined>;
+  deleteArticle(id: number): Promise<boolean>;
 
   // Lead Activities
   createLeadActivity(activity: InsertLeadActivity): Promise<LeadActivity>;
@@ -650,9 +654,30 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(articles).where(eq(articles.published, true)).orderBy(articles.publishedAt);
   }
 
+  async getLibraryArticles(): Promise<Article[]> {
+    return db.select().from(articles)
+      .where(and(eq(articles.published, true), eq(articles.featuredInLibrary, true)))
+      .orderBy(articles.libraryOrder, articles.createdAt);
+  }
+
   async getArticleBySlug(slug: string): Promise<Article | undefined> {
     const [article] = await db.select().from(articles).where(eq(articles.slug, slug));
     return article;
+  }
+
+  async getArticleById(id: number): Promise<Article | undefined> {
+    const [article] = await db.select().from(articles).where(eq(articles.id, id));
+    return article;
+  }
+
+  async updateArticle(id: number, patch: Partial<InsertArticle>): Promise<Article | undefined> {
+    const [updated] = await db.update(articles).set(patch).where(eq(articles.id, id)).returning();
+    return updated;
+  }
+
+  async deleteArticle(id: number): Promise<boolean> {
+    const result = await db.delete(articles).where(eq(articles.id, id)).returning();
+    return result.length > 0;
   }
 
   // Lead Activities
