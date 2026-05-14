@@ -131,6 +131,7 @@ This grouping is canonical across desktop header, mobile sheet, and footer. Any 
 ### Development Tools
 *   **TypeScript**: Type safety.
 *   **Vite**: Fast development server and optimized builds.
+*   **Vitest**: Test runner. Run the suite with `npm test` (one-shot) or `npm run test:watch` (watch mode). The current suite includes the nav parity guard at `client/src/__tests__/nav-parity.test.tsx`.
 
 ### Security
 *   **DOMPurify / isomorphic-dompurify**: HTML sanitization for XSS prevention.
