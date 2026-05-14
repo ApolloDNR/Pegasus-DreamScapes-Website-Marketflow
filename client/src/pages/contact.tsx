@@ -238,7 +238,7 @@ function ContactFormSection() {
 
   const contactInfo = [
     { icon: Mail, label: "Email", value: "apollo@pegasusdreamscapes.com", href: "mailto:apollo@pegasusdreamscapes.com" },
-    { icon: Phone, label: "Direct", value: "925-948-6566", href: "tel:+19259486566" },
+    { icon: Phone, label: "Direct", value: "925-744-8525", href: "tel:+19257448525" },
     { icon: MapPin, label: "Based in", value: "Bay Area, California", href: null },
     { icon: Clock, label: "Response Time", value: "Within 1–2 business days", href: null },
   ];

@@ -120,9 +120,9 @@ function FounderSection() {
               "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."
             </p>
             <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40 border-y border-border/40">
-              <a href="tel:+19259486566" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-phone">
+              <a href="tel:+19257448525" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-phone">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Direct</p>
-                <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors">925-948-6566</p>
+                <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors">925-744-8525</p>
               </a>
               <a href="mailto:apollo@pegasusdreamscapes.com" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-email">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Email</p>

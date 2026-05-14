@@ -601,12 +601,12 @@ function FounderSection() {
 
             <div className="grid sm:grid-cols-2 gap-px bg-border/50 rounded-lg overflow-hidden border border-border/50" data-testid="founder-contact">
               <a
-                href="tel:+19259486566"
+                href="tel:+19257448525"
                 className="bg-card hover:bg-card/70 px-6 py-5 transition-colors group"
                 data-testid="link-founder-phone"
               >
                 <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-supporting font-semibold mb-1.5">Direct Line</p>
-                <p className="font-serif text-lg text-foreground group-hover:text-primary transition-colors">925-948-6566</p>
+                <p className="font-serif text-lg text-foreground group-hover:text-primary transition-colors">925-744-8525</p>
               </a>
               <a
                 href="mailto:apollo@pegasusdreamscapes.com"
@@ -3158,7 +3158,7 @@ function ContactSection() {
                 </div>
               </motion.a>
               <motion.a
-                href={`tel:${(getValue("home.contact.phone") || "+19259486566").replace(/[^+\d]/g, "")}`}
+                href={`tel:${(getValue("home.contact.phone") || "+19257448525").replace(/[^+\d]/g, "")}`}
                 className="flex items-center gap-5 p-4 rounded-lg hover:bg-card transition-colors duration-200 group"
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-phone"
@@ -3170,8 +3170,8 @@ function ContactSection() {
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Direct Line</p>
                   <div className="font-semibold text-lg">
                     {isEditMode ? (
-                      <EditableText contentKey="home.contact.phone" fallback="925-948-6566" />
-                    ) : (getValue("home.contact.phone") || "925-948-6566")}
+                      <EditableText contentKey="home.contact.phone" fallback="925-744-8525" />
+                    ) : (getValue("home.contact.phone") || "925-744-8525")}
                   </div>
                 </div>
               </motion.a>

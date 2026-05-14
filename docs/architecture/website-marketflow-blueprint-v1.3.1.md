@@ -17,7 +17,7 @@ This blueprint locks the website + MarketFlow experience for the v1.3.1 build. I
 - **Doctrine line:** Every property gets a serious review. Not every property gets an offer.
 - **Belief line:** Built on strategy. Governed by virtue. Executed with discipline.
 - **Tagline:** Dream it. Build it. Live it.
-- **Founder, public:** Paolo "Apollo" Duran. Direct line `925-948-6566`. Direct email `apollo@pegasusdreamscapes.com`.
+- **Founder, public:** Paolo "Apollo" Duran. Direct line `925-744-8525`. Direct email `apollo@pegasusdreamscapes.com`.
 
 The site reads as a strategy-first real estate operating company. It does not read as a wholesaler, a generic investor splash page, a cash-buyer site, or a SaaS dashboard.
 

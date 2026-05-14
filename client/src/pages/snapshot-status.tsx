@@ -286,13 +286,13 @@ export default function SnapshotStatus() {
                     Reply by Email
                   </Button>
                 </a>
-                <a href="tel:+19259486566">
+                <a href="tel:+19257448525">
                   <Button
                     variant="outline"
                     className="w-full sm:w-auto text-xs uppercase tracking-[0.15em] font-semibold"
                     data-testid="button-needs-info-call"
                   >
-                    Call 925-948-6566
+                    Call 925-744-8525
                   </Button>
                 </a>
               </div>
@@ -399,10 +399,10 @@ export default function SnapshotStatus() {
           <p className="text-xs text-muted-foreground mb-3">
             Questions? Direct line:{" "}
             <a
-              href="tel:+19259486566"
+              href="tel:+19257448525"
               className="text-foreground hover:text-primary"
             >
-              925-948-6566
+              925-744-8525
             </a>{" "}
             ·{" "}
             <a

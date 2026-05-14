@@ -156,7 +156,7 @@ function OperatorSection() {
           Founder &amp; Principal · Pegasus DreamScapes Corp
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mt-6 max-w-xl mx-auto">
-          A real person reviews every submission. Direct line: <a href="tel:+19259486566" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-948-6566</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>
+          A real person reviews every submission. Direct line: <a href="tel:+19257448525" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-744-8525</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>
         </p>
       </div>
     </section>

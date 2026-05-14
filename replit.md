@@ -13,7 +13,7 @@ The frontend uses **React 18, TypeScript, and Vite**, with **Wouter** for routin
 
 **Brand Identity (May 2026 — applied from official brand sheet)**:
 - **Founder**: Paolo "Apollo" Duran — Founder & Principal, Pegasus Dreamscapes Corp
-- **Real contact**: `apollo@pegasusdreamscapes.com` / `925-948-6566` (replaced legacy `hello@`/`info@` variants across footer, contact, home, marketplace-property-detail)
+- **Real contact**: `apollo@pegasusdreamscapes.com` / `925-744-8525` (replaced legacy `hello@`/`info@` variants across footer, contact, home, marketplace-property-detail)
 - **Palette** (HSL tokens in `client/src/index.css`):
   - Deep Navy `#0D1B2A` → `--navy: 213 53% 11%` (also `--foreground` light, `--background` dark)
   - Rich Copper `#C77A35` → `--copper: 26 58% 50%` (also `--primary`, `--accent`, `--ring`)

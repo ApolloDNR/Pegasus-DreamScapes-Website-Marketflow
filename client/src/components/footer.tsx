@@ -109,12 +109,12 @@ export function Footer() {
                 apollo@pegasusdreamscapes.com
               </a>
               <a
-                href="tel:+19259486566"
+                href="tel:+19257448525"
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 data-testid="link-footer-phone"
               >
                 <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary flex-shrink-0" />
-                925-948-6566
+                925-744-8525
               </a>
               <div className="flex items-center gap-3 text-sm text-muted-foreground" data-testid="text-footer-location">
                 <MapPin className="w-4 h-4 text-primary/70 flex-shrink-0" />
