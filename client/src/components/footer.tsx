@@ -2,25 +2,18 @@ import { Link } from "wouter";
 import { Mail, MapPin, ArrowUpRight, Phone, LogIn } from "lucide-react";
 import logoImage from "@assets/image_1765405939117.png";
 import { ThemeToggle } from "./theme-toggle";
+import {
+  NAV_PRIMARY,
+  NAV_MORE,
+  FOOTER_MORE_EXTRA,
+} from "@/config/navigation";
 
 // Locked Pass D grouping — mirrors the desktop header order so users see one
-// consistent navigation map across header and footer.
-const exploreLinks = [
-  { href: "/sell", label: "Approach" },
-  { href: "/projects", label: "Projects" },
-  { href: "/invest", label: "Capital" },
-  { href: "/marketflow", label: "MarketFlow" },
-  { href: "/about", label: "About" },
-];
-
-const moreLinks = [
-  { href: "/resources", label: "Strategy Library" },
-  { href: "/calculators", label: "Calculators" },
-  { href: "/vendor-network", label: "Vendor Network" },
-  { href: "/contact", label: "Contact" },
-  { href: "/disclosures", label: "Disclosures" },
-  { href: "/deal-blueprint", label: "Deal Blueprint" },
-];
+// consistent navigation map across header and footer. The canonical lists
+// live in `@/config/navigation`. Footer's "More" column is the shared
+// NAV_MORE plus a footer-only Deal Blueprint link.
+const exploreLinks = NAV_PRIMARY.map(({ href, label }) => ({ href, label }));
+const moreLinks = [...NAV_MORE, ...FOOTER_MORE_EXTRA];
 
 export function Footer() {
   return (
