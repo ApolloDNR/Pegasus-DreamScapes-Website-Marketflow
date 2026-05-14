@@ -82,6 +82,8 @@ const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
 const SnapshotStatus = lazy(() => import("@/pages/snapshot-status"));
 const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
+const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
+const Education = lazy(() => import("@/pages/education"));
 
 const legacyRedirects: [string, string][] = [
   // v1.3.1 — retired public funnel pages route to their closest current destination.
@@ -144,8 +146,9 @@ function Router() {
       <Route path="/projects/:slug" component={ProjectDetail} />
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />
-      <Route path="/education" component={Resources} />
-      <Route path="/vendor-network" component={Contact} />
+      <Route path="/education" component={Education} />
+      <Route path="/strategy-library">{() => <Redirect to="/education" />}</Route>
+      <Route path="/vendor-network" component={VendorNetwork} />
       <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/contact" component={Contact} />
       <Route path="/privacy" component={Privacy} />
