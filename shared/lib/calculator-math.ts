@@ -374,6 +374,20 @@ export function housingAffordability28_36(args: {
   } else if (piAvailable > 0) {
     maxLoan = piAvailable * n;
   }
+  // 100%-down means there is no loan, so the 28/36 housing-debt rule does
+  // not constrain price. We surface zero here rather than dividing by
+  // (1 - dp) which would explode to Infinity. The PITI UI surfaces an
+  // inline validation note for >=100% down.
+  if (args.downPaymentPct >= 100) {
+    return {
+      maxMonthlyHousing28: ceil28,
+      maxMonthlyTotal36: grossMonthly * 0.36,
+      maxMonthlyHousing36Net: Math.max(0, ceil36),
+      bindingMaxMonthly: binding,
+      maxLoanAmount: 0,
+      maxPurchasePrice: 0,
+    };
+  }
   const dp = Math.max(0.01, args.downPaymentPct / 100);
   const maxPrice = maxLoan / (1 - dp);
   return {

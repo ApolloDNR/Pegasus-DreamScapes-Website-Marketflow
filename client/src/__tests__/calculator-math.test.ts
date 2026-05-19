@@ -9,7 +9,15 @@ import {
   projectExit,
   ownVsRent,
   SCENARIO_DELTAS,
+  housingAffordability28_36,
+  holdingCostStack,
 } from "@/lib/calculator-math";
+import {
+  computeArv,
+  computeRoi,
+  computeBrrrr,
+  computeWholesale,
+} from "@shared/strategy-lab/calculator-adapters";
 
 describe("monthlyPayment", () => {
   it("matches a known amortization figure: 200k @ 7% / 30yr ≈ $1,330.60", () => {
@@ -272,5 +280,213 @@ describe("ownVsRentScenarios", () => {
     const yr15 = r.map((s) => s.series.at(-1)!.ownNetWorth);
     expect(yr15[1]).toBeGreaterThan(yr15[0]);
     expect(yr15[2]).toBeGreaterThan(yr15[1]);
+  });
+});
+
+describe("housingAffordability28_36 — edge cases", () => {
+  it("returns zero max-loan and max-price when down payment is 100%", () => {
+    const r = housingAffordability28_36({
+      grossAnnualIncome: 180_000,
+      monthlyDebts: 500,
+      downPaymentPct: 100,
+      annualRatePct: 7,
+      termYears: 30,
+      monthlyTaxIns: 600,
+    });
+    expect(r.maxLoanAmount).toBe(0);
+    expect(r.maxPurchasePrice).toBe(0);
+    expect(r.bindingMaxMonthly).toBeGreaterThan(0);
+  });
+
+  it("produces a sane price for a normal 20% down profile", () => {
+    const r = housingAffordability28_36({
+      grossAnnualIncome: 120_000,
+      monthlyDebts: 400,
+      downPaymentPct: 20,
+      annualRatePct: 7,
+      termYears: 30,
+      monthlyTaxIns: 600,
+    });
+    expect(r.maxPurchasePrice).toBeGreaterThan(200_000);
+    expect(r.maxPurchasePrice).toBeLessThan(800_000);
+    expect(r.maxLoanAmount).toBeCloseTo(r.maxPurchasePrice * 0.8, 0);
+  });
+});
+
+describe("computeBrrrr — cash back nets existing loan payoff", () => {
+  it("all-cash BRRRR: full refi proceeds flow back to investor", () => {
+    const r = computeBrrrr({
+      purchase: 200_000,
+      rehab: 50_000,
+      arv: 400_000,
+      monthlyRent: 2800,
+      monthlyExpenses: 600,
+      refinanceLtvPct: 75,
+      refinanceRatePct: 7.5,
+    });
+    expect(r.existingLoanPayoff).toBe(0);
+    expect(r.refinanceValue).toBeCloseTo(300_000, 0);
+    expect(r.cashBack).toBeCloseTo(300_000, 0);
+    expect(r.cashLeftInDeal).toBe(0);
+    expect(r.infiniteReturn).toBe(true);
+  });
+
+  it("BRRRR with $150k existing acquisition loan: cash back is refi minus payoff", () => {
+    const r = computeBrrrr({
+      purchase: 200_000,
+      rehab: 50_000,
+      arv: 400_000,
+      monthlyRent: 2800,
+      monthlyExpenses: 600,
+      refinanceLtvPct: 75,
+      refinanceRatePct: 7.5,
+      existingLoanBalance: 150_000,
+    });
+    expect(r.existingLoanPayoff).toBe(150_000);
+    expect(r.refinanceValue).toBeCloseTo(300_000, 0);
+    expect(r.cashBack).toBeCloseTo(150_000, 0);
+  });
+
+  it("BRRRR where refi cannot cover the existing loan: cash back floors at zero", () => {
+    const r = computeBrrrr({
+      purchase: 200_000,
+      rehab: 50_000,
+      arv: 260_000,
+      monthlyRent: 2800,
+      monthlyExpenses: 600,
+      refinanceLtvPct: 75,
+      refinanceRatePct: 7.5,
+      existingLoanBalance: 220_000,
+    });
+    expect(r.cashBack).toBe(0);
+    expect(r.cashLeftInDeal).toBeGreaterThan(0);
+  });
+});
+
+describe("holdingCostStack — hard money edge cases", () => {
+  it("one-month clamp (the floor the UI enforces) produces a finite stack and APR", () => {
+    const s = holdingCostStack({
+      purchase: 300_000,
+      rehab: 50_000,
+      ltcPct: 90,
+      pointsPct: 2,
+      ratePct: 12,
+      monthsHeld: 1,
+      originationFee: 1500,
+      annualTaxPct: 1.2,
+      monthlyInsurance: 150,
+      monthlyUtilities: 100,
+      sellingCostPct: 7,
+    });
+    expect(Number.isFinite(s.totalHoldingCost)).toBe(true);
+    expect(s.totalHoldingCost).toBeGreaterThan(0);
+    expect(Number.isFinite(s.effectiveAPRpct)).toBe(true);
+  });
+});
+
+describe("computeArv — guard divisions and 70% rule", () => {
+  it("zero rehab and zero holding still produces a finite 70% rule and ROI", () => {
+    const r = computeArv({ purchase: 200_000, rehab: 0, arv: 300_000, holding: 0, closingPercent: 6 });
+    expect(Number.isFinite(r.seventyPercentRule)).toBe(true);
+    expect(r.seventyPercentRule).toBeCloseTo(300_000 * 0.7, 0);
+    expect(Number.isFinite(r.roi)).toBe(true);
+  });
+
+  it("zero total investment does not produce NaN ROI", () => {
+    const r = computeArv({ purchase: 0, rehab: 0, arv: 250_000, holding: 0, closingPercent: 6 });
+    expect(Number.isFinite(r.roi)).toBe(true);
+    expect(r.roi).toBe(0);
+  });
+});
+
+describe("computeRoi — guard divisions", () => {
+  it("zero purchase price returns zero CoC instead of NaN", () => {
+    const r = computeRoi({
+      purchase: 0,
+      downPaymentPct: 100,
+      rehab: 0,
+      monthlyRent: 2000,
+      monthlyExpenses: 500,
+      ratePct: 7,
+      termYears: 30,
+    });
+    expect(Number.isFinite(r.cashOnCashReturn)).toBe(true);
+    expect(r.capRate).toBe(0);
+  });
+});
+
+describe("Strategy Lab — Quick Read reveal parity with lane scoring", () => {
+  // The "How we got this number" reveal in Quick Read replays a small
+  // arithmetic chain that MUST land on the same number the lane scorer
+  // surfaced as economics.primaryValue. These tests pin the formulas the
+  // reveal uses (see quickMath in client/src/pages/strategy-lab.tsx) against
+  // the live engine output, so a refactor to lanes.ts cannot silently drift
+  // the reveal away from the displayed metric.
+  //
+  // Lane formulas pinned here (must match lanes.ts):
+  //   BRRRR        cashLeft = max(0, askingPrice + rehab − ARV × 0.75)
+  //   rental_hold  monthlyCashFlow = base.annualCashFlow / 12
+
+  it("BRRRR reveal cash-left math matches scoreBrrrr output", async () => {
+    const { runStrategyLab } = await import("@shared/strategy-lab");
+    const snap = runStrategyLab(
+      {
+        askingPrice: 200_000,
+        arvEstimate: 300_000,
+        rehabBudget: 40_000,
+        marketRent: 2_400,
+        sqft: 1_400,
+        condition: "moderate",
+      },
+      { comps: [] },
+    );
+    const brrrr = snap.lanes.find((l) => l.lane === "brrrr");
+    expect(brrrr).toBeDefined();
+    // Reveal arithmetic (mirrors strategy-lab.tsx quickMath for BRRRR):
+    const totalIn = 200_000 + 40_000;
+    const refi = 300_000 * 0.75;
+    const cashLeftReveal = Math.max(0, totalIn - refi);
+    expect(cashLeftReveal).toBe(15_000);
+    // Lane scorer used the same formula → primaryValue must display $15,000.
+    expect(brrrr!.economics?.primaryValue).toContain("15,000");
+  });
+
+  it("Rental-hold reveal monthly cash flow matches base.annualCashFlow / 12", async () => {
+    const { runStrategyLab } = await import("@shared/strategy-lab");
+    const snap = runStrategyLab(
+      {
+        askingPrice: 350_000,
+        arvEstimate: 380_000,
+        rehabBudget: 0,
+        marketRent: 3_000,
+        sqft: 1_600,
+        condition: "turnkey",
+      },
+      { comps: [] },
+    );
+    const expectedMonthly = Math.round(snap.scenarios.base.annualCashFlow / 12);
+    // Find the lane whose primaryMetric is "Monthly cash flow" (rental_hold).
+    const rental = snap.lanes.find((l) => l.economics?.primaryMetric === "Monthly cash flow");
+    expect(rental).toBeDefined();
+    // fmtMonthly in lanes.ts produces e.g. "$1,234/mo". Parse the dollars
+    // out and confirm they match the reveal's annualCashFlow / 12 chain.
+    const numeric = Number((rental!.economics!.primaryValue || "").replace(/[^0-9-]/g, ""));
+    expect(Math.abs(numeric - expectedMonthly)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("computeWholesale — negative MAO scenarios", () => {
+  it("MAO can go negative but maxOfferWithFee floors at zero", () => {
+    const r = computeWholesale({
+      arv: 200_000,
+      rehab: 180_000,
+      buyerProfitPct: 25,
+      closingCostPct: 6,
+      holding: 0,
+      assignmentFee: 10_000,
+    });
+    expect(Number.isFinite(r.mao)).toBe(true);
+    expect(r.maxOfferWithFee).toBeGreaterThanOrEqual(0);
+    expect(r.dealViability).toBe("not_viable");
   });
 });

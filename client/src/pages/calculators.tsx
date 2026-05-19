@@ -39,6 +39,11 @@ import {
   calculateDealGrade,
   formatCurrency as formatCurrencyShared,
   PROJECTION_KEY,
+  AssumptionsPanel,
+  FormulaReveal,
+  ValidationNote,
+  type AssumptionRow,
+  type FormulaLine,
   type ProjectionSpec,
 } from "@/components/calculator-shared";
 import { MyAnalysesDrawer } from "@/components/my-analyses-drawer";
@@ -719,6 +724,34 @@ function ARVCalculator() {
               </div>
             </motion.div>
 
+            {(() => {
+              const p = parseFloat(purchasePrice);
+              const a = parseFloat(arv);
+              const r = parseFloat(rehabCost);
+              const notes: { type: "warning" | "info"; message: string }[] = [];
+              if (purchasePrice && (!Number.isFinite(p) || p <= 0)) notes.push({ type: "warning", message: "Purchase price must be greater than 0 for ROI math to be meaningful." });
+              if (arv && (!Number.isFinite(a) || a <= 0)) notes.push({ type: "warning", message: "ARV must be greater than 0 — without it, MAO and ROI cannot be computed." });
+              if (Number.isFinite(p) && Number.isFinite(a) && p > 0 && a > 0 && a < p) notes.push({ type: "info", message: "ARV is below purchase price — this is not a flip / BRRRR candidate. Profit will be negative." });
+              if (rehabCost && Number.isFinite(r) && r < 0) notes.push({ type: "warning", message: "Rehab cost cannot be negative." });
+              return notes.map((n, i) => (
+                <ValidationNote key={i} level={n.type} message={n.message} testId={`validation-arv-${i}`} />
+              ));
+            })()}
+            <AssumptionsPanel
+              assumptions={[
+                { label: "Closing costs at sale", value: `${parseFloat(closingCosts) || 6}% of ARV`, note: "Agent commissions + title fees." },
+                { label: "Holding costs", value: holdingCosts ? `$${(parseFloat(holdingCosts) || 0).toLocaleString()}` : "Not entered — assumed $0", note: "Add taxes, insurance, utilities during rehab." },
+                { label: "70% rule benchmark", value: "ARV × 0.70 − rehab" },
+              ]}
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "Total investment", expression: "purchasePrice + rehabCost + holdingCosts" },
+                { label: "Net profit", expression: "(ARV − totalInvestment) − ARV × closing%" },
+                { label: "ROI", expression: "netProfit ÷ totalInvestment × 100" },
+                { label: "70% rule max", expression: "ARV × 0.70 − rehab", note: "Compares against your purchase price." },
+              ]}
+            />
             <CalculatorActions
               calculatorType="arv"
               inputs={{
@@ -1025,6 +1058,35 @@ function ROICalculator() {
               </div>
             </div>
 
+            {(() => {
+              const p = parseFloat(purchasePrice);
+              const dp = parseFloat(downPayment);
+              const rent = parseFloat(monthlyRent);
+              const notes: { type: "warning" | "info"; message: string }[] = [];
+              if (purchasePrice && (!Number.isFinite(p) || p <= 0)) notes.push({ type: "warning", message: "Purchase price must be greater than 0." });
+              if (monthlyRent && (!Number.isFinite(rent) || rent <= 0)) notes.push({ type: "warning", message: "Monthly rent must be greater than 0 for cap rate and CoC to be meaningful." });
+              if (downPayment && Number.isFinite(dp) && dp >= 100) notes.push({ type: "info", message: "100% down means no loan — mortgage and CoC denominators degenerate. Cap rate still works." });
+              return notes.map((n, i) => (
+                <ValidationNote key={i} level={n.type} message={n.message} testId={`validation-roi-${i}`} />
+              ));
+            })()}
+            <AssumptionsPanel
+              assumptions={[
+                { label: "Down payment", value: `${parseFloat(downPayment) || 25}%`, note: "Default 25% for non-owner-occupied." },
+                { label: "Interest rate", value: `${parseFloat(loanRate) || 7.5}%`, note: "Default 7.5%; refresh with a real quote." },
+                { label: "Loan term", value: `${parseFloat(loanTerm) || 30} years` },
+                { label: "Vacancy / mgmt / capex", value: "Bundled into your 'Monthly Expenses'", note: "Not auto-added — include them in opex." },
+              ]}
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "Down payment", expression: "purchasePrice × downPaymentPct" },
+                { label: "Monthly mortgage", expression: "PMT(loanAmount, rate/12, term×12)" },
+                { label: "Monthly cash flow", expression: "monthlyRent − monthlyExpenses − monthlyMortgage" },
+                { label: "Cash-on-cash", expression: "annualCashFlow ÷ (downPayment + rehab) × 100" },
+                { label: "Cap rate", expression: "(monthlyRent − monthlyExpenses) × 12 ÷ purchasePrice × 100" },
+              ]}
+            />
             <CalculatorActions
               calculatorType="roi"
               inputs={{
@@ -1076,6 +1138,7 @@ function BRRRRCalculator() {
   const [monthlyExpenses, setMonthlyExpenses] = useState("");
   const [refinanceLTV, setRefinanceLTV] = useState("75");
   const [refinanceRate, setRefinanceRate] = useState("7.5");
+  const [existingLoanBalance, setExistingLoanBalance] = useState("");
   const [results, setResults] = useState<{
     totalCashIn: number;
     refinanceValue: number;
@@ -1097,6 +1160,7 @@ function BRRRRCalculator() {
         monthlyExpenses: parseFloat(monthlyExpenses) || 0,
         refinanceLtvPct: parseFloat(refinanceLTV) || 75,
         refinanceRatePct: parseFloat(refinanceRate) || 7.5,
+        existingLoanBalance: parseFloat(existingLoanBalance) || 0,
       }),
     );
   };
@@ -1109,6 +1173,7 @@ function BRRRRCalculator() {
     setMonthlyExpenses("");
     setRefinanceLTV("75");
     setRefinanceRate("7.5");
+    setExistingLoanBalance("");
     setResults(null);
   };
 
@@ -1116,7 +1181,7 @@ function BRRRRCalculator() {
     if (purchasePrice || arv || monthlyRent) calculate();
     else setResults(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [purchasePrice, rehabCost, arv, monthlyRent, monthlyExpenses, refinanceLTV, refinanceRate]);
+  }, [purchasePrice, rehabCost, arv, monthlyRent, monthlyExpenses, refinanceLTV, refinanceRate, existingLoanBalance]);
 
   const loadBrrrr = useCallback((i: Record<string, unknown>) => {
     setPurchasePrice(String(i.purchasePrice ?? ""));
@@ -1259,6 +1324,23 @@ function BRRRRCalculator() {
               </div>
               <p className="text-xs text-muted-foreground">Taxes, insurance, maintenance, vacancy</p>
             </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="brrrrExistingLoan">Existing Loan Payoff (optional)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="brrrrExistingLoan"
+                  type="number"
+                  placeholder="0"
+                  value={existingLoanBalance}
+                  onChange={(e) => setExistingLoanBalance(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-brrrr-existing-loan"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Balance of acquisition loan paid off at refi. Leave blank for all-cash BRRRR.</p>
+            </div>
           </div>
 
           <div className="flex gap-4">
@@ -1341,6 +1423,42 @@ function BRRRRCalculator() {
               </div>
             </div>
 
+            {(() => {
+              const p = parseFloat(purchasePrice);
+              const a = parseFloat(arv);
+              const rent = parseFloat(monthlyRent);
+              const exp = parseFloat(monthlyExpenses);
+              const ltv = parseFloat(refinanceLTV);
+              const notes: { type: "warning" | "info"; message: string }[] = [];
+              if (purchasePrice && (!Number.isFinite(p) || p <= 0)) notes.push({ type: "warning", message: "Purchase price must be greater than 0." });
+              if (arv && (!Number.isFinite(a) || a <= 0)) notes.push({ type: "warning", message: "ARV must be greater than 0 — without it, refi proceeds and cash-back cannot be computed." });
+              if (Number.isFinite(p) && Number.isFinite(a) && p > 0 && a > 0 && a < p) notes.push({ type: "info", message: "ARV is below purchase price — refi will not return your capital. BRRRR loop will not close." });
+              if (monthlyRent && (!Number.isFinite(rent) || rent <= 0)) notes.push({ type: "warning", message: "Monthly rent must be greater than 0 — DSCR and cash-on-cash depend on it." });
+              if (Number.isFinite(rent) && Number.isFinite(exp) && rent > 0 && exp >= rent) notes.push({ type: "info", message: "Monthly expenses meet or exceed rent — post-refi cash flow will be ≤ 0 before debt service." });
+              if (refinanceLTV && Number.isFinite(ltv) && (ltv <= 0 || ltv > 100)) notes.push({ type: "warning", message: "Refinance LTV must be between 0 and 100%." });
+              return notes.map((n, i) => (
+                <ValidationNote key={i} level={n.type} message={n.message} testId={`validation-brrrr-${i}`} />
+              ));
+            })()}
+            <AssumptionsPanel
+              assumptions={[
+                { label: "Acquisition method", value: (parseFloat(existingLoanBalance) || 0) > 0 ? `Financed — existing loan payoff ${formatCurrency(parseFloat(existingLoanBalance) || 0)}` : "All cash (no existing loan to pay off)", note: "Existing loan payoff is netted against refi proceeds before cash back." },
+                { label: "Refinance LTV", value: `${parseFloat(refinanceLTV) || 75}% of ARV` },
+                { label: "Refinance rate / term", value: `${parseFloat(refinanceRate) || 7.5}% / 30 yr` },
+                { label: "Refi closing costs", value: "Not modeled separately", note: "Net them against cash back in your own pro-forma." },
+              ]}
+              triggerLabel="Adjust assumptions"
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "Total cash in", expression: "purchasePrice + rehabCost" },
+                { label: "Refi proceeds", expression: "ARV × refinanceLTV" },
+                { label: "Cash back to investor", expression: "max(0, refiProceeds − existingLoanPayoff)", note: "Existing loan payoff = 0 for all-cash BRRRR." },
+                { label: "Cash left in deal", expression: "max(0, totalCashIn − cashBack)" },
+                { label: "Monthly cash flow", expression: "rent − expenses − PMT(refiLoan, rate/12, 360)" },
+                { label: "Cash-on-cash", expression: "(cashFlow × 12) ÷ cashLeftInDeal × 100", note: "Infinite when cashLeftInDeal ≤ 0 and CF > 0." },
+              ]}
+            />
             <CalculatorActions
               calculatorType="brrrr"
               inputs={{
@@ -1759,6 +1877,34 @@ function CashFlowCalculator() {
               </div>
             </div>
 
+            {(() => {
+              const gr = parseFloat(grossRent);
+              const v = parseFloat(vacancy);
+              const m = parseFloat(management);
+              const notes: { type: "warning" | "info"; message: string }[] = [];
+              if (grossRent && (!Number.isFinite(gr) || gr <= 0)) notes.push({ type: "warning", message: "Gross rent must be greater than 0 — NOI and expense ratio depend on it." });
+              if (vacancy && Number.isFinite(v) && (v < 0 || v > 100)) notes.push({ type: "warning", message: "Vacancy % must be between 0 and 100." });
+              if (management && Number.isFinite(m) && (m < 0 || m > 100)) notes.push({ type: "warning", message: "Management % must be between 0 and 100." });
+              return notes.map((n, i) => (
+                <ValidationNote key={i} level={n.type} message={n.message} testId={`validation-cashflow-${i}`} />
+              ));
+            })()}
+            <AssumptionsPanel
+              assumptions={[
+                { label: "Vacancy allowance", value: `${parseFloat(vacancy) || 5}% of gross rent`, note: "Default 5%; B/C markets often need 8–10%." },
+                { label: "Management fee", value: `${parseFloat(management) || 10}% of gross rent`, note: "Default 10% for third-party PM." },
+                { label: "Capex reserve", value: "Not auto-added", note: "Include in maintenance or 'other'." },
+              ]}
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "Effective gross income", expression: "grossRent − grossRent × vacancy%" },
+                { label: "Operating expenses", expression: "tax + insurance + maintenance + grossRent × mgmt% + utilities + other" },
+                { label: "NOI", expression: "EGI − operatingExpenses" },
+                { label: "Monthly cash flow", expression: "NOI − mortgage" },
+                { label: "Expense ratio", expression: "operatingExpenses ÷ grossRent × 100" },
+              ]}
+            />
             <CalculatorActions
               calculatorType="cashflow"
               inputs={{
@@ -2167,6 +2313,20 @@ function WholesaleCalculator() {
               </div>
             </div>
 
+            <AssumptionsPanel
+              assumptions={[
+                { label: "Buyer profit target", value: `${parseFloat(buyerProfit) || 25}% of ARV`, note: "What the end buyer needs to clear after closing." },
+                { label: "Closing costs", value: `${parseFloat(closingCosts) || 6}% of ARV` },
+                { label: "Assignment fee viability", value: "≤ 40% of MAO ⇒ great · ≤ 60% ⇒ good" },
+              ]}
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "MAO (max allowable offer)", expression: "ARV − rehab − holding − ARV × closing% − ARV × buyerProfit%" },
+                { label: "Max offer to seller", expression: "max(0, MAO − assignmentFee)" },
+                { label: "Assignment fee % of MAO", expression: "assignmentFee ÷ MAO × 100" },
+              ]}
+            />
             <CalculatorActions
               calculatorType="wholesale"
               inputs={{
@@ -2391,6 +2551,39 @@ function PITICalculator() {
               ))}
             </div>
 
+            {(parseFloat(downPct) || 0) >= 100 && (
+              <ValidationNote
+                level="warning"
+                message="100% down means there is no loan, so the 28/36 affordability rule doesn't constrain price. Max loan and max purchase price are shown as $0 — your cash on hand is the only constraint."
+                testId="validation-piti-100down"
+              />
+            )}
+            {(parseFloat(downPct) || 0) > 95 && (parseFloat(downPct) || 0) < 100 && (
+              <ValidationNote
+                level="info"
+                message="Down payment above 95% produces an unusually large 'max price' because the loan side of the math collapses. Consider whether a loan is needed at all."
+                testId="validation-piti-high-down"
+              />
+            )}
+            <AssumptionsPanel
+              assumptions={[
+                { label: "28/36 rule", value: "Housing ≤ 28% income · all debt ≤ 36% income" },
+                { label: "Down payment", value: `${parseFloat(downPct) || 0}%` },
+                { label: "Property tax", value: `${parseFloat(annualTaxPct) || 0}% per year of price` },
+                { label: "Insurance", value: `$${parseFloat(monthlyIns) || 0}/mo` },
+                { label: "Loan terms", value: `${parseFloat(rate) || 0}% / ${parseInt(term) || 30} yr fixed` },
+                { label: "PMI / HOA", value: "Not modeled — fold into 'Insurance' if relevant." },
+              ]}
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "Max housing payment (28%)", expression: "grossMonthlyIncome × 0.28" },
+                { label: "Max total debt (36%)", expression: "grossMonthlyIncome × 0.36 − otherDebts" },
+                { label: "Binding monthly cap", expression: "min(28% cap, 36% cap)" },
+                { label: "Max loan (PV reverse)", expression: "(binding − taxes − insurance) × [(1 − (1+r)^-n) / r]" },
+                { label: "Max purchase price", expression: "maxLoan ÷ (1 − downPaymentPct)", note: "Returns $0 when downPaymentPct = 100% (no loan needed)." },
+              ]}
+            />
             <CalculatorActions
               calculatorType="piti"
               inputs={{
@@ -2636,6 +2829,22 @@ function OwnVsRentCalculator() {
               Chart shows the 4%/yr scenario. Crossover year is when owner net worth overtakes the
               rent + invest path. Illustrative, not a forecast.
             </p>
+            <AssumptionsPanel
+              assumptions={[
+                { label: "Appreciation scenarios", value: "2% / 4% / 6% per year", note: "Cooling / long-run / hot market paths." },
+                { label: "Rent growth", value: `${parseFloat(rentGrowth) || 3}% per year` },
+                { label: "Investment return (renter)", value: `${parseFloat(investReturn) || 6}% per year`, note: "What the down payment + monthly savings earn if invested instead." },
+                { label: "Maintenance", value: `${parseFloat(maintPct) || 1}% of price per year` },
+                { label: "Tax / Insurance / HOA", value: `${parseFloat(taxRate) || 1.2}% · $${parseFloat(insurance) || 150}/mo · $${parseFloat(hoa) || 0}/mo` },
+              ]}
+            />
+            <FormulaReveal
+              formulas={[
+                { label: "Owner net worth (year y)", expression: "price × (1 + appreciation)^y − loanBalance(y)" },
+                { label: "Renter net worth (year y)", expression: "rentInvested × (1 + investReturn) + max(0, ownerMonthly − rent) × 12" },
+                { label: "Crossover year", expression: "first year where ownerNetWorth ≥ renterNetWorth" },
+              ]}
+            />
             <CalculatorActions
               calculatorType="ownvsrent"
               inputs={{
@@ -2694,6 +2903,14 @@ function HardMoneyCalculator() {
     if (inputs.sellingCostPct != null) setSellingCostPct(String(inputs.sellingCostPct));
   });
 
+  // Months held: treat empty input as "use default 6", but if the user
+  // explicitly typed 0 (or anything <1), preserve their value so we can
+  // surface inline validation instead of silently coercing to 6.
+  const monthsTrimmed = months.trim();
+  const monthsParsed = monthsTrimmed === "" ? 6 : parseInt(monthsTrimmed);
+  const monthsValid = Number.isFinite(monthsParsed) && monthsParsed >= 1;
+  const monthsUsed = monthsValid ? monthsParsed : Math.max(1, monthsParsed || 1);
+
   const stack = useMemo(
     () =>
       holdingCostStack({
@@ -2702,14 +2919,14 @@ function HardMoneyCalculator() {
         ltcPct: parseFloat(ltc) || 0,
         pointsPct: parseFloat(points) || 0,
         ratePct: parseFloat(rate) || 0,
-        monthsHeld: parseInt(months) || 6,
+        monthsHeld: monthsUsed,
         originationFee: parseFloat(originationFee) || 0,
         annualTaxPct: parseFloat(annualTaxPct) || 0,
         monthlyInsurance: parseFloat(monthlyIns) || 0,
         monthlyUtilities: parseFloat(monthlyUtilities) || 0,
         sellingCostPct: parseFloat(sellingCostPct) || 7,
       }),
-    [purchase, rehab, ltc, points, rate, months, originationFee, annualTaxPct, monthlyIns, monthlyUtilities, sellingCostPct],
+    [purchase, rehab, ltc, points, rate, monthsUsed, originationFee, annualTaxPct, monthlyIns, monthlyUtilities, sellingCostPct],
   );
 
   const reset = () => {
@@ -2850,6 +3067,33 @@ function HardMoneyCalculator() {
               <p className="font-medium tabular-nums text-lg" data-testid="result-hm-cashin">{fmt(stack.totalCashIntoDeal)}</p>
             </div>
           </div>
+          {!monthsValid && (
+            <ValidationNote
+              level="warning"
+              message="Months held must be at least 1. Using 1 month for the calculation — type a real hold horizon (typically 3–12 months) to refine the holding cost stack."
+              testId="validation-hm-months"
+            />
+          )}
+          <AssumptionsPanel
+            assumptions={[
+              { label: "Loan-to-cost", value: `${parseFloat(ltc) || 0}% of (purchase + rehab)` },
+              { label: "Points", value: `${parseFloat(points) || 0}% of loan, due at close` },
+              { label: "Rate", value: `${parseFloat(rate) || 0}% interest-only` },
+              { label: "Hold horizon", value: `${monthsUsed} month${monthsUsed === 1 ? "" : "s"}`, note: monthsValid ? undefined : "Adjusted from your input — see warning above." },
+              { label: "Property tax", value: `${parseFloat(annualTaxPct) || 0}% per year of purchase` },
+              { label: "Selling costs", value: `${parseFloat(sellingCostPct) || 7}% at resale` },
+            ]}
+          />
+          <FormulaReveal
+            formulas={[
+              { label: "Loan amount", expression: "(purchase + rehab) × LTC" },
+              { label: "Cash required at close", expression: "(purchase + rehab) − loan + points × loan + origination" },
+              { label: "Total interest", expression: "loan × (rate ÷ 12) × monthsHeld", note: "Interest-only payments." },
+              { label: "Holding cost stack", expression: "points + origination + totalInterest + (tax+ins+util) × monthsHeld" },
+              { label: "Breakeven sale price", expression: "(totalCashIntoDeal + loan) ÷ (1 − sellingCost%)" },
+              { label: "Effective APR", expression: "(totalFinanceCost ÷ loan) × (12 ÷ monthsHeld) × 100" },
+            ]}
+          />
           <CalculatorActions
             calculatorType="hardmoney"
             inputs={{
@@ -2858,7 +3102,7 @@ function HardMoneyCalculator() {
               ltc: parseFloat(ltc) || 0,
               points: parseFloat(points) || 0,
               rate: parseFloat(rate) || 0,
-              months: parseInt(months) || 0,
+              months: monthsUsed,
               originationFee: parseFloat(originationFee) || 0,
               annualTaxPct: parseFloat(annualTaxPct) || 0,
               monthlyIns: parseFloat(monthlyIns) || 0,

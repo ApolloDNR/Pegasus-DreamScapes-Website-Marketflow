@@ -714,6 +714,149 @@ export function BreakdownChart({ items, title }: { items: BreakdownItemProps[]; 
   );
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// AssumptionsPanel + FormulaReveal
+//
+// Surfaced on every calculator's results card so users can see the hidden
+// defaults driving the numbers (vacancy, closing, mgmt %, etc.) and the
+// exact formula the engine used. No more silent defaults.
+// ──────────────────────────────────────────────────────────────────────────
+
+export interface AssumptionRow {
+  label: string;
+  value: string;
+  /** Optional short note: where the default comes from. */
+  note?: string;
+}
+
+export function AssumptionsPanel({
+  assumptions,
+  title = "Assumptions in play",
+  triggerLabel = "Adjust assumptions",
+}: {
+  assumptions: AssumptionRow[];
+  title?: string;
+  /**
+   * Explicit "Adjust assumptions" call-to-action shown next to the title so
+   * users immediately see they can change the hidden defaults. Pass `null`
+   * or empty string to hide it on a specific calculator.
+   */
+  triggerLabel?: string;
+}) {
+  if (assumptions.length === 0) return null;
+  return (
+    <Collapsible className="rounded-lg border border-border bg-muted/20" data-testid="assumptions-panel">
+      <CollapsibleTrigger className="group w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover-elevate active-elevate-2 rounded-lg">
+        <div className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-primary" />
+          <span className="text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
+            {title}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {triggerLabel && (
+            <span className="text-[11px] font-supporting font-semibold text-primary underline-offset-2 group-hover:underline" data-testid="assumptions-trigger-label">
+              {triggerLabel}
+            </span>
+          )}
+          <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="px-4 pb-4 pt-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          {assumptions.map((row, idx) => (
+            <div key={idx} className="flex items-baseline justify-between gap-3 border-b border-border/40 py-1.5">
+              <div className="min-w-0">
+                <p className="font-medium text-foreground truncate" data-testid={`assumption-label-${idx}`}>{row.label}</p>
+                {row.note && <p className="text-[11px] text-muted-foreground leading-snug">{row.note}</p>}
+              </div>
+              <p className="font-medium tabular-nums text-foreground whitespace-nowrap" data-testid={`assumption-value-${idx}`}>
+                {row.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+export interface FormulaLine {
+  label: string;
+  expression: string;
+  /** Optional plain-English clarifier. */
+  note?: string;
+}
+
+export function FormulaReveal({
+  formulas,
+  title = "Show the math",
+}: {
+  formulas: FormulaLine[];
+  title?: string;
+}) {
+  if (formulas.length === 0) return null;
+  return (
+    <Collapsible className="rounded-lg border border-border bg-muted/20" data-testid="formula-reveal">
+      <CollapsibleTrigger className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover-elevate active-elevate-2 rounded-lg">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-primary" />
+          <span className="text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
+            {title}
+          </span>
+        </div>
+        <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="px-4 pb-4 pt-1 space-y-2">
+          {formulas.map((row, idx) => (
+            <div key={idx} className="border-b border-border/40 py-1.5">
+              <p className="text-[11px] uppercase tracking-[0.18em] font-supporting font-semibold text-muted-foreground mb-1">
+                {row.label}
+              </p>
+              <p className="font-mono text-xs leading-relaxed text-foreground break-words" data-testid={`formula-expr-${idx}`}>
+                {row.expression}
+              </p>
+              {row.note && <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{row.note}</p>}
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+/**
+ * Inline validation banner used by calculators when user inputs require
+ * surfacing rather than silently coercing to a default (e.g. 100% down,
+ * 0 months held).
+ */
+export function ValidationNote({
+  level = "warning",
+  message,
+  testId,
+}: {
+  level?: "warning" | "error" | "info";
+  message: string;
+  testId?: string;
+}) {
+  const tone =
+    level === "error"
+      ? "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-300"
+      : level === "info"
+        ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300"
+        : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300";
+  return (
+    <div
+      className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${tone}`}
+      data-testid={testId ?? "validation-note"}
+    >
+      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+      <span className="leading-snug">{message}</span>
+    </div>
+  );
+}
+
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

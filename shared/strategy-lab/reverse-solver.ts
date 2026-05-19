@@ -74,10 +74,10 @@ function solveFlipLike(c: LaneCtx): string[] {
   if (c.arv <= 0) return [safeCopy("Provide an After-Repair Value to evaluate flip economics.")];
   // Target: all-in ≤ 75% of ARV with $30k profit minimum.
   const targetAllIn = c.arv * 0.75;
-  const priceCutNeeded = c.property.askingPrice + c.rehab - targetAllIn;
-  const priceCutPct = priceCutNeeded > 0 ? priceCutNeeded / c.property.askingPrice : 0;
-  const rehabCap = Math.max(0, targetAllIn - c.property.askingPrice);
-  const arvLift = Math.max(0, (c.property.askingPrice + c.rehab) / 0.75 - c.arv);
+  const priceCutNeeded = c.effectivePrice + c.rehab - targetAllIn;
+  const priceCutPct = priceCutNeeded > 0 ? priceCutNeeded / c.effectivePrice : 0;
+  const rehabCap = Math.max(0, targetAllIn - c.effectivePrice);
+  const arvLift = Math.max(0, (c.effectivePrice + c.rehab) / 0.75 - c.arv);
   const out: string[] = [];
   if (priceCutNeeded > 0) {
     out.push(
@@ -105,7 +105,7 @@ function solveBrrrr(c: LaneCtx): string[] {
   const out: string[] = [];
   // Need all-in ≤ 75% of ARV AND DSCR ≥ 1.20.
   const targetAllIn = c.arv * 0.75;
-  const overspend = c.property.askingPrice + c.rehab - targetAllIn;
+  const overspend = c.effectivePrice + c.rehab - targetAllIn;
   if (overspend > 0) {
     out.push(
       safeCopy(
@@ -164,7 +164,7 @@ function solveRentalHold(c: LaneCtx): string[] {
 
 function solveWholesale(c: LaneCtx): string[] {
   const targetMao = c.arv * 0.7 - c.rehab;
-  const overpaid = c.property.askingPrice - targetMao;
+  const overpaid = c.effectivePrice - targetMao;
   if (overpaid <= 0) return [safeCopy("Spread already exists at 70% rule; revisit assumptions.")];
   return [
     safeCopy(

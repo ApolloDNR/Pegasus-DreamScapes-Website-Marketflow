@@ -29,6 +29,18 @@ export interface RunOptions {
   loanLtvPct?: number;
   loanRatePct?: number;
   loanTermYears?: number;
+  /** Property-management overhead, default 8% of collected rent. */
+  managementPct?: number;
+  /**
+   * Override the closing-reserve % of price (default 3%). Surfaced so
+   * Quick Read users can adjust the hidden assumption inline.
+   */
+  closingReservePct?: number;
+  /**
+   * Override Base-scenario vacancy %. Stressed/Worst stay at +2pp / +4pp
+   * relative to the chosen Base.
+   */
+  vacancyPctBase?: number;
   /** Override the engine clock (for tests + reproducible snapshots). */
   now?: Date;
 }
@@ -41,6 +53,8 @@ export function runStrategyLab(
   const ltvPct = opts.loanLtvPct ?? 75;
   const ratePct = opts.loanRatePct ?? 7.5;
   const termYears = opts.loanTermYears ?? 30;
+  const managementPct = opts.managementPct ?? 8;
+  const closingReservePct = opts.closingReservePct ?? 3;
 
   // ── Comp bands ────────────────────────────────────────────────────────
   // Pass subject beds/baths so the comp band applies bed (±5%/unit) and
@@ -58,9 +72,13 @@ export function runStrategyLab(
   const rehab = property.rehabBudget ?? 0;
 
   // ── Capital stack + financing ─────────────────────────────────────────
-  const downPayment = property.askingPrice * (1 - ltvPct / 100);
-  const loanAmount = property.askingPrice - downPayment;
-  const closingReserve = property.askingPrice * 0.03;
+  // Use the active purchase price when present (e.g. negotiated offer); fall
+  // back to asking price. Keeps cash-in math honest when buyer is paying less
+  // (or more) than list.
+  const effectivePrice = property.purchasePrice ?? property.askingPrice;
+  const downPayment = effectivePrice * (1 - ltvPct / 100);
+  const loanAmount = effectivePrice - downPayment;
+  const closingReserve = effectivePrice * (closingReservePct / 100);
   const totalCashIn = downPayment + rehab + closingReserve;
 
   const capitalStack: CapitalStackEntry[] = [
@@ -84,11 +102,14 @@ export function runStrategyLab(
     loanAmount,
     ratePct,
     termYears,
+    managementPct,
+    vacancyPctBase: opts.vacancyPctBase,
   });
 
   // ── Lane scoring ──────────────────────────────────────────────────────
   const laneCtx: LaneCtx = {
     property,
+    effectivePrice,
     rent,
     rehab,
     arv,

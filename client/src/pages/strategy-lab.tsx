@@ -748,14 +748,72 @@ export default function StrategyLabPage() {
     ],
   );
 
+  // Quick Read editable assumptions — defaults match Apollo's underwriting
+  // baseline and were previously hidden inside the engine. Surfacing them
+  // here means a Quick Read user can sanity-check (or override) every lever
+  // without graduating to Full Path.
+  const [quickAssumptions, setQuickAssumptions] = useState({
+    loanLtvPct: "75",
+    loanRatePct: "7.5",
+    managementPct: "8",
+    closingReservePct: "3",
+    vacancyPct: "8",
+  });
+  const updateQuick = useCallback(
+    <K extends keyof typeof quickAssumptions>(k: K, v: string) =>
+      setQuickAssumptions((s) => ({ ...s, [k]: v })),
+    [],
+  );
+
+  // Quick Read inline validation — non-blocking warnings for the small set
+  // of inputs where 0 / blank / inverted values would silently produce a
+  // misleading verdict. Reads the raw form fields so users see the warning
+  // the instant they finish typing.
+  const quickValidation = useMemo(() => {
+    const out: { field: string; message: string }[] = [];
+    const price = parseNum(form.askingPrice);
+    const arv = parseNum(form.arvEstimate);
+    const rehab = parseNum(form.rehabBudget);
+    const rent = parseNum(form.marketRent);
+    if (price != null && price <= 0) {
+      out.push({ field: "askingPrice", message: "Asking price must be greater than $0." });
+    }
+    if (arv != null && arv <= 0) {
+      out.push({ field: "arvEstimate", message: "ARV must be greater than $0." });
+    }
+    if (price != null && arv != null && price > 0 && arv > 0 && arv < price) {
+      out.push({
+        field: "arvEstimate",
+        message: `ARV ($${arv.toLocaleString()}) is below asking price — this isn't a fix-and-flip or BRRRR candidate.`,
+      });
+    }
+    if (rehab != null && rehab < 0) {
+      out.push({ field: "rehabBudget", message: "Rehab budget cannot be negative." });
+    }
+    if (rent != null && rent <= 0 && rent != null) {
+      out.push({ field: "marketRent", message: "Market rent must be greater than $0/mo to score rental lanes." });
+    }
+    return out;
+  }, [form.askingPrice, form.arvEstimate, form.rehabBudget, form.marketRent]);
+
   const snapshot = useMemo(() => {
     if (!engineInputs.property.askingPrice || engineInputs.property.askingPrice <= 0) return null;
     try {
+      // Quick Read assumption overrides take precedence over the form-level
+      // financing fields so users can experiment without polluting Full Path.
+      const ltvOverride = parseNum(quickAssumptions.loanLtvPct);
+      const rateOverride = parseNum(quickAssumptions.loanRatePct);
+      const mgmtOverride = parseNum(quickAssumptions.managementPct);
+      const closingOverride = parseNum(quickAssumptions.closingReservePct);
+      const vacancyOverride = parseNum(quickAssumptions.vacancyPct);
       return runStrategyLab(engineInputs.property, {
         comps: engineInputs.comps,
-        loanLtvPct: engineInputs.loanLtvPct,
-        loanRatePct: engineInputs.loanRatePct,
+        loanLtvPct: mode === "quick" && ltvOverride != null ? ltvOverride : engineInputs.loanLtvPct,
+        loanRatePct: mode === "quick" && rateOverride != null ? rateOverride : engineInputs.loanRatePct,
         loanTermYears: engineInputs.loanTermYears,
+        managementPct: mode === "quick" && mgmtOverride != null ? mgmtOverride : undefined,
+        closingReservePct: mode === "quick" && closingOverride != null ? closingOverride : undefined,
+        vacancyPctBase: mode === "quick" && vacancyOverride != null ? vacancyOverride : undefined,
       });
     } catch (e) {
       // Engine should never throw on user input, but if it does we surface the
@@ -764,7 +822,7 @@ export default function StrategyLabPage() {
       console.error("Strategy Lab engine error:", e);
       return null;
     }
-  }, [engineInputs]);
+  }, [engineInputs, quickAssumptions, mode]);
 
   // 4-tone Reading Lens (Task #90). `toneLens` of null means "follow the
   // submission role". A manual selection pins the lens for the session and
@@ -800,6 +858,90 @@ export default function StrategyLabPage() {
   }, [snapshot, effectiveLens, form.dealStatus]);
 
   const topLane = snapshot?.lanes[0];
+
+  // "How we got this number" — substituted values for the headline metric of
+  // the TOP lane that the snapshot actually surfaces. Keeps the math reveal
+  // honest: if Quick Read shows "Monthly cash flow", the chain shown is NOI
+  // minus debt service, not a generic refi expression.
+  const quickMath = useMemo(() => {
+    if (!snapshot || !topLane) return null;
+    const price = engineInputs.property.purchasePrice ?? engineInputs.property.askingPrice ?? 0;
+    if (!price) return null;
+    const arv = engineInputs.property.arvEstimate ?? 0;
+    const rehab = engineInputs.property.rehabBudget ?? 0;
+    const rent = engineInputs.property.marketRent ?? 0;
+    const ltvPct = parseNum(quickAssumptions.loanLtvPct) ?? 75;
+    const ratePct = parseNum(quickAssumptions.loanRatePct) ?? 7.5;
+    const mgmtPct = parseNum(quickAssumptions.managementPct) ?? 8;
+    const closingPct = parseNum(quickAssumptions.closingReservePct) ?? 3;
+    const vacancyPct = parseNum(quickAssumptions.vacancyPct) ?? 8;
+    const downPayment = price * (1 - ltvPct / 100);
+    const loanAmount = price * (ltvPct / 100);
+    const closingReserve = price * (closingPct / 100);
+    const totalCashIn = downPayment + rehab + closingReserve;
+    const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+
+    // Lane-specific arithmetic chain leading to the displayed primaryValue.
+    const lane = topLane.lane;
+    const base = snapshot.scenarios.base;
+    const lines: { label: string; value: string }[] = [
+      { label: "Effective price", value: fmt(price) },
+      { label: `Down payment (price × ${(100 - ltvPct).toFixed(0)}%)`, value: fmt(downPayment) },
+      { label: `Loan amount (price × ${ltvPct}%)`, value: fmt(loanAmount) },
+      { label: `Closing reserve (price × ${closingPct}%)`, value: fmt(closingReserve) },
+      { label: "Total cash in (down + rehab + closing)", value: fmt(totalCashIn) },
+    ];
+
+    // Lane-specific arithmetic that mirrors shared/strategy-lab/lanes.ts so
+    // every line in the reveal terminates at the same number the lane scorer
+    // surfaced as `economics.primaryValue`. Calculator-math test asserts
+    // parity for BRRRR + rental_hold.
+    if (lane === "flip") {
+      const closing = arv * 0.06; // lanes.ts: closing = c.arv * 0.06
+      const netProfit = arv - price - rehab - closing;
+      lines.push(
+        { label: "Selling cost (ARV × 6%)", value: fmt(closing) },
+        { label: "Net profit = ARV − price − rehab − selling", value: fmt(netProfit) },
+      );
+    } else if (lane === "wholetail") {
+      const closing = arv * 0.07; // lanes.ts: c.arv * 0.07
+      const netProfit = arv - price - rehab - closing;
+      lines.push(
+        { label: "Selling cost (ARV × 7%)", value: fmt(closing) },
+        { label: "Net after light rehab = ARV − price − rehab − selling", value: fmt(netProfit) },
+      );
+    } else if (lane === "brrrr") {
+      // lanes.ts scoreBrrrr uses totalIn = askingPrice + rehab (NOT the
+      // engine's down+rehab+closing). Mirror exactly so the reveal lands
+      // on the same `Cash left in after refi` value.
+      const refiProceeds = arv * 0.75;
+      const totalIn = price + rehab;
+      const cashLeft = Math.max(0, totalIn - refiProceeds);
+      lines.push(
+        { label: "Total in (price + rehab)", value: fmt(totalIn) },
+        { label: "Refi cash-out (ARV × 75% LTV)", value: fmt(refiProceeds) },
+        { label: "Cash left in = max(0, total in − refi)", value: fmt(cashLeft) },
+      );
+    } else if (lane === "rental_hold" || lane === "jv") {
+      lines.push(
+        { label: `EGI (rent × 12 × ${(100 - vacancyPct).toFixed(0)}%)`, value: fmt(base.effectiveGrossIncome) },
+        { label: "NOI (EGI − opex, Base)", value: fmt(base.noiAnnual) },
+        { label: `Debt service @ ${ratePct}% / 30 yr`, value: fmt(base.annualDebtService) },
+        { label: "Annual cash flow = NOI − debt", value: fmt(base.annualCashFlow) },
+        { label: "Monthly cash flow = annual / 12", value: fmt(base.annualCashFlow / 12) },
+      );
+    } else if (lane === "wholesale") {
+      // lanes.ts: fee = max(0, arv * 0.7 - rehab - askingPrice)
+      const seventyMao = arv * 0.7 - rehab;
+      const fee = Math.max(0, seventyMao - price);
+      lines.push(
+        { label: "70% rule MAO = ARV × 70% − rehab", value: fmt(seventyMao) },
+        { label: "Assignment fee = max(0, MAO − asking)", value: fmt(fee) },
+      );
+    }
+
+    return { price, arv, rehab, rent, ltvPct, ratePct, mgmtPct, closingPct, vacancyPct, lines, fmt };
+  }, [snapshot, topLane, engineInputs, quickAssumptions]);
 
   // ── Persistence + share + PDF + submit (Task #84) ──────────────────────
   const { isAuthenticated } = useSupabaseAuth();
@@ -1666,6 +1808,11 @@ export default function StrategyLabPage() {
                   prefix="$"
                   testId="quick-input-price"
                 />
+                {quickValidation.filter((v) => v.field === "askingPrice").map((v, i) => (
+                  <p key={i} className="text-[11px] text-amber-700 mt-1" data-testid="validation-quick-askingPrice">
+                    {v.message}
+                  </p>
+                ))}
               </Field>
               <Field label="Rehab budget" hint="Engineer or GC estimate.">
                 <NumInput
@@ -1674,6 +1821,11 @@ export default function StrategyLabPage() {
                   prefix="$"
                   testId="quick-input-rehab"
                 />
+                {quickValidation.filter((v) => v.field === "rehabBudget").map((v, i) => (
+                  <p key={i} className="text-[11px] text-amber-700 mt-1" data-testid="validation-quick-rehabBudget">
+                    {v.message}
+                  </p>
+                ))}
               </Field>
               <Field label="ARV (After-Repair)" hint="Appraised value post-rehab.">
                 <NumInput
@@ -1682,6 +1834,11 @@ export default function StrategyLabPage() {
                   prefix="$"
                   testId="quick-input-arv"
                 />
+                {quickValidation.filter((v) => v.field === "arvEstimate").map((v, i) => (
+                  <p key={i} className="text-[11px] text-amber-700 mt-1" data-testid="validation-quick-arvEstimate">
+                    {v.message}
+                  </p>
+                ))}
               </Field>
               <Field label="Market rent" hint="If you held it as a rental.">
                 <NumInput
@@ -1691,10 +1848,83 @@ export default function StrategyLabPage() {
                   suffix="/mo"
                   testId="quick-input-rent"
                 />
+                {quickValidation.filter((v) => v.field === "marketRent").map((v, i) => (
+                  <p key={i} className="text-[11px] text-amber-700 mt-1" data-testid="validation-quick-marketRent">
+                    {v.message}
+                  </p>
+                ))}
               </Field>
               <div className="pt-2 text-[11px] text-muted-foreground leading-snug">
                 Need scenarios, risks, sensitivity, or PDF export? Switch to Full Path on the right.
               </div>
+
+              {/* Hidden defaults — now editable inline. The static fallbacks
+                  (vacancy 8%, tax 1.1%, insurance $150/mo) live in
+                  scenarios.ts and the methodology doc. */}
+              <details
+                className="mt-2 rounded-md border border-[hsl(var(--rule))] bg-muted/20 p-4 [&[open]>summary>span.chev]:rotate-90"
+                data-testid="quick-assumptions"
+              >
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
+                    What we're assuming — tap to edit
+                  </span>
+                  <span className="chev transition-transform text-primary text-xs" aria-hidden="true">›</span>
+                </summary>
+                <p className="mt-2 text-[11px] text-muted-foreground leading-snug" data-testid="quick-assumptions-scope">
+                  These drive scenario economics (cash flow, NOI, capital stack). Lane scoring still uses the doctrinal levers (70% rule for flips, 75% refi for BRRRR) so verdicts stay comparable across deals.
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <Field label="Loan LTV" hint="Default 75%.">
+                    <NumInput
+                      value={quickAssumptions.loanLtvPct}
+                      onChange={(v) => updateQuick("loanLtvPct", v)}
+                      suffix="%"
+                      testId="quick-assume-ltv"
+                    />
+                  </Field>
+                  <Field label="Loan rate" hint="Default 7.5%.">
+                    <NumInput
+                      value={quickAssumptions.loanRatePct}
+                      onChange={(v) => updateQuick("loanRatePct", v)}
+                      suffix="%"
+                      testId="quick-assume-rate"
+                    />
+                  </Field>
+                  <Field label="Mgmt %" hint="Default 8% of rent.">
+                    <NumInput
+                      value={quickAssumptions.managementPct}
+                      onChange={(v) => updateQuick("managementPct", v)}
+                      suffix="%"
+                      testId="quick-assume-mgmt"
+                    />
+                  </Field>
+                  <Field label="Closing reserve" hint="Default 3% of price.">
+                    <NumInput
+                      value={quickAssumptions.closingReservePct}
+                      onChange={(v) => updateQuick("closingReservePct", v)}
+                      suffix="%"
+                      testId="quick-assume-closing"
+                    />
+                  </Field>
+                  <Field label="Vacancy (Base)" hint="Default 8%. Stressed/Worst auto-stack +2pp/+4pp.">
+                    <NumInput
+                      value={quickAssumptions.vacancyPct}
+                      onChange={(v) => updateQuick("vacancyPct", v)}
+                      suffix="%"
+                      testId="quick-assume-vacancy"
+                    />
+                  </Field>
+                </div>
+                <ul className="mt-3 text-[11px] text-muted-foreground leading-snug space-y-1 border-t border-[hsl(var(--rule))] pt-3">
+                  <li className="flex justify-between gap-3"><span>Property tax</span><span className="tabular-nums text-foreground">1.1% / yr of price</span></li>
+                  <li className="flex justify-between gap-3"><span>Insurance</span><span className="tabular-nums text-foreground">$150 / mo</span></li>
+                  <li className="flex justify-between gap-3"><span>Loan term</span><span className="tabular-nums text-foreground">30 yr fixed</span></li>
+                </ul>
+                <p className="text-[11px] text-muted-foreground leading-snug pt-2">
+                  Need to edit vacancy, tax, insurance, or comps? Switch to <span className="font-semibold text-foreground">Full Path</span>.
+                </p>
+              </details>
             </section>
 
             {/* Stripped 3-card verdict */}
@@ -1775,6 +2005,31 @@ export default function StrategyLabPage() {
                       <div className="font-serif text-3xl font-semibold tabular-nums">
                         {topLane.economics.primaryValue}
                       </div>
+
+                      {quickMath && (
+                        <details className="mt-3 border-t border-[hsl(var(--rule))] pt-3 [&[open]>summary>span.chev]:rotate-90">
+                          <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
+                            <span className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
+                              How we got this number
+                            </span>
+                            <span className="chev transition-transform text-primary text-xs" aria-hidden="true">›</span>
+                          </summary>
+                          <ul className="mt-3 text-[11px] text-muted-foreground leading-relaxed space-y-1.5 font-mono" data-testid="quick-math-reveal">
+                            {quickMath.lines.map((ln, i) => (
+                              <li key={i} className="flex justify-between gap-3">
+                                <span className="text-foreground">{ln.label}</span>
+                                <span className="tabular-nums">{ln.value}</span>
+                              </li>
+                            ))}
+                            <li className="pt-1 text-[10px] italic border-t border-[hsl(var(--rule))]/50">
+                              Mgmt {quickMath.mgmtPct}% · Rate {quickMath.ratePct}% / 30 yr · Vacancy {quickMath.vacancyPct}% (Base)
+                            </li>
+                          </ul>
+                          <p className="mt-2 text-[10px] text-muted-foreground leading-snug">
+                            Edit any assumption above to recompute. Full Path adds Stressed / Worst scenarios, DSCR, and the lane-by-lane sensitivity grid.
+                          </p>
+                        </details>
+                      )}
                     </div>
                   )}
 

@@ -21,6 +21,13 @@ import { fmtDollars, fmtMonthly, fmtPct, safeCopy } from "./voice";
 
 interface LaneCtx {
   property: PropertyInput;
+  /**
+   * Acquisition basis used for ALL lane economics: `purchasePrice ?? askingPrice`.
+   * This matches the engine's `effectivePrice` (see `runStrategyLab`) so lane
+   * scoring stays consistent with capital-stack, scenario, and cap-rate math
+   * when a negotiated purchase price differs from the public listing price.
+   */
+  effectivePrice: number;
   rent: number;
   rehab: number;
   arv: number;
@@ -53,12 +60,12 @@ function scoreFlip(c: LaneCtx): LaneFitResult {
 
   if (c.arv <= 0) missing.push("After-Repair Value (ARV)");
   if (c.rehab <= 0) missing.push("Rehab budget");
-  if (c.property.askingPrice <= 0) missing.push("Asking price");
+  if (c.effectivePrice <= 0) missing.push("Asking price");
 
   // 70% rule: max offer = ARV * 0.70 - rehab.
   const seventyMao = c.arv * 0.7 - c.rehab;
-  const headroom = seventyMao - c.property.askingPrice;
-  const arvAllInPct = c.arv > 0 ? (c.property.askingPrice + c.rehab) / c.arv : 1;
+  const headroom = seventyMao - c.effectivePrice;
+  const arvAllInPct = c.arv > 0 ? (c.effectivePrice + c.rehab) / c.arv : 1;
 
   if (headroom > 0) {
     score += 25;
@@ -78,7 +85,7 @@ function scoreFlip(c: LaneCtx): LaneFitResult {
 
   // Net profit estimate (after 6% closing).
   const closing = c.arv * 0.06;
-  const netProfit = c.arv - c.property.askingPrice - c.rehab - closing;
+  const netProfit = c.arv - c.effectivePrice - c.rehab - closing;
   if (netProfit < 25000 && c.arv > 0) {
     score -= 10;
     sensitive.push(`Projected gross profit of ${fmtDollars(netProfit)} leaves no room for holding-cost surprises.`);
@@ -136,7 +143,7 @@ function scoreWholetail(c: LaneCtx): LaneFitResult {
   if (c.arv <= 0) missing.push("After-Repair / retail comp value");
 
   const lightRehab = c.rehab > 0 && c.rehab <= 25000;
-  const sellable = c.arv > c.property.askingPrice * 1.1;
+  const sellable = c.arv > c.effectivePrice * 1.1;
 
   if (lightRehab) {
     score += 25;
@@ -147,7 +154,7 @@ function scoreWholetail(c: LaneCtx): LaneFitResult {
   }
   if (sellable) {
     score += 20;
-    supporting.push(`Retail value sits ${fmtDollars(c.arv - c.property.askingPrice)} over asking.`);
+    supporting.push(`Retail value sits ${fmtDollars(c.arv - c.effectivePrice)} over asking.`);
   } else if (c.arv > 0) {
     score -= 15;
     sensitive.push("Retail spread is below 10% — list price will not move retail.");
@@ -157,7 +164,7 @@ function scoreWholetail(c: LaneCtx): LaneFitResult {
     supporting.push("Turnkey / light condition allows a fast cosmetic refresh.");
   }
 
-  const netProfit = c.arv - c.property.askingPrice - c.rehab - c.arv * 0.07;
+  const netProfit = c.arv - c.effectivePrice - c.rehab - c.arv * 0.07;
   const verdict = pickVerdict(score, missing);
   return {
     lane: "wholetail",
@@ -179,7 +186,7 @@ function scoreWholetail(c: LaneCtx): LaneFitResult {
       primaryMetric: "Net after light rehab",
       primaryValue: fmtDollars(netProfit),
       metrics: [
-        { label: "Retail spread", value: fmtDollars(c.arv - c.property.askingPrice) },
+        { label: "Retail spread", value: fmtDollars(c.arv - c.effectivePrice) },
         { label: "Rehab budget", value: fmtDollars(c.rehab) },
       ],
     },
@@ -203,7 +210,7 @@ function scoreBrrrr(c: LaneCtx): LaneFitResult {
 
   const refiLtv = 0.75;
   const cashOut = c.arv * refiLtv;
-  const totalIn = c.property.askingPrice + c.rehab;
+  const totalIn = c.effectivePrice + c.rehab;
   const cashLeft = Math.max(0, totalIn - cashOut);
   const arvAllInPct = c.arv > 0 ? totalIn / c.arv : 1;
 
@@ -278,9 +285,9 @@ function scoreRentalHold(c: LaneCtx): LaneFitResult {
   let score = 50;
 
   if (c.rent <= 0) missing.push("Market rent");
-  if (c.property.askingPrice <= 0) missing.push("Asking price");
+  if (c.effectivePrice <= 0) missing.push("Asking price");
 
-  const onePctRatio = c.property.askingPrice > 0 ? c.rent / c.property.askingPrice : 0;
+  const onePctRatio = c.effectivePrice > 0 ? c.rent / c.effectivePrice : 0;
 
   if (c.base.capRatePct >= 6) {
     score += 20;
@@ -420,7 +427,7 @@ function scoreWholesale(c: LaneCtx): LaneFitResult {
 
   // Buyer's MAO at 70% rule, then assignment fee = MAO - asking.
   const mao = c.arv * 0.7 - c.rehab;
-  const fee = mao - c.property.askingPrice;
+  const fee = mao - c.effectivePrice;
   const feePct = c.arv > 0 ? fee / c.arv : 0;
 
   if (fee >= 10000) {
@@ -611,7 +618,7 @@ function scoreGroundUp(c: LaneCtx): LaneFitResult {
   const bigLot = (c.property.lotSqft ?? 0) >= 10000;
   const tearDown =
     c.property.condition === "gut" ||
-    (c.arv > 0 && c.property.askingPrice + c.rehab > c.arv * 0.95);
+    (c.arv > 0 && c.effectivePrice + c.rehab > c.arv * 0.95);
 
   if (bigLot && c.property.developmentPotential) {
     score += 18;

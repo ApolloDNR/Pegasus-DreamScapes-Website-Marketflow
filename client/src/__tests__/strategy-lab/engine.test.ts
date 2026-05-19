@@ -284,6 +284,7 @@ describe("lane scoring", () => {
     });
     return {
       property: p,
+      effectivePrice: p.purchasePrice ?? p.askingPrice,
       rent,
       rehab: p.rehabBudget ?? 0,
       arv: p.arvEstimate ?? 0,
@@ -345,6 +346,27 @@ describe("lane scoring", () => {
     const adu = lanes.find((l) => l.lane === "adu_development")!;
     expect(adu.verdict).toBe("needs_more_data");
     expect(adu.confidence.missingInputs.length).toBeGreaterThan(0);
+  });
+
+  it("lane economics use purchasePrice (not askingPrice) when both are set", () => {
+    const listed = { ...fixtureFlip(), askingPrice: 400_000, purchasePrice: undefined };
+    const negotiated = { ...fixtureFlip(), askingPrice: 400_000, purchasePrice: 300_000 };
+
+    const flipListed = scoreAllLanes(ctxFor(listed, 2500)).find((l) => l.lane === "flip")!;
+    const flipNegotiated = scoreAllLanes(ctxFor(negotiated, 2500)).find((l) => l.lane === "flip")!;
+    expect(flipNegotiated.confidence.score).toBeGreaterThan(flipListed.confidence.score);
+
+    const wsListed = scoreAllLanes(ctxFor({ ...fixtureWholesale(), askingPrice: 200_000, purchasePrice: undefined }, 0))
+      .find((l) => l.lane === "wholesale")!;
+    const wsNegotiated = scoreAllLanes(ctxFor({ ...fixtureWholesale(), askingPrice: 200_000, purchasePrice: 130_000 }, 0))
+      .find((l) => l.lane === "wholesale")!;
+    expect(wsNegotiated.confidence.score).toBeGreaterThan(wsListed.confidence.score);
+
+    const brrrrListed = scoreAllLanes(ctxFor({ ...fixtureFlip(), askingPrice: 400_000, purchasePrice: undefined }, 2500))
+      .find((l) => l.lane === "brrrr")!;
+    const brrrrNegotiated = scoreAllLanes(ctxFor({ ...fixtureFlip(), askingPrice: 400_000, purchasePrice: 250_000 }, 2500))
+      .find((l) => l.lane === "brrrr")!;
+    expect(brrrrNegotiated.confidence.score).toBeGreaterThanOrEqual(brrrrListed.confidence.score);
   });
 
   it("STRATEGY_LANES enumerates all 9 in stable order", () => {

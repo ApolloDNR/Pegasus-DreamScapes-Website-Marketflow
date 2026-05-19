@@ -99,10 +99,20 @@ export interface BrrrrCalcInputs {
   monthlyExpenses: number;
   refinanceLtvPct: number;
   refinanceRatePct: number;
+  /**
+   * Outstanding balance on any acquisition / bridge loan that must be paid
+   * off at refinance. Defaults to 0 for the canonical all-cash BRRRR.
+   * `cashBack = max(0, refiProceeds - existingLoanBalance)`.
+   */
+  existingLoanBalance?: number;
 }
 export interface BrrrrCalcResult {
   totalCashIn: number;
+  /** Gross new refinance loan amount (ARV × LTV). */
   refinanceValue: number;
+  /** Existing-loan payoff netted out of refi proceeds. */
+  existingLoanPayoff: number;
+  /** Net cash returned to investor after payoff. Never negative. */
   cashBack: number;
   cashLeftInDeal: number;
   monthlyMortgage: number;
@@ -113,7 +123,11 @@ export interface BrrrrCalcResult {
 export function computeBrrrr(i: BrrrrCalcInputs): BrrrrCalcResult {
   const totalCashIn = i.purchase + i.rehab;
   const refinanceValue = i.arv * (i.refinanceLtvPct / 100);
-  const cashBack = refinanceValue;
+  const existingLoanPayoff = Math.max(0, i.existingLoanBalance ?? 0);
+  // Net cash back to investor = refi proceeds minus any acquisition-loan payoff.
+  // For the canonical all-cash BRRRR (no acquisition loan), payoff = 0 and
+  // cashBack equals the gross refi amount.
+  const cashBack = Math.max(0, refinanceValue - existingLoanPayoff);
   const cashLeftInDeal = Math.max(0, totalCashIn - cashBack);
   const monthlyMortgage = refinanceValue > 0
     ? monthlyPayment(refinanceValue, i.refinanceRatePct, 30)
@@ -127,6 +141,7 @@ export function computeBrrrr(i: BrrrrCalcInputs): BrrrrCalcResult {
   return {
     totalCashIn,
     refinanceValue,
+    existingLoanPayoff,
     cashBack,
     cashLeftInDeal,
     monthlyMortgage,

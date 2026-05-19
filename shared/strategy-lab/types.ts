@@ -107,6 +107,14 @@ export interface PropertyInput {
 
   /** Asking price (preferred) or confirmed purchase price. */
   askingPrice: number;
+  /**
+   * Active purchase price under consideration, if it differs from the
+   * listed asking price (e.g. negotiated offer, all-in basis). When set,
+   * the strategy engine uses this for cash-in math, capital stack, and
+   * lane scoring instead of `askingPrice`. Asking price stays available
+   * for spread comparisons.
+   */
+  purchasePrice?: number;
   /** Estimated as-is value if asking price is absent — flagged in memo. */
   asIsValueEstimate?: number;
 

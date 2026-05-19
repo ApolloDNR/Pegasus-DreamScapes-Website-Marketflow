@@ -24,6 +24,11 @@ interface ScenarioInputs {
   termYears: number;
   /** Optional management overhead, default 8% of collected rent. */
   managementPct?: number;
+  /**
+   * Override the Base-scenario vacancy %. Stressed/Worst stay at their
+   * deltas relative to whatever the user picked (≤ +2pp / +4pp).
+   */
+  vacancyPctBase?: number;
 }
 
 const DELTAS: Record<
@@ -47,8 +52,18 @@ export function buildScenario(label: ScenarioLabel, inp: ScenarioInputs): Scenar
   const rent = inp.monthlyRent * d.rentMult;
   const mgmtPct = (inp.managementPct ?? 8) / 100;
 
+  // Apply user-supplied Base vacancy override. Stressed/Worst keep their
+  // historical +2pp / +4pp deltas so the stress curve stays monotonic.
+  let vacancyPct = d.vacancyPct;
+  if (inp.vacancyPctBase != null && Number.isFinite(inp.vacancyPctBase)) {
+    const base = Math.max(0, Math.min(50, inp.vacancyPctBase));
+    if (label === "base") vacancyPct = base;
+    else if (label === "stressed") vacancyPct = Math.min(50, base + 2);
+    else vacancyPct = Math.min(50, base + 4);
+  }
+
   // Effective gross income after vacancy.
-  const egiMonthly = rent * (1 - d.vacancyPct / 100);
+  const egiMonthly = rent * (1 - vacancyPct / 100);
 
   // Variable opex pieces (% of collected rent).
   const repairs = egiMonthly * (d.repairsPct / 100);
@@ -57,7 +72,8 @@ export function buildScenario(label: ScenarioLabel, inp: ScenarioInputs): Scenar
 
   // Fixed monthly costs.
   const taxAnnualPct = (inp.property.monthlyTaxAnnualPct ?? 1.1) / 100;
-  const monthlyTax = (inp.property.askingPrice * taxAnnualPct * d.taxInsMult) / 12;
+  const effectivePrice = inp.property.purchasePrice ?? inp.property.askingPrice;
+  const monthlyTax = (effectivePrice * taxAnnualPct * d.taxInsMult) / 12;
   const monthlyIns = (inp.property.monthlyInsurance ?? 150) * d.taxInsMult;
   const monthlyHoa = (inp.property.monthlyHoa ?? 0) * d.hoaMult;
 
@@ -71,7 +87,7 @@ export function buildScenario(label: ScenarioLabel, inp: ScenarioInputs): Scenar
   return {
     label,
     effectiveRent: rent,
-    effectiveVacancyPct: d.vacancyPct,
+    effectiveVacancyPct: vacancyPct,
     effectiveRepairsPct: d.repairsPct,
     effectiveCapexPct: d.capexPct,
     effectiveTaxInsMult: d.taxInsMult,
@@ -79,7 +95,7 @@ export function buildScenario(label: ScenarioLabel, inp: ScenarioInputs): Scenar
     effectiveGrossIncome: egiMonthly * 12,
     operatingExpenses: opexMonthly * 12,
     noiAnnual: noi,
-    capRatePct: capRate(noi, inp.property.askingPrice),
+    capRatePct: capRate(noi, effectivePrice),
     annualDebtService: annualDebt,
     annualCashFlow: cashFlow,
     cashOnCashPct: cashOnCash(cashFlow, inp.totalCashIn),
