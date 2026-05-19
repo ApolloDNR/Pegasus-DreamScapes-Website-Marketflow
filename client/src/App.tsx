@@ -59,7 +59,6 @@ const MarketplaceDreamscaper = lazy(() => import("@/pages/marketplace-dreamscape
 const MarketplaceInvestor = lazy(() => import("@/pages/marketplace-investor"));
 const MarketplaceBuyer = lazy(() => import("@/pages/marketplace-buyer"));
 const MarketplaceAdmin = lazy(() => import("@/pages/marketplace-admin"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
 const MarketplaceDealDetail = lazy(() => import("@/pages/marketplace-deal-detail"));
 const MarketplaceCapital = lazy(() => import("@/pages/marketplace-capital"));
 const MarketplaceCapitalDetail = lazy(() => import("@/pages/marketplace-capital-detail"));
@@ -154,7 +153,10 @@ function Router() {
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />
       <Route path="/education" component={Education} />
-      <Route path="/strategy-library">{() => <Redirect to="/education" />}</Route>
+      {/* Legacy alias — keep parity with the visible "Strategy Library" nav
+       * label, which now points at /resources. /education is its own page
+       * (the categorized library) and is reachable from the home router. */}
+      <Route path="/strategy-library">{() => <Redirect to="/resources" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
       <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/contact" component={Contact} />
@@ -171,7 +173,10 @@ function Router() {
       <Route path="/snapshot/property/:token" component={SnapshotProperty} />
       <Route path="/snapshot/:token" component={SnapshotStatus} />
       <Route path="/deal-blueprint" component={DealBlueprint} />
-      <Route path="/dashboard" component={Dashboard} />
+      {/* Legacy /dashboard route. Kept as a redirect because the auth-aware
+       * destination lives at /marketflow/dashboard; the role router there
+       * forwards staff vs. operator vs. investor to the right surface. */}
+      <Route path="/dashboard">{() => <Redirect to="/marketflow/dashboard" />}</Route>
       <Route path="/dealflow/project/:id" component={DealflowProject} />
       
       {/* Legacy route redirects to MarketFlow - consolidated for maintainability */}

@@ -1,5 +1,9 @@
 import { Link } from "wouter";
 import { Mail, MapPin, ArrowUpRight, Phone, LogIn } from "lucide-react";
+// Footer reads NAV_PRIMARY / NAV_MORE / FOOTER_MORE_EXTRA so any nav rename
+// or addition lands here automatically. FOOTER_MORE_EXTRA is currently
+// empty; it exists so footer-only links (legal etc.) can be added without
+// reshuffling the header dropdown. See docs/architecture/navigation-map.md.
 import logoImage from "@/assets/brand/pegasus-mark-full.png";
 import wordmarkImage from "@/assets/brand/pegasus-wordmark.svg";
 import { ThemeToggle } from "./theme-toggle";
@@ -12,7 +16,8 @@ import {
 // Locked Pass D grouping — mirrors the desktop header order so users see one
 // consistent navigation map across header and footer. The canonical lists
 // live in `@/config/navigation`. Footer's "More" column is the shared
-// NAV_MORE plus a footer-only Deal Blueprint link.
+// NAV_MORE (identical to the header dropdown) plus any footer-only extras
+// from FOOTER_MORE_EXTRA (currently empty).
 const exploreLinks = NAV_PRIMARY.map(({ href, label }) => ({ href, label }));
 const moreLinks = [...NAV_MORE, ...FOOTER_MORE_EXTRA];
 
@@ -132,14 +137,15 @@ export function Footer() {
                 </span>
               </Link>
               <span className="text-border">·</span>
-              <a
-                href="/api/login"
-                className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="link-footer-signin"
-              >
-                <LogIn className="w-3 h-3" aria-hidden="true" />
-                Sign In
-              </a>
+              <Link href="/login">
+                <span
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  data-testid="link-footer-signin"
+                >
+                  <LogIn className="w-3 h-3" aria-hidden="true" />
+                  Sign In
+                </span>
+              </Link>
             </div>
           </div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

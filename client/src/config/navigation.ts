@@ -21,13 +21,15 @@ export const NAV_MORE: NavMoreItem[] = [
   { href: "/resources", label: "Strategy Library" },
   { href: "/strategy-lab", label: "Strategy Lab" },
   { href: "/calculators", label: "Calculators" },
+  { href: "/deal-blueprint", label: "Deal Blueprint" },
   { href: "/vendor-network", label: "Vendor Network" },
   { href: "/contact", label: "Contact" },
   { href: "/disclosures", label: "Disclosures" },
 ];
 
-export const FOOTER_MORE_EXTRA: NavMoreItem[] = [
-  { href: "/deal-blueprint", label: "Deal Blueprint" },
-];
+// Footer-only "More" extras. Kept as a typed empty list so the footer
+// can grow footer-specific links (e.g. legal) without expanding the
+// header dropdown. Today the canonical More set lives entirely in NAV_MORE.
+export const FOOTER_MORE_EXTRA: NavMoreItem[] = [];
 
 export const PRIMARY_CTA = { href: "/sell", label: "Start a Strategy Review" };

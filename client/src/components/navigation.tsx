@@ -34,6 +34,7 @@ import {
   Network,
   Mail,
   FileText,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -75,6 +76,10 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
   "/vendor-network": {
     icon: Network,
     tagline: "Trusted operators, trades, and capital partners.",
+  },
+  "/deal-blueprint": {
+    icon: ClipboardCheck,
+    tagline: "The paid, written analysis — three tiers, 48-hour SLA.",
   },
   "/contact": {
     icon: Mail,
@@ -125,11 +130,13 @@ function UserMenu({
   userEmail,
   onLightSurface,
   isAdmin,
+  onSignOut,
 }: {
   profile: any;
   userEmail: string;
   onLightSurface: boolean;
   isAdmin: boolean;
+  onSignOut: () => void;
 }) {
   const initials = (profile?.display_name || userEmail || "U")
     .split(/[\s@.]/)
@@ -198,12 +205,17 @@ function UserMenu({
           </>
         )}
         <DropdownMenuSeparator />
-        <a href="/api/logout">
-          <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive">
-            <LogOut className="w-4 h-4" aria-hidden="true" />
-            Sign Out
-          </DropdownMenuItem>
-        </a>
+        <DropdownMenuItem
+          className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+          onSelect={(event) => {
+            event.preventDefault();
+            onSignOut();
+          }}
+          data-testid="button-user-menu-signout"
+        >
+          <LogOut className="w-4 h-4" aria-hidden="true" />
+          Sign Out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -212,8 +224,27 @@ function UserMenu({
 export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [location] = useLocation();
-  const { user, profile, isAuthenticated, isAdmin } = useSupabaseAuth();
+  const [location, navigate] = useLocation();
+  const { user, profile, isAuthenticated, isAdmin, signOut } = useSupabaseAuth();
+
+  const handleSignOut = async () => {
+    // Clear the SPA's Supabase session first, then hand off to the
+    // server-side Replit OIDC end-session flow at /api/logout. The app
+    // treats Replit Auth as the primary session source (see
+    // `supabase-auth-context.tsx`); doing only the Supabase signOut
+    // would leave the server-backed OIDC session active and the user
+    // would silently re-authenticate on next request.
+    try {
+      await signOut();
+    } catch {
+      // Continue to server logout even if client signOut fails.
+    }
+    if (typeof window !== "undefined") {
+      window.location.assign("/api/logout");
+    } else {
+      navigate("/");
+    }
+  };
 
   const isHomePage = location === "/";
   // On home, the hero is dark, so the nav floats on a dark surface until scroll.
@@ -467,7 +498,7 @@ export function Navigation() {
                 {!isAuthenticated && (
                   <div className="relative px-5 py-3 bg-gradient-to-b from-background to-cream/30 dark:to-white/[0.02]">
                     <span aria-hidden="true" className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-                    <a href="/api/login" className="block">
+                    <Link href="/login" className="block">
                       <DropdownMenuItem
                         className="cursor-pointer rounded-md px-3 py-2 gap-2 text-foreground hover:bg-cream/50 dark:hover:bg-white/[0.04] focus:bg-cream/50 dark:focus:bg-white/[0.04]"
                         data-testid="link-nav-more-signin"
@@ -477,7 +508,7 @@ export function Navigation() {
                           Sign In
                         </span>
                       </DropdownMenuItem>
-                    </a>
+                    </Link>
                   </div>
                 )}
               </DropdownMenuContent>
@@ -494,6 +525,7 @@ export function Navigation() {
                   userEmail={user?.email || ""}
                   onLightSurface={onLightSurface}
                   isAdmin={isAdmin}
+                  onSignOut={handleSignOut}
                 />
               </>
             ) : (
@@ -563,14 +595,15 @@ export function Navigation() {
                       ))}
                       {!isAuthenticated && (
                         <li>
-                          <a
-                            href="/api/login"
+                          <Link
+                            href="/login"
+                            onClick={() => setMobileOpen(false)}
                             className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
                             data-testid="link-mobile-signin"
                           >
                             <LogIn className="w-4 h-4" aria-hidden="true" />
                             Sign In
-                          </a>
+                          </Link>
                         </li>
                       )}
                     </ul>
