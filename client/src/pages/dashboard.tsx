@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useSEO } from "@/hooks/use-seo";
 import { Loader2 } from "lucide-react";
 
 export default function Dashboard() {
+  useSEO({ title: "Dashboard", noIndex: true });
   const { user, isLoading } = useSupabaseAuth();
   const [, setLocation] = useLocation();
 

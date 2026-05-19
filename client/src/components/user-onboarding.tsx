@@ -460,7 +460,7 @@ function StepGoals({
   onChange: (updates: Partial<OnboardingData>) => void;
 }) {
   const goals = [
-    { value: "passive_income", label: "Generate passive income" },
+    { value: "passive_income", label: "Generate cash flow" },
     { value: "build_wealth", label: "Build long-term wealth" },
     { value: "quick_profits", label: "Make quick profits" },
     { value: "diversify", label: "Diversify investments" },

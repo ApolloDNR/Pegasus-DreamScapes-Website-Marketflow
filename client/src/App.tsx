@@ -17,6 +17,7 @@ import { NotificationProvider } from "@/contexts/notification-context";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { AdminBar } from "@/components/AdminBar";
+import { AnonymousClaimWatcher } from "@/components/anonymous-claim-watcher";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -39,23 +40,15 @@ const Invest = lazy(() => import("@/pages/invest"));
 const Projects = lazy(() => import("@/pages/projects"));
 const ProjectDetail = lazy(() => import("@/pages/project-detail"));
 const Calculators = lazy(() => import("@/pages/calculators"));
+const StrategyLab = lazy(() => import("@/pages/strategy-lab"));
+const StrategyLabLibrary = lazy(() => import("@/pages/strategy-lab-library"));
+const StrategyLabSubmitted = lazy(() => import("@/pages/strategy-lab-submitted"));
+const StrategyLabBlueprintConfirmed = lazy(() => import("@/pages/strategy-lab-blueprint-confirmed"));
+const AdminStrategyLab = lazy(() => import("@/pages/admin-strategy-lab"));
+const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
-const Dreamspace = lazy(() => import("@/pages/dreamspace"));
 const Contact = lazy(() => import("@/pages/contact"));
-const HQ = lazy(() => import("@/pages/hq"));
-const Wholesale = lazy(() => import("@/pages/wholesale"));
-const Buyers = lazy(() => import("@/pages/buyers"));
-const Buy = lazy(() => import("@/pages/buy"));
-const PortalSelect = lazy(() => import("@/pages/portal-select"));
-const InvestorPortal = lazy(() => import("@/pages/investor-portal"));
-const WholesalerPortal = lazy(() => import("@/pages/wholesaler-portal"));
-const BuyerPortal = lazy(() => import("@/pages/buyer-portal"));
-const DreamscaperPortal = lazy(() => import("@/pages/dreamscaper-portal"));
-const Community = lazy(() => import("@/pages/community"));
-const CapitalRaising = lazy(() => import("@/pages/capital-raising"));
-const DealflowOffice = lazy(() => import("@/pages/dealflow-office"));
-const DealflowDeals = lazy(() => import("@/pages/dealflow-deals"));
 const DealflowProject = lazy(() => import("@/pages/dealflow-project"));
 const DealflowCommunity = lazy(() => import("@/pages/dealflow-community"));
 const DealflowMessages = lazy(() => import("@/pages/dealflow-messages"));
@@ -66,9 +59,7 @@ const MarketplaceDreamscaper = lazy(() => import("@/pages/marketplace-dreamscape
 const MarketplaceInvestor = lazy(() => import("@/pages/marketplace-investor"));
 const MarketplaceBuyer = lazy(() => import("@/pages/marketplace-buyer"));
 const MarketplaceAdmin = lazy(() => import("@/pages/marketplace-admin"));
-const Partner = lazy(() => import("@/pages/partner"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
-const MarketplaceDeals = lazy(() => import("@/pages/marketplace-deals"));
 const MarketplaceDealDetail = lazy(() => import("@/pages/marketplace-deal-detail"));
 const MarketplaceCapital = lazy(() => import("@/pages/marketplace-capital"));
 const MarketplaceCapitalDetail = lazy(() => import("@/pages/marketplace-capital-detail"));
@@ -76,19 +67,34 @@ const MarketplaceProperties = lazy(() => import("@/pages/marketplace-properties"
 const MarketplacePropertyDetail = lazy(() => import("@/pages/marketplace-property-detail"));
 const MarketplaceCalculators = lazy(() => import("@/pages/marketplace-calculators"));
 const MarketplaceResources = lazy(() => import("@/pages/marketplace-resources"));
-const SubmitDeal = lazy(() => import("@/pages/submit-deal"));
 const MarketflowSubmit = lazy(() => import("@/pages/marketflow-submit"));
 const MarketflowDeals = lazy(() => import("@/pages/marketflow-deals"));
 const MarketflowNegotiate = lazy(() => import("@/pages/marketflow-negotiate"));
 const MarketflowDashboard = lazy(() => import("@/pages/marketflow-dashboard"));
 const MyDealsPage = lazy(() => import("@/pages/my-deals"));
 const OfferStudioPage = lazy(() => import("@/pages/offer-studio"));
+const MarketflowOfferStudio = lazy(() => import("@/pages/marketflow/offer-studio"));
 const AnalyticsPage = lazy(() => import("@/pages/analytics"));
 const MyAnalyticsPage = lazy(() => import("@/pages/my-analytics"));
 const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
+const Disclosures = lazy(() => import("@/pages/disclosures"));
+const SnapshotStatus = lazy(() => import("@/pages/snapshot-status"));
+const SnapshotCalc = lazy(() => import("@/pages/snapshot-calc"));
+const SnapshotCalcGate = lazy(() => import("@/pages/snapshot-calc-gate"));
+const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
+const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
+const Education = lazy(() => import("@/pages/education"));
 
 const legacyRedirects: [string, string][] = [
+  // v1.3.1 — retired public funnel pages route to their closest current destination.
+  ["/wholesale", "/sell"],
+  ["/submit-deal", "/sell"],
+  ["/buyers", "/marketflow"],
+  ["/buy", "/marketflow"],
+  ["/dreamspace", "/invest"],
+  ["/partner", "/invest"],
+  ["/capital-raising", "/invest"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],
@@ -139,20 +145,33 @@ function Router() {
       <Route path="/invest" component={Invest} />
       <Route path="/projects" component={Projects} />
       <Route path="/projects/:slug" component={ProjectDetail} />
+      <Route path="/strategy-lab" component={StrategyLab} />
+      <Route path="/strategy-lab/library" component={StrategyLabLibrary} />
+      <Route path="/strategy-lab/submitted" component={StrategyLabSubmitted} />
+      <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
+      <Route path="/admin/strategy-lab" component={AdminStrategyLab} />
+      <Route path="/strategy-lab/classic" component={Calculators} />
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />
+      <Route path="/education" component={Education} />
+      <Route path="/strategy-library">{() => <Redirect to="/education" />}</Route>
+      <Route path="/vendor-network" component={VendorNetwork} />
       <Route path="/resources/:slug" component={ArticleDetail} />
-      <Route path="/wholesale" component={Wholesale} />
-      <Route path="/buyers" component={Buyers} />
-      <Route path="/buy" component={Buy} />
-      <Route path="/dreamspace" component={Dreamspace} />
       <Route path="/contact" component={Contact} />
-      <Route path="/partner" component={Partner} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
-      <Route path="/submit-deal" component={SubmitDeal} />
+      <Route path="/disclosures" component={Disclosures} />
+      {/*
+       * /snapshot/calc/:token is the canonical share URL. The Gate probes
+       * property-analyses first (Task #84) and falls back to legacy
+       * calculator-share rendering. /snapshot/property/:token is kept as
+       * a permanent alias so existing v1 links remain valid.
+       */}
+      <Route path="/snapshot/calc/:token" component={SnapshotCalcGate} />
+      <Route path="/snapshot/property/:token" component={SnapshotProperty} />
+      <Route path="/snapshot/:token" component={SnapshotStatus} />
+      <Route path="/deal-blueprint" component={DealBlueprint} />
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/capital-raising" component={CapitalRaising} />
       <Route path="/dealflow/project/:id" component={DealflowProject} />
       
       {/* Legacy route redirects to MarketFlow - consolidated for maintainability */}
@@ -192,6 +211,7 @@ function Router() {
       <Route path="/marketflow/my-analytics" component={MyAnalyticsPage} />
       
       {/* Offer Studio - Full page deal offer experience */}
+      <Route path="/marketflow/offer-studio/:dealId" component={MarketflowOfferStudio} />
       <Route path="/offer-studio/:dealType/:dealId" component={OfferStudioPage} />
       
       <Route path="/profile/:userId" component={UserProfile} />
@@ -204,7 +224,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="pegasus-ui-theme">
+      <ThemeProvider defaultTheme="system" storageKey="pegasus-ui-theme">
         <SupabaseAuthProvider>
           <SiteContentProvider>
             <EditModeProvider>
@@ -215,9 +235,11 @@ function App() {
                       <NotificationProvider>
                         <ScrollToTop />
                         <AdminBar />
+                        <AnonymousClaimWatcher />
                         <div className="min-h-screen flex flex-col bg-background text-foreground">
+                          <a href="#main-content" className="skip-to-content">Skip to main content</a>
                           <Navigation />
-                          <main className="flex-1">
+                          <main id="main-content" className="flex-1" tabIndex={-1}>
                             <ErrorBoundary>
                               <Router />
                             </ErrorBoundary>

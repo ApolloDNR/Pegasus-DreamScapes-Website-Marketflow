@@ -10,18 +10,36 @@ export interface PeggyContextData {
   calculatorType?: string;
   calculatorInputs?: Record<string, any>;
   calculatorResults?: Record<string, any>;
+  // Strategy Lab (Task #85): live snapshot the user is looking at + lab mode.
+  labMode?: 'explain' | 'stress' | 'prepare';
+  labAnalysis?: {
+    address?: string | null;
+    topLane?: string | null;
+    topLaneLabel?: string | null;
+    topLaneVerdict?: string | null;
+    confidenceScore?: number | null;
+    memoParagraph?: string | null;
+    memoNextStep?: string | null;
+    laneSummary?: Array<{ lane: string; label: string; verdict: string; headline: string }>;
+    primaryMetric?: { label: string; value: string } | null;
+    risks?: Array<{ severity: string; title: string; detail?: string }>;
+    inputs?: Record<string, any>;
+  };
 }
 
 interface PeggyContextValue {
   context: PeggyContextData;
   sessionId: string;
   isOpen: boolean;
+  pendingPrompt: string | null;
   openChat: () => void;
   closeChat: () => void;
   toggleChat: () => void;
   updateContext: (updates: Partial<PeggyContextData>) => void;
   setCalculatorData: (type: string, inputs: Record<string, any>, results: Record<string, any>) => void;
   setDealContext: (dealType: 'capital' | 'wholesale' | 'retail', dealId: number) => void;
+  setPendingPrompt: (prompt: string | null) => void;
+  consumePendingPrompt: () => string | null;
   clearContext: () => void;
 }
 
@@ -44,6 +62,9 @@ function getPageFromPath(pathname: string): string {
     if (path.includes('brrrr')) return 'calculator-brrrr';
     if (path.includes('cash-flow') || path.includes('cashflow')) return 'calculator-cashflow';
     if (path.includes('mao') || path.includes('wholesale')) return 'calculator-mao';
+    if (path.includes('piti') || path.includes('mortgage')) return 'calculator-piti';
+    if (path.includes('ownvsrent') || path.includes('rent')) return 'calculator-ownvsrent';
+    if (path.includes('hardmoney') || path.includes('hard-money')) return 'calculator-hardmoney';
     return 'calculator';
   }
   
@@ -61,6 +82,7 @@ function getPageFromPath(pathname: string): string {
     if (path.includes('/properties/')) return 'marketflow-property-detail';
     if (path.includes('/properties')) return 'marketflow-properties';
     if (path.includes('/submit')) return 'marketflow-submit';
+    if (path.includes('/offer-studio')) return 'offer-studio';
     if (path.includes('/community')) return 'marketflow-community';
     if (path.includes('/messages')) return 'marketflow-messages';
     if (path.includes('/analytics')) return 'marketflow-analytics';
@@ -131,6 +153,7 @@ export function PeggyProvider({ children }: PeggyProviderProps) {
   const { isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer } = useSupabaseAuth();
   const [sessionId] = useState(generateSessionId);
   const [isOpen, setIsOpen] = useState(false);
+  const [pendingPrompt, setPendingPromptState] = useState<string | null>(null);
   
   const roleFlags: RoleFlags = { isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer };
   
@@ -193,6 +216,19 @@ export function PeggyProvider({ children }: PeggyProviderProps) {
     }));
   }, []);
   
+  const setPendingPrompt = useCallback((prompt: string | null) => {
+    setPendingPromptState(prompt);
+  }, []);
+  
+  const consumePendingPrompt = useCallback((): string | null => {
+    let value: string | null = null;
+    setPendingPromptState((prev) => {
+      value = prev;
+      return null;
+    });
+    return value;
+  }, []);
+  
   const clearContext = useCallback(() => {
     setContext({
       page: getPageFromPath(location),
@@ -204,12 +240,15 @@ export function PeggyProvider({ children }: PeggyProviderProps) {
     context,
     sessionId,
     isOpen,
+    pendingPrompt,
     openChat,
     closeChat,
     toggleChat,
     updateContext,
     setCalculatorData,
     setDealContext,
+    setPendingPrompt,
+    consumePendingPrompt,
     clearContext
   };
   

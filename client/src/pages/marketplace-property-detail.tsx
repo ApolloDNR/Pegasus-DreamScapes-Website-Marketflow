@@ -46,6 +46,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RetailListing, InsertBuyerOffer } from "@shared/schema";
+import { AskPeggyButton } from "@/components/ask-peggy-button";
 
 export default function MarketplacePropertyDetailPage() {
   return (
@@ -372,6 +373,14 @@ function PropertyDetailContent() {
                   <Heart className="h-4 w-4 mr-2" />
                   {isAuthenticated ? "Save Listing" : "Login to Save"}
                 </Button>
+                {propertyId && (
+                  <AskPeggyButton
+                    dealType="retail"
+                    dealId={propertyId}
+                    dealLabel={listing.propertyAddress}
+                    fullWidth
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -402,12 +411,12 @@ function PropertyDetailContent() {
                 <span>apollo@pegasusdreamscapes.com</span>
               </a>
               <a
-                href="tel:+19259486566"
+                href="tel:+19257448525"
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                 data-testid="link-property-phone"
               >
                 <Phone className="h-4 w-4" />
-                <span>925-948-6566</span>
+                <span>925-744-8525</span>
               </a>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />

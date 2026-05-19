@@ -39,32 +39,37 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-6">
-          <Card className="max-w-md w-full">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
-              </div>
-              <CardTitle>Something went wrong</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p className="text-muted-foreground text-sm">
-                We encountered an unexpected error. Please try refreshing the page or return to the dashboard.
+        <div className="min-h-[500px] flex items-center justify-center p-6 bg-background">
+          <div className="max-w-md w-full text-center">
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-primary/5">
+              <AlertTriangle className="h-6 w-6 text-primary" />
+            </div>
+            <div className="inline-flex items-center gap-3 mb-5">
+              <span className="h-px w-8 bg-primary/60" />
+              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+                A wrinkle in the path
               </p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                <Button onClick={this.handleReset} variant="outline" className="gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Try Again
+              <span className="h-px w-8 bg-primary/60" />
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight leading-tight mb-4 text-foreground">
+              Something didn't load.
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-8">
+              We hit an unexpected error rendering this view. Try again, or head back to a known-good surface.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={this.handleReset} variant="outline" className="gap-2 min-h-[44px] px-6 border-primary/30 hover:border-primary hover:bg-primary/5">
+                <RefreshCw className="h-4 w-4 text-primary" />
+                Try again
+              </Button>
+              <Link href="/">
+                <Button className="gap-2 w-full sm:w-auto min-h-[44px] px-6 bg-primary hover:bg-primary/90">
+                  <Home className="h-4 w-4" />
+                  Back to home
                 </Button>
-                <Link href="/marketflow">
-                  <Button className="gap-2 w-full sm:w-auto">
-                    <Home className="h-4 w-4" />
-                    Go to Dashboard
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              </Link>
+            </div>
+          </div>
         </div>
       );
     }
@@ -153,27 +158,32 @@ export function QueryErrorFallback({
 
 export function LoadingSpinner({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    <div className={`flex items-center justify-center ${className}`} role="status" aria-label="Loading">
+      <div className="relative h-10 w-10">
+        <div className="absolute inset-0 rounded-full border-2 border-primary/15" />
+        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+      </div>
     </div>
   );
 }
 
-export function PageLoader({ message = "Loading..." }: { message?: string }) {
+export function PageLoader({ message = "Reading the situation…" }: { message?: string }) {
   return (
-    <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
+    <div className="min-h-[400px] flex flex-col items-center justify-center gap-5">
       <LoadingSpinner />
-      <p className="text-muted-foreground text-sm">{message}</p>
+      <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+        {message}
+      </p>
     </div>
   );
 }
 
-export function EmptyState({ 
+export function EmptyState({
   icon: Icon,
   title,
   description,
   action
-}: { 
+}: {
   icon?: React.ComponentType<{ className?: string }>;
   title: string;
   description?: string;
@@ -182,13 +192,22 @@ export function EmptyState({
   return (
     <div className="min-h-[300px] flex flex-col items-center justify-center p-6 text-center">
       {Icon && (
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <Icon className="h-6 w-6 text-muted-foreground" />
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-primary/5">
+          <Icon className="h-6 w-6 text-primary" />
         </div>
       )}
-      <h3 className="text-lg font-medium mb-2">{title}</h3>
+      <div className="inline-flex items-center gap-3 mb-4">
+        <span className="h-px w-8 bg-primary/60" />
+        <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+          Nothing here yet
+        </p>
+        <span className="h-px w-8 bg-primary/60" />
+      </div>
+      <h3 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight leading-tight mb-3 text-foreground">
+        {title}
+      </h3>
       {description && (
-        <p className="text-muted-foreground text-sm max-w-sm mb-4">{description}</p>
+        <p className="text-muted-foreground text-sm max-w-md mb-5 leading-relaxed">{description}</p>
       )}
       {action}
     </div>

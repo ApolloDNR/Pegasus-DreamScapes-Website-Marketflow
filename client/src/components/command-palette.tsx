@@ -74,14 +74,14 @@ export function CommandPalette() {
     { id: "properties", label: "Properties for Buyers", description: "Browse renovated homes", icon: Home, href: "/buyers", keywords: ["buy", "house", "real estate"] },
     { id: "wholesale", label: "Wholesale Deals", description: "Off-market investment opportunities", icon: Briefcase, href: "/wholesale", keywords: ["deals", "investment"] },
     { id: "sell", label: "Sell Your Property", description: "Get a cash offer today", icon: DollarSign, href: "/sell", keywords: ["sell", "cash", "offer"] },
-    { id: "invest", label: "Invest With Us", description: "Partner on projects", icon: TrendingUp, href: "/invest", keywords: ["partner", "capital"] },
+    { id: "invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp, href: "/invest", keywords: ["partner", "capital"] },
     { id: "projects", label: "Case Studies", description: "Real project examples", icon: Target, href: "/projects", keywords: ["portfolio", "examples"] },
     { id: "about", label: "About Us", description: "Our story and mission", icon: Users, href: "/about", keywords: ["team", "company"] },
     { id: "contact", label: "Contact", description: "Get in touch", icon: Mail, href: "/contact", keywords: ["email", "phone", "message"] },
   ];
 
   const toolItems: CommandItem[] = [
-    { id: "calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator, href: "/calculators", keywords: ["math", "analyze"], badge: "Pro" },
+    { id: "strategy-lab", label: "Strategy Lab", description: "Run a property through the Pegasus lens", icon: Calculator, href: "/strategy-lab", keywords: ["math", "analyze", "calculator", "lane", "verdict"], badge: "New" },
     { id: "resources", label: "Investment Guides", description: "Learn the fundamentals", icon: BookOpen, href: "/resources", keywords: ["learn", "education"] },
     { id: "community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare, href: "/dealflow/community", keywords: ["forum", "chat", "social"] },
   ];

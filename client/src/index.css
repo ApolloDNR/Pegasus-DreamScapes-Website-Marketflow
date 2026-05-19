@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+/* Fonts loaded via <link> in client/index.html (subset to weights actually used). */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* PEGASUS DREAMSCAPES — Brand Identity System
- * Palette (from brand sheet):
- *   Deep Navy   #0D1B2A → 213 53% 11%
- *   Rich Copper #C77A35 → 26 58% 50%
- *   Warm Cream  #F6F1E6 → 38 50% 94%
- *   Charcoal    #22262E → 218 16% 16%
+ * Palette (from official brand sheet, May 2026 — Final Brand Asset System):
+ *   Deep Navy   #0D1B2D → 214 55% 11%
+ *   Rich Copper #C77A3A → 27 56% 50%
+ *   Warm Cream  #F6EFE4 → 37 50% 93%
+ *   Charcoal    #1E2328 → 210 14% 14%
  * Type: Cinzel (Trajan-substitute display caps), Cormorant Garamond (editorial),
  *       Montserrat (letterspaced supporting), Inter (body).
  */
@@ -19,51 +19,53 @@
   --opaque-button-border-intensity: -6;
   --elevate-1: rgba(0,0,0, .02);
   --elevate-2: rgba(0,0,0, .05);
-  --background: 38 50% 96%;
-  --foreground: 213 53% 11%;
+  --background: 37 50% 95%;
+  --foreground: 214 55% 11%;
   --border: 35 22% 86%;
   --card: 0 0% 100%;
-  --card-foreground: 213 53% 11%;
+  --card-foreground: 214 55% 11%;
   --card-border: 35 18% 88%;
-  --tan: 26 45% 70%;
-  --tan-foreground: 213 53% 11%;
-  --champagne: 38 50% 90%;
-  --champagne-foreground: 213 53% 11%;
-  --warm-glow: 26 58% 55%;
-  --stone: 38 38% 95%;
-  --stone-foreground: 213 53% 11%;
-  --navy: 213 53% 11%;
-  --navy-foreground: 38 50% 96%;
-  --copper: 26 58% 50%;
+  --tan: 27 45% 70%;
+  --tan-foreground: 214 55% 11%;
+  --champagne: 37 50% 90%;
+  --champagne-foreground: 214 55% 11%;
+  --warm-glow: 27 56% 55%;
+  --stone: 37 38% 95%;
+  --stone-foreground: 214 55% 11%;
+  --navy: 214 55% 11%;
+  --navy-foreground: 37 50% 95%;
+  --copper: 27 56% 50%;
   --copper-foreground: 0 0% 100%;
-  --cream: 38 50% 94%;
-  --cream-foreground: 213 53% 11%;
-  --charcoal: 218 16% 16%;
-  --charcoal-foreground: 38 50% 94%;
-  --sidebar: 38 38% 95%;
-  --sidebar-foreground: 213 53% 14%;
+  --cream: 37 50% 93%;
+  --cream-foreground: 214 55% 11%;
+  --charcoal: 210 14% 14%;
+  --charcoal-foreground: 37 50% 93%;
+  --sidebar: 37 38% 95%;
+  --sidebar-foreground: 214 55% 14%;
   --sidebar-border: 35 20% 88%;
-  --sidebar-primary: 26 58% 48%;
+  --sidebar-primary: 27 56% 48%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 38 30% 92%;
-  --sidebar-accent-foreground: 213 53% 14%;
-  --sidebar-ring: 26 58% 48%;
+  --sidebar-accent-foreground: 214 55% 14%;
+  --sidebar-ring: 27 56% 48%;
   --popover: 0 0% 100%;
-  --popover-foreground: 213 53% 11%;
+  --popover-foreground: 214 55% 11%;
   --popover-border: 35 18% 88%;
-  --primary: 26 58% 48%;
+  --primary: 27 56% 48%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 213 53% 11%;
-  --secondary-foreground: 38 50% 96%;
+  --secondary: 214 55% 11%;
+  --secondary-foreground: 37 50% 95%;
   --muted: 38 28% 93%;
-  --muted-foreground: 213 22% 38%;
-  --accent: 26 58% 48%;
+  /* Bumped from 213 22% 38% → 213 30% 28% so body/muted text clears WCAG AA
+     against cream (--background 37 50% 95%) and white card surfaces. */
+  --muted-foreground: 213 30% 28%;
+  --accent: 27 56% 48%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 65% 50%;
   --destructive-foreground: 0 0% 100%;
   --input: 38 22% 90%;
-  --ring: 26 58% 48%;
-  --chart-1: 26 58% 50%;
+  --ring: 27 56% 48%;
+  --chart-1: 27 56% 50%;
   --chart-2: 213 53% 25%;
   --chart-3: 38 38% 60%;
   --chart-4: 213 45% 18%;
@@ -74,16 +76,25 @@
   --font-supporting: 'Montserrat', 'Inter', sans-serif;
   --font-mono: Menlo, monospace;
   --radius: .375rem;
-  --shadow-2xs: 0 1px 2px 0 hsl(213 53% 11% / 0.04);
-  --shadow-xs: 0 1px 3px 0 hsl(213 53% 11% / 0.05);
-  --shadow-sm: 0 2px 4px -1px hsl(213 53% 11% / 0.06), 0 1px 2px -1px hsl(213 53% 11% / 0.04);
-  --shadow: 0 4px 6px -2px hsl(213 53% 11% / 0.06), 0 2px 4px -1px hsl(213 53% 11% / 0.04);
-  --shadow-md: 0 6px 12px -3px hsl(213 53% 11% / 0.10), 0 3px 6px -2px hsl(213 53% 11% / 0.05);
-  --shadow-lg: 0 12px 24px -4px hsl(213 53% 11% / 0.12), 0 4px 8px -2px hsl(213 53% 11% / 0.05);
-  --shadow-xl: 0 20px 40px -8px hsl(213 53% 11% / 0.14), 0 8px 16px -4px hsl(213 53% 11% / 0.06);
-  --shadow-2xl: 0 32px 64px -12px hsl(213 53% 11% / 0.18);
+  --shadow-2xs: 0 1px 2px 0 hsl(214 55% 11% / 0.04);
+  --shadow-xs: 0 1px 3px 0 hsl(214 55% 11% / 0.05);
+  --shadow-sm: 0 2px 4px -1px hsl(214 55% 11% / 0.06), 0 1px 2px -1px hsl(214 55% 11% / 0.04);
+  --shadow: 0 4px 6px -2px hsl(214 55% 11% / 0.06), 0 2px 4px -1px hsl(214 55% 11% / 0.04);
+  --shadow-md: 0 6px 12px -3px hsl(214 55% 11% / 0.10), 0 3px 6px -2px hsl(214 55% 11% / 0.05);
+  --shadow-lg: 0 12px 24px -4px hsl(214 55% 11% / 0.12), 0 4px 8px -2px hsl(214 55% 11% / 0.05);
+  --shadow-xl: 0 20px 40px -8px hsl(214 55% 11% / 0.14), 0 8px 16px -4px hsl(214 55% 11% / 0.06);
+  --shadow-2xl: 0 32px 64px -12px hsl(214 55% 11% / 0.18);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+
+  /* === Semantic surface tokens (Website Craft Pass — May 2026) === */
+  /* Map editorial names to existing brand HSL values. */
+  --ink: var(--navy);              /* deep navy headlines + body */
+  --paper: var(--background);      /* warm cream page surface */
+  --bronze: var(--copper);         /* primary accent / CTA */
+  --bronze-soft: 26 58% 78%;       /* desaturated copper for soft hover */
+  --rule: var(--border);           /* hairline rules + dividers */
+  --muted-text: var(--muted-foreground);
 
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -99,59 +110,82 @@
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* ── Workbench Instrument · brand-token aliases (literal hex so the
+        graduated mockup renders identically inside the live app). Used by
+        client/src/components/strategy-lab/instrument-workbench.tsx. ───── */
+  --pd-navy: #0D1B2D;
+  --pd-copper: #C77A3A;
+  --pd-copper-soft: #D4B483;
+  --pd-copper-light: #E8DBC5;
+  --pd-cream: #F6EFE4;
+  --pd-charcoal: #1E2328;
+  --pd-rule: #E2D6BF;
+  --pd-muted: #6B6256;
+  --pd-font-display: "Cinzel", serif;
+  --pd-font-serif: "Cormorant Garamond", serif;
+  --pd-font-supporting: "Montserrat", sans-serif;
+  --pd-font-sans: "Inter", system-ui, sans-serif;
 }
 
 /* DARK MODE — Deep Navy bg with Warm Cream type, Rich Copper accents */
 .dark {
+  --ink: 37 38% 92%;
+  --paper: 214 55% 9%;
+  --bronze: 27 60% 56%;
+  --bronze-soft: 26 50% 38%;
+  --rule: 213 30% 20%;
+  /* Bumped from 38 20% 65% → 38 25% 78% for AA contrast on navy --paper. */
+  --muted-text: 38 25% 78%;
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 213 53% 9%;
-  --foreground: 38 38% 92%;
-  --border: 213 30% 20%;
-  --card: 213 40% 13%;
-  --card-foreground: 38 38% 92%;
-  --card-border: 213 30% 22%;
-  --tan: 26 45% 70%;
-  --tan-foreground: 213 53% 11%;
-  --navy: 213 53% 11%;
-  --navy-foreground: 38 38% 92%;
-  --copper: 26 65% 56%;
-  --copper-foreground: 213 53% 11%;
-  --cream: 38 38% 92%;
-  --cream-foreground: 213 53% 11%;
-  --charcoal: 218 16% 16%;
-  --charcoal-foreground: 38 50% 94%;
+  --background: 214 55% 9%;
+  --foreground: 37 38% 92%;
+  --border: 214 30% 20%;
+  --card: 214 40% 13%;
+  --card-foreground: 37 38% 92%;
+  --card-border: 214 30% 22%;
+  --tan: 27 45% 70%;
+  --tan-foreground: 214 55% 11%;
+  --navy: 214 55% 11%;
+  --navy-foreground: 37 38% 92%;
+  --copper: 27 60% 56%;
+  --copper-foreground: 214 55% 11%;
+  --cream: 37 38% 92%;
+  --cream-foreground: 214 55% 11%;
+  --charcoal: 210 14% 14%;
+  --charcoal-foreground: 37 50% 93%;
   --champagne: 213 30% 18%;
-  --champagne-foreground: 38 38% 92%;
-  --warm-glow: 26 65% 56%;
+  --champagne-foreground: 37 38% 92%;
+  --warm-glow: 27 60% 56%;
   --stone: 213 30% 16%;
-  --stone-foreground: 38 38% 92%;
+  --stone-foreground: 37 38% 92%;
   --sidebar: 213 40% 12%;
-  --sidebar-foreground: 38 38% 92%;
+  --sidebar-foreground: 37 38% 92%;
   --sidebar-border: 213 30% 20%;
-  --sidebar-primary: 26 65% 56%;
-  --sidebar-primary-foreground: 213 53% 11%;
+  --sidebar-primary: 27 60% 56%;
+  --sidebar-primary-foreground: 214 55% 11%;
   --sidebar-accent: 213 28% 20%;
   --sidebar-accent-foreground: 38 38% 88%;
-  --sidebar-ring: 26 65% 56%;
+  --sidebar-ring: 27 60% 56%;
   --popover: 213 40% 13%;
-  --popover-foreground: 38 38% 92%;
+  --popover-foreground: 37 38% 92%;
   --popover-border: 213 30% 22%;
-  --primary: 26 65% 56%;
-  --primary-foreground: 213 53% 11%;
+  --primary: 27 60% 56%;
+  --primary-foreground: 214 55% 11%;
   --secondary: 213 38% 28%;
-  --secondary-foreground: 38 38% 92%;
+  --secondary-foreground: 37 38% 92%;
   --muted: 213 28% 18%;
-  --muted-foreground: 38 20% 65%;
-  --accent: 26 65% 56%;
-  --accent-foreground: 213 53% 11%;
+  --muted-foreground: 38 25% 78%;
+  --accent: 27 60% 56%;
+  --accent-foreground: 214 55% 11%;
   --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 98%;
   --input: 213 28% 22%;
-  --ring: 26 65% 56%;
+  --ring: 27 60% 56%;
   --chart-1: 26 65% 58%;
   --chart-2: 213 50% 50%;
   --chart-3: 38 45% 55%;
@@ -220,6 +254,85 @@ html {
   scroll-behavior: smooth;
 }
 
+/* === A11y baseline (Website Craft Pass) === */
+/* Skip link — invisible until focused */
+.skip-to-content {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  padding: 0.625rem 1rem;
+  background: hsl(var(--ink));
+  color: hsl(var(--paper));
+  font-family: var(--font-supporting);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 0.25rem;
+  transform: translateY(-150%);
+  transition: transform 0.2s ease;
+}
+.skip-to-content:focus {
+  transform: translateY(0);
+  outline: 2px solid hsl(var(--bronze));
+  outline-offset: 2px;
+}
+
+/* Bronze focus ring on every focusable surface */
+:focus-visible {
+  outline: 2px solid hsl(var(--bronze));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* === Locked 7-tier type scale (utility classes available for new use) === */
+.text-eyebrow {
+  font-family: var(--font-supporting);
+  font-size: 0.6875rem;       /* 11px */
+  line-height: 1;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.text-display {
+  font-family: var(--font-serif);
+  font-size: clamp(2.75rem, 6.5vw, 5.75rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.text-h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.text-h3 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.text-body-lg {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;        /* 18px */
+  line-height: 1.55;
+}
+.text-body {
+  font-family: var(--font-sans);
+  font-size: 1rem;            /* 16px */
+  line-height: 1.6;
+}
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;       /* 13px */
+  line-height: 1.5;
+  color: hsl(var(--muted-text));
+}
+
 /* Brand divider — copper-to-navy hairline */
 .brand-divider {
   height: 1px;
@@ -231,6 +344,150 @@ html {
   height: 6px;
   background: linear-gradient(90deg, hsl(var(--copper)), hsl(var(--navy)) 60%, hsl(var(--copper)));
 }
+
+/* Strategy Library article body — editorial markdown rendering */
+.article-prose {
+  color: hsl(var(--muted-foreground));
+  line-height: 1.7;
+  font-size: 1rem;
+}
+.article-prose > * + * {
+  margin-top: 1rem;
+}
+.article-prose h1,
+.article-prose h2,
+.article-prose h3,
+.article-prose h4 {
+  font-family: var(--font-serif);
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.article-prose h1 {
+  font-size: clamp(1.875rem, 2.4vw, 2.25rem);
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
+}
+.article-prose h1:first-child { margin-top: 0; }
+.article-prose h2 {
+  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+.article-prose h3 {
+  font-size: 1.25rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+.article-prose h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.article-prose p { margin-bottom: 1rem; }
+.article-prose strong { color: hsl(var(--foreground)); font-weight: 600; }
+.article-prose em { font-style: italic; }
+.article-prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--primary) / 0.4);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+.article-prose a:hover { text-decoration-color: hsl(var(--primary)); }
+.article-prose ul,
+.article-prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.article-prose ul > li { list-style-type: disc; }
+.article-prose ol > li { list-style-type: decimal; }
+.article-prose li { margin-top: 0.5rem; }
+.article-prose li > ul,
+.article-prose li > ol { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+.article-prose blockquote {
+  margin: 1.75rem 0;
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  border-left: 3px solid hsl(var(--primary));
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  color: hsl(var(--foreground));
+  line-height: 1.6;
+  background: hsl(var(--primary) / 0.04);
+}
+.article-prose blockquote p { margin-bottom: 0.5rem; }
+.article-prose blockquote p:last-child { margin-bottom: 0; }
+.article-prose hr {
+  margin: 2.5rem 0;
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, hsl(var(--copper) / 0.6), hsl(var(--navy) / 0.4), transparent);
+}
+.article-prose img {
+  display: block;
+  margin: 1.75rem auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+.article-prose code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid hsl(var(--border));
+}
+.article-prose pre {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.article-prose pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+.article-prose table {
+  width: 100%;
+  margin: 1.75rem 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.article-prose thead {
+  background: hsl(var(--primary) / 0.08);
+}
+.article-prose th {
+  text-align: left;
+  font-family: var(--font-supporting);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: hsl(var(--foreground));
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.article-prose td {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  vertical-align: top;
+}
+.article-prose tbody tr:hover { background: hsl(var(--muted) / 0.4); }
 
 /**
  * Using the elevate system. Automatic contrast adjustment.
@@ -375,7 +632,7 @@ html {
 
 /* Signature golden headline gradient — used on hero accent words */
 .text-headline-gold {
-  background: linear-gradient(135deg, #E8DBC5 0%, #D4B483 50%, #C77A35 100%);
+  background: linear-gradient(135deg, #E8DBC5 0%, #D4B483 50%, #C77A3A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -397,7 +654,7 @@ html {
   position: relative;
   background: hsl(var(--card));
   border: none;
-  box-shadow: 0 1px 3px hsl(213 53% 11% / 0.04), 0 4px 12px hsl(213 53% 11% / 0.03);
+  box-shadow: 0 1px 3px hsl(214 55% 11% / 0.04), 0 4px 12px hsl(214 55% 11% / 0.03);
   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -413,7 +670,7 @@ html {
 
 .luxury-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 24px hsl(213 53% 11% / 0.08), 0 16px 48px hsl(213 53% 11% / 0.06);
+  box-shadow: 0 8px 24px hsl(214 55% 11% / 0.08), 0 16px 48px hsl(214 55% 11% / 0.06);
 }
 
 .luxury-card:hover::before { opacity: 1; }
@@ -425,12 +682,12 @@ html {
 .sleek-card {
   background: hsl(var(--card));
   border: none;
-  box-shadow: inset 0 0 0 1px hsl(213 53% 11% / 0.04), 0 2px 8px hsl(213 53% 11% / 0.03);
+  box-shadow: inset 0 0 0 1px hsl(214 55% 11% / 0.04), 0 2px 8px hsl(214 55% 11% / 0.03);
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .sleek-card:hover {
-  box-shadow: inset 0 0 0 1px hsl(213 53% 11% / 0.06), 0 8px 24px hsl(213 53% 11% / 0.06);
+  box-shadow: inset 0 0 0 1px hsl(214 55% 11% / 0.06), 0 8px 24px hsl(214 55% 11% / 0.06);
   transform: translateY(-2px);
 }
 
@@ -526,7 +783,7 @@ html {
   [data-testid="card-invest-action"] { display: none !important; }
   @page { margin: 2cm; size: letter; }
   body::before {
-    content: "Pegasus Dreamscapes Corp — Investment Summary";
+    content: "Pegasus DreamScapes Corp — Investment Summary";
     display: block;
     font-size: 10pt;
     color: #666 !important;

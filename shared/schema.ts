@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, varchar, integer, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, varchar, integer, boolean, jsonb, index, uniqueIndex, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
@@ -657,6 +657,9 @@ export const articles = pgTable("articles", {
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(false),
   publishedAt: timestamp("published_at"),
+  featuredInLibrary: boolean("featured_in_library").notNull().default(false),
+  libraryCategoryKey: varchar("library_category_key", { length: 64 }),
+  libraryOrder: integer("library_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -1862,11 +1865,14 @@ export type PeggyMessage = typeof peggyMessages.$inferSelect;
 
 // Calculator Types
 export const CALCULATOR_TYPES = [
-  "arv",       // After Repair Value
-  "roi",       // Return on Investment
-  "brrrr",     // Buy, Rehab, Rent, Refinance, Repeat
-  "cashflow",  // Cash Flow Analysis
-  "mao",       // Maximum Allowable Offer (Wholesale)
+  "arv",        // After Repair Value
+  "roi",        // Return on Investment
+  "brrrr",      // Buy, Rehab, Rent, Refinance, Repeat
+  "cashflow",   // Cash Flow Analysis
+  "mao",        // Maximum Allowable Offer (Wholesale)
+  "piti",       // Mortgage / PITI breakdown
+  "ownvsrent",  // Own vs Rent wealth-crossover
+  "hardmoney",  // Hard Money / Bridge cost-of-capital
 ] as const;
 export type CalculatorType = typeof CALCULATOR_TYPES[number];
 
@@ -1920,6 +1926,25 @@ export const savedAnalyses = pgTable("saved_analyses", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Track each successful PDF send so owners can see who has the numbers.
+export const analysisSendHistory = pgTable("analysis_send_history", {
+  id: serial("id").primaryKey(),
+  savedAnalysisId: integer("saved_analysis_id").notNull(),
+  recipientName: varchar("recipient_name", { length: 120 }).notNull(),
+  recipientEmail: varchar("recipient_email", { length: 254 }).notNull(),
+  senderUserId: varchar("sender_user_id", { length: 255 }),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_analysis_send_history_analysis").on(table.savedAnalysisId, table.sentAt),
+}));
+
+export const insertAnalysisSendSchema = createInsertSchema(analysisSendHistory).omit({
+  id: true,
+  sentAt: true,
+});
+export type InsertAnalysisSend = z.infer<typeof insertAnalysisSendSchema>;
+export type AnalysisSend = typeof analysisSendHistory.$inferSelect;
 
 export const insertSavedAnalysisSchema = createInsertSchema(savedAnalyses).omit({ 
   id: true, 
@@ -2771,3 +2796,316 @@ export const insertSiteContentSchema = createInsertSchema(siteContent).omit({
 });
 export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
 export type SiteContent = typeof siteContent.$inferSelect;
+
+// ============================================
+// EDUCATION PAGE - Beginner Path & Glossary (admin editable)
+// ============================================
+
+export const libraryBeginnerSteps = pgTable("library_beginner_steps", {
+  id: serial("id").primaryKey(),
+  step: varchar("step", { length: 16 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLibraryBeginnerStepSchema = createInsertSchema(libraryBeginnerSteps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLibraryBeginnerStep = z.infer<typeof insertLibraryBeginnerStepSchema>;
+export type LibraryBeginnerStep = typeof libraryBeginnerSteps.$inferSelect;
+
+export const libraryGlossaryTerms = pgTable("library_glossary_terms", {
+  id: serial("id").primaryKey(),
+  term: varchar("term", { length: 120 }).notNull(),
+  definition: text("definition").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLibraryGlossaryTermSchema = createInsertSchema(libraryGlossaryTerms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLibraryGlossaryTerm = z.infer<typeof insertLibraryGlossaryTermSchema>;
+export type LibraryGlossaryTerm = typeof libraryGlossaryTerms.$inferSelect;
+
+// ============================================================================
+// STRATEGY LAB — Property Strategy Snapshot persistence (Task #82)
+// ============================================================================
+// Engine lives in `shared/strategy-lab/`. These tables persist user-saved Lab
+// runs so a Snapshot can be re-rendered, shared via token, or escalated into
+// a paid Pegasus Deal Blueprint without re-entering inputs.
+
+export const propertyAnalysis = pgTable("property_analysis", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }), // nullable — anon Lab runs allowed
+  sessionId: varchar("session_id", { length: 64 }), // for anon recovery
+
+  // Property identity (denormalized from PropertyInput for query/index).
+  address: text("address"),
+  city: varchar("city", { length: 120 }),
+  state: varchar("state", { length: 8 }),
+  zip: varchar("zip", { length: 12 }),
+  askingPrice: integer("asking_price"),
+  arvEstimate: integer("arv_estimate"),
+  rehabBudget: integer("rehab_budget"),
+  monthlyRent: integer("monthly_rent"),
+
+  // Engine output snapshot.
+  engineVersion: varchar("engine_version", { length: 16 }).notNull(),
+  topLane: varchar("top_lane", { length: 32 }),
+  topLaneVerdict: varchar("top_lane_verdict", { length: 24 }),
+  topLaneScore: integer("top_lane_score"),
+
+  // Full payload (PropertyInput + StrategySnapshot output).
+  propertyInput: jsonb("property_input").notNull(),
+  snapshot: jsonb("snapshot").notNull(),
+
+  // Sharing (mirrors savedAnalyses pattern).
+  isShared: boolean("is_shared").default(false),
+  shareToken: varchar("share_token", { length: 64 }),
+  sharedAt: timestamp("shared_at"),
+  viewCount: integer("view_count").default(0),
+
+  // Submit-to-Pegasus (Task #84).
+  submittedToPegasus: boolean("submitted_to_pegasus").default(false),
+  submittedAt: timestamp("submitted_at"),
+
+  // Share visibility tier (Task #84). 'summary' = lane verdict + memo only;
+  // 'full' = numbers, risk, capital stack, sensitivity, alternates.
+  visibility: varchar("visibility", { length: 16 }).notNull().default("summary"),
+  // Engine runs counted on this analysis (drives soft account wall in UI).
+  runCount: integer("run_count").notNull().default(1),
+
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  byUser: index("idx_property_analysis_user").on(table.userId, table.updatedAt),
+  // Unique to prevent token collisions / cross-analysis leak via share URL.
+  uniqShareToken: uniqueIndex("uniq_property_analysis_share_token").on(table.shareToken),
+}));
+
+export const insertPropertyAnalysisSchema = createInsertSchema(propertyAnalysis).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  shareToken: true,
+  sharedAt: true,
+  viewCount: true,
+  submittedAt: true,
+  visibility: true,
+  runCount: true,
+});
+export type InsertPropertyAnalysis = z.infer<typeof insertPropertyAnalysisSchema>;
+export type PropertyAnalysis = typeof propertyAnalysis.$inferSelect;
+
+// Comp entries — sale OR rent comps the user added to the Comp Pad.
+export const compEntry = pgTable("comp_entry", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id").notNull()
+    .references(() => propertyAnalysis.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 8 }).notNull(), // "sale" | "rent"
+  address: text("address"),
+  // `real` (single-precision float) preserves rent-comp precision
+  // (e.g. $1.74/sqft) which was truncated by the prior `integer` type.
+  pricePerSqft: real("price_per_sqft").notNull(),
+  sqft: integer("sqft"),
+  beds: real("beds"),
+  baths: real("baths"),
+  distanceMiles: real("distance_miles"),
+  conditionDelta: integer("condition_delta").default(0),
+  weight: real("weight").default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_comp_entry_analysis").on(table.propertyAnalysisId),
+}));
+
+export const insertCompEntrySchema = createInsertSchema(compEntry).omit({ id: true, createdAt: true });
+export type InsertCompEntry = z.infer<typeof insertCompEntrySchema>;
+export type CompEntryRow = typeof compEntry.$inferSelect;
+
+// Risk flags — auto-fired by the engine, persisted for audit/share.
+export const riskFlag = pgTable("risk_flag", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id").notNull()
+    .references(() => propertyAnalysis.id, { onDelete: "cascade" }),
+  flagId: varchar("flag_id", { length: 64 }).notNull(),
+  category: varchar("category", { length: 24 }).notNull(),
+  severity: varchar("severity", { length: 12 }).notNull(),
+  title: text("title").notNull(),
+  detail: text("detail").notNull(),
+  affectsLanes: text("affects_lanes").array().notNull().default(sql`ARRAY[]::text[]`),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_risk_flag_analysis").on(table.propertyAnalysisId),
+}));
+
+export const insertRiskFlagSchema = createInsertSchema(riskFlag).omit({ id: true, createdAt: true });
+export type InsertRiskFlag = z.infer<typeof insertRiskFlagSchema>;
+export type RiskFlagRow = typeof riskFlag.$inferSelect;
+
+// Capital stack entries.
+export const capitalStackEntry = pgTable("capital_stack_entry", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id").notNull()
+    .references(() => propertyAnalysis.id, { onDelete: "cascade" }),
+  source: varchar("source", { length: 32 }).notNull(),
+  label: varchar("label", { length: 120 }).notNull(),
+  amount: integer("amount").notNull(),
+  ratePct: real("rate_pct"), // decimal percent (e.g. 7.5 = 7.5% APR)
+  termDays: integer("term_days"),
+  note: text("note"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_capital_stack_analysis").on(table.propertyAnalysisId),
+}));
+
+export const insertCapitalStackEntrySchema = createInsertSchema(capitalStackEntry).omit({ id: true, createdAt: true });
+export type InsertCapitalStackEntry = z.infer<typeof insertCapitalStackEntrySchema>;
+export type CapitalStackEntryRow = typeof capitalStackEntry.$inferSelect;
+
+// Scenario runs — base / stressed / worst.
+export const scenarioRun = pgTable("scenario_run", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id").notNull()
+    .references(() => propertyAnalysis.id, { onDelete: "cascade" }),
+  label: varchar("label", { length: 12 }).notNull(), // base | stressed | worst
+  payload: jsonb("payload").notNull(), // ScenarioRun shape
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_scenario_run_analysis").on(table.propertyAnalysisId),
+}));
+
+export const insertScenarioRunSchema = createInsertSchema(scenarioRun).omit({ id: true, createdAt: true });
+export type InsertScenarioRun = z.infer<typeof insertScenarioRunSchema>;
+export type ScenarioRunRow = typeof scenarioRun.$inferSelect;
+
+// Lane fit results — one row per lane per analysis.
+export const laneFitResult = pgTable("lane_fit_result", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id").notNull()
+    .references(() => propertyAnalysis.id, { onDelete: "cascade" }),
+  lane: varchar("lane", { length: 32 }).notNull(),
+  verdict: varchar("verdict", { length: 24 }).notNull(),
+  score: integer("score").notNull(),
+  headline: text("headline").notNull(),
+  payload: jsonb("payload").notNull(), // full LaneFitResult
+  rank: integer("rank").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_lane_fit_analysis").on(table.propertyAnalysisId, table.rank),
+}));
+
+export const insertLaneFitResultSchema = createInsertSchema(laneFitResult).omit({ id: true, createdAt: true });
+export type InsertLaneFitResult = z.infer<typeof insertLaneFitResultSchema>;
+export type LaneFitResultRow = typeof laneFitResult.$inferSelect;
+
+// ============================================================================
+// STRATEGY LAB — Submission, Blueprint Order, Touchpoint telemetry (Task #85)
+// ============================================================================
+// Three new tables. `pegasus_submission` records every "Submit to Pegasus"
+// hand-off (rich row, separate from the legacy boolean on propertyAnalysis so
+// resubmissions and review status survive). `blueprint_order` records paid
+// Pegasus Deal Blueprint orders across three CMS-priced tiers, with a Stripe
+// session id when Stripe is configured or "invoice" status when not.
+// `strategy_lab_touchpoint` is funnel telemetry: each meaningful action (run,
+// save, share, pdf, submit, blueprint_order, peggy_lab_mode) lands here,
+// joined to either userId or sessionId, for the /admin/strategy-lab view.
+
+export const pegasusSubmission = pgTable("pegasus_submission", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id").notNull()
+    .references(() => propertyAnalysis.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 255 }),
+  sessionId: varchar("session_id", { length: 64 }),
+  submitterName: varchar("submitter_name", { length: 200 }),
+  submitterEmail: varchar("submitter_email", { length: 255 }),
+  submitterPhone: varchar("submitter_phone", { length: 40 }),
+  submitterRole: varchar("submitter_role", { length: 32 }),
+  notes: text("notes"),
+  topLane: varchar("top_lane", { length: 32 }),
+  topLaneVerdict: varchar("top_lane_verdict", { length: 24 }),
+  // status: received → in_review → reviewed → routed → escalated
+  status: varchar("status", { length: 24 }).notNull().default("received"),
+  // Soft 48-business-hour SLA. If reviewedAt is null and 48h have elapsed,
+  // the row is considered escalated for priority review (NO free-Blueprint
+  // promise — escalation only, per task spec).
+  slaDueAt: timestamp("sla_due_at"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: varchar("reviewed_by", { length: 255 }),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  byAnalysis: index("idx_pegasus_submission_analysis").on(table.propertyAnalysisId),
+  byStatus: index("idx_pegasus_submission_status").on(table.status, table.createdAt),
+}));
+
+export const insertPegasusSubmissionSchema = createInsertSchema(pegasusSubmission).omit({
+  id: true, createdAt: true, updatedAt: true, reviewedAt: true, reviewedBy: true, reviewNotes: true,
+});
+export type InsertPegasusSubmission = z.infer<typeof insertPegasusSubmissionSchema>;
+export type PegasusSubmission = typeof pegasusSubmission.$inferSelect;
+
+export const blueprintOrder = pgTable("blueprint_order", {
+  id: serial("id").primaryKey(),
+  propertyAnalysisId: integer("property_analysis_id")
+    .references(() => propertyAnalysis.id, { onDelete: "set null" }),
+  userId: varchar("user_id", { length: 255 }),
+  sessionId: varchar("session_id", { length: 64 }),
+  // tier: singlepath | comparison | complete (CMS-configurable price/title).
+  tier: varchar("tier", { length: 24 }).notNull(),
+  priceCents: integer("price_cents").notNull(),
+  contactName: varchar("contact_name", { length: 200 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 40 }),
+  notes: text("notes"),
+  // payment_method: stripe | invoice. paymentStatus: pending | paid | failed | invoiced.
+  paymentMethod: varchar("payment_method", { length: 16 }).notNull().default("invoice"),
+  paymentStatus: varchar("payment_status", { length: 16 }).notNull().default("pending"),
+  stripeSessionId: varchar("stripe_session_id", { length: 255 }),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  byUser: index("idx_blueprint_order_user").on(table.userId, table.createdAt),
+  byStatus: index("idx_blueprint_order_status").on(table.paymentStatus, table.createdAt),
+}));
+
+export const insertBlueprintOrderSchema = createInsertSchema(blueprintOrder).omit({
+  id: true, createdAt: true, updatedAt: true, paidAt: true, stripeSessionId: true,
+});
+export type InsertBlueprintOrder = z.infer<typeof insertBlueprintOrderSchema>;
+export type BlueprintOrder = typeof blueprintOrder.$inferSelect;
+
+export const strategyLabTouchpoint = pgTable("strategy_lab_touchpoint", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }),
+  sessionId: varchar("session_id", { length: 64 }),
+  propertyAnalysisId: integer("property_analysis_id"),
+  // action: run | save | share | pdf | submit | blueprint_view | blueprint_order | peggy_lab_mode | account_wall
+  action: varchar("action", { length: 32 }).notNull(),
+  laneVerdict: varchar("lane_verdict", { length: 24 }),
+  topLane: varchar("top_lane", { length: 32 }),
+  payload: jsonb("payload"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  byAction: index("idx_strategy_lab_touchpoint_action").on(table.action, table.createdAt),
+  bySession: index("idx_strategy_lab_touchpoint_session").on(table.sessionId, table.createdAt),
+  byUser: index("idx_strategy_lab_touchpoint_user").on(table.userId, table.createdAt),
+}));
+
+export const insertStrategyLabTouchpointSchema = createInsertSchema(strategyLabTouchpoint).omit({
+  id: true, createdAt: true,
+});
+export type InsertStrategyLabTouchpoint = z.infer<typeof insertStrategyLabTouchpointSchema>;
+export type StrategyLabTouchpoint = typeof strategyLabTouchpoint.$inferSelect;

@@ -53,8 +53,10 @@ export default function ProjectDetail() {
   });
 
   useSEO({
-    title: project ? `${project.name} — Pegasus Dreamscapes Case Study` : "Project — Pegasus Dreamscapes",
-    description: project?.description || "Documented real estate case study from Pegasus Dreamscapes.",
+    title: project ? `${project.name} · Projects` : "Project",
+    description: project?.description || "Documented real estate case study from Pegasus DreamScapes Corp.",
+    image: project?.afterImages?.[0],
+    noTagline: true,
   });
 
   if (isLoading) return <ProjectSkeleton />;
@@ -62,10 +64,47 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen">
+      <ProjectJsonLd project={project} />
+      <h1 className="sr-only">Project Detail — Pegasus DreamScapes</h1>
       <HeroSection project={project} />
       <BodySection project={project} />
       <RoutingSection />
     </div>
+  );
+}
+
+function ProjectJsonLd({ project }: { project: Project }) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: project.name,
+    description: project.description || `${project.name} case study from Pegasus DreamScapes Corp.`,
+    url: `https://pegasusdreamscapes.com/projects/${project.slug}`,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: project.address,
+      addressLocality: project.city,
+      addressRegion: project.state,
+      addressCountry: "US",
+    },
+    image: project.afterImages?.[0],
+    provider: {
+      "@type": "Organization",
+      name: "Pegasus DreamScapes Corp.",
+      url: "https://pegasusdreamscapes.com",
+    },
+  };
+  if (project.bedrooms) data.numberOfBedrooms = project.bedrooms;
+  if (project.bathrooms) data.numberOfBathroomsTotal = project.bathrooms;
+  if (project.sqft) {
+    data.floorSize = { "@type": "QuantitativeValue", value: project.sqft, unitCode: "FTK" };
+  }
+  if (project.yearBuilt) data.yearBuilt = project.yearBuilt;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
   );
 }
 
@@ -76,12 +115,34 @@ function HeroSection({ project }: { project: Project }) {
     <section className="relative min-h-[80vh] flex items-end overflow-hidden pt-20">
       {heroImg ? (
         <motion.div
-          className="absolute inset-0 bg-cover bg-center scale-105"
-          style={{ backgroundImage: `url(${heroImg})` }}
+          className="absolute inset-0 scale-105"
           initial={{ scale: 1.1 }}
           animate={{ scale: 1.05 }}
           transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-        />
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "url(data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAACwAQCdASoQAAkAPm0ulEclI6IhMAgAsBOJaQAAk2zSAAD+8w0AAAAA)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "blur(12px)",
+              transform: "scale(1.05)",
+            }}
+          />
+          <img
+            src={heroImg}
+            alt={`${project.name} after photo`}
+            width={1920}
+            height={1080}
+            loading="eager"
+            decoding="sync"
+            {...({ fetchpriority: "high" } as Record<string, string>)}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </motion.div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-navy to-charcoal" />
       )}
@@ -191,7 +252,7 @@ function BodySection({ project }: { project: Project }) {
                       whileHover={{ y: -3 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <img src={image} alt={`${project.name} after ${i + 1}`} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" data-testid={`img-after-${i}`} />
+                      <img src={image} alt={`${project.name} after ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" decoding="async" data-testid={`img-after-${i}`} />
                     </motion.div>
                   ))}
                 </div>
@@ -208,7 +269,7 @@ function BodySection({ project }: { project: Project }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {project.beforeImages.map((image, i) => (
                     <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
-                      <img src={image} alt={`${project.name} before ${i + 1}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" data-testid={`img-before-${i}`} />
+                      <img src={image} alt={`${project.name} before ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" decoding="async" data-testid={`img-before-${i}`} />
                     </div>
                   ))}
                 </div>
@@ -243,7 +304,7 @@ function BodySection({ project }: { project: Project }) {
                 <ScrollReveal>
                   <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-lg">
                     <div className="px-7 py-6 border-b border-border/40">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold font-supporting mb-1">The Asset</p>
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1">The Asset</p>
                       <h3 className="font-serif text-2xl font-semibold tracking-tight">Property</h3>
                     </div>
                     <div className="divide-y divide-border/40">
@@ -265,7 +326,7 @@ function BodySection({ project }: { project: Project }) {
                 <ScrollReveal delay={0.1}>
                   <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-lg">
                     <div className="px-7 py-6 border-b border-border/40">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold font-supporting mb-1">The Numbers</p>
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1">The Numbers</p>
                       <h3 className="font-serif text-2xl font-semibold tracking-tight">Project Economics</h3>
                     </div>
                     <div className="divide-y divide-border/40">
@@ -290,7 +351,7 @@ function BodySection({ project }: { project: Project }) {
               <ScrollReveal delay={0.2}>
                 <div className="relative p-8 rounded-2xl bg-gradient-to-br from-navy to-charcoal text-cream overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-copper via-cream to-copper opacity-80" />
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-copper font-semibold font-supporting mb-3">Next Project</p>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">Next Project</p>
                   <h4 className="font-serif text-2xl font-semibold mb-3 tracking-tight">Have one to add to the record?</h4>
                   <p className="text-sm text-cream/90 leading-relaxed mb-6">
                     Submit a property, or open a private partner conversation about the next project.
@@ -341,7 +402,7 @@ function RoutingSection() {
                 data-testid={`route-${i}`}
               >
                 <div className="flex items-baseline justify-between mb-6">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold font-supporting">{lane.kicker}</p>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{lane.kicker}</p>
                   <lane.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
                 </div>
                 <h3 className="font-serif text-2xl font-semibold mb-3 tracking-tight">{lane.title}</h3>

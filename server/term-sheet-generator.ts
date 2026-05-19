@@ -29,7 +29,7 @@ export function generateTermSheetPDF(
         margin: 50,
         info: {
           Title: `Investor Term Sheet - ${project.title}`,
-          Author: "Pegasus Dreamscapes Corp",
+          Author: "Pegasus DreamScapes Corp",
         }
       });
 
@@ -92,7 +92,7 @@ export function generateTermSheetPDF(
       const dealDetails = [
         ["Project Name", project.title],
         ["Location", project.location],
-        ["Operator", "Pegasus Dreamscapes Corp"],
+        ["Operator", "Pegasus DreamScapes Corp"],
         ["Raise Type", project.structure],
         ["Raise Goal", formatCurrency(project.fundingGoal)],
         ["Term Length", project.holdPeriod],
@@ -343,7 +343,7 @@ export function generateTermSheetPDF(
 
       doc.fontSize(10).font("Helvetica");
       doc.fillColor(mutedColor).text("Company", 50, yPos, { width: 120 });
-      doc.fillColor(textColor).text("Pegasus Dreamscapes Corp", 170, yPos);
+      doc.fillColor(textColor).text("Pegasus DreamScapes Corp", 170, yPos);
       yPos += 16;
       doc.fillColor(mutedColor).text("Principal", 50, yPos, { width: 120 });
       doc.fillColor(textColor).text("Paolo A. Duran", 170, yPos);
@@ -372,7 +372,7 @@ export function generateTermSheetPDF(
         doc.switchToPage(i);
         doc.fontSize(8).fillColor(mutedColor);
         doc.text(
-          `Pegasus Dreamscapes Corp | Confidential | Page ${i + 1} of ${pageCount}`,
+          `Pegasus DreamScapes Corp | Confidential | Page ${i + 1} of ${pageCount}`,
           50,
           doc.page.height - 30,
           { align: "center", width: doc.page.width - 100 }

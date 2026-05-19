@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600&family=Montserrat:wght@400;500;600;700&display=swap');
+
+.snap-bg-cream { background-color: #F6EFE4; }
+.snap-text-navy { color: #0D1B2D; }
+.snap-bg-navy { background-color: #0D1B2D; }
+.snap-text-copper { color: #C77A3A; }
+.snap-bg-copper { background-color: #C77A3A; }
+.snap-text-charcoal { color: #1E2328; }
+.snap-border-copper { border-color: #C77A3A; }
+.snap-border-navy { border-color: #0D1B2D; }
+.snap-border-charcoal { border-color: #1E2328; }
+.snap-border-charcoal-light { border-color: rgba(30, 35, 40, 0.15); }
+
+.snap-font-serif { font-family: 'Cormorant Garamond', serif; }
+.snap-font-cinzel { font-family: 'Cinzel', serif; }
+.snap-font-montserrat { font-family: 'Montserrat', sans-serif; }
+.snap-font-inter { font-family: 'Inter', sans-serif; }
+
+.snap-hairline-amber { border-top: 2px solid #F59E0B; }
+.snap-hairline-green { border-top: 2px solid #10B981; }
+.snap-hairline-red { border-top: 2px solid #EF4444; }

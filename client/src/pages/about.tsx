@@ -1,393 +1,347 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
-import { 
-  Target, 
-  Eye, 
-  Handshake, 
-  CheckCircle,
-  Search,
-  Palette,
-  Hammer,
-  User,
-  Users,
-  Wrench,
-  Award,
-  Building2,
-  TrendingUp,
-  MapPin,
-  Star,
+import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+import founderApolloPath from "@assets/image_1778735694150.png";
+import {
   ArrowRight,
-  Linkedin,
+  Compass,
+  Hammer,
+  Layers,
+  Network,
+  Shield,
+  Building,
   Mail,
   Phone,
-  Shield,
-  Heart,
-  DollarSign,
-  Clock,
-  CheckCircle2
 } from "lucide-react";
 
 export default function About() {
   useSEO({
-    title: "About Us - Pegasus Dreamscapes Corp",
-    description: "Learn about Pegasus Dreamscapes Corp, a Bay Area real estate investment company transforming distressed properties into profitable investments."
+    title: "About",
+    description:
+      "Pegasus DreamScapes Corp. is a strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Built on strategy. Governed by virtue. Executed with discipline.",
+    image: "https://pegasusdreamscapes.com/og/about.svg",
   });
 
   return (
-    <div className="min-h-screen pt-20">
-      <HeroSection />
-      <StatsSection />
-      <OurStorySection />
-      <MissionValuesSection />
-      <ApproachSection />
-      <TeamSection />
-      <CredentialsSection />
+    <div className="min-h-screen bg-background">
+      <AboutHero />
+      <DoctrineSection />
+      <PillarsSection />
+      <FounderSection />
+      <PrinciplesSection />
       <CTASection />
     </div>
   );
 }
 
-function HeroSection() {
+function AboutHero() {
   return (
-    <section className="py-24 lg:py-40 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="absolute top-20 right-20 w-96 h-96 bg-tan/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-      
-      <div className="relative max-w-7xl mx-auto px-6 text-center">
-        <Badge variant="outline" className="mb-6 border-tan/30 text-tan">
-          About Pegasus Dreamscapes
-        </Badge>
-        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight" data-testid="text-about-hero">
-          Dream it. Build it.<br />
-          <span className="text-tan">Live it.</span>
-        </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          We transform distressed properties into stunning investments while elevating communities and creating lasting partnerships.
-        </p>
+    <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 bg-navy text-cream overflow-hidden">
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-[28rem] h-[28rem] bg-copper/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-champagne/10 rounded-full blur-3xl" />
       </div>
-    </section>
-  );
-}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-copper/40 to-transparent" />
 
-function StatsSection() {
-  const stats = [
-    { value: "Founder-Led", label: "Execution Focus", icon: DollarSign },
-    { value: "East Bay", label: "Local Roots", icon: Building2 },
-    { value: "Three Pillars", label: "Development • Investments • Systems", icon: Clock },
-    { value: "Private Beta", label: "MarketFlow in Active Development", icon: Star },
-  ];
-
-  return (
-    <section className="py-16 bg-tan/5 border-y border-border">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-tan/20 mb-3">
-                <stat.icon className="w-6 h-6 text-tan" />
-              </div>
-              <p className="text-3xl lg:text-4xl font-bold text-foreground mb-1">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-end">
+          <ScrollReveal className="lg:col-span-7" direction="left">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-copper to-transparent" />
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+                About · The Operating Company
+              </p>
             </div>
-          ))}
+            <h1
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] mb-8 leading-[0.98]"
+              data-testid="text-about-headline"
+            >
+              A real estate company,<br />
+              <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+                built on strategy.
+              </span>
+            </h1>
+            <p className="text-lg sm:text-xl text-cream/90 leading-relaxed max-w-2xl mb-6">
+              Pegasus DreamScapes is a strategy-first real estate operating company. We work the complex situations, the half-broken pro formas, and the properties other groups walk away from. Every property gets a serious review. Not every property gets an offer.
+            </p>
+            <p
+              className="font-serif text-base sm:text-lg text-cream/85 italic tracking-wide leading-snug"
+              data-testid="text-about-philosophical"
+            >
+              Built on strategy. Governed by virtue. Executed with discipline.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal className="lg:col-span-5" direction="right" delay={0.15}>
+            <div className="relative">
+              <div className="absolute -inset-6 bg-gradient-to-br from-copper/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div
+                className="relative p-8 lg:p-10 rounded-2xl border border-cream/15 shadow-2xl shadow-black/40 backdrop-blur-sm"
+                style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}
+              >
+                <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
+                  The shape of the company
+                </p>
+                <dl className="divide-y divide-cream/15">
+                  <ShapeRow label="Positioning" value="The Deal Architect" />
+                  <ShapeRow label="Founder" value="Paolo &quot;Apollo&quot; Duran" />
+                  <ShapeRow label="Entity" value="Pegasus DreamScapes Corp." />
+                  <ShapeRow label="HQ" value="Pleasant Hill, California" />
+                  <ShapeRow label="Stage" value="Private beta · Invite-only network" />
+                </dl>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
+      <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
     </section>
   );
 }
 
-function OurStorySection() {
+function ShapeRow({ label, value }: { label: string; value: string }) {
   return (
-    <section className="py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <span className="text-tan font-medium text-sm uppercase tracking-wider">Our Story</span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-8 tracking-tight" data-testid="text-story-title">
-              FROM FIRST FLIP TO<br />PEGASUS EMPIRE
-            </h2>
-            <div className="space-y-6 text-muted-foreground leading-relaxed">
-              <p className="text-lg">
-                Pegasus Dreamscapes was founded by Paolo Duran, a real estate entrepreneur and project manager with a background in construction and design-driven renovations.
-              </p>
-              <p>
-                After managing projects for a general contractor and successfully completing his own flip, Paolo saw a gap: properties that needed more than paint and staging—they needed vision, systems, and a team that cared about both profit and the people involved.
-              </p>
-              <p>
-                What started as a passion for transforming neglected properties has grown into a full-service real estate operation. Today, Pegasus Dreamscapes combines construction expertise with design sensibility to create spaces that not only look beautiful but perform as solid investments.
-              </p>
-            </div>
-          </div>
-          
-          <div className="relative">
-            <div className="aspect-[4/3] bg-card rounded-2xl border border-border overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-tan/10 to-primary/10" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <Building2 className="w-16 h-16 text-tan mx-auto mb-4" />
-                  <p className="text-2xl font-bold mb-2">Bay Area Based</p>
-                  <p className="text-muted-foreground">Serving Oakland, San Francisco, San Jose & Surrounding Areas</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="absolute -bottom-6 -right-6 bg-card border border-tan/20 rounded-xl p-4 shadow-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-tan/20 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-tan" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">Local Expertise</p>
-                  <p className="text-xs text-muted-foreground">Deep Bay Area Knowledge</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <div className="flex items-baseline justify-between py-3.5">
+      <dt className="text-[10px] uppercase tracking-[0.25em] text-cream/55 font-supporting">{label}</dt>
+      <dd
+        className="font-serif text-sm sm:text-base text-cream font-medium text-right"
+        dangerouslySetInnerHTML={{ __html: value }}
+      />
+    </div>
   );
 }
 
-function MissionValuesSection() {
-  const values = [
-    {
-      icon: Eye,
-      title: "Transparency & Numbers",
-      description: "We share the data, the comps, and the projections. No hidden surprises—every deal is analyzed with full visibility.",
-    },
-    {
-      icon: Palette,
-      title: "Design with Purpose",
-      description: "Every design choice is intentional—balancing aesthetics with ROI to maximize both beauty and value.",
-    },
-    {
-      icon: Handshake,
-      title: "Long-Term Relationships",
-      description: "We build partnerships, not just properties. Our success is measured by our partners' success.",
-    },
-    {
-      icon: CheckCircle,
-      title: "Execution & Accountability",
-      description: "We deliver on promises and hold ourselves to the highest standards of professionalism.",
-    },
-  ];
-
+function DoctrineSection() {
   return (
-    <section className="py-24 lg:py-32 bg-tan/5 border-y border-border">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Our Mission</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-mission-title">
-            ELEVATING PROPERTIES,<br />NEIGHBORHOODS & PEOPLE
+    <section className="py-24 lg:py-32 bg-background">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <ScrollReveal>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              The Doctrine
+            </p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-8 leading-tight">
+            No lead dies. Every property gets a path.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            To elevate properties, neighborhoods, and people by designing and executing real estate projects that are beautiful, profitable, and responsible.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {values.map((value, index) => (
-            <Card key={index} className="group hover:border-tan/30 transition-all duration-300" data-testid={`card-value-${index}`}>
-              <CardContent className="p-8">
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-tan/10 flex items-center justify-center flex-shrink-0 group-hover:bg-tan/20 transition-colors">
-                    <value.icon className="w-7 h-7 text-tan" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{value.description}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          <div className="space-y-5 text-lg text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-7 max-w-3xl">
+            <p>
+              Most real estate companies want one thing: the property they can buy at their number. Anything else gets dropped.
+            </p>
+            <p>
+              We were built differently. When a property hits Pegasus HQ, the question we ask first is structural: what is this situation actually asking for? Sometimes the answer is a direct acquisition. Sometimes it is a joint venture, a creative-finance structure, a referral to a trusted operator, or a clean MLS listing through our KW partnership.
+            </p>
+            <p className="text-foreground/90">
+              The lane that fits the property is the lane we route it to. The owner gets a real read on their situation either way.
+            </p>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );
 }
 
-function ApproachSection() {
-  const steps = [
-    {
-      icon: Search,
-      step: "01",
-      title: "Analyze the Deal",
-      description: "We evaluate every property with thorough due diligence—comps, repairs, ARV projections, and market analysis.",
-    },
-    {
-      icon: Palette,
-      step: "02",
-      title: "Design the Dreamscape",
-      description: "Our design team creates a vision that maximizes value while respecting budget and timeline constraints.",
-    },
+function PillarsSection() {
+  const pillars = [
     {
       icon: Hammer,
-      step: "03",
-      title: "Execute & Exit",
-      description: "We manage the renovation, handle the details, and execute a clean exit strategy for maximum returns.",
+      kicker: "Pillar 01",
+      title: "Pegasus Development",
+      desc: "The spine of the company. ADU, fix-and-flip, BRRRR, and small-scale development today; trajectory toward ground-up infill and master-planned classical neighborhoods over time.",
+    },
+    {
+      icon: Layers,
+      kicker: "Pillar 02",
+      title: "Pegasus Investments",
+      desc: "Capital structures that feed what gets built. Direct acquisition, JV / co-GP, and creative finance, sized to the situation, never the other way around. Private network, no public offering.",
+    },
+    {
+      icon: Network,
+      kicker: "Pillar 03",
+      title: "Pegasus Systems",
+      desc: "The operating layer. MarketFlow private dealflow, Peggy strategy assistant, Strategy Library, and the vendor network that makes execution repeatable.",
     },
   ];
 
   return (
-    <section className="py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">The Pegasus Approach</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 tracking-tight" data-testid="text-approach-title">
-            HOW WE TRANSFORM PROPERTIES
+    <section className="py-24 lg:py-32 bg-muted/20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-16">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Three Pillars
+            </p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            One operating company. Three pillars.
           </h2>
-        </div>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Development is the spine. Investments and Systems exist to feed and support what gets built.
+          </p>
+        </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {steps.map((step, index) => (
-            <div key={index} className="relative group" data-testid={`step-${index}`}>
-              <div className="text-8xl font-bold text-tan/10 absolute -top-6 left-0 group-hover:text-tan/20 transition-colors">{step.step}</div>
-              <div className="pt-16 relative">
-                <div className="w-16 h-16 rounded-xl bg-tan/10 flex items-center justify-center mb-6 group-hover:bg-tan/20 transition-colors">
-                  <step.icon className="w-8 h-8 text-tan" />
+        <StaggerChildren className="grid md:grid-cols-3 gap-6 lg:gap-7" staggerDelay={0.1}>
+          {pillars.map((p, i) => (
+            <StaggerItem key={p.title}>
+              <div
+                className="h-full p-7 lg:p-8 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-colors duration-300"
+                data-testid={`about-pillar-${i}`}
+              >
+                <div className="flex items-baseline justify-between mb-6">
+                  <span className="font-serif text-3xl text-primary/30">0{i + 1}</span>
+                  <p.icon className="w-5 h-5 text-primary/55" />
                 </div>
-                <h3 className="text-2xl font-semibold mb-4">{step.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-1">
+                  {p.kicker}
+                </p>
+                <h3 className="font-serif text-2xl font-semibold mb-4 tracking-tight">{p.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
               </div>
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -right-6 w-12 h-0.5 bg-gradient-to-r from-border to-transparent" />
-              )}
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );
 }
 
-function TeamSection() {
-  const team = [
-    {
-      name: "Paolo Duran",
-      role: "Founder & Principal",
-      description: "Real estate entrepreneur with 5+ years in construction project management. Background in design-driven renovations and value-add investments.",
-      expertise: ["Deal Analysis", "Project Management", "Investor Relations"],
-      icon: User,
-    },
-    {
-      name: "Construction Partner",
-      role: "General Contractor",
-      description: "Licensed GC with 15+ years experience in residential renovations. Expert in timeline management and quality execution.",
-      expertise: ["Renovations", "Code Compliance", "Subcontractor Management"],
-      icon: Wrench,
-    },
-    {
-      name: "Design Partner",
-      role: "Interior Design Lead",
-      description: "Creative director with keen eye for market-appropriate design. Specializes in maximizing ROI through strategic finishes.",
-      expertise: ["Interior Design", "Staging", "Material Selection"],
-      icon: Palette,
-    },
-  ];
-
+function FounderSection() {
   return (
-    <section className="py-24 lg:py-32 bg-tan/5 border-y border-border">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Our Team</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 tracking-tight" data-testid="text-team-title">
-            MEET THE DREAMSCAPERS
-          </h2>
-          <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
-            A dedicated team of professionals committed to transforming properties and creating value.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {team.map((member, index) => (
-            <Card key={index} className="group hover:border-tan/30 transition-all duration-300 overflow-hidden" data-testid={`card-team-${index}`}>
-              <CardContent className="p-8">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-tan/20 to-primary/10 flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform">
-                  <member.icon className="w-10 h-10 text-tan" />
+    <section className="py-24 lg:py-32 bg-background">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          <ScrollReveal className="lg:col-span-5" direction="left">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="relative">
+                <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
+                  <img
+                    src={founderApolloPath}
+                    alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
+                    className="absolute inset-0 w-full h-full object-cover object-top"
+                    data-testid="img-founder-apollo"
+                  />
+                  <div className="absolute inset-0 ring-1 ring-primary/50 rounded-lg pointer-events-none" />
+                  <div className="absolute -inset-1 rounded-lg ring-1 ring-primary/15 pointer-events-none" />
                 </div>
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold mb-1">{member.name}</h3>
-                  <p className="text-tan text-sm font-medium mb-4">{member.role}</p>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-6">{member.description}</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {member.expertise.map((skill, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
+                <div className="brand-stripe mt-3" />
+                <div className="mt-6 px-1">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2">
+                    Founder &amp; Principal
+                  </p>
+                  <h3 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight mb-1">
+                    Paolo &quot;Apollo&quot; Duran
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    Pegasus DreamScapes Corp.
+                  </p>
+                  <blockquote className="font-serif text-base italic text-foreground/85 leading-relaxed border-l-2 border-primary pl-5 mb-5">
+                    &ldquo;Where others see impossible, we see a path. The deal is the architecture of the situation, not the situation itself.&rdquo;
+                  </blockquote>
+                  <div className="grid grid-cols-2 divide-x divide-border/60 -mx-2">
+                    <div className="px-3">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-1">Direct line</p>
+                      <a href="tel:+19257448525" className="text-sm font-medium text-foreground hover:text-primary transition-colors">925-744-8525</a>
+                    </div>
+                    <div className="px-3">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-1">Email</p>
+                      <a href="mailto:apollo@pegasusdreamscapes.com" className="text-sm font-medium text-foreground hover:text-primary transition-colors break-all">apollo@pegasusdreamscapes.com</a>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+            </div>
+          </ScrollReveal>
 
-        <p className="text-center text-muted-foreground mt-12 text-sm">
-          We also work with a trusted network of real estate agents, lenders, inspectors, and trades professionals.
-        </p>
+          <ScrollReveal className="lg:col-span-7" direction="right" delay={0.15}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+                The Operator
+              </p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-7 leading-tight">
+              Strategy is the product.<br />
+              <span className="italic">Discipline is the moat.</span>
+            </h2>
+            <div className="space-y-5 text-base text-muted-foreground leading-relaxed">
+              <p>
+                Apollo founded Pegasus DreamScapes to do real estate the way it should be done: a long-arc operating company instead of a quarterly transaction shop. Every project is treated as a structural problem first and a profit number second.
+              </p>
+              <p>
+                That means underwriting that survives the worst case, capital partners who get the truth in writing, and execution that never depends on a single point of failure.
+              </p>
+              <p className="text-foreground/90">
+                The work today is small-scale and disciplined. The trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods. Each phase is earned, not assumed.
+              </p>
+            </div>
+          </ScrollReveal>
+        </div>
       </div>
     </section>
   );
 }
 
-function CredentialsSection() {
-  const credentials = [
+function PrinciplesSection() {
+  const principles = [
     {
-      icon: Shield,
-      title: "Compliance-Aware Operations",
-      description: "Operations are structured with role clarity, documentation, and process discipline.",
-      detail: "Licensing and brokerage relationships handled per applicable requirements",
+      kicker: "Principle 01",
+      title: "Strategy first, transaction second.",
+      body: "We design the path before we touch the contract. The structural read of the situation is the product; the close is the consequence.",
     },
     {
-      icon: Award,
-      title: "Partner Network",
-      description: "We emphasize transparent communication and disciplined execution standards.",
-      detail: "Built for disciplined execution",
+      kicker: "Principle 02",
+      title: "Truth in writing.",
+      body: "Capital partners and sellers get the full picture. The numbers we model in private are the numbers we put on paper.",
     },
     {
-      icon: CheckCircle2,
-      title: "Execution Discipline",
-      description: "Project decisions are grounded in underwriting, execution planning, and accountability.",
-      detail: "Private review conversations available",
+      kicker: "Principle 03",
+      title: "Earned, never assumed.",
+      body: "Each phase of the company graduates only when the prior phase is consistently profitable, well-documented, and operationally repeatable.",
     },
     {
-      icon: Users,
-      title: "Industry Network",
-      description: "Connected with top real estate professionals across the Bay Area.",
-      detail: "East Bay and Bay Area aligned network",
+      kicker: "Principle 04",
+      title: "No lead dies.",
+      body: "Every property gets a path. When the path is a referral or a listing instead of an offer, we say so plainly and route accordingly.",
     },
   ];
 
   return (
-    <section className="py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Trust & Credentials</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 tracking-tight" data-testid="text-credentials-title">
-            WHY PARTNER WITH US
+    <section className="py-24 lg:py-32 bg-muted/20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-16">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Operating Principles
+            </p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            How we actually work.
           </h2>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {credentials.map((credential, index) => (
-            <div key={index} className="text-center p-6 rounded-xl bg-card border border-border hover:border-tan/30 transition-colors" data-testid={`credential-${index}`}>
-              <div className="w-14 h-14 rounded-full bg-tan/10 flex items-center justify-center mx-auto mb-4">
-                <credential.icon className="w-7 h-7 text-tan" />
+        <StaggerChildren className="grid sm:grid-cols-2 gap-6 lg:gap-8" staggerDelay={0.08}>
+          {principles.map((p, i) => (
+            <StaggerItem key={p.kicker}>
+              <div
+                className="h-full p-7 lg:p-8 bg-card rounded-lg border-l-2 border-primary/40 hover:border-primary transition-colors duration-300"
+                data-testid={`about-principle-${i}`}
+              >
+                <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
+                  {p.kicker}
+                </p>
+                <h3 className="font-serif text-2xl font-semibold mb-3 tracking-tight leading-tight">
+                  {p.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
               </div>
-              <h3 className="font-semibold mb-2">{credential.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{credential.description}</p>
-              <Badge variant="outline" className="border-tan/30 text-tan text-xs">
-                {credential.detail}
-              </Badge>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );
@@ -395,34 +349,37 @@ function CredentialsSection() {
 
 function CTASection() {
   return (
-    <section className="py-24 lg:py-32 bg-gradient-to-br from-tan/10 to-primary/5 border-t border-border">
-      <div className="max-w-4xl mx-auto px-6 text-center">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
-          READY TO WORK TOGETHER?
-        </h2>
-        <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-          Whether you're looking to sell a property, invest in real estate, or learn more about our approach, we'd love to hear from you.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/sell">
-            <Button size="lg" className="gap-2 bg-tan text-tan-foreground hover:bg-tan/90" data-testid="button-about-sell">
-              <Building2 className="w-5 h-5" />
-              Sell Your Property
-            </Button>
-          </Link>
-          <Link href="/invest">
-            <Button size="lg" variant="outline" className="gap-2" data-testid="button-about-invest">
-              <TrendingUp className="w-5 h-5" />
-              Become an Investor
-            </Button>
-          </Link>
-          <Link href="/#contact">
-            <Button size="lg" variant="ghost" className="gap-2" data-testid="button-about-contact">
-              <Mail className="w-5 h-5" />
-              Contact Us
-            </Button>
-          </Link>
-        </div>
+    <section className="py-24 lg:py-32 bg-navy text-cream relative overflow-hidden">
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-copper/15 rounded-full blur-3xl" />
+      </div>
+      <div className="relative max-w-4xl mx-auto px-6 lg:px-12 text-center">
+        <ScrollReveal>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
+            Continue the conversation
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-8">
+            Dream it. Build it. Live it.
+          </h2>
+          <p className="text-lg text-cream/85 leading-relaxed max-w-2xl mx-auto mb-10">
+            Whether you have a property, capital, or a question that does not fit a box, the door is the same.
+          </p>
+          <div className="flex justify-center">
+            <Link href="/sell">
+              <Button
+                size="lg"
+                className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-copper text-white hover:bg-copper/90 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 min-h-[44px]"
+                data-testid="button-about-sell"
+              >
+                Start a Strategy Review
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+          <p className="text-xs text-cream/55 mt-6 font-supporting">
+            Or call Apollo direct: <a href="tel:+19257448525" className="text-copper hover:text-copper/80 transition-colors">925-744-8525</a>
+          </p>
+        </ScrollReveal>
       </div>
     </section>
   );

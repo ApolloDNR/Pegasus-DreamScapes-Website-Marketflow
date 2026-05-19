@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /marketflow/admin
+Disallow: /marketflow/dashboard
+Disallow: /marketflow/messages
+Disallow: /marketflow/submit
+Disallow: /marketflow/negotiate
+Disallow: /dashboard
+Disallow: /services
+Disallow: /login
+Disallow: /signup
+
+Sitemap: https://pegasusdreamscapes.com/sitemap.xml

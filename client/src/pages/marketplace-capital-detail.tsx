@@ -63,6 +63,8 @@ import {
   Printer,
 } from "lucide-react";
 import { ShareButtons } from "@/components/share-buttons";
+import { AskPeggyButton } from "@/components/ask-peggy-button";
+import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
 
 export default function MarketplaceCapitalDetail() {
   return (
@@ -204,7 +206,12 @@ function CapitalDetailPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <AskPeggyButton
+                      dealType="capital"
+                      dealId={projectId}
+                      dealLabel={project.title}
+                    />
                     <ShareButtons 
                       title={`Capital Opportunity: ${project.title}`}
                       description={`Invest in ${project.title} - ${project.structure} structure, seeking $${((project.fundingGoal || 0) / 1000).toFixed(0)}K`}
@@ -519,6 +526,13 @@ function CapitalDetailPage() {
                       <Bookmark className="w-4 h-4 mr-2" />
                       Save for Later
                     </Button>
+
+                    <OpenOfferStudioButton
+                      dealId={project.id}
+                      lane="CAPITAL"
+                      variant="outline"
+                      className="w-full"
+                    />
                   </>
                 )}
               </CardContent>

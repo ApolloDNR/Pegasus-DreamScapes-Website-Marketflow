@@ -34,6 +34,9 @@ import {
   insertTeamMemberSchema,
   insertMediaFileSchema,
   insertSiteContentSchema,
+  insertArticleSchema,
+  insertLibraryBeginnerStepSchema,
+  insertLibraryGlossaryTermSchema,
   STAFF_ROLES
 } from "@shared/schema";
 
@@ -67,11 +70,12 @@ const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Res
   record.count++;
   return next();
 };
+import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
-import { generateCalculatorPDF, generateDealPacketPDF } from "./pdf";
+import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
 import peggy from "./peggy";
 import { 
   createUserProfile, 
@@ -81,7 +85,7 @@ import {
   getUserBadges,
   updateUserProfile
 } from "./lib/supabase";
-import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification } from "./email";
+import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
@@ -170,6 +174,96 @@ export async function registerRoutes(
   
   // Add Supabase auth middleware to extract user from JWT tokens
   app.use(supabaseAuthMiddleware);
+
+  // Legacy 301 aliases for retired public routes. Keeps inbound links and
+  // search-engine equity flowing to the current path. Must be registered
+  // BEFORE the SPA / Vite catch-all so the redirect wins over the HTML
+  // shell. Mirror entries that exist in client/src/App.tsx legacyRedirects
+  // for SPA-internal navigation.
+  const legacyAliases: Array<[string, string]> = [];
+  for (const [from, to] of legacyAliases) {
+    app.get(from, (_req, res) => res.redirect(301, to));
+  }
+
+  // SEO: robots.txt
+  app.get('/robots.txt', (req, res) => {
+    const host = `${req.protocol}://${req.get('host')}`;
+    res.type('text/plain').send(
+      [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /api/',
+        'Disallow: /hq',
+        'Disallow: /admin',
+        'Disallow: /dashboard',
+        'Disallow: /login',
+        'Disallow: /signup',
+        'Disallow: /marketflow/admin',
+        'Disallow: /marketflow/dashboard',
+        'Disallow: /offer-studio',
+        'Disallow: /profile/',
+        '',
+        `Sitemap: ${host}/sitemap.xml`,
+        '',
+      ].join('\n'),
+    );
+  });
+
+  // SEO: sitemap.xml — public routes + project case studies
+  app.get('/sitemap.xml', async (req, res) => {
+    const host = `${req.protocol}://${req.get('host')}`;
+    const today = new Date().toISOString().split('T')[0];
+    const staticRoutes: { path: string; priority: string; changefreq: string }[] = [
+      { path: '/', priority: '1.0', changefreq: 'weekly' },
+      { path: '/sell', priority: '0.9', changefreq: 'monthly' },
+      { path: '/invest', priority: '0.9', changefreq: 'monthly' },
+      { path: '/projects', priority: '0.8', changefreq: 'weekly' },
+      { path: '/contact', priority: '0.7', changefreq: 'yearly' },
+      { path: '/marketflow', priority: '0.8', changefreq: 'weekly' },
+      { path: '/deal-blueprint', priority: '0.8', changefreq: 'monthly' },
+      { path: '/resources', priority: '0.6', changefreq: 'weekly' },
+      { path: '/education', priority: '0.5', changefreq: 'monthly' },
+      { path: '/vendor-network', priority: '0.5', changefreq: 'monthly' },
+      { path: '/about', priority: '0.6', changefreq: 'yearly' },
+      { path: '/terms', priority: '0.3', changefreq: 'yearly' },
+      { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+      { path: '/disclosures', priority: '0.3', changefreq: 'yearly' },
+      { path: '/services', priority: '0.5', changefreq: 'yearly' },
+      { path: '/calculators', priority: '0.7', changefreq: 'monthly' },
+    ];
+
+    const calculatorTabs = ['arv', 'roi', 'brrrr', 'cashflow', 'wholesale', 'piti', 'ownvsrent', 'hardmoney'];
+    const calculatorTabUrls = calculatorTabs
+      .map(
+        (tab) =>
+          `  <url><loc>${host}/calculators?tab=${tab}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`,
+      )
+      .join('\n');
+
+    let projectUrls = '';
+    try {
+      const projects = await storage.getProjects();
+      projectUrls = projects
+        .map(
+          (p) =>
+            `  <url><loc>${host}/projects/${p.slug}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`,
+        )
+        .join('\n');
+    } catch (err) {
+      projectUrls = '';
+    }
+
+    const urls = staticRoutes
+      .map(
+        (r) =>
+          `  <url><loc>${host}${r.path}</loc><lastmod>${today}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
+      )
+      .join('\n');
+
+    res
+      .type('application/xml')
+      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n${calculatorTabUrls}${projectUrls ? '\n' + projectUrls : ''}\n</urlset>\n`);
+  });
 
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
@@ -1982,6 +2076,220 @@ export async function registerRoutes(
       return res.json(articlesList);
     } catch (error) {
       console.error("Error fetching articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Strategy Library curated articles (public, published + featuredInLibrary)
+  app.get("/api/articles/library", async (_req, res) => {
+    try {
+      const list = await storage.getLibraryArticles();
+      return res.json(list);
+    } catch (error) {
+      console.error("Error fetching library articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: full Strategy Library management
+  app.get("/api/hq/articles", isAuthenticated, requireStaffRole, async (_req, res) => {
+    try {
+      const list = await storage.getArticles();
+      return res.json(list);
+    } catch (error) {
+      console.error("Error fetching all articles:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Accept ISO date strings from JSON clients by coercing publishedAt to Date.
+  const articleWriteSchema = insertArticleSchema.extend({
+    publishedAt: z.preprocess(
+      (v) => (typeof v === "string" && v.length > 0 ? new Date(v) : v),
+      z.date().nullable().optional(),
+    ),
+  });
+
+  app.post("/api/hq/articles", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const result = articleWriteSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid article", errors: result.error.flatten() });
+      }
+      const data = { ...result.data };
+      if (data.published && !data.publishedAt) data.publishedAt = new Date();
+      const created = await storage.createArticle(data);
+      return res.status(201).json(created);
+    } catch (error) {
+      if ((error as { code?: string })?.code === "23505") {
+        return res.status(409).json({ message: "An article with that slug already exists" });
+      }
+      console.error("Error creating article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/articles/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const result = articleWriteSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid article patch", errors: result.error.flatten() });
+      }
+      const data = { ...result.data };
+      if (data.published && !data.publishedAt) data.publishedAt = new Date();
+      const updated = await storage.updateArticle(id, data);
+      if (!updated) return res.status(404).json({ message: "Article not found" });
+      return res.json(updated);
+    } catch (error) {
+      if ((error as { code?: string })?.code === "23505") {
+        return res.status(409).json({ message: "An article with that slug already exists" });
+      }
+      console.error("Error updating article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/hq/articles/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const ok = await storage.deleteArticle(id);
+      if (!ok) return res.status(404).json({ message: "Article not found" });
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Education page: Beginner Path (public read)
+  app.get("/api/library/beginner-path", async (_req, res) => {
+    try {
+      const steps = await storage.getLibraryBeginnerSteps();
+      return res.json(steps);
+    } catch (error) {
+      console.error("Error fetching beginner path:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Education page: Glossary (public read)
+  app.get("/api/library/glossary", async (_req, res) => {
+    try {
+      const terms = await storage.getLibraryGlossaryTerms();
+      return res.json(terms);
+    } catch (error) {
+      console.error("Error fetching glossary:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Beginner Path CRUD
+  app.get("/api/hq/library/beginner-path", isAuthenticated, requireStaffRole, async (_req, res) => {
+    try {
+      return res.json(await storage.getLibraryBeginnerSteps());
+    } catch (error) {
+      console.error("Error fetching beginner path (hq):", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/hq/library/beginner-path", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const result = insertLibraryBeginnerStepSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid step", errors: result.error.flatten() });
+      }
+      const created = await storage.createLibraryBeginnerStep(result.data);
+      return res.status(201).json(created);
+    } catch (error) {
+      console.error("Error creating beginner step:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/library/beginner-path/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const result = insertLibraryBeginnerStepSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid patch", errors: result.error.flatten() });
+      }
+      const updated = await storage.updateLibraryBeginnerStep(id, result.data);
+      if (!updated) return res.status(404).json({ message: "Step not found" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating beginner step:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/hq/library/beginner-path/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const ok = await storage.deleteLibraryBeginnerStep(id);
+      if (!ok) return res.status(404).json({ message: "Step not found" });
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting beginner step:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: Glossary CRUD
+  app.get("/api/hq/library/glossary", isAuthenticated, requireStaffRole, async (_req, res) => {
+    try {
+      return res.json(await storage.getLibraryGlossaryTerms());
+    } catch (error) {
+      console.error("Error fetching glossary (hq):", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/hq/library/glossary", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const result = insertLibraryGlossaryTermSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid term", errors: result.error.flatten() });
+      }
+      const created = await storage.createLibraryGlossaryTerm(result.data);
+      return res.status(201).json(created);
+    } catch (error) {
+      console.error("Error creating glossary term:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/hq/library/glossary/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const result = insertLibraryGlossaryTermSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid patch", errors: result.error.flatten() });
+      }
+      const updated = await storage.updateLibraryGlossaryTerm(id, result.data);
+      if (!updated) return res.status(404).json({ message: "Term not found" });
+      return res.json(updated);
+    } catch (error) {
+      console.error("Error updating glossary term:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/hq/library/glossary/:id", isAuthenticated, requireStaffRole, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const ok = await storage.deleteLibraryGlossaryTerm(id);
+      if (!ok) return res.status(404).json({ message: "Term not found" });
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting glossary term:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5609,22 +5917,22 @@ export async function registerRoutes(
     }
   });
 
-  // Get shared analysis by token (public)
-  app.get("/api/shared-analyses/:token", async (req: any, res) => {
-    try {
-      const token = req.params.token;
-      const analysis = await storage.getSavedAnalysisByShareToken(token);
-      
-      if (!analysis) {
-        return res.status(404).json({ message: "Shared analysis not found" });
-      }
-      
-      res.json(analysis);
-    } catch (error) {
-      console.error("Error fetching shared analysis:", error);
-      res.status(500).json({ message: "Failed to fetch shared analysis" });
-    }
-  });
+  // Owner-only: who has this analysis been emailed to (most recent first).
+  // Implementation lives in ./analysisSendHistoryRoutes so the ownership
+  // check + storage wiring can be exercised by integration tests.
+  const { registerAnalysisSendHistoryRoutes } = await import(
+    "./analysisSendHistoryRoutes"
+  );
+  registerAnalysisSendHistoryRoutes(app, { isAuthenticated });
+
+  // Snapshot share endpoints — extracted into a dedicated module so the
+  // PATCH allowlist + token mint + public-read flow can be exercised by
+  // the integration tests in server/__tests__/saved-analyses-share.test.ts
+  // without booting the full Express app.
+  const { registerSavedAnalysesShareRoutes } = await import(
+    "./savedAnalysesShareRoutes"
+  );
+  registerSavedAnalysesShareRoutes(app, { isAuthenticated });
 
   // Create saved analysis
   app.post("/api/saved-analyses", isAuthenticated, async (req: any, res) => {
@@ -5651,28 +5959,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update saved analysis
-  app.patch("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const userId = req.user.claims.sub;
-      
-      // Verify ownership
-      const existing = await storage.getSavedAnalysis(id);
-      if (!existing) {
-        return res.status(404).json({ message: "Analysis not found" });
-      }
-      if (existing.userId !== userId) {
-        return res.status(403).json({ message: "Not authorized" });
-      }
-      
-      const analysis = await storage.updateSavedAnalysis(id, req.body);
-      res.json(analysis);
-    } catch (error) {
-      console.error("Error updating analysis:", error);
-      res.status(500).json({ message: "Failed to update analysis" });
-    }
-  });
+  // PATCH /api/saved-analyses/:id is registered above via
+  // registerSavedAnalysesShareRoutes — do not redeclare it here.
 
   // Delete saved analysis
   app.delete("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
@@ -5819,22 +6107,94 @@ export async function registerRoutes(
 
   // ============== PDF GENERATION ROUTES ==============
   
-  // Generate calculator analysis PDF
-  app.post("/api/pdf/calculator", async (req, res) => {
+  // Generate calculator analysis PDF.
+  // Three input modes (in priority order):
+  //   1. { id }          → render a saved analysis owned by the caller (auth required)
+  //   2. { shareToken }  → render a publicly shared saved analysis (no auth)
+  //   3. { calculatorType, inputs, outputs } → render an ad-hoc calculator run
+  app.post("/api/pdf/calculator", async (req: any, res) => {
     try {
-      const { calculatorType, inputs, outputs } = req.body;
-      
+      const { id, shareToken, calculatorType, inputs, outputs } = req.body ?? {};
+
+      // Mode 1: render by saved analysis id (owner-only)
+      if (id !== undefined && id !== null) {
+        const numericId = Number(id);
+        if (!Number.isFinite(numericId)) {
+          return res.status(400).json({ message: "Invalid id" });
+        }
+        const userId = getAuthUserId(req) ?? (await extractSupabaseUser(req))?.id ?? null;
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        const analysis = await storage.getSavedAnalysis(numericId);
+        if (!analysis) {
+          return res.status(404).json({ message: "Analysis not found" });
+        }
+        if (analysis.userId !== userId) {
+          return res.status(403).json({ message: "Not authorized" });
+        }
+        const buffer = await generateSavedAnalysisPDF({
+          name: analysis.name,
+          calculatorType: analysis.calculatorType,
+          propertyAddress: analysis.propertyAddress,
+          inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
+          results: (analysis.results ?? {}) as Record<string, unknown>,
+          primaryMetric: analysis.primaryMetric,
+          primaryValue: analysis.primaryValue,
+          secondaryMetric: analysis.secondaryMetric,
+          secondaryValue: analysis.secondaryValue,
+          dealGrade: analysis.dealGrade,
+          scenarioLabel: analysis.scenarioLabel,
+          notes: analysis.notes,
+          createdAt: analysis.createdAt,
+        });
+        const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="pegasus-${safeName}.pdf"`);
+        return res.send(buffer);
+      }
+
+      // Mode 2: render by public share token
+      if (typeof shareToken === "string" && shareToken.length > 0) {
+        // PDF export should not inflate snapshot viewCount analytics.
+        const analysis = await storage.getSavedAnalysisByShareToken(shareToken, {
+          incrementViewCount: false,
+        });
+        if (!analysis) {
+          return res.status(404).json({ message: "Shared analysis not found" });
+        }
+        const buffer = await generateSavedAnalysisPDF({
+          name: analysis.name,
+          calculatorType: analysis.calculatorType,
+          propertyAddress: analysis.propertyAddress,
+          inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
+          results: (analysis.results ?? {}) as Record<string, unknown>,
+          primaryMetric: analysis.primaryMetric,
+          primaryValue: analysis.primaryValue,
+          secondaryMetric: analysis.secondaryMetric,
+          secondaryValue: analysis.secondaryValue,
+          dealGrade: analysis.dealGrade,
+          scenarioLabel: analysis.scenarioLabel,
+          notes: analysis.notes,
+          createdAt: analysis.createdAt,
+        });
+        const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="pegasus-${safeName}.pdf"`);
+        return res.send(buffer);
+      }
+
+      // Mode 3: ad-hoc calculator run (legacy)
       if (!calculatorType || !inputs || !outputs) {
-        return res.status(400).json({ 
-          message: "calculatorType, inputs, and outputs are required" 
+        return res.status(400).json({
+          message: "Provide id, shareToken, or calculatorType+inputs+outputs",
         });
       }
-      
+
       const buffer = await generateCalculatorPDF(calculatorType, inputs, outputs);
-      
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
-        "Content-Disposition", 
+        "Content-Disposition",
         `attachment; filename="${calculatorType}-analysis-${Date.now()}.pdf"`
       );
       res.send(buffer);
@@ -5843,6 +6203,259 @@ export async function registerRoutes(
       res.status(500).json({ message: "Failed to generate PDF" });
     }
   });
+
+  // Generate branded PDF for a saved analysis (owner only) — convenience GET
+  // wrapper around POST /api/pdf/calculator { id } for direct-download links.
+  app.get("/api/pdf/calculator/by-id/:id", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) {
+        return res.status(400).json({ message: "Invalid id" });
+      }
+      const userId = getAuthUserId(req);
+      const analysis = await storage.getSavedAnalysis(id);
+      if (!analysis) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+      if (analysis.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const buffer = await generateSavedAnalysisPDF({
+        name: analysis.name,
+        calculatorType: analysis.calculatorType,
+        propertyAddress: analysis.propertyAddress,
+        inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
+        results: (analysis.results ?? {}) as Record<string, unknown>,
+        primaryMetric: analysis.primaryMetric,
+        primaryValue: analysis.primaryValue,
+        secondaryMetric: analysis.secondaryMetric,
+        secondaryValue: analysis.secondaryValue,
+        dealGrade: analysis.dealGrade,
+        scenarioLabel: analysis.scenarioLabel,
+        notes: analysis.notes,
+        createdAt: analysis.createdAt,
+      });
+
+      const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="pegasus-${safeName}.pdf"`
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating saved-analysis PDF (by id):", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // Generate branded PDF for a publicly shared analysis (no auth required)
+  app.get("/api/pdf/calculator/by-token/:token", async (req, res) => {
+    try {
+      const token = req.params.token;
+      const analysis = await storage.getSavedAnalysisByShareToken(token, {
+        incrementViewCount: false,
+      });
+      if (!analysis) {
+        return res.status(404).json({ message: "Shared analysis not found" });
+      }
+
+      const buffer = await generateSavedAnalysisPDF({
+        name: analysis.name,
+        calculatorType: analysis.calculatorType,
+        propertyAddress: analysis.propertyAddress,
+        inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
+        results: (analysis.results ?? {}) as Record<string, unknown>,
+        primaryMetric: analysis.primaryMetric,
+        primaryValue: analysis.primaryValue,
+        secondaryMetric: analysis.secondaryMetric,
+        secondaryValue: analysis.secondaryValue,
+        dealGrade: analysis.dealGrade,
+        scenarioLabel: analysis.scenarioLabel,
+        notes: analysis.notes,
+        createdAt: analysis.createdAt,
+      });
+
+      const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="pegasus-${safeName}.pdf"`
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating saved-analysis PDF (by token):", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // Email a saved-analysis PDF to a recipient (lender, JV partner, seller, etc.).
+  // Two input modes:
+  //   1. { id, recipientName, recipientEmail, note? } → owner-only (auth required)
+  //   2. { shareToken, recipientName, recipientEmail, note? } → public, rate-limited
+  const sendPdfEmailSchema = z.object({
+    id: z.number().int().positive().optional(),
+    shareToken: z.string().min(1).optional(),
+    recipientName: z.string().trim().min(1, "Recipient name is required").max(120),
+    recipientEmail: z.string().trim().email("Invalid email").max(254),
+    note: z.string().max(2000).optional(),
+  }).refine(
+    (v) => v.id !== undefined || v.shareToken !== undefined,
+    { message: "Provide id or shareToken" },
+  );
+
+  const CALC_EMAIL_LABELS: Record<string, string> = {
+    arv: "ARV / Flip Analysis",
+    roi: "Investment ROI Analysis",
+    brrrr: "BRRRR Strategy Analysis",
+    cashflow: "Cash Flow Analysis",
+    mao: "Wholesale (MAO) Analysis",
+    wholesale: "Wholesale Deal Analysis",
+    piti: "Mortgage / PITI Analysis",
+    ownvsrent: "Own vs Rent Analysis",
+    hardmoney: "Hard Money Analysis",
+  };
+
+  app.post(
+    "/api/pdf/calculator/email",
+    rateLimit(10, 60_000),
+    async (req: any, res) => {
+      try {
+        const parsed = sendPdfEmailSchema.safeParse(req.body ?? {});
+        if (!parsed.success) {
+          return res.status(400).json({
+            message: fromError(parsed.error).toString(),
+          });
+        }
+        const { id, shareToken, recipientName, recipientEmail, note } = parsed.data;
+
+        let analysis: Awaited<ReturnType<typeof storage.getSavedAnalysis>> | undefined;
+
+        if (id !== undefined) {
+          // Owner-only path
+          const userId =
+            getAuthUserId(req) ?? (await extractSupabaseUser(req))?.id ?? null;
+          if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+          }
+          const found = await storage.getSavedAnalysis(id);
+          if (!found) {
+            return res.status(404).json({ message: "Analysis not found" });
+          }
+          if (found.userId !== userId) {
+            return res.status(403).json({ message: "Not authorized" });
+          }
+          analysis = found;
+        } else if (shareToken) {
+          const found = await storage.getSavedAnalysisByShareToken(shareToken, {
+            incrementViewCount: false,
+          });
+          if (!found) {
+            return res
+              .status(404)
+              .json({ message: "Shared analysis not found" });
+          }
+          analysis = found;
+        }
+
+        if (!analysis) {
+          return res.status(400).json({ message: "Analysis not resolved" });
+        }
+
+        const buffer = await generateSavedAnalysisPDF({
+          name: analysis.name,
+          calculatorType: analysis.calculatorType,
+          propertyAddress: analysis.propertyAddress,
+          inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
+          results: (analysis.results ?? {}) as Record<string, unknown>,
+          primaryMetric: analysis.primaryMetric,
+          primaryValue: analysis.primaryValue,
+          secondaryMetric: analysis.secondaryMetric,
+          secondaryValue: analysis.secondaryValue,
+          dealGrade: analysis.dealGrade,
+          scenarioLabel: analysis.scenarioLabel,
+          notes: analysis.notes,
+          createdAt: analysis.createdAt,
+        });
+
+        const safeName =
+          analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) ||
+          "analysis";
+
+        // Sender attribution: use the authenticated user's profile when available.
+        let senderName: string | undefined;
+        let senderEmail: string | undefined;
+        const senderUserId =
+          getAuthUserId(req) ?? (await extractSupabaseUser(req))?.id ?? null;
+        if (senderUserId) {
+          try {
+            const sender = await storage.getUser(senderUserId);
+            if (sender) {
+              const fullName = [sender.firstName, sender.lastName]
+                .filter(Boolean)
+                .join(" ")
+                .trim();
+              senderName = fullName || sender.email || undefined;
+              senderEmail = sender.email || undefined;
+            }
+          } catch {
+            // non-fatal: still send without sender attribution
+          }
+        }
+
+        const result = await sendSavedAnalysisPDFEmail({
+          recipientName,
+          recipientEmail,
+          senderName,
+          senderEmail,
+          analysisName: analysis.name,
+          calculatorLabel:
+            CALC_EMAIL_LABELS[analysis.calculatorType] ?? "Strategy Analysis",
+          propertyAddress: analysis.propertyAddress,
+          primaryMetric: analysis.primaryMetric,
+          primaryValue: analysis.primaryValue,
+          note,
+          pdfBuffer: buffer,
+          pdfFilename: `pegasus-${safeName}.pdf`,
+        });
+
+        if (!result.success) {
+          return res.status(502).json({
+            message: result.error ?? "Failed to send email",
+          });
+        }
+
+        // Persist a send-history row only for owner-originated sends.
+        // The email has already been delivered; if persistence fails we
+        // still return success with `historyPersisted: false` so the
+        // client doesn't trigger a duplicate retry. Public-share-token
+        // sends from anonymous viewers are intentionally not recorded.
+        const { recordOwnerOriginatedSend } = await import(
+          "./analysisSendHistoryRoutes"
+        );
+        const { recorded, ownerOriginated } = await recordOwnerOriginatedSend({
+          analysisId: analysis.id,
+          analysisOwnerId: analysis.userId,
+          senderUserId,
+          recipientName,
+          recipientEmail,
+        });
+
+        return res.json({
+          success: true,
+          fallback: result.fallback ?? false,
+          // true if persisted; for non-owner sends, true (no row was
+          // expected). Only flips false when the send WAS owner-originated
+          // but storage threw.
+          historyPersisted: !ownerOriginated || recorded,
+        });
+      } catch (error) {
+        console.error("Error emailing saved-analysis PDF:", error);
+        res.status(500).json({ message: "Failed to email PDF" });
+      }
+    },
+  );
 
   // Generate deal packet PDF
   app.post("/api/pdf/deal-packet", async (req, res) => {
@@ -7937,6 +8550,13 @@ export async function registerRoutes(
   // =====================================================
   // WebSocket Server for Real-time Notifications
   // =====================================================
+  // Strategy Lab — Property Analysis routes (Task #84)
+  const { registerPropertyAnalysisRoutes } = await import("./propertyAnalysisRoutes");
+  registerPropertyAnalysisRoutes(app, { isAuthenticated: isHybridAuthenticated });
+
+  const { registerStrategyLabRoutes } = await import("./strategyLabRoutes");
+  registerStrategyLabRoutes(app, { isAuthenticated: isHybridAuthenticated, adminEmails: ADMIN_EMAILS });
+
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   const clients = new Map<string, Set<WebSocket>>();
 

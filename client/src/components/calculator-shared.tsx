@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePeggyContext } from "@/contexts/peggy-context";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { 
   Save, 
   FileText, 
@@ -40,10 +41,64 @@ interface CalculatorResult {
   timestamp?: string;
 }
 
+export interface ProjectionPoint {
+  year: number;
+  value: number;
+}
+
+export interface ProjectionSeries {
+  name: string;
+  points: ProjectionPoint[];
+}
+
+export interface ProjectionSpec {
+  title: string;
+  yLabel?: string;
+  format?: "currency" | "percent" | "number";
+  series: ProjectionSeries[];
+}
+
+export const PROJECTION_KEY = "__projection";
+
+export function extractProjection(
+  results: Record<string, unknown> | null | undefined,
+): ProjectionSpec | null {
+  if (!results) return null;
+  const raw = (results as Record<string, unknown>)[PROJECTION_KEY];
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as Partial<ProjectionSpec>;
+  if (!Array.isArray(p.series) || p.series.length === 0) return null;
+
+  const cleanSeries: ProjectionSeries[] = [];
+  for (const s of p.series) {
+    if (!s || typeof s !== "object") continue;
+    const name = typeof (s as ProjectionSeries).name === "string" ? (s as ProjectionSeries).name : "";
+    const points = Array.isArray((s as ProjectionSeries).points) ? (s as ProjectionSeries).points : [];
+    const cleanPoints: ProjectionPoint[] = [];
+    for (const pt of points) {
+      if (!pt || typeof pt !== "object") continue;
+      const year = (pt as ProjectionPoint).year;
+      const value = (pt as ProjectionPoint).value;
+      if (typeof year !== "number" || typeof value !== "number" || !Number.isFinite(year) || !Number.isFinite(value)) continue;
+      cleanPoints.push({ year, value });
+    }
+    if (cleanPoints.length === 0) continue;
+    cleanSeries.push({ name, points: cleanPoints });
+  }
+  if (cleanSeries.length === 0) return null;
+
+  return {
+    title: typeof p.title === "string" ? p.title : "Projection",
+    yLabel: typeof p.yLabel === "string" ? p.yLabel : undefined,
+    format: p.format === "currency" || p.format === "percent" || p.format === "number" ? p.format : undefined,
+    series: cleanSeries,
+  };
+}
+
 interface CalculatorActionsProps {
   calculatorType: string;
   inputs: Record<string, number | string>;
-  outputs: Record<string, number | string | boolean>;
+  outputs: Record<string, number | string | boolean | ProjectionSpec | null | undefined>;
   onAskPeggy?: () => void;
   disabled?: boolean;
 }
@@ -62,26 +117,48 @@ export function CalculatorActions({
   const [analysisName, setAnalysisName] = useState("");
   const [analysisNotes, setAnalysisNotes] = useState("");
   const [copied, setCopied] = useState(false);
-  const { setCalculatorData, openChat } = usePeggyContext();
+  const { setCalculatorData, openChat, setPendingPrompt } = usePeggyContext();
+  const { isAuthenticated } = useSupabaseAuth();
+  const [signInPromptOpen, setSignInPromptOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: { name: string; notes: string }) => {
-      const res = await apiRequest("POST", "/api/peggy/analyses/save", {
-        calculatorType,
+    mutationFn: async (data: { name: string; notes: string; thenShare?: boolean }) => {
+      // Pull primary metric label/value for quick-display columns.
+      const primary = pickPrimary(calculatorType, outputs);
+      const res = await apiRequest("POST", "/api/saved-analyses", {
         name: data.name,
+        calculatorType,
         inputs,
-        outputs,
+        results: outputs,
+        primaryMetric: primary.label,
+        primaryValue: primary.value,
         notes: data.notes,
       });
-      return res.json();
+      const saved = await res.json();
+      if (data.thenShare && saved?.id) {
+        const shareRes = await apiRequest("PATCH", `/api/saved-analyses/${saved.id}`, {
+          isShared: true,
+        });
+        return shareRes.json();
+      }
+      return saved;
     },
-    onSuccess: () => {
+    onSuccess: (saved: { shareToken?: string | null }, vars) => {
       setAnalysisSaved(true);
       setSaveDialogOpen(false);
-      toast({
-        title: "Analysis Saved",
-        description: "Your analysis has been saved and can be accessed from your dashboard.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-analyses"] });
+      if (vars.thenShare && saved?.shareToken) {
+        const url = `${window.location.origin}/snapshot/calc/${saved.shareToken}`;
+        setShareUrl(url);
+        navigator.clipboard?.writeText(url).catch(() => undefined);
+        setShareDialogOpen(true);
+      } else {
+        toast({
+          title: "Analysis Saved",
+          description: "Open My Analyses to revisit, share, or compare scenarios.",
+        });
+      }
     },
     onError: () => {
       toast({
@@ -125,34 +202,38 @@ export function CalculatorActions({
   });
 
   const handleShare = () => {
-    const shareData = {
-      type: calculatorType,
-      inputs,
-      outputs,
-      timestamp: new Date().toISOString(),
-    };
-    const encoded = btoa(JSON.stringify(shareData));
-    const shareUrl = `${window.location.origin}/calculators?analysis=${encoded}`;
-    
+    if (!isAuthenticated) {
+      setSignInPromptOpen(true);
+      return;
+    }
+    // Open save dialog with thenShare=true so the URL is tokenized via the
+    // server (no base64 payload in the URL — that's a privacy + size hazard).
+    setSaveDialogOpen(true);
+  };
+
+  const copyShareUrl = () => {
+    if (!shareUrl) return;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast({
-        title: "Link Copied",
-        description: "Share link has been copied to your clipboard.",
-      });
+      toast({ title: "Link Copied", description: "Public read-only link copied to clipboard." });
     });
   };
 
   const handleAskPeggy = () => {
     setCalculatorData(calculatorType, inputs, outputs);
+    setPendingPrompt(buildAskPeggyPrompt(calculatorType, outputs));
     openChat();
     if (onAskPeggy) {
       onAskPeggy();
     }
   };
 
-  const handleSave = () => {
+  const handleSave = (thenShare: boolean = false) => {
+    if (!isAuthenticated) {
+      setSignInPromptOpen(true);
+      return;
+    }
     if (!analysisName.trim()) {
       toast({
         title: "Name Required",
@@ -161,7 +242,7 @@ export function CalculatorActions({
       });
       return;
     }
-    saveMutation.mutate({ name: analysisName, notes: analysisNotes });
+    saveMutation.mutate({ name: analysisName, notes: analysisNotes, thenShare });
   };
 
   return (
@@ -170,7 +251,7 @@ export function CalculatorActions({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setSaveDialogOpen(true)}
+          onClick={() => (isAuthenticated ? setSaveDialogOpen(true) : setSignInPromptOpen(true))}
           disabled={disabled || analysisSaved}
           data-testid="button-save-analysis"
         >
@@ -260,15 +341,77 @@ export function CalculatorActions({
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={() => handleSave(false)}
               disabled={saveMutation.isPending}
               data-testid="button-confirm-save"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : null}
-              Save Analysis
+              Save
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => handleSave(true)}
+              disabled={saveMutation.isPending}
+              data-testid="button-confirm-save-and-share"
+            >
+              {saveMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Share2 className="w-4 h-4 mr-2" />
+              )}
+              Save & Share
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Public link ready</DialogTitle>
+            <DialogDescription>
+              Anyone with this read-only link can view the analysis. They cannot edit, save, or see other deals.
+            </DialogDescription>
+          </DialogHeader>
+          {shareUrl && (
+            <div className="flex items-center gap-2 p-2 rounded border border-border bg-muted/40">
+              <Input
+                value={shareUrl}
+                readOnly
+                className="text-xs font-mono"
+                data-testid="input-share-url"
+              />
+              <Button size="sm" variant="outline" onClick={copyShareUrl} data-testid="button-copy-share-url">
+                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={signInPromptOpen} onOpenChange={setSignInPromptOpen}>
+        <DialogContent data-testid="dialog-signin-prompt">
+          <DialogHeader>
+            <DialogTitle>Sign in to save and share</DialogTitle>
+            <DialogDescription>
+              Calculators are free to use without an account. Saving and sharing analyses needs sign-in
+              so your work is yours, and so the public link is tied to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSignInPromptOpen(false)}>
+              Not now
+            </Button>
+            <Button asChild data-testid="button-signin-redirect">
+              <a href="/api/login">Sign in</a>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -582,6 +725,76 @@ export function formatCurrency(value: number): string {
 
 export function formatPercent(value: number, decimals: number = 1): string {
   return `${value.toFixed(decimals)}%`;
+}
+
+/**
+ * Map calculator outputs → primary metric label/value for saved-analysis
+ * quick-display columns. Keeps the saved-analyses list scannable.
+ */
+const CALC_DISPLAY_NAMES: Record<string, string> = {
+  arv: "ARV / Flip",
+  roi: "Investment ROI",
+  brrrr: "BRRRR",
+  cashflow: "Cash Flow",
+  mao: "Wholesale (MAO)",
+  piti: "Mortgage / PITI",
+  ownvsrent: "Own vs Rent",
+  hardmoney: "Hard Money",
+};
+
+/**
+ * Build the structural-read prompt that "Ask Peggy" auto-sends. Uses the
+ * primary metric so Peggy has a number to anchor on, then asks for a
+ * lane read, stress tests, and what's missing.
+ */
+export function buildAskPeggyPrompt(
+  calculatorType: string,
+  outputs: Record<string, unknown>,
+): string {
+  const displayName = CALC_DISPLAY_NAMES[calculatorType] ?? calculatorType.toUpperCase();
+  const primary = pickPrimary(calculatorType, outputs);
+  const headline = primary.label !== "Result"
+    ? `${primary.label} came in at ${primary.value}.`
+    : "";
+  return [
+    `I just ran the ${displayName} calculator on a property.`,
+    headline,
+    "Give me a structural read: which of the 8 outcome lanes most likely fits, what should I stress-test in these numbers, and what info is still missing for a real review?",
+  ].filter(Boolean).join(" ");
+}
+
+export function pickPrimary(
+  type: string,
+  outputs: Record<string, unknown>,
+): { label: string; value: string } {
+  const fmt = (n: number) => formatCurrency(n);
+  const pct = (n: number) => `${n.toFixed(1)}%`;
+  switch (type) {
+    case "arv":
+      return { label: "ROI", value: pct(Number(outputs.roi) || 0) };
+    case "roi":
+      return { label: "Cash-on-Cash", value: pct(Number(outputs.cashOnCashReturn) || 0) };
+    case "brrrr":
+      return { label: "Cash Left", value: fmt(Number(outputs.cashLeftInDeal) || 0) };
+    case "cashflow":
+      return { label: "Monthly CF", value: fmt(Number(outputs.monthlyCashFlow) || 0) };
+    case "mao":
+      return { label: "MAO", value: fmt(Number(outputs.mao) || 0) };
+    case "piti":
+      return { label: "PITI / mo", value: fmt(Number(outputs.totalMonthly) || 0) };
+    case "ownvsrent": {
+      const yr =
+        outputs.crossoverYearAt4 ??
+        outputs.crossoverYear ??
+        outputs.crossoverYearAt2 ??
+        outputs.crossoverYearAt6;
+      return { label: "Crossover (4%)", value: yr ? `Y${yr}` : "—" };
+    }
+    case "hardmoney":
+      return { label: "Total Cost", value: fmt(Number(outputs.totalCostOfCapital) || 0) };
+    default:
+      return { label: "Result", value: "—" };
+  }
 }
 
 export function calculateDealGrade(roi: number, cashFlow?: number, meetsRule?: boolean): "A" | "B" | "C" | "D" | "F" {

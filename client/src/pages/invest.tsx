@@ -26,6 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+import founderApolloPath from "@assets/image_1778735694150.png";
 import { insertInvestorLeadSchema, type InsertInvestorLead, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -42,17 +43,20 @@ import {
   Eye,
   Briefcase,
 } from "lucide-react";
-import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import { HeroPicture } from "@/components/hero-picture";
 
 export default function Invest() {
   useSEO({
-    title: "Partner Inquiry — Pegasus Dreamscapes",
-    description: "Private capital and partnership conversations around real opportunities. Deal-specific structures only — no public investment offering.",
+    title: "Capital & Partnerships",
+    description: "Capital meets structure. Private, deal-specific capital and partnership conversations around real estate projects Pegasus operates or co-develops. Not a public investment offering.",
+    image: "https://pegasusdreamscapes.com/og/invest.svg",
   });
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Capital and Partnership Inquiries — Pegasus DreamScapes</h1>
       <HeroSection />
+      <NonOfferDisclaimerSection />
       <FounderSection />
       <PrinciplesSection />
       <PartnershipStructuresSection />
@@ -64,6 +68,24 @@ export default function Invest() {
   );
 }
 
+function NonOfferDisclaimerSection() {
+  return (
+    <section className="py-10 bg-muted/40 border-b border-border/40">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="flex items-start gap-4 p-5 rounded-lg border border-primary/20 bg-card">
+          <Lock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-1.5">Non-Offer Notice</p>
+            <p className="text-sm text-foreground/85 leading-relaxed" data-testid="text-invest-non-offer">
+              Nothing on this page is an offer to sell securities, a solicitation to invest, or a promise of returns.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FounderSection() {
   return (
     <section className="py-24 lg:py-32 bg-background relative overflow-hidden border-b border-border/40">
@@ -71,18 +93,21 @@ function FounderSection() {
       <div className="max-w-5xl mx-auto px-6 lg:px-12 relative">
         <div className="grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-4">
-            <div className="relative aspect-square rounded-2xl bg-gradient-to-br from-navy via-charcoal to-navy p-10 flex flex-col items-center justify-center text-center overflow-hidden">
-              <div className="absolute inset-3 border border-copper/30 rounded-xl pointer-events-none" />
-              <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-copper/60 rounded-tl-lg" />
-              <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-copper/60 rounded-tr-lg" />
-              <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-copper/60 rounded-bl-lg" />
-              <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-copper/60 rounded-br-lg" />
-              <p className="font-display text-copper text-xs uppercase tracking-[0.3em] mb-4">Pegasus</p>
-              <p className="font-display text-cream text-2xl uppercase tracking-[0.18em] leading-tight mb-4">
-                Paolo<br />&ldquo;Apollo&rdquo;<br />Duran
-              </p>
-              <div className="brand-divider w-16 mb-4 opacity-70" />
-              <p className="text-[11px] uppercase tracking-[0.25em] text-cream/85 font-supporting">Founder · Principal</p>
+            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden">
+              <img
+                src={founderApolloPath}
+                alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
+                className="absolute inset-0 w-full h-full object-cover object-top"
+                data-testid="img-founder-apollo"
+              />
+              <div className="absolute inset-0 ring-1 ring-copper/50 rounded-2xl pointer-events-none" />
+              <div className="absolute -inset-1 rounded-2xl ring-1 ring-copper/15 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/95 via-navy/70 to-transparent px-5 py-4">
+                <p className="font-display text-cream text-base uppercase tracking-[0.18em] leading-tight">
+                  Paolo &ldquo;Apollo&rdquo; Duran
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting mt-1">Founder · Principal</p>
+              </div>
             </div>
           </div>
           <div className="lg:col-span-8">
@@ -94,15 +119,15 @@ function FounderSection() {
               You'll talk to a real person.
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span> — founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
+              Pegasus DreamScapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
             </p>
             <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-copper pl-5">
-              "Capital partners aren't a pipeline metric. The relationship outlasts the deal — that's why we paper everything, name the downside, and only structure things we'd put our own capital into."
+              "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."
             </p>
             <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40 border-y border-border/40">
-              <a href="tel:+19259486566" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-phone">
+              <a href="tel:+19257448525" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-phone">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Direct</p>
-                <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors">925-948-6566</p>
+                <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors">925-744-8525</p>
               </a>
               <a href="mailto:apollo@pegasusdreamscapes.com" className="px-5 py-4 hover:bg-muted/40 transition-colors group" data-testid="link-founder-email">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Email</p>
@@ -110,7 +135,7 @@ function FounderSection() {
               </a>
               <div className="px-5 py-4">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Entity</p>
-                <p className="font-serif text-base text-foreground">Pegasus Dreamscapes Corp</p>
+                <p className="font-serif text-base text-foreground">Pegasus DreamScapes Corp</p>
               </div>
             </div>
           </div>
@@ -136,7 +161,7 @@ function MarketFlowConnectionSection() {
           </div>
           <div className="lg:col-span-7">
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              MarketFlow is our private, invite-only deal-flow network where active wholesale and JV opportunities are presented to vetted partners. Inquiry-first access — your partner profile must be reviewed before MarketFlow is unlocked.
+              MarketFlow is our private, invite-only deal-flow network where active wholesale and JV opportunities are presented to vetted partners. Inquiry-first access. Your partner profile must be reviewed before MarketFlow is unlocked.
             </p>
             <Link href="/marketflow">
               <Button variant="outline" className="text-sm uppercase tracking-[0.15em] font-semibold px-7 py-6" data-testid="button-invest-marketflow">
@@ -155,12 +180,17 @@ function HeroSection() {
   return (
     <section className="relative min-h-[88vh] flex items-center overflow-hidden pt-20">
       <motion.div
-        className="absolute inset-0 bg-cover bg-center scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="absolute inset-0 scale-105"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1.05 }}
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      />
+      >
+        <HeroPicture
+          alt="Capital and partnerships at Pegasus DreamScapes Corp."
+          className="absolute inset-0 w-full h-full object-cover"
+          priority
+        />
+      </motion.div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/65 to-black/85" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
@@ -173,11 +203,11 @@ function HeroSection() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-champagne/40 bg-white/5 backdrop-blur-sm">
-                <Lock className="w-3 h-3 text-champagne" />
-                <span className="text-[10px] uppercase tracking-[0.25em] text-champagne font-semibold">Private Network</span>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-copper/50 bg-copper/10 backdrop-blur-sm">
+                <Lock className="w-3 h-3 text-copper" />
+                <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">Private Network</span>
               </span>
-              <span className="text-xs uppercase tracking-[0.25em] text-white/60">Invite-only</span>
+              <span className="text-[11px] uppercase tracking-[0.28em] text-white/65 font-supporting">Invite-only</span>
             </motion.div>
 
             <motion.h1
@@ -206,7 +236,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Pegasus structures private, deal-specific capital and partnership conversations around real estate projects we operate or co-develop. This is not a public investment offering — every conversation is individual, suitability-checked, and properly papered.
+              The Investments pillar of Pegasus supports deal-specific capital, partnership, and ownership conversations. Public conversations begin as relationship-based inquiries, not public offerings.
             </motion.p>
 
             <motion.div
@@ -219,20 +249,20 @@ function HeroSection() {
                 size="lg"
                 className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20"
                 onClick={() => document.getElementById('investor-form')?.scrollIntoView({ behavior: 'smooth' })}
-                data-testid="button-become-partner"
+                data-testid="button-start-capital-conversation"
               >
-                Start a Conversation
+                Start a Capital Conversation
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
-              <a href="#structures">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold"
-                >
-                  See Structures
-                </Button>
-              </a>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold"
+                onClick={() => document.getElementById('investor-form')?.scrollIntoView({ behavior: 'smooth' })}
+                data-testid="button-discuss-partnership"
+              >
+                Discuss a Partnership
+              </Button>
             </motion.div>
           </div>
 
@@ -246,17 +276,17 @@ function HeroSection() {
               <div className="absolute -inset-8 bg-gradient-to-br from-black/50 via-black/30 to-transparent blur-3xl rounded-[2rem]" />
               <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-3xl" />
               <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-2xl backdrop-blur-2xl shadow-2xl shadow-black/40">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-semibold mb-6">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-supporting font-semibold mb-6">
                   How we work with capital
                 </p>
                 <div className="space-y-5">
                   {[
                     { kicker: "Private", title: "Deal-specific conversations", desc: "Never a pooled fund pitch. Always a real, named project." },
-                    { kicker: "Documented", title: "Real underwriting, real papers", desc: "Comps, scope, capital stack, exit — on paper, before any commitment." },
+                    { kicker: "Documented", title: "Real underwriting, real papers", desc: "Comps, scope, capital stack, exit, on paper, before any commitment." },
                     { kicker: "Suited", title: "Suitability comes first", desc: "If the structure isn't right for you, we say so." },
                   ].map((item, i) => (
                     <div key={i} className="pb-5 border-b border-white/15 last:border-0 last:pb-0">
-                      <p className="text-[10px] uppercase tracking-[0.25em] text-champagne font-semibold mb-1.5">{item.kicker}</p>
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-champagne font-supporting font-semibold mb-1.5">{item.kicker}</p>
                       <p className="font-serif text-lg text-white mb-1">{item.title}</p>
                       <p className="text-sm text-white/85 leading-relaxed">{item.desc}</p>
                     </div>
@@ -277,7 +307,7 @@ function PrinciplesSection() {
     { icon: Eye, title: "Transparent Underwriting", desc: "You see the comps, the scope, the capital stack, and the exit. No black-box returns, no hand-waving on assumptions." },
     { icon: Shield, title: "Documented Risk", desc: "Every structure comes with a written risk profile and the conditions under which it can break. We name the downside before the upside." },
     { icon: FileCheck, title: "Lawful Execution", desc: "Deal-specific, individually-papered structures with proper legal review. No public solicitation, no general advertising of terms." },
-    { icon: Target, title: "Defined Exit", desc: "Sale, refinance, or hold — every project has a planned exit, a timeline, and a contingency path." },
+    { icon: Target, title: "Defined Exit", desc: "Sale, refinance, or hold. Every project has a planned exit, a timeline, and a contingency path." },
   ];
 
   return (
@@ -293,7 +323,7 @@ function PrinciplesSection() {
             How we treat your capital.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Capital partners aren't a line item — they're a long-term relationship. Four principles guide every conversation.
+            Capital partners aren't a line item. They're a long-term relationship. Four principles guide every conversation.
           </p>
         </ScrollReveal>
 
@@ -336,7 +366,7 @@ function PartnershipStructuresSection() {
       icon: TrendingUp,
       kicker: "Equity",
       title: "Equity Investment",
-      desc: "Share in the outcomes (and exposure) of an active project — flips, value-add, or hold strategies.",
+      desc: "Share in the outcomes (and exposure) of an active project: flips, value-add, or hold strategies.",
       attributes: ["Aligned with project outcome", "Share in appreciation and improvements", "Tax treatment per individual situation"],
       considerations: ["Returns tied to project success", "Hold period dependent on exit"],
     },
@@ -363,7 +393,7 @@ function PartnershipStructuresSection() {
             Three ways capital participates.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Each structure is matched to a specific project and a specific partner. We don't fit you to a product — we design the structure to fit the situation.
+            Each structure is matched to a specific project and a specific partner. We don't fit you to a product. We design the structure to fit the situation.
           </p>
         </ScrollReveal>
 
@@ -377,7 +407,7 @@ function PartnershipStructuresSection() {
                 data-testid={`structure-${i}`}
               >
                 <div className="flex items-baseline justify-between mb-6">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold">{s.kicker}</p>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{s.kicker}</p>
                   <s.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
                 </div>
                 <h3 className="font-serif text-2xl font-semibold mb-4 tracking-tight">{s.title}</h3>
@@ -385,7 +415,7 @@ function PartnershipStructuresSection() {
 
                 <div className="space-y-5 pt-5 border-t border-border/40">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/60 font-semibold mb-3">Attributes</p>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-supporting font-semibold mb-3">Attributes</p>
                     <ul className="space-y-2">
                       {s.attributes.map((a, j) => (
                         <li key={j} className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
@@ -396,7 +426,7 @@ function PartnershipStructuresSection() {
                     </ul>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/60 font-semibold mb-3">Considerations</p>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-supporting font-semibold mb-3">Considerations</p>
                     <ul className="space-y-2">
                       {s.considerations.map((c, j) => (
                         <li key={j} className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
@@ -439,8 +469,8 @@ function ProjectSnapshotSection() {
             <div className="p-8 lg:p-10 border-b border-border/40">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold mb-2">Case Study Format</p>
-                  <h3 className="font-serif text-3xl font-semibold tracking-tight">Nelson Dr — Richmond, CA</h3>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2">Case Study Format</p>
+                  <h3 className="font-serif text-3xl font-semibold tracking-tight">Nelson Dr, Richmond, CA</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {["Fix & Flip", "3 Bed · 2 Bath", "~3 Month Timeline"].map((tag) => (
@@ -458,7 +488,7 @@ function ProjectSnapshotSection() {
                 { label: "Resale Target", value: "$575,000", accent: true },
               ].map((stat, i) => (
                 <div key={i} className="p-7 lg:p-8 text-center" data-testid={`snapshot-stat-${i}`}>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-3 font-semibold">{stat.label}</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-supporting font-semibold mb-3">{stat.label}</p>
                   <p className={`font-serif text-3xl lg:text-4xl font-semibold tabular-nums ${stat.accent ? 'text-primary' : ''}`}>
                     {stat.value}
                   </p>
@@ -563,13 +593,13 @@ function InvestorFormSection() {
             Start with context.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
-            This is a starting point, not a commitment. The information below helps us frame the right structure and right conversation — or tell you honestly if Pegasus isn't the right fit yet.
+            This is a starting point, not a commitment. The information below helps us frame the right structure and right conversation, or tell you honestly if Pegasus isn't the right fit yet.
           </p>
           <ul className="space-y-4">
             {[
               { icon: Lock, text: "Private conversation, never publicly solicited" },
               { icon: FileCheck, text: "Documented suitability before structure discussion" },
-              { icon: Users, text: "Direct call with our team — not a sales sequence" },
+              { icon: Users, text: "Direct call with our team. Not a sales sequence" },
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-3 text-sm text-foreground/85">
                 <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -711,7 +741,7 @@ function DisclaimerSection() {
       <div className="max-w-3xl mx-auto px-6 lg:px-12">
         <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold mb-4 text-center">Important Disclosures</p>
         <p className="text-sm text-muted-foreground text-center leading-relaxed" data-testid="text-disclaimer">
-          This page is informational only and does not constitute an offer to sell or a solicitation of an offer to buy any security or investment product. Pegasus Dreamscapes does not make public investment offerings. Any partnership opportunities are discussed individually with prospective partners after suitability review and are documented under proper legal structure. All real estate investments involve risk including the potential loss of principal. Past project outcomes are not indicative of future results. Nothing on this page is an offer of guaranteed returns or principal protection.
+          This page is informational only and does not constitute an offer to sell or a solicitation of an offer to buy any security or investment product. Pegasus DreamScapes does not make public investment offerings. Any partnership opportunities are discussed individually with prospective partners after suitability review and are documented under proper legal structure. All real estate investments involve risk including the potential loss of principal. Past project outcomes are not indicative of future results. Nothing on this page is an offer of guaranteed returns or principal protection.
         </p>
         <div className="text-center mt-8">
           <Link href="/contact">

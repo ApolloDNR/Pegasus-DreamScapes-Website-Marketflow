@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0D1B2D"/>
+      <stop offset="100%" stop-color="#1E2328"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E8DBC5"/>
+      <stop offset="55%" stop-color="#D4B483"/>
+      <stop offset="100%" stop-color="#C17A4A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="950" cy="180" r="240" fill="#C77A3A" opacity="0.10"/>
+  <circle cx="220" cy="500" r="180" fill="#C77A3A" opacity="0.08"/>
+  <rect x="80" y="156" width="40" height="2" fill="#C77A3A"/>
+  <text x="140" y="164" font-family="Montserrat, Arial, sans-serif" font-size="20" font-weight="600" letter-spacing="6" fill="#C77A3A">PEGASUS DREAMSCAPES · CASH FLOW CALCULATOR</text>
+  <text x="80" y="290" font-family="Cormorant Garamond, Georgia, serif" font-size="84" font-weight="600" fill="#F6EFE4">Monthly cash flow.</text>
+  <text x="80" y="380" font-family="Cormorant Garamond, Georgia, serif" font-size="84" font-weight="500" font-style="italic" fill="url(#gold)">10-year projection.</text>
+  <text x="80" y="470" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="400" fill="#F6EFE4" opacity="0.85">Rent, expenses, mortgage — true to the operator P&L.</text>
+  <text x="80" y="510" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="400" fill="#F6EFE4" opacity="0.85">Operator-grade math. Free. No signup.</text>
+  <rect x="80" y="560" width="1040" height="6" fill="url(#gold)"/>
+  <text x="80" y="600" font-family="Cinzel, Georgia, serif" font-size="14" letter-spacing="4" fill="#C77A3A">DREAM IT. BUILD IT. LIVE IT.</text>
+  <image href="/brand/pegasus-mark.png" x="1040" y="40" width="120" height="120" opacity="0.95" preserveAspectRatio="xMidYMid meet"/>
+</svg>

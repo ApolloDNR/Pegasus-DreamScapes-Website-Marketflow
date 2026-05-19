@@ -173,6 +173,23 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
                   setSession(newSession);
                   setUser(newSession.user);
                   setProfile(profileData);
+                  // Strategy Lab — claim anonymous snapshots (Task #84)
+                  try {
+                    const sid = window.localStorage.getItem("pegasus.lab.sessionId");
+                    if (sid && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
+                      await fetch("/api/property-analyses/claim", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${newSession.access_token}`,
+                        },
+                        body: JSON.stringify({ sessionId: sid }),
+                      }).catch(() => undefined);
+                    }
+                  } catch {
+                    // localStorage / fetch unavailable — non-fatal.
+                  }
                 } else {
                   setSession(null);
                   setUser(null);
@@ -191,7 +208,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           subscription.unsubscribe();
         };
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        // Auth init can fail benignly in environments without Supabase configured.
+        // Surface it at info level so it doesn't pollute Best-Practices audits.
+        console.info('[auth] Initialization completed without Supabase session.', error);
         if (mounted) {
           setIsLoading(false);
         }

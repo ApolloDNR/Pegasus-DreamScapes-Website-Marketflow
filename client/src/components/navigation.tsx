@@ -1,8 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,285 +18,190 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Menu, 
-  X, 
-  ChevronDown, 
-  Calculator, 
-  TrendingUp, 
-  Home,
-  DollarSign,
-  BookOpen,
-  Users,
-  Building2,
-  FileText,
-  Target,
-  Award,
+import {
+  Menu,
+  ChevronDown,
   BarChart3,
-  Briefcase,
   Sparkles,
   LogIn,
-  User,
   MessageSquare,
   Bell,
-  Settings,
   LogOut,
   Shield,
-  Zap,
-  Activity,
-  ChevronRight,
-  Command,
-  Search
+  ArrowRight,
+  BookOpen,
+  Calculator,
+  Network,
+  Mail,
+  FileText,
+  type LucideIcon,
 } from "lucide-react";
-import logoImage from "@assets/image_1765405939117.png";
-import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
-import { CommandTrigger, CommandPalette } from "./command-palette";
-import { ThemeToggle } from "./theme-toggle";
-import { motion, AnimatePresence } from "framer-motion";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import logoImage from "@/assets/brand/pegasus-mark-full.png";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { CommandPalette } from "./command-palette";
+import {
+  NAV_PRIMARY,
+  NAV_MORE,
+  PRIMARY_CTA,
+  type NavPrimaryItem,
+} from "@/config/navigation";
 
-const homeLinks = [
-  { href: "#services", label: "Pillars" },
-  { href: "#development-pathway", label: "Pathway" },
-  { href: "#projects", label: "Projects" },
-  { href: "#marketflow-beta", label: "MarketFlow" },
-  { href: "/sell", label: "Sell", isPage: true },
-  { href: "/invest", label: "Invest", isPage: true },
-  { href: "/contact", label: "Contact", isPage: true },
-];
+// Locked Pass D grouping. Header desktop = 5 noun items + a "More" dropdown.
+// Mobile sheet mirrors the same set under its "More" group for parity.
+// The canonical lists live in `@/config/navigation` so the desktop header,
+// mobile sheet, and footer all read from one source of truth (verified by
+// `client/src/__tests__/nav-parity.test.tsx`).
+type NavItem = NavPrimaryItem & { useAnchor?: boolean };
+const NAV_ITEMS: NavItem[] = NAV_PRIMARY;
+const MORE_ITEMS = NAV_MORE;
 
-import { Handshake } from "lucide-react";
-
-const megaMenuSections = {
-  opportunities: {
-    title: "Opportunities",
-    icon: DollarSign,
-    gradient: "from-amber-500/20 to-orange-500/20",
-    items: [
-      { href: "/buyers", label: "Properties for Buyers", description: "Renovated homes & wholesale deals", icon: Home },
-      { href: "/wholesale", label: "Wholesale Deals", description: "Off-market properties available", icon: Briefcase },
-      { href: "/sell", label: "Sell Your Property", description: "Get a cash offer", icon: DollarSign },
-      { href: "/invest", label: "Invest With Us", description: "Partner on projects", icon: TrendingUp },
-      { href: "/submit-deal", label: "Submit a Deal", description: "Wholesalers submit deals", icon: FileText },
-    ]
+// Editorial metadata for the More mega-menu. Keys must match NAV_MORE hrefs.
+// Tested separately by `nav-parity.test.tsx` which only asserts label presence,
+// so adding icons + taglines stays within guardrails.
+const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
+  "/resources": {
+    icon: BookOpen,
+    tagline: "Frameworks, lane reads, and the operating doctrine.",
   },
-  tools: {
-    title: "Tools & Resources",
+  "/strategy-lab": {
     icon: Calculator,
-    gradient: "from-blue-500/20 to-cyan-500/20",
-    items: [
-      { href: "/calculators", label: "Deal Calculators", description: "ARV, ROI, BRRRR analysis", icon: Calculator, badge: "Pro" },
-      { href: "/resources", label: "Investment Guides", description: "Learn the fundamentals", icon: FileText },
-      { href: "/marketflow/community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare },
-      { href: "/projects", label: "Case Studies", description: "Real project examples", icon: Target },
-    ]
+    tagline: "Run a property through the Pegasus lens — eight lanes, one verdict.",
   },
-  company: {
-    title: "Company",
-    icon: Building2,
-    gradient: "from-purple-500/20 to-pink-500/20",
-    items: [
-      { href: "/about", label: "About Us", description: "Our story and mission", icon: Users },
-      { href: "/projects", label: "Portfolio", description: "Completed projects", icon: Briefcase },
-      { href: "/partner", label: "Partner With Us", description: "Join our marketplace", icon: Handshake, badge: "New" },
-      { href: "/contact", label: "Contact", description: "Get in touch", icon: Award },
-    ]
-  }
+  "/calculators": {
+    icon: Calculator,
+    tagline: "ARV, ROI, BRRRR, PITI — eight operator-grade calculators, free.",
+  },
+  "/vendor-network": {
+    icon: Network,
+    tagline: "Trusted operators, trades, and capital partners.",
+  },
+  "/contact": {
+    icon: Mail,
+    tagline: "Reach Apollo and the strategy desk directly.",
+  },
+  "/disclosures": {
+    icon: FileText,
+    tagline: "What we do, what we don't, and how we operate.",
+  },
 };
 
-function NotificationBell({ scrolled, isHomePage }: { scrolled: boolean; isHomePage: boolean }) {
-  const [hasNotifications] = useState(true);
-  const [notificationCount] = useState(3);
-  
+function isItemActive(item: NavItem, location: string): boolean {
+  const prefix = item.matchPrefix ?? item.href;
+  if (prefix === "/") return location === "/";
+  return location === prefix || location.startsWith(prefix + "/");
+}
+
+function NotificationBell({ onLightSurface }: { onLightSurface: boolean }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button 
-          className={`relative p-2 rounded-lg transition-all hover-elevate ${
-            (scrolled || !isHomePage) 
-              ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' 
-              : 'text-white/70 hover:text-white hover:bg-white/10'
+        <button
+          className={`relative p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
+            onLightSurface
+              ? "text-[hsl(var(--muted-text))] hover:text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
+              : "text-white/80 hover:text-white hover:bg-white/10"
           }`}
           data-testid="button-notifications"
+          aria-label="Open notifications"
         >
           <Bell className="w-5 h-5" />
-          {hasNotifications && (
-            <>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full animate-ping" />
-            </>
-          )}
-          {notificationCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground rounded-full flex items-center justify-center">
-              {notificationCount}
-            </span>
-          )}
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[hsl(var(--bronze))] rounded-full" aria-hidden="true" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
-          <Badge variant="secondary" className="text-[10px]">{notificationCount} new</Badge>
-        </DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <div className="max-h-64 overflow-y-auto">
-          <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-4 h-4 text-green-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">New deal matched!</p>
-              <p className="text-xs text-muted-foreground truncate">123 Oak Street matches your criteria</p>
-              <p className="text-[10px] text-muted-foreground mt-1">2 min ago</p>
-            </div>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-              <MessageSquare className="w-4 h-4 text-blue-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">New message</p>
-              <p className="text-xs text-muted-foreground truncate">Sarah: Interested in the downtown project...</p>
-              <p className="text-[10px] text-muted-foreground mt-1">1 hour ago</p>
-            </div>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-              <Activity className="w-4 h-4 text-amber-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Investment update</p>
-              <p className="text-xs text-muted-foreground truncate">Phase 2 milestone completed</p>
-              <p className="text-[10px] text-muted-foreground mt-1">3 hours ago</p>
-            </div>
-          </DropdownMenuItem>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="justify-center text-primary cursor-pointer">
-          View all notifications
+        <DropdownMenuItem className="text-sm text-muted-foreground cursor-default">
+          You're all caught up.
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-function UserMenu({ profile, userEmail, scrolled, isHomePage, isAdmin }: { profile: any; userEmail: string; scrolled: boolean; isHomePage: boolean; isAdmin: boolean }) {
-  const getInitials = (name: string) => {
-    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-  };
-
-  const displayName = profile?.display_name || 'User';
-  const avatarUrl = profile?.avatar_url;
-  const email = userEmail || '';
+function UserMenu({
+  profile,
+  userEmail,
+  onLightSurface,
+  isAdmin,
+}: {
+  profile: any;
+  userEmail: string;
+  onLightSurface: boolean;
+  isAdmin: boolean;
+}) {
+  const initials = (profile?.display_name || userEmail || "U")
+    .split(/[\s@.]/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n: string) => n[0]?.toUpperCase())
+    .join("");
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button 
-          className={`flex items-center gap-2 p-1.5 pr-3 rounded-full transition-all ${
-            (scrolled || !isHomePage) 
-              ? 'hover:bg-secondary/50 border border-border/50' 
-              : 'hover:bg-white/10 border border-white/20'
+        <button
+          className={`flex items-center gap-2 p-1 pr-2.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
+            onLightSurface
+              ? "border border-[hsl(var(--rule))] hover:bg-[hsl(var(--ink)/0.04)]"
+              : "border border-white/20 hover:bg-white/10"
           }`}
           data-testid="button-user-menu"
+          aria-label="Open account menu"
         >
-          <Avatar className="w-7 h-7 border-2 border-primary/20">
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-              {getInitials(displayName)}
+          <Avatar className="w-7 h-7">
+            <AvatarImage src={profile?.avatar_url} />
+            <AvatarFallback className="bg-[hsl(var(--bronze)/0.1)] text-[hsl(var(--bronze))] text-xs font-medium">
+              {initials || "U"}
             </AvatarFallback>
           </Avatar>
-          <div className="hidden sm:block text-left">
-            <p className={`text-xs font-medium leading-tight ${(scrolled || !isHomePage) ? 'text-foreground' : 'text-white'}`}>
-              {displayName}
-            </p>
-            <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              <span className={`text-[10px] ${(scrolled || !isHomePage) ? 'text-muted-foreground' : 'text-white/60'}`}>
-                Online
-              </span>
-            </div>
-          </div>
-          <ChevronDown className={`w-3 h-3 ${(scrolled || !isHomePage) ? 'text-muted-foreground' : 'text-white/60'}`} />
+          <ChevronDown className={`w-3 h-3 ${onLightSurface ? "text-[hsl(var(--muted-text))]" : "text-white/70"}`} aria-hidden="true" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
-          <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback className="bg-primary/10 text-primary">
-                {getInitials(displayName)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium">{displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">{email}</p>
-            </div>
+          <div>
+            <p className="font-medium text-sm">{profile?.display_name || "Account"}</p>
+            <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        
-        <div className="px-2 py-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Status</span>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="font-medium text-green-600">Active</span>
-            </div>
-          </div>
-        </div>
-        
-        <DropdownMenuSeparator />
-        
         <Link href="/marketflow">
           <DropdownMenuItem className="cursor-pointer gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span>MarketFlow Hub</span>
-            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5">New</Badge>
+            <Sparkles className="w-4 h-4 text-[hsl(var(--bronze))]" aria-hidden="true" />
+            MarketFlow
           </DropdownMenuItem>
         </Link>
-        
-        <Link href="/marketflow">
+        <Link href="/marketflow/dashboard">
           <DropdownMenuItem className="cursor-pointer gap-2">
-            <BarChart3 className="w-4 h-4" />
-            <span>My Dashboard</span>
+            <BarChart3 className="w-4 h-4" aria-hidden="true" />
+            My Dashboard
           </DropdownMenuItem>
         </Link>
-        
         <Link href="/marketflow/messages">
           <DropdownMenuItem className="cursor-pointer gap-2">
-            <MessageSquare className="w-4 h-4" />
-            <span>Messages</span>
-            <Badge variant="outline" className="ml-auto text-[10px] px-1.5">2</Badge>
+            <MessageSquare className="w-4 h-4" aria-hidden="true" />
+            Messages
           </DropdownMenuItem>
         </Link>
-        
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
             <Link href="/marketflow/admin">
-              <DropdownMenuItem className="cursor-pointer gap-2 text-blue-600">
-                <Shield className="w-4 h-4" />
-                <span>Admin Dashboard</span>
-                <Badge variant="outline" className="ml-auto text-[10px] px-1.5 border-blue-500/50 text-blue-500">Staff</Badge>
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <Shield className="w-4 h-4" aria-hidden="true" />
+                Admin
+                <Badge variant="outline" className="ml-auto text-[10px]">Staff</Badge>
               </DropdownMenuItem>
             </Link>
           </>
         )}
-        
         <DropdownMenuSeparator />
-        
-        <Link href="/marketflow/settings">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <Settings className="w-4 h-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
-        </Link>
-        
         <a href="/api/logout">
           <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive">
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
+            <LogOut className="w-4 h-4" aria-hidden="true" />
+            Sign Out
           </DropdownMenuItem>
         </a>
       </DropdownMenuContent>
@@ -298,440 +210,388 @@ function UserMenu({ profile, userEmail, scrolled, isHomePage, isAdmin }: { profi
 }
 
 export function Navigation() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [location] = useLocation();
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { user, profile, isAuthenticated, isAdmin } = useSupabaseAuth();
 
   const isHomePage = location === "/";
+  // On home, the hero is dark, so the nav floats on a dark surface until scroll.
+  // On every other page the nav sits on a light surface from the start.
+  const onLightSurface = scrolled || !isHomePage;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 24);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleMenuEnter = () => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
+  const navLinkBase =
+    "relative px-3 py-2 text-[13px] tracking-[0.04em] font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
+
+  const renderNavLink = (item: NavItem, isMobile = false) => {
+    const active = isItemActive(item, location);
+    // Active state keeps high-contrast ink/white text (WCAG AA) and uses the
+    // copper underline + font weight for state. Bronze on cream is too light
+    // for normal text contrast.
+    const desktopColor = onLightSurface
+      ? active
+        ? "text-[hsl(var(--ink))] font-semibold"
+        : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+      : active
+        ? "text-white font-semibold"
+        : "text-white/85 hover:text-white";
+    const className = isMobile
+      ? `relative block py-3 text-base transition-colors ${
+          active
+            ? "text-[hsl(var(--ink))] font-semibold border-l-2 border-[hsl(var(--bronze))] pl-3"
+            : "text-[hsl(var(--ink))] font-medium hover:text-[hsl(var(--bronze))]"
+        }`
+      : `${navLinkBase} ${desktopColor}`;
+    const testId = `link-nav-${item.label.toLowerCase()}`;
+    const ariaCurrent = active ? "page" : undefined;
+    const underline = !isMobile && active ? (
+      <span
+        aria-hidden="true"
+        className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+          onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+        }`}
+      />
+    ) : null;
+    if (item.useAnchor) {
+      // Use a real anchor so browsers can navigate cross-page to the hash target.
+      return (
+        <a
+          key={item.label}
+          href={item.href}
+          className={className}
+          data-testid={testId}
+          aria-current={ariaCurrent}
+          onClick={() => isMobile && setMobileOpen(false)}
+        >
+          {item.label}
+          {underline}
+        </a>
+      );
     }
-    setMegaMenuOpen(true);
+    return (
+      <Link
+        key={item.label}
+        href={item.href}
+        className={className}
+        data-testid={testId}
+        aria-current={ariaCurrent}
+        onClick={() => isMobile && setMobileOpen(false)}
+      >
+        {item.label}
+        {underline}
+      </Link>
+    );
   };
 
-  const handleMenuLeave = () => {
-    closeTimeoutRef.current = setTimeout(() => {
-      setMegaMenuOpen(false);
-    }, 150);
-  };
-
-  const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith("#") && isHomePage) {
-      e.preventDefault();
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-      setIsOpen(false);
-    }
-  };
+  const moreActive = MORE_ITEMS.some((m) => location === m.href || location.startsWith(m.href + "/"));
+  const moreDesktopColor = onLightSurface
+    ? moreActive
+      ? "text-[hsl(var(--ink))] font-semibold"
+      : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+    : moreActive
+      ? "text-white font-semibold"
+      : "text-white/85 hover:text-white";
 
   return (
     <>
       <CommandPalette />
-      <header className="fixed top-0 left-0 right-0 z-50">
-        <nav className={`transition-all duration-500 ${
-          scrolled || !isHomePage 
-            ? 'bg-background/80 backdrop-blur-xl shadow-lg shadow-black/5 border-b border-border/50' 
-            : 'bg-gradient-to-b from-black/50 to-transparent'
-        }`}>
-          <div className="w-full px-6 lg:px-10 xl:px-12 h-18 lg:h-22 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-4 group flex-shrink-0" data-testid="link-logo">
-              <div className="relative">
-                <img 
-                  src={logoImage} 
-                  alt="Pegasus Dreamscapes" 
-                  className="h-12 lg:h-14 w-auto transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-              <div className="hidden md:block min-w-max">
-                <h1 className={`font-serif text-xl lg:text-2xl font-semibold tracking-tight transition-colors whitespace-nowrap ${scrolled || !isHomePage ? 'text-foreground' : 'text-white'}`}>
-                  Pegasus Dreamscapes
-                </h1>
-                <div className="flex items-center gap-2">
-                  <p className={`text-[11px] uppercase tracking-[0.2em] transition-colors ${scrolled || !isHomePage ? 'text-muted-foreground' : 'text-white/70'}`}>
-                    Corp
-                  </p>
-                  <div className={`h-3 w-px ${scrolled || !isHomePage ? 'bg-border' : 'bg-white/30'}`} />
-                  <div className="flex items-center gap-1">
-                    <Zap className={`w-3 h-3 ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`} />
-                    <span className={`text-[11px] font-medium ${scrolled || !isHomePage ? 'text-primary' : 'text-amber-400'}`}>
-                      The Deal Architect
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-              {isHomePage ? (
-                <>
-                  {homeLinks.map((link) => (
-                    (link as any).isPage ? (
-                      <Link 
-                        key={link.href} 
-                        href={link.href}
-                        className={`px-4 py-2.5 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
-                          scrolled 
-                            ? 'text-foreground hover:text-primary hover:bg-primary/5' 
-                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                        }`}
-                        data-testid={`link-nav-${link.label.toLowerCase()}`}
-                      >
-                        {link.label}
-                        <span className={`absolute bottom-1 left-4 right-4 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
-                      </Link>
-                    ) : (
-                      <a 
-                        key={link.href} 
-                        href={link.href}
-                        onClick={(e) => handleScrollClick(e, link.href)}
-                        className={`px-4 py-2.5 text-sm font-medium tracking-wide transition-all cursor-pointer relative group rounded-lg ${
-                          scrolled 
-                            ? 'text-foreground hover:text-primary hover:bg-primary/5' 
-                            : 'text-white/90 hover:text-white hover:bg-white/10'
-                        }`}
-                        data-testid={`link-nav-${link.label.toLowerCase()}`}
-                      >
-                        {link.label}
-                        <span className={`absolute bottom-1 left-4 right-4 h-0.5 scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${scrolled ? 'bg-primary' : 'bg-white'}`} />
-                      </a>
-                    )
-                  ))}
-                </>
-              ) : (
-                <Link 
-                  href="/"
-                  className="px-3 py-2 text-sm font-medium tracking-wide transition-all hover:text-primary text-foreground relative group rounded-lg hover:bg-primary/5"
-                  data-testid="link-nav-home"
-                >
-                  Home
-                  <span className="absolute bottom-1 left-3 right-3 h-0.5 bg-primary scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
-                </Link>
-              )}
-              
-              <div 
-                className="relative"
-                onMouseEnter={handleMenuEnter}
-                onMouseLeave={handleMenuLeave}
-              >
-                <button 
-                  className={`flex items-center gap-1 px-3 py-2 text-sm font-medium tracking-wide cursor-pointer transition-all rounded-lg ${
-                    (scrolled || !isHomePage) 
-                      ? 'text-foreground hover:text-primary hover:bg-primary/5' 
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                  }`}
-                  data-testid="button-nav-explore"
-                  aria-expanded={megaMenuOpen}
-                  onClick={() => setMegaMenuOpen(!megaMenuOpen)}
-                >
-                  Explore
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${megaMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {megaMenuOpen && (
-                  <div className="absolute top-full left-0 h-5 w-full bg-transparent" />
-                )}
-                
-                <AnimatePresence>
-                  {megaMenuOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full right-0 mt-4 w-[750px] bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-tan/5" />
-                      <div className="absolute -top-2 right-6 w-4 h-4 bg-card border-l border-t border-border/50 rotate-45" />
-                      
-                      <div className="relative grid grid-cols-3 divide-x divide-border/50">
-                        {Object.entries(megaMenuSections).map(([key, section]) => (
-                          <div key={key} className="p-5">
-                            <div className={`flex items-center gap-2 mb-4 p-2 rounded-lg bg-gradient-to-r ${section.gradient}`}>
-                              <div className="w-8 h-8 rounded-lg bg-background/80 flex items-center justify-center shadow-sm">
-                                <section.icon className="w-4 h-4 text-primary" />
-                              </div>
-                              <span className="font-semibold text-sm text-foreground">{section.title}</span>
-                            </div>
-                            <div className="space-y-1">
-                              {section.items.map((item, idx) => (
-                                <Link
-                                  key={idx}
-                                  href={item.href}
-                                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-secondary/50 transition-all group"
-                                  onClick={() => setMegaMenuOpen(false)}
-                                  data-testid={`link-mega-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                                >
-                                  <div className="w-9 h-9 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 group-hover:scale-110 transition-all shadow-sm">
-                                    <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{item.label}</p>
-                                      {(item as any).badge && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                          {(item as any).badge}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">{item.description}</p>
-                                  </div>
-                                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="relative bg-gradient-to-r from-primary/10 via-tan/10 to-primary/10 px-5 py-4 flex items-center justify-between border-t border-border/50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Ready to start investing?</p>
-                            <p className="text-xs text-muted-foreground">Join our network of successful investors</p>
-                          </div>
-                        </div>
-                        <Link href="/sell" onClick={() => setMegaMenuOpen(false)}>
-                          <Button size="sm" className="gap-2" data-testid="button-mega-cta">
-                            Get Started
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 lg:gap-3">
-              <CommandTrigger className={scrolled || !isHomePage ? '' : 'border-white/20 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/30'} />
-              
-              {isAuthenticated ? (
-                <>
-                  <Link 
-                    href="/marketflow"
-                    className={`hidden lg:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                      (scrolled || !isHomePage) 
-                        ? 'text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20' 
-                        : 'text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30'
-                    }`}
-                    data-testid="link-nav-marketflow"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>MarketFlow</span>
-                    <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded border border-amber-500/30">
-                      BETA
-                    </span>
-                  </Link>
-                  
-                  <NotificationBell scrolled={scrolled} isHomePage={isHomePage} />
-                  <div className={`hidden sm:block ${(scrolled || !isHomePage) ? '' : '[&_button]:text-white [&_button]:hover:bg-white/10'}`} data-testid="nav-theme-toggle">
-                    <ThemeToggle />
-                  </div>
-                  <UserMenu profile={profile} userEmail={user?.email || ''} scrolled={scrolled} isHomePage={isHomePage} isAdmin={isAdmin} />
-                </>
-              ) : (
-                <>
-                  <div className={`hidden sm:block ${(scrolled || !isHomePage) ? '' : '[&_button]:text-white [&_button]:hover:bg-white/10'}`} data-testid="nav-theme-toggle">
-                    <ThemeToggle />
-                  </div>
-                  <a 
-                    href="/api/login"
-                    className={`hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                      (scrolled || !isHomePage) 
-                        ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' 
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
-                    data-testid="link-nav-login"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Sign In
-                  </a>
-                  {isHomePage && (
-                    <a href="#sell" onClick={(e) => handleScrollClick(e, "#sell")}>
-                      <Button size="sm" className={`hidden sm:flex gap-2 ${scrolled ? '' : 'bg-white text-foreground hover:bg-white/90'}`} data-testid="button-nav-cta">
-                        <Zap className="w-4 h-4" />
-                        Get Started
-                      </Button>
-                    </a>
-                  )}
-                </>
-              )}
-              
-              <button
-                className={`lg:hidden p-2 rounded-lg transition-all ${
-                  (scrolled || !isHomePage) 
-                    ? 'text-foreground hover:bg-secondary/50' 
-                    : 'text-white hover:bg-white/10'
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+          onLightSurface
+            ? "bg-[hsl(var(--paper)/0.92)] backdrop-blur-md border-b border-[hsl(var(--rule))]"
+            : "bg-gradient-to-b from-black/45 via-black/20 to-transparent"
+        }`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 h-[76px] lg:h-[92px] flex items-center justify-between gap-6">
+          {/* Wordmark — semantic <a>, NOT an <h1> */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 lg:gap-4 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm group"
+            aria-label="Pegasus DreamScapes — home"
+            data-testid="link-logo"
+          >
+            <img
+              src={logoImage}
+              alt=""
+              aria-hidden="true"
+              className={`h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-[1.03] ${
+                onLightSurface
+                  ? "[filter:drop-shadow(0_2px_4px_rgba(13,27,45,0.18))]"
+                  : "[filter:drop-shadow(0_3px_8px_rgba(0,0,0,0.45))]"
+              }`}
+            />
+            <span
+              className={`hidden sm:block h-9 lg:h-10 w-px ${
+                onLightSurface
+                  ? "bg-gradient-to-b from-transparent via-[hsl(var(--bronze)/0.5)] to-transparent"
+                  : "bg-gradient-to-b from-transparent via-[hsl(var(--bronze-soft)/0.65)] to-transparent"
+              }`}
+              aria-hidden="true"
+            />
+            <span className="hidden sm:flex flex-col leading-tight">
+              <span
+                className={`font-display text-[15px] lg:text-[17px] tracking-[0.18em] uppercase ${
+                  onLightSurface ? "text-[hsl(var(--ink))]" : "text-white"
                 }`}
-                onClick={() => setIsOpen(!isOpen)}
-                data-testid="button-mobile-menu"
-                aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-                aria-expanded={isOpen}
-                aria-controls="mobile-menu"
               >
-                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-        </nav>
-        
-        <div className="h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                Pegasus DreamScapes
+              </span>
+              <span
+                className={`text-[9px] lg:text-[10px] tracking-[0.32em] uppercase font-supporting mt-1 ${
+                  onLightSurface ? "text-[hsl(var(--bronze))]" : "text-[hsl(var(--bronze-soft))]"
+                }`}
+              >
+                The Deal Architect
+              </span>
+            </span>
+          </Link>
 
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div 
-              id="mobile-menu" 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden"
-            >
-              <div className="px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
-                <div className="mb-4">
-                  <CommandTrigger className="w-full justify-start" />
-                </div>
-                
-                {isHomePage ? (
-                  <>
-                    {homeLinks.map((link) => (
-                      <a 
-                        key={link.href} 
-                        href={link.href}
-                        onClick={(e) => handleScrollClick(e, link.href)}
-                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all text-foreground hover:bg-secondary cursor-pointer"
-                        data-testid={`link-mobile-${link.label.toLowerCase()}`}
-                      >
-                        {link.label}
-                      </a>
-                    ))}
-                  </>
-                ) : (
-                  <Link 
-                    href="/"
-                    className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all text-foreground hover:bg-secondary"
-                    onClick={() => setIsOpen(false)}
-                    data-testid="link-mobile-home"
-                  >
-                    <Home className="w-4 h-4" />
-                    Home
-                  </Link>
-                )}
-                
-                {Object.entries(megaMenuSections).map(([key, section]) => (
-                  <div key={key} className="pt-4">
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${section.gradient}`}>
-                      <section.icon className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{section.title}</span>
-                    </div>
-                    {section.items.map((item, idx) => (
-                      <Link 
-                        key={idx}
-                        href={item.href}
-                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all text-foreground hover:bg-secondary"
-                        onClick={() => setIsOpen(false)}
-                        data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                      >
-                        <item.icon className="w-4 h-4 text-muted-foreground" />
-                        {item.label}
-                        {(item as any).badge && (
-                          <Badge variant="secondary" className="ml-auto text-[10px]">{(item as any).badge}</Badge>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-                
-                <div className="pt-4 border-t border-border space-y-1">
-                  {isAuthenticated ? (
-                    <>
-                      <Link 
-                        href="/marketflow"
-                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-primary bg-primary/5 transition-all"
-                        onClick={() => setIsOpen(false)} 
-                        data-testid="link-mobile-marketflow"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        MarketFlow
-                        <Badge variant="secondary" className="ml-auto text-[10px]">New</Badge>
-                      </Link>
-                      <Link 
-                        href="/marketflow/dashboard"
-                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-foreground hover:bg-secondary transition-all"
-                        onClick={() => setIsOpen(false)} 
-                        data-testid="link-mobile-dashboard"
-                      >
-                        <BarChart3 className="w-4 h-4 text-muted-foreground" />
-                        My Dashboard
-                      </Link>
-                      {isAdmin && (
-                        <Link 
-                          href="/marketflow/admin"
-                          className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-blue-600 bg-blue-500/5 transition-all"
-                          onClick={() => setIsOpen(false)} 
-                          data-testid="link-mobile-admin"
-                        >
-                          <Shield className="w-4 h-4" />
-                          Admin Dashboard
-                          <Badge variant="outline" className="ml-auto text-[10px] border-blue-500/50 text-blue-500">Staff</Badge>
-                        </Link>
-                      )}
-                      <a 
-                        href="/api/logout"
-                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/5 transition-all"
-                        data-testid="link-mobile-logout"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                      </a>
-                    </>
-                  ) : (
-                    <>
-                      <a 
-                        href="/api/login"
-                        className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium text-foreground hover:bg-secondary transition-all"
-                        data-testid="link-mobile-login"
-                      >
-                        <LogIn className="w-4 h-4 text-muted-foreground" />
-                        Sign In
-                      </a>
-                      <Link href="/sell" onClick={() => setIsOpen(false)}>
-                        <Button className="w-full gap-2 mt-2" data-testid="button-mobile-cta">
-                          <Zap className="w-4 h-4" />
-                          Get Started
-                        </Button>
-                      </Link>
-                    </>
+          {/* Desktop nav — 5 noun items + More dropdown */}
+          <nav
+            className="hidden lg:flex items-center gap-1"
+            aria-label="Primary navigation"
+          >
+            {NAV_ITEMS.map((item) => {
+              if (item.label !== "MarketFlow") return renderNavLink(item);
+              const active = isItemActive(item, location);
+              const colorClass = onLightSurface
+                ? active
+                  ? "text-[hsl(var(--ink))] font-semibold"
+                  : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+                : active
+                  ? "text-white font-semibold"
+                  : "text-white/85 hover:text-white";
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`${navLinkBase} ${colorClass} inline-flex items-center gap-1.5`}
+                  data-testid="link-nav-marketflow"
+                  aria-current={active ? "page" : undefined}
+                >
+                  MarketFlow
+                  <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--bronze))] rounded">
+                    BETA
+                  </span>
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+                        onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+                      }`}
+                    />
                   )}
-                  <div className="pt-3 mt-3 border-t border-border/40 flex items-center justify-between px-1">
-                    <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Appearance</span>
-                    <ThemeToggle />
-                  </div>
+                </Link>
+              );
+            })}
+
+            {/* More dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`${navLinkBase} ${moreDesktopColor} inline-flex items-center gap-1`}
+                  data-testid="button-nav-more"
+                  aria-label="More navigation"
+                >
+                  More
+                  <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
+                  {moreActive && (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+                        onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+                      }`}
+                    />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={12}
+                className="w-[380px] p-0 overflow-hidden rounded-2xl border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background"
+              >
+                {/* Editorial header */}
+                <div className="relative px-5 pt-5 pb-4 bg-gradient-to-b from-cream/70 to-cream/20 dark:from-white/[0.04] dark:to-transparent">
+                  <span aria-hidden="true" className="absolute inset-x-5 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-1.5">
+                    More from Pegasus
+                  </p>
+                  <p className="font-serif text-base text-foreground leading-snug tracking-tight">
+                    Tools, the network, and the fine print.
+                  </p>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+                {/* Items */}
+                <div className="py-2">
+                  {MORE_ITEMS.map((item) => {
+                    const meta = MORE_META[item.href];
+                    const Icon = meta?.icon ?? BookOpen;
+                    const testid = `link-nav-more-${item.label.toLowerCase().replace(/\s+/g, "-")}`;
+                    return (
+                      <Link key={item.href} href={item.href}>
+                        <DropdownMenuItem
+                          className="group cursor-pointer px-5 py-3 rounded-none focus:bg-cream/50 dark:focus:bg-white/[0.04] data-[highlighted]:bg-cream/50 dark:data-[highlighted]:bg-white/[0.04]"
+                          data-testid={testid}
+                        >
+                          <div className="flex items-start gap-3.5 w-full">
+                            <div className="flex-shrink-0 mt-0.5 w-9 h-9 rounded-lg border border-primary/20 bg-cream/40 dark:bg-white/[0.03] flex items-center justify-center group-hover:border-primary/50 group-hover:bg-cream/70 dark:group-hover:bg-white/[0.06] transition-colors duration-200">
+                              <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-serif text-[15px] font-semibold tracking-tight text-foreground leading-none">
+                                  {item.label}
+                                </span>
+                                <ArrowRight className="w-3.5 h-3.5 text-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
+                              </div>
+                              {meta?.tagline && (
+                                <p className="mt-1 text-xs text-muted-foreground leading-snug">
+                                  {meta.tagline}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {!isAuthenticated && (
+                  <div className="relative px-5 py-3 bg-gradient-to-b from-background to-cream/30 dark:to-white/[0.02]">
+                    <span aria-hidden="true" className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                    <a href="/api/login" className="block">
+                      <DropdownMenuItem
+                        className="cursor-pointer rounded-md px-3 py-2 gap-2 text-foreground hover:bg-cream/50 dark:hover:bg-white/[0.04] focus:bg-cream/50 dark:focus:bg-white/[0.04]"
+                        data-testid="link-nav-more-signin"
+                      >
+                        <LogIn className="w-4 h-4 text-primary" aria-hidden="true" />
+                        <span className="text-[10px] uppercase tracking-[0.25em] font-supporting font-semibold">
+                          Sign In
+                        </span>
+                      </DropdownMenuItem>
+                    </a>
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+
+          {/* Right cluster — public state is exactly: bronze CTA. Auth state adds account utilities. */}
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <>
+                <NotificationBell onLightSurface={onLightSurface} />
+                <UserMenu
+                  profile={profile}
+                  userEmail={user?.email || ""}
+                  onLightSurface={onLightSurface}
+                  isAdmin={isAdmin}
+                />
+              </>
+            ) : (
+              <Link href={PRIMARY_CTA.href} className="hidden sm:block">
+                <Button
+                  size="sm"
+                  className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
+                  data-testid="button-nav-cta"
+                >
+                  {PRIMARY_CTA.label}
+                  <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
+                </Button>
+              </Link>
+            )}
+
+            {/* Mobile menu trigger */}
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <button
+                  className={`lg:hidden p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
+                    onLightSurface
+                      ? "text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
+                      : "text-white hover:bg-white/10"
+                  }`}
+                  aria-label="Open navigation menu"
+                  data-testid="button-mobile-menu"
+                >
+                  <Menu className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-full sm:max-w-sm bg-[hsl(var(--paper))] border-l border-[hsl(var(--rule))] flex flex-col"
+              >
+                <VisuallyHidden>
+                  <SheetTitle>Site navigation</SheetTitle>
+                  <SheetDescription>Primary links and account actions</SheetDescription>
+                </VisuallyHidden>
+
+                <div className="flex items-center justify-between pb-6 border-b border-[hsl(var(--rule))]">
+                  <span className="font-display text-sm tracking-[0.18em] uppercase text-[hsl(var(--ink))]">
+                    Pegasus DreamScapes
+                  </span>
+                </div>
+
+                <nav className="flex-1 py-6 overflow-y-auto" aria-label="Mobile navigation">
+                  <ul className="space-y-1">
+                    {NAV_ITEMS.map((item) => (
+                      <li key={item.label}>{renderNavLink(item, true)}</li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-8 pt-6 border-t border-[hsl(var(--rule))]">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--muted-text))] font-supporting font-semibold mb-3">More</p>
+                    <ul className="space-y-1">
+                      {MORE_ITEMS.map((item) => (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                            data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                          >
+                            {item.label}
+                          </Link>
+                        </li>
+                      ))}
+                      {!isAuthenticated && (
+                        <li>
+                          <a
+                            href="/api/login"
+                            className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                            data-testid="link-mobile-signin"
+                          >
+                            <LogIn className="w-4 h-4" aria-hidden="true" />
+                            Sign In
+                          </a>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </nav>
+
+                <div className="pt-6 border-t border-[hsl(var(--rule))]">
+                  <Link href={PRIMARY_CTA.href} onClick={() => setMobileOpen(false)}>
+                    <Button
+                      className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
+                      data-testid="button-mobile-cta"
+                    >
+                      {PRIMARY_CTA.label}
+                      <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
+                    </Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
       </header>
     </>
   );

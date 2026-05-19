@@ -184,7 +184,9 @@ export function DealMapView({ deals, onDealSelect, selectedDealId, isLoading }: 
           });
           mapInstanceRef.current?.setZoom(10);
         },
-        () => console.log("Geolocation denied")
+        () => {
+          /* geolocation denied — silently fall back to default center */
+        }
       );
     }
   };

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal } from "@/components/animations";
 import { PropertyMap } from "@/components/property-map";
 import { useDealAction } from "@/contexts/deal-action-context";
+import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useDemoMode } from "@/contexts/demo-mode-context";
@@ -53,6 +54,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { ShareButtons } from "@/components/share-buttons";
+import { AskPeggyButton } from "@/components/ask-peggy-button";
 import { UnderConstructionBadge, UnderConstructionCard } from "@/components/under-construction";
 
 export default function MarketplaceDealDetail() {
@@ -230,7 +232,12 @@ function DealDetailPage() {
                       {deal.propertyAddress}, {deal.city}, {deal.state} {deal.zipCode}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <AskPeggyButton
+                      dealType="wholesale"
+                      dealId={dealId}
+                      dealLabel={deal.propertyAddress}
+                    />
                     <ShareButtons 
                       title={`Wholesale Deal: ${deal.propertyAddress}`}
                       description={`Check out this wholesale deal at ${deal.propertyAddress}, ${deal.city}, ${deal.state} - ARV $${deal.arv?.toLocaleString() || "N/A"}`}
@@ -508,6 +515,13 @@ function DealDetailPage() {
                 <Handshake className="w-5 h-5 mr-2" />
                 Request JV
               </Button>
+
+              <OpenOfferStudioButton
+                dealId={deal.id}
+                lane="WHOLESALE"
+                variant="outline"
+                className="w-full"
+              />
 
               <Button 
                 variant="outline" 

@@ -18,11 +18,21 @@ import {
   Lightbulb,
   CheckCircle2
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useSEO } from "@/hooks/use-seo";
 import type { Article } from "@shared/schema";
 
 export default function Resources() {
+  const [location] = useLocation();
+  const isEducation = location.startsWith("/education");
+  useSEO({
+    title: isEducation ? "Education" : "Resources",
+    description: isEducation
+      ? "Strategy education for sellers, investors, and operators. Frameworks, calculators, and case-study walkthroughs from Pegasus DreamScapes Corp."
+      : "Articles, guides, and tools for navigating complex real estate. Strategy-first resources from Pegasus DreamScapes Corp.",
+    image: `https://pegasusdreamscapes.com/og/${isEducation ? "education" : "resources"}.svg`,
+  });
   return (
     <div className="min-h-screen pt-20">
       <HeroSection />
@@ -42,14 +52,21 @@ function HeroSection() {
       <div className="absolute bottom-20 left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
       
       <div className="relative max-w-7xl mx-auto px-6 text-center">
-        <Badge variant="outline" className="mb-6 border-tan/30 text-tan">
-          Learning Center
-        </Badge>
-        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight" data-testid="text-resources-hero">
-          RESOURCES &<br /><span className="text-tan">INSIGHTS</span>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+            Strategy Library · Educational only
+          </p>
+          <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+        </div>
+        <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] mb-6 leading-[0.98]" data-testid="text-resources-hero">
+          The strategy work,<br />
+          <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+            written down.
+          </span>
         </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Master real estate investing with our comprehensive guides, market analysis, and expert insights.
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          The frameworks, structural reads, and worked examples we use inside Pegasus. Not advice. Not a sales funnel. The library you actually wanted.
         </p>
       </div>
     </section>
@@ -91,13 +108,22 @@ function InvestmentGuidesSection() {
   return (
     <section className="py-20 lg:py-28 bg-tan/5 border-y border-border">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Investment Education</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-guides-title">
-            LEARN THE FUNDAMENTALS
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-3 mb-5">
+            <span className="h-px w-8 bg-primary" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Strategy Education · Beginner to Advanced
+            </p>
+            <span className="h-px w-8 bg-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]" data-testid="text-guides-title">
+            <span className="block">Learn the fundamentals.</span>
+            <span className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+              Then earn the next move.
+            </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Start your real estate investment journey with our structured learning guides
+          <p className="text-lg text-muted-foreground mt-6 leading-relaxed">
+            Structured guides that walk through the real strategy work: how to read a deal, where the math breaks, and the questions to ask before you commit.
           </p>
         </div>
 
@@ -143,8 +169,14 @@ function ArticlesGrid() {
   if (isLoading) {
     return (
       <section className="py-20 lg:py-32">
-        <div className="flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center justify-center gap-5">
+          <div className="relative h-10 w-10" role="status" aria-label="Loading">
+            <div className="absolute inset-0 rounded-full border-2 border-primary/15" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+            Loading the field notes…
+          </p>
         </div>
       </section>
     );
@@ -154,15 +186,24 @@ function ArticlesGrid() {
     return (
       <section className="py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="text-tan font-medium text-sm uppercase tracking-wider">Latest Articles</span>
-            <h2 className="text-3xl sm:text-4xl font-bold mt-4 mb-6 tracking-tight">
-              INSIGHTS & ANALYSIS
+          <div className="text-center mb-12 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-3 mb-5">
+              <span className="h-px w-8 bg-primary" />
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+                Strategy Library · Field Notes
+              </p>
+              <span className="h-px w-8 bg-primary" />
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]">
+              <span className="block">Insights and analysis.</span>
+              <span className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+                Coming soon.
+              </span>
             </h2>
           </div>
-          <div className="text-center text-muted-foreground">
-            <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-            <p>No articles available at this time. Check back soon!</p>
+          <div className="text-center text-muted-foreground max-w-md mx-auto">
+            <BookOpen className="w-12 h-12 mx-auto mb-5 text-primary/40" />
+            <p className="text-base leading-relaxed">The first field notes are being written. Check back shortly, or start a Strategy Review on a real situation.</p>
           </div>
         </div>
       </section>
@@ -182,13 +223,22 @@ function ArticlesGrid() {
   return (
     <section className="py-20 lg:py-32">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Latest Articles</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-6 tracking-tight" data-testid="text-articles-title">
-            INSIGHTS & ANALYSIS
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-3 mb-5">
+            <span className="h-px w-8 bg-primary" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Strategy Library · Field Notes
+            </p>
+            <span className="h-px w-8 bg-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]" data-testid="text-articles-title">
+            <span className="block">Insights and analysis.</span>
+            <span className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+              Written down.
+            </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stay informed with our latest market insights and investment strategies
+          <p className="text-lg text-muted-foreground mt-6 leading-relaxed">
+            The frameworks, structural reads, and worked examples we use inside Pegasus, published as field notes.
           </p>
         </div>
 
@@ -278,13 +328,22 @@ function ToolsSection() {
   return (
     <section className="py-20 lg:py-28 bg-tan/5 border-y border-border">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <span className="text-tan font-medium text-sm uppercase tracking-wider">Investment Tools</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-4 mb-4 tracking-tight" data-testid="text-tools-title">
-            PROFESSIONAL CALCULATORS
+        <div className="text-center mb-14 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-3 mb-5">
+            <span className="h-px w-8 bg-primary" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Operator Tools · No Signup
+            </p>
+            <span className="h-px w-8 bg-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]" data-testid="text-tools-title">
+            <span className="block">Operator-grade calculators.</span>
+            <span className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+              Free to use.
+            </span>
           </h2>
-          <p className="text-muted-foreground">
-            Analyze deals with our suite of professional investment tools
+          <p className="text-base text-muted-foreground mt-5 leading-relaxed">
+            Run the numbers the way Pegasus runs them. ARV, BRRRR, cash-flow, ROI.
           </p>
         </div>
 
@@ -312,12 +371,22 @@ function CTASection() {
   return (
     <section className="py-24 lg:py-32 bg-gradient-to-br from-primary/5 to-tan/5">
       <div className="max-w-4xl mx-auto px-6 text-center">
-        <GraduationCap className="w-16 h-16 text-tan mx-auto mb-6" />
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
-          READY TO START INVESTING?
+        <GraduationCap className="w-12 h-12 text-primary mx-auto mb-6" />
+        <div className="inline-flex items-center gap-3 mb-5">
+          <span className="h-px w-8 bg-primary" />
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+            From Reading to Doing
+          </p>
+          <span className="h-px w-8 bg-primary" />
+        </div>
+        <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">
+          <span className="block">Bring us a real situation.</span>
+          <span className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+            We will read it like operators.
+          </span>
         </h2>
-        <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-          Put your knowledge into action. Whether you're selling a property or looking to invest, our team is ready to help.
+        <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+          Put what you read into action. Whether the next move is a sale, a structure, or a capital relationship, we will tell you straight.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/sell">

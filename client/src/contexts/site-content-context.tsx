@@ -31,6 +31,10 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
   const { data: contentList = [], isLoading } = useQuery<SiteContent[]>({
     queryKey: ["/api/site-content"],
     staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   const content = contentList.reduce((acc, item) => {

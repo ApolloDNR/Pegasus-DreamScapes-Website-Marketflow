@@ -55,7 +55,7 @@ import {
   PanelLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImage from "@assets/image_1765405939117.png";
+import logoImage from "@/assets/brand/pegasus-mark-full.png";
 
 interface DealflowLayoutProps {
   children: React.ReactNode;
@@ -171,7 +171,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   ];
   
   const toolItems = [
-    { path: "/calculators", label: "Calculators", icon: BarChart3 },
+    { path: "/strategy-lab", label: "Strategy Lab", icon: BarChart3 },
     { path: "/resources", label: "Resources", icon: Building2 },
     { path: "#peggy", label: "Peggy AI", icon: Sparkles, isPeggy: true },
   ];
@@ -216,7 +216,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                 <img 
                   src={logoImage} 
                   alt="Pegasus" 
-                  className="h-10 w-auto"
+                  className="h-12 w-auto [filter:drop-shadow(0_1px_2px_rgba(13,27,45,0.2))]"
                 />
                 <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
               </div>
@@ -466,7 +466,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </Button>
                 <Link href="/dealflow" className="flex items-center gap-2">
-                  <img src={logoImage} alt="Pegasus" className="h-8 w-auto" />
+                  <img src={logoImage} alt="Pegasus" className="h-10 w-auto [filter:drop-shadow(0_1px_2px_rgba(13,27,45,0.2))]" />
                   <span className="font-serif font-bold">Dealflow</span>
                 </Link>
               </div>
@@ -597,7 +597,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
               <div className="flex items-center gap-4">
                 <span>Dreamscaper Dealflow</span>
                 <span className="text-border">|</span>
-                <span>Pegasus Dreamscapes Corp.</span>
+                <span>Pegasus DreamScapes Corp.</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-3 h-3 text-primary" />

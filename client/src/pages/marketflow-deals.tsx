@@ -43,6 +43,7 @@ import { QuickCalcButton, InlineROIBadge } from "@/components/quick-calculator";
 import { ActivityFeedWidget, useActivityFeed } from "@/components/activity-feed";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
 import { BetaBanner } from "@/components/beta-banner";
+import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
 import {
   Tooltip,
   TooltipContent,
@@ -1069,23 +1070,27 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
 
   if (deals.length === 0) {
     return (
-      <Card className="p-12 text-center border-dashed">
-        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
-          <Home className="w-8 h-8 text-primary/60" />
+      <Card className="p-12 lg:p-16 text-center border-dashed max-w-2xl mx-auto">
+        <div className="h-14 w-14 rounded-full border border-primary/30 flex items-center justify-center mx-auto mb-6">
+          <Home className="w-6 h-6 text-primary/70" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">No Deals Match Your Criteria</h3>
-        <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-          Try adjusting your filters or expanding your search to discover more investment opportunities.
+        <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+          MarketFlow · Reviewed lane
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button variant="outline" onClick={() => window.location.reload()} data-testid="button-reset-filters">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reset Filters
-          </Button>
-          <Link href="/marketflow/submit">
-            <Button data-testid="button-submit-deal-empty">
-              <Plus className="w-4 h-4 mr-2" />
-              Submit a Deal
+        <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
+          First reviewed deals coming soon.
+        </h3>
+        <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+          MarketFlow only lists opportunities that have passed Pegasus HQ review. The first reviewed set is being prepared now.
+        </p>
+        <div className="flex justify-center">
+          <Link href="/marketflow">
+            <Button
+              size="lg"
+              className="min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold"
+              data-testid="button-marketflow-back"
+            >
+              Back to MarketFlow
             </Button>
           </Link>
         </div>
@@ -1217,11 +1222,18 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
 
   if (deals.length === 0) {
     return (
-      <Card className="p-12 text-center max-w-lg mx-auto">
-        <Home className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Deals to Swipe</h3>
-        <p className="text-muted-foreground">
-          Check back later for new opportunities.
+      <Card className="p-12 lg:p-16 text-center border-dashed max-w-2xl mx-auto">
+        <div className="h-14 w-14 rounded-full border border-primary/30 flex items-center justify-center mx-auto mb-6">
+          <Home className="w-6 h-6 text-primary/70" />
+        </div>
+        <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+          MarketFlow · Reviewed lane
+        </p>
+        <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
+          First reviewed deals coming soon.
+        </h3>
+        <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+          MarketFlow only lists opportunities that have passed Pegasus HQ review. The first reviewed set is being prepared now.
         </p>
       </Card>
     );
@@ -1229,19 +1241,34 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
 
   if (currentIndex >= deals.length) {
     return (
-      <Card className="p-12 text-center max-w-lg mx-auto">
-        <Sparkles className="w-12 h-12 mx-auto text-primary mb-4" />
-        <h3 className="text-lg font-semibold mb-2">You've Seen All Deals!</h3>
-        <p className="text-muted-foreground mb-6">
-          You've reviewed all available deals. Check your saved deals or come back later.
+      <Card className="p-12 lg:p-16 text-center border-dashed max-w-2xl mx-auto">
+        <div className="h-14 w-14 rounded-full border border-primary/30 flex items-center justify-center mx-auto mb-6">
+          <Sparkles className="w-6 h-6 text-primary/70" />
+        </div>
+        <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+          MarketFlow · Lane reviewed
         </p>
-        <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={() => setCurrentIndex(0)} data-testid="button-start-over">
+        <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
+          You've reviewed every reviewed deal.
+        </h3>
+        <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+          New opportunities are added as Pegasus HQ clears them. Revisit your saved set in the meantime.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentIndex(0)}
+            className="min-h-[44px] px-6 text-sm uppercase tracking-[0.15em] font-semibold"
+            data-testid="button-start-over"
+          >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Start Over
+            Start over
           </Button>
           <Link href="/marketflow/investor/saved">
-            <Button data-testid="button-view-saved">
+            <Button
+              className="min-h-[44px] px-6 text-sm uppercase tracking-[0.15em] font-semibold"
+              data-testid="button-view-saved"
+            >
               <Bookmark className="w-4 h-4 mr-2" />
               View Saved
             </Button>
@@ -1492,6 +1519,13 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
             Counter Offer
           </Button>
         </div>
+        <OpenOfferStudioButton
+          dealId={deal.id}
+          lane="WHOLESALE"
+          variant="outline"
+          className="w-full"
+          stopPropagation
+        />
       </CardContent>
     </Card>
   );
@@ -1864,6 +1898,15 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             Counter Offer
           </Button>
         </div>
+        <div className="mt-2">
+          <OpenOfferStudioButton
+            dealId={deal.id}
+            lane="WHOLESALE"
+            variant="outline"
+            className="w-full"
+            stopPropagation
+          />
+        </div>
       </CardContent>
     </Card>
   );
@@ -2135,16 +2178,27 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           </Button>
         </div>
         {!isFunded && (
-          <div className="flex gap-2 mt-2">
-            <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
-              <DollarSign className="w-4 h-4 mr-2" />
-              Invest Now
-            </Button>
-            <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
-              <Handshake className="w-4 h-4 mr-2" />
-              Negotiate
-            </Button>
-          </div>
+          <>
+            <div className="flex gap-2 mt-2">
+              <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Commit Capital
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
+                <Handshake className="w-4 h-4 mr-2" />
+                Negotiate
+              </Button>
+            </div>
+            <div className="mt-2">
+              <OpenOfferStudioButton
+                dealId={project.id}
+                lane="CAPITAL"
+                variant="outline"
+                className="w-full"
+                stopPropagation
+              />
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
@@ -2489,16 +2543,27 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           </Button>
         </div>
         {!isFunded && (
-          <div className="flex gap-2 mt-2">
-            <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Invest Now
-            </Button>
-            <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
-              <Handshake className="w-4 h-4 mr-2" />
-              Negotiate
-            </Button>
-          </div>
+          <>
+            <div className="flex gap-2 mt-2">
+              <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Commit Capital
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
+                <Handshake className="w-4 h-4 mr-2" />
+                Negotiate
+              </Button>
+            </div>
+            <div className="mt-2">
+              <OpenOfferStudioButton
+                dealId={project.id}
+                lane="CAPITAL"
+                variant="outline"
+                className="w-full"
+                stopPropagation
+              />
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
@@ -2700,6 +2765,13 @@ function ListingCard({ listing, onView, onRequestInfo, onScheduleShowing, isSave
             Schedule Showing
           </Button>
         </div>
+        <OpenOfferStudioButton
+          dealId={listing.id}
+          lane="LISTING"
+          variant="outline"
+          className="w-full"
+          stopPropagation
+        />
       </CardContent>
     </Card>
   );

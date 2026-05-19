@@ -14,7 +14,7 @@ import {
   Building,
 } from "lucide-react";
 import type { Project } from "@shared/schema";
-import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import { HeroPicture } from "@/components/hero-picture";
 
 const STRATEGY_LABEL: Record<string, string> = {
   "fix-flip": "Fix & Flip",
@@ -32,12 +32,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function Projects() {
   useSEO({
-    title: "Case Studies — Pegasus Dreamscapes",
-    description: "Documented real estate projects. Strategy, structure, and execution — every phase recorded.",
+    title: "Projects",
+    description: "Documented real estate case studies from Pegasus DreamScapes Corp. Strategy, structure, and execution recorded for every project.",
+    image: "https://pegasusdreamscapes.com/og/projects.svg",
   });
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Projects and Case Studies — Pegasus DreamScapes</h1>
       <HeroSection />
       <ProjectsGrid />
       <CTASection />
@@ -49,12 +51,17 @@ function HeroSection() {
   return (
     <section className="relative min-h-[60vh] flex items-center overflow-hidden pt-20">
       <motion.div
-        className="absolute inset-0 bg-cover bg-center scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="absolute inset-0 scale-105"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1.05 }}
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      />
+      >
+        <HeroPicture
+          alt="Projects portfolio from Pegasus DreamScapes Corp."
+          className="absolute inset-0 w-full h-full object-cover"
+          priority
+        />
+      </motion.div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/65 to-black/85" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
@@ -66,8 +73,8 @@ function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
-            <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 font-medium">Case Studies · Documented Work</p>
+            <div className="h-px w-10 bg-copper" />
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-copper font-semibold font-supporting">Case Studies · Documented Work</p>
           </motion.div>
 
           <motion.h1
@@ -87,7 +94,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            A growing record of the real estate situations we've taken on — from forced-value rehabs to small-scale development. Strategy, structure, and execution recorded for every property.
+            A growing record of the real estate situations we've taken on, from forced-value rehabs to small-scale development. Strategy, structure, and execution recorded for every property.
           </motion.p>
         </div>
       </div>
@@ -158,9 +165,30 @@ function ProjectsGrid() {
 
   if (error || !projects) {
     return (
-      <section className="py-32 bg-background">
-        <div className="text-center text-muted-foreground">
-          Unable to load projects. Please try again later.
+      <section className="py-24 lg:py-32 bg-background">
+        <div className="max-w-xl mx-auto text-center px-6">
+          <div className="inline-flex w-14 h-14 rounded-full border border-primary/30 items-center justify-center mb-7">
+            <Building className="w-6 h-6 text-primary/70" />
+          </div>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            The Record · Loading
+          </p>
+          <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
+            We can't reach the project record right now.
+          </h3>
+          <p className="text-base text-muted-foreground leading-relaxed mb-8">
+            Refresh in a moment. If it persists, the team has been notified.
+          </p>
+          <Link href="/sell">
+            <Button
+              size="lg"
+              className="min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold"
+              data-testid="button-projects-error-cta"
+            >
+              Start a Strategy Review
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </section>
     );
@@ -199,10 +227,47 @@ function ProjectsGrid() {
         </ScrollReveal>
 
         {filtered.length === 0 ? (
-          <div className="py-24 text-center">
-            <Building className="w-10 h-10 text-muted-foreground/50 mx-auto mb-5" />
-            <p className="font-serif text-2xl mb-2">No projects match these filters.</p>
-            <p className="text-sm text-muted-foreground">Try clearing one of the filters above.</p>
+          <div className="py-20 lg:py-28 text-center max-w-xl mx-auto">
+            <div className="inline-flex w-14 h-14 rounded-full border border-primary/30 items-center justify-center mb-7">
+              <Building className="w-6 h-6 text-primary/70" />
+            </div>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+              {statusFilter === "all" && strategyFilter === "all"
+                ? "Case studies · In progress"
+                : "No matches in this slice"}
+            </p>
+            <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
+              {statusFilter === "all" && strategyFilter === "all"
+                ? "First case study coming soon."
+                : "Nothing in this slice yet."}
+            </h3>
+            <p className="text-base text-muted-foreground mb-8 leading-relaxed">
+              {statusFilter === "all" && strategyFilter === "all"
+                ? "Pegasus is in build mode. The first case studies are being documented now. In the meantime, the door is open for a Strategy Review on your situation."
+                : "Clear the filters to see the full set, or start a Strategy Review and we will route your situation to the right lane."}
+            </p>
+            <div className="flex justify-center">
+              {statusFilter === "all" && strategyFilter === "all" ? (
+                <a
+                  href="/sell"
+                  className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                  data-testid="link-projects-strategy-review"
+                >
+                  Start a Strategy Review
+                </a>
+              ) : (
+                <button
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setStrategyFilter("all");
+                  }}
+                  className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold border border-primary/40 text-primary hover:bg-primary/10 rounded-md transition-colors"
+                  data-testid="button-projects-clear-filters"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 gap-7" staggerDelay={0.1}>
@@ -354,7 +419,7 @@ function CTASection() {
             Have one to add to the record?
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            Whether you have a property to submit, capital to deploy, or a partnership to discuss — every conversation starts the same way: with a real, structural review.
+            Whether you have a property to submit, capital to deploy, or a partnership to discuss, every conversation starts the same way: with a real, structural review.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/sell">

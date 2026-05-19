@@ -2,8 +2,8 @@ import { useSEO } from "@/hooks/use-seo";
 
 export default function Terms() {
   useSEO({
-    title: "Terms of Service | Pegasus Dreamscapes Corp",
-    description: "Terms of service for using the Pegasus Dreamscapes Corp real estate investment platform.",
+    title: "Terms of Service",
+    description: "Terms of service for the Pegasus DreamScapes Corp. website and Strategy Review intake.",
   });
 
   return (
@@ -16,14 +16,14 @@ export default function Terms() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing or using the Pegasus Dreamscapes Corp website and platform ("Services"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use our Services. These Terms constitute a legally binding agreement between you and Pegasus Dreamscapes Corp ("Company," "we," "our," or "us").
+              By accessing or using the Pegasus DreamScapes Corp website and platform ("Services"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use our Services. These Terms constitute a legally binding agreement between you and Pegasus DreamScapes Corp ("Company," "we," "our," or "us").
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold mb-4">2. Description of Services</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Pegasus Dreamscapes Corp operates a real estate investment platform that connects property sellers with investors. Our Services include, but are not limited to:
+              Pegasus DreamScapes Corp operates a real estate investment platform that connects property sellers with investors. Our Services include, but are not limited to:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-4">
               <li>Wholesale real estate deal marketplace</li>
@@ -103,7 +103,7 @@ export default function Terms() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">8. Intellectual Property</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              All content, features, and functionality of our Services, including but not limited to text, graphics, logos, and software, are owned by Pegasus Dreamscapes Corp and are protected by intellectual property laws.
+              All content, features, and functionality of our Services, including but not limited to text, graphics, logos, and software, are owned by Pegasus DreamScapes Corp and are protected by intellectual property laws.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               You retain ownership of any content you submit to our platform but grant us a non-exclusive, worldwide, royalty-free license to use, display, and distribute such content in connection with our Services.
@@ -120,7 +120,7 @@ export default function Terms() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">10. Indemnification</h2>
             <p className="text-muted-foreground leading-relaxed">
-              You agree to indemnify and hold harmless Pegasus Dreamscapes Corp, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including attorney's fees) arising out of your use of our Services, your violation of these Terms, or your violation of any rights of a third party.
+              You agree to indemnify and hold harmless Pegasus DreamScapes Corp, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including attorney's fees) arising out of your use of our Services, your violation of these Terms, or your violation of any rights of a third party.
             </p>
           </section>
 
@@ -158,7 +158,7 @@ export default function Terms() {
               If you have questions about these Terms of Service, please contact us at:
             </p>
             <div className="mt-4 p-4 bg-muted rounded-lg">
-              <p className="font-medium">Pegasus Dreamscapes Corp</p>
+              <p className="font-medium">Pegasus DreamScapes Corp</p>
               <p className="text-muted-foreground">Email: legal@pegasusdreamscapes.com</p>
                           </div>
           </section>

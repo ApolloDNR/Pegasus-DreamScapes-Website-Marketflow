@@ -33,7 +33,7 @@ import {
   MessageSquare,
   Phone,
 } from "lucide-react";
-import heroImage from "@assets/generated_images/luxury_home_at_dusk_with_warm_lighting.png";
+import { HeroPicture } from "@/components/hero-picture";
 
 const contactFormSchema = insertContactSchema.extend({
   name: z.string().min(2, "Please enter your full name"),
@@ -44,12 +44,14 @@ const contactFormSchema = insertContactSchema.extend({
 
 export default function Contact() {
   useSEO({
-    title: "Contact — Pegasus Dreamscapes",
+    title: "Contact",
     description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
+    image: "https://pegasusdreamscapes.com/og/contact.svg",
   });
 
   return (
     <div className="min-h-screen">
+      <h1 className="sr-only">Contact Pegasus DreamScapes</h1>
       <HeroSection />
       <ContactRoutingSection />
       <ContactFormSection />
@@ -61,12 +63,17 @@ function HeroSection() {
   return (
     <section className="relative min-h-[60vh] flex items-center overflow-hidden pt-20">
       <motion.div
-        className="absolute inset-0 bg-cover bg-center scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="absolute inset-0 scale-105"
         initial={{ scale: 1.1 }}
         animate={{ scale: 1.05 }}
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      />
+      >
+        <HeroPicture
+          alt="Contact Pegasus DreamScapes Corp."
+          className="absolute inset-0 w-full h-full object-cover"
+          priority
+        />
+      </motion.div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/65 to-black/85" />
 
       <div className="relative z-10 w-full py-20">
@@ -77,9 +84,9 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-champagne" />
-            <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 font-medium">Open Channel</p>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-champagne" />
+            <div className="h-px w-10 bg-copper" />
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-copper font-semibold font-supporting">Open Channel</p>
+            <div className="h-px w-10 bg-copper" />
           </motion.div>
 
           <motion.h1
@@ -99,7 +106,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            Submit a property, open a private partner conversation, or just ask a question. Every message gets a direct, honest response — no funnels, no auto-replies.
+            Submit a property, open a private partner conversation, or just ask a question. Every message gets a direct, honest response. No funnels, no auto-replies.
           </motion.p>
         </div>
       </div>
@@ -130,7 +137,7 @@ function ContactRoutingSection() {
       icon: MessageSquare,
       kicker: "Everything else",
       title: "General question?",
-      desc: "Press, partnerships, MarketFlow access requests, or anything that doesn't fit a box — use the form below.",
+      desc: "Press, partnerships, MarketFlow access requests, or anything that doesn't fit a box, use the form below.",
       cta: "Use the Form",
       href: "#contact-form",
     },
@@ -227,7 +234,7 @@ function ContactFormSection() {
 
   const contactInfo = [
     { icon: Mail, label: "Email", value: "apollo@pegasusdreamscapes.com", href: "mailto:apollo@pegasusdreamscapes.com" },
-    { icon: Phone, label: "Direct", value: "925-948-6566", href: "tel:+19259486566" },
+    { icon: Phone, label: "Direct", value: "925-744-8525", href: "tel:+19257448525" },
     { icon: MapPin, label: "Based in", value: "Bay Area, California", href: null },
     { icon: Clock, label: "Response Time", value: "Within 1–2 business days", href: null },
   ];

@@ -61,6 +61,7 @@ import {
   InvestorBreakdownTable,
   RepaymentTimeline 
 } from "@/components/deal-transparency";
+import { AskPeggyButton } from "@/components/ask-peggy-button";
 
 interface CapitalProject {
   id: number;
@@ -339,6 +340,11 @@ export default function DealflowProject() {
               <MessageCircle className="w-4 h-4 mr-2" />
               Contact
             </Button>
+            <AskPeggyButton
+              dealType="capital"
+              dealId={projectId}
+              dealLabel={project.title}
+            />
           </div>
         </div>
 
@@ -1109,7 +1115,7 @@ export default function DealflowProject() {
                     P
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold">Pegasus Dreamscapes</p>
+                    <p className="font-semibold">Pegasus DreamScapes</p>
                     <Badge variant="outline" className="text-xs mt-1">
                       <Star className="w-3 h-3 mr-1 fill-amber-500 text-amber-500" />
                       Certified Dreamscaper

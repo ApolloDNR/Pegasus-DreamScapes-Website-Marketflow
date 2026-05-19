@@ -13,8 +13,9 @@ import {
 
 export default function Services() {
   useSEO({
-    title: "Our Services - Real Estate Investment & Renovation",
-    description: "Explore Pegasus Dreamscapes services: fix & flip acquisitions, buy & hold rentals, design & renovation management, and expert consulting."
+    title: "Services",
+    description: "Three pillars: Development, Investments, Systems. Strategy-first execution across complex real estate situations.",
+    noIndex: true,
   });
 
   return (
@@ -35,7 +36,7 @@ function HeroSection() {
           Our Services
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Pegasus Dreamscapes offers a blend of acquisitions, renovations, and design services tailored to sellers, investors, and property owners.
+          Pegasus DreamScapes offers a blend of acquisitions, renovations, and design services tailored to sellers, investors, and property owners.
         </p>
       </div>
     </section>
@@ -154,7 +155,7 @@ function CTASection() {
           </Link>
           <Link href="/invest">
             <Button size="lg" variant="outline" data-testid="button-services-invest">
-              Invest With Us
+              Capital & Partnerships
             </Button>
           </Link>
           <Link href="/contact">

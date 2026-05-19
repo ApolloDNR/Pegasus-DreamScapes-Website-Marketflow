@@ -10,7 +10,7 @@ import {
   announcements, notifications, investorActivity,
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
-  leads, peggyConversations, peggyMessages, savedAnalyses, wholesaleDealOffers, jvRequests,
+  leads, peggyConversations, peggyMessages, savedAnalyses, analysisSendHistory, wholesaleDealOffers, jvRequests,
   userReputation, userBadges, adminAuditLog,
   listings, listingInquiries,
   marketflowOffers, marketflowNegotiations, negotiationMessages,
@@ -59,6 +59,7 @@ import {
   type PeggyConversation, type InsertPeggyConversation,
   type PeggyMessage, type InsertPeggyMessage,
   type SavedAnalysis, type InsertSavedAnalysis,
+  type AnalysisSend, type InsertAnalysisSend,
   type WholesaleDealOffer, type InsertWholesaleDealOffer,
   type JVRequest, type InsertJVRequest,
   type UserReputation, type InsertUserReputation,
@@ -78,6 +79,9 @@ import {
   type TeamMember, type InsertTeamMember,
   type MediaFile, type InsertMediaFile,
   type SiteContent, type InsertSiteContent,
+  libraryBeginnerSteps, libraryGlossaryTerms,
+  type LibraryBeginnerStep, type InsertLibraryBeginnerStep,
+  type LibraryGlossaryTerm, type InsertLibraryGlossaryTerm,
   featuredDeals,
   userActivity,
   homepageContent,
@@ -87,6 +91,35 @@ import {
   teamMembers,
   mediaFiles,
   siteContent,
+  propertyAnalysis,
+  compEntry,
+  riskFlag,
+  capitalStackEntry,
+  scenarioRun,
+  laneFitResult,
+  pegasusSubmission,
+  blueprintOrder,
+  strategyLabTouchpoint,
+} from "@shared/schema";
+import type {
+  InsertPropertyAnalysis,
+  PropertyAnalysis,
+  InsertCompEntry,
+  CompEntryRow,
+  InsertRiskFlag,
+  RiskFlagRow,
+  InsertCapitalStackEntry,
+  CapitalStackEntryRow,
+  InsertScenarioRun,
+  ScenarioRunRow,
+  InsertLaneFitResult,
+  LaneFitResultRow,
+  InsertPegasusSubmission,
+  PegasusSubmission,
+  InsertBlueprintOrder,
+  BlueprintOrder,
+  InsertStrategyLabTouchpoint,
+  StrategyLabTouchpoint,
 } from "@shared/schema";
 
 export interface QueueItem {
@@ -143,7 +176,11 @@ export interface IStorage {
   createArticle(article: InsertArticle): Promise<Article>;
   getArticles(): Promise<Article[]>;
   getPublishedArticles(): Promise<Article[]>;
+  getLibraryArticles(): Promise<Article[]>;
   getArticleBySlug(slug: string): Promise<Article | undefined>;
+  getArticleById(id: number): Promise<Article | undefined>;
+  updateArticle(id: number, patch: Partial<InsertArticle>): Promise<Article | undefined>;
+  deleteArticle(id: number): Promise<boolean>;
 
   // Lead Activities
   createLeadActivity(activity: InsertLeadActivity): Promise<LeadActivity>;
@@ -413,9 +450,29 @@ export interface IStorage {
   createSavedAnalysis(analysis: InsertSavedAnalysis): Promise<SavedAnalysis>;
   getSavedAnalyses(userId: string, calculatorType?: string): Promise<SavedAnalysis[]>;
   getSavedAnalysis(id: number): Promise<SavedAnalysis | undefined>;
-  getSavedAnalysisByShareToken(shareToken: string): Promise<SavedAnalysis | undefined>;
+  getSavedAnalysisByShareToken(
+    shareToken: string,
+    options?: { incrementViewCount?: boolean },
+  ): Promise<SavedAnalysis | undefined>;
   updateSavedAnalysis(id: number, data: Partial<InsertSavedAnalysis>): Promise<SavedAnalysis | undefined>;
   deleteSavedAnalysis(id: number): Promise<void>;
+  createAnalysisSend(data: InsertAnalysisSend): Promise<AnalysisSend>;
+  getAnalysisSends(savedAnalysisId: number, limit?: number): Promise<AnalysisSend[]>;
+
+  // Strategy Lab — Property Strategy Snapshot persistence (Task #82)
+  createPropertyAnalysis(data: InsertPropertyAnalysis): Promise<PropertyAnalysis>;
+  getPropertyAnalysis(id: number): Promise<PropertyAnalysis | undefined>;
+  getPropertyAnalysisByShareToken(token: string, opts?: { incrementViewCount?: boolean }): Promise<PropertyAnalysis | undefined>;
+  listPropertyAnalysesByUser(userId: string): Promise<PropertyAnalysis[]>;
+  updatePropertyAnalysis(id: number, data: Partial<InsertPropertyAnalysis> & { isShared?: boolean; submittedToPegasus?: boolean; visibility?: string; runCount?: number }): Promise<PropertyAnalysis | undefined>;
+  deletePropertyAnalysis(id: number): Promise<void>;
+  claimPropertyAnalysesForUser(sessionId: string, userId: string): Promise<number>;
+  latestPropertyAnalysisForSession(sessionId: string, userId: string): Promise<number | null>;
+  replaceCompEntries(propertyAnalysisId: number, comps: InsertCompEntry[]): Promise<CompEntryRow[]>;
+  replaceRiskFlags(propertyAnalysisId: number, flags: InsertRiskFlag[]): Promise<RiskFlagRow[]>;
+  replaceCapitalStack(propertyAnalysisId: number, entries: InsertCapitalStackEntry[]): Promise<CapitalStackEntryRow[]>;
+  replaceScenarioRuns(propertyAnalysisId: number, runs: InsertScenarioRun[]): Promise<ScenarioRunRow[]>;
+  replaceLaneFitResults(propertyAnalysisId: number, lanes: InsertLaneFitResult[]): Promise<LaneFitResultRow[]>;
   
   // Wholesale Deal Offers
   createWholesaleDealOffer(offer: InsertWholesaleDealOffer): Promise<WholesaleDealOffer>;
@@ -488,6 +545,18 @@ export interface IStorage {
   getSiteContent(key: string): Promise<SiteContent | undefined>;
   upsertSiteContent(data: InsertSiteContent): Promise<SiteContent>;
   deleteSiteContent(key: string): Promise<void>;
+
+  // Education page: Beginner Path
+  getLibraryBeginnerSteps(): Promise<LibraryBeginnerStep[]>;
+  createLibraryBeginnerStep(data: InsertLibraryBeginnerStep): Promise<LibraryBeginnerStep>;
+  updateLibraryBeginnerStep(id: number, patch: Partial<InsertLibraryBeginnerStep>): Promise<LibraryBeginnerStep | undefined>;
+  deleteLibraryBeginnerStep(id: number): Promise<boolean>;
+
+  // Education page: Glossary
+  getLibraryGlossaryTerms(): Promise<LibraryGlossaryTerm[]>;
+  createLibraryGlossaryTerm(data: InsertLibraryGlossaryTerm): Promise<LibraryGlossaryTerm>;
+  updateLibraryGlossaryTerm(id: number, patch: Partial<InsertLibraryGlossaryTerm>): Promise<LibraryGlossaryTerm | undefined>;
+  deleteLibraryGlossaryTerm(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -650,9 +719,30 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(articles).where(eq(articles.published, true)).orderBy(articles.publishedAt);
   }
 
+  async getLibraryArticles(): Promise<Article[]> {
+    return db.select().from(articles)
+      .where(and(eq(articles.published, true), eq(articles.featuredInLibrary, true)))
+      .orderBy(articles.libraryOrder, articles.createdAt);
+  }
+
   async getArticleBySlug(slug: string): Promise<Article | undefined> {
     const [article] = await db.select().from(articles).where(eq(articles.slug, slug));
     return article;
+  }
+
+  async getArticleById(id: number): Promise<Article | undefined> {
+    const [article] = await db.select().from(articles).where(eq(articles.id, id));
+    return article;
+  }
+
+  async updateArticle(id: number, patch: Partial<InsertArticle>): Promise<Article | undefined> {
+    const [updated] = await db.update(articles).set(patch).where(eq(articles.id, id)).returning();
+    return updated;
+  }
+
+  async deleteArticle(id: number): Promise<boolean> {
+    const result = await db.delete(articles).where(eq(articles.id, id)).returning();
+    return result.length > 0;
   }
 
   // Lead Activities
@@ -2419,14 +2509,17 @@ export class DatabaseStorage implements IStorage {
     return analysis;
   }
 
-  async getSavedAnalysisByShareToken(shareToken: string): Promise<SavedAnalysis | undefined> {
+  async getSavedAnalysisByShareToken(
+    shareToken: string,
+    options: { incrementViewCount?: boolean } = {},
+  ): Promise<SavedAnalysis | undefined> {
+    const { incrementViewCount = true } = options;
     const [analysis] = await db.select().from(savedAnalyses)
       .where(and(
         eq(savedAnalyses.shareToken, shareToken),
         eq(savedAnalyses.isShared, true)
       ));
-    if (analysis) {
-      // Increment view count
+    if (analysis && incrementViewCount) {
       await db.update(savedAnalyses)
         .set({ viewCount: sql`${savedAnalyses.viewCount} + 1` })
         .where(eq(savedAnalyses.id, analysis.id));
@@ -2434,9 +2527,37 @@ export class DatabaseStorage implements IStorage {
     return analysis;
   }
 
-  async updateSavedAnalysis(id: number, data: Partial<InsertSavedAnalysis>): Promise<SavedAnalysis | undefined> {
+  async updateSavedAnalysis(id: number, data: Partial<InsertSavedAnalysis> & { isShared?: boolean }): Promise<SavedAnalysis | undefined> {
+    // When the user flips isShared → true, auto-mint a one-time public token
+    // unless one already exists. Token is URL-safe and 22 chars; retry on the
+    // (vanishingly unlikely) collision.
+    const patch: Partial<InsertSavedAnalysis> & {
+      isShared?: boolean;
+      shareToken?: string;
+      sharedAt?: Date;
+      updatedAt: Date;
+    } = { ...data, updatedAt: new Date() };
+    if (data.isShared === true) {
+      const existing = await this.getSavedAnalysis(id);
+      if (existing && !existing.shareToken) {
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const tok =
+            (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2))
+              .replace(/-/g, "")
+              .slice(0, 22);
+          const dupe = await db.select({ id: savedAnalyses.id })
+            .from(savedAnalyses)
+            .where(eq(savedAnalyses.shareToken, tok));
+          if (dupe.length === 0) {
+            patch.shareToken = tok;
+            patch.sharedAt = new Date();
+            break;
+          }
+        }
+      }
+    }
     const [updated] = await db.update(savedAnalyses)
-      .set({ ...data, updatedAt: new Date() })
+      .set(patch)
       .where(eq(savedAnalyses.id, id))
       .returning();
     return updated;
@@ -2444,6 +2565,20 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSavedAnalysis(id: number): Promise<void> {
     await db.delete(savedAnalyses).where(eq(savedAnalyses.id, id));
+  }
+
+  async createAnalysisSend(data: InsertAnalysisSend): Promise<AnalysisSend> {
+    const [created] = await db.insert(analysisSendHistory).values(data).returning();
+    return created;
+  }
+
+  async getAnalysisSends(savedAnalysisId: number, limit = 5): Promise<AnalysisSend[]> {
+    return db
+      .select()
+      .from(analysisSendHistory)
+      .where(eq(analysisSendHistory.savedAnalysisId, savedAnalysisId))
+      .orderBy(desc(analysisSendHistory.sentAt))
+      .limit(limit);
   }
 
   // ============================================
@@ -3000,6 +3135,301 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSiteContent(key: string): Promise<void> {
     await db.delete(siteContent).where(eq(siteContent.key, key));
+  }
+
+  // ============================================
+  // EDUCATION PAGE - Beginner Path
+  // ============================================
+
+  async getLibraryBeginnerSteps(): Promise<LibraryBeginnerStep[]> {
+    return db
+      .select()
+      .from(libraryBeginnerSteps)
+      .orderBy(asc(libraryBeginnerSteps.sortOrder), asc(libraryBeginnerSteps.id));
+  }
+
+  async createLibraryBeginnerStep(data: InsertLibraryBeginnerStep): Promise<LibraryBeginnerStep> {
+    const [created] = await db.insert(libraryBeginnerSteps).values(data).returning();
+    return created;
+  }
+
+  async updateLibraryBeginnerStep(
+    id: number,
+    patch: Partial<InsertLibraryBeginnerStep>,
+  ): Promise<LibraryBeginnerStep | undefined> {
+    const [updated] = await db
+      .update(libraryBeginnerSteps)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(libraryBeginnerSteps.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLibraryBeginnerStep(id: number): Promise<boolean> {
+    const result = await db
+      .delete(libraryBeginnerSteps)
+      .where(eq(libraryBeginnerSteps.id, id))
+      .returning({ id: libraryBeginnerSteps.id });
+    return result.length > 0;
+  }
+
+  // ============================================
+  // EDUCATION PAGE - Glossary
+  // ============================================
+
+  async getLibraryGlossaryTerms(): Promise<LibraryGlossaryTerm[]> {
+    return db
+      .select()
+      .from(libraryGlossaryTerms)
+      .orderBy(asc(libraryGlossaryTerms.sortOrder), asc(libraryGlossaryTerms.id));
+  }
+
+  async createLibraryGlossaryTerm(data: InsertLibraryGlossaryTerm): Promise<LibraryGlossaryTerm> {
+    const [created] = await db.insert(libraryGlossaryTerms).values(data).returning();
+    return created;
+  }
+
+  async updateLibraryGlossaryTerm(
+    id: number,
+    patch: Partial<InsertLibraryGlossaryTerm>,
+  ): Promise<LibraryGlossaryTerm | undefined> {
+    const [updated] = await db
+      .update(libraryGlossaryTerms)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(libraryGlossaryTerms.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLibraryGlossaryTerm(id: number): Promise<boolean> {
+    const result = await db
+      .delete(libraryGlossaryTerms)
+      .where(eq(libraryGlossaryTerms.id, id))
+      .returning({ id: libraryGlossaryTerms.id });
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // STRATEGY LAB — Property Strategy Snapshot persistence (Task #82)
+  // ============================================================================
+
+  async createPropertyAnalysis(data: InsertPropertyAnalysis): Promise<PropertyAnalysis> {
+    const [created] = await db.insert(propertyAnalysis).values(data).returning();
+    return created;
+  }
+
+  async getPropertyAnalysis(id: number): Promise<PropertyAnalysis | undefined> {
+    const [row] = await db.select().from(propertyAnalysis).where(eq(propertyAnalysis.id, id));
+    return row;
+  }
+
+  async getPropertyAnalysisByShareToken(
+    token: string,
+    opts: { incrementViewCount?: boolean } = {},
+  ): Promise<PropertyAnalysis | undefined> {
+    const { incrementViewCount = true } = opts;
+    const [row] = await db.select().from(propertyAnalysis)
+      .where(and(eq(propertyAnalysis.shareToken, token), eq(propertyAnalysis.isShared, true)));
+    if (row && incrementViewCount) {
+      await db.update(propertyAnalysis)
+        .set({ viewCount: sql`${propertyAnalysis.viewCount} + 1` })
+        .where(eq(propertyAnalysis.id, row.id));
+    }
+    return row;
+  }
+
+  async listPropertyAnalysesByUser(userId: string): Promise<PropertyAnalysis[]> {
+    return db.select().from(propertyAnalysis)
+      .where(eq(propertyAnalysis.userId, userId))
+      .orderBy(desc(propertyAnalysis.updatedAt));
+  }
+
+  async updatePropertyAnalysis(
+    id: number,
+    data: Partial<InsertPropertyAnalysis> & { isShared?: boolean; submittedToPegasus?: boolean },
+  ): Promise<PropertyAnalysis | undefined> {
+    const patch: Record<string, unknown> = { ...data, updatedAt: new Date() };
+    if (data.isShared === true) {
+      const existing = await this.getPropertyAnalysis(id);
+      if (existing && !existing.shareToken) {
+        for (let i = 0; i < 5; i++) {
+          const tok = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2))
+            .replace(/-/g, "").slice(0, 22);
+          const dupe = await db.select({ id: propertyAnalysis.id }).from(propertyAnalysis)
+            .where(eq(propertyAnalysis.shareToken, tok));
+          if (dupe.length === 0) {
+            patch.shareToken = tok;
+            patch.sharedAt = new Date();
+            break;
+          }
+        }
+      }
+    }
+    if (data.submittedToPegasus === true) {
+      patch.submittedAt = new Date();
+    }
+    const [updated] = await db.update(propertyAnalysis)
+      .set(patch)
+      .where(eq(propertyAnalysis.id, id))
+      .returning();
+    return updated;
+  }
+
+  async claimPropertyAnalysesForUser(sessionId: string, userId: string): Promise<number> {
+    if (!sessionId || !userId) return 0;
+    const updated = await db.update(propertyAnalysis)
+      .set({ userId, updatedAt: new Date() })
+      .where(and(eq(propertyAnalysis.sessionId, sessionId), isNull(propertyAnalysis.userId)))
+      .returning({ id: propertyAnalysis.id });
+    return updated.length;
+  }
+
+  /** Latest claimed analysis for a session — used after auth handoff to rehydrate the Lab. */
+  async latestPropertyAnalysisForSession(sessionId: string, userId: string): Promise<number | null> {
+    if (!sessionId || !userId) return null;
+    const rows = await db.select({ id: propertyAnalysis.id })
+      .from(propertyAnalysis)
+      .where(and(eq(propertyAnalysis.userId, userId), eq(propertyAnalysis.sessionId, sessionId)))
+      .orderBy(desc(propertyAnalysis.updatedAt))
+      .limit(1);
+    return rows[0]?.id ?? null;
+  }
+
+  // ============================================================================
+  // STRATEGY LAB — Submissions / Blueprint orders / Touchpoints (Task #85)
+  // ============================================================================
+
+  async createPegasusSubmission(data: InsertPegasusSubmission): Promise<PegasusSubmission> {
+    const [created] = await db.insert(pegasusSubmission).values(data).returning();
+    return created;
+  }
+
+  async listPegasusSubmissions(opts: { status?: string; limit?: number } = {}): Promise<PegasusSubmission[]> {
+    const limit = opts.limit ?? 200;
+    if (opts.status) {
+      return db.select().from(pegasusSubmission)
+        .where(eq(pegasusSubmission.status, opts.status))
+        .orderBy(desc(pegasusSubmission.createdAt)).limit(limit);
+    }
+    return db.select().from(pegasusSubmission).orderBy(desc(pegasusSubmission.createdAt)).limit(limit);
+  }
+
+  async getPegasusSubmission(id: number): Promise<PegasusSubmission | undefined> {
+    const [row] = await db.select().from(pegasusSubmission).where(eq(pegasusSubmission.id, id));
+    return row;
+  }
+
+  async updatePegasusSubmission(
+    id: number,
+    patch: Partial<{ status: string; reviewedAt: Date; reviewedBy: string; reviewNotes: string }>,
+  ): Promise<PegasusSubmission | undefined> {
+    const [updated] = await db.update(pegasusSubmission)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(pegasusSubmission.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createBlueprintOrder(data: InsertBlueprintOrder): Promise<BlueprintOrder> {
+    const [created] = await db.insert(blueprintOrder).values(data).returning();
+    return created;
+  }
+
+  async getBlueprintOrder(id: number): Promise<BlueprintOrder | undefined> {
+    const [row] = await db.select().from(blueprintOrder).where(eq(blueprintOrder.id, id));
+    return row;
+  }
+
+  async listBlueprintOrders(opts: { limit?: number } = {}): Promise<BlueprintOrder[]> {
+    return db.select().from(blueprintOrder)
+      .orderBy(desc(blueprintOrder.createdAt))
+      .limit(opts.limit ?? 200);
+  }
+
+  async updateBlueprintOrder(
+    id: number,
+    patch: Partial<{ paymentMethod: string; paymentStatus: string; stripeSessionId: string; paidAt: Date }>,
+  ): Promise<BlueprintOrder | undefined> {
+    const [updated] = await db.update(blueprintOrder)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(blueprintOrder.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createStrategyLabTouchpoint(data: InsertStrategyLabTouchpoint): Promise<StrategyLabTouchpoint> {
+    const [created] = await db.insert(strategyLabTouchpoint).values(data).returning();
+    return created;
+  }
+
+  async listStrategyLabTouchpoints(opts: { limit?: number; sinceDays?: number } = {}): Promise<StrategyLabTouchpoint[]> {
+    const limit = opts.limit ?? 500;
+    if (opts.sinceDays) {
+      const since = new Date(Date.now() - opts.sinceDays * 24 * 60 * 60 * 1000);
+      return db.select().from(strategyLabTouchpoint)
+        .where(gte(strategyLabTouchpoint.createdAt, since))
+        .orderBy(desc(strategyLabTouchpoint.createdAt))
+        .limit(limit);
+    }
+    return db.select().from(strategyLabTouchpoint)
+      .orderBy(desc(strategyLabTouchpoint.createdAt))
+      .limit(limit);
+  }
+
+  async deletePropertyAnalysis(id: number): Promise<void> {
+    // Children are deleted by replaceXxx callers when an analysis is updated;
+    // on full delete clear them all up front.
+    await db.delete(compEntry).where(eq(compEntry.propertyAnalysisId, id));
+    await db.delete(riskFlag).where(eq(riskFlag.propertyAnalysisId, id));
+    await db.delete(capitalStackEntry).where(eq(capitalStackEntry.propertyAnalysisId, id));
+    await db.delete(scenarioRun).where(eq(scenarioRun.propertyAnalysisId, id));
+    await db.delete(laneFitResult).where(eq(laneFitResult.propertyAnalysisId, id));
+    await db.delete(propertyAnalysis).where(eq(propertyAnalysis.id, id));
+  }
+
+  async replaceCompEntries(propertyAnalysisId: number, comps: InsertCompEntry[]): Promise<CompEntryRow[]> {
+    return db.transaction(async (tx) => {
+      await tx.delete(compEntry).where(eq(compEntry.propertyAnalysisId, propertyAnalysisId));
+      if (comps.length === 0) return [];
+      const rows = comps.map((c) => ({ ...c, propertyAnalysisId }));
+      return tx.insert(compEntry).values(rows).returning();
+    });
+  }
+
+  async replaceRiskFlags(propertyAnalysisId: number, flags: InsertRiskFlag[]): Promise<RiskFlagRow[]> {
+    return db.transaction(async (tx) => {
+      await tx.delete(riskFlag).where(eq(riskFlag.propertyAnalysisId, propertyAnalysisId));
+      if (flags.length === 0) return [];
+      const rows = flags.map((f) => ({ ...f, propertyAnalysisId }));
+      return tx.insert(riskFlag).values(rows).returning();
+    });
+  }
+
+  async replaceCapitalStack(propertyAnalysisId: number, entries: InsertCapitalStackEntry[]): Promise<CapitalStackEntryRow[]> {
+    return db.transaction(async (tx) => {
+      await tx.delete(capitalStackEntry).where(eq(capitalStackEntry.propertyAnalysisId, propertyAnalysisId));
+      if (entries.length === 0) return [];
+      const rows = entries.map((e) => ({ ...e, propertyAnalysisId }));
+      return tx.insert(capitalStackEntry).values(rows).returning();
+    });
+  }
+
+  async replaceScenarioRuns(propertyAnalysisId: number, runs: InsertScenarioRun[]): Promise<ScenarioRunRow[]> {
+    return db.transaction(async (tx) => {
+      await tx.delete(scenarioRun).where(eq(scenarioRun.propertyAnalysisId, propertyAnalysisId));
+      if (runs.length === 0) return [];
+      const rows = runs.map((r) => ({ ...r, propertyAnalysisId }));
+      return tx.insert(scenarioRun).values(rows).returning();
+    });
+  }
+
+  async replaceLaneFitResults(propertyAnalysisId: number, lanes: InsertLaneFitResult[]): Promise<LaneFitResultRow[]> {
+    return db.transaction(async (tx) => {
+      await tx.delete(laneFitResult).where(eq(laneFitResult.propertyAnalysisId, propertyAnalysisId));
+      if (lanes.length === 0) return [];
+      const rows = lanes.map((l) => ({ ...l, propertyAnalysisId }));
+      return tx.insert(laneFitResult).values(rows).returning();
+    });
   }
 }
 

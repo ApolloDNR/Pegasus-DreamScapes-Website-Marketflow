@@ -299,8 +299,8 @@ export function PeggyChatBubble() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold text-sm">Peggy</h3>
-              <p className="text-xs text-muted-foreground">AI Assistant</p>
+              <h3 className="font-semibold text-sm">Peggy · Strategy Assistant</h3>
+              <p className="text-xs text-muted-foreground">Pegasus DreamScapes intake & routing</p>
             </div>
           </div>
           
@@ -342,9 +342,9 @@ export function PeggyChatBubble() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                 <Sparkles className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Hi, I'm Peggy!</h3>
+              <h3 className="font-semibold mb-2">Hi, I'm Peggy.</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Your AI assistant for real estate investing. Ask me anything about deals, strategies, or the platform.
+                I can help route your property, deal, or partnership idea to the right Pegasus review path.
               </p>
               
               {suggestions.length > 0 && (
