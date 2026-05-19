@@ -1550,7 +1550,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Pegasus DreamScapes Corp. — luxury home at dusk with warm lighting"
+          alt="Pegasus DreamScapes Corp. luxury home at dusk with warm lighting"
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -1656,7 +1656,7 @@ function HeroSection() {
                 transition={{ duration: 0.8, delay: 0.75 }}
                 data-testid="text-hero-subheadline"
               >
-                A strategy-first real estate operating company. We review the situation. Then we design the path.
+                Where others see impossible, we see a path. A strategy-first real estate operating company that reviews the situation, then designs the route forward.
               </motion.p>
             </div>
 
@@ -1747,7 +1747,7 @@ function HeroSection() {
       </div>
 
       {/* Premium accent bar at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
+      <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
     </section>
   );
 }

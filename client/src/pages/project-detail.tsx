@@ -424,7 +424,7 @@ function ProjectSkeleton() {
   return (
     <div className="min-h-screen pt-20">
       <section className="relative min-h-[60vh] bg-gradient-to-br from-navy to-charcoal animate-skeleton">
-        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
+        <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
       </section>
       <section className="py-24 max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12">
         <div className="lg:col-span-7 space-y-6">

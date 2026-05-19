@@ -48,7 +48,7 @@ function HeroSection() {
   return (
     <section className="py-24 lg:py-40 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="absolute top-20 right-20 w-96 h-96 bg-tan/5 rounded-full blur-3xl" />
+      <div className="absolute top-20 right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
       
       <div className="relative max-w-7xl mx-auto px-6 text-center">
@@ -106,7 +106,7 @@ function InvestmentGuidesSection() {
   ];
 
   return (
-    <section className="py-20 lg:py-28 bg-tan/5 border-y border-border">
+    <section className="py-20 lg:py-28 bg-primary/5 border-y border-border">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-3 mb-5">
@@ -129,16 +129,16 @@ function InvestmentGuidesSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {guides.map((guide, index) => (
-            <Card key={index} className="group hover:border-tan/30 transition-all duration-300" data-testid={`guide-card-${index}`}>
+            <Card key={index} className="group hover:border-primary/30 transition-all duration-300" data-testid={`guide-card-${index}`}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-tan/10 flex items-center justify-center flex-shrink-0 group-hover:bg-tan/20 transition-colors">
-                    <guide.icon className="w-7 h-7 text-tan" />
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <guide.icon className="w-7 h-7 text-primary" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="text-xl font-semibold">{guide.title}</h3>
-                      <Badge variant="outline" className="text-xs border-tan/30 text-tan">
+                      <Badge variant="outline" className="text-xs border-primary/30 text-primary">
                         {guide.difficulty}
                       </Badge>
                     </div>
@@ -245,7 +245,7 @@ function ArticlesGrid() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((article, index) => (
             <Link key={article.id} href={`/resources/${article.slug}`}>
-              <Card className="overflow-hidden group hover:border-tan/30 transition-all duration-300 cursor-pointer h-full flex flex-col" data-testid={`card-article-${index}`}>
+              <Card className="overflow-hidden group hover:border-primary/30 transition-all duration-300 cursor-pointer h-full flex flex-col" data-testid={`card-article-${index}`}>
                 <div className="aspect-video relative overflow-hidden">
                   {article.imageUrl ? (
                     <img 
@@ -254,8 +254,8 @@ function ArticlesGrid() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-tan/20 to-primary/10 flex items-center justify-center">
-                      <BookOpen className="w-12 h-12 text-tan/50" />
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                      <BookOpen className="w-12 h-12 text-primary/50" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
@@ -266,7 +266,7 @@ function ArticlesGrid() {
                   </div>
                 </div>
                 <CardHeader className="pb-3 flex-grow">
-                  <CardTitle className="text-xl line-clamp-2 group-hover:text-tan transition-colors">{article.title}</CardTitle>
+                  <CardTitle className="text-xl line-clamp-2 group-hover:text-primary transition-colors">{article.title}</CardTitle>
                   <CardDescription className="line-clamp-3">
                     {article.excerpt}
                   </CardDescription>
@@ -283,7 +283,7 @@ function ArticlesGrid() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <span className="text-tan font-medium text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span className="text-primary font-medium text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                       Read More <ArrowRight className="w-4 h-4" />
                     </span>
                   </div>
@@ -326,7 +326,7 @@ function ToolsSection() {
   ];
 
   return (
-    <section className="py-20 lg:py-28 bg-tan/5 border-y border-border">
+    <section className="py-20 lg:py-28 bg-primary/5 border-y border-border">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-14 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-3 mb-5">
@@ -350,12 +350,12 @@ function ToolsSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {tools.map((tool, index) => (
             <Link key={index} href={tool.href}>
-              <Card className="group hover:border-tan/30 transition-all duration-300 cursor-pointer h-full" data-testid={`tool-card-${index}`}>
+              <Card className="group hover:border-primary/30 transition-all duration-300 cursor-pointer h-full" data-testid={`tool-card-${index}`}>
                 <CardContent className="p-6 text-center">
-                  <div className="w-14 h-14 rounded-xl bg-tan/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-tan/20 transition-colors">
-                    <tool.icon className="w-7 h-7 text-tan" />
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                    <tool.icon className="w-7 h-7 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2 group-hover:text-tan transition-colors">{tool.title}</h3>
+                  <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">{tool.title}</h3>
                   <p className="text-sm text-muted-foreground">{tool.description}</p>
                 </CardContent>
               </Card>
@@ -369,7 +369,7 @@ function ToolsSection() {
 
 function CTASection() {
   return (
-    <section className="py-24 lg:py-32 bg-gradient-to-br from-primary/5 to-tan/5">
+    <section className="py-24 lg:py-32 bg-gradient-to-br from-primary/5 to-primary/5">
       <div className="max-w-4xl mx-auto px-6 text-center">
         <GraduationCap className="w-12 h-12 text-primary mx-auto mb-6" />
         <div className="inline-flex items-center gap-3 mb-5">
@@ -390,7 +390,7 @@ function CTASection() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/sell">
-            <Button size="lg" className="gap-2 bg-tan text-tan-foreground hover:bg-tan/90" data-testid="button-resources-sell">
+            <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-resources-sell">
               <Home className="w-5 h-5" />
               Sell Your Property
             </Button>

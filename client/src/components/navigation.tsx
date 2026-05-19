@@ -67,11 +67,11 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
   },
   "/strategy-lab": {
     icon: Calculator,
-    tagline: "Run a property through the Pegasus lens — eight lanes, one verdict.",
+    tagline: "Run a property through the Pegasus lens. Eight lanes, one verdict.",
   },
   "/calculators": {
     icon: Calculator,
-    tagline: "ARV, ROI, BRRRR, PITI — eight operator-grade calculators, free.",
+    tagline: "ARV, ROI, BRRRR, PITI. Eight operator-grade calculators, free.",
   },
   "/vendor-network": {
     icon: Network,
@@ -79,7 +79,7 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
   },
   "/deal-blueprint": {
     icon: ClipboardCheck,
-    tagline: "The paid, written analysis — three tiers, 48-hour SLA.",
+    tagline: "The paid, written analysis. Three tiers, 48-hour SLA.",
   },
   "/contact": {
     icon: Mail,
@@ -345,7 +345,7 @@ export function Navigation() {
           <Link
             href="/"
             className="flex items-center gap-3 lg:gap-4 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm group"
-            aria-label="Pegasus DreamScapes — home"
+            aria-label="Pegasus DreamScapes home"
             data-testid="link-logo"
           >
             <img

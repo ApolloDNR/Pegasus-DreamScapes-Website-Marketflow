@@ -155,7 +155,7 @@ function HeroSection() {
           </div>
         </FadeIn>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-tan to-champagne" />
+      <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
     </section>
   );
 }

@@ -2943,7 +2943,7 @@ function HardMoneyCalculator() {
         <CardHeader>
           <CardTitle className="font-serif text-2xl flex items-center gap-2">
             <Coins className="w-5 h-5 text-primary" />
-            Hard Money — Full Holding Stack
+            Hard Money: Full Holding Stack
           </CardTitle>
           <CardDescription>
             Points + interest + taxes + insurance + utilities. And the sale price needed to walk out whole.

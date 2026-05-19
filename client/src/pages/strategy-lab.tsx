@@ -1867,7 +1867,7 @@ export default function StrategyLabPage() {
               >
                 <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
                   <span className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
-                    What we're assuming — tap to edit
+                    What we're assuming. Tap to edit.
                   </span>
                   <span className="chev transition-transform text-primary text-xs" aria-hidden="true">›</span>
                 </summary>
@@ -2251,7 +2251,7 @@ export default function StrategyLabPage() {
             </div>
             <DialogTitle className="font-serif text-2xl">Save your work in a free account.</DialogTitle>
             <DialogDescription className="font-serif text-base text-muted-foreground leading-relaxed">
-              You've used {getLabRunCount()} of your {FREE_RUN_LIMIT} free Strategy Lab runs. Sign in to {accountWallReason || "save and share"} — it takes ten seconds and your current snapshot will follow you in.
+              You've used {getLabRunCount()} of your {FREE_RUN_LIMIT} free Strategy Lab runs. Sign in to {accountWallReason || "save and share"}. It takes ten seconds, and your current snapshot will follow you in.
             </DialogDescription>
           </DialogHeader>
           <div className="text-xs text-muted-foreground border-l-2 border-[hsl(var(--copper))] pl-3 italic">
@@ -2321,7 +2321,7 @@ export default function StrategyLabPage() {
               <div className="border-l-2 border-[hsl(var(--copper))] pl-4 py-2 bg-[hsl(var(--copper)/0.05)]">
                 <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">Confirm full share</div>
                 <div className="font-serif text-base text-foreground leading-relaxed">
-                  This link will expose the full underwriting math — pricing, rehab,
+                  This link will expose the full underwriting math: pricing, rehab,
                   capital stack, and sensitivity. Anyone who receives the URL can
                   see every number. Only share with a trusted partner.
                 </div>
@@ -2407,7 +2407,7 @@ export default function StrategyLabPage() {
             </div>
             <DialogTitle className="font-serif text-2xl">Send this snapshot in for review.</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Apollo's team reviews every submission within two business days. If we miss the window, your request is escalated for priority review. This is not an offer — every property gets a serious read.
+              Apollo's team reviews every submission within two business days. If we miss the window, your request is escalated for priority review. This is not an offer. Every property gets a serious read.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -2448,7 +2448,7 @@ export default function StrategyLabPage() {
                 rows={4}
                 value={submitForm.notes}
                 onChange={(e) => setSubmitForm((s) => ({ ...s, notes: e.target.value }))}
-                placeholder="Anything the team should know — timeline pressure, title issues, seller motivation, capital you've lined up."
+                placeholder="Anything the team should know: timeline pressure, title issues, seller motivation, capital you've lined up."
                 data-testid="textarea-submit-notes"
               />
             </div>
@@ -2485,7 +2485,7 @@ export default function StrategyLabPage() {
             <DialogTitle className="font-serif text-2xl">
               {(() => {
                 const t = blueprintTiersQuery.data?.tiers.find((x) => x.key === selectedTierId);
-                return t ? `${t.title} — $${(t.priceCents / 100).toLocaleString()}` : "Order a Blueprint";
+                return t ? `${t.title}: $${(t.priceCents / 100).toLocaleString()}` : "Order a Blueprint";
               })()}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
