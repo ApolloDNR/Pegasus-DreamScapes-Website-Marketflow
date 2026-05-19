@@ -69,6 +69,7 @@ function HeroSection() {
           The frameworks, structural reads, and worked examples we use inside Pegasus. Not advice. Not a sales funnel. The library you actually wanted.
         </p>
       </div>
+      <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
     </section>
   );
 }
