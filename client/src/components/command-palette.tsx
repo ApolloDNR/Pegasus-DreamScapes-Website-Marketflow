@@ -209,8 +209,8 @@ export function CommandPalette() {
               className="flex items-center gap-3 cursor-pointer"
               data-testid={`command-${item.id}`}
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-tan/20">
-                <item.icon className="w-4 h-4 text-tan" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20">
+                <item.icon className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">

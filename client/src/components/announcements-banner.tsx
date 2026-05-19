@@ -54,7 +54,7 @@ export function AnnouncementsBanner({ className = "", audience }: AnnouncementsB
           className={`border-l-4 ${
             announcement.isPinned
               ? "border-l-primary bg-primary/5"
-              : "border-l-tan bg-tan/5"
+              : "border-l-primary/50 bg-primary/[0.03]"
           }`}
           data-testid={`announcement-${announcement.id}`}
         >
@@ -63,7 +63,7 @@ export function AnnouncementsBanner({ className = "", audience }: AnnouncementsB
               {announcement.isPinned ? (
                 <Pin className="h-4 w-4 text-primary" />
               ) : (
-                <Megaphone className="h-4 w-4 text-tan" />
+                <Megaphone className="h-4 w-4 text-primary" />
               )}
             </div>
             <div className="flex-1 min-w-0">

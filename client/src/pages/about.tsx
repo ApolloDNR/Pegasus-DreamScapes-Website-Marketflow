@@ -39,16 +39,16 @@ function AboutHero() {
   return (
     <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 bg-navy text-cream overflow-hidden">
       <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-1/3 left-1/4 w-[28rem] h-[28rem] bg-copper/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/4 w-[28rem] h-[28rem] bg-primary/15 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-champagne/10 rounded-full blur-3xl" />
       </div>
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-copper/40 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-end">
           <ScrollReveal className="lg:col-span-7" direction="left">
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-px w-16 bg-gradient-to-r from-copper to-transparent" />
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
               <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
                 About · The Operating Company
               </p>
@@ -75,7 +75,7 @@ function AboutHero() {
 
           <ScrollReveal className="lg:col-span-5" direction="right" delay={0.15}>
             <div className="relative">
-              <div className="absolute -inset-6 bg-gradient-to-br from-copper/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="absolute -inset-6 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
               <div
                 className="relative p-8 lg:p-10 rounded-2xl border border-cream/15 shadow-2xl shadow-black/40 backdrop-blur-sm"
                 style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}
@@ -351,7 +351,7 @@ function CTASection() {
   return (
     <section className="py-24 lg:py-32 bg-navy text-cream relative overflow-hidden">
       <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-copper/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
       </div>
       <div className="relative max-w-4xl mx-auto px-6 lg:px-12 text-center">
         <ScrollReveal>
@@ -368,7 +368,7 @@ function CTASection() {
             <Link href="/sell">
               <Button
                 size="lg"
-                className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-copper text-white hover:bg-copper/90 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 min-h-[44px]"
+                className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-white hover:bg-primary/90 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 min-h-[44px]"
                 data-testid="button-about-sell"
               >
                 Start a Strategy Review
@@ -377,7 +377,7 @@ function CTASection() {
             </Link>
           </div>
           <p className="text-xs text-cream/55 mt-6 font-supporting">
-            Or call Apollo direct: <a href="tel:+19257448525" className="text-copper hover:text-copper/80 transition-colors">925-744-8525</a>
+            Or call Apollo direct: <a href="tel:+19257448525" className="text-primary hover:text-primary/80 transition-colors">925-744-8525</a>
           </p>
         </ScrollReveal>
       </div>

@@ -14,12 +14,12 @@ export default function Disclosures() {
     <div className="min-h-screen bg-background">
       <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 bg-navy text-cream overflow-hidden">
         <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-copper/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-champagne/10 rounded-full blur-3xl" />
         </div>
         <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
           <div className="flex items-center gap-4 mb-6">
-            <div className="h-px w-16 bg-gradient-to-r from-copper to-transparent" />
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
               Compliance · Plain language
             </p>
@@ -134,13 +134,13 @@ export default function Disclosures() {
           <ScrollReveal delay={0.1}>
             <div className="mt-16 pt-10 border-t border-border">
               <div className="flex items-start gap-4">
-                <Mail className="w-5 h-5 text-copper mt-1 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2">
                     Questions about this page
                   </p>
                   <p className="text-base text-foreground/90 leading-relaxed">
-                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-copper hover:underline">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-copper hover:underline">925-744-8525</a>.
+                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-primary hover:underline">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-primary hover:underline">925-744-8525</a>.
                   </p>
                   <p className="text-sm text-muted-foreground mt-3 italic">
                     Last updated: May 2026
@@ -171,7 +171,7 @@ function DisclosureBlock({
   return (
     <div className="mb-14 last:mb-0" data-testid={testId}>
       <div className="flex items-center gap-3 mb-3">
-        <Icon className="w-4 h-4 text-copper" />
+        <Icon className="w-4 h-4 text-primary" />
         <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
           {kicker}
         </p>
@@ -179,7 +179,7 @@ function DisclosureBlock({
       <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight mb-5 leading-tight">
         {title}
       </h2>
-      <div className="space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-copper/30 pl-6">
+      <div className="space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-6">
         {children}
       </div>
     </div>

@@ -270,7 +270,7 @@ function HeroSection() {
   return (
     <section className="py-20 lg:py-32 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="absolute top-20 right-20 w-96 h-96 bg-tan/5 rounded-full blur-3xl" />
+      <div className="absolute top-20 right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
       
       <div className="relative max-w-7xl mx-auto px-6 text-center">
@@ -328,7 +328,7 @@ function CalculatorTabs({
     window.history.replaceState({}, "", url.toString());
   }, [activeTab]);
   return (
-    <section className="py-12 lg:py-20 border-t border-border bg-tan/5">
+    <section className="py-12 lg:py-20 border-t border-border bg-primary/5">
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex justify-end mb-4">
           <MyAnalysesDrawer
@@ -513,7 +513,7 @@ function ARVCalculator() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-tan/20">
+      <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -868,7 +868,7 @@ function ROICalculator() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-tan/20">
+      <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -1205,11 +1205,11 @@ function BRRRRCalculator() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-tan/20">
+      <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-tan/20 flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 text-tan" />
+            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <RefreshCw className="w-5 h-5 text-primary" />
             </div>
             <div>
               <CardTitle>BRRRR Calculator</CardTitle>
@@ -1220,8 +1220,8 @@ function BRRRRCalculator() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="p-4 bg-tan/5 rounded-lg border border-tan/20">
-            <h4 className="font-medium text-sm mb-2 text-tan">What is BRRRR?</h4>
+          <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+            <h4 className="font-medium text-sm mb-2 text-primary">What is BRRRR?</h4>
             <p className="text-xs text-muted-foreground">
               BRRRR is a strategy where you buy distressed properties, rehab them, rent them out, refinance to pull your cash out, then repeat with the same capital.
             </p>
@@ -1354,10 +1354,10 @@ function BRRRRCalculator() {
       </Card>
 
       {results && (
-        <Card className="border-tan/30 bg-gradient-to-br from-card to-tan/5">
+        <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-tan" />
+              <RefreshCw className="w-5 h-5 text-primary" />
               BRRRR Analysis Results
               {results.infiniteReturn && (
                 <Badge className="bg-green-500/10 text-green-500 ml-2">Infinite Return!</Badge>
@@ -1374,7 +1374,7 @@ function BRRRRCalculator() {
               </div>
               <div className="p-4 bg-background rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Refinance Amount</p>
-                <p className="text-xl font-bold text-tan" data-testid="result-brrrr-refi">
+                <p className="text-xl font-bold text-primary" data-testid="result-brrrr-refi">
                   {formatCurrency(results.refinanceValue)}
                 </p>
               </div>
@@ -1541,7 +1541,7 @@ function BRRRRCalculator() {
                 <DealGradeBadge grade={calculateDealGrade(results.cashOnCash, results.monthlyCashFlow)} />
               </div>
               <Link href="/invest">
-                <Button className="bg-tan text-tan-foreground hover:bg-tan/90" data-testid="button-brrrr-cta">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-brrrr-cta">
                   Join Investor Network
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -1633,7 +1633,7 @@ function CashFlowCalculator() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-tan/20">
+      <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -1649,7 +1649,7 @@ function CashFlowCalculator() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <h4 className="font-medium text-sm text-tan uppercase tracking-wider">Income</h4>
+            <h4 className="font-medium text-sm text-primary uppercase tracking-wider">Income</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="grossRent">Gross Monthly Rent</Label>
@@ -1685,7 +1685,7 @@ function CashFlowCalculator() {
           </div>
           
           <div className="space-y-4">
-            <h4 className="font-medium text-sm text-tan uppercase tracking-wider">Operating Expenses</h4>
+            <h4 className="font-medium text-sm text-primary uppercase tracking-wider">Operating Expenses</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="propertyTax">Property Tax (Monthly)</Label>
@@ -1781,7 +1781,7 @@ function CashFlowCalculator() {
           </div>
           
           <div className="space-y-4">
-            <h4 className="font-medium text-sm text-tan uppercase tracking-wider">Debt Service</h4>
+            <h4 className="font-medium text-sm text-primary uppercase tracking-wider">Debt Service</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="mortgage">Monthly Mortgage Payment</Label>
@@ -2080,7 +2080,7 @@ function WholesaleCalculator() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-tan/20">
+      <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">

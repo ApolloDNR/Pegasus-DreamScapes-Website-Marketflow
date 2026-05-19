@@ -70,8 +70,8 @@ function HeroSection() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-copper/50 bg-copper/10 backdrop-blur-sm">
-                <FileText className="w-3 h-3 text-copper" />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/50 bg-primary/10 backdrop-blur-sm">
+                <FileText className="w-3 h-3 text-primary" />
                 <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">Strategic Planning Report</span>
               </span>
               <span className="text-[11px] uppercase tracking-[0.28em] text-white/65 font-supporting">Paid · Follows the free Snapshot</span>

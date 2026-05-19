@@ -352,17 +352,17 @@ function MarketFlowBetaSection() {
       style={{ backgroundColor: "hsl(var(--navy))", color: "hsl(var(--navy-foreground))" }}
     >
       <div className="absolute inset-0 opacity-40 pointer-events-none">
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-copper/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-champagne/10 rounded-full blur-3xl" />
       </div>
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-copper/40 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <ScrollReveal className="lg:col-span-7" direction="left">
             <div className="flex items-center gap-3 mb-6">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-copper/40 bg-copper/10">
-                <Lock className="w-3 h-3 text-copper" />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10">
+                <Lock className="w-3 h-3 text-primary" />
                 <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">Private Beta</span>
               </span>
               <span className="text-xs uppercase tracking-[0.2em] text-cream/60">Invite-only network</span>
@@ -379,7 +379,7 @@ function MarketFlowBetaSection() {
               MarketFlow is the private dealflow layer for reviewed opportunities, trusted operators, buyers, and capital relationships.
             </p>
 
-            <div className="mb-8 border-l-2 border-copper/60 pl-5 text-sm text-cream/80 leading-relaxed max-w-2xl" data-testid="marketflow-not">
+            <div className="mb-8 border-l-2 border-primary/60 pl-5 text-sm text-cream/80 leading-relaxed max-w-2xl" data-testid="marketflow-not">
               <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-2">What MarketFlow is not</p>
               <ul className="space-y-1">
                 <li>· Not raw intake. Every property is routed through Pegasus HQ first.</li>
@@ -396,7 +396,7 @@ function MarketFlowBetaSection() {
                 { icon: Network, text: "Direct-to-operator messaging in-network" },
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3" data-testid={`marketflow-feature-${i}`}>
-                  <item.icon className="w-4 h-4 text-copper mt-1 flex-shrink-0" />
+                  <item.icon className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                   <span className="text-sm text-cream/90 leading-relaxed">{item.text}</span>
                 </li>
               ))}
@@ -404,7 +404,7 @@ function MarketFlowBetaSection() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/marketflow">
-                <Button size="lg" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-copper text-white hover:bg-copper/90" data-testid="button-marketflow-explore">
+                <Button size="lg" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-white hover:bg-primary/90" data-testid="button-marketflow-explore">
                   Enter MarketFlow
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
@@ -419,7 +419,7 @@ function MarketFlowBetaSection() {
 
           <ScrollReveal className="lg:col-span-5" direction="right" delay={0.2}>
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-copper/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
               <div className="relative p-8 lg:p-10 rounded-2xl border border-cream/15 shadow-2xl shadow-black/30 backdrop-blur-sm" style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}>
                 <div className="flex items-center justify-between mb-6 pb-5 border-b border-cream/15">
                   <div className="flex items-center gap-2">
@@ -442,12 +442,12 @@ function MarketFlowBetaSection() {
                   ].map((deal, i) => (
                     <div
                       key={i}
-                      className="p-4 rounded-lg border border-cream/15 hover:border-copper/40 transition-colors group bg-cream/[0.03]"
+                      className="p-4 rounded-lg border border-cream/15 hover:border-primary/40 transition-colors group bg-cream/[0.03]"
                       data-testid={`marketflow-deal-${i}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-supporting font-semibold">{deal.lane}</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-cream/50 group-hover:text-copper transition-colors" />
+                        <ArrowRight className="w-3.5 h-3.5 text-cream/50 group-hover:text-primary transition-colors" />
                       </div>
                       <h3 className="font-semibold text-sm mb-1 font-serif text-cream">{deal.title}</h3>
                       <p className="text-xs text-cream/60">{deal.meta}</p>
@@ -478,8 +478,8 @@ function MarketFlowBetaSection() {
             {/* Mobile: vertical timeline grouped by stage */}
             <ol className="lg:hidden space-y-8" data-testid="marketflow-funnel-mobile">
               {stages.map((stage, si) => (
-                <li key={stage.stage} className="relative pl-6 border-l border-copper/40" data-testid={`funnel-stage-${si}`}>
-                  <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-copper" />
+                <li key={stage.stage} className="relative pl-6 border-l border-primary/40" data-testid={`funnel-stage-${si}`}>
+                  <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-primary" />
                   <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1">{stage.stage}</p>
                   <p className="font-serif text-base font-semibold text-cream mb-4">{stage.stageLabel}</p>
                   <div className="space-y-3">
@@ -504,7 +504,7 @@ function MarketFlowBetaSection() {
               <div className="grid grid-cols-4 gap-5">
                 {stages.map((stage, si) => (
                   <div key={stage.stage} className="relative">
-                    <div className="mb-5 pb-3 border-b border-copper/30">
+                    <div className="mb-5 pb-3 border-b border-primary/30">
                       <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1">{stage.stage}</p>
                       <p className="font-serif text-base font-semibold text-cream leading-tight">{stage.stageLabel}</p>
                     </div>
@@ -512,7 +512,7 @@ function MarketFlowBetaSection() {
                       {stage.steps.map((step) => (
                         <div
                           key={step.n}
-                          className="relative p-4 rounded-lg border border-cream/15 bg-cream/[0.03] hover:border-copper/50 hover:bg-cream/[0.05] transition-all"
+                          className="relative p-4 rounded-lg border border-cream/15 bg-cream/[0.03] hover:border-primary/50 hover:bg-cream/[0.05] transition-all"
                           data-testid={`funnel-step-${step.n}-desktop`}
                         >
                           <div className="text-[10px] uppercase tracking-[0.25em] text-primary/85 font-supporting font-semibold mb-1.5">{step.n}</div>
@@ -522,7 +522,7 @@ function MarketFlowBetaSection() {
                       ))}
                     </div>
                     {si < stages.length - 1 && (
-                      <ArrowRight className="hidden lg:block absolute top-5 -right-3.5 w-4 h-4 text-copper/60" aria-hidden="true" />
+                      <ArrowRight className="hidden lg:block absolute top-5 -right-3.5 w-4 h-4 text-primary/60" aria-hidden="true" />
                     )}
                   </div>
                 ))}
@@ -560,8 +560,8 @@ function FounderSection() {
                   data-testid="img-founder-apollo"
                 />
                 {/* Copper hairline frame */}
-                <div className="absolute inset-0 ring-1 ring-copper/50 rounded-lg pointer-events-none" />
-                <div className="absolute -inset-1 rounded-lg ring-1 ring-copper/15 pointer-events-none" />
+                <div className="absolute inset-0 ring-1 ring-primary/50 rounded-lg pointer-events-none" />
+                <div className="absolute -inset-1 rounded-lg ring-1 ring-primary/15 pointer-events-none" />
               </div>
               <div className="brand-stripe mt-3" />
             </div>
@@ -570,7 +570,7 @@ function FounderSection() {
           {/* Founder text block */}
           <ScrollReveal className="lg:col-span-7" direction="right" delay={0.15}>
             <div className="flex items-center gap-3 mb-5">
-              <span className="h-px w-10 bg-copper" />
+              <span className="h-px w-10 bg-primary" />
               <p className="text-[11px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">
                 The Operator
               </p>
@@ -703,16 +703,16 @@ function WhatBringsYouHereSection() {
           {cards.map((card, index) => (
             <StaggerItem key={index}>
               <Link href={card.href} data-testid={`link-${card.testId}`}>
-                <Card className="group h-full p-7 bg-card border border-border/40 hover:border-copper/40 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden hover:-translate-y-[3px]">
+                <Card className="group h-full p-7 bg-card border border-border/40 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden hover:-translate-y-[3px]">
                   {/* Bronze top rule on hover */}
-                  <div className="absolute left-0 right-0 top-0 h-px bg-copper/0 group-hover:bg-copper transition-all duration-300" />
+                  <div className="absolute left-0 right-0 top-0 h-px bg-primary/0 group-hover:bg-primary transition-all duration-300" />
                   <div className="flex items-baseline justify-between mb-6">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{card.tag}</p>
-                    <card.icon className="w-5 h-5 text-copper/55 group-hover:text-copper transition-colors duration-300" />
+                    <card.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors duration-300" />
                   </div>
                   <h3 className="font-serif text-xl sm:text-[22px] font-semibold mb-3 tracking-tight leading-tight group-hover:text-primary transition-colors duration-300">{card.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5">{card.desc}</p>
-                  <div className="flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-copper/80 group-hover:text-copper font-semibold transition-colors">
+                  <div className="flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary/80 group-hover:text-primary font-semibold transition-colors">
                     Continue
                     <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
@@ -1503,8 +1503,8 @@ function OperatingPrinciplesSection() {
                 whileHover={{ x: 4 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-14 h-14 rounded-xl bg-tan/10 flex items-center justify-center flex-shrink-0">
-                  <BarChart3 className="w-6 h-6 text-tan" />
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <div className="font-semibold text-base">
@@ -1583,7 +1583,7 @@ function HeroSection() {
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
         <motion.div 
-          className="absolute top-1/2 right-1/3 w-48 h-48 bg-tan/15 rounded-full blur-3xl"
+          className="absolute top-1/2 right-1/3 w-48 h-48 bg-primary/15 rounded-full blur-3xl"
           animate={{ 
             scale: [1, 1.3, 1],
             rotate: [0, 180, 360]
@@ -1612,8 +1612,8 @@ function HeroSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
               data-testid="hero-eyebrow"
             >
-              <span className="h-px w-8 bg-copper" />
-              <p className="text-[11px] sm:text-[12px] uppercase tracking-[0.18em] text-copper font-semibold font-supporting">
+              <span className="h-px w-8 bg-primary" />
+              <p className="text-[11px] sm:text-[12px] uppercase tracking-[0.18em] text-primary font-semibold font-supporting">
                 Featured · Nelson Dr · Richmond CA
               </p>
             </motion.div>
@@ -1674,8 +1674,8 @@ function HeroSection() {
                 {heroPhilosophical}
               </p>
               <div className="flex items-center gap-3" data-testid="text-hero-tagline">
-                <span className="h-px w-8 bg-copper/70" />
-                <p className="text-[11px] sm:text-xs uppercase tracking-[0.4em] text-copper/90 font-medium font-supporting">
+                <span className="h-px w-8 bg-primary/70" />
+                <p className="text-[11px] sm:text-xs uppercase tracking-[0.4em] text-primary/90 font-medium font-supporting">
                   Dream it. Build it. Live it.
                 </p>
               </div>
@@ -1689,7 +1689,7 @@ function HeroSection() {
               transition={{ duration: 0.6, delay: 1.05 }}
             >
               <a href="/sell">
-                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-copper text-white hover:bg-copper/90 font-semibold shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
+                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_primary" fallback="Start a Strategy Review" />
                   ) : heroCtaPrimary}
@@ -1715,7 +1715,7 @@ function HeroSection() {
               data-testid="hero-bottom-row"
             >
               <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/70 font-supporting" data-testid="hero-location-chips">
-                <MapPin className="w-3 h-3 text-copper/80" />
+                <MapPin className="w-3 h-3 text-primary/80" />
                 <span>Pleasant Hill</span>
                 <span className="text-white/25">·</span>
                 <span>East Bay</span>

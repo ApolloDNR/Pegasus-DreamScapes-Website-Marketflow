@@ -191,8 +191,8 @@ function HeroSection() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <div className="h-px w-10 bg-copper" />
-              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-copper font-semibold font-supporting">
+              <div className="h-px w-10 bg-primary" />
+              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">
                 Strategy Review · Pegasus DreamScapes
               </p>
             </motion.div>

@@ -193,7 +193,7 @@ function HeroSection({ project }: { project: Project }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
-            <MapPin className="w-4 h-4 text-copper" />
+            <MapPin className="w-4 h-4 text-primary" />
             <span>{project.address}, {project.city}, {project.state}</span>
           </motion.div>
         </div>
@@ -350,7 +350,7 @@ function BodySection({ project }: { project: Project }) {
 
               <ScrollReveal delay={0.2}>
                 <div className="relative p-8 rounded-2xl bg-gradient-to-br from-navy to-charcoal text-cream overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-copper via-cream to-copper opacity-80" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cream to-primary opacity-80" />
                   <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">Next Project</p>
                   <h4 className="font-serif text-2xl font-semibold mb-3 tracking-tight">Have one to add to the record?</h4>
                   <p className="text-sm text-cream/90 leading-relaxed mb-6">

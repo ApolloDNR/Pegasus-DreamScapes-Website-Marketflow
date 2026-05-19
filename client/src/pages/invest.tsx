@@ -89,7 +89,7 @@ function NonOfferDisclaimerSection() {
 function FounderSection() {
   return (
     <section className="py-24 lg:py-32 bg-background relative overflow-hidden border-b border-border/40">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] bg-gradient-radial from-copper/8 via-transparent to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] bg-gradient-radial from-primary/8 via-transparent to-transparent rounded-full blur-3xl" />
       <div className="max-w-5xl mx-auto px-6 lg:px-12 relative">
         <div className="grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-4">
@@ -100,8 +100,8 @@ function FounderSection() {
                 className="absolute inset-0 w-full h-full object-cover object-top"
                 data-testid="img-founder-apollo"
               />
-              <div className="absolute inset-0 ring-1 ring-copper/50 rounded-2xl pointer-events-none" />
-              <div className="absolute -inset-1 rounded-2xl ring-1 ring-copper/15 pointer-events-none" />
+              <div className="absolute inset-0 ring-1 ring-primary/50 rounded-2xl pointer-events-none" />
+              <div className="absolute -inset-1 rounded-2xl ring-1 ring-primary/15 pointer-events-none" />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/95 via-navy/70 to-transparent px-5 py-4">
                 <p className="font-display text-cream text-base uppercase tracking-[0.18em] leading-tight">
                   Paolo &ldquo;Apollo&rdquo; Duran
@@ -121,7 +121,7 @@ function FounderSection() {
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
               Pegasus DreamScapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
             </p>
-            <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-copper pl-5">
+            <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-primary pl-5">
               "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."
             </p>
             <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40 border-y border-border/40">
@@ -203,8 +203,8 @@ function HeroSection() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-copper/50 bg-copper/10 backdrop-blur-sm">
-                <Lock className="w-3 h-3 text-copper" />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/50 bg-primary/10 backdrop-blur-sm">
+                <Lock className="w-3 h-3 text-primary" />
                 <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">Private Network</span>
               </span>
               <span className="text-[11px] uppercase tracking-[0.28em] text-white/65 font-supporting">Invite-only</span>
