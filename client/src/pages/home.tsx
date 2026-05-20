@@ -96,11 +96,107 @@ export default function Home() {
       <WhatBringsYouHereSection />
       <FreeSnapshotSection />
       <PegasusStandardSection />
+      <EcosystemTeaserSection />
       <FeaturedProjectSection />
       <MarketFlowBetaSection />
       <FounderSection />
       <FinalCTASection />
     </div>
+  );
+}
+
+function EcosystemTeaserSection() {
+  const columns = [
+    {
+      heading: "Live",
+      items: [
+        { name: "Pegasus Dreamscapes", href: "/" },
+        { name: "MarketFlow (Beta)", href: "/marketflow" },
+        { name: "Strategy Lab", href: "/strategy-lab" },
+      ],
+    },
+    {
+      heading: "In Build",
+      items: [
+        { name: "Pegasus HQ" },
+        { name: "Peggy (Strategy Assistant)" },
+        { name: "Deal Blueprint", href: "/deal-blueprint" },
+      ],
+    },
+    {
+      heading: "Coming Soon",
+      items: [
+        { name: "BuildForge" },
+        { name: "CapStack" },
+        { name: "Vendor Network (Intake)", href: "/vendor-network" },
+      ],
+    },
+  ];
+
+  return (
+    <section className="py-20 sm:py-28 bg-background" data-testid="section-ecosystem-teaser">
+      <div className="max-w-6xl mx-auto px-6">
+        <ScrollReveal>
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+              Pegasus Systems
+            </p>
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
+              The operating infrastructure behind the company.
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Some tools are live today. Others are being developed from real operational needs inside the company.
+              No fake screenshots, no overclaims.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {columns.map((col) => (
+            <div
+              key={col.heading}
+              className="rounded-2xl border border-border bg-card p-7"
+              data-testid={`column-ecosystem-${col.heading.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
+                {col.heading}
+              </p>
+              <ul className="space-y-3">
+                {col.items.map((item) => (
+                  <li key={item.name}>
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        className="font-serif text-lg sm:text-xl text-foreground hover:text-primary transition-colors inline-flex items-center gap-2 group"
+                        data-testid={`link-ecosystem-${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                      >
+                        {item.name}
+                        <ArrowRight className="w-4 h-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                      </Link>
+                    ) : (
+                      <span className="font-serif text-lg sm:text-xl text-foreground/80">
+                        {item.name}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Link
+            href="/systems"
+            className="inline-flex items-center gap-2 text-sm font-supporting uppercase tracking-[0.2em] text-primary hover:gap-3 transition-all"
+            data-testid="link-ecosystem-see-all"
+          >
+            See the full ecosystem
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
 

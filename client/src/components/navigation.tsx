@@ -35,6 +35,7 @@ import {
   Mail,
   FileText,
   ClipboardCheck,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -80,6 +81,10 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
   "/deal-blueprint": {
     icon: ClipboardCheck,
     tagline: "The paid, written analysis. Three tiers, 48-hour SLA.",
+  },
+  "/systems": {
+    icon: Layers,
+    tagline: "The operating infrastructure: HQ, MarketFlow, BuildForge, CapStack.",
   },
   "/contact": {
     icon: Mail,

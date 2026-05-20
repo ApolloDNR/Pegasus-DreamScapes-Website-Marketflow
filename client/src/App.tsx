@@ -84,6 +84,7 @@ const SnapshotCalc = lazy(() => import("@/pages/snapshot-calc"));
 const SnapshotCalcGate = lazy(() => import("@/pages/snapshot-calc-gate"));
 const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
 const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
+const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
 
 const legacyRedirects: [string, string][] = [
@@ -154,6 +155,8 @@ function Router() {
       <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
       <Route path="/admin/strategy-lab" component={AdminStrategyLab} />
       <Route path="/admin/vendors" component={AdminVendors} />
+      <Route path="/systems" component={Systems} />
+      <Route path="/ecosystem" component={Systems} />
       <Route path="/strategy-lab/classic" component={Calculators} />
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />

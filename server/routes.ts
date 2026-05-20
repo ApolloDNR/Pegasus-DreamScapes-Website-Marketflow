@@ -85,7 +85,7 @@ import {
   getUserBadges,
   updateUserProfile
 } from "./lib/supabase";
-import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
+import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
@@ -5805,6 +5805,17 @@ export async function registerRoutes(
           locations: (leadData.leadData as any)?.locations,
           notes: leadData.notes || undefined,
         }).catch(err => console.error('Failed to send buyer lead notification:', err));
+      } else if (leadData.leadType === 'vendor') {
+        sendVendorLeadNotification({
+          name: fullName,
+          email: leadData.email || '',
+          phone: leadData.phone || '',
+          company: (leadData.leadData as any)?.company || (leadData.leadData as any)?.companyName,
+          trade: (leadData.leadData as any)?.trade || (leadData.leadData as any)?.tradeCategory || (leadData.leadData as any)?.category,
+          license: (leadData.leadData as any)?.license || (leadData.leadData as any)?.licenseNumber,
+          serviceArea: (leadData.leadData as any)?.serviceArea || (leadData.leadData as any)?.area,
+          notes: leadData.notes || undefined,
+        }).catch(err => console.error('Failed to send vendor lead notification:', err));
       }
       
       res.status(201).json(lead);

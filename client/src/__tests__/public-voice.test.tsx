@@ -39,6 +39,7 @@ const PUBLIC_PAGE_FILES = [
   "client/src/pages/strategy-lab.tsx",
   "client/src/pages/calculators.tsx",
   "client/src/pages/education.tsx",
+  "client/src/pages/systems.tsx",
   "client/src/pages/project-detail.tsx",
   "client/src/pages/marketplace.tsx",
   "client/src/pages/terms.tsx",

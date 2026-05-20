@@ -246,6 +246,43 @@ export async function sendBuyerLeadNotification(lead: {
   });
 }
 
+export async function sendVendorLeadNotification(lead: {
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  trade?: string;
+  license?: string;
+  serviceArea?: string;
+  notes?: string;
+}): Promise<EmailResult> {
+  const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "apollo@pegasusdreamscapes.com";
+
+  const html = `
+    <h2>New Vendor Network Application</h2>
+    <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.name}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${lead.phone}">${lead.phone}</a></td></tr>
+      ${lead.company ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Company</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.company}</td></tr>` : ''}
+      ${lead.trade ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Trade</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.trade}</td></tr>` : ''}
+      ${lead.license ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>License</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.license}</td></tr>` : ''}
+      ${lead.serviceArea ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Service Area</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.serviceArea}</td></tr>` : ''}
+      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
+    </table>
+    <p style="margin-top: 20px;">
+      <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/admin/vendors" style="display: inline-block; padding: 10px 20px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px;">Review in Vendor HQ</a>
+    </p>
+    <p style="margin-top: 20px; color: #666;">This application was submitted through the Pegasus Vendor Network intake.</p>
+  `;
+
+  return sendEmail({
+    to: staffEmail,
+    subject: `New Vendor Application: ${lead.name}${lead.trade ? ` (${lead.trade})` : ''}`,
+    html,
+  });
+}
+
 export async function sendWelcomeEmail(user: {
   email: string;
   name: string;

@@ -39,6 +39,23 @@ Preferred communication style: simple, everyday language.
 - No fake stats, no fake testimonials, no BBB/DRE claims, no glassmorphism overuse.
 - Development Pathway language discipline: Phase 1 = today's actual scope (ADU/flips/BRRRR/small-scale). Phases 2–4 framed as trajectory ("Each phase is earned, not assumed."). Do NOT overclaim large-scale development as current capability.
 
+## Pegasus Systems (ecosystem vocabulary)
+
+The operating infrastructure behind the company. Status badges are canonical and must not overclaim. Public copy lives on `/systems` (alias `/ecosystem`) + a homepage `EcosystemTeaserSection` after `PegasusStandardSection`. Anchored in `client/src/pages/systems.tsx` + `home.tsx` `EcosystemTeaserSection`.
+
+- **Pegasus Dreamscapes** — Strategy-first real estate operating company built around Development, Investments, and Systems. (LIVE)
+- **MarketFlow** — Private beta dealflow layer for reviewed opportunities, trusted operators, buyers, and capital relationships. Not raw intake, not a public marketplace, not an investment solicitation platform. (BETA)
+- **Strategy Lab** — Public-facing strategy tool. Quick Read or Full Path Builder. (LIVE)
+- **Pegasus HQ** — Internal operating command center: Submissions, Seeds, Strategy Snapshots, Opportunities, War Rooms, tasks, documents, money, approvals, audit trails. (IN BUILD)
+- **Peggy** — Pegasus Strategy Assistant. Guides intake, explains strategies, prepares drafts, helps route. Does not make offers, guarantee outcomes, approve deals, or give legal/tax/securities advice. (IN BUILD)
+- **Deal Blueprint** — Paid strategy and execution report after a free Strategy Snapshot. (IN BUILD)
+- **BuildForge** — Future execution + vendor-operations layer: scopes, budgets, contractors, schedules, draw requests, change orders, project accountability. (COMING SOON)
+- **CapStack** — Future capital-relationship + deal-structure layer: private capital conversations, capital stacks, waterfalls, investor records, compliant capital coordination. (COMING SOON)
+- **Vendor Network** — Intake + qualification path for contractors, vendors, operators, service providers. (INTAKE ONLY)
+- **Pegasus Systems** — The systems division that houses all of the above. (BRAND / SYSTEMS ARM)
+
+Rules: no fake screenshots (mark conceptual if used), no fake metrics, no implication that BuildForge/CapStack are live, no implication of public investment access. "LIVE — BETA" status was rewritten to "BETA" because spaced em-dashes are forbidden in public copy. Voice test scope (`PUBLIC_PAGE_FILES`) now includes `systems.tsx`.
+
 ## Public routes (locked v1.3.1)
 
 `/`, `/sell`, `/invest`, `/projects`, `/projects/:slug`, `/contact`, `/marketflow`, `/deal-blueprint`, `/snapshot/:token`, `/strategy-lab`, `/strategy-lab/classic`, `/strategy-lab/library`, `/resources`, `/education`, `/development`, `/vendor-network`, `/about`, `/disclosures`. `/resources` (Field Notes & Tools) and `/education` (Guided Learning Path) carry distinct kickers but share the Strategy Library brand. `/vendor-network` is the dedicated Pegasus Vendor Network page (hero + 6 trade categories + Pegasus Standard + 3-step join + intake form posting `leadType: "vendor"` to `/api/leads`). `/calculators` redirects to `/strategy-lab`; original 8-tile calculator suite preserved at `/strategy-lab/classic`. `/development` is the Pegasus Development pillar page (spine doctrine + 4-phase pathway + supporting pillars).
@@ -59,7 +76,7 @@ Canonical across desktop header, mobile sheet, and footer. Any addition or renam
 
 ## Homepage section order
 
-Hero → EveryPropertyGetsAPath → Services (Three Pillars) → DevelopmentPathway (4 phases) → StrategyStructureStacks → OutcomeLanes (No Lead Dies, 4+4) → FeaturedProject → MarketFlowBeta → OperatingPrinciples → FinalCTA. Sell/Invest/HowItWorks/TrustLogos/FeaturedDeals/FAQ/Newsletter/Contact components still exist but are unmounted from the homepage — they live on `/sell`, `/invest`, `/contact`.
+Hero → WhatBringsYouHere → FreeSnapshot → PegasusStandard → EcosystemTeaser (Pegasus Systems: 3 columns Live/In Build/Coming Soon → links to `/systems`) → FeaturedProject (Nelson Dr) → MarketFlowBeta → Founder → FinalCTA. Sell/Invest/HowItWorks/TrustLogos/FeaturedDeals/FAQ/Newsletter/Contact components still exist but are unmounted from the homepage — they live on `/sell`, `/invest`, `/contact`. EveryPropertyGetsAPath, DevelopmentPathway, StrategyStructureStacks, OutcomeLanes, OperatingPrinciples sections remain defined in `home.tsx` but are not mounted in the current order — preserved for future restoration.
 
 ## Canonical typography
 

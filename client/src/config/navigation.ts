@@ -22,6 +22,7 @@ export const NAV_MORE: NavMoreItem[] = [
   { href: "/strategy-lab", label: "Strategy Lab" },
   { href: "/calculators", label: "Calculators" },
   { href: "/deal-blueprint", label: "Deal Blueprint" },
+  { href: "/systems", label: "Pegasus Systems" },
   { href: "/vendor-network", label: "Vendor Network" },
   { href: "/contact", label: "Contact" },
   { href: "/disclosures", label: "Disclosures" },
