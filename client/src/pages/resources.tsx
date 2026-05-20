@@ -55,7 +55,7 @@ function HeroSection() {
         <div className="flex items-center justify-center gap-4 mb-6">
           <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
           <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
-            Strategy Library · Educational only
+            Strategy Library · Field Notes & Tools
           </p>
           <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
         </div>

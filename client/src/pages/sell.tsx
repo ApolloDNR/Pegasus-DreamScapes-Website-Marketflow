@@ -164,7 +164,13 @@ function OperatorSection() {
   );
 }
 
+function useIsDealJvIntent(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("intent") === "deal-jv";
+}
+
 function HeroSection() {
+  const isDealJv = useIsDealJvIntent();
   return (
     <section className="relative min-h-[88vh] flex items-center overflow-hidden pt-20">
       <motion.div
@@ -192,8 +198,10 @@ function HeroSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <div className="h-px w-10 bg-primary" />
-              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">
-                Strategy Review · Pegasus DreamScapes
+              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting" data-testid="text-sell-kicker">
+                {isDealJv
+                  ? "Deal / JV Submission · Wholesaler Intake"
+                  : "Strategy Review · Pegasus DreamScapes"}
               </p>
             </motion.div>
 
@@ -204,8 +212,19 @@ function HeroSection() {
               transition={{ duration: 0.7, delay: 0.3 }}
               data-testid="text-sell-hero"
             >
-              Submit a property.<br />
-              <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Get a free Strategy Snapshot.</span>
+              {isDealJv ? (
+                <>
+                  Submit a deal or<br />
+                  <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+                    {" "}partnership opportunity.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Submit a property.<br />
+                  <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Get a free Strategy Snapshot.</span>
+                </>
+              )}
             </motion.h1>
 
             <motion.p
@@ -223,7 +242,9 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Tell us about the property and the situation. A real person reviews every submission and routes it to the cleanest path: acquisition, wholesale, JV, listing, or honest referral. The Snapshot is preliminary and free; no offer figures, no pressure, no spam.
+              {isDealJv
+                ? "Bring us the address, the spread, and the structure you're proposing. A real person reviews every wholesaler and JV submission and routes it to the cleanest path: assignment, JV, double close, capital partner, or honest referral. No spam, no pressure."
+                : "Tell us about the property and the situation. A real person reviews every submission and routes it to the cleanest path: acquisition, wholesale, JV, listing, or honest referral. The Snapshot is preliminary and free; no offer figures, no pressure, no spam."}
             </motion.p>
 
             <motion.div
@@ -238,7 +259,7 @@ function HeroSection() {
                 onClick={() => document.getElementById('seller-form')?.scrollIntoView({ behavior: 'smooth' })}
                 data-testid="button-start-strategy-review"
               >
-                Start Strategy Review
+                {isDealJv ? "Submit Deal or JV" : "Start Strategy Review"}
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
               <a href="#how-it-works">
@@ -406,6 +427,15 @@ function LeadFormSection() {
   const [photos, setPhotos] = useState<string[]>([]);
   const { getUploadParameters } = useUpload();
 
+  // /submit-deal redirects to /sell?intent=deal-jv to preserve wholesaler/JV
+  // intent across the funnel collapse. Read once on mount and preselect.
+  const initialIntent = (() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("intent");
+  })();
+  const isDealJvIntent = initialIntent === "deal-jv";
+
   const form = useForm<SellerFormValues>({
     resolver: zodResolver(sellerFormSchema),
     defaultValues: {
@@ -413,13 +443,15 @@ function LeadFormSection() {
       phone: "",
       email: "",
       propertyAddress: "",
-      submitterRole: "owner",
+      submitterRole: isDealJvIntent ? "wholesaler" : "owner",
       propertyType: "house",
       condition: "needs-tlc",
       occupancy: "vacant",
       timeline: "30-60-days",
       situation: "",
-      desiredOutcome: "",
+      desiredOutcome: isDealJvIntent
+        ? "I'm bringing a deal or JV opportunity to route through Pegasus."
+        : "",
       proposedTerms: "",
       creativeFinanceOpenness: "maybe",
       notes: "",
@@ -511,13 +543,17 @@ function LeadFormSection() {
         <ScrollReveal className="lg:col-span-5">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Submit a Property</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold" data-testid="text-form-kicker">
+              {isDealJvIntent ? "Submit a Deal or Partnership Opportunity" : "Submit a Property"}
+            </p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-form-title">
-            Tell us what you have.
+            {isDealJvIntent ? "Tell us about the deal." : "Tell us what you have."}
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
-            Five minutes. Real review. Real answer. Whatever you know about the property is enough to start. We'll fill in the rest.
+            {isDealJvIntent
+              ? "Five minutes. Wholesaler-friendly intake. Share the address, the spread, the structure you're proposing, and the constraints. We'll route it cleanly."
+              : "Five minutes. Real review. Real answer. Whatever you know about the property is enough to start. We'll fill in the rest."}
           </p>
           <ul className="space-y-4">
             {[
@@ -853,7 +889,7 @@ function LeadFormSection() {
                   {mutation.isPending ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</>
                   ) : (
-                    <>Start Strategy Review<ArrowRight className="ml-3 w-4 h-4" /></>
+                    <>{isDealJvIntent ? "Submit Deal or JV" : "Start Strategy Review"}<ArrowRight className="ml-3 w-4 h-4" /></>
                   )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center pt-2">

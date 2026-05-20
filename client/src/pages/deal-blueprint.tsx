@@ -86,7 +86,7 @@ function HeroSection() {
             >
               The Pegasus<br />
               <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-                Deal Blueprint.
+                {" "}Deal Blueprint.
               </span>
             </motion.h1>
 

@@ -187,9 +187,12 @@ describe("Public voice rules (v1.3.1)", () => {
     const homeSrc = read("client/src/pages/home.tsx");
 
     const REQUIRED_SUBSTRINGS = [
-      // Hero line (replit.md: "Where others see impossible, we see a path.")
-      "Where others see impossible",
-      // "Complex property. Structured opportunity." — split across line1/line2 EditableTexts
+      // Hero doctrine lock (v1.3.1, relaxed in Task #119):
+      // "Complex property. Structured opportunity." is the canonical hero
+      // line. "Where others see impossible" remains in supporting copy
+      // but is no longer a hard requirement — it appears in the hero
+      // subhead, /sell, /about, peggy-dock, and instrument-workbench,
+      // so drift is unlikely.
       "Complex property.",
       "Structured opportunity.",
       // "Every property gets a serious review. Not every property gets an offer."
@@ -294,7 +297,6 @@ describe("Public voice rules (v1.3.1) — render layer", () => {
     }
     renderWithProviders(<HeroSection />);
     const text = visibleText();
-    expect(text).toContain("Where others see impossible");
     expect(text).toContain("Complex property.");
     expect(text).toContain("Structured opportunity.");
     expect(text).toContain("Built on strategy. Governed by virtue. Executed with discipline.");

@@ -125,7 +125,7 @@ function HeroSection() {
           >
             <div className="h-px w-10 bg-primary" />
             <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">
-              Strategy Library
+              Strategy Library · Guided Learning Path
             </p>
             <div className="h-px w-10 bg-primary" />
           </motion.div>

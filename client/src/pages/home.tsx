@@ -674,9 +674,9 @@ function FinalCTASection() {
 function WhatBringsYouHereSection() {
   const cards = [
     { icon: HomeIcon, tag: "Owners", title: "I have a property", desc: "Distressed, complex, or just exploring options. Get a structured review.", href: "/sell", testId: "router-property" },
-    { icon: GitBranch, tag: "Deal Sources", title: "I have a deal or JV idea", desc: "Wholesale, assignment, or partnership opportunity to route.", href: "/submit-deal", testId: "router-deal" },
+    { icon: GitBranch, tag: "Deal Sources", title: "I have a deal or JV idea", desc: "Wholesale, assignment, or partnership opportunity to route.", href: "/sell?intent=deal-jv", testId: "router-deal" },
     { icon: DollarSign, tag: "Capital", title: "I represent capital", desc: "Private capital or partnership inquiry, by conversation, not public offering.", href: "/invest", testId: "router-capital" },
-    { icon: Hammer, tag: "Development", title: "I'm exploring ADU or development", desc: "Build, add, or reposition. Pre-development scope and feasibility.", href: "/services", testId: "router-development" },
+    { icon: Hammer, tag: "Development", title: "I'm exploring ADU or development", desc: "Build, add, or reposition. Pre-development scope and feasibility.", href: "/development", testId: "router-development" },
     { icon: BookOpenIcon, tag: "Learning", title: "I want to learn the strategies", desc: "Plain-language strategy library. No hype, no shortcuts.", href: "/education", testId: "router-education" },
     { icon: Network, tag: "Vendors", title: "I'm a vendor or operator", desc: "Join the disciplined network behind Pegasus execution.", href: "/vendor-network", testId: "router-vendor" },
   ];

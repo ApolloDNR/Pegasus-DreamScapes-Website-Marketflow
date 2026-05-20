@@ -50,7 +50,7 @@ function getPageFromPath(pathname: string): string {
   
   if (path === '/' || path === '/home') return 'home';
   if (path === '/about') return 'about';
-  if (path === '/services') return 'services';
+  if (path === '/development' || path === '/services') return 'services';
   if (path === '/sell') return 'sell';
   if (path === '/buy') return 'buy';
   if (path === '/invest') return 'invest';

@@ -97,7 +97,7 @@ function HeroSection() {
             data-testid="text-contact-hero"
           >
             Start a real<br />
-            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">conversation.</span>
+            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">{" "}conversation.</span>
           </motion.h1>
 
           <motion.p

@@ -57,8 +57,10 @@ from contextual links inside the experience:
 | Route                                    | Reached from                                         |
 |------------------------------------------|------------------------------------------------------|
 | `/` (Home)                               | Logo wordmark                                        |
-| `/services`                              | Home "Development" router tile, internal CTAs        |
-| `/education`                             | Home "Learning" router tile, article-detail breadcrumbs |
+| `/development`                           | Home "Development" router tile, internal CTAs (the spine pillar page) |
+| `/education`                             | Home "Learning" router tile (Guided Learning Path), article-detail breadcrumbs |
+| `/resources`                             | "More ▾" Strategy Library link (Field Notes & Tools) |
+| `/sell?intent=deal-jv`                   | Home "Deal Sources" router tile, `/submit-deal` redirect (preselects wholesaler + Deal/JV intent) |
 | `/strategy-lab/library`                  | Strategy Lab subnav                                  |
 | `/strategy-lab/classic`                  | Strategy Lab subnav (legacy 8-tile suite)            |
 | `/strategy-lab/submitted`                | Form-result page                                     |
@@ -79,9 +81,9 @@ from contextual links inside the experience:
 ## Legacy redirects (in `App.tsx` `legacyRedirects`)
 
 Listed in code; they cover retired funnel routes (`/wholesale`,
-`/submit-deal`, `/buyers`, `/buy`, `/dreamspace`, `/partner`,
-`/capital-raising`, all `/marketplace/*`, `/dealflow/*`, `/portal/*`,
-`/community`, `/hq`).
+`/submit-deal` → `/sell?intent=deal-jv`, `/services` → `/development`,
+`/buyers`, `/buy`, `/dreamspace`, `/partner`, `/capital-raising`, all
+`/marketplace/*`, `/dealflow/*`, `/portal/*`, `/community`, `/hq`).
 
 Two non-funnel redirects worth calling out:
 

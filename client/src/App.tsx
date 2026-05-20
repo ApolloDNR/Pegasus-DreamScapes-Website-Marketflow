@@ -34,7 +34,7 @@ import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 
 const About = lazy(() => import("@/pages/about"));
-const Services = lazy(() => import("@/pages/services"));
+const Development = lazy(() => import("@/pages/development"));
 const Sell = lazy(() => import("@/pages/sell"));
 const Invest = lazy(() => import("@/pages/invest"));
 const Projects = lazy(() => import("@/pages/projects"));
@@ -88,7 +88,10 @@ const Education = lazy(() => import("@/pages/education"));
 const legacyRedirects: [string, string][] = [
   // v1.3.1 — retired public funnel pages route to their closest current destination.
   ["/wholesale", "/sell"],
-  ["/submit-deal", "/sell"],
+  // /submit-deal preserves wholesaler/deal-JV intent via query param so
+  // /sell can preselect submitter role + outcome. See Task #119.
+  ["/submit-deal", "/sell?intent=deal-jv"],
+  ["/services", "/development"],
   ["/buyers", "/marketflow"],
   ["/buy", "/marketflow"],
   ["/dreamspace", "/invest"],
@@ -139,7 +142,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
-      <Route path="/services" component={Services} />
+      <Route path="/development" component={Development} />
       <Route path="/sell" component={Sell} />
       <Route path="/invest" component={Invest} />
       <Route path="/projects" component={Projects} />

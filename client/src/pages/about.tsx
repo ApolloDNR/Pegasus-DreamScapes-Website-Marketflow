@@ -59,7 +59,7 @@ function AboutHero() {
             >
               A real estate company,<br />
               <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-                built on strategy.
+                {" "}built on strategy.
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-cream/90 leading-relaxed max-w-2xl mb-6">

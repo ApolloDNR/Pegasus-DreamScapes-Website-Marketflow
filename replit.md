@@ -32,8 +32,8 @@ Preferred communication style: simple, everyday language.
 
 ## Locked voice rules (v1.3.1)
 
-- Required visible homepage lines: "Complex property. Structured opportunity." / "Every property gets a serious review. Not every property gets an offer." / "Built on strategy. Governed by virtue. Executed with discipline." / "Dream it. Build it. Live it."
-- Hero line: "Where others see impossible, we see a path." Nav subtitle: "The Deal Architect."
+- Required visible homepage lines (hard-locked by `public-voice.test.tsx`): "Complex property. Structured opportunity." / "Every property gets a serious review. Not every property gets an offer." / "Built on strategy. Governed by virtue. Executed with discipline." / "Dream it. Build it. Live it."
+- Canonical hero line: "Complex property. Structured opportunity." (split across `home.hero.line1` / `home.hero.line2` EditableTexts). "Where others see impossible, we see a path." is supporting copy used in the hero subhead, `/sell`, `/about`, peggy-dock, and instrument-workbench — no longer hard-locked by the voice test but preserved across the site. Nav subtitle: "The Deal Architect."
 - No spaced em-dashes in public copy. Preserved exclusions: `return "—"` empty-cell formatters, code comments, en-dash number ranges (`7–14 days`), editorial title attributions (`Page Title — Pegasus Dreamscapes`).
 - Forbidden public phrases: "Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," AI-sounding phrasing, generic luxury/guru language. Negative disclaimer use ("not an offer of guaranteed returns or principal protection") is preserved on `/invest` and `/terms` because it serves disclosure.
 - No fake stats, no fake testimonials, no BBB/DRE claims, no glassmorphism overuse.
@@ -41,9 +41,9 @@ Preferred communication style: simple, everyday language.
 
 ## Public routes (locked v1.3.1)
 
-`/`, `/sell`, `/invest`, `/projects`, `/projects/:slug`, `/contact`, `/marketflow`, `/deal-blueprint`, `/snapshot/:token`, `/strategy-lab`, `/strategy-lab/classic`, `/strategy-lab/library`, `/resources`, `/education`, `/vendor-network`, `/about`, `/disclosures`. `/education` aliases Resources and `/vendor-network` aliases Contact until dedicated pages ship. `/calculators` redirects to `/strategy-lab`; original 8-tile calculator suite preserved at `/strategy-lab/classic`.
+`/`, `/sell`, `/invest`, `/projects`, `/projects/:slug`, `/contact`, `/marketflow`, `/deal-blueprint`, `/snapshot/:token`, `/strategy-lab`, `/strategy-lab/classic`, `/strategy-lab/library`, `/resources`, `/education`, `/development`, `/vendor-network`, `/about`, `/disclosures`. `/resources` (Field Notes & Tools) and `/education` (Guided Learning Path) carry distinct kickers but share the Strategy Library brand. `/vendor-network` aliases Contact until dedicated pages ship. `/calculators` redirects to `/strategy-lab`; original 8-tile calculator suite preserved at `/strategy-lab/classic`. `/development` is the Pegasus Development pillar page (spine doctrine + 4-phase pathway + supporting pillars).
 
-**Retired funnel routes** (redirects in `App.tsx` `legacyRedirects`): `/wholesale` → `/sell`, `/submit-deal` → `/sell`, `/buyers` + `/buy` → `/marketflow`, `/dreamspace` + `/partner` + `/capital-raising` → `/invest`. Original components deleted.
+**Retired funnel routes** (redirects in `App.tsx` `legacyRedirects`): `/wholesale` → `/sell`, `/submit-deal` → `/sell?intent=deal-jv` (preselects wholesaler + Deal/JV intent in the Strategy Review form), `/services` → `/development`, `/buyers` + `/buy` → `/marketflow`, `/dreamspace` + `/partner` + `/capital-raising` → `/invest`. Original components deleted.
 
 **`noIndex` utility routes**: `/services`, `/dashboard`.
 
