@@ -34,38 +34,45 @@ import {
 } from "lucide-react";
 
 export default function MarketflowSubmit() {
-  return (
-    <MarketplaceLayout>
-      <SubmitPage />
-    </MarketplaceLayout>
-  );
-}
-
-function SubmitPage() {
   const { user, isLoading, isWholesaler, isDreamscaper, userRole, isGuestMode } = useSupabaseAuth();
   const { isDemoMode } = useDemoMode();
-  
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
-  
+
   const isPegasus = userRole?.startsWith("pegasus_") || false;
   const canSubmit = isWholesaler || isDreamscaper;
   const isPreviewMode = isDemoMode || isGuestMode;
-  
+
+  // Anonymous and out-of-role users get the marketing-style gate
+  // WITHOUT the authenticated MarketplaceLayout sidebar. Auditor flagged
+  // the sidebar leaking to public visitors as the biggest visual whiplash.
   if (!user && !isPreviewMode) {
-    return <LockedScreen reason="login" />;
+    return (
+      <div className="min-h-screen bg-background pt-24 pb-24">
+        <LockedScreen reason="login" />
+      </div>
+    );
   }
-  
+
   if (user && !canSubmit && !isPreviewMode) {
-    return <LockedScreen reason="role" currentRole={userRole} />;
+    return (
+      <div className="min-h-screen bg-background pt-24 pb-24">
+        <LockedScreen reason="role" currentRole={userRole} />
+      </div>
+    );
   }
-  
-  return <AuthenticatedSubmitPage isPegasus={isPegasus} isPreviewMode={isPreviewMode} />;
+
+  return (
+    <MarketplaceLayout>
+      <AuthenticatedSubmitPage isPegasus={isPegasus} isPreviewMode={isPreviewMode} />
+    </MarketplaceLayout>
+  );
 }
 
 function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; currentRole?: string | null }) {

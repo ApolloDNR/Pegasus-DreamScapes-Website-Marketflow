@@ -185,9 +185,26 @@ export async function registerRoutes(
     app.get(from, (_req, res) => res.redirect(301, to));
   }
 
-  // SEO: robots.txt
+  // SEO: robots.txt — preview/dev hosts are fully disallowed so the
+  // Replit dev URL does not get indexed before launch. Production
+  // (pegasusdreamscapes.com) gets the full crawl policy.
   app.get('/robots.txt', (req, res) => {
-    const host = `${req.protocol}://${req.get('host')}`;
+    const rawHost = (req.get('host') || '').toLowerCase();
+    const host = `${req.protocol}://${rawHost}`;
+    const isPreviewHost =
+      rawHost.includes('replit.dev') ||
+      rawHost.includes('replit.app') ||
+      rawHost.includes('repl.co') ||
+      rawHost.includes('localhost') ||
+      rawHost.includes('127.0.0.1');
+
+    if (isPreviewHost) {
+      res.type('text/plain').send(
+        ['User-agent: *', 'Disallow: /', ''].join('\n'),
+      );
+      return;
+    }
+
     res.type('text/plain').send(
       [
         'User-agent: *',

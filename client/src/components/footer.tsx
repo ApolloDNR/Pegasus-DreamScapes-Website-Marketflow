@@ -117,8 +117,11 @@ export function Footer() {
               </a>
               <div className="flex items-center gap-3 text-sm text-muted-foreground" data-testid="text-footer-location">
                 <MapPin className="w-4 h-4 text-primary/70 flex-shrink-0" />
-                Bay Area, California
+                Pleasant Hill, California · Bay Area · Pacific Time
               </div>
+              <p className="text-xs text-muted-foreground/85 pt-1 leading-relaxed" data-testid="text-footer-response">
+                We respond to every serious submission within 48 hours, Monday through Friday.
+              </p>
             </div>
           </div>
         </div>
@@ -159,10 +162,10 @@ export function Footer() {
               />
             <div>
               <p className="text-xs text-muted-foreground" data-testid="text-copyright">
-                &copy; {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.
+                &copy; {new Date().getFullYear()} Pegasus DreamScapes Corp. · A California Corporation. All rights reserved.
               </p>
-              <p className="text-[11px] text-muted-foreground/80 mt-1.5 max-w-2xl leading-relaxed">
-                Private network · Invite-only deal flow. Information on this site is for general purposes only and is not an offer to buy or sell securities, real property, or investment products.
+              <p className="text-[11px] text-muted-foreground/80 mt-1.5 max-w-2xl leading-relaxed" data-testid="text-footer-disclosure">
+                Pegasus DreamScapes Corp. is a California operating company. Nothing on this website is an offer or solicitation to buy or sell securities, real property, or investment products. Capital relationships are private and discussed individually under written agreement. Real estate transactions are facilitated through licensed partners. See our <Link href="/disclosures"><span className="underline hover:text-foreground transition-colors cursor-pointer">Disclosures</span></Link> page for full terms.
               </p>
             </div>
             </div>

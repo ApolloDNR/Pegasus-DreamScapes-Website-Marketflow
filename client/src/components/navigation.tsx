@@ -116,7 +116,6 @@ function NotificationBell({ onLightSurface }: { onLightSurface: boolean }) {
           aria-label="Open notifications"
         >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[hsl(var(--bronze))] rounded-full" aria-hidden="true" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">

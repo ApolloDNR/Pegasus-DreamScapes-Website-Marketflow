@@ -769,7 +769,7 @@ function FinalCTASection() {
 
 function WhatBringsYouHereSection() {
   const cards = [
-    { icon: HomeIcon, tag: "Owners", title: "I have a property", desc: "Distressed, complex, or just exploring options. Get a structured review.", href: "/sell", testId: "router-property" },
+    { icon: HomeIcon, tag: "Owners", title: "I have a property", desc: "Distressed, complex, or just exploring options. Get a structured review.", href: "/sell", testId: "router-property", primary: true },
     { icon: GitBranch, tag: "Deal Sources", title: "I have a deal or JV idea", desc: "Wholesale, assignment, or partnership opportunity to route.", href: "/sell?intent=deal-jv", testId: "router-deal" },
     { icon: DollarSign, tag: "Capital", title: "I represent capital", desc: "Private capital or partnership inquiry, by conversation, not public offering.", href: "/invest", testId: "router-capital" },
     { icon: Hammer, tag: "Development", title: "I'm exploring ADU or development", desc: "Build, add, or reposition. Pre-development scope and feasibility.", href: "/development", testId: "router-development" },
@@ -799,9 +799,14 @@ function WhatBringsYouHereSection() {
           {cards.map((card, index) => (
             <StaggerItem key={index}>
               <Link href={card.href} data-testid={`link-${card.testId}`}>
-                <Card className="group h-full p-7 bg-card border border-border/40 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden hover:-translate-y-[3px]">
-                  {/* Bronze top rule on hover */}
-                  <div className="absolute left-0 right-0 top-0 h-px bg-primary/0 group-hover:bg-primary transition-all duration-300" />
+                <Card className={`group h-full p-7 bg-card transition-all duration-300 cursor-pointer relative overflow-hidden hover:-translate-y-[3px] hover:shadow-md ${card.primary ? "border-2 border-primary/45 shadow-sm" : "border border-border/40 hover:border-primary/40"}`}>
+                  {/* Bronze top rule — pinned on primary, hover-only on the rest */}
+                  <div className={`absolute left-0 right-0 top-0 h-[2px] transition-all duration-300 ${card.primary ? "bg-primary" : "bg-primary/0 group-hover:bg-primary"}`} />
+                  {card.primary && (
+                    <span className="absolute top-3 right-3 text-[9px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-sm" data-testid="badge-primary-path">
+                      Most Common
+                    </span>
+                  )}
                   <div className="flex items-baseline justify-between mb-6">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{card.tag}</p>
                     <card.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors duration-300" />
@@ -1727,7 +1732,7 @@ function HeroSection() {
                 ) : heroLine1}
               </motion.span>
               <motion.span
-                className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent"
+                className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent pb-2 overflow-visible"
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.5 }}
@@ -1793,7 +1798,7 @@ function HeroSection() {
                 </Button>
               </a>
               <a href="#projects">
-                <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
+                <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-2 border-white/70 bg-white/5 text-white hover:bg-white/15 hover:border-white backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_secondary" fallback="View Featured Project" />
                   ) : heroCtaSecondary}
