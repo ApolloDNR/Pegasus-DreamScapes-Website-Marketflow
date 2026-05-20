@@ -68,6 +68,7 @@ export default function VendorNetwork() {
       <h1 className="sr-only">Pegasus Vendor Network</h1>
       <HeroSection />
       <CategoriesSection />
+      <PegasusStandardSection />
       <HowToJoinSection />
       <VendorFormSection />
     </div>
@@ -225,6 +226,70 @@ const JOIN_STEPS = [
     desc: "Approved vendors get matched to scopes inside live Pegasus projects. Preferred vendors are first call on the lanes they fit.",
   },
 ];
+
+const PEGASUS_STANDARDS = [
+  {
+    title: "Licensed & insured where required",
+    desc: "Current GL coverage, workers' comp where applicable, and an active license on file for any trade that requires one.",
+  },
+  {
+    title: "Real references, recently checked",
+    desc: "We call 2–3 recent references: clients, GCs, or capital partners who can speak to scope, schedule, and behavior on site.",
+  },
+  {
+    title: "Clear scope, written change orders",
+    desc: "Quotes are itemized. Change orders are written, not verbal. Surprise invoices break trust and end the relationship.",
+  },
+  {
+    title: "Communication on a project clock",
+    desc: "Same-day acknowledgement, next-day answers. If a date is going to slip, we want to hear it before the date, not after.",
+  },
+  {
+    title: "Safe sites, clean handoffs",
+    desc: "PPE, lien waivers, permits where required, and a broom-clean handoff. We document the standard with photos at each milestone.",
+  },
+  {
+    title: "Aligned with the doctrine",
+    desc: "Vendors who fit Pegasus operate on virtue and discipline. No kickbacks, no quiet markups, no chasing volume over quality.",
+  },
+];
+
+function PegasusStandardSection() {
+  return (
+    <section className="py-24 lg:py-32 bg-navy text-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-charcoal opacity-95" />
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Pegasus Standard</p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
+            The bar we hold every vendor to.
+          </h2>
+          <p className="text-base text-cream/85 leading-relaxed">
+            Built on strategy. Governed by virtue. Executed with discipline. Vendors who fit the Pegasus Standard get routed to real work, repeatedly.
+          </p>
+        </ScrollReveal>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {PEGASUS_STANDARDS.map((s, i) => (
+            <div
+              key={i}
+              className="p-7 bg-black/40 backdrop-blur-xl rounded-lg border border-champagne/20"
+              data-testid={`pegasus-standard-${i}`}
+            >
+              <CheckCircle2 className="w-6 h-6 text-primary mb-4" />
+              <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight text-white">{s.title}</h3>
+              <p className="text-sm text-cream/80 leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function HowToJoinSection() {
   return (
