@@ -573,6 +573,19 @@ function LeadFormSection() {
           <div className="p-8 lg:p-10 bg-background rounded-2xl border border-border/50 shadow-xl">
             <Form {...form}>
               <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-5">
+                {isDealJvIntent && (
+                  <div
+                    className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3"
+                    data-testid="banner-deal-jv-intent"
+                  >
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-1">
+                      Wholesaler Intake
+                    </p>
+                    <p className="text-sm text-foreground/85 leading-relaxed">
+                      Submitting a deal or JV opportunity. Wholesaler intake preselected.
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
