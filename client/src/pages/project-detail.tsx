@@ -20,6 +20,38 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import type { Project } from "@shared/schema";
 
+type StoryBlock = { kicker: string; heading: string; body: string };
+
+const CASE_STUDY_NARRATIVE: Record<string, StoryBlock[]> = {
+  "nelson-dr": [
+    {
+      kicker: "Strategy",
+      heading: "Why this property, why this path.",
+      body: "A complex East Bay single-family situation with real condition issues, real permit exposure, and real upside. The structural read was clear: take it down, run a disciplined value-add renovation, exit retail. The deal was selected for its forced-appreciation potential, not its convenience.",
+    },
+    {
+      kicker: "Structure",
+      heading: "How the deal was put together.",
+      body: "Direct acquisition with private capital coordination. Clean title, scoped contingencies, and a defined renovation budget agreed before closing. Every dollar in the project had a documented purpose and a documented source.",
+    },
+    {
+      kicker: "Execution",
+      heading: "Permit planning, scope control, communication discipline.",
+      body: "The renovation ran through real-world friction: permit coordination with the City of Richmond, scope adjustments mid-project, and the daily communication cadence that keeps a build on track. This project is where Pegasus learned that permit planning is the project, scope creep is the enemy, and disciplined contractor communication is non-negotiable.",
+    },
+    {
+      kicker: "Result",
+      heading: "Renovated, sold, documented.",
+      body: "The home was fully renovated, brought to retail-ready condition, and sold. Public-safe economics: acquisition near $600k, renovation investment in the $90–100k range, sale near $840k. Project economics: documented internally for partner conversations.",
+    },
+    {
+      kicker: "Lesson",
+      heading: "Why Nelson became the foundation.",
+      body: "Nelson is the project that inspired Pegasus HQ. Every system we run now (strategy reviews, structured intake, permit-aware underwriting, the no-lead-dies doctrine) traces back to a lesson learned here. It is the reason Pegasus is built the way it is built.",
+    },
+  ],
+};
+
 const STRATEGY_LABEL: Record<string, string> = {
   "fix-flip": "Fix & Flip",
   "buy-hold": "Buy & Hold",
@@ -214,12 +246,14 @@ function BodySection({ project }: { project: Project }) {
 
   const investmentMetrics = [
     { label: "Acquisition", value: formatCurrency(project.purchasePrice) },
-    { label: "Rehab Investment", value: formatCurrency(project.rehabCost) },
+    { label: "Renovation Investment", value: formatCurrency(project.rehabCost) },
     { label: "ARV", value: formatCurrency(project.arv) },
     { label: "Sale Price", value: formatCurrency(project.salePrice), accent: true },
     { label: "Profit", value: formatCurrency(project.profit), accent: true },
     { label: "ROI", value: project.roi, accent: true },
   ].filter((m) => m.value);
+
+  const narrative = CASE_STUDY_NARRATIVE[project.slug];
 
   return (
     <section className="py-24 lg:py-32 bg-background">
@@ -236,6 +270,20 @@ function BodySection({ project }: { project: Project }) {
                 {project.description}
               </p>
             </ScrollReveal>
+
+            {narrative && narrative.map((block, i) => (
+              <ScrollReveal key={`story-${i}`}>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+                  <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting" data-testid={`story-kicker-${block.kicker.toLowerCase()}`}>{block.kicker}</p>
+                </div>
+                <div className="relative rounded-2xl border border-border/40 bg-gradient-to-br from-navy to-charcoal p-8 lg:p-10 text-cream overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cream/40 to-primary opacity-80" />
+                  <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-4 tracking-tight">{block.heading}</h3>
+                  <p className="text-base sm:text-lg text-cream/90 leading-relaxed">{block.body}</p>
+                </div>
+              </ScrollReveal>
+            ))}
 
             {project.afterImages && project.afterImages.length > 0 && (
               <ScrollReveal>
@@ -340,8 +388,8 @@ function BodySection({ project }: { project: Project }) {
                       ))}
                     </div>
                     <div className="px-7 py-4 bg-muted/40 border-t border-border/40">
-                      <p className="text-[10px] text-muted-foreground italic leading-relaxed">
-                        Documented for transparency. Real partner conversations include the full capital stack, contingency budgets, and exit assumptions.
+                      <p className="text-[10px] text-muted-foreground italic leading-relaxed" data-testid="text-economics-note">
+                        Project economics: documented internally. Public figures are shown as approximate ranges; full capital stack, contingency budgets, and exit assumptions are reserved for partner conversations.
                       </p>
                     </div>
                   </div>

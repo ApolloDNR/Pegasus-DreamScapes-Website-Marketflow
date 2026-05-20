@@ -1614,7 +1614,7 @@ function HeroSection() {
             >
               <span className="h-px w-8 bg-primary" />
               <p className="text-[11px] sm:text-[12px] uppercase tracking-[0.18em] text-primary font-semibold font-supporting">
-                Featured · Nelson Dr · Richmond CA
+                Featured · 4369 Nelson Dr · Richmond CA
               </p>
             </motion.div>
 
@@ -1887,47 +1887,54 @@ function FeaturedProjectSection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Section header */}
         <div className="mb-16">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Case Study</p>
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.02em]" data-testid="text-featured-title">
-            Featured Project: Nelson Dr
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">First Case Study · Foundational Project</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em]" data-testid="text-featured-title">
+            4369 Nelson Dr, Richmond, CA
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="relative">
-            <div className="aspect-[4/3] rounded-lg overflow-hidden">
-              <img 
-                src={serviceImage2} 
-                alt="Featured Project - Nelson Dr"
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-stretch">
+          {/* Editorial photo-light panel */}
+          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-navy to-charcoal text-cream p-10 lg:p-12 flex flex-col justify-between min-h-[420px]">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cream/40 to-primary opacity-80" />
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl" />
+            <div className="relative">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-4">The Project That Started Pegasus</p>
+              <p className="font-serif text-2xl sm:text-3xl text-cream leading-snug tracking-tight mb-8">
+                The first Pegasus-controlled project. Acquired complex, renovated with discipline, resold to retail.
+              </p>
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-cream/15">
+                {[
+                  { label: "Acquisition", value: "~$600k" },
+                  { label: "Renovation", value: "~$90–100k" },
+                  { label: "Sale", value: "~$840k" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-[9px] uppercase tracking-[0.22em] text-cream/55 font-supporting font-semibold mb-2">{stat.label}</p>
+                    <p className="font-serif text-xl sm:text-2xl font-semibold tabular-nums text-cream">{stat.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium text-sm shadow-lg">
-              Featured Flip
-            </div>
+            <p className="relative text-[11px] text-cream/65 italic leading-relaxed mt-8 pt-6 border-t border-cream/10">
+              Project economics: documented internally. Public figures shown as approximate ranges.
+            </p>
           </div>
 
           <div className="space-y-8">
-            <div>
-              <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-                Nelson Dr, Richmond, CA
-              </h3>
-            </div>
-            
-            <p className="text-muted-foreground text-base leading-relaxed" data-testid="text-featured-description">
-              A value-add residential project used to sharpen the Pegasus operating model: acquisition strategy, renovation planning, capital discipline, and resale execution. Every phase documented, every decision deliberate.
+            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed" data-testid="text-featured-description">
+              A complex East Bay single-family acquisition that taught Pegasus permit planning, scope control, and the communication discipline that became the foundation of how the company operates today. Every phase documented, every decision deliberate.
             </p>
 
             <div className="flex flex-wrap gap-2">
-              {["Kitchen Remodel", "Bath Updates", "New Flooring", "Exterior Refresh"].map((tag, i) => (
+              {["Full Interior Renovation", "Permit Coordination", "Electrical & Plumbing", "Exterior Refresh", "Staging & Resale"].map((tag, i) => (
                 <span key={i} className="px-4 py-2 bg-background text-foreground border border-border/50 rounded-md text-sm font-medium">{tag}</span>
               ))}
             </div>
 
-            <div className="grid grid-cols-3 gap-8 py-8 border-t border-border/30">
+            <div className="grid grid-cols-3 gap-6 py-8 border-t border-border/30">
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Strategy Model</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Strategy</p>
                 <p className="font-semibold">Fix & Flip</p>
               </div>
               <div>
@@ -1935,14 +1942,14 @@ function FeaturedProjectSection() {
                 <p className="font-semibold">Direct Acquisition</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Stage</p>
-                <p className="font-semibold text-primary">Execution</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Status</p>
+                <p className="font-semibold text-primary">Completed</p>
               </div>
             </div>
 
-            <Link href="/projects">
-              <Button variant="outline" size="lg" className="px-8 text-sm uppercase tracking-widest font-medium" data-testid="button-view-projects">
-                View All Projects
+            <Link href="/projects/nelson-dr">
+              <Button size="lg" className="px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-view-projects">
+                Read the Full Case Study
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>

@@ -21,34 +21,32 @@ import { eq } from "drizzle-orm";
 const initialProjects = [
   {
     slug: "nelson-dr",
-    name: "Nelson Drive Flip",
-    address: "1234 Nelson Dr",
+    name: "4369 Nelson Dr",
+    address: "4369 Nelson Dr",
     city: "Richmond",
     state: "CA",
     strategy: "fix-flip",
     status: "completed",
-    purchasePrice: 425000,
-    rehabCost: 85000,
-    arv: 625000,
-    salePrice: 615000,
-    profit: 105000,
-    roi: "20.6%",
-    holdTime: "4 months",
-    bedrooms: 3,
-    bathrooms: "2",
-    sqft: 1450,
-    yearBuilt: 1962,
-    description: "This classic Richmond ranch was transformed from a dated property into a modern family home.",
-    beforeImages: [
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"
-    ],
-    afterImages: [
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"
-    ],
+    purchasePrice: 600000,
+    rehabCost: 95000,
+    arv: null,
+    salePrice: 840000,
+    profit: null,
+    roi: null,
+    holdTime: "~6 months",
+    bedrooms: null,
+    bathrooms: null,
+    sqft: null,
+    yearBuilt: null,
+    description: "The first Pegasus-controlled project. A complex East Bay single-family acquisition that taught us permit planning, scope control, and the communication discipline that became the foundation of how Pegasus operates today.",
+    beforeImages: [],
+    afterImages: [],
     highlights: [
-      "Complete kitchen renovation with quartz countertops",
-      "Updated bathrooms with modern fixtures",
-      "New LVP flooring throughout"
+      "Full interior renovation: kitchen, bathrooms, flooring, paint",
+      "Electrical and plumbing updates to meet inspection standards",
+      "Permit coordination with the City of Richmond",
+      "Exterior refresh including landscaping and curb appeal",
+      "Staging and resale execution"
     ]
   },
   {

@@ -470,22 +470,21 @@ function ProjectSnapshotSection() {
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2">Case Study Format</p>
-                  <h3 className="font-serif text-3xl font-semibold tracking-tight">Nelson Dr, Richmond, CA</h3>
+                  <h3 className="font-serif text-3xl font-semibold tracking-tight">4369 Nelson Dr, Richmond, CA</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {["Fix & Flip", "3 Bed · 2 Bath", "~3 Month Timeline"].map((tag) => (
+                  {["Fix & Flip", "Direct Acquisition", "~6 Month Timeline"].map((tag) => (
                     <span key={tag} className="px-3 py-1.5 text-xs font-medium bg-muted rounded-md text-muted-foreground">{tag}</span>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
+            <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
               {[
-                { label: "Acquisition", value: "$385,000" },
-                { label: "Rehab Budget", value: "$75,000" },
-                { label: "All-In Basis", value: "$460,000" },
-                { label: "Resale Target", value: "$575,000", accent: true },
+                { label: "Acquisition", value: "~$600k" },
+                { label: "Renovation Investment", value: "~$90–100k" },
+                { label: "Sale Price", value: "~$840k", accent: true },
               ].map((stat, i) => (
                 <div key={i} className="p-7 lg:p-8 text-center" data-testid={`snapshot-stat-${i}`}>
                   <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-supporting font-semibold mb-3">{stat.label}</p>
@@ -498,7 +497,7 @@ function ProjectSnapshotSection() {
 
             <div className="p-8 lg:p-10 border-t border-border/40 bg-muted/20">
               <p className="text-sm text-muted-foreground leading-relaxed text-center italic">
-                * Real partner conversations include capital stack, contingency budgets, sensitivity analysis, exit assumptions, comp set, scope-of-work, and operator track record. Numbers above are formatting only.
+                Project economics: documented internally. Real partner conversations include capital stack, contingency budgets, sensitivity analysis, exit assumptions, comp set, scope-of-work, and operator track record. Public figures above are approximate ranges only.
               </p>
             </div>
           </div>
