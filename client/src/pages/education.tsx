@@ -204,7 +204,7 @@ function CuratedArticles({ active }: { active: string }) {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Core Articles</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Core Articles</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -280,7 +280,7 @@ function BeginnerPathSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Beginner Path</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Beginner Path</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -324,7 +324,7 @@ function GlossarySection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-14">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Glossary</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Glossary</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -371,7 +371,7 @@ function RemoteArticlesSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-14">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">From the Library</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">From the Library</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">

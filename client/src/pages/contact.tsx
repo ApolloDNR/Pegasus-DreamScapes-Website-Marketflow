@@ -150,7 +150,7 @@ function ContactRoutingSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-14">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Choose Your Lane</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Choose Your Lane</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -246,7 +246,7 @@ function ContactFormSection() {
         <ScrollReveal className="lg:col-span-5">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Send a Message</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Send a Message</p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-contact-info-title">
             Plain-text reaches us fastest.

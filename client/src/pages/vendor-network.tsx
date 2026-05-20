@@ -175,7 +175,7 @@ function CategoriesSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Trades We Work With</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Trades We Work With</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -298,7 +298,7 @@ function HowToJoinSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">How to Join</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -406,7 +406,7 @@ function VendorFormSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Vendor Intake</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">

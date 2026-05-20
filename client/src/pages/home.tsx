@@ -368,7 +368,7 @@ function StrategyStructureStacksSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Operating Stack</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">The Operating Stack</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
@@ -784,7 +784,7 @@ function WhatBringsYouHereSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Where to Start</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Where to Start</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
@@ -848,7 +848,7 @@ function FreeSnapshotSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Free · No Obligation</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Free · No Obligation</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
@@ -933,7 +933,7 @@ function PegasusStandardSection() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">The Pegasus Standard</p>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">The Pegasus Standard</p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
             Six commitments. Every conversation.
           </h2>
@@ -1018,7 +1018,7 @@ function EveryPropertyGetsAPathSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Strategy Review</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Strategy Review</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
@@ -1081,7 +1081,7 @@ function OutcomeLanesSection() {
         <ScrollReveal className="mb-14">
           <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">No Lead Dies</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">No Lead Dies</p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-4">
             One property. Multiple possible paths.
@@ -1236,7 +1236,7 @@ function FeaturedDealsSection() {
           <ScrollReveal className="text-center">
             <div className="flex items-center justify-center gap-4 mb-4">
               <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
                 {isEditMode ? (
                   <EditableText contentKey="home.deals.kicker" fallback="MarketFlow" />
                 ) : (getValue("home.deals.kicker") || "MarketFlow")}
@@ -1274,7 +1274,7 @@ function FeaturedDealsSection() {
           <div>
             <div className="flex items-center gap-4 mb-4">
               <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
                 {isEditMode ? (
                   <EditableText contentKey="home.deals.kicker" fallback="MarketFlow" />
                 ) : (getValue("home.deals.kicker") || "MarketFlow")}
@@ -1455,7 +1455,7 @@ function OperatingPrinciplesSection() {
       
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="text-center mb-16">
-          <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold mb-4">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
             {isEditMode ? (
               <EditableText contentKey="home.testimonials.kicker" fallback="Operating Principles" />
             ) : (getValue("home.testimonials.kicker") || "Operating Principles")}
@@ -1897,7 +1897,7 @@ function ServicesSection() {
         <ScrollReveal className="mb-20">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
               {isEditMode ? (
                 <EditableText contentKey="home.services.kicker" fallback="The Three Pillars" />
               ) : (getValue("home.services.kicker") || "The Three Pillars")}
@@ -2562,7 +2562,7 @@ function InvestmentPhilosophySection() {
           <ScrollReveal className="lg:sticky lg:top-32">
             <div className="flex items-center gap-4 mb-6">
               <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
                 {isEditMode ? (
                   <EditableText contentKey="home.philosophy.kicker" fallback="Our Approach" />
                 ) : (getValue("home.philosophy.kicker") || "Our Approach")}
@@ -2672,7 +2672,7 @@ function HowItWorksSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-20">
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
               {isEditMode ? (
                 <EditableText contentKey="home.howitworks.kicker" fallback="The Process" />
               ) : (getValue("home.howitworks.kicker") || "The Process")}
@@ -3228,7 +3228,7 @@ function ContactSection() {
           <ScrollReveal>
             <div className="flex items-center gap-4 mb-6">
               <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-              <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
                 {isEditMode ? (
                   <EditableText contentKey="home.contact.kicker" fallback="Get In Touch" />
                 ) : (getValue("home.contact.kicker") || "Get In Touch")}
