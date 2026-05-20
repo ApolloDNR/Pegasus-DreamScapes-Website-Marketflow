@@ -40,41 +40,16 @@ const initialProjects = [
     yearBuilt: null,
     description: "The first Pegasus-controlled project. A complex East Bay single-family acquisition that taught us permit planning, scope control, and the communication discipline that became the foundation of how Pegasus operates today.",
     beforeImages: [],
-    afterImages: [],
+    afterImages: [
+      "/nelson/nelson-01.jpg",
+      "/nelson/nelson-kitchen.png"
+    ],
     highlights: [
       "Full interior renovation: kitchen, bathrooms, flooring, paint",
       "Electrical and plumbing updates to meet inspection standards",
       "Permit coordination with the City of Richmond",
       "Exterior refresh including landscaping and curb appeal",
       "Staging and resale execution"
-    ]
-  },
-  {
-    slug: "maple-street",
-    name: "Maple Street Rental",
-    address: "567 Maple Street",
-    city: "Oakland",
-    state: "CA",
-    strategy: "buy-hold",
-    status: "active",
-    purchasePrice: 380000,
-    rehabCost: 45000,
-    arv: 485000,
-    bedrooms: 2,
-    bathrooms: "1",
-    sqft: 1100,
-    yearBuilt: 1955,
-    description: "A strategic buy-and-hold acquisition in a rapidly appreciating Oakland neighborhood.",
-    beforeImages: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
-    ],
-    afterImages: [
-      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800"
-    ],
-    highlights: [
-      "Modernized kitchen with stainless appliances",
-      "Updated bathroom with new vanity and tile",
-      "Strong rental income in growing neighborhood"
     ]
   }
 ];

@@ -5814,6 +5814,17 @@ export async function registerRoutes(
     }
   });
 
+  // HQ: list vendor applications submitted via /vendor-network
+  app.get("/api/hq/vendors", isAuthenticated, requireStaffRole, async (_req, res) => {
+    try {
+      const vendors = await storage.getLeads({ leadType: "vendor" });
+      return res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching vendor leads:", error);
+      return res.status(500).json({ message: "Failed to fetch vendor applications" });
+    }
+  });
+
   // Update lead (staff only)
   app.patch("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
     try {

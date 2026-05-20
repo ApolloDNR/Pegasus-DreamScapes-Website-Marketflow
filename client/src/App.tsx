@@ -45,6 +45,7 @@ const StrategyLabLibrary = lazy(() => import("@/pages/strategy-lab-library"));
 const StrategyLabSubmitted = lazy(() => import("@/pages/strategy-lab-submitted"));
 const StrategyLabBlueprintConfirmed = lazy(() => import("@/pages/strategy-lab-blueprint-confirmed"));
 const AdminStrategyLab = lazy(() => import("@/pages/admin-strategy-lab"));
+const AdminVendors = lazy(() => import("@/pages/admin-vendors"));
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
@@ -152,6 +153,7 @@ function Router() {
       <Route path="/strategy-lab/submitted" component={StrategyLabSubmitted} />
       <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
       <Route path="/admin/strategy-lab" component={AdminStrategyLab} />
+      <Route path="/admin/vendors" component={AdminVendors} />
       <Route path="/strategy-lab/classic" component={Calculators} />
       <Route path="/calculators" component={Calculators} />
       <Route path="/resources" component={Resources} />
