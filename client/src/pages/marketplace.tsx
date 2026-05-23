@@ -11,6 +11,7 @@ import { LegalDisclaimer } from "@/components/legal-disclaimer";
 import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { trackCtaClick } from "@/lib/analytics";
 import { motion } from "framer-motion";
+import { SkeletonHero, SkeletonGrid } from "@/components/skeleton-primitives";
 import {
   Loader2,
   Building2,
@@ -52,10 +53,13 @@ export default function MarketplacePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
+      <div
+        className="min-h-screen bg-background"
+        data-testid="skeleton-marketplace"
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-32 pb-16 space-y-12">
+          <SkeletonHero />
+          <SkeletonGrid count={4} columns={4} />
         </div>
       </div>
     );

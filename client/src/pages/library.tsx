@@ -6,6 +6,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { ArrowRight, BookOpen } from "lucide-react";
 import type { Article } from "@shared/schema";
 import { trackEvent } from "@/lib/analytics";
+import { SkeletonLine } from "@/components/skeleton-primitives";
 
 // Empire Doctrine v1.0.1 — /library is the canonical Strategy Library
 // surface. It is intentionally a thin, doctrine-clean index of the
@@ -71,7 +72,32 @@ export default function LibraryPage() {
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           {isLoading ? (
-            <p className="text-muted-foreground">Loading library...</p>
+            <ul
+              className="divide-y divide-border"
+              role="status"
+              aria-label="Loading library"
+              data-testid="skeleton-library-list"
+            >
+              {Array.from({ length: 4 }).map((_, i) => (
+                <li key={i} className="py-6">
+                  <div className="flex items-start gap-5">
+                    <div
+                      aria-hidden="true"
+                      className="w-6 h-6 mt-1 shrink-0 rounded-sm bg-muted animate-pulse"
+                    />
+                    <div className="flex-1 space-y-3">
+                      <SkeletonLine width="70%" className="h-6" />
+                      <SkeletonLine width="95%" />
+                      <SkeletonLine width="80%" />
+                    </div>
+                    <div
+                      aria-hidden="true"
+                      className="w-5 h-5 mt-2 rounded-sm bg-muted animate-pulse"
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : published.length === 0 ? (
             <p className="text-muted-foreground" data-testid="text-library-empty">
               The library is being staged. New entries publish as Apollo signs off.

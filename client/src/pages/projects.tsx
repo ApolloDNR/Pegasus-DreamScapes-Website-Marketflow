@@ -16,6 +16,7 @@ import {
 import type { Project } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
+import { SkeletonLine } from "@/components/skeleton-primitives";
 
 const STRATEGY_LABEL: Record<string, string> = {
   "fix-flip": "Fix & Flip",
@@ -132,27 +133,35 @@ function ProjectsGrid() {
 
   if (isLoading) {
     return (
-      <section className="py-24 lg:py-32 bg-background">
+      <section
+        className="py-24 lg:py-32 bg-background"
+        role="status"
+        aria-label="Loading projects"
+        data-testid="skeleton-projects-grid"
+      >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="mb-14 pb-6 border-b border-border/40">
-            <div className="h-3 w-20 bg-muted rounded mb-3 animate-skeleton" />
-            <div className="h-7 w-64 bg-muted rounded animate-skeleton" />
+          <div className="mb-14 pb-6 border-b border-border/40 space-y-3">
+            <SkeletonLine width="5rem" className="h-3" />
+            <SkeletonLine width="16rem" className="h-7" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="bg-card rounded-md border border-border/40 overflow-hidden">
-                <div className="aspect-[16/10] bg-muted animate-skeleton" />
+                <div
+                  aria-hidden="true"
+                  className="aspect-[16/10] bg-muted animate-pulse"
+                />
                 <div className="p-7 space-y-4">
-                  <div className="h-4 w-full bg-muted rounded animate-skeleton" />
-                  <div className="h-4 w-5/6 bg-muted rounded animate-skeleton" />
+                  <SkeletonLine width="100%" className="h-4" />
+                  <SkeletonLine width="83%" className="h-4" />
                   <div className="grid grid-cols-2 gap-5 pt-6 border-t border-border/40">
                     <div className="space-y-2">
-                      <div className="h-2.5 w-16 bg-muted rounded animate-skeleton" />
-                      <div className="h-5 w-24 bg-muted rounded animate-skeleton" />
+                      <SkeletonLine width="4rem" className="h-2.5" />
+                      <SkeletonLine width="6rem" className="h-5" />
                     </div>
                     <div className="space-y-2">
-                      <div className="h-2.5 w-16 bg-muted rounded animate-skeleton" />
-                      <div className="h-5 w-24 bg-muted rounded animate-skeleton" />
+                      <SkeletonLine width="4rem" className="h-2.5" />
+                      <SkeletonLine width="6rem" className="h-5" />
                     </div>
                   </div>
                 </div>
