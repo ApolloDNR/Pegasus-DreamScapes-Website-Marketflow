@@ -1,169 +1,204 @@
 import { useSEO } from "@/hooks/use-seo";
+import { Mail, Scale, FileText, Shield, AlertCircle, Users, Briefcase, MessageSquare } from "lucide-react";
+
+const SECTIONS = [
+  { id: "agreement", label: "Agreement", icon: FileText, title: "By using the site, you agree to these terms.", kicker: "Agreement" },
+  { id: "what-we-do", label: "What we do", icon: Briefcase, title: "Strategy-first real estate. Not a public marketplace.", kicker: "What we do" },
+  { id: "submissions", label: "Submissions", icon: Users, title: "Every submission gets a serious read. Not every submission gets an offer.", kicker: "Property submissions" },
+  { id: "no-offer", label: "No offer", icon: AlertCircle, title: "Nothing here is an offer of guaranteed returns or principal protected investment products.", kicker: "Not a securities offer" },
+  { id: "your-conduct", label: "Your conduct", icon: Shield, title: "Submit honest information. Don't try to break the site.", kicker: "Your conduct" },
+  { id: "content", label: "Content", icon: MessageSquare, title: "We own ours. You own yours. You give us a limited license to use it.", kicker: "Content and IP" },
+  { id: "liability", label: "Liability", icon: Scale, title: "We do our best. We can't promise outcomes.", kicker: "Limits and disclaimers" },
+  { id: "law-contact", label: "Law & contact", icon: Mail, title: "California law. Reach the operator directly.", kicker: "Governing law · Contact" },
+];
 
 export default function Terms() {
   useSEO({
     title: "Terms of Service",
-    description: "Terms of service for the Pegasus DreamScapes Corp. website and Strategy Review intake.",
+    description:
+      "Terms of service for Pegasus DreamScapes Corp.: the public website, Strategy Review intake, and MarketFlow access. Draft pending legal review.",
+    image: "/og/default.png",
   });
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
-      <div className="max-w-4xl mx-auto px-6">
-        <h1 className="text-4xl font-bold mb-2" data-testid="text-terms-title">Terms of Service</h1>
-        <p className="text-muted-foreground mb-8">Last updated: January 2026</p>
-        
-        <div className="prose prose-stone dark:prose-invert max-w-none space-y-8">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              By accessing or using the Pegasus DreamScapes Corp website and platform ("Services"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use our Services. These Terms constitute a legally binding agreement between you and Pegasus DreamScapes Corp ("Company," "we," "our," or "us").
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">2. Description of Services</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Pegasus DreamScapes Corp operates a real estate investment platform that connects property sellers with investors. Our Services include, but are not limited to:
-            </p>
-            <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-4">
-              <li>Wholesale real estate deal marketplace</li>
-              <li>Capital raising project listings</li>
-              <li>Property listing services</li>
-              <li>Investor-seller matching and communication tools</li>
-              <li>Deal negotiation facilitation</li>
-              <li>Educational resources and calculators</li>
-              <li>Community forums and messaging</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">3. User Accounts</h2>
-            <h3 className="text-xl font-medium mb-2">Registration</h3>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              To access certain features of our Services, you must create an account. You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate.
-            </p>
-            <h3 className="text-xl font-medium mb-2">Account Security</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">4. User Conduct</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">You agree not to:</p>
-            <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-              <li>Provide false or misleading information about properties or deals</li>
-              <li>Engage in fraudulent or deceptive practices</li>
-              <li>Violate any applicable laws or regulations</li>
-              <li>Infringe on the intellectual property rights of others</li>
-              <li>Harass, threaten, or intimidate other users</li>
-              <li>Attempt to gain unauthorized access to our systems</li>
-              <li>Use automated systems to access or scrape our platform</li>
-              <li>Interfere with the proper functioning of the Services</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">5. Property and Deal Listings</h2>
-            <h3 className="text-xl font-medium mb-2">Accuracy of Listings</h3>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              Users who list properties or deals are solely responsible for the accuracy and completeness of all information provided. We do not verify the accuracy of listings and make no representations about the condition, value, or investment potential of any listed property.
-            </p>
-            <h3 className="text-xl font-medium mb-2">No Guarantee of Transactions</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              We facilitate connections between parties but do not guarantee that any transaction will be completed. All negotiations and transactions are conducted directly between users at their own risk.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">6. Investment Disclaimer</h2>
-            <div className="bg-muted p-4 rounded-lg mb-4">
-              <p className="font-semibold text-foreground">IMPORTANT NOTICE</p>
-            </div>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              The information provided through our Services is for general informational purposes only and should not be construed as investment advice, financial advice, or a recommendation to buy or sell any real estate or securities.
-            </p>
-            <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-              <li>Real estate investments carry inherent risks, including the potential loss of principal</li>
-              <li>Past performance is not indicative of future results</li>
-              <li>Property values can fluctuate and may not appreciate as projected</li>
-              <li>Rental income and returns are not guaranteed</li>
-              <li>You should conduct your own due diligence before making any investment decisions</li>
-              <li>We recommend consulting with qualified legal, tax, and financial professionals</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">7. Fees and Payments</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Certain features of our Services may require payment of fees. All fees are disclosed before purchase and are non-refundable unless otherwise stated. We reserve the right to change our fee structure with reasonable notice to users.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">8. Intellectual Property</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              All content, features, and functionality of our Services, including but not limited to text, graphics, logos, and software, are owned by Pegasus DreamScapes Corp and are protected by intellectual property laws.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              You retain ownership of any content you submit to our platform but grant us a non-exclusive, worldwide, royalty-free license to use, display, and distribute such content in connection with our Services.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">9. Limitation of Liability</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, Pegasus DreamScapes Corp SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF OUR SERVICES. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU TO US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">10. Indemnification</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              You agree to indemnify and hold harmless Pegasus DreamScapes Corp, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including attorney's fees) arising out of your use of our Services, your violation of these Terms, or your violation of any rights of a third party.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">11. Dispute Resolution</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Any disputes arising out of or relating to these Terms or our Services shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association. The arbitration shall take place in the state where our principal place of business is located, and the decision of the arbitrator shall be final and binding.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">12. Termination</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We reserve the right to suspend or terminate your account and access to our Services at any time, with or without cause, and with or without notice. Upon termination, your right to use the Services will immediately cease.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">13. Changes to Terms</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on our website and updating the "Last updated" date. Your continued use of our Services after such changes constitutes acceptance of the new Terms.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">14. Governing Law</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              These Terms shall be governed by and construed in accordance with the laws of the State of Arizona, without regard to its conflict of law provisions.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">15. Contact Information</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              If you have questions about these Terms of Service, please contact us at:
-            </p>
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              <p className="font-medium">Pegasus DreamScapes Corp</p>
-              <p className="text-muted-foreground">Email: legal@pegasusdreamscapes.com</p>
-                          </div>
-          </section>
+    <div className="min-h-screen bg-background">
+      <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 bg-navy text-cream overflow-hidden">
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-champagne/10 rounded-full blur-3xl" />
         </div>
-      </div>
+        <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Terms · Plain language
+            </p>
+          </div>
+          <h1
+            className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6"
+            data-testid="text-terms-title"
+          >
+            Terms of Service.<br />
+            <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+              The rules of engagement.
+            </span>
+          </h1>
+          <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
+            By using the Pegasus DreamScapes website, you agree to the terms on this page. They cover what the site is, what it isn't, and how we work together.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10">
+            <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">Draft · Pending Legal Review</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 lg:py-20 bg-muted/30 border-b border-border">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            Jump to a section
+          </p>
+          <nav aria-label="On-page navigation" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {SECTIONS.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                data-testid={`link-terms-jump-${s.id}`}
+                className="group flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:border-primary/60 hover:bg-primary/5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
+              >
+                <s.icon className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                <span className="truncate">{s.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+      </section>
+
+      <section className="py-20 lg:py-28">
+        <div className="max-w-5xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-2 gap-x-12 gap-y-14">
+            <LegalBlock id="agreement" idx={0} icon={SECTIONS[0].icon} kicker={SECTIONS[0].kicker} title={SECTIONS[0].title}>
+              <p>
+                These Terms of Service form a binding agreement between you and Pegasus DreamScapes Corp. when you access pegasusdreamscapes.com or submit a property, request, or message through it. If you do not agree, do not use the site.
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="what-we-do" idx={1} icon={SECTIONS[1].icon} kicker={SECTIONS[1].kicker} title={SECTIONS[1].title}>
+              <p>
+                Pegasus DreamScapes Corp. is a strategy-first real estate operating company in the East Bay. We acquire, joint-venture, refer, and list real property across acquisition, value-add, ADU, and creative-finance lanes. We do not operate a public investment marketplace.
+              </p>
+              <p>
+                Paolo "Apollo" Duran is a licensed California real estate agent (DRE #02333658) with Keller Williams East Bay. Each office is independently owned and operated.
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="submissions" idx={2} icon={SECTIONS[2].icon} kicker={SECTIONS[2].kicker} title={SECTIONS[2].title}>
+              <p>
+                When you submit a property through the Strategy Review intake, you are asking for a structural read of the situation. Every submission gets a serious review. Not every submission gets an offer. When the right path is a referral, listing, or partner introduction, we will say so plainly.
+              </p>
+              <p>
+                You are responsible for the accuracy of the information you submit. We do not guarantee timing, price, or outcome on any submission.
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="no-offer" idx={3} icon={SECTIONS[3].icon} kicker={SECTIONS[3].kicker} title={SECTIONS[3].title}>
+              <p>
+                Nothing on this website is an offer to buy or sell any security, an offer of guaranteed returns, or a promise of principal protected investment products. Capital relationships, joint ventures, and project participations are conducted privately, on a relationship basis, with parties who qualify under applicable federal and state law.
+              </p>
+              <p>
+                Any reference to a project, structure, or return profile on the public site is descriptive, not promotional. We do not publicly market specific deals, securities, or investment vehicles. Past performance does not predict future results.
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="your-conduct" idx={4} icon={SECTIONS[4].icon} kicker={SECTIONS[4].kicker} title={SECTIONS[4].title}>
+              <p>
+                You agree to submit honest, accurate information. You agree not to misrepresent property facts, impersonate others, harass anyone, or attempt to disrupt the site through scraping, automated abuse, or unauthorized access.
+              </p>
+              <p>
+                We may decline to work with anyone whose conduct, intent, or property situation falls outside our doctrine. We may also remove or refuse to publish content that violates these terms or applicable law.
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="content" idx={5} icon={SECTIONS[5].icon} kicker={SECTIONS[5].kicker} title={SECTIONS[5].title}>
+              <p>
+                The site, its content, the Pegasus name, brand, and operating frameworks belong to Pegasus DreamScapes Corp. You may read and share public pages with attribution. You may not copy or republish the site or its frameworks for commercial use without written permission.
+              </p>
+              <p>
+                You keep ownership of any property, photo, or information you submit. By submitting it, you grant us a non-exclusive license to use it to do the work you asked us to do (review, route, and respond), and to keep operating records of that work.
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="liability" idx={6} icon={SECTIONS[6].icon} kicker={SECTIONS[6].kicker} title={SECTIONS[6].title}>
+              <p>
+                The site, the Strategy Lab tools, the Strategy Library, and any calculator output are provided as-is, for general informational and educational use. They are not legal, tax, accounting, or investment advice for your specific situation. Before acting on anything you read or model here, consult licensed professionals who know your facts and jurisdiction.
+              </p>
+              <p>
+                To the maximum extent permitted by law, Pegasus DreamScapes Corp. is not liable for indirect, incidental, special, or consequential damages arising from your use of the site. Our total liability to you for any claim related to the site is limited to one hundred dollars (US $100).
+              </p>
+            </LegalBlock>
+
+            <LegalBlock id="law-contact" idx={7} icon={SECTIONS[7].icon} kicker={SECTIONS[7].kicker} title={SECTIONS[7].title}>
+              <p>
+                These Terms are governed by the laws of the State of California, without regard to conflict-of-law principles. Any dispute will be resolved in the state or federal courts located in Contra Costa County, California.
+              </p>
+              <p>
+                Questions about these Terms go to the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-primary hover:underline" data-testid="link-terms-email">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-primary hover:underline" data-testid="link-terms-phone">925-744-8525</a>.
+              </p>
+            </LegalBlock>
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-border text-sm text-muted-foreground">
+            <p>Last updated: May 2026. These Terms are a draft pending qualified legal review.</p>
+          </div>
+        </div>
+      </section>
     </div>
+  );
+}
+
+function LegalBlock({
+  id,
+  idx,
+  icon: Icon,
+  kicker,
+  title,
+  children,
+}: {
+  id: string;
+  idx: number;
+  icon: React.ComponentType<{ className?: string }>;
+  kicker: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const alternate = idx % 2 === 1;
+  return (
+    <section
+      id={id}
+      data-testid={`section-terms-${id}`}
+      className={
+        alternate
+          ? "rounded-lg border border-border bg-card/60 p-6 lg:p-7 scroll-mt-32"
+          : "scroll-mt-32"
+      }
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
+        <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+          {kicker}
+        </p>
+      </div>
+      <h2 className="font-serif text-2xl sm:text-[26px] font-semibold tracking-tight mb-4 leading-tight">
+        {title}
+      </h2>
+      <div
+        className={
+          alternate
+            ? "space-y-4 text-base text-muted-foreground leading-relaxed"
+            : "space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-5"
+        }
+      >
+        {children}
+      </div>
+    </section>
   );
 }

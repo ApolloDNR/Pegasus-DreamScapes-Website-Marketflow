@@ -2,6 +2,15 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { Shield, AlertCircle, BookOpen, MessageSquare, Home as HomeIcon, Mail } from "lucide-react";
 
+const JUMP_NAV = [
+  { id: "disclosure-securities", label: "Securities", icon: AlertCircle },
+  { id: "disclosure-realestate", label: "Real estate", icon: HomeIcon },
+  { id: "disclosure-education", label: "Education", icon: BookOpen },
+  { id: "disclosure-peggy", label: "Peggy", icon: MessageSquare },
+  { id: "disclosure-marketflow", label: "MarketFlow", icon: Shield },
+  { id: "disclosure-fairhousing", label: "Fair housing", icon: Shield },
+];
+
 export default function Disclosures() {
   useSEO({
     title: "Disclosures",
@@ -39,10 +48,33 @@ export default function Disclosures() {
         </div>
       </section>
 
-      <section className="py-20 lg:py-28">
+      <section className="py-16 lg:py-20 bg-muted/30 border-b border-border">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            Jump to a section
+          </p>
+          <nav aria-label="On-page navigation" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {JUMP_NAV.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                data-testid={`link-disclosures-jump-${s.id}`}
+                className="group flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:border-primary/60 hover:bg-primary/5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
+              >
+                <s.icon className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                <span className="truncate">{s.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+      </section>
+
+      <section className="py-20 lg:py-28">
+        <div className="max-w-5xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-2 gap-x-12 gap-y-2">
           <ScrollReveal>
             <DisclosureBlock
+              idx={0}
               icon={AlertCircle}
               kicker="Not an offer of securities"
               title="This site is not an investment solicitation."
@@ -59,6 +91,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
+              idx={1}
               icon={HomeIcon}
               kicker="Real estate transactions"
               title="We do not promise an offer on any property."
@@ -75,6 +108,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
+              idx={2}
               icon={BookOpen}
               kicker="Strategy Library and Calculators"
               title="Educational content. Not advice."
@@ -91,6 +125,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
+              idx={3}
               icon={MessageSquare}
               kicker="Peggy Strategy Assistant"
               title="A guide. Not the decision-maker."
@@ -107,6 +142,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
+              idx={4}
               icon={Shield}
               kicker="MarketFlow access"
               title="Private dealflow. Invite-only."
@@ -120,6 +156,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
+              idx={5}
               icon={Shield}
               kicker="Equal housing & fair dealing"
               title="We comply with federal and state fair-housing law."
@@ -130,6 +167,8 @@ export default function Disclosures() {
               </p>
             </DisclosureBlock>
           </ScrollReveal>
+
+          </div>
 
           <ScrollReveal delay={0.1}>
             <div className="mt-16 pt-10 border-t border-border">
@@ -156,30 +195,48 @@ export default function Disclosures() {
 }
 
 function DisclosureBlock({
+  idx = 0,
   icon: Icon,
   kicker,
   title,
   children,
   testId,
 }: {
+  idx?: number;
   icon: React.ComponentType<{ className?: string }>;
   kicker: string;
   title: string;
   children: React.ReactNode;
   testId: string;
 }) {
+  // Alternate two visual patterns so the page reads as rhythm, not repetition.
+  const alternate = idx % 2 === 1;
   return (
-    <div className="mb-14 last:mb-0" data-testid={testId}>
+    <div
+      id={testId}
+      data-testid={testId}
+      className={
+        alternate
+          ? "mb-12 last:mb-0 rounded-lg border border-border bg-card/60 p-6 lg:p-7 scroll-mt-32"
+          : "mb-12 last:mb-0 scroll-mt-32"
+      }
+    >
       <div className="flex items-center gap-3 mb-3">
         <Icon className="w-4 h-4 text-primary" />
         <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
           {kicker}
         </p>
       </div>
-      <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight mb-5 leading-tight">
+      <h2 className="font-serif text-2xl sm:text-[26px] font-semibold tracking-tight mb-5 leading-tight">
         {title}
       </h2>
-      <div className="space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-6">
+      <div
+        className={
+          alternate
+            ? "space-y-4 text-base text-muted-foreground leading-relaxed"
+            : "space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-5"
+        }
+      >
         {children}
       </div>
     </div>

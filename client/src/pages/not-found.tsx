@@ -91,19 +91,18 @@ export default function NotFound() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {[
-              { href: "/sell", label: "Start a Strategy Review" },
-              { href: "/projects", label: "Projects" },
-              { href: "/invest", label: "Capital" },
-              { href: "/marketflow", label: "MarketFlow" },
+              { href: "/strategy-lab", label: "Strategy Lab" },
+              { href: "/submit", label: "Submit a Property" },
+              { href: "/about", label: "About" },
             ].map((link) => (
-              <Link key={link.href} href={link.href}>
-                <span
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-cream/20 hover:border-primary/60 bg-white/[0.03] hover:bg-white/[0.06] text-xs uppercase tracking-[0.15em] text-cream/80 hover:text-cream font-supporting font-semibold transition-all duration-200 cursor-pointer"
-                  data-testid={`link-404-${link.href.replace("/", "")}`}
-                >
-                  {link.label}
-                  <ArrowRight className="w-3 h-3 text-primary" />
-                </span>
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-cream/20 hover:border-primary/60 bg-white/[0.03] hover:bg-white/[0.06] text-xs uppercase tracking-[0.15em] text-cream/80 hover:text-cream font-supporting font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-navy transition-all duration-200"
+                data-testid={`link-404-${link.href.replace(/\//g, "")}`}
+              >
+                {link.label}
+                <ArrowRight className="w-3 h-3 text-primary" />
               </Link>
             ))}
           </div>
