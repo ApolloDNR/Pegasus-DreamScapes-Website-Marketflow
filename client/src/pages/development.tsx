@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
+import { CardSurface } from "@/components/ui/card-primitives";
 
 export default function Development() {
   useSEO({
@@ -230,10 +231,9 @@ function PhaseSection() {
         <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-5" staggerDelay={0.1}>
           {phases.map((phase, index) => (
             <StaggerItem key={index}>
-              <motion.div
-                className="relative h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 group"
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.25 }}
+              <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.25 }} className="h-full">
+              <CardSurface
+                className="relative h-full p-7 border-border/40 hover:border-primary/30 transition-all duration-300 group"
                 data-testid={`phase-card-${index}`}
               >
                 <div className="flex items-baseline justify-between mb-6">
@@ -254,6 +254,7 @@ function PhaseSection() {
                     </li>
                   ))}
                 </ul>
+              </CardSurface>
               </motion.div>
             </StaggerItem>
           ))}
@@ -318,7 +319,7 @@ function SupportingPillarsSection() {
           {pillars.map((p, i) => (
             <StaggerItem key={i}>
               <Link href={p.href}>
-                <div className="group h-full p-8 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer" data-testid={`supporting-pillar-${i}`}>
+                <CardSurface className="group h-full p-8 border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer" data-testid={`supporting-pillar-${i}`}>
                   <div className="flex items-baseline justify-between mb-6">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{p.kicker}</p>
                     <p.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
@@ -329,7 +330,7 @@ function SupportingPillarsSection() {
                     {p.cta}
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </span>
-                </div>
+                </CardSurface>
               </Link>
             </StaggerItem>
           ))}

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
+import { CardSurface } from "@/components/ui/card-primitives";
 import founderApolloPath from "@assets/image_1778735694150.png";
 import {
   ArrowRight,
@@ -239,8 +240,8 @@ function PillarsSection() {
         <StaggerChildren className="grid md:grid-cols-3 gap-6 lg:gap-7" staggerDelay={0.1}>
           {pillars.map((p, i) => (
             <StaggerItem key={p.title}>
-              <div
-                className="h-full p-7 lg:p-8 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-colors duration-300"
+              <CardSurface
+                className="h-full p-7 lg:p-8 border-border/40 hover:border-primary/30 transition-colors duration-300"
                 data-testid={`about-pillar-${i}`}
               >
                 <div className="flex items-baseline justify-between mb-6">
@@ -252,7 +253,7 @@ function PillarsSection() {
                 </p>
                 <h3 className="font-serif text-2xl font-semibold mb-4 tracking-tight">{p.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
-              </div>
+              </CardSurface>
             </StaggerItem>
           ))}
         </StaggerChildren>
@@ -383,8 +384,8 @@ function PrinciplesSection() {
         <StaggerChildren className="grid sm:grid-cols-2 gap-6 lg:gap-8" staggerDelay={0.08}>
           {principles.map((p, i) => (
             <StaggerItem key={p.kicker}>
-              <div
-                className="h-full p-7 lg:p-8 bg-card rounded-lg border-l-2 border-primary/40 hover:border-primary transition-colors duration-300"
+              <CardSurface
+                className="h-full p-7 lg:p-8 rounded-none border-0 border-l-2 border-primary/40 hover:border-primary transition-colors duration-300"
                 data-testid={`about-principle-${i}`}
               >
                 <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
@@ -394,7 +395,7 @@ function PrinciplesSection() {
                   {p.title}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
-              </div>
+              </CardSurface>
             </StaggerItem>
           ))}
         </StaggerChildren>

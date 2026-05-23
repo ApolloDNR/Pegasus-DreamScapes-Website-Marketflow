@@ -22,6 +22,7 @@ import { ScrollReveal } from "@/components/animations";
 import { apiRequest } from "@/lib/queryClient";
 import { type InsertLead } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
+import { CardSurface } from "@/components/ui/card-primitives";
 import {
   Hammer,
   HardHat,
@@ -190,14 +191,17 @@ function CategoriesSection() {
           {VENDOR_CATEGORIES.map((cat, i) => (
             <motion.div
               key={i}
-              className="group h-full p-7 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300"
               whileHover={{ y: -4 }}
               transition={{ duration: 0.25 }}
-              data-testid={`vendor-category-${i}`}
             >
-              <cat.icon className="w-7 h-7 text-primary/70 mb-5 group-hover:text-primary transition-colors" />
-              <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{cat.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
+              <CardSurface
+                className="group h-full p-7 border-border/40 hover:border-primary/30 transition-all duration-300"
+                data-testid={`vendor-category-${i}`}
+              >
+                <cat.icon className="w-7 h-7 text-primary/70 mb-5 group-hover:text-primary transition-colors" />
+                <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{cat.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
+              </CardSurface>
             </motion.div>
           ))}
         </div>
@@ -311,16 +315,16 @@ function HowToJoinSection() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {JOIN_STEPS.map((s, i) => (
-            <div
+            <CardSurface
               key={i}
-              className="relative p-8 bg-background rounded-lg border border-border/40"
+              className="relative p-8 bg-background border-border/40"
               data-testid={`vendor-step-${i}`}
             >
               <p className="font-serif text-6xl text-primary/15 absolute top-4 right-6 leading-none">{s.step}</p>
               <s.icon className="w-7 h-7 text-primary mb-5" />
               <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{s.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-            </div>
+            </CardSurface>
           ))}
         </div>
 
@@ -418,7 +422,7 @@ function VendorFormSection() {
         </ScrollReveal>
 
         {submitted ? (
-          <div className="p-10 lg:p-14 bg-card rounded-lg border border-border/50 shadow-md text-center">
+          <CardSurface className="p-10 lg:p-14 border-border/50 shadow-md text-center">
             <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
             <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
             <h3 className="font-serif text-3xl font-semibold mb-5 tracking-tight" data-testid="text-vendor-success">
@@ -437,7 +441,7 @@ function VendorFormSection() {
             </div>
           </div>
         ) : (
-          <div className="p-8 lg:p-10 bg-card rounded-lg border border-border/50 shadow-md">
+          <CardSurface className="p-8 lg:p-10 border-border/50 shadow-md">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((d) => mutation.mutate(d))}
@@ -587,7 +591,7 @@ function VendorFormSection() {
                 </p>
               </form>
             </Form>
-          </div>
+          </CardSurface>
         )}
       </div>
     </section>

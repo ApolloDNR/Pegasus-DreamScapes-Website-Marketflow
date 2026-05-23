@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { useEffect } from "react";
 import { Construction, ArrowLeft } from "lucide-react";
+import { CardSurface } from "@/components/ui/card-primitives";
 
 // Empire Doctrine v1.0.1 / Addendum §6 — Nelson Dr is held behind a
 // "case study coming" placeholder until real photos + founder-confirmed
@@ -79,7 +80,7 @@ export default function NelsonDrPage() {
           Acquisition near $600K. Scope $90–100K. Projected stabilized value near $840K.
         </p>
 
-        <div className="rounded-md border border-border bg-card p-8 sm:p-10 text-center mb-12">
+        <CardSurface className="p-8 sm:p-10 text-center mb-12">
           <Construction className="w-10 h-10 text-primary mx-auto mb-5" />
           <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-3">
             Case study coming
@@ -91,7 +92,7 @@ export default function NelsonDrPage() {
             We do not publish a case study before the record is clean. The structural sections are
             queued below; each gets its body when Apollo signs off.
           </p>
-        </div>
+        </CardSurface>
 
         <div className="space-y-8 opacity-75">
           {SECTIONS.map((title) => (

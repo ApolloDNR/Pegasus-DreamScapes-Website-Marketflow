@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Project } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
+import { CardSurface } from "@/components/ui/card-primitives";
 
 const STRATEGY_LABEL: Record<string, string> = {
   "fix-flip": "Fix & Flip",
