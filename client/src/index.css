@@ -1,17 +1,17 @@
-/* Fonts loaded via <link> in client/index.html (Playfair Display + Inter only). */
+/* Fonts loaded via <link> in client/index.html (subset to weights actually used). */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* PEGASUS DREAMSCAPES — Empire Doctrine v1.0.1 brand tokens.
- * Locked palette:
- *   Midnight  #1A2332 → 215 32% 15%   (foreground / dark hero ink)
- *   Navy      #243044 → 218 30% 20%   (dark surface)
- *   Copper    #C87A3A → 26 56% 51%    (primary accent / CTA)
- *   Cream     #D4CFC4 → 40 14% 80%    (warm cream accent)
- * Type: Playfair Display (display/serif) + Inter (body/UI/forms). Cinzel,
- * Cormorant Garamond, and Montserrat were removed in the Foundation Reset.
+/* PEGASUS DREAMSCAPES — Brand Identity System
+ * Palette (Final Brand Asset System):
+ *   Deep Navy   #0D1B2D → 214 55% 11%
+ *   Rich Copper #C77A3A → 27 56% 50%
+ *   Warm Cream  #F6EFE4 → 37 50% 93%
+ *   Charcoal    #1E2328 → 210 14% 14%
+ * Type: Cinzel (Trajan-substitute display caps), Cormorant Garamond (editorial),
+ *       Montserrat (letterspaced supporting), Inter (body).
  */
 :root {
   --button-outline: rgba(0,0,0, .08);
@@ -19,64 +19,60 @@
   --opaque-button-border-intensity: -6;
   --elevate-1: rgba(0,0,0, .02);
   --elevate-2: rgba(0,0,0, .05);
-  --background: 40 22% 96%;
-  --foreground: 215 32% 15%;
-  --border: 38 18% 84%;
+  --background: 37 50% 95%;
+  --foreground: 214 55% 11%;
+  --border: 35 22% 86%;
   --card: 0 0% 100%;
-  --card-foreground: 215 32% 15%;
-  --card-border: 38 16% 86%;
-  --tan: 26 45% 70%;
-  --tan-foreground: 215 32% 15%;
-  --champagne: 40 18% 88%;
-  --champagne-foreground: 215 32% 15%;
-  --warm-glow: 26 56% 56%;
-  --stone: 40 16% 94%;
-  --stone-foreground: 215 32% 15%;
-  --navy: 215 32% 15%;
-  --navy-foreground: 40 22% 96%;
-  --copper: 26 56% 51%;
+  --card-foreground: 214 55% 11%;
+  --card-border: 35 18% 88%;
+  --tan: 27 45% 70%;
+  --tan-foreground: 214 55% 11%;
+  --champagne: 37 50% 90%;
+  --champagne-foreground: 214 55% 11%;
+  --warm-glow: 27 56% 55%;
+  --stone: 37 38% 95%;
+  --stone-foreground: 214 55% 11%;
+  --navy: 214 55% 11%;
+  --navy-foreground: 37 50% 95%;
+  --copper: 27 56% 50%;
   --copper-foreground: 0 0% 100%;
-  --cream: 40 14% 80%;
-  --cream-foreground: 215 32% 15%;
-  --charcoal: 218 30% 20%;
-  --charcoal-foreground: 40 22% 96%;
-  --sidebar: 40 16% 94%;
-  --sidebar-foreground: 215 32% 15%;
-  --sidebar-border: 38 16% 86%;
-  --sidebar-primary: 26 56% 51%;
+  --cream: 37 50% 93%;
+  --cream-foreground: 214 55% 11%;
+  --charcoal: 210 14% 14%;
+  --charcoal-foreground: 37 50% 93%;
+  --sidebar: 37 38% 95%;
+  --sidebar-foreground: 214 55% 14%;
+  --sidebar-border: 35 20% 88%;
+  --sidebar-primary: 27 56% 48%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 40 18% 90%;
-  --sidebar-accent-foreground: 215 32% 15%;
-  --sidebar-ring: 26 56% 51%;
+  --sidebar-accent: 38 30% 92%;
+  --sidebar-accent-foreground: 214 55% 14%;
+  --sidebar-ring: 27 56% 48%;
   --popover: 0 0% 100%;
-  --popover-foreground: 215 32% 15%;
-  --popover-border: 38 16% 86%;
-  --primary: 26 56% 51%;
+  --popover-foreground: 214 55% 11%;
+  --popover-border: 35 18% 88%;
+  --primary: 27 56% 48%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 215 32% 15%;
-  --secondary-foreground: 40 22% 96%;
-  --muted: 40 18% 92%;
+  --secondary: 214 55% 11%;
+  --secondary-foreground: 37 50% 95%;
+  --muted: 38 28% 93%;
   /* AA contrast on cream/white card surfaces. */
-  --muted-foreground: 218 22% 30%;
-  --accent: 26 56% 51%;
+  --muted-foreground: 213 30% 28%;
+  --accent: 27 56% 48%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 65% 50%;
   --destructive-foreground: 0 0% 100%;
-  --input: 38 16% 90%;
-  --ring: 26 56% 51%;
-  --chart-1: 26 56% 51%;
-  --chart-2: 218 30% 25%;
-  --chart-3: 40 16% 70%;
-  --chart-4: 215 32% 15%;
+  --input: 38 22% 90%;
+  --ring: 27 56% 48%;
+  --chart-1: 27 56% 50%;
+  --chart-2: 213 53% 25%;
+  --chart-3: 38 38% 60%;
+  --chart-4: 213 45% 18%;
   --chart-5: 26 50% 38%;
-  /* Empire Doctrine v1.0.1: Playfair Display + Inter only. The display
-     and supporting tokens alias to the same families so legacy
-     `font-display` / `font-supporting` classes still render with the
-     locked type system instead of breaking. */
   --font-sans: 'Inter', system-ui, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-supporting: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --font-supporting: 'Montserrat', 'Inter', sans-serif;
   --font-mono: Menlo, monospace;
   --radius: .375rem;
   --shadow-2xs: 0 1px 2px 0 hsl(214 55% 11% / 0.04);
@@ -125,12 +121,9 @@
   --pd-charcoal: #1E2328;
   --pd-rule: #E2D6BF;
   --pd-muted: #6B6256;
-  /* Empire Doctrine v1.0.1 — Playfair Display + Inter only. Legacy
-     tokens (Cinzel / Cormorant Garamond / Montserrat) were removed
-     during the Foundation Reset and must not be reintroduced. */
-  --pd-font-display: "Playfair Display", Georgia, serif;
-  --pd-font-serif: "Playfair Display", Georgia, serif;
-  --pd-font-supporting: "Inter", system-ui, sans-serif;
+  --pd-font-display: "Cinzel", serif;
+  --pd-font-serif: "Cormorant Garamond", serif;
+  --pd-font-supporting: "Montserrat", sans-serif;
   --pd-font-sans: "Inter", system-ui, sans-serif;
 }
 
@@ -243,13 +236,13 @@
   font-optical-sizing: auto;
 }
 
-/* Playfair Display — display headlines (Empire Doctrine v1.0.1). */
+/* Cinzel — Trajan-style display caps for the wordmark and stone-carved labels */
 .font-display {
   font-family: var(--font-display);
   font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* Inter — letterspaced supporting type for kickers + UI labels. */
+/* Montserrat — letterspaced supporting type per brand sheet */
 .font-supporting {
   font-family: var(--font-supporting);
   font-feature-settings: "kern" 1, "liga" 1;

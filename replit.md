@@ -3,6 +3,8 @@
 ## Overview
 Strategy-first real estate operating company in the East Bay (Pleasant Hill, California). Positioning: **"The Deal Architect"**. Every property gets a path. Honest review, disciplined execution, no marketing-fluff. The public website is the Foundation Reset: a small, locked, voice-disciplined v1 surface designed to hold the brand without overclaiming.
 
+**Visual identity is preserved from the prior Final Brand Asset System (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter).** Foundation Reset changed structure (navigation, routes, copy, function), not the palette or typography.
+
 ## User Preferences
 Preferred communication style: simple, everyday language.
 
@@ -14,14 +16,16 @@ Preferred communication style: simple, everyday language.
 - **Belief line** (about, locked): "Built on strategy. Governed by virtue. Executed with discipline."
 - **Founder**: Paolo "Apollo" Duran — Founder & Principal. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.
 - **Contact**: `apollo@pegasusdreamscapes.com` / `925-744-8525`. Replaces all legacy `hello@`/`info@`.
-- **Palette** (HSL tokens in `client/src/index.css`):
-  - Midnight `#1A2332` → `--charcoal` (primary dark surface)
-  - Navy `#243044` → secondary dark surface
-  - Copper `#C87A3A` → `--primary`, `--accent`, `--ring`
-  - Cream `#D4CFC4` → `--cream` (warm light surface)
-- **Type system** (Empire Doctrine v1.0.1 locks to two families only):
-  - **Playfair Display** → `font-serif`, `font-display` (display + headlines)
-  - **Inter** → `font-sans`, `font-supporting` (body + kickers)
+- **Palette** (HSL tokens in `client/src/index.css` — Final Brand Asset System, preserved through Foundation Reset):
+  - Deep Navy `#0D1B2D` → `--navy`, `--foreground`, `--secondary`
+  - Rich Copper `#C77A3A` → `--primary`, `--accent`, `--ring`, `--copper`
+  - Warm Cream `#F6EFE4` → `--background`, `--cream`
+  - Charcoal `#1E2328` → `--charcoal`
+- **Type system** (four families — preserved through Foundation Reset):
+  - **Cinzel** → `font-display` (Trajan-style display caps, wordmark + stone-carved labels)
+  - **Cormorant Garamond** → `font-serif` (editorial headlines + H1/H2/H3)
+  - **Montserrat** → `font-supporting` (letterspaced kickers + UI labels)
+  - **Inter** → `font-sans` (body + forms + UI)
 - **Logo**: SVG-first. `public/brand/pegasus-wordmark.svg`, `public/brand/pegasus-mark.svg`, `public/favicon.svg`. (Final illustrated mark TBD; current SVGs are typography-driven placeholders.)
 
 ## Locked voice rules (Empire Doctrine v1.0.1)
@@ -74,20 +78,21 @@ The motto and belief line are also rendered as visually hidden `<span>`s in the 
 
 ## Canonical typography
 
-Playfair Display + Inter only.
+Four families: Cinzel · Cormorant Garamond · Montserrat · Inter.
 
-- **Hero H1**: `font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[1.02]`. Optional copper accent on second line via `text-primary`.
+- **Hero H1**: `font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[1.02]` (Cormorant Garamond). Optional copper accent on second line via `text-primary`.
+- **Wordmark / display caps**: `font-display` (Cinzel) with wide letterspacing.
 - **Section H2**: `font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight`.
 - **Card H3**: `font-serif text-2xl sm:text-3xl font-semibold tracking-tight leading-tight`.
-- **Kicker (section)**: `text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold`.
-- **Body lead**: `text-lg sm:text-xl text-muted-foreground leading-relaxed`.
-- **Body**: `text-base text-muted-foreground leading-relaxed`.
+- **Kicker (section)**: `text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold` (Montserrat).
+- **Body lead**: `text-lg sm:text-xl text-muted-foreground leading-relaxed` (Inter).
+- **Body**: `text-base text-muted-foreground leading-relaxed` (Inter).
 - **Use semantic tokens, not literals**: `text-primary` (not `text-copper`), `text-foreground` (not `text-navy`).
 
 ## Visual baseline
 
-- Light mode = warm cream (Cream `#D4CFC4`).
-- Dark surfaces = Midnight `#1A2332` (`bg-[hsl(var(--charcoal))]`) and Navy `#243044`.
+- Light mode = warm cream (Warm Cream `#F6EFE4`).
+- Dark surfaces = Deep Navy `#0D1B2D` (`bg-[hsl(var(--navy))]`) and Charcoal `#1E2328`.
 - Primary CTAs copper, secondary outline. CTA pill style: `text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm`.
 - **Theme**: defaults to `system`. Manual Light/Dark/System toggle persists to `localStorage` under `pegasus-ui-theme`.
 
