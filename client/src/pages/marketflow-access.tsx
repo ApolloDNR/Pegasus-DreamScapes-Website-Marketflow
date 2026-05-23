@@ -24,6 +24,7 @@ import {
 import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { trackEvent } from "@/lib/analytics";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
 const accessSchema = z.object({
@@ -42,6 +43,11 @@ export default function MarketflowAccessPage() {
     description:
       "Request access to MarketFlow, the private dealflow layer of Pegasus DreamScapes. Access is by introduction; tell us who connected you.",
   });
+
+  // Brief §11 analytics — page-view event for the access funnel.
+  useEffect(() => {
+    trackEvent("marketflow_access_opened");
+  }, []);
 
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
@@ -85,7 +91,10 @@ export default function MarketflowAccessPage() {
         },
       });
     },
-    onSuccess: () => setSubmitted(true),
+    onSuccess: () => {
+      trackEvent("marketflow_access_requested");
+      setSubmitted(true);
+    },
     onError: (e: Error) =>
       toast({ title: "Could not send request", description: e.message, variant: "destructive" }),
   });

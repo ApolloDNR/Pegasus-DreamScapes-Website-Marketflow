@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Mail, MapPin, ArrowUpRight, Phone, LogIn } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import logoImage from "@/assets/brand/pegasus-mark-full.png";
 import wordmarkImage from "@/assets/brand/pegasus-wordmark.svg";
 import { ThemeToggle } from "./theme-toggle";
@@ -98,6 +99,7 @@ export function Footer() {
             <div className="space-y-3 pt-3 border-t border-border/40 mt-4">
               <a
                 href="mailto:apollo@pegasusdreamscapes.com"
+                onClick={() => trackEvent("email_tap", { location: "footer" })}
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 data-testid="link-footer-email"
               >
@@ -106,6 +108,7 @@ export function Footer() {
               </a>
               <a
                 href="tel:+19257448525"
+                onClick={() => trackEvent("phone_tap", { location: "footer" })}
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 data-testid="link-footer-phone"
               >

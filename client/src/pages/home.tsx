@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { trackEvent } from "@/lib/analytics";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -838,18 +839,18 @@ function FinalCTASection() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
             <Link href="/submit">
-              <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-sell">
+              <Button onClick={() => trackEvent("cta_click", { id: "final_primary", to: "/submit" })} size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-sell">
                 Submit a Property
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
             <Link href="/capital">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-invest">
+              <Button onClick={() => trackEvent("cta_click", { id: "final_secondary", to: "/capital" })} size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-invest">
                 Partner Inquiry
               </Button>
             </Link>
             <Link href="/contact">
-              <Button size="lg" variant="ghost" className="w-full sm:w-auto px-8 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-contact">
+              <Button onClick={() => trackEvent("cta_click", { id: "final_tertiary", to: "/contact" })} size="lg" variant="ghost" className="w-full sm:w-auto px-8 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-contact">
                 Just Say Hello
               </Button>
             </Link>
@@ -1890,7 +1891,7 @@ function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.05 }}
             >
-              <a href="/submit">
+              <a href="/submit" onClick={() => trackEvent("cta_click", { id: "hero_primary", to: "/submit" })}>
                 <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_primary" fallback="Start a Strategy Review" />
@@ -1898,7 +1899,7 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="#projects">
+              <a href="#projects" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "#projects" })}>
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-2 border-white/70 bg-white/5 text-white hover:bg-white/15 hover:border-white backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_secondary" fallback="View Featured Project" />

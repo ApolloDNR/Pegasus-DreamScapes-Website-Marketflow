@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { ArrowRight, BookOpen } from "lucide-react";
 import type { Article } from "@shared/schema";
+import { trackEvent } from "@/lib/analytics";
 
 // Empire Doctrine v1.0.1 — /library is the canonical Strategy Library
 // surface. It is intentionally a thin, doctrine-clean index of the
@@ -26,6 +27,25 @@ export default function LibraryPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
+  }, []);
+
+  // Brief §11 analytics — fire `library_scroll_50` once when the visitor
+  // crosses 50% scroll depth on the library index (consent-gated).
+  const firedScroll50 = useRef(false);
+  useEffect(() => {
+    const onScroll = () => {
+      if (firedScroll50.current) return;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      if (max <= 0) return;
+      const pct = window.scrollY / max;
+      if (pct >= 0.5) {
+        firedScroll50.current = true;
+        trackEvent("library_scroll_50");
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const published = articles.filter((a) => a.published);

@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { trackEvent } from "@/lib/analytics";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
 // Empire Doctrine v1.0.1 — canonical submission page.
@@ -70,6 +71,11 @@ export default function SubmitPage() {
     description:
       "Submit a property to Pegasus DreamScapes. Apollo reviews every serious submission. Every property gets a path. Honest review, no pressure.",
   });
+
+  // Brief §11 analytics — fire `submit_opened` once on mount (consent-gated).
+  useEffect(() => {
+    trackEvent("submit_opened", { intent: useInitialIntent() });
+  }, []);
 
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
@@ -128,6 +134,8 @@ export default function SubmitPage() {
       return apiRequest("POST", "/api/leads", payload);
     },
     onSuccess: () => {
+      // Brief §11 analytics — submit lifecycle complete.
+      trackEvent("submit_completed", { intent: form.getValues("intent") });
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },

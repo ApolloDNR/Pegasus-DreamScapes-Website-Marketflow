@@ -18,6 +18,15 @@ declare global {
 }
 
 function getDomain(): string | null {
+  // Test/runtime override: window.__PEGASUS_PLAUSIBLE_DOMAIN__ takes
+  // precedence over the build-time env var so tests (and emergency
+  // ops switches) can flip the domain without a redeploy.
+  const fromWindow =
+    typeof window !== "undefined"
+      ? (window as unknown as { __PEGASUS_PLAUSIBLE_DOMAIN__?: string })
+          .__PEGASUS_PLAUSIBLE_DOMAIN__
+      : undefined;
+  if (fromWindow) return fromWindow;
   const fromEnv = (import.meta as { env?: Record<string, string | undefined> }).env
     ?.VITE_PLAUSIBLE_DOMAIN;
   if (!fromEnv || fromEnv === "undefined") return null;

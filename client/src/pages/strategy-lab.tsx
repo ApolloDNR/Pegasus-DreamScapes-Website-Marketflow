@@ -33,6 +33,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { trackEvent } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { usePeggyContext } from "@/contexts/peggy-context";
 import { useQuery } from "@tanstack/react-query";
@@ -668,6 +669,12 @@ export default function StrategyLabPage() {
     description:
       "Run a property through the Pegasus lens. Lane fit, risk, scenario stress, and a recommended next step in seconds. Preliminary analysis, human review required.",
   });
+
+  // Brief §11 analytics — fire `strategy_lab_started` once per mount
+  // (consent-gated; no-op until the visitor opts in).
+  useEffect(() => {
+    trackEvent("strategy_lab_started");
+  }, []);
 
   const [form, setForm] = useState<FormState>(EMPTY_STATE);
   const [mode, setMode] = useState<"quick" | "full">(() => {
@@ -1307,6 +1314,8 @@ export default function StrategyLabPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/property-analyses"] });
       fireTouchpoint("submit_pegasus_success", { submissionId: data.submissionId });
+      // Brief §11 analytics — Strategy Lab funnel completion.
+      trackEvent("strategy_lab_completed", { submissionId: data.submissionId });
       setSubmitDialogOpen(false);
       navigate(`/strategy-lab/submitted?id=${data.submissionId}`);
     },
