@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { injectSeo } from "./seo-html";
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -12,8 +13,13 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  // SPA fall-through. Wave 4: rewrite <title>/OG/Twitter tags per-route
+  // so social-card crawlers (LinkedIn, iMessage, Slack, Twitter/X) see
+  // correct metadata without executing client JS.
+  app.use("*", (req, res) => {
+    const indexPath = path.resolve(distPath, "index.html");
+    const html = fs.readFileSync(indexPath, "utf-8");
+    const pathname = (req.originalUrl || req.url || "/").split("?")[0];
+    res.status(200).type("html").send(injectSeo(html, pathname));
   });
 }

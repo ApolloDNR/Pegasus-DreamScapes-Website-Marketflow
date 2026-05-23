@@ -172,17 +172,27 @@ function HeroSection({ project }: { project: Project }) {
             }}
           />
           <picture>
-            <source srcSet={toAvif(heroImg)} type="image/avif" />
-            <source srcSet={heroImg} type="image/webp" />
+            <source
+              type="image/avif"
+              srcSet={`${toAvif(heroImg)} 1920w`}
+              sizes="100vw"
+            />
+            <source
+              type="image/webp"
+              srcSet={`${heroImg} 1920w`}
+              sizes="100vw"
+            />
             <img
-            src={heroImg}
-            alt={`${project.name} after photo`}
-            width={1920}
-            height={1080}
-            loading="eager"
-            decoding="sync"
-            {...({ fetchpriority: "high" } as Record<string, string>)}
-            className="absolute inset-0 w-full h-full object-cover"
+              src={heroImg}
+              srcSet={`${heroImg} 1920w`}
+              sizes="100vw"
+              alt={`${project.name} after photo`}
+              width={1920}
+              height={1080}
+              loading="eager"
+              decoding="sync"
+              {...({ fetchpriority: "high" } as Record<string, string>)}
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </picture>
         </motion.div>
@@ -312,9 +322,28 @@ function BodySection({ project }: { project: Project }) {
                       transition={{ duration: 0.3 }}
                     >
                       <picture>
-                        <source srcSet={toAvif(image)} type="image/avif" />
-                        <source srcSet={image} type="image/webp" />
-                        <img src={image} alt={`${project.name} after ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" decoding="async" data-testid={`img-after-${i}`} />
+                        <source
+                          type="image/avif"
+                          srcSet={`${toAvif(image)} 1280w`}
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
+                        <source
+                          type="image/webp"
+                          srcSet={`${image} 1280w`}
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
+                        <img
+                          src={image}
+                          srcSet={`${image} 1280w`}
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                          alt={`${project.name} after ${i + 1}`}
+                          width={1280}
+                          height={853}
+                          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                          loading="lazy"
+                          decoding="async"
+                          data-testid={`img-after-${i}`}
+                        />
                       </picture>
                     </motion.div>
                   ))}
@@ -333,9 +362,28 @@ function BodySection({ project }: { project: Project }) {
                   {project.beforeImages.map((image, i) => (
                     <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
                       <picture>
-                        <source srcSet={toAvif(image)} type="image/avif" />
-                        <source srcSet={image} type="image/webp" />
-                        <img src={image} alt={`${project.name} before ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" decoding="async" data-testid={`img-before-${i}`} />
+                        <source
+                          type="image/avif"
+                          srcSet={`${toAvif(image)} 1280w`}
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
+                        <source
+                          type="image/webp"
+                          srcSet={`${image} 1280w`}
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
+                        <img
+                          src={image}
+                          srcSet={`${image} 1280w`}
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                          alt={`${project.name} before ${i + 1}`}
+                          width={1280}
+                          height={853}
+                          className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                          loading="lazy"
+                          decoding="async"
+                          data-testid={`img-before-${i}`}
+                        />
                       </picture>
                     </div>
                   ))}
