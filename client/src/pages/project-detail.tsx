@@ -52,6 +52,14 @@ const CASE_STUDY_NARRATIVE: Record<string, StoryBlock[]> = {
   ],
 };
 
+// Wave 4 — asset discipline: derive an AVIF sibling from a webp/jpg path.
+// Falls back gracefully when no transcoded sibling exists (browser
+// continues down the <picture> source list to webp/jpg).
+function toAvif(src: string | undefined | null): string {
+  if (!src) return "";
+  return src.replace(/\.(webp|jpe?g|png)$/i, ".avif");
+}
+
 const STRATEGY_LABEL: Record<string, string> = {
   "fix-flip": "Fix & Flip",
   "buy-hold": "Buy & Hold",
@@ -163,7 +171,10 @@ function HeroSection({ project }: { project: Project }) {
               transform: "scale(1.05)",
             }}
           />
-          <img
+          <picture>
+            <source srcSet={toAvif(heroImg)} type="image/avif" />
+            <source srcSet={heroImg} type="image/webp" />
+            <img
             src={heroImg}
             alt={`${project.name} after photo`}
             width={1920}
@@ -172,7 +183,8 @@ function HeroSection({ project }: { project: Project }) {
             decoding="sync"
             {...({ fetchpriority: "high" } as Record<string, string>)}
             className="absolute inset-0 w-full h-full object-cover"
-          />
+            />
+          </picture>
         </motion.div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-navy to-charcoal" />
@@ -299,7 +311,11 @@ function BodySection({ project }: { project: Project }) {
                       whileHover={{ y: -3 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <img src={image} alt={`${project.name} after ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" decoding="async" data-testid={`img-after-${i}`} />
+                      <picture>
+                        <source srcSet={toAvif(image)} type="image/avif" />
+                        <source srcSet={image} type="image/webp" />
+                        <img src={image} alt={`${project.name} after ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" decoding="async" data-testid={`img-after-${i}`} />
+                      </picture>
                     </motion.div>
                   ))}
                 </div>
@@ -316,7 +332,11 @@ function BodySection({ project }: { project: Project }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {project.beforeImages.map((image, i) => (
                     <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
-                      <img src={image} alt={`${project.name} before ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" decoding="async" data-testid={`img-before-${i}`} />
+                      <picture>
+                        <source srcSet={toAvif(image)} type="image/avif" />
+                        <source srcSet={image} type="image/webp" />
+                        <img src={image} alt={`${project.name} before ${i + 1}`} width={1280} height={853} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" loading="lazy" decoding="async" data-testid={`img-before-${i}`} />
+                      </picture>
                     </div>
                   ))}
                 </div>

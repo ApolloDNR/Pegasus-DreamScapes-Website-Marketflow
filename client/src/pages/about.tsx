@@ -5,6 +5,14 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import { CardSurface } from "@/components/ui/card-primitives";
 import founderApolloPath from "@assets/image_1778735694150.png";
+
+// Wave 4 — asset discipline: pre-transcoded responsive variants live at
+// /images/founder/apollo-{w}.{avif|webp|jpg}. See scripts/transcode-images.mjs.
+const FOUNDER_BASE = "/images/founder/apollo";
+const FOUNDER_WIDTHS = [480, 768, 1200] as const;
+const FOUNDER_SRCSET = (ext: string) =>
+  FOUNDER_WIDTHS.map((w) => `${FOUNDER_BASE}-${w}.${ext} ${w}w`).join(", ");
+const FOUNDER_SIZES = "(max-width: 1024px) 90vw, 480px";
 import {
   ArrowRight,
   Compass,
@@ -272,12 +280,26 @@ function FounderSection() {
               <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-lg" />
               <div className="relative">
                 <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
-                  <img
-                    src={founderApolloPath}
-                    alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
-                    className="absolute inset-0 w-full h-full object-cover object-top"
-                    data-testid="img-founder-apollo"
-                  />
+                  <picture>
+                    <source type="image/avif" srcSet={FOUNDER_SRCSET("avif")} sizes={FOUNDER_SIZES} />
+                    <source type="image/webp" srcSet={FOUNDER_SRCSET("webp")} sizes={FOUNDER_SIZES} />
+                    <img
+                      src={`${FOUNDER_BASE}-768.jpg`}
+                      srcSet={FOUNDER_SRCSET("jpg")}
+                      sizes={FOUNDER_SIZES}
+                      width={768}
+                      height={960}
+                      loading="lazy"
+                      decoding="async"
+                      alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
+                      className="absolute inset-0 w-full h-full object-cover object-top"
+                      data-testid="img-founder-apollo"
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        if (t.src !== founderApolloPath) t.src = founderApolloPath;
+                      }}
+                    />
+                  </picture>
                   <div className="absolute inset-0 ring-1 ring-primary/50 rounded-lg pointer-events-none" />
                   <div className="absolute -inset-1 rounded-lg ring-1 ring-primary/15 pointer-events-none" />
                 </div>
