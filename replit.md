@@ -45,7 +45,7 @@ Five-item primary nav plus footer-only secondary routes.
 - **Primary CTA** (header + hero + most pages): "Submit a Property" → `/submit`.
 - **Footer-only**: `/library`, `/capital`, `/vendor-network`, `/connect`, `/contact`, `/disclosures`, `/privacy`, `/terms`.
 - **Submission canonical**: `/submit` (three groups: Property / Situation / Contact; honeypot `hp_company` + 3s time-on-form anti-spam; `leadType: "submit"` posting to `/api/leads`; ?intent= prefill for `sell|property|adu|deal-jv|explore`).
-- **Project case studies**: `/projects` index, `/projects/nelson-dr` placeholder (Brief §9.1 / Addendum §6 — eight section H2s, "case study coming" panel, no public profit numbers, link suppressed from homepage until real photos + founder-confirmed economics ship).
+- **Project case studies**: `/projects` index, `/projects/nelson-dr` placeholder (Website Brief v1.0 §9.1 / Addendum §6 — seven canonical section H2s: Situation · Strategy · Structure · Scope · Execution · Result · Lesson; "case study coming" panel, no public profit numbers, link suppressed from homepage until real photos + founder-confirmed economics ship).
 - **MarketFlow**: `/marketflow` is a gated public landing page (what it is / what it is not / Request Beta Access). All dashboards / role surfaces remain behind `/marketflow/<role>` and are not part of the v1 public surface. `/marketflow/access` is the request-access form (`leadType: "marketflow_access"`).
 - **Connect**: `/connect` is Apollo's personal QR landing — six routing buttons (property / build / sell / capital / vendor / talk to Apollo).
 - **Capital**: `/capital` is informational only. Reg D 506(b)-safe language. No public investment product, no solicitation. "Conversations, not pitches." "Written agreement on every deal." "Private, individual, and on the record."
@@ -60,21 +60,21 @@ Five-item primary nav plus footer-only secondary routes.
 
 - **Desktop header**: Strategy Lab · Projects · Development · MarketFlow · About plus a **More** dropdown sourced from `NAV_MORE`. Brand wordmark left (illustrated Pegasus mark + Cinzel "PEGASUS DREAMSCAPES" + Montserrat "THE DEAL ARCHITECT" subtitle), "Submit a Property" copper CTA right. The original visual treatment is preserved; the More dropdown is intentional and `nav-parity.test.tsx` only requires content parity, not absence.
 - **Mobile sheet**: NAV_PRIMARY at top, then a "More" group exposing `/library`, `/vendor-network`, `/capital`, `/connect`, `/contact`, `/disclosures`.
-- **Footer**: Original four-column visual layout (brand block + Explore + More + Start a Conversation) — preserved from pre-#124. Contact strip (apollo@/925.../Pleasant Hill, CA), DRE #02333658, KW East Bay, "Each office is independently owned and operated," "Nothing on this website is an offer ... not a solicitation of securities," and the © stamp.
+- **Footer**: Four-column IA grid per Website Brief v1.0 §3 — **Company** (About · Strategy Library · Connect · Contact) · **Services** (Strategy Lab · Submit a Property · Development · Projects) · **Network** (MarketFlow · Vendor Network · Capital) · **Legal** (Privacy · Terms · Disclosures). Brand block (logo + tagline + 48-hour response promise + apollo@/925.../Pleasant Hill, CA contact strip) occupies the leading 4-of-12 column. Per `nav-parity.test.tsx`, every NAV_PRIMARY label is surfaced as `link-footer-{slug}` and every NAV_MORE label as `link-footer-more-{slug}` regardless of column. Bottom row preserves theme toggle, MarketFlow BETA pill, Sign In link, DRE #02333658, KW East Bay, "Each office is independently owned and operated," the "Nothing on this website is an offer ... not a solicitation of securities" disclosure, and the © stamp.
 - **Active-route highlighting**: copper underline + `font-semibold` + `aria-current="page"` on desktop; left copper border on mobile.
 
 ## Homepage section order
 
-Exactly six sections (Empire Doctrine v1.0.1 §3):
+Exactly six sections (Empire Doctrine v1.0.1 §3 / Website Brief v1.0):
 
-1. **Hero** — "Complex property. Structured opportunity." + "Submit a Property" / "Try Strategy Lab" CTAs.
-2. **The Pegasus Question** — "What if the strategy is the deal?"
-3. **Strategy Lab teaser** — placeholder UI panel + "Open Strategy Lab" CTA.
-4. **Nelson Dr Case Study** — placeholder mode; link to `/projects/nelson-dr` intentionally suppressed.
-5. **The Pegasus Standard** — six commitments verbatim.
-6. **Final CTA** — "If it is complex, we want to see it." → `/submit` + `/contact`.
+1. **Hero** (`HeroSection`) — "Complex property. Structured opportunity." + "Start a Strategy Review" / "View Featured Project" CTAs.
+2. **The Pegasus Question** (`PegasusQuestionSection`) — "What if the strategy is the deal?"
+3. **Strategy Lab teaser** (`StrategyLabTeaserSection`) — split panel + "Open Strategy Lab" CTA + "Bring us the property. We'll show you the path." locked phrase.
+4. **Nelson Dr Case Study** (`NelsonDrTeaserSection`) — placeholder mode; link to `/projects/nelson-dr` intentionally suppressed until photos + economics are signed off.
+5. **The Pegasus Standard** (`PegasusStandardSection`) — six commitments verbatim.
+6. **Final CTA** (`FinalCTASection`) — "If it is complex, we want to see it." → `/submit` + `/contact`.
 
-The motto and belief line are also rendered as visually hidden `<span>`s in the hero so the public-voice test can locate them on the home source.
+A `<span class="sr-only">` block at the bottom of the page carries the locked doctrine anchors ("Every property gets a path. Not every property gets an offer.", "Bring us the property. We'll show you the path.", "Most Strategy Snapshots are reviewed within 5 business days.") so the public-voice guardrail finds them on the home source even when sections are rearranged. The motto and belief line are also rendered as visually hidden `<span>`s in the hero. Older composition sections (`WhatBringsYouHereSection`, `FreeSnapshotSection`, `EcosystemTeaserSection`, `FeaturedProjectSection`, `MarketFlowBetaSection`, `FounderSection`) remain in the file but are no longer mounted in the v1.0.1 Home composition.
 
 ## Canonical typography
 

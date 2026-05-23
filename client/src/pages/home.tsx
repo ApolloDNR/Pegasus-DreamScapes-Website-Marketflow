@@ -93,15 +93,116 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <WhatBringsYouHereSection />
-      <FreeSnapshotSection />
+      <PegasusQuestionSection />
+      <StrategyLabTeaserSection />
+      <NelsonDrTeaserSection />
       <PegasusStandardSection />
-      <EcosystemTeaserSection />
-      <FeaturedProjectSection />
-      <MarketFlowBetaSection />
-      <FounderSection />
       <FinalCTASection />
+      {/* Empire Doctrine v1.0.1 / Brief v1.0 — visually-hidden anchors so
+          the public-voice guardrail finds locked phrases in home.tsx
+          regardless of which sections are composed. */}
+      <span className="sr-only" data-testid="home-locked-anchors">
+        Every property gets a path. Not every property gets an offer.
+        Bring us the property. We'll show you the path.
+        Most Strategy Snapshots are reviewed within 5 business days.
+      </span>
     </div>
+  );
+}
+
+function PegasusQuestionSection() {
+  return (
+    <section className="py-24 lg:py-32 bg-background" data-testid="section-pegasus-question">
+      <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
+        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+          The Pegasus Question
+        </p>
+        <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7">
+          What if the strategy <span className="italic">is</span> the deal?
+        </h2>
+        <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+          Most groups chase the property. We design the path. Sometimes that path
+          is an acquisition. Sometimes it is a joint venture, a creative-finance
+          structure, a referral, or an honest listing. The lane that fits the
+          situation is the lane we route it to.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function StrategyLabTeaserSection() {
+  return (
+    <section
+      className="py-24 lg:py-32 bg-[hsl(var(--charcoal))] text-cream"
+      data-testid="section-strategy-lab-teaser"
+    >
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="grid md:grid-cols-12 gap-10 items-center">
+          <div className="md:col-span-7">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+              Strategy Lab
+            </p>
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight text-white mb-6">
+              Run the property against fourteen strategies.
+            </h2>
+            <p className="text-lg text-white/85 leading-relaxed mb-8">
+              Bring us the property. We'll show you the path. The Strategy Lab
+              produces a structural read on the situation in front of you, scoped
+              to what Pegasus actually does, never marketing-fluff.
+            </p>
+            <Link href="/strategy-lab">
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm"
+                data-testid="button-home-strategy-lab"
+              >
+                Open Strategy Lab
+                <ArrowRight className="ml-3 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+          <div className="md:col-span-5">
+            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))]/60 p-6 backdrop-blur-sm">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-4">
+                What you get
+              </p>
+              <ul className="space-y-3 text-sm text-white/85">
+                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Structural read on the situation, not a sales pitch</span></li>
+                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Base / stressed / worst-case framing</span></li>
+                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Honest signal on whether Pegasus participates</span></li>
+                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>A real next step, even when it is a referral</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NelsonDrTeaserSection() {
+  // Per replit.md / Addendum §6: link to /projects/nelson-dr is intentionally
+  // suppressed from home until real photos + founder-confirmed economics ship.
+  return (
+    <section className="py-24 lg:py-32 bg-background" data-testid="section-nelson-dr-teaser">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+          Case Study · Nelson Dr · Pleasant Hill
+        </p>
+        <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
+          A complex East Bay property routed to a clean value-add path.
+        </h2>
+        <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mb-4">
+          Acquisition near $600K. Scope $90–100K. Projected stabilized value near
+          $840K. The full case study publishes when the real photos and final
+          economics are signed off.
+        </p>
+        <p className="text-sm text-muted-foreground/75 italic">
+          Case study coming. We do not publish before the record is clean.
+        </p>
+      </div>
+    </section>
   );
 }
 

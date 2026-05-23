@@ -13,15 +13,15 @@ import { Construction, ArrowLeft } from "lucide-react";
 // stabilized value ~$840K. No profit / ROI / net figures are surfaced
 // publicly per Addendum §6.
 
+// Website Brief v1.0 §9.1 — seven canonical case-study H2s.
 const SECTIONS = [
-  "The property",
-  "The situation",
-  "The structural read",
-  "The path Pegasus took",
-  "The scope",
-  "Capital structure",
-  "Outcome (in progress)",
-  "Lessons & doctrine",
+  "Situation",
+  "Strategy",
+  "Structure",
+  "Scope",
+  "Execution",
+  "Result",
+  "Lesson",
 ];
 
 const NELSON_JSONLD = {

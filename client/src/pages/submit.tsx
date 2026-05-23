@@ -434,10 +434,10 @@ function Confirmation({ intent }: { intent: SubmitFormValues["intent"] }) {
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-foreground mb-6">
           Thank you. Your submission is in front of Apollo.
         </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-          Every serious submission gets a serious review. We respond within 48 business hours.
-          You will get a real answer, even if the answer is that Pegasus isn't the right fit and
-          we are routing you to someone who is.
+        <p className="text-lg text-muted-foreground leading-relaxed mb-4" data-testid="text-submit-confirmation">
+          Most Strategy Snapshots are reviewed within 5 business days. You'll hear from Apollo
+          directly with the structural read on your property and the next step, even if the
+          answer is that Pegasus is not the right fit and we are routing you to someone who is.
         </p>
         <p className="text-sm text-muted-foreground/85">
           Reference intent: <span className="font-supporting uppercase tracking-wider text-primary">{intent}</span>

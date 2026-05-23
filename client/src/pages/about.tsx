@@ -272,6 +272,9 @@ function FounderSection() {
                 Apollo founded Pegasus DreamScapes to do real estate the way it should be done: a long-arc operating company instead of a quarterly transaction shop. Every project is treated as a structural problem first and a profit number second.
               </p>
               <p>
+                The build discipline runs in the family. Apollo's father, Moises Duran, is a licensed General Contractor with more than 20 years of commercial and residential construction experience; that operator's lens sits inside every Pegasus project review.
+              </p>
+              <p>
                 That means underwriting that survives the worst case, capital partners who get the truth in writing, and execution that never depends on a single point of failure.
               </p>
               <p className="text-foreground/90">

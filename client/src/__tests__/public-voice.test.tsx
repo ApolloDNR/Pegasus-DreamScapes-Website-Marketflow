@@ -198,6 +198,9 @@ describe("Public voice rules (v1.3.1)", () => {
       "Not every property gets an offer",
       "Built on strategy. Governed by virtue. Executed with discipline.",
       "Dream it. Build it. Live it.",
+      // Website Brief v1.0 locked phrases (§5 hero / §7.3 confirmation).
+      "Bring us the property. We'll show you the path.",
+      "Most Strategy Snapshots are reviewed within 5 business days.",
     ];
 
     for (const required of REQUIRED_SUBSTRINGS) {
