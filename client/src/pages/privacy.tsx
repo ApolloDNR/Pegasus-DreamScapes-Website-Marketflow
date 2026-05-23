@@ -10,24 +10,7 @@ export default function Privacy() {
     <div className="min-h-screen pt-24 pb-16">
       <div className="max-w-4xl mx-auto px-6">
         <h1 className="text-4xl font-bold mb-2" data-testid="text-privacy-title">Privacy Policy</h1>
-        <p className="text-muted-foreground mb-4">Last updated: May 2026</p>
-
-        {/* Empire Doctrine v1.0.1 §10: Draft notice. This document is on the
-            site to give visitors a current good-faith summary; it has not
-            yet been reviewed by qualified privacy counsel. */}
-        <div
-          className="mb-8 border border-primary/40 bg-primary/[0.06] rounded-md p-4 text-sm"
-          data-testid="banner-privacy-draft"
-        >
-          <p className="font-supporting font-semibold uppercase tracking-[0.22em] text-[10px] text-primary mb-2">
-            Draft · Pending Legal Review
-          </p>
-          <p className="text-muted-foreground leading-relaxed">
-            Draft – pending qualified privacy counsel review before launch. The terms below are
-            published in good faith and will be replaced with the counsel-reviewed version prior to
-            general availability.
-          </p>
-        </div>
+        <p className="text-muted-foreground mb-8">Last updated: January 2026</p>
         
         <div className="prose prose-stone dark:prose-invert max-w-none space-y-8">
           <section>

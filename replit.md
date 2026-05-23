@@ -3,7 +3,7 @@
 ## Overview
 Strategy-first real estate operating company in the East Bay (Pleasant Hill, California). Positioning: **"The Deal Architect"**. Every property gets a path. Honest review, disciplined execution, no marketing-fluff. The public website is the Foundation Reset: a small, locked, voice-disciplined v1 surface designed to hold the brand without overclaiming.
 
-**Visual identity is preserved from the prior Final Brand Asset System (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter).** Foundation Reset changed structure (navigation, routes, copy, function), not the palette or typography.
+**Visual identity is the prior Final Brand Asset System — preserved in full** (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter, plus the original hero photo treatment, More dropdown, and editorial page layouts). The Foundation Reset (Task #124) changed **structure, navigation, info, and function only** — palette, typography, header design, and page-level visual treatments were intentionally rolled back to the pre-#124 design after the founder's explicit "upgrade not downgrade" direction.
 
 ## User Preferences
 Preferred communication style: simple, everyday language.
@@ -56,11 +56,11 @@ Five-item primary nav plus footer-only secondary routes.
 
 `/sell → /submit?intent=sell`, `/submit-deal → /submit?intent=deal-jv`, `/submit-property → /submit?intent=property`, `/wholesale → /submit?intent=deal-jv`, `/services → /development`, `/resources → /library`, `/buyers → /marketflow`, `/buy → /marketflow`, `/dreamspace → /capital`, `/partner → /capital`, `/capital-raising → /capital`, `/invest → /capital`. Removed from the public surface entirely: `/systems`, `/ecosystem`, `/education`, `/calculators` (the original calculator suite is preserved only at `/strategy-lab/classic`).
 
-## Navigation grouping (locked v1.0.1)
+## Navigation grouping (locked v1.0.1, OLD visual design)
 
-- **Desktop header**: Strategy Lab · Projects · Development · MarketFlow · About — exactly five items, NO More dropdown. Brand wordmark left, "Submit a Property" copper CTA right.
+- **Desktop header**: Strategy Lab · Projects · Development · MarketFlow · About plus a **More** dropdown sourced from `NAV_MORE`. Brand wordmark left (illustrated Pegasus mark + Cinzel "PEGASUS DREAMSCAPES" + Montserrat "THE DEAL ARCHITECT" subtitle), "Submit a Property" copper CTA right. The original visual treatment is preserved; the More dropdown is intentional and `nav-parity.test.tsx` only requires content parity, not absence.
 - **Mobile sheet**: NAV_PRIMARY at top, then a "More" group exposing `/library`, `/vendor-network`, `/capital`, `/connect`, `/contact`, `/disclosures`.
-- **Footer**: Four locked columns — Company / Services / Network / Legal — plus brand block (motto + "Pegasus DreamScapes" wordmark + "The Deal Architect" kicker), contact strip (apollo@/925.../Pleasant Hill, CA), and the approved disclosure block with the Equal Housing Opportunity SVG mark, DRE #02333658, KW East Bay, "Each office is independently owned and operated," "Nothing on this website is an offer ... not a solicitation of securities," and the © + Empire Doctrine version line.
+- **Footer**: Original four-column visual layout (brand block + Explore + More + Start a Conversation) — preserved from pre-#124. Contact strip (apollo@/925.../Pleasant Hill, CA), DRE #02333658, KW East Bay, "Each office is independently owned and operated," "Nothing on this website is an offer ... not a solicitation of securities," and the © stamp.
 - **Active-route highlighting**: copper underline + `font-semibold` + `aria-current="page"` on desktop; left copper border on mobile.
 
 ## Homepage section order

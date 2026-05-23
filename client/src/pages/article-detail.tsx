@@ -11,8 +11,7 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
-import { Clock } from "lucide-react";
+import { useMemo } from "react";
 import { marked } from "marked";
 import DOMPurify from "isomorphic-dompurify";
 import type { Article } from "@shared/schema";
@@ -53,51 +52,6 @@ export default function ArticleDetail() {
     () => renderMarkdown(article?.content ?? ""),
     [article?.content],
   );
-
-  // Empire Doctrine v1.0.1 — /library/:slug must carry visible reading
-  // time + Article JSON-LD so each library entry is independently
-  // crawlable and signed with publishedAt + reading time.
-  const readingTimeMinutes = useMemo(() => {
-    const text = (article?.content ?? "").replace(/<[^>]+>/g, " ");
-    const words = text.trim().split(/\s+/).filter(Boolean).length;
-    return Math.max(1, Math.round(words / 200));
-  }, [article?.content]);
-
-  useEffect(() => {
-    if (!article) return;
-    const id = "ld-article";
-    let s = document.head.querySelector<HTMLScriptElement>(`#${id}`);
-    if (!s) {
-      s = document.createElement("script");
-      s.id = id;
-      s.type = "application/ld+json";
-      document.head.appendChild(s);
-    }
-    const url = `https://pegasusdreamscapes.com/library/${article.slug}`;
-    s.text = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Article",
-      headline: article.title,
-      description: article.excerpt ?? undefined,
-      image: article.imageUrl ?? undefined,
-      datePublished: article.publishedAt ?? undefined,
-      author: { "@type": "Person", name: article.author },
-      publisher: {
-        "@type": "Organization",
-        name: "Pegasus DreamScapes",
-        logo: {
-          "@type": "ImageObject",
-          url: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
-        },
-      },
-      mainEntityOfPage: { "@type": "WebPage", "@id": url },
-      url,
-      timeRequired: `PT${readingTimeMinutes}M`,
-    });
-    return () => {
-      document.head.querySelector(`#${id}`)?.remove();
-    };
-  }, [article, readingTimeMinutes]);
 
   if (isLoading) {
     return (
@@ -155,7 +109,7 @@ export default function ArticleDetail() {
         <Link href="/library">
           <Button variant="ghost" className="mb-6" data-testid="button-back-resources">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Strategy Library
+            {isLibraryArticle ? "Back to Strategy Library" : "Back to Resources"}
           </Button>
         </Link>
 
@@ -199,7 +153,7 @@ export default function ArticleDetail() {
                   </li>
                   <li>
                     <Link
-                      href={`/library?category=${article.libraryCategoryKey}`}
+                      href={`/education?category=${article.libraryCategoryKey}`}
                       className="hover:text-primary transition-colors"
                       data-testid="link-breadcrumb-category"
                     >
@@ -239,11 +193,7 @@ export default function ArticleDetail() {
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span data-testid="text-article-published">{formatDate(article.publishedAt)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span data-testid="text-article-reading-time">{readingTimeMinutes} min read</span>
+              <span>{formatDate(article.publishedAt)}</span>
             </div>
           </div>
         </div>
@@ -268,13 +218,13 @@ export default function ArticleDetail() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link href="/submit">
                     <Button size="lg" className="gap-2 w-full sm:w-auto" data-testid="button-library-strategy-review">
-                      Submit a Property
+                      Start a Strategy Review
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                   <Link href="/strategy-lab">
                     <Button size="lg" variant="outline" className="w-full sm:w-auto" data-testid="button-library-blueprint">
-                      Try Strategy Lab
+                      Pegasus Deal Blueprint
                     </Button>
                   </Link>
                 </div>
@@ -296,9 +246,9 @@ export default function ArticleDetail() {
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <Link href="/submit">
+                    <Link href="/strategy-lab">
                       <Button className="w-full sm:w-auto" data-testid="button-article-calculators">
-                        Submit a Property
+                        Use Calculators
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>
@@ -327,7 +277,7 @@ export default function ArticleDetail() {
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {relatedArticles.map((a, i) => (
-                <Link key={a.id} href={`/library/${a.slug}`}>
+                <Link key={a.id} href={`/resources/${a.slug}`}>
                   <article
                     className="group h-full p-6 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer flex flex-col"
                     data-testid={`related-article-${i}`}

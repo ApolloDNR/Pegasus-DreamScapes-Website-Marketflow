@@ -76,7 +76,7 @@ function HeroSection() {
               transition={{ duration: 0.7, delay: 0.3 }}
               data-testid="text-development-hero"
             >
-              The path to building.{" "}
+              We build first.{" "}
               <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
                 Everything else supports it.
               </span>
@@ -97,7 +97,7 @@ function HeroSection() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Pegasus DreamScapes is forming as a strategy-first real estate operating company with a planned construction arm, forming in 2026, subject to final entity formation, licensing, insurance, and contract review. Today's actual scope is small-scale and disciplined: ADU, value-add, and small residential. The planned trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods.
+              Pegasus DreamScapes is, at its core, a real estate development company. Investments and Systems exist to feed and support what gets built. Today the work is small-scale and disciplined; the trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods.
             </motion.p>
 
             <motion.div
@@ -112,7 +112,7 @@ function HeroSection() {
                   className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 w-full sm:w-auto"
                   data-testid="button-development-strategy-review"
                 >
-                  Submit a Property
+                  Start a Strategy Review
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
@@ -146,11 +146,11 @@ function PillarSection() {
             <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">Why Development Leads</p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-6">
-            Development is the planned spine.{" "}
-            <span className="text-headline-gold">The rest is how it gets done well.</span>
+            Development is what we do.{" "}
+            <span className="text-headline-gold">The rest is how we do it well.</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-            Pegasus DreamScapes is standing up a planned construction arm, forming in 2026, subject to final entity formation, licensing, insurance, and contract review. Each Pegasus pillar is being built to make that planned Development arm sharper: Investments would fund and structure the projects, Systems would run the operating discipline, and MarketFlow would route the deal flow that becomes built work. The intended product is the building, the renovation, the addition, the neighborhood. The other pillars are scaffolding.
+            Every Pegasus pillar exists to make Development sharper: Investments fund and structure the projects, Systems run the operating discipline, and MarketFlow routes the deal flow that becomes built work. The product is the building, the renovation, the addition, the neighborhood. The other pillars are scaffolding.
           </p>
           <p className="text-base text-muted-foreground/85 leading-relaxed italic">
             Built on strategy. Governed by virtue. Executed with discipline.
@@ -277,7 +277,7 @@ function SupportingPillarsSection() {
       title: "Capital that feeds the build.",
       desc: "Direct acquisition, JV / co-GP, and creative-finance structures funded by aligned operating partners. Capital is matched to the project, not the other way around.",
       cta: "Capital Partnerships",
-      href: "/capital",
+      href: "/invest",
     },
     {
       icon: Network,
@@ -310,7 +310,7 @@ function SupportingPillarsSection() {
             Investments and Systems exist for one reason.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            So that anything Pegasus takes on can be approached the right way: funded correctly, scoped correctly, run correctly, governed correctly.
+            To make sure what Pegasus builds gets built right: funded correctly, scoped correctly, run correctly, governed correctly.
           </p>
         </ScrollReveal>
 
@@ -359,13 +359,13 @@ function CTASection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/submit">
               <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold" data-testid="button-development-cta-sell">
-                Submit a Property
+                Start a Strategy Review
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
             <Link href="/strategy-lab">
               <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold" data-testid="button-development-cta-blueprint">
-                Try Strategy Lab
+                Pegasus Deal Blueprint
               </Button>
             </Link>
           </div>

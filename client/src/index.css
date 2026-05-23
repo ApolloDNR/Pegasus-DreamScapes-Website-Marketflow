@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /* PEGASUS DREAMSCAPES — Brand Identity System
- * Palette (Final Brand Asset System):
+ * Palette (from official brand sheet, May 2026 — Final Brand Asset System):
  *   Deep Navy   #0D1B2D → 214 55% 11%
  *   Rich Copper #C77A3A → 27 56% 50%
  *   Warm Cream  #F6EFE4 → 37 50% 93%
@@ -56,7 +56,8 @@
   --secondary: 214 55% 11%;
   --secondary-foreground: 37 50% 95%;
   --muted: 38 28% 93%;
-  /* AA contrast on cream/white card surfaces. */
+  /* Bumped from 213 22% 38% → 213 30% 28% so body/muted text clears WCAG AA
+     against cream (--background 37 50% 95%) and white card surfaces. */
   --muted-foreground: 213 30% 28%;
   --accent: 27 56% 48%;
   --accent-foreground: 0 0% 100%;
