@@ -262,7 +262,7 @@ export async function registerRoutes(
     '/capital-raising',
   ];
   const gonePage = (path: string) =>
-    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus DreamScapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus DreamScapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/submit" style="color:#C87A3A">submit a property</a> directly.</p></body></html>`;
+    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus DreamScapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus DreamScapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/submit" style="color:#C87A3A">submit a property</a> directly.</p></body></html>`;
   for (const path of GONE_ROUTES) {
     app.get(path, (_req, res) => {
       res.status(410).type('html').send(gonePage(path));

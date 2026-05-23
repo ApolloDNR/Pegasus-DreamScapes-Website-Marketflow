@@ -62,29 +62,29 @@ const MORE_ITEMS = NAV_MORE;
 // Tested separately by `nav-parity.test.tsx` which only asserts label presence,
 // so adding icons + taglines stays within guardrails.
 const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
-  "/resources": {
+  "/library": {
     icon: BookOpen,
     tagline: "Frameworks, lane reads, and the operating doctrine.",
   },
   "/strategy-lab": {
     icon: Calculator,
-    tagline: "Run a property through the Pegasus lens. Eight lanes, one verdict.",
-  },
-  "/calculators": {
-    icon: Calculator,
-    tagline: "ARV, ROI, BRRRR, PITI. Eight operator-grade calculators, free.",
+    tagline: "Run a property through the Pegasus lens. Fourteen strategies, one verdict.",
   },
   "/vendor-network": {
     icon: Network,
     tagline: "Trusted operators, trades, and capital partners.",
   },
-  "/deal-blueprint": {
+  "/capital": {
     icon: ClipboardCheck,
-    tagline: "The paid, written analysis. Three tiers, 48-hour SLA.",
+    tagline: "Conversations, not pitches. Written agreement on every deal.",
   },
-  "/systems": {
+  "/connect": {
     icon: Layers,
-    tagline: "The operating infrastructure: HQ, MarketFlow, BuildForge, CapStack.",
+    tagline: "Six routes to Apollo. Pick the lane that fits.",
+  },
+  "/disclosures": {
+    icon: BookOpen,
+    tagline: "DRE, KW East Bay, and securities-safe disclosures.",
   },
   "/contact": {
     icon: Mail,

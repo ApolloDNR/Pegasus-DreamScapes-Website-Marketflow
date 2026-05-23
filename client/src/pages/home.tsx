@@ -144,10 +144,10 @@ function StrategyLabTeaserSection() {
             <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
               Strategy Lab
             </p>
-            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight text-white mb-6">
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight text-cream mb-6">
               Run the property against fourteen strategies.
             </h2>
-            <p className="text-lg text-white/85 leading-relaxed mb-8">
+            <p className="text-lg text-cream/85 leading-relaxed mb-8">
               Bring us the property. We'll show you the path. The Strategy Lab
               produces a structural read on the situation in front of you, scoped
               to what Pegasus actually does, never marketing-fluff.
@@ -168,7 +168,7 @@ function StrategyLabTeaserSection() {
               <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-4">
                 What you get
               </p>
-              <ul className="space-y-3 text-sm text-white/85">
+              <ul className="space-y-3 text-sm text-cream/85">
                 <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Structural read on the situation, not a sales pitch</span></li>
                 <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Base / stressed / worst-case framing</span></li>
                 <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Honest signal on whether Pegasus participates</span></li>
