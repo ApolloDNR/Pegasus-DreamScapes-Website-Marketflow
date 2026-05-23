@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,11 @@ import {
 import type { WholesaleDeal, CapitalProject, Listing } from "@shared/schema";
 
 export default function MyDealsPage() {
+  useSEO({
+    title: "My Deals",
+    description: "Private MarketFlow personal dealflow surface.",
+    noIndex: true,
+  });
   const { user, isAuthenticated } = useSupabaseAuth();
 
   if (!isAuthenticated) {

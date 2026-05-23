@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,11 @@ import {
 import type { WholesaleDeal } from "@shared/schema";
 
 export default function MarketflowNegotiate() {
+  useSEO({
+    title: "MarketFlow Negotiation Room",
+    description: "Private MarketFlow negotiation surface.",
+    noIndex: true,
+  });
   return (
     <MarketplaceLayout>
       <NegotiationRoom />

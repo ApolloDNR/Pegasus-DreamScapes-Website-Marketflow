@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,11 @@ import {
 import type { WholesaleDeal } from "@shared/schema";
 
 export default function MarketflowDashboard() {
+  useSEO({
+    title: "MarketFlow Dashboard",
+    description: "Private MarketFlow operating surface.",
+    noIndex: true,
+  });
   return (
     <MarketplaceLayout>
       <InvestorDashboard />

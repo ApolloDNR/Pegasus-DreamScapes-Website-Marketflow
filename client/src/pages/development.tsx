@@ -70,7 +70,7 @@ function HeroSection() {
             </motion.div>
 
             <motion.h1
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8 [text-shadow:0_2px_14px_rgba(0,0,0,0.6)]"
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-cream leading-[0.95] tracking-[-0.02em] mb-8 [text-shadow:0_2px_14px_rgba(0,0,0,0.6)]"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
@@ -83,7 +83,7 @@ function HeroSection() {
             </motion.h1>
 
             <motion.p
-              className="font-serif text-lg sm:text-xl text-white/90 italic max-w-2xl mb-4 leading-snug"
+              className="font-serif text-lg sm:text-xl text-cream/90 italic max-w-2xl mb-4 leading-snug"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.55 }}
@@ -92,7 +92,7 @@ function HeroSection() {
             </motion.p>
 
             <motion.p
-              className="text-base sm:text-lg text-white/85 max-w-2xl mb-10 leading-relaxed font-light"
+              className="text-base sm:text-lg text-cream/85 max-w-2xl mb-10 leading-relaxed font-light"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
@@ -120,7 +120,7 @@ function HeroSection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-white/30 text-white hover:bg-white/10 backdrop-blur-md font-semibold"
+                  className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-cream/30 text-cream hover:bg-cream/10 backdrop-blur-md font-semibold"
                   data-testid="button-development-projects"
                 >
                   See Built Work

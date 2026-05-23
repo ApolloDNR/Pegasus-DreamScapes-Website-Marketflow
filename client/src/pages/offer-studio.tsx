@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/use-seo";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   ArrowLeft, 
@@ -31,6 +32,11 @@ interface CapitalProject {
 }
 
 export default function OfferStudioPage() {
+  useSEO({
+    title: "Offer Studio",
+    description: "Private MarketFlow offer-drafting surface.",
+    noIndex: true,
+  });
   const [, params] = useRoute("/offer-studio/:dealType/:dealId");
   const [, setLocation] = useLocation();
   const { toast } = useToast();

@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,11 @@ interface CommunityReply {
 }
 
 export default function DealflowCommunity() {
+  useSEO({
+    title: "MarketFlow Community",
+    description: "Private MarketFlow community surface.",
+    noIndex: true,
+  });
   const { user, profile } = useSupabaseAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("feed");

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,11 @@ interface Message {
 }
 
 export default function DealflowMessages() {
+  useSEO({
+    title: "MarketFlow Messages",
+    description: "Private MarketFlow messages surface.",
+    noIndex: true,
+  });
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);

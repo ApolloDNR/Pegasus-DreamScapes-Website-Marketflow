@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
@@ -157,6 +158,11 @@ interface Listing {
 }
 
 export default function MarketflowDeals() {
+  useSEO({
+    title: "MarketFlow Deals",
+    description: "Private MarketFlow dealflow surface.",
+    noIndex: true,
+  });
   return (
     <MarketplaceLayout>
       <DealsPage />

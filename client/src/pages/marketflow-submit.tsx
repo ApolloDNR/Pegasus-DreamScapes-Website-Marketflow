@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useDemoMode } from "@/contexts/demo-mode-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
+import { useSEO } from "@/hooks/use-seo";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
 import { CapitalRaiseForm } from "@/components/capital-raise-form";
 import { ListingForm } from "@/components/listing-form";
@@ -34,6 +35,11 @@ import {
 } from "lucide-react";
 
 export default function MarketflowSubmit() {
+  useSEO({
+    title: "MarketFlow Submit",
+    description: "Private MarketFlow submission surface.",
+    noIndex: true,
+  });
   const { user, isLoading, isWholesaler, isDreamscaper, userRole, isGuestMode } = useSupabaseAuth();
   const { isDemoMode } = useDemoMode();
 

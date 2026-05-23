@@ -1565,7 +1565,7 @@ export default function StrategyLabPage() {
                     .getElementById("section-identity")
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="bg-[hsl(var(--copper))] text-white px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(27_56%_44%)] transition-colors"
+                className="bg-[hsl(var(--copper))] text-primary-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(27_56%_44%)] transition-colors"
                 data-testid="cta-start-analysis"
               >
                 Start an Analysis
@@ -2188,7 +2188,7 @@ export default function StrategyLabPage() {
                   <button onClick={handleExportPDF} className="bg-[hsl(var(--ink))] text-[hsl(var(--paper))] px-3 py-2.5 text-xs font-supporting font-semibold flex items-center justify-center gap-1.5" data-testid="mobile-btn-pdf">
                     <Download className="w-3.5 h-3.5" /> PDF
                   </button>
-                  <button onClick={handleSubmit} className="bg-[hsl(var(--copper))] text-white px-3 py-2.5 text-xs font-supporting font-semibold flex items-center justify-center gap-1.5" data-testid="mobile-btn-submit">
+                  <button onClick={handleSubmit} className="bg-[hsl(var(--copper))] text-primary-foreground px-3 py-2.5 text-xs font-supporting font-semibold flex items-center justify-center gap-1.5" data-testid="mobile-btn-submit">
                     <Activity className="w-3.5 h-3.5" /> Submit
                   </button>
                 </div>
@@ -2232,7 +2232,7 @@ export default function StrategyLabPage() {
                 <a
                   href={pdfPreviewUrl}
                   download
-                  className="bg-[hsl(var(--copper))] text-white px-4 py-2 text-sm font-supporting font-semibold inline-flex items-center gap-1.5"
+                  className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold inline-flex items-center gap-1.5"
                   data-testid="link-pdf-download"
                 >
                   <Download className="w-3.5 h-3.5" /> Download
@@ -2277,7 +2277,7 @@ export default function StrategyLabPage() {
             </button>
             <button
               type="button"
-              className="bg-[hsl(var(--copper))] text-white px-4 py-2 text-sm font-supporting font-semibold"
+              className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold"
               onClick={() => {
                 handleWallOpenChange(false);
                 navigate("/api/login");
@@ -2348,7 +2348,7 @@ export default function StrategyLabPage() {
                   type="button"
                   onClick={() => { setPendingFullShareConfirm(false); shareMutation.mutate("full"); }}
                   disabled={shareMutation.isPending}
-                  className="bg-[hsl(var(--copper))] text-white px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
+                  className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
                   data-testid="btn-share-full-confirm"
                 >
                   Yes, share full math
@@ -2475,7 +2475,7 @@ export default function StrategyLabPage() {
               type="button"
               disabled={submitMutation.isPending}
               onClick={() => submitMutation.mutate(submitForm)}
-              className="bg-[hsl(var(--copper))] text-white px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
+              className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
               data-testid="btn-submit-confirm"
             >
               {submitMutation.isPending ? "Sending…" : "Send to Pegasus"}
@@ -2559,7 +2559,7 @@ export default function StrategyLabPage() {
                 if (!selectedTierId) return;
                 blueprintOrderMutation.mutate({ tierId: selectedTierId, ...blueprintForm });
               }}
-              className="bg-[hsl(var(--copper))] text-white px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
+              className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
               data-testid="btn-bp-confirm"
             >
               {blueprintOrderMutation.isPending ? "Placing order…" : "Place order"}
