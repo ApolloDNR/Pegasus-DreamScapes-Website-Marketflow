@@ -15,8 +15,7 @@ interface SEOProps {
 // 60-character SERP truncation limit. The home (no `title` passed)
 // still renders the brand + tagline as the bare-document title.
 const BRAND = "Pegasus DreamScapes";
-const TAGLINE = "The Deal Architect";
-const BASE_TITLE = `${BRAND} · ${TAGLINE}`;
+const BASE_TITLE = BRAND;
 const BASE_DESCRIPTION =
   "Pegasus DreamScapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
 const SITE_URL = "https://pegasusdreamscapes.com";
