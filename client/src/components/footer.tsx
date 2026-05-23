@@ -180,9 +180,25 @@ export function Footer() {
           <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium" data-testid="text-footer-dre">
             Founder · Paolo &ldquo;Apollo&rdquo; Duran · DRE #02333658 · Keller Williams East Bay
           </p>
-          <p className="text-[11px] text-muted-foreground/85 mt-3 leading-relaxed" data-testid="text-footer-kw">
-            Each office is independently owned and operated.
-          </p>
+          <div className="mt-3 flex items-center gap-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="h-5 w-5 text-muted-foreground/80 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              aria-hidden="true"
+              data-testid="img-footer-eho"
+            >
+              <path d="M12 3 3 9v12h18V9z" />
+              <path d="M9 21v-6h6v6" />
+              <path d="M8 13h8" />
+            </svg>
+            <p className="text-[11px] text-muted-foreground/85 leading-relaxed" data-testid="text-footer-kw">
+              <span className="sr-only">Equal Housing Opportunity. </span>Each office is independently owned and operated.
+            </p>
+          </div>
           <div className="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-start gap-4">
               <img

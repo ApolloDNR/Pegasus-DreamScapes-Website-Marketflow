@@ -1899,7 +1899,7 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="#projects" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "#projects" })}>
+              <a href="/projects/nelson-dr" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects/nelson-dr" })}>
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-2 border-white/70 bg-white/5 text-white hover:bg-white/15 hover:border-white backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_secondary" fallback="View Featured Project" />
