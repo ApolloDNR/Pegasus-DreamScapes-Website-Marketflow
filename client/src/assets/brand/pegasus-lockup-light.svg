@@ -12,6 +12,6 @@
     <line x1="0" y1="58" x2="100" y2="58" stroke="#C77A3A" stroke-width="1.2"/>
     <path d="M114 54 L120 58 L114 62 L108 58 Z" fill="#C77A3A"/>
     <line x1="128" y1="58" x2="356" y2="58" stroke="#C77A3A" stroke-width="1.2"/>
-    <text x="0" y="84" font-family="Cinzel, 'Cormorant Garamond', Georgia, serif" font-size="18" font-weight="400" letter-spacing="6" fill="#F6EFE4">DREAMSCAPES</text>
+    <text x="0" y="84" font-family="Cinzel, 'Cormorant Garamond', Georgia, serif" font-size="18" font-weight="400" letter-spacing="6" fill="#F6EFE4">DreamScapes</text>
   </g>
 </svg>

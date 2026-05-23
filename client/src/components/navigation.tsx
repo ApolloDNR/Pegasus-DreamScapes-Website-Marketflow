@@ -371,12 +371,11 @@ export function Navigation() {
             />
             <span className="hidden sm:flex flex-col leading-tight">
               <span
-                aria-label="Pegasus DreamScapes"
                 className={`font-display text-[15px] lg:text-[17px] tracking-[0.18em] ${
                   onLightSurface ? "text-[hsl(var(--ink))]" : "text-white"
                 }`}
               >
-                PEGASUS DREAMSCAPES
+                Pegasus DreamScapes
               </span>
               <span
                 className={`text-[9px] lg:text-[10px] tracking-[0.32em] uppercase font-supporting mt-1 ${
@@ -571,10 +570,9 @@ export function Navigation() {
 
                 <div className="flex items-center justify-between pb-6 border-b border-[hsl(var(--rule))]">
                   <span
-                    aria-label="Pegasus DreamScapes"
                     className="font-display text-sm tracking-[0.18em] text-[hsl(var(--ink))]"
                   >
-                    PEGASUS DREAMSCAPES
+                    Pegasus DreamScapes
                   </span>
                 </div>
 
