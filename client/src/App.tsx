@@ -21,6 +21,7 @@ import { AnonymousClaimWatcher } from "@/components/anonymous-claim-watcher";
 import { AuthGuard } from "@/components/auth-guard";
 import { CookieConsent } from "@/components/cookie-consent";
 import { initAnalytics } from "@/lib/analytics";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -39,6 +40,15 @@ function ScrollToTop() {
 function AnalyticsBoot() {
   useEffect(() => initAnalytics(), []);
   return null;
+}
+
+// Empire Doctrine v1.0.1 — Peggy is internal-only on the public surface.
+// Gate the floating dock to authenticated visitors so logged-out hero
+// landings are not obscured by the chat orb.
+function AuthGatedPeggyDock() {
+  const { isAuthenticated } = useSupabaseAuth();
+  if (!isAuthenticated) return null;
+  return <PeggyDock />;
 }
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
@@ -291,7 +301,7 @@ function App() {
                           </main>
                           <Footer />
                         </div>
-                        <PeggyDock />
+                        <AuthGatedPeggyDock />
                         <CookieConsent />
                         <Toaster />
                       </NotificationProvider>

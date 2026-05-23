@@ -1762,6 +1762,11 @@ function HeroSection() {
       {/* Premium cinematic overlay - luxury gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+      {/* Wave 1 — bottom-anchored navy scrim for hero copy AA contrast */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[hsl(var(--navy)/0.92)] via-[hsl(var(--navy)/0.55)] to-transparent pointer-events-none"
+      />
       
       {/* Enhanced animated gradient orbs */}
       <div className="absolute inset-0 opacity-40 overflow-hidden">
@@ -1849,11 +1854,11 @@ function HeroSection() {
             <div className="relative">
               <div
                 aria-hidden="true"
-                className="absolute -inset-x-4 -inset-y-3 sm:-inset-x-6 sm:-inset-y-4 pointer-events-none rounded-2xl bg-[radial-gradient(ellipse_at_left,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.35)_55%,rgba(0,0,0,0)_100%)] blur-[2px]"
+                className="absolute -inset-x-4 -inset-y-3 sm:-inset-x-6 sm:-inset-y-4 pointer-events-none rounded-2xl bg-[radial-gradient(ellipse_at_left,rgba(13,27,45,0.7)_0%,rgba(13,27,45,0.4)_55%,rgba(13,27,45,0)_100%)] blur-[2px]"
               />
               {/* Shortened body line — strategy-first positioning */}
               <motion.p
-                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-white/95 max-w-2xl mb-7 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.6)]"
+                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-7 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.75 }}

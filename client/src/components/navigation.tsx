@@ -250,10 +250,13 @@ export function Navigation() {
     }
   };
 
-  const isHomePage = location === "/";
-  // On home, the hero is dark, so the nav floats on a dark surface until scroll.
-  // On every other page the nav sits on a light surface from the start.
-  const onLightSurface = scrolled || !isHomePage;
+  // Wave 1 — pages with a dark navy/photographic hero. The nav floats fully
+  // transparent over these at scroll = 0 (no border, no dark gradient band)
+  // and only transitions to the cream surface on scroll. Every other route
+  // sits on a light surface from the first paint.
+  const DARK_HERO_ROUTES = ["/", "/about"];
+  const isDarkHero = DARK_HERO_ROUTES.includes(location);
+  const onLightSurface = scrolled || !isDarkHero;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24);
@@ -341,7 +344,7 @@ export function Navigation() {
         className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
           onLightSurface
             ? "bg-[hsl(var(--paper)/0.92)] backdrop-blur-md border-b border-[hsl(var(--rule))]"
-            : "bg-gradient-to-b from-black/45 via-black/20 to-transparent"
+            : "bg-transparent backdrop-blur-[2px]"
         }`}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 h-[76px] lg:h-[92px] flex items-center justify-between gap-6">
