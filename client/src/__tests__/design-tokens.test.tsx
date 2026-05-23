@@ -59,6 +59,28 @@ describe("Design token discipline (Empire Doctrine v1.0.1 §Brand System)", () =
     });
   }
 
+  describe("Brand casing — no uppercase transform on mixed-case 'Pegasus DreamScapes'", () => {
+    const ALL_SOURCES = [
+      ...PUBLIC_PAGES.map((n) => join(PAGES_DIR, n)),
+      ...SHARED_COMPONENTS.map((n) => join(COMPONENTS_DIR, n)),
+    ];
+    for (const path of ALL_SOURCES) {
+      test(`${path.split("/").slice(-2).join("/")} does not uppercase the brand string`, () => {
+        const src = readFileSync(path, "utf8");
+        // Find every JSX element with className containing 'uppercase' and assert it does not contain the literal brand string.
+        const elementRx = /<[a-zA-Z]+[^>]*className=("([^"]*)"|\{`([^`]*)`\}|\{"([^"]*)"\})[^>]*>([\s\S]*?)<\//g;
+        let m: RegExpExecArray | null;
+        while ((m = elementRx.exec(src)) !== null) {
+          const cls = m[2] || m[3] || m[4] || "";
+          const body = m[5] || "";
+          if (/\buppercase\b/.test(cls) && /Pegasus DreamScapes/.test(body)) {
+            throw new Error(`Mixed-case 'Pegasus DreamScapes' rendered inside className with 'uppercase' in ${path}: ${m[0].slice(0, 160)}`);
+          }
+        }
+      });
+    }
+  });
+
   test("card-primitives.tsx exists and exports CardSurface + CardElevated", () => {
     const src = readFileSync(join(COMPONENTS_DIR, "ui/card-primitives.tsx"), "utf8");
     expect(src).toMatch(/CardSurface/);

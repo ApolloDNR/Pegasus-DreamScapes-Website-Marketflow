@@ -54,7 +54,7 @@ export default function ConnectPage() {
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+        <p className="text-[11px] tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
           Pegasus DreamScapes · Apollo
         </p>
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-foreground leading-tight mb-6">
