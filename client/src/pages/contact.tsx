@@ -227,7 +227,6 @@ function ContactFormSection() {
     },
     onSuccess: () => {
       setSubmitted(true);
-      toast({ title: "Message Sent", description: "We'll get back to you within 1–2 business days." });
     },
     onError: () => {
       toast({ title: "Something went wrong", description: "Please try again or email us directly.", variant: "destructive" });

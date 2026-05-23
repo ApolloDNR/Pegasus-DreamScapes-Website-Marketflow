@@ -391,10 +391,6 @@ function VendorFormSection() {
     },
     onSuccess: () => {
       setSubmitted(true);
-      toast({
-        title: "Application received",
-        description: "We'll review and follow up if there's a fit.",
-      });
     },
     onError: () => {
       toast({
