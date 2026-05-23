@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useSEO } from "@/hooks/use-seo";
 import { marked } from "marked";
 import DOMPurify from "isomorphic-dompurify";
 import type { Article } from "@shared/schema";
@@ -52,6 +53,58 @@ export default function ArticleDetail() {
     () => renderMarkdown(article?.content ?? ""),
     [article?.content],
   );
+
+  // Website Brief v1.0 — per-article SEO + Article JSON-LD on /library/[slug].
+  useSEO({
+    title: article?.title,
+    description: article?.excerpt || article?.title || undefined,
+    type: "article",
+    image: article?.imageUrl || undefined,
+  });
+
+  useEffect(() => {
+    if (!article) return;
+    const id = "ld-article";
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: article.title,
+      description: article.excerpt || article.title,
+      image: article.imageUrl ? [article.imageUrl] : undefined,
+      datePublished: article.publishedAt
+        ? new Date(article.publishedAt as unknown as string).toISOString()
+        : undefined,
+      dateModified: article.updatedAt
+        ? new Date(article.updatedAt as unknown as string).toISOString()
+        : undefined,
+      author: article.author
+        ? { "@type": "Person", name: article.author }
+        : { "@type": "Organization", name: "Pegasus DreamScapes Corp." },
+      publisher: {
+        "@type": "Organization",
+        name: "Pegasus DreamScapes Corp.",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
+        },
+      },
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": `https://pegasusdreamscapes.com/library/${slug ?? ""}`,
+      },
+    };
+    let s = document.head.querySelector<HTMLScriptElement>(`#${id}`);
+    if (!s) {
+      s = document.createElement("script");
+      s.id = id;
+      s.type = "application/ld+json";
+      document.head.appendChild(s);
+    }
+    s.text = JSON.stringify(ld);
+    return () => {
+      document.head.querySelector(`#${id}`)?.remove();
+    };
+  }, [article, slug]);
 
   if (isLoading) {
     return (

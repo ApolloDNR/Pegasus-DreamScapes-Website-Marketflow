@@ -19,6 +19,8 @@ import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { AdminBar } from "@/components/AdminBar";
 import { AnonymousClaimWatcher } from "@/components/anonymous-claim-watcher";
 import { AuthGuard } from "@/components/auth-guard";
+import { CookieConsent } from "@/components/cookie-consent";
+import { initAnalytics } from "@/lib/analytics";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -27,6 +29,15 @@ function ScrollToTop() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [location]);
   
+  return null;
+}
+
+// Website Brief v1.0 §11 — boot the consent-gated Plausible loader once
+// per app instance; it idempotently injects or removes the script based
+// on the current `pegasus-cookie-consent` state and the
+// `pegasus:consent-changed` event.
+function AnalyticsBoot() {
+  useEffect(() => initAnalytics(), []);
   return null;
 }
 import Home from "@/pages/home";
@@ -267,6 +278,7 @@ function App() {
                     <PeggyProvider>
                       <NotificationProvider>
                         <ScrollToTop />
+                        <AnalyticsBoot />
                         <AdminBar />
                         <AnonymousClaimWatcher />
                         <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -280,6 +292,7 @@ function App() {
                           <Footer />
                         </div>
                         <PeggyDock />
+                        <CookieConsent />
                         <Toaster />
                       </NotificationProvider>
                     </PeggyProvider>

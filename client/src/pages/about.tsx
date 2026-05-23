@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
@@ -15,6 +16,43 @@ import {
   Phone,
 } from "lucide-react";
 
+// Website Brief v1.0 — Organization + Person JSON-LD for the About page so
+// search engines surface Pegasus DreamScapes Corp. and its founder with
+// the canonical entity attributes (legal name, founder, contact).
+const ABOUT_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://pegasusdreamscapes.com/#organization",
+      name: "Pegasus DreamScapes Corp.",
+      alternateName: "Pegasus DreamScapes",
+      url: "https://pegasusdreamscapes.com",
+      logo: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
+      slogan: "The Deal Architect",
+      email: "apollo@pegasusdreamscapes.com",
+      telephone: "+1-925-744-8525",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Pleasant Hill",
+        addressRegion: "CA",
+        addressCountry: "US",
+      },
+      founder: { "@id": "https://pegasusdreamscapes.com/#founder" },
+      areaServed: "East Bay, California",
+    },
+    {
+      "@type": "Person",
+      "@id": "https://pegasusdreamscapes.com/#founder",
+      name: "Paolo \"Apollo\" Duran",
+      jobTitle: "Founder & Principal",
+      worksFor: { "@id": "https://pegasusdreamscapes.com/#organization" },
+      identifier: "DRE #02333658",
+      affiliation: "Keller Williams East Bay",
+    },
+  ],
+};
+
 export default function About() {
   useSEO({
     title: "About",
@@ -22,6 +60,21 @@ export default function About() {
       "Pegasus DreamScapes Corp. is a strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Built on strategy. Governed by virtue. Executed with discipline.",
     image: "https://pegasusdreamscapes.com/og/about.svg",
   });
+
+  useEffect(() => {
+    const id = "ld-about";
+    let s = document.head.querySelector<HTMLScriptElement>(`#${id}`);
+    if (!s) {
+      s = document.createElement("script");
+      s.id = id;
+      s.type = "application/ld+json";
+      document.head.appendChild(s);
+    }
+    s.text = JSON.stringify(ABOUT_JSONLD);
+    return () => {
+      document.head.querySelector(`#${id}`)?.remove();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
