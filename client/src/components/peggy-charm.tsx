@@ -80,7 +80,7 @@ export function PeggyCharm({ context = "general", dealInfo }: PeggyCharmProps) {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="w-72 bg-card border rounded-2xl shadow-lg overflow-hidden"
+            className="w-72 bg-card border rounded-lg shadow-lg overflow-hidden"
           >
             <div className="p-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">

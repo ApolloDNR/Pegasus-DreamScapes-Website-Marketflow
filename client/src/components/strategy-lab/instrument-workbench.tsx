@@ -257,7 +257,7 @@ export function InstrumentWorkbench(props: InstrumentWorkbenchProps) {
             </span>
           </div>
           <div
-            className="text-[10px] tracking-[0.22em] uppercase"
+            className="text-[10px] tracking-[0.22em]"
             style={{ fontFamily: FONT_SUP, color: MUTED }}
           >
             Pegasus DreamScapes Corp · Private network · Apollo · 925-744-8525

@@ -96,7 +96,7 @@ function InvestmentGuides() {
           <Card key={index} className="hover-elevate cursor-pointer" data-testid={`guide-card-${index}`}>
             <CardContent className="p-5">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <guide.icon className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -250,7 +250,7 @@ function QuickTools() {
           <Link key={index} href={tool.href}>
             <Card className="h-full hover-elevate cursor-pointer" data-testid={`tool-card-${index}`}>
               <CardContent className="p-5 text-center">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <tool.icon className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="font-semibold mb-1">{tool.title}</h3>

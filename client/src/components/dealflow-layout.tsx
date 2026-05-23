@@ -76,7 +76,7 @@ function QuickStatsCard({ stats }: { stats: QuickStat[] }) {
       {stats.map((stat, index) => (
         <div 
           key={index}
-          className="p-3 rounded-xl bg-gradient-to-br from-secondary/50 to-secondary/20 border border-border/50 hover:border-primary/30 transition-all group"
+          className="p-3 rounded-md bg-gradient-to-br from-secondary/50 to-secondary/20 border border-border/50 hover:border-primary/30 transition-all group"
         >
           <div className="flex items-center gap-2 mb-1">
             <div className={`w-6 h-6 rounded-lg ${stat.color} flex items-center justify-center`}>
@@ -256,7 +256,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   <TooltipTrigger asChild>
                     <Link 
                       href={item.path}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all group ${
                         isActive 
                           ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
                           : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
@@ -305,7 +305,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                     <TooltipTrigger asChild>
                       <button 
                         onClick={openChat}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-primary hover:bg-primary/10 w-full ${sidebarCollapsed ? 'justify-center' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all text-primary hover:bg-primary/10 w-full ${sidebarCollapsed ? 'justify-center' : ''}`}
                         data-testid="nav-peggy-ai"
                       >
                         <Icon className="w-5 h-5" />
@@ -329,7 +329,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   <TooltipTrigger asChild>
                     <Link 
                       href={item.path}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 ${sidebarCollapsed ? 'justify-center' : ''}`}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 ${sidebarCollapsed ? 'justify-center' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase()}`}
                     >
                       <Icon className="w-5 h-5" />
@@ -352,7 +352,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   <TooltipTrigger asChild>
                     <Link 
                       href="/dealflow/hq"
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-blue-500 hover:bg-blue-500/10 ${sidebarCollapsed ? 'justify-center' : ''}`}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all text-blue-500 hover:bg-blue-500/10 ${sidebarCollapsed ? 'justify-center' : ''}`}
                       data-testid="nav-hq"
                     >
                       <Shield className="w-5 h-5" />
@@ -383,7 +383,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button 
-                  className={`flex items-center gap-3 w-full p-2 rounded-xl hover:bg-secondary/50 transition-all ${sidebarCollapsed ? 'justify-center' : ''}`}
+                  className={`flex items-center gap-3 w-full p-2 rounded-md hover:bg-secondary/50 transition-all ${sidebarCollapsed ? 'justify-center' : ''}`}
                   data-testid="button-sidebar-user"
                 >
                   <Avatar className="h-10 w-10 border-2 border-primary/20">
@@ -498,7 +498,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                           key={item.path}
                           href={item.path}
                           onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                          className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
                             isActive 
                               ? 'bg-primary text-primary-foreground' 
                               : 'text-foreground hover:bg-secondary/50'
@@ -524,7 +524,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                             key={item.path}
                             href={item.path}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+                            className="flex items-center gap-3 px-4 py-3 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
                             data-testid={`nav-mobile-${item.label.toLowerCase()}`}
                           >
                             <Icon className="w-5 h-5" />
@@ -537,7 +537,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                       <Link
                         href="/dealflow/hq"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-500 hover:bg-blue-500/10 transition-all"
+                        className="flex items-center gap-3 px-4 py-3 rounded-md text-blue-500 hover:bg-blue-500/10 transition-all"
                         data-testid="nav-mobile-hq"
                       >
                         <Shield className="w-5 h-5" />
@@ -549,14 +549,14 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                       <Link
                         href="/"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary/50 transition-all"
+                        className="flex items-center gap-3 px-4 py-3 rounded-md text-muted-foreground hover:bg-secondary/50 transition-all"
                       >
                         <Home className="w-5 h-5" />
                         <span className="font-medium">Back to Website</span>
                       </Link>
                       <a
                         href="/__replit/auth/logout"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
+                        className="flex items-center gap-3 px-4 py-3 rounded-md text-destructive hover:bg-destructive/10 transition-all"
                       >
                         <LogOut className="w-5 h-5" />
                         <span className="font-medium">Sign Out</span>

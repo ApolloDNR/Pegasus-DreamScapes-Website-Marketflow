@@ -242,7 +242,7 @@ export function DealMapView({ deals, onDealSelect, selectedDealId, isLoading }: 
       {/* Selected Deal Card */}
       {selectedDeal && (
         <div className="absolute bottom-4 left-4 right-4 max-w-md mx-auto">
-          <Card className="shadow-xl">
+          <Card className="shadow-md">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">

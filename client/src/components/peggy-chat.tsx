@@ -285,10 +285,10 @@ export function PeggyChatBubble() {
   
   return (
     <Card className={cn(
-      "fixed z-50 shadow-2xl transition-all duration-300",
+      "fixed z-50 shadow-md transition-all duration-300",
       isExpanded 
-        ? "bottom-0 right-0 w-full h-full sm:bottom-4 sm:right-4 sm:w-[500px] sm:h-[700px] sm:rounded-xl" 
-        : "bottom-6 right-6 w-[380px] h-[520px] rounded-xl"
+        ? "bottom-0 right-0 w-full h-full sm:bottom-4 sm:right-4 sm:w-[500px] sm:h-[700px] sm:rounded-md" 
+        : "bottom-6 right-6 w-[380px] h-[520px] rounded-md"
     )}>
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between px-4 py-3 border-b bg-accent/5">

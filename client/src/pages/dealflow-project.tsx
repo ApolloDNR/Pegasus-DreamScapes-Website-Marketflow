@@ -365,7 +365,7 @@ export default function DealflowProject() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="relative aspect-[16/9] bg-gradient-to-br from-primary/20 via-primary/10 to-amber-500/10 rounded-xl overflow-hidden">
+            <div className="relative aspect-[16/9] bg-gradient-to-br from-primary/20 via-primary/10 to-amber-500/10 rounded-md overflow-hidden">
               {project.images && project.images[0] ? (
                 <img 
                   src={project.images[0]} 
@@ -902,7 +902,7 @@ export default function DealflowProject() {
                 </div>
 
                 {/* Seeking Statement - aligned with investment details */}
-                <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-2 border-primary/30 text-center">
+                <div className="p-4 rounded-md bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-2 border-primary/30 text-center">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Seeking</p>
                   <p className="text-lg font-bold text-primary" data-testid="text-seeking-amount">
                     {formatCurrency(project.fundingGoal)}

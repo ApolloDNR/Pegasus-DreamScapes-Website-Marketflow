@@ -77,7 +77,7 @@ function TypingIndicator() {
           P
         </AvatarFallback>
       </Avatar>
-      <div className="flex items-center gap-1.5 bg-cream/60 dark:bg-white/5 border border-primary/15 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-1.5 bg-cream/60 dark:bg-white/5 border border-primary/15 rounded-lg rounded-bl-md px-4 py-3 shadow-sm">
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
@@ -147,8 +147,8 @@ function PeggyMessage({
         <div className={cn(
           "px-4 py-2.5 text-sm leading-relaxed shadow-sm",
           isUser 
-            ? "rounded-2xl rounded-br-md bg-gradient-to-br from-primary to-[#A35A28] text-primary-foreground shadow-primary/20" 
-            : "rounded-2xl rounded-bl-md bg-cream/60 dark:bg-white/5 border border-primary/15 text-foreground"
+            ? "rounded-lg rounded-br-md bg-gradient-to-br from-primary to-[#A35A28] text-primary-foreground shadow-primary/20" 
+            : "rounded-lg rounded-bl-md bg-cream/60 dark:bg-white/5 border border-primary/15 text-foreground"
         )}>
           <div className="whitespace-pre-wrap">{message.content}</div>
         </div>
@@ -598,13 +598,13 @@ export function PeggyDock() {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             className={cn(
-              "fixed z-50 shadow-2xl",
+              "fixed z-50 shadow-md",
               isFullscreen 
                 ? "inset-4 sm:inset-8" 
                 : "bottom-6 right-6 w-[400px] h-[600px]"
             )}
           >
-            <Card className="w-full h-full flex flex-col overflow-hidden rounded-3xl border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background">
+            <Card className="w-full h-full flex flex-col overflow-hidden rounded-lg border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background">
               <div 
                 className="relative flex items-center justify-between px-5 py-4 cursor-move bg-gradient-to-b from-cream/70 to-cream/20 dark:from-white/[0.04] dark:to-transparent"
                 onPointerDown={(e) => dragControls.start(e)}

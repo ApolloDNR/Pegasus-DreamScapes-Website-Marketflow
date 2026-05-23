@@ -240,7 +240,7 @@ export default function SnapshotStatus() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="bg-card border border-border/50 rounded-xl p-8 lg:p-10 shadow-sm mb-10"
+          className="bg-card border border-border/50 rounded-md p-8 lg:p-10 shadow-sm mb-10"
           data-testid={`panel-state-${state}`}
         >
           {state === "submitted" && (
@@ -379,7 +379,7 @@ export default function SnapshotStatus() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
-            className="bg-muted/30 border border-border/50 rounded-xl p-6 text-center"
+            className="bg-muted/30 border border-border/50 rounded-md p-6 text-center"
           >
             <p className="text-sm text-muted-foreground mb-2">
               You selected:{" "}
@@ -416,7 +416,7 @@ export default function SnapshotStatus() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs uppercase tracking-[0.15em]"
+              className="text-xs tracking-[0.15em]"
               data-testid="button-snapshot-home"
             >
               Back to Pegasus DreamScapes

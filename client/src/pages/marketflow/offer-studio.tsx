@@ -844,7 +844,7 @@ export default function MarketflowOfferStudioPage() {
         className="fixed bottom-4 right-4 z-30 w-[360px] max-w-[calc(100vw-2rem)]"
         data-testid="panel-chat"
       >
-        <Card className="shadow-xl border-primary/30">
+        <Card className="shadow-md border-primary/30">
           <button
             type="button"
             className="w-full flex items-center justify-between gap-2 px-4 py-3 hover-elevate active-elevate-2 rounded-t-md"

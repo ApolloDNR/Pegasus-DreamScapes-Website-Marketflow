@@ -1332,7 +1332,7 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
               transition: { duration: 0.25, ease: "easeOut" }
             }}
             transition={{ type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
-            className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-xl"
+            className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-md"
           >
             <SwipeCard 
               deal={currentDeal}
@@ -1430,7 +1430,7 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
       : "";
 
   return (
-    <Card className={`h-full overflow-hidden shadow-xl transition-all duration-150 ${cardBorderClass}`}>
+    <Card className={`h-full overflow-hidden shadow-md transition-all duration-150 ${cardBorderClass}`}>
       <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50">
         {deal.photos?.[0] || deal.images?.[0] ? (
           <img 
@@ -2444,7 +2444,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
   };
 
   return (
-    <Card className="h-full overflow-hidden shadow-xl">
+    <Card className="h-full overflow-hidden shadow-md">
       <div className="relative h-44 bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/20">
         {project.images?.[0] ? (
           <img 

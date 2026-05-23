@@ -117,7 +117,7 @@ function HeroSection() {
               <Link href="/sell">
                 <Button
                   size="lg"
-                  className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 w-full sm:w-auto"
+                  className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20 w-full sm:w-auto"
                   data-testid="button-blueprint-start-snapshot"
                 >
                   Start with a Free Snapshot
@@ -145,8 +145,8 @@ function HeroSection() {
           >
             <div className="relative">
               <div className="absolute -inset-8 bg-gradient-to-br from-black/50 via-black/30 to-transparent blur-3xl rounded-[2rem]" />
-              <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-3xl" />
-              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-2xl backdrop-blur-2xl shadow-2xl shadow-black/40">
+              <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-lg" />
+              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-lg backdrop-blur-2xl shadow-md shadow-black/40">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-supporting font-semibold mb-6">
                   How the Blueprint fits
                 </p>

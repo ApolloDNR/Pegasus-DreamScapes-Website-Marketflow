@@ -93,15 +93,15 @@ function FounderSection() {
       <div className="max-w-5xl mx-auto px-6 lg:px-12 relative">
         <div className="grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-4">
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden">
+            <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
               <img
                 src={founderApolloPath}
                 alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
                 className="absolute inset-0 w-full h-full object-cover object-top"
                 data-testid="img-founder-apollo"
               />
-              <div className="absolute inset-0 ring-1 ring-primary/50 rounded-2xl pointer-events-none" />
-              <div className="absolute -inset-1 rounded-2xl ring-1 ring-primary/15 pointer-events-none" />
+              <div className="absolute inset-0 ring-1 ring-primary/50 rounded-lg pointer-events-none" />
+              <div className="absolute -inset-1 rounded-lg ring-1 ring-primary/15 pointer-events-none" />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/95 via-navy/70 to-transparent px-5 py-4">
                 <p className="font-display text-cream text-base uppercase tracking-[0.18em] leading-tight">
                   Paolo &ldquo;Apollo&rdquo; Duran
@@ -247,7 +247,7 @@ function HeroSection() {
             >
               <Button
                 size="lg"
-                className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20"
+                className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20"
                 onClick={() => document.getElementById('investor-form')?.scrollIntoView({ behavior: 'smooth' })}
                 data-testid="button-start-capital-conversation"
               >
@@ -274,8 +274,8 @@ function HeroSection() {
           >
             <div className="relative">
               <div className="absolute -inset-8 bg-gradient-to-br from-black/50 via-black/30 to-transparent blur-3xl rounded-[2rem]" />
-              <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-3xl" />
-              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-2xl backdrop-blur-2xl shadow-2xl shadow-black/40">
+              <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-lg" />
+              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-lg backdrop-blur-2xl shadow-md shadow-black/40">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-supporting font-semibold mb-6">
                   How we work with capital
                 </p>
@@ -465,7 +465,7 @@ function ProjectSnapshotSection() {
         </ScrollReveal>
 
         <ScrollReveal>
-          <div className="relative bg-card rounded-2xl border border-border/50 overflow-hidden shadow-xl">
+          <div className="relative bg-card rounded-lg border border-border/50 overflow-hidden shadow-md">
             <div className="p-8 lg:p-10 border-b border-border/40">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
                 <div>
@@ -609,7 +609,7 @@ function InvestorFormSection() {
         </ScrollReveal>
 
         <ScrollReveal className="lg:col-span-7" delay={0.15}>
-          <div className="p-8 lg:p-10 bg-background rounded-2xl border border-border/50 shadow-xl">
+          <div className="p-8 lg:p-10 bg-background rounded-lg border border-border/50 shadow-md">
             <Form {...form}>
               <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

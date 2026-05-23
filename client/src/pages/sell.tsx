@@ -255,7 +255,7 @@ function HeroSection() {
             >
               <Button
                 size="lg"
-                className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20"
+                className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20"
                 onClick={() => document.getElementById('seller-form')?.scrollIntoView({ behavior: 'smooth' })}
                 data-testid="button-start-strategy-review"
               >
@@ -282,8 +282,8 @@ function HeroSection() {
           >
             <div className="relative">
               <div className="absolute -inset-8 bg-gradient-to-br from-black/50 via-black/30 to-transparent blur-3xl rounded-[2rem]" />
-              <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-3xl" />
-              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-2xl backdrop-blur-2xl shadow-2xl shadow-black/40">
+              <div className="absolute -inset-4 bg-gradient-to-br from-champagne/15 via-transparent to-primary/10 blur-2xl rounded-lg" />
+              <div className="relative p-8 lg:p-10 bg-black/55 border border-champagne/25 rounded-lg backdrop-blur-2xl shadow-md shadow-black/40">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-champagne font-supporting font-semibold mb-6">
                   The Doctrine
                 </p>
@@ -570,7 +570,7 @@ function LeadFormSection() {
         </ScrollReveal>
 
         <ScrollReveal className="lg:col-span-7" delay={0.15}>
-          <div className="p-8 lg:p-10 bg-background rounded-2xl border border-border/50 shadow-xl">
+          <div className="p-8 lg:p-10 bg-background rounded-lg border border-border/50 shadow-md">
             <Form {...form}>
               <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-5">
                 {isDealJvIntent && (

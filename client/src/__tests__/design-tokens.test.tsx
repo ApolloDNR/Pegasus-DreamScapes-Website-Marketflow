@@ -5,26 +5,11 @@ import { join } from "path";
 const PAGES_DIR = join(process.cwd(), "client/src/pages");
 const COMPONENTS_DIR = join(process.cwd(), "client/src/components");
 
-const PUBLIC_PAGES = [
-  "home.tsx",
-  "about.tsx",
-  "development.tsx",
-  "submit.tsx",
-  "capital.tsx",
-  "connect.tsx",
-  "library.tsx",
-  "projects.tsx",
-  "project-nelson-dr.tsx",
-  "project-detail.tsx",
-  "vendor-network.tsx",
-  "contact.tsx",
-  "disclosures.tsx",
-  "privacy.tsx",
-  "terms.tsx",
-  "marketplace.tsx",
-  "marketflow-access.tsx",
-  "not-found.tsx",
-];
+// All .tsx files under client/src/pages — full surface enforcement, including
+// retired-but-still-resident pages so future edits can't regress the rule.
+const PUBLIC_PAGES = readdirSync(PAGES_DIR, { withFileTypes: true })
+  .filter((d) => d.isFile() && d.name.endsWith(".tsx"))
+  .map((d) => d.name);
 
 const SHARED_COMPONENTS = [
   "navigation.tsx",

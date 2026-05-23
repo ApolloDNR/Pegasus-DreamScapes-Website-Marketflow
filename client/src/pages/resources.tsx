@@ -133,7 +133,7 @@ function InvestmentGuidesSection() {
             <Card key={index} className="group hover:border-primary/30 transition-all duration-300" data-testid={`guide-card-${index}`}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                     <guide.icon className="w-7 h-7 text-primary" />
                   </div>
                   <div className="flex-1">
@@ -353,7 +353,7 @@ function ToolsSection() {
             <Link key={index} href={tool.href}>
               <Card className="group hover:border-primary/30 transition-all duration-300 cursor-pointer h-full" data-testid={`tool-card-${index}`}>
                 <CardContent className="p-6 text-center">
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                  <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                     <tool.icon className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">{tool.title}</h3>

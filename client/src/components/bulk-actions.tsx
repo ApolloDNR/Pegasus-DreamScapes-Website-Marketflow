@@ -49,7 +49,7 @@ export function BulkActionsBar({
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <Card className="shadow-xl border-primary/30">
+      <Card className="shadow-md border-primary/30">
         <CardContent className="p-3 flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Checkbox

@@ -341,7 +341,7 @@ export function InvestorReturnCalculator({ project }: { project: CapitalProject 
 
         {calculations.principal > 0 && isDebtDeal && (
           <div className="space-y-4 pt-4 border-t animate-in fade-in-50 duration-300">
-            <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
+            <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-md border border-green-500/20">
               <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Your Projected Earnings</p>
               <div className="grid grid-cols-3 gap-4 mt-3">
                 <div>
@@ -749,7 +749,7 @@ export function DynamicROIPreview({
   if (!calculations) return null;
 
   return (
-    <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20 animate-in fade-in-50 duration-200">
+    <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-md border border-green-500/20 animate-in fade-in-50 duration-200">
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="w-5 h-5 text-green-600" />
         <span className="font-medium text-green-700 dark:text-green-400">Projected Returns</span>
