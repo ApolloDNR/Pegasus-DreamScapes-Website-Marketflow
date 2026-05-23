@@ -472,7 +472,7 @@ export function Navigation() {
                     return (
                       <Link key={item.href} href={item.href}>
                         <DropdownMenuItem
-                          className="group cursor-pointer px-5 py-3 rounded-none focus:bg-cream/50 dark:focus:bg-white/[0.04] data-[highlighted]:bg-cream/50 dark:data-[highlighted]:bg-white/[0.04]"
+                          className="group cursor-pointer px-5 py-3 rounded-none border-l-2 border-transparent focus:bg-cream/60 focus:border-[hsl(var(--bronze))] dark:focus:bg-white/[0.06] data-[highlighted]:bg-cream/60 data-[highlighted]:border-[hsl(var(--bronze))] dark:data-[highlighted]:bg-white/[0.06]"
                           data-testid={testid}
                         >
                           <div className="flex items-start gap-3.5 w-full">
@@ -504,7 +504,7 @@ export function Navigation() {
                     <span aria-hidden="true" className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                     <Link href="/login" className="block">
                       <DropdownMenuItem
-                        className="cursor-pointer rounded-md px-3 py-2 gap-2 text-foreground hover:bg-cream/50 dark:hover:bg-white/[0.04] focus:bg-cream/50 dark:focus:bg-white/[0.04]"
+                        className="cursor-pointer rounded-md px-3 py-2 gap-2 text-foreground hover:bg-cream/50 dark:hover:bg-white/[0.04] focus:bg-cream/60 focus:ring-2 focus:ring-[hsl(var(--bronze))] focus:ring-offset-1 focus:ring-offset-background dark:focus:bg-white/[0.06]"
                         data-testid="link-nav-more-signin"
                       >
                         <LogIn className="w-4 h-4 text-primary" aria-hidden="true" />
