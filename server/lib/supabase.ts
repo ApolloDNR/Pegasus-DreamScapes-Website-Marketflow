@@ -1,8 +1,24 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
+const rawSupabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+function isValidHttpUrl(value: string): boolean {
+  if (!value) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+const supabaseUrlIsValid = isValidHttpUrl(rawSupabaseUrl);
+if (rawSupabaseUrl && !supabaseUrlIsValid) {
+  console.warn(`Server: SUPABASE_URL is set but is not a valid http(s) URL (got "${rawSupabaseUrl}"). Expected something like https://<project-ref>.supabase.co. Falling back to PostgreSQL.`);
+}
+const supabaseUrl = supabaseUrlIsValid ? rawSupabaseUrl : '';
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const isSupabaseAdminConfigured = Boolean(supabaseUrl && supabaseServiceRoleKey);
