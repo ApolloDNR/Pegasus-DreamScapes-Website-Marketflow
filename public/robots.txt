@@ -6,9 +6,20 @@ Disallow: /marketflow/dashboard
 Disallow: /marketflow/messages
 Disallow: /marketflow/submit
 Disallow: /marketflow/negotiate
+Disallow: /marketflow/wholesaler
+Disallow: /marketflow/dreamscaper
+Disallow: /marketflow/investor
+Disallow: /marketflow/buyer
+Disallow: /marketflow/deals
+Disallow: /marketflow/capital
+Disallow: /marketflow/properties
+Disallow: /marketflow/community
+Disallow: /marketflow/calculators
+Disallow: /marketflow/resources
 Disallow: /dashboard
 Disallow: /services
 Disallow: /login
 Disallow: /signup
+Disallow: /admin/
 
 Sitemap: https://pegasusdreamscapes.com/sitemap.xml

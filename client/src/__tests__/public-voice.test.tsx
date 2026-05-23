@@ -25,23 +25,27 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const ROOT = resolve(__dirname, "..", "..", "..");
 
+// Empire Doctrine v1.0.1 — public page set. Removed legacy public pages
+// (/sell, /invest, /resources, /education, /calculators, /systems) and
+// added the new canonical surfaces (/submit, /capital, /connect,
+// /projects/nelson-dr, /marketflow access, /library).
 const PUBLIC_PAGE_FILES = [
   "client/src/pages/home.tsx",
-  "client/src/pages/sell.tsx",
-  "client/src/pages/invest.tsx",
   "client/src/pages/about.tsx",
+  "client/src/pages/development.tsx",
+  "client/src/pages/submit.tsx",
+  "client/src/pages/capital.tsx",
+  "client/src/pages/connect.tsx",
+  "client/src/pages/library.tsx",
   "client/src/pages/projects.tsx",
-  "client/src/pages/resources.tsx",
+  "client/src/pages/project-nelson-dr.tsx",
+  "client/src/pages/project-detail.tsx",
   "client/src/pages/vendor-network.tsx",
   "client/src/pages/contact.tsx",
   "client/src/pages/disclosures.tsx",
-  "client/src/pages/deal-blueprint.tsx",
   "client/src/pages/strategy-lab.tsx",
-  "client/src/pages/calculators.tsx",
-  "client/src/pages/education.tsx",
-  "client/src/pages/systems.tsx",
-  "client/src/pages/project-detail.tsx",
   "client/src/pages/marketplace.tsx",
+  "client/src/pages/marketflow-access.tsx",
   "client/src/pages/terms.tsx",
   "client/src/pages/privacy.tsx",
   "client/src/components/footer.tsx",
@@ -61,7 +65,7 @@ const FORBIDDEN_PHRASES = [
 // Files allowed to mention forbidden-phrase strings because they exist
 // only as negative disclosure ("not an offer of ...") on /invest and /terms.
 const NEGATIVE_DISCLOSURE_FILES = new Set<string>([
-  "client/src/pages/invest.tsx",
+  "client/src/pages/capital.tsx",
   "client/src/pages/terms.tsx",
   "client/src/pages/disclosures.tsx",
   "client/src/pages/strategy-lab.tsx",
@@ -188,20 +192,11 @@ describe("Public voice rules (v1.3.1)", () => {
     const homeSrc = read("client/src/pages/home.tsx");
 
     const REQUIRED_SUBSTRINGS = [
-      // Hero doctrine lock (v1.3.1, relaxed in Task #119):
-      // "Complex property. Structured opportunity." is the canonical hero
-      // line. "Where others see impossible" remains in supporting copy
-      // but is no longer a hard requirement — it appears in the hero
-      // subhead, /sell, /about, peggy-dock, and instrument-workbench,
-      // so drift is unlikely.
       "Complex property.",
       "Structured opportunity.",
-      // "Every property gets a serious review. Not every property gets an offer."
-      "Every property gets a serious review",
+      "Every property gets a path",
       "Not every property gets an offer",
-      // "Built on strategy. Governed by virtue. Executed with discipline."
       "Built on strategy. Governed by virtue. Executed with discipline.",
-      // "Dream it. Build it. Live it."
       "Dream it. Build it. Live it.",
     ];
 
@@ -213,6 +208,27 @@ describe("Public voice rules (v1.3.1)", () => {
         ).toBe(true);
       });
     }
+  });
+
+  describe("Empire Doctrine v1.0.1 locked phrase placements", () => {
+    it("footer renders the 'Dream it. Build it. Live it.' motto", () => {
+      const footerSrc = read("client/src/components/footer.tsx");
+      expect(footerSrc).toContain("Dream it. Build it. Live it.");
+    });
+
+    it("/about renders the 'Built on strategy...' belief line", () => {
+      const aboutSrc = read("client/src/pages/about.tsx");
+      expect(aboutSrc).toContain(
+        "Built on strategy. Governed by virtue. Executed with discipline.",
+      );
+    });
+
+    it("/about surfaces the Path-First Review Standard line", () => {
+      const aboutSrc = read("client/src/pages/about.tsx");
+      expect(aboutSrc).toContain(
+        "Pegasus reviews the path first and Pegasus participation second.",
+      );
+    });
   });
 });
 

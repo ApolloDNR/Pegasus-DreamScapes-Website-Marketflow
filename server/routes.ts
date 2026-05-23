@@ -226,36 +226,74 @@ export async function registerRoutes(
     );
   });
 
+  // ─── Empire Doctrine v1.0.1 legacy URL handling ───────────────────────
+  // Server-side 301 redirects for retired public funnel routes. These run
+  // before the Vite dev catch-all (registerRoutes is wired ahead of the
+  // SPA fallback in server/index.ts) and replace the prior client-side
+  // <Redirect> shim with a true HTTP redirect.
+  // Canonical 301 redirects — only kept for routes that map cleanly to a
+  // current v1 destination with preserved intent.
+  const LEGACY_REDIRECTS: Array<[string, string]> = [
+    ['/sell', '/submit?intent=sell'],
+    ['/submit-deal', '/submit?intent=deal-jv'],
+    ['/submit-property', '/submit?intent=property'],
+    ['/services', '/development'],
+    ['/resources', '/library'],
+    ['/invest', '/capital'],
+    ['/partner', '/capital'],
+  ];
+  for (const [from, to] of LEGACY_REDIRECTS) {
+    app.get(from, (_req, res) => res.redirect(301, to));
+  }
+
+  // Retired-from-public routes: return 410 Gone for direct HTTP requests.
+  // Brief §1: these routes are gone from the v1 public surface entirely
+  // (no clean canonical successor that preserves the original intent).
+  // We answer with a small HTML page so a crawler / human gets the right
+  // signal without falling through to the SPA shell.
+  const GONE_ROUTES = [
+    '/education',
+    '/calculators',
+    '/buyers',
+    '/wholesale',
+    '/systems',
+    '/ecosystem',
+    '/dreamspace',
+    '/capital-raising',
+  ];
+  const gonePage = (path: string) =>
+    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus DreamScapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus DreamScapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/submit" style="color:#C87A3A">submit a property</a> directly.</p></body></html>`;
+  for (const path of GONE_ROUTES) {
+    app.get(path, (_req, res) => {
+      res.status(410).type('html').send(gonePage(path));
+    });
+  }
+
   // SEO: sitemap.xml — public routes + project case studies
   app.get('/sitemap.xml', async (req, res) => {
     const host = `${req.protocol}://${req.get('host')}`;
     const today = new Date().toISOString().split('T')[0];
+    // Empire Doctrine v1.0.1 — v1 public route set only. Strategy Lab,
+    // Calculators, and the legacy /resources, /education, /systems
+    // surfaces are intentionally excluded from the public sitemap.
     const staticRoutes: { path: string; priority: string; changefreq: string }[] = [
       { path: '/', priority: '1.0', changefreq: 'weekly' },
-      { path: '/sell', priority: '0.9', changefreq: 'monthly' },
-      { path: '/invest', priority: '0.9', changefreq: 'monthly' },
-      { path: '/projects', priority: '0.8', changefreq: 'weekly' },
-      { path: '/contact', priority: '0.7', changefreq: 'yearly' },
-      { path: '/marketflow', priority: '0.8', changefreq: 'weekly' },
-      { path: '/deal-blueprint', priority: '0.8', changefreq: 'monthly' },
-      { path: '/resources', priority: '0.6', changefreq: 'weekly' },
-      { path: '/education', priority: '0.5', changefreq: 'monthly' },
-      { path: '/vendor-network', priority: '0.5', changefreq: 'monthly' },
-      { path: '/about', priority: '0.6', changefreq: 'yearly' },
-      { path: '/terms', priority: '0.3', changefreq: 'yearly' },
-      { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+      { path: '/submit', priority: '0.9', changefreq: 'monthly' },
+      { path: '/strategy-lab', priority: '0.9', changefreq: 'monthly' },
+      { path: '/projects', priority: '0.9', changefreq: 'weekly' },
+      { path: '/projects/nelson-dr', priority: '0.7', changefreq: 'monthly' },
+      { path: '/development', priority: '0.9', changefreq: 'monthly' },
+      { path: '/marketflow', priority: '0.8', changefreq: 'monthly' },
+      { path: '/about', priority: '0.8', changefreq: 'monthly' },
+      { path: '/library', priority: '0.7', changefreq: 'weekly' },
+      { path: '/capital', priority: '0.6', changefreq: 'monthly' },
+      { path: '/vendor-network', priority: '0.6', changefreq: 'monthly' },
+      { path: '/contact', priority: '0.7', changefreq: 'monthly' },
+      { path: '/connect', priority: '0.5', changefreq: 'monthly' },
       { path: '/disclosures', priority: '0.3', changefreq: 'yearly' },
-      { path: '/services', priority: '0.5', changefreq: 'yearly' },
-      { path: '/calculators', priority: '0.7', changefreq: 'monthly' },
+      { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+      { path: '/terms', priority: '0.3', changefreq: 'yearly' },
     ];
-
-    const calculatorTabs = ['arv', 'roi', 'brrrr', 'cashflow', 'wholesale', 'piti', 'ownvsrent', 'hardmoney'];
-    const calculatorTabUrls = calculatorTabs
-      .map(
-        (tab) =>
-          `  <url><loc>${host}/calculators?tab=${tab}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`,
-      )
-      .join('\n');
 
     let projectUrls = '';
     try {
@@ -279,7 +317,7 @@ export async function registerRoutes(
 
     res
       .type('application/xml')
-      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n${calculatorTabUrls}${projectUrls ? '\n' + projectUrls : ''}\n</urlset>\n`);
+      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}${projectUrls ? '\n' + projectUrls : ''}\n</urlset>\n`);
   });
 
   // Register object storage routes for file uploads
@@ -5778,6 +5816,64 @@ export async function registerRoutes(
   // Create a new lead (public or authenticated)
   app.post("/api/leads", async (req: any, res) => {
     try {
+      // Empire Doctrine v1.0.1 — server-truth anti-spam for /submit and
+      // /marketflow/access submissions. Honeypot hp_company must be empty;
+      // ts_elapsed_ms must be at least 3000 (3-second time-on-form).
+      // Client-side checks exist for UX, but the server is the
+      // authoritative gate so a scripted POST bypassing the React form
+      // cannot reach storage.
+      const lt = req.body?.leadType;
+      if (lt === "submit" || lt === "marketflow_access") {
+        const hp = req.body?.leadData?.hp_company ?? req.body?.hp_company ?? "";
+        if (typeof hp === "string" && hp.trim().length > 0) {
+          return res.status(400).json({ message: "Submission rejected." });
+        }
+        const elapsed = Number(
+          req.body?.leadData?.ts_elapsed_ms ?? req.body?.ts_elapsed_ms ?? 0,
+        );
+        if (!Number.isFinite(elapsed) || elapsed < 3000) {
+          return res.status(400).json({
+            message: "Form submitted too fast. Please try again.",
+          });
+        }
+        // Strip honeypot before persisting so it never lands in storage.
+        if (req.body?.leadData && typeof req.body.leadData === "object") {
+          delete req.body.leadData.hp_company;
+        }
+      }
+
+      // Empire Doctrine v1.0.1 — explicit boundary mapping for MarketFlow
+      // access requests. /api/leads is the persistence path of record, but
+      // marketflow_access submissions are conceptually a distinct
+      // canonical shape — `marketflow_access_requests` — and we project
+      // them into that shape server-side so downstream consumers
+      // (analytics, future dedicated table) can subscribe to a stable
+      // contract independent of the underlying leads table.
+      if (lt === "marketflow_access") {
+        const ld: any = req.body?.leadData ?? {};
+        const marketflow_access_request = {
+          shape: "marketflow_access_requests",
+          version: 1,
+          firstName: req.body?.firstName ?? "",
+          lastName: req.body?.lastName ?? "",
+          email: req.body?.email ?? "",
+          role: ld.role ?? "",
+          introducedBy: ld.introducedBy ?? "",
+          notes: ld.notes ?? "",
+          source: req.body?.source ?? "marketflow_access_page",
+          submittedAt: new Date().toISOString(),
+        };
+        console.log(
+          "[marketflow_access_requests]",
+          JSON.stringify(marketflow_access_request),
+        );
+        // Persist the canonical shape inside leadData under a versioned
+        // key so the leads row carries the full access-request envelope.
+        if (req.body?.leadData && typeof req.body.leadData === "object") {
+          req.body.leadData.marketflow_access_request = marketflow_access_request;
+        }
+      }
+
       const parseResult = insertLeadSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ 

@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { Clock } from "lucide-react";
 import { marked } from "marked";
 import DOMPurify from "isomorphic-dompurify";
 import type { Article } from "@shared/schema";
@@ -53,6 +54,51 @@ export default function ArticleDetail() {
     [article?.content],
   );
 
+  // Empire Doctrine v1.0.1 — /library/:slug must carry visible reading
+  // time + Article JSON-LD so each library entry is independently
+  // crawlable and signed with publishedAt + reading time.
+  const readingTimeMinutes = useMemo(() => {
+    const text = (article?.content ?? "").replace(/<[^>]+>/g, " ");
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 200));
+  }, [article?.content]);
+
+  useEffect(() => {
+    if (!article) return;
+    const id = "ld-article";
+    let s = document.head.querySelector<HTMLScriptElement>(`#${id}`);
+    if (!s) {
+      s = document.createElement("script");
+      s.id = id;
+      s.type = "application/ld+json";
+      document.head.appendChild(s);
+    }
+    const url = `https://pegasusdreamscapes.com/library/${article.slug}`;
+    s.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: article.title,
+      description: article.excerpt ?? undefined,
+      image: article.imageUrl ?? undefined,
+      datePublished: article.publishedAt ?? undefined,
+      author: { "@type": "Person", name: article.author },
+      publisher: {
+        "@type": "Organization",
+        name: "Pegasus DreamScapes",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
+        },
+      },
+      mainEntityOfPage: { "@type": "WebPage", "@id": url },
+      url,
+      timeRequired: `PT${readingTimeMinutes}M`,
+    });
+    return () => {
+      document.head.querySelector(`#${id}`)?.remove();
+    };
+  }, [article, readingTimeMinutes]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
@@ -68,7 +114,7 @@ export default function ArticleDetail() {
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-semibold mb-4">Article Not Found</h2>
             <p className="text-muted-foreground mb-6">The article you're looking for doesn't exist or has been removed.</p>
-            <Link href="/resources">
+            <Link href="/library">
               <Button>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Strategy Library
@@ -106,10 +152,10 @@ export default function ArticleDetail() {
   return (
     <div className="min-h-screen pt-20">
       <article className="max-w-4xl mx-auto px-6 py-8">
-        <Link href="/resources">
+        <Link href="/library">
           <Button variant="ghost" className="mb-6" data-testid="button-back-resources">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {isLibraryArticle ? "Back to Strategy Library" : "Back to Resources"}
+            Back to Strategy Library
           </Button>
         </Link>
 
@@ -141,7 +187,7 @@ export default function ArticleDetail() {
                 <ol className="flex flex-wrap items-center gap-2">
                   <li>
                     <Link
-                      href="/education"
+                      href="/library"
                       className="hover:text-primary transition-colors"
                       data-testid="link-breadcrumb-library"
                     >
@@ -153,7 +199,7 @@ export default function ArticleDetail() {
                   </li>
                   <li>
                     <Link
-                      href={`/education?category=${article.libraryCategoryKey}`}
+                      href={`/library?category=${article.libraryCategoryKey}`}
                       className="hover:text-primary transition-colors"
                       data-testid="link-breadcrumb-category"
                     >
@@ -193,7 +239,11 @@ export default function ArticleDetail() {
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span>{formatDate(article.publishedAt)}</span>
+              <span data-testid="text-article-published">{formatDate(article.publishedAt)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span data-testid="text-article-reading-time">{readingTimeMinutes} min read</span>
             </div>
           </div>
         </div>
@@ -216,15 +266,15 @@ export default function ArticleDetail() {
                   Reading is one thing. A real read on a real property is the next step. Strategy Review is free, written, and routes every property to a path.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link href="/sell">
+                  <Link href="/submit">
                     <Button size="lg" className="gap-2 w-full sm:w-auto" data-testid="button-library-strategy-review">
-                      Start a Strategy Review
+                      Submit a Property
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
-                  <Link href="/deal-blueprint">
+                  <Link href="/strategy-lab">
                     <Button size="lg" variant="outline" className="w-full sm:w-auto" data-testid="button-library-blueprint">
-                      Pegasus Deal Blueprint
+                      Try Strategy Lab
                     </Button>
                   </Link>
                 </div>
@@ -246,9 +296,9 @@ export default function ArticleDetail() {
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <Link href="/calculators">
+                    <Link href="/submit">
                       <Button className="w-full sm:w-auto" data-testid="button-article-calculators">
-                        Use Calculators
+                        Submit a Property
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>
@@ -277,7 +327,7 @@ export default function ArticleDetail() {
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {relatedArticles.map((a, i) => (
-                <Link key={a.id} href={`/resources/${a.slug}`}>
+                <Link key={a.id} href={`/library/${a.slug}`}>
                   <article
                     className="group h-full p-6 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer flex flex-col"
                     data-testid={`related-article-${i}`}

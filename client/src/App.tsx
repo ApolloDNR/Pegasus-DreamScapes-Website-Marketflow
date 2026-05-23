@@ -18,6 +18,7 @@ import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { AdminBar } from "@/components/AdminBar";
 import { AnonymousClaimWatcher } from "@/components/anonymous-claim-watcher";
+import { AuthGuard } from "@/components/auth-guard";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -48,7 +49,13 @@ const AdminStrategyLab = lazy(() => import("@/pages/admin-strategy-lab"));
 const AdminVendors = lazy(() => import("@/pages/admin-vendors"));
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
+const Library = lazy(() => import("@/pages/library"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
+const SubmitPage = lazy(() => import("@/pages/submit"));
+const CapitalPage = lazy(() => import("@/pages/capital"));
+const ConnectPage = lazy(() => import("@/pages/connect"));
+const NelsonDrPage = lazy(() => import("@/pages/project-nelson-dr"));
+const MarketflowAccess = lazy(() => import("@/pages/marketflow-access"));
 const Contact = lazy(() => import("@/pages/contact"));
 const DealflowProject = lazy(() => import("@/pages/dealflow-project"));
 const DealflowCommunity = lazy(() => import("@/pages/dealflow-community"));
@@ -88,17 +95,19 @@ const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
 
 const legacyRedirects: [string, string][] = [
-  // v1.3.1 — retired public funnel pages route to their closest current destination.
-  ["/wholesale", "/sell"],
-  // /submit-deal preserves wholesaler/deal-JV intent via query param so
-  // /sell can preselect submitter role + outcome. See Task #119.
-  ["/submit-deal", "/sell?intent=deal-jv"],
+  // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
+  // old funnel routes (/sell, /submit-deal, /submit-property, /wholesale)
+  // all collapse into /submit with their intent preserved via query.
+  // Mirror of server LEGACY_REDIRECTS for SPA-internal navigation only.
+  // Server-side 301s / 410s are authoritative for direct HTTP hits.
+  ["/sell", "/submit?intent=sell"],
+  ["/submit-deal", "/submit?intent=deal-jv"],
+  ["/submit-property", "/submit?intent=property"],
   ["/services", "/development"],
-  ["/buyers", "/marketflow"],
+  ["/resources", "/library"],
   ["/buy", "/marketflow"],
-  ["/dreamspace", "/invest"],
-  ["/partner", "/invest"],
-  ["/capital-raising", "/invest"],
+  ["/partner", "/capital"],
+  ["/invest", "/capital"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],
@@ -145,9 +154,12 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
       <Route path="/development" component={Development} />
-      <Route path="/sell" component={Sell} />
-      <Route path="/invest" component={Invest} />
+      {/* Empire Doctrine v1.0.1 — canonical submission route. */}
+      <Route path="/submit" component={SubmitPage} />
+      <Route path="/capital" component={CapitalPage} />
+      <Route path="/connect" component={ConnectPage} />
       <Route path="/projects" component={Projects} />
+      <Route path="/projects/nelson-dr" component={NelsonDrPage} />
       <Route path="/projects/:slug" component={ProjectDetail} />
       <Route path="/strategy-lab" component={StrategyLab} />
       <Route path="/strategy-lab/library" component={StrategyLabLibrary} />
@@ -155,19 +167,18 @@ function Router() {
       <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
       <Route path="/admin/strategy-lab" component={AdminStrategyLab} />
       <Route path="/admin/vendors" component={AdminVendors} />
-      <Route path="/systems" component={Systems} />
-      <Route path="/ecosystem" component={Systems} />
       <Route path="/strategy-lab/classic" component={Calculators} />
-      <Route path="/calculators" component={Calculators} />
-      <Route path="/resources" component={Resources} />
-      <Route path="/education" component={Education} />
-      {/* Legacy alias — keep parity with the visible "Strategy Library" nav
-       * label, which now points at /resources. /education is its own page
-       * (the categorized library) and is reachable from the home router. */}
-      <Route path="/strategy-library">{() => <Redirect to="/resources" />}</Route>
+      {/* /library is canonical; /resources 301s to /library via legacyRedirects.
+       * /library/:slug keeps the existing article shell working. */}
+      <Route path="/library" component={Library} />
+      <Route path="/library/:slug" component={ArticleDetail} />
+      <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
-      <Route path="/resources/:slug" component={ArticleDetail} />
       <Route path="/contact" component={Contact} />
+      {/* Empire Doctrine v1.0.1: /systems, /ecosystem, /education, /calculators,
+       * /buyers, /wholesale, /capital-raising, /dreamspace are removed from
+       * the public surface. /calculators not registered here (only the
+       * /strategy-lab/classic alias is kept as an internal sub-route). */}
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/disclosures" component={Disclosures} />
@@ -180,12 +191,14 @@ function Router() {
       <Route path="/snapshot/calc/:token" component={SnapshotCalcGate} />
       <Route path="/snapshot/property/:token" component={SnapshotProperty} />
       <Route path="/snapshot/:token" component={SnapshotStatus} />
-      <Route path="/deal-blueprint" component={DealBlueprint} />
+      {/* Empire Doctrine v1.0.1: /deal-blueprint is removed from the
+       * public v1 surface and redirects to /strategy-lab. */}
+      <Route path="/deal-blueprint">{() => <Redirect to="/strategy-lab" />}</Route>
       {/* Legacy /dashboard route. Kept as a redirect because the auth-aware
        * destination lives at /marketflow/dashboard; the role router there
        * forwards staff vs. operator vs. investor to the right surface. */}
       <Route path="/dashboard">{() => <Redirect to="/marketflow/dashboard" />}</Route>
-      <Route path="/dealflow/project/:id" component={DealflowProject} />
+      <Route path="/dealflow/project/:id">{() => <AuthGuard><DealflowProject /></AuthGuard>}</Route>
       
       {/* Legacy route redirects to MarketFlow - consolidated for maintainability */}
       {legacyRedirects.map(([from, to]) => (
@@ -194,40 +207,47 @@ function Router() {
       
       {/* MarketFlow Routes with Supabase Auth */}
       <Route path="/marketflow" component={Marketplace} />
-      <Route path="/marketflow/wholesaler/:rest*" component={MarketplaceWholesaler} />
-      <Route path="/marketflow/wholesaler" component={MarketplaceWholesaler} />
-      <Route path="/marketflow/dreamscaper/:rest*" component={MarketplaceDreamscaper} />
-      <Route path="/marketflow/dreamscaper" component={MarketplaceDreamscaper} />
-      <Route path="/marketflow/investor/:rest*" component={MarketplaceInvestor} />
-      <Route path="/marketflow/investor" component={MarketplaceInvestor} />
-      <Route path="/marketflow/buyer/:rest*" component={MarketplaceBuyer} />
-      <Route path="/marketflow/buyer" component={MarketplaceBuyer} />
-      <Route path="/marketflow/admin/:rest*" component={MarketplaceAdmin} />
-      <Route path="/marketflow/admin" component={MarketplaceAdmin} />
+      <Route path="/marketflow/access" component={MarketflowAccess} />
+      <Route path="/marketflow/wholesaler/:rest*">{() => <AuthGuard><MarketplaceWholesaler /></AuthGuard>}</Route>
+      <Route path="/marketflow/wholesaler">{() => <AuthGuard><MarketplaceWholesaler /></AuthGuard>}</Route>
+      <Route path="/marketflow/dreamscaper/:rest*">{() => <AuthGuard><MarketplaceDreamscaper /></AuthGuard>}</Route>
+      <Route path="/marketflow/dreamscaper">{() => <AuthGuard><MarketplaceDreamscaper /></AuthGuard>}</Route>
+      <Route path="/marketflow/investor/:rest*">{() => <AuthGuard><MarketplaceInvestor /></AuthGuard>}</Route>
+      <Route path="/marketflow/investor">{() => <AuthGuard><MarketplaceInvestor /></AuthGuard>}</Route>
+      <Route path="/marketflow/buyer/:rest*">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
+      <Route path="/marketflow/buyer">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
+      <Route path="/marketflow/admin/:rest*">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
+      <Route path="/marketflow/admin">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
       <Route path="/marketflow/discover">{() => <Redirect to="/marketflow/deals" />}</Route>
-      <Route path="/marketflow/calculators" component={MarketplaceCalculators} />
-      <Route path="/marketflow/resources" component={MarketplaceResources} />
-      <Route path="/marketflow/community" component={DealflowCommunity} />
-      <Route path="/marketflow/messages" component={DealflowMessages} />
-      <Route path="/marketflow/deals" component={MarketflowDeals} />
-      <Route path="/marketflow/deals/:id" component={MarketplaceDealDetail} />
-      <Route path="/marketflow/capital" component={MarketplaceCapital} />
-      <Route path="/marketflow/capital/:id" component={MarketplaceCapitalDetail} />
-      <Route path="/marketflow/properties" component={MarketplaceProperties} />
-      <Route path="/marketflow/properties/:id" component={MarketplacePropertyDetail} />
-      <Route path="/marketflow/submit" component={MarketflowSubmit} />
-      <Route path="/marketflow/deals/:id/negotiate" component={MarketflowNegotiate} />
-      <Route path="/marketflow/negotiate/:lane/:id" component={MarketflowNegotiate} />
-      <Route path="/marketflow/dashboard" component={MarketflowDashboard} />
-      <Route path="/marketflow/my-deals" component={MyDealsPage} />
-      <Route path="/marketflow/analytics" component={AnalyticsPage} />
-      <Route path="/marketflow/my-analytics" component={MyAnalyticsPage} />
+      <Route path="/marketflow/calculators">{() => <AuthGuard><MarketplaceCalculators /></AuthGuard>}</Route>
+      <Route path="/marketflow/resources">{() => <AuthGuard><MarketplaceResources /></AuthGuard>}</Route>
+      {/* Empire Doctrine v1.0.1 — private MarketFlow surfaces. The public
+          v1 surface is /marketflow (gated landing) and /marketflow/access
+          (request-access form). All dashboards / deal / capital / property
+          / negotiate / offer-studio routes are operator surfaces and
+          must be behind AuthGuard so unauthenticated users cannot render
+          them. */}
+      <Route path="/marketflow/community">{() => <AuthGuard><DealflowCommunity /></AuthGuard>}</Route>
+      <Route path="/marketflow/messages">{() => <AuthGuard><DealflowMessages /></AuthGuard>}</Route>
+      <Route path="/marketflow/deals">{() => <AuthGuard><MarketflowDeals /></AuthGuard>}</Route>
+      <Route path="/marketflow/deals/:id">{() => <AuthGuard><MarketplaceDealDetail /></AuthGuard>}</Route>
+      <Route path="/marketflow/capital">{() => <AuthGuard><MarketplaceCapital /></AuthGuard>}</Route>
+      <Route path="/marketflow/capital/:id">{() => <AuthGuard><MarketplaceCapitalDetail /></AuthGuard>}</Route>
+      <Route path="/marketflow/properties">{() => <AuthGuard><MarketplaceProperties /></AuthGuard>}</Route>
+      <Route path="/marketflow/properties/:id">{() => <AuthGuard><MarketplacePropertyDetail /></AuthGuard>}</Route>
+      <Route path="/marketflow/submit">{() => <AuthGuard><MarketflowSubmit /></AuthGuard>}</Route>
+      <Route path="/marketflow/deals/:id/negotiate">{() => <AuthGuard><MarketflowNegotiate /></AuthGuard>}</Route>
+      <Route path="/marketflow/negotiate/:lane/:id">{() => <AuthGuard><MarketflowNegotiate /></AuthGuard>}</Route>
+      <Route path="/marketflow/dashboard">{() => <AuthGuard><MarketflowDashboard /></AuthGuard>}</Route>
+      <Route path="/marketflow/my-deals">{() => <AuthGuard><MyDealsPage /></AuthGuard>}</Route>
+      <Route path="/marketflow/analytics">{() => <AuthGuard><AnalyticsPage /></AuthGuard>}</Route>
+      <Route path="/marketflow/my-analytics">{() => <AuthGuard><MyAnalyticsPage /></AuthGuard>}</Route>
+
+      {/* Offer Studio - Full page deal offer experience (operator-only) */}
+      <Route path="/marketflow/offer-studio/:dealId">{() => <AuthGuard><MarketflowOfferStudio /></AuthGuard>}</Route>
+      <Route path="/offer-studio/:dealType/:dealId">{() => <AuthGuard><OfferStudioPage /></AuthGuard>}</Route>
       
-      {/* Offer Studio - Full page deal offer experience */}
-      <Route path="/marketflow/offer-studio/:dealId" component={MarketflowOfferStudio} />
-      <Route path="/offer-studio/:dealType/:dealId" component={OfferStudioPage} />
-      
-      <Route path="/profile/:userId" component={UserProfile} />
+      <Route path="/profile/:userId">{() => <AuthGuard><UserProfile /></AuthGuard>}</Route>
       <Route component={NotFound} />
     </Switch>
     </Suspense>

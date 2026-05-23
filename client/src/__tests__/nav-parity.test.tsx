@@ -10,6 +10,13 @@ import {
   FOOTER_MORE_EXTRA,
 } from "@/config/navigation";
 
+// Empire Doctrine v1.0.1 nav parity:
+//   • Desktop header surfaces exactly NAV_PRIMARY (five items).
+//   • Desktop header has NO More dropdown (collapsed in the Foundation Reset).
+//   • Mobile sheet exposes NAV_PRIMARY + NAV_MORE.
+//   • Footer's column grid exposes NAV_PRIMARY + NAV_MORE (any column).
+//   • Mobile "More" set == Footer "More" set (label/href agreement).
+
 vi.mock("@/contexts/supabase-auth-context", () => ({
   useSupabaseAuth: () => ({
     user: null,
@@ -20,13 +27,8 @@ vi.mock("@/contexts/supabase-auth-context", () => ({
   SupabaseAuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-vi.mock("@/components/command-palette", () => ({
-  CommandPalette: () => null,
-}));
-
-vi.mock("@/components/theme-toggle", () => ({
-  ThemeToggle: () => null,
-}));
+vi.mock("@/components/command-palette", () => ({ CommandPalette: () => null }));
+vi.mock("@/components/theme-toggle", () => ({ ThemeToggle: () => null }));
 
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
@@ -36,9 +38,7 @@ function renderWithRouter(ui: React.ReactElement, path = "/") {
   return render(<Router hook={hook}>{ui}</Router>);
 }
 
-// Radix dropdown / dialog triggers open on pointerdown, and JSDOM doesn't
-// implement pointer capture or scrollIntoView. Augment the prototype so
-// userEvent's pointer events don't blow up Radix internals.
+// Radix triggers use pointer events that jsdom doesn't fully implement.
 interface PointerCapableElement {
   hasPointerCapture?: (pointerId: number) => boolean;
   releasePointerCapture?: (pointerId: number) => void;
@@ -62,23 +62,19 @@ beforeEach(() => {
 
 const user = () => userEvent.setup({ pointerEventsCheck: 0 });
 
-describe("Navigation parity (header / mobile sheet / footer)", () => {
-  it("desktop header exposes the canonical NAV_PRIMARY entries", () => {
+describe("Navigation parity (Empire Doctrine v1.0.1)", () => {
+  it("desktop header exposes exactly the five NAV_PRIMARY entries", () => {
     renderWithRouter(<Navigation />);
+    expect(NAV_PRIMARY).toHaveLength(5);
     for (const item of NAV_PRIMARY) {
-      const link = screen.getByTestId(`link-nav-${item.label.toLowerCase()}`);
+      const link = screen.getByTestId(`link-nav-${slugify(item.label)}`);
       expect(link.getAttribute("href")).toBe(item.href);
     }
   });
 
-  it("desktop header dropdown exposes the canonical NAV_MORE entries", async () => {
+  it("desktop header has no More dropdown", () => {
     renderWithRouter(<Navigation />);
-    await user().click(screen.getByTestId("button-nav-more"));
-    for (const item of NAV_MORE) {
-      const link = await screen.findByTestId(`link-nav-more-${slugify(item.label)}`);
-      const anchor = link.closest("a");
-      expect(anchor?.getAttribute("href")).toBe(item.href);
-    }
+    expect(screen.queryByTestId("button-nav-more")).toBeNull();
   });
 
   it("mobile sheet exposes both NAV_PRIMARY and NAV_MORE entries", async () => {
@@ -86,7 +82,7 @@ describe("Navigation parity (header / mobile sheet / footer)", () => {
     await user().click(screen.getByTestId("button-mobile-menu"));
 
     for (const item of NAV_PRIMARY) {
-      const links = await screen.findAllByTestId(`link-nav-${item.label.toLowerCase()}`);
+      const links = await screen.findAllByTestId(`link-nav-${slugify(item.label)}`);
       expect(links.length).toBeGreaterThan(0);
       links.forEach((l) => expect(l.getAttribute("href")).toBe(item.href));
     }
@@ -97,12 +93,9 @@ describe("Navigation parity (header / mobile sheet / footer)", () => {
     }
   });
 
-  it("footer exposes NAV_PRIMARY in Explore and NAV_MORE (+ extra) in More", () => {
+  it("footer surfaces NAV_PRIMARY (any column) and NAV_MORE (+ extras)", () => {
     renderWithRouter(<Footer />);
     for (const item of NAV_PRIMARY) {
-      // MarketFlow has a second occurrence in the legal row, so allow
-      // multiple matches and assert that at least one points at the right
-      // href (and they all agree).
       const links = screen.getAllByTestId(`link-footer-${slugify(item.label)}`);
       expect(links.length).toBeGreaterThan(0);
       links.forEach((link) => {
@@ -117,20 +110,9 @@ describe("Navigation parity (header / mobile sheet / footer)", () => {
     }
   });
 
-  it("header dropdown, mobile sheet, and footer all expose the same More label/href set", async () => {
-    // 1. Header dropdown
+  it("mobile More set and footer More set agree on label + href", async () => {
     renderWithRouter(<Navigation />);
-    const u = user();
-    await u.click(screen.getByTestId("button-nav-more"));
-    const headerMore = new Set<string>();
-    for (const item of NAV_MORE) {
-      const link = await screen.findByTestId(`link-nav-more-${slugify(item.label)}`);
-      const anchor = link.closest("a");
-      headerMore.add(`${item.label}|${anchor?.getAttribute("href")}`);
-    }
-
-    // 2. Mobile sheet "More" group (same Navigation render)
-    await u.click(screen.getByTestId("button-mobile-menu"));
+    await user().click(screen.getByTestId("button-mobile-menu"));
     const mobileMore = new Set<string>();
     for (const item of NAV_MORE) {
       const link = await screen.findByTestId(`link-mobile-${slugify(item.label)}`);
@@ -138,7 +120,6 @@ describe("Navigation parity (header / mobile sheet / footer)", () => {
     }
     cleanup();
 
-    // 3. Footer "More" column (filtered to the canonical NAV_MORE subset)
     renderWithRouter(<Footer />);
     const footerMore = new Set<string>();
     for (const item of NAV_MORE) {
@@ -147,8 +128,7 @@ describe("Navigation parity (header / mobile sheet / footer)", () => {
       footerMore.add(`${item.label}|${anchor?.getAttribute("href")}`);
     }
 
-    expect(headerMore).toEqual(mobileMore);
-    expect(headerMore).toEqual(footerMore);
-    expect(headerMore.size).toBe(NAV_MORE.length);
+    expect(mobileMore).toEqual(footerMore);
+    expect(mobileMore.size).toBe(NAV_MORE.length);
   });
 });

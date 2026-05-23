@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Pegasus DreamScapes mark">
+  <circle cx="60" cy="60" r="58" fill="#1A2332"/>
+  <g fill="none" stroke="#C87A3A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30 84 L60 28 L90 84" />
+    <path d="M42 84 L60 50 L78 84" />
+    <circle cx="60" cy="84" r="3" fill="#C87A3A"/>
+  </g>
+  <text x="60" y="108" text-anchor="middle" fill="#D4CFC4" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600" letter-spacing="0.22em">PEGASUS</text>
+</svg>

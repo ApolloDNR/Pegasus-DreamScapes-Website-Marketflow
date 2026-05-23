@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 120" role="img" aria-label="Pegasus DreamScapes">
+  <defs>
+    <style>
+      .word { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
+      .small { font-family: 'Inter', system-ui, sans-serif; font-weight: 600; letter-spacing: 0.26em; }
+    </style>
+  </defs>
+  <g fill="#1A2332">
+    <text x="0" y="62" class="word" font-size="56">Pegasus DreamScapes</text>
+  </g>
+  <g fill="#C87A3A">
+    <text x="2" y="100" class="small" font-size="14">THE DEAL ARCHITECT</text>
+    <rect x="540" y="46" width="120" height="2"/>
+  </g>
+</svg>

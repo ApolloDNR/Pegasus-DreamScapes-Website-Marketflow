@@ -123,7 +123,7 @@ function ContactRoutingSection() {
       title: "Have a property?",
       desc: "Submit it through the structured intake. Reviewed and routed within 24 business hours.",
       cta: "Submit a Property",
-      href: "/sell",
+      href: "/submit",
     },
     {
       icon: Briefcase,
@@ -131,7 +131,7 @@ function ContactRoutingSection() {
       title: "Partner inquiry?",
       desc: "Start a private conversation about deal-specific structures and active opportunities.",
       cta: "Partner Inquiry",
-      href: "/invest",
+      href: "/capital",
     },
     {
       icon: MessageSquare,

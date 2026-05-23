@@ -9,12 +9,20 @@ interface SEOProps {
   noTagline?: boolean;
 }
 
-const BRAND = "Pegasus DreamScapes Corp.";
+// Empire Doctrine v1.0.1 title pattern:
+//   [Page Title] · Pegasus DreamScapes · The Deal Architect
+const BRAND = "Pegasus DreamScapes";
 const TAGLINE = "The Deal Architect";
 const BASE_TITLE = `${BRAND} · ${TAGLINE}`;
 const BASE_DESCRIPTION =
-  "Pegasus DreamScapes Corp. is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a serious review.";
+  "Pegasus DreamScapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
 const SITE_URL = "https://pegasusdreamscapes.com";
+// Empire Doctrine v1.0.1 — staging/launch flag. While the Foundation
+// Reset is draft, indexing is globally off. A future production env
+// will flip `VITE_ALLOW_INDEX === "true"` to permit per-page opt-ins.
+const STAGING_ALLOWS_INDEX =
+  typeof import.meta !== "undefined" &&
+  (import.meta as any).env?.VITE_ALLOW_INDEX === "true";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.svg`;
 
 function setMeta(selector: string, attr: "name" | "property", key: string, value: string) {
@@ -48,7 +56,13 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     document.title = fullTitle;
 
     setMeta('meta[name="description"]', "name", "description", desc);
-    setMeta('meta[name="robots"]', "name", "robots", noIndex ? "noindex, nofollow" : "index, follow");
+    // Empire Doctrine v1.0.1 — Foundation Reset is still draft. Default
+    // to noindex,nofollow site-wide; per-page opt-in via noIndex={false}
+    // is still honored so launch-ready pages can selectively re-enable
+    // indexing without rewriting the hook contract. Pages that pass
+    // noIndex={true} (admin, dashboards, drafts) always stay noindex.
+    const indexable = noIndex === false && STAGING_ALLOWS_INDEX;
+    setMeta('meta[name="robots"]', "name", "robots", indexable ? "index, follow" : "noindex, nofollow");
 
     setMeta('meta[property="og:title"]', "property", "og:title", fullTitle);
     setMeta('meta[property="og:description"]', "property", "og:description", desc);
