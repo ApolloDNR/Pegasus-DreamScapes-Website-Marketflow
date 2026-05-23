@@ -48,7 +48,7 @@ export function CookieConsent() {
         className="fixed inset-x-0 bottom-0 z-[60] px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-none"
         data-testid="cookie-consent-banner"
       >
-        <div className="pointer-events-auto mx-auto max-w-2xl rounded-md border border-border bg-card shadow-2xl">
+        <div className="pointer-events-auto mx-auto max-w-2xl rounded-md border border-border bg-card shadow-md">
           <div className="p-5 sm:p-6 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>

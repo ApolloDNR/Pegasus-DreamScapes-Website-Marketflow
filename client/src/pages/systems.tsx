@@ -132,9 +132,9 @@ export default function SystemsPage() {
               return (
                 <StaggerItem key={sys.name}>
                   <Wrapper>
-                    <article className="h-full bg-card border border-border rounded-2xl p-7 transition-all hover:border-primary/40 hover:shadow-lg">
+                    <article className="h-full bg-card border border-border rounded-lg p-7 transition-all hover:border-primary/40 hover:shadow-lg">
                       <div className="flex items-start justify-between gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center text-primary">
                           <Icon className="w-6 h-6" />
                         </div>
                         <span
