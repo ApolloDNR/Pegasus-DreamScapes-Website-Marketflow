@@ -1,9 +1,12 @@
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
+import { trackCtaClick } from "@/lib/analytics";
 import { Building2, Hammer, DollarSign, Banknote, Network, MessageSquare } from "lucide-react";
 
 // Empire Doctrine v1.0.1 — Apollo's personal QR landing.
 // Six routing buttons. Public Peggy chat is explicitly excluded (v1.1).
+// Wave 3: 56px+ tap targets, visible :active/:focus-visible state, and
+// every click is attributed via trackCtaClick(source, label).
 
 const ROUTES = [
   {
@@ -68,18 +71,27 @@ export default function ConnectPage() {
       <div className="max-w-3xl mx-auto px-6 lg:px-12 space-y-3">
         {ROUTES.map((r) => {
           const Icon = r.icon;
+          const slug = r.label.toLowerCase().split(" ").slice(0, 4).join("-");
           return (
             <Link key={r.href} href={r.href}>
               <a
-                className="block rounded-md border border-border bg-card hover:border-primary hover:bg-primary/[0.03] transition-colors p-5 sm:p-6 group"
-                data-testid={`link-connect-${r.label.toLowerCase().split(" ").slice(0, 4).join("-")}`}
+                onClick={() => trackCtaClick("connect", r.label, r.href)}
+                className="
+                  group block min-h-[56px] rounded-md border border-border bg-card
+                  px-5 sm:px-6 py-4 sm:py-5
+                  transition-colors transition-transform duration-150
+                  hover:border-primary hover:bg-primary/[0.04]
+                  active:scale-[0.99] active:bg-primary/[0.08] active:border-primary
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                "
+                data-testid={`link-connect-${slug}`}
               >
                 <div className="flex items-start gap-5">
-                  <span className="shrink-0 w-10 h-10 rounded-sm bg-primary/10 text-primary flex items-center justify-center">
-                    <Icon className="w-5 h-5" />
+                  <span className="shrink-0 w-12 h-12 rounded-sm bg-primary/10 text-primary flex items-center justify-center group-active:bg-primary/20 transition-colors">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
                   </span>
-                  <div className="flex-1">
-                    <p className="font-serif text-xl text-foreground group-hover:text-primary transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-serif text-xl text-foreground group-hover:text-primary group-active:text-primary transition-colors">
                       {r.label}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">{r.sub}</p>

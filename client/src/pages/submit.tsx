@@ -20,7 +20,8 @@ import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { SuccessView } from "@/components/success-view";
+import { Loader2 } from "lucide-react";
 
 // Empire Doctrine v1.0.1 — canonical submission page.
 // Three groups: Property / Situation / Contact.
@@ -149,7 +150,34 @@ export default function SubmitPage() {
   });
 
   if (submitted) {
-    return <Confirmation intent={form.getValues("intent")} />;
+    return (
+      <div className="min-h-screen bg-background pt-28 pb-20">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12">
+          <SuccessView
+            formType="submit"
+            referenceTag={form.getValues("intent")}
+            onAddAnother={() => {
+              form.reset({
+                propertyAddress: "",
+                propertyType: "sfr",
+                condition: "moderate",
+                intent: initialIntent,
+                timeline: "exploratory",
+                situation: "",
+                name: "",
+                email: "",
+                phone: "",
+                hp_company: "",
+                consent: undefined as unknown as true,
+              });
+              formMountedAt.current = Date.now();
+              setSubmitted(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -431,26 +459,3 @@ function FormGroup({
   );
 }
 
-function Confirmation({ intent }: { intent: SubmitFormValues["intent"] }) {
-  return (
-    <div className="min-h-screen bg-background pt-32 pb-24">
-      <div className="max-w-2xl mx-auto px-6 lg:px-12 text-center">
-        <CheckCircle2 className="w-14 h-14 text-primary mx-auto mb-6" />
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          Submission received
-        </p>
-        <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-foreground mb-6">
-          Thank you. Your submission is in front of Apollo.
-        </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed mb-4" data-testid="text-submit-confirmation">
-          Most Strategy Snapshots are reviewed within 5 business days. You'll hear from Apollo
-          directly with the structural read on your property and the next step, even if the
-          answer is that Pegasus is not the right fit and we are routing you to someone who is.
-        </p>
-        <p className="text-sm text-muted-foreground/85">
-          Reference intent: <span className="font-supporting uppercase tracking-wider text-primary">{intent}</span>
-        </p>
-      </div>
-    </div>
-  );
-}

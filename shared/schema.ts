@@ -1783,6 +1783,31 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
 
+// Empire Doctrine v1.0.1 Wave 3 — CTA click attribution.
+// Lightweight first-party event store for primary surface CTAs. Distinct
+// from form-submission analytics: this captures the click intent (which
+// CTA was pressed, where, what path it pointed to) so /admin/cta-events
+// can show 30-day funnel health independent of Plausible.
+export const ctaEvents = pgTable("cta_events", {
+  id: serial("id").primaryKey(),
+  source: varchar("source", { length: 100 }).notNull(),
+  label: varchar("label", { length: 200 }).notNull(),
+  href: varchar("href", { length: 500 }),
+  path: varchar("path", { length: 500 }),
+  referrer: varchar("referrer", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_cta_events_created").on(table.createdAt),
+  index("idx_cta_events_source_label").on(table.source, table.label),
+]);
+
+export const insertCtaEventSchema = createInsertSchema(ctaEvents).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertCtaEvent = z.infer<typeof insertCtaEventSchema>;
+export type CtaEvent = typeof ctaEvents.$inferSelect;
+
 // ============================================
 // PEGGY AI CONVERSATIONS
 // ============================================

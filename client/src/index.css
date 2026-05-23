@@ -61,8 +61,12 @@
   --muted-foreground: 213 30% 28%;
   --accent: 27 56% 48%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 65% 50%;
+  /* Wave 3 — brand-tuned error color. Deeper, slightly warmer red that
+     sits beside copper without clashing and clears WCAG AA on cream. */
+  --destructive: 5 70% 38%;
   --destructive-foreground: 0 0% 100%;
+  --form-error: var(--destructive);
+  --form-error-foreground: var(--destructive-foreground);
   --input: 38 22% 90%;
   --ring: 27 56% 48%;
   --chart-1: 27 56% 50%;
@@ -182,8 +186,11 @@
   --muted-foreground: 38 25% 78%;
   --accent: 27 60% 56%;
   --accent-foreground: 214 55% 11%;
-  --destructive: 0 72% 50%;
+  /* Wave 3 — brand-tuned error color (dark mode variant). */
+  --destructive: 5 72% 52%;
   --destructive-foreground: 0 0% 98%;
+  --form-error: var(--destructive);
+  --form-error-foreground: var(--destructive-foreground);
   --input: 213 28% 22%;
   --ring: 27 60% 56%;
   --chart-1: 26 65% 58%;

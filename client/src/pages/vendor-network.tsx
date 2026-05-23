@@ -23,6 +23,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { type InsertLead } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
+import { SuccessView } from "@/components/success-view";
 import {
   Hammer,
   HardHat,
@@ -422,24 +423,14 @@ function VendorFormSection() {
         </ScrollReveal>
 
         {submitted ? (
-          <CardSurface className="p-10 lg:p-14 border-border/50 shadow-md text-center">
-            <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
-            <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
-            <h3 className="font-serif text-3xl font-semibold mb-5 tracking-tight" data-testid="text-vendor-success">
-              Application in.
-            </h3>
-            <p className="text-muted-foreground leading-relaxed">
-              We review every vendor intake by hand. If there's a fit on a current or upcoming scope, we'll reach out directly.
-            </p>
-            <div className="mt-8">
-              <Link href="/projects">
-                <Button variant="outline" data-testid="button-vendor-projects">
-                  See current projects
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardSurface>
+          <SuccessView
+            formType="vendor"
+            onAddAnother={() => {
+              form.reset();
+              setSubmitted(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
         ) : (
           <CardSurface className="p-8 lg:p-10 border-border/50 shadow-md">
             <Form {...form}>

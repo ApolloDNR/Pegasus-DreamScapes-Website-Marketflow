@@ -27,6 +27,7 @@ import {
   insertNotificationSchema,
   insertAdminAuditLogSchema,
   insertLeadSchema,
+  insertCtaEventSchema,
   insertSavedAnalysisSchema,
   insertWholesaleDealOfferSchema,
   insertFaqSchema,
@@ -322,6 +323,54 @@ export async function registerRoutes(
 
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
+
+  // ─── Empire Doctrine v1.0.1 Wave 3 — CTA attribution ────────────────
+  // Public POST /api/events captures primary-surface CTA clicks. Rate-
+  // limited per-IP, payload validated, errors swallowed so a failed
+  // beacon never blocks navigation.
+  app.post(
+    "/api/events",
+    rateLimit(120, 60_000),
+    async (req: Request, res: Response) => {
+      try {
+        const parsed = insertCtaEventSchema.safeParse(req.body);
+        if (!parsed.success) {
+          // Swallow malformed payloads — telemetry must never surface a
+          // client-visible failure or block navigation.
+          return res.status(204).end();
+        }
+        await storage.createCtaEvent(parsed.data);
+        res.status(204).end();
+      } catch (err) {
+        console.error("[cta_events] failed to record", err);
+        res.status(204).end();
+      }
+    },
+  );
+
+  // Admin-only — last 30 days of CTA events, grouped and raw.
+  app.get(
+    "/api/hq/cta-events",
+    isHybridAuthenticated,
+    async (req: any, res: Response) => {
+      try {
+        const userEmail = (
+          req.user?.claims?.email ||
+          req.user?.email ||
+          req.supabaseUser?.email ||
+          ""
+        ).toLowerCase();
+        if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+          return res.status(403).json({ message: "Forbidden" });
+        }
+        const events = await storage.getCtaEvents(30);
+        res.json(events);
+      } catch (err) {
+        console.error("[cta_events] failed to load", err);
+        res.status(500).json({ message: "Failed to load events" });
+      }
+    },
+  );
 
   // Public config endpoint - exposes only public/safe configuration
   app.get('/api/config/supabase', (_req, res) => {

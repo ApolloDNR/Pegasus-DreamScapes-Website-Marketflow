@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackCtaClick } from "@/lib/analytics";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -1896,7 +1896,13 @@ function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.05 }}
             >
-              <a href="/submit" onClick={() => trackEvent("cta_click", { id: "hero_primary", to: "/submit" })}>
+              <a
+                href="/submit"
+                onClick={() => {
+                  trackEvent("cta_click", { id: "hero_primary", to: "/submit" });
+                  trackCtaClick("home_hero", heroCtaPrimary, "/submit");
+                }}
+              >
                 <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_primary" fallback="Start a Strategy Review" />

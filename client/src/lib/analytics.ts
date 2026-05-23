@@ -83,3 +83,50 @@ export function trackEvent(name: string, props?: Record<string, unknown>): void 
     /* noop */
   }
 }
+
+// Empire Doctrine v1.0.1 Wave 3 — first-party CTA attribution.
+//
+// `trackCtaClick` is the canonical wire for primary-surface CTAs ("Submit
+// a Property", "Start a Strategy Review", "Request Beta Access",
+// "Connect"). It does two things:
+//   1. Mirrors the click into Plausible (consent-gated, like trackEvent).
+//   2. Posts to /api/events for the first-party cta_events store the
+//      admin /admin/cta-events surface reads from. The POST is fire-and-
+//      forget with keepalive so it survives navigation, and is NOT gated
+//      on analytics consent — it is first-party operational telemetry
+//      (no cookies, no PII), the same shape as a server access log entry.
+export function trackCtaClick(
+  source: string,
+  label: string,
+  href?: string,
+): void {
+  if (typeof window === "undefined") return;
+  // 1. Plausible mirror (consent-gated).
+  trackEvent("cta_click", { source, label, href });
+  // 2. First-party event beacon.
+  try {
+    const path =
+      typeof window.location !== "undefined" ? window.location.pathname : "";
+    const referrer =
+      typeof document !== "undefined" ? document.referrer || "" : "";
+    const body = JSON.stringify({ source, label, href, path, referrer });
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.sendBeacon === "function"
+    ) {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon("/api/events", blob);
+      return;
+    }
+    fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    }).catch(() => {
+      /* swallow — never block navigation on telemetry */
+    });
+  } catch {
+    /* noop */
+  }
+}

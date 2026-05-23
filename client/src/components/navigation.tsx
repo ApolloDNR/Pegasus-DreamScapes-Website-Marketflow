@@ -41,6 +41,7 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import logoImage from "@/assets/brand/pegasus-mark-full.png";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { trackCtaClick } from "@/lib/analytics";
 import { CommandPalette } from "./command-palette";
 import {
   NAV_PRIMARY,
@@ -532,7 +533,11 @@ export function Navigation() {
                 />
               </>
             ) : (
-              <Link href={PRIMARY_CTA.href} className="hidden sm:block">
+              <Link
+                href={PRIMARY_CTA.href}
+                className="hidden sm:block"
+                onClick={() => trackCtaClick("nav_desktop", PRIMARY_CTA.label, PRIMARY_CTA.href)}
+              >
                 <Button
                   size="sm"
                   className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
@@ -622,7 +627,13 @@ export function Navigation() {
                 </nav>
 
                 <div className="pt-6 border-t border-[hsl(var(--rule))]">
-                  <Link href={PRIMARY_CTA.href} onClick={() => setMobileOpen(false)}>
+                  <Link
+                    href={PRIMARY_CTA.href}
+                    onClick={() => {
+                      trackCtaClick("nav_mobile", PRIMARY_CTA.label, PRIMARY_CTA.href);
+                      setMobileOpen(false);
+                    }}
+                  >
                     <Button
                       className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
                       data-testid="button-mobile-cta"

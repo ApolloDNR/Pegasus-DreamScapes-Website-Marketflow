@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
+import { SuccessView } from "@/components/success-view";
 
 const contactFormSchema = insertContactSchema.extend({
   name: z.string().min(2, "Please enter your full name"),
@@ -277,16 +278,14 @@ function ContactFormSection() {
 
         <ScrollReveal className="lg:col-span-7" delay={0.15}>
           {submitted ? (
-            <CardSurface className="p-10 lg:p-14 bg-background text-center">
-              <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
-              <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
-              <h3 className="font-serif text-3xl font-semibold mb-5 tracking-tight" data-testid="text-contact-success">
-                Thank you.
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Your message is in. A real person will read it and follow up within 1–2 business days.
-              </p>
-            </CardSurface>
+            <SuccessView
+              formType="contact"
+              onAddAnother={() => {
+                form.reset();
+                setSubmitted(false);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
           ) : (
             <CardSurface className="p-8 lg:p-10 bg-background">
               <Form {...form}>

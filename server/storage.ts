@@ -10,7 +10,7 @@ import {
   announcements, notifications, investorActivity,
   investorWantedDeals, userReviews, userStats, dealNegotiations, wholesaleDealDocuments, dealAnalyzerResults,
   dealMessages,
-  leads, peggyConversations, peggyMessages, savedAnalyses, analysisSendHistory, wholesaleDealOffers, jvRequests,
+  leads, ctaEvents, peggyConversations, peggyMessages, savedAnalyses, analysisSendHistory, wholesaleDealOffers, jvRequests,
   userReputation, userBadges, adminAuditLog,
   listings, listingInquiries,
   marketflowOffers, marketflowNegotiations, negotiationMessages,
@@ -56,6 +56,7 @@ import {
   type DealAnalyzerResult, type InsertDealAnalyzerResult,
   type DealMessage, type InsertDealMessage,
   type Lead, type InsertLead,
+  type CtaEvent, type InsertCtaEvent,
   type PeggyConversation, type InsertPeggyConversation,
   type PeggyMessage, type InsertPeggyMessage,
   type SavedAnalysis, type InsertSavedAnalysis,
@@ -434,6 +435,10 @@ export interface IStorage {
   updateLead(id: number, data: Partial<InsertLead>): Promise<Lead | undefined>;
   updateLeadStage(id: number, stage: string): Promise<Lead | undefined>;
   assignLead(id: number, assignedTo: string): Promise<Lead | undefined>;
+
+  // CTA Events (Empire Doctrine v1.0.1 Wave 3)
+  createCtaEvent(event: InsertCtaEvent): Promise<CtaEvent>;
+  getCtaEvents(sinceDays?: number): Promise<CtaEvent[]>;
   
   // Peggy AI Conversations
   createPeggyConversation(conversation: InsertPeggyConversation): Promise<PeggyConversation>;
@@ -2361,6 +2366,20 @@ export class DatabaseStorage implements IStorage {
   async createLead(lead: InsertLead): Promise<Lead> {
     const [created] = await db.insert(leads).values(lead).returning();
     return created;
+  }
+
+  async createCtaEvent(event: InsertCtaEvent): Promise<CtaEvent> {
+    const [created] = await db.insert(ctaEvents).values(event).returning();
+    return created;
+  }
+
+  async getCtaEvents(sinceDays: number = 30): Promise<CtaEvent[]> {
+    const since = new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000);
+    return db
+      .select()
+      .from(ctaEvents)
+      .where(gte(ctaEvents.createdAt, since))
+      .orderBy(desc(ctaEvents.createdAt));
   }
 
   async getLeads(filters?: { leadType?: string; stage?: string; assignedTo?: string }): Promise<Lead[]> {

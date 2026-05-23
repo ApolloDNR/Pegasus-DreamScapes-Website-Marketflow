@@ -25,7 +25,8 @@ import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { SuccessView } from "@/components/success-view";
 
 const accessSchema = z.object({
   name: z.string().min(2),
@@ -101,15 +102,23 @@ export default function MarketflowAccessPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background pt-32 pb-24">
-        <div className="max-w-xl mx-auto px-6 lg:px-12 text-center">
-          <CheckCircle2 className="w-14 h-14 text-primary mx-auto mb-6" />
-          <h1 className="font-serif text-3xl font-semibold tracking-[-0.02em] text-foreground mb-4">
-            Request received.
-          </h1>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            We will confirm the introduction and reach out within 48 business hours.
-          </p>
+      <div className="min-h-screen bg-background pt-28 pb-20">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12">
+          <SuccessView
+            formType="marketflow_access"
+            onAddAnother={() => {
+              form.reset({
+                name: "",
+                email: "",
+                role: "operator",
+                introducedBy: "",
+                notes: "",
+              });
+              formMountedAt.current = Date.now();
+              setSubmitted(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
         </div>
       </div>
     );

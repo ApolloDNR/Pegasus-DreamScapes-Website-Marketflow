@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { LegalDisclaimer } from "@/components/legal-disclaimer";
 import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+import { trackCtaClick } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import {
   Loader2,
@@ -133,7 +134,10 @@ function HeroSection() {
               </ul>
             </div>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/signup">
+              <Link
+                href="/marketflow/access"
+                onClick={() => trackCtaClick("marketflow_landing", "Request Beta Access", "/marketflow/access")}
+              >
                 <Button size="lg" className="px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-white hover:bg-primary/90" data-testid="button-join-marketplace">
                   Request Beta Access
                   <ArrowRight className="w-4 h-4 ml-2" />
