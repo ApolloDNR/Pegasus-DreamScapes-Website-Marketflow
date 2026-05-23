@@ -57,9 +57,9 @@ export default function SnapshotPropertyPage() {
 
   useSEO({
     title: addr
-      ? `Strategy Snapshot · ${addr} · Pegasus Dreamscapes.`
-      : "Strategy Snapshot · Pegasus Dreamscapes.",
-    description: topLane?.headline ?? "A preliminary structural read by Pegasus Dreamscapes.",
+      ? `Strategy Snapshot · ${addr} · Pegasus DreamScapes.`
+      : "Strategy Snapshot · Pegasus DreamScapes.",
+    description: topLane?.headline ?? "A preliminary structural read by Pegasus DreamScapes.",
     image: token ? `/og/snapshot/${token}` : undefined,
   });
 

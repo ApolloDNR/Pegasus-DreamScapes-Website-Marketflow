@@ -187,7 +187,7 @@ export default function SnapshotCalc() {
   useSEO({
     title: "Strategy Snapshot: Calculator",
     description:
-      "A read-only strategy snapshot from the Pegasus Dreamscapes calculator suite.",
+      "A read-only strategy snapshot from the Pegasus DreamScapes calculator suite.",
     noIndex: true,
   });
 

@@ -418,7 +418,7 @@ function VendorFormSection() {
         </ScrollReveal>
 
         {submitted ? (
-          <div className="p-10 lg:p-14 bg-card rounded-2xl border border-border/50 shadow-xl text-center">
+          <div className="p-10 lg:p-14 bg-card rounded-lg border border-border/50 shadow-md text-center">
             <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
             <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
             <h3 className="font-serif text-3xl font-semibold mb-5 tracking-tight" data-testid="text-vendor-success">
@@ -437,7 +437,7 @@ function VendorFormSection() {
             </div>
           </div>
         ) : (
-          <div className="p-8 lg:p-10 bg-card rounded-2xl border border-border/50 shadow-xl">
+          <div className="p-8 lg:p-10 bg-card rounded-lg border border-border/50 shadow-md">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((d) => mutation.mutate(d))}

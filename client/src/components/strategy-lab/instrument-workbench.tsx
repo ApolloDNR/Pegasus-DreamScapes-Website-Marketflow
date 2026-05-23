@@ -260,7 +260,7 @@ export function InstrumentWorkbench(props: InstrumentWorkbenchProps) {
             className="text-[10px] tracking-[0.22em] uppercase"
             style={{ fontFamily: FONT_SUP, color: MUTED }}
           >
-            Pegasus Dreamscapes Corp · Private network · Apollo · 925-744-8525
+            Pegasus DreamScapes Corp · Private network · Apollo · 925-744-8525
           </div>
         </div>
         <div

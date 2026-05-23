@@ -527,7 +527,7 @@ export async function sendSavedAnalysisPDFEmail(params: {
   const safeNote = (params.note ?? "").trim();
   const fromLine = params.senderName
     ? `${params.senderName}${params.senderEmail ? ` (${params.senderEmail})` : ""}`
-    : "a Pegasus Dreamscapes user";
+    : "a Pegasus DreamScapes user";
   const subjectFrom = params.senderName ? ` from ${params.senderName}` : "";
   const subject = `Strategy Analysis: ${params.analysisName}${subjectFrom}`;
 
@@ -551,7 +551,7 @@ export async function sendSavedAnalysisPDFEmail(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; background:#ffffff;">
       <div style="background:#0d1b2d;padding:28px 24px;text-align:center;">
-        <h1 style="color:#f6efe4;margin:0;font-size:22px;letter-spacing:0.04em;">Pegasus Dreamscapes</h1>
+        <h1 style="color:#f6efe4;margin:0;font-size:22px;letter-spacing:0.04em;">Pegasus DreamScapes</h1>
         <p style="color:#c77a3a;margin:6px 0 0;font-size:11px;letter-spacing:0.28em;text-transform:uppercase;">Strategy Analysis Attached</p>
       </div>
 
@@ -578,7 +578,7 @@ export async function sendSavedAnalysisPDFEmail(params: {
       </div>
 
       <div style="padding:18px;text-align:center;background:#0d1b2d;color:#a8b0bc;font-size:11px;">
-        <p style="margin:0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
+        <p style="margin:0;">Pegasus DreamScapes Corp &copy; ${new Date().getFullYear()}</p>
         <p style="margin:6px 0 0;">Where others see impossible, we see a path.</p>
       </div>
     </div>

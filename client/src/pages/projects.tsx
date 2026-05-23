@@ -139,7 +139,7 @@ function ProjectsGrid() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="bg-card rounded-xl border border-border/40 overflow-hidden">
+              <div key={i} className="bg-card rounded-md border border-border/40 overflow-hidden">
                 <div className="aspect-[16/10] bg-muted animate-skeleton" />
                 <div className="p-7 space-y-4">
                   <div className="h-4 w-full bg-muted rounded animate-skeleton" />
@@ -321,7 +321,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
   return (
     <Link href={`/projects/${project.slug}`}>
       <motion.div
-        className="group block h-full bg-card rounded-xl border border-border/40 hover:border-primary/30 overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-2xl"
+        className="group block h-full bg-card rounded-md border border-border/40 hover:border-primary/30 overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md"
         whileHover={{ y: -6 }}
         transition={{ duration: 0.3 }}
         data-testid={`card-project-${index}`}

@@ -88,7 +88,7 @@ function addFooter(doc: PDFKit.PDFDocument): void {
     .fillColor(BRAND_COLORS.textMuted)
     .font("Helvetica")
     .text(
-      `Generated ${new Date().toLocaleDateString()}  |  Pegasus Dreamscapes Corp  |  apollo@pegasusdreamscapes.com`,
+      `Generated ${new Date().toLocaleDateString()}  |  Pegasus DreamScapes Corp  |  apollo@pegasusdreamscapes.com`,
       50,
       pageHeight - 40,
       { align: "center", width: doc.page.width - 100 }
@@ -1143,7 +1143,7 @@ function snapshotPageHeader(doc: PDFKit.PDFDocument, kicker: string, title: stri
 // every page of the Strategy Snapshot PDF so the document is self-disclosing
 // even when a single page is shared in isolation.
 const SNAPSHOT_FOOTER =
-  "Preliminary Strategy Snapshot · Pegasus Dreamscapes · For analysis only. Human review required before any offer or execution decision.";
+  "Preliminary Strategy Snapshot · Pegasus DreamScapes · For analysis only. Human review required before any offer or execution decision.";
 
 function snapshotPageFooter(doc: PDFKit.PDFDocument, _legacyLabel?: string): void {
   void _legacyLabel; // legacy per-page label retired — footer is canonical now.
@@ -1355,7 +1355,7 @@ export async function generateStrategySnapshotPDF(
     const disclaimer = [
       "This Property Strategy Snapshot is a preliminary, directional read of structural paths and economics. It is not an offer, valuation, appraisal, financing commitment, or guarantee. It is not investment advice and not an offer of guaranteed returns or principal protection.",
       "",
-      "Pegasus Dreamscapes Corp reviews every property submitted through the Strategy Lab. Not every property results in an offer. Numbers are illustrative and depend on the inputs you provided. Comp bands, ARV, and rent estimates are indicative only and require human verification.",
+      "Pegasus DreamScapes Corp reviews every property submitted through the Strategy Lab. Not every property results in an offer. Numbers are illustrative and depend on the inputs you provided. Comp bands, ARV, and rent estimates are indicative only and require human verification.",
       "",
       "No lead dies. Every property gets a serious review. Not every property gets an offer.",
     ];
@@ -1369,7 +1369,7 @@ export async function generateStrategySnapshotPDF(
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).strokeColor(BRAND_COLORS.accent).lineWidth(1).stroke();
     y += 14;
     doc.fontSize(10).fillColor(BRAND_COLORS.primary).font(bf("sansBold"))
-      .text("Pegasus Dreamscapes Corp · The Deal Architect", 50, y);
+      .text("Pegasus DreamScapes Corp · The Deal Architect", 50, y);
     y += 14;
     doc.fontSize(9).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
       .text("apollo@pegasusdreamscapes.com  ·  925-744-8525  ·  pegasusdreamscapes.com", 50, y);

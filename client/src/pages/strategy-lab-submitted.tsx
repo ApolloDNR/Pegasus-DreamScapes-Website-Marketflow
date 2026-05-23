@@ -17,7 +17,7 @@ export default function StrategyLabSubmittedPage() {
   const id = params.get("id");
 
   useSEO({
-    title: "Submission received. Pegasus Dreamscapes.",
+    title: "Submission received. Pegasus DreamScapes.",
     description: "Your Strategy Lab snapshot is in the review queue.",
     noIndex: true,
   });

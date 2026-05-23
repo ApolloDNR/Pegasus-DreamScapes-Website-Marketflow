@@ -90,10 +90,6 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
     icon: Mail,
     tagline: "Reach Apollo and the strategy desk directly.",
   },
-  "/disclosures": {
-    icon: FileText,
-    tagline: "What we do, what we don't, and how we operate.",
-  },
 };
 
 function isItemActive(item: NavItem, location: string): boolean {
@@ -453,7 +449,7 @@ export function Navigation() {
               <DropdownMenuContent
                 align="end"
                 sideOffset={12}
-                className="w-[380px] p-0 overflow-hidden rounded-2xl border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background"
+                className="w-[380px] p-0 overflow-hidden rounded-lg border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background"
               >
                 {/* Editorial header */}
                 <div className="relative px-5 pt-5 pb-4 bg-gradient-to-b from-cream/70 to-cream/20 dark:from-white/[0.04] dark:to-transparent">
@@ -585,9 +581,15 @@ export function Navigation() {
                     ))}
                   </ul>
 
-                  <div className="mt-8 pt-6 border-t border-[hsl(var(--rule))]">
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--muted-text))] font-supporting font-semibold mb-3">More</p>
-                    <ul className="space-y-1">
+                  {/* Wave 2 — single "More" accordion mirroring desktop IA.
+                      Uses native <details> so children stay in DOM when
+                      collapsed (nav-parity test queries by testId). */}
+                  <details className="group mt-8 pt-6 border-t border-[hsl(var(--rule))]" data-testid="mobile-more-accordion">
+                    <summary className="flex items-center justify-between cursor-pointer list-none py-2 text-[11px] uppercase tracking-[0.28em] text-[hsl(var(--muted-text))] font-supporting font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm">
+                      <span>More</span>
+                      <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
+                    </summary>
+                    <ul className="space-y-1 pt-2">
                       {MORE_ITEMS.map((item) => (
                         <li key={item.href}>
                           <Link
@@ -614,7 +616,7 @@ export function Navigation() {
                         </li>
                       )}
                     </ul>
-                  </div>
+                  </details>
                 </nav>
 
                 <div className="pt-6 border-t border-[hsl(var(--rule))]">

@@ -15,7 +15,7 @@ type SystemCard = {
 
 const SYSTEMS: SystemCard[] = [
   {
-    name: "Pegasus Dreamscapes",
+    name: "Pegasus DreamScapes",
     status: "LIVE",
     icon: Building2,
     description: "Strategy-first real estate operating company built around Development, Investments, and Systems.",
@@ -86,7 +86,7 @@ const STATUS_STYLES: Record<Status, string> = {
 export default function SystemsPage() {
   useSEO({
     title: "Pegasus Systems — The operating infrastructure behind the company",
-    description: "Pegasus Dreamscapes is building a connected operating ecosystem for strategy-first real estate execution. Some tools are live today. Others are being developed from real operational needs inside the company.",
+    description: "Pegasus DreamScapes is building a connected operating ecosystem for strategy-first real estate execution. Some tools are live today. Others are being developed from real operational needs inside the company.",
   });
 
   return (
@@ -104,7 +104,7 @@ export default function SystemsPage() {
               The operating infrastructure behind the company.
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-              Pegasus Dreamscapes is building a connected operating ecosystem for strategy-first real estate execution.
+              Pegasus DreamScapes is building a connected operating ecosystem for strategy-first real estate execution.
               Some tools are live today. Others are being developed from real operational needs inside the company.
             </p>
           </header>

@@ -277,7 +277,7 @@ function BodySection({ project }: { project: Project }) {
                   <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
                   <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting" data-testid={`story-kicker-${block.kicker.toLowerCase()}`}>{block.kicker}</p>
                 </div>
-                <div className="relative rounded-2xl border border-border/40 bg-gradient-to-br from-navy to-charcoal p-8 lg:p-10 text-cream overflow-hidden">
+                <div className="relative rounded-lg border border-border/40 bg-gradient-to-br from-navy to-charcoal p-8 lg:p-10 text-cream overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cream/40 to-primary opacity-80" />
                   <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-4 tracking-tight">{block.heading}</h3>
                   <p className="text-base sm:text-lg text-cream/90 leading-relaxed">{block.body}</p>
@@ -350,7 +350,7 @@ function BodySection({ project }: { project: Project }) {
             <div className="lg:sticky lg:top-28 space-y-6">
               {propertyDetails.length > 0 && (
                 <ScrollReveal>
-                  <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-lg">
+                  <div className="bg-card rounded-lg border border-border/50 overflow-hidden shadow-lg">
                     <div className="px-7 py-6 border-b border-border/40">
                       <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1">The Asset</p>
                       <h3 className="font-serif text-2xl font-semibold tracking-tight">Property</h3>
@@ -372,7 +372,7 @@ function BodySection({ project }: { project: Project }) {
 
               {investmentMetrics.length > 0 && (
                 <ScrollReveal delay={0.1}>
-                  <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-lg">
+                  <div className="bg-card rounded-lg border border-border/50 overflow-hidden shadow-lg">
                     <div className="px-7 py-6 border-b border-border/40">
                       <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1">The Numbers</p>
                       <h3 className="font-serif text-2xl font-semibold tracking-tight">Project Economics</h3>
@@ -397,7 +397,7 @@ function BodySection({ project }: { project: Project }) {
               )}
 
               <ScrollReveal delay={0.2}>
-                <div className="relative p-8 rounded-2xl bg-gradient-to-br from-navy to-charcoal text-cream overflow-hidden">
+                <div className="relative p-8 rounded-lg bg-gradient-to-br from-navy to-charcoal text-cream overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cream to-primary opacity-80" />
                   <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">Next Project</p>
                   <h4 className="font-serif text-2xl font-semibold mb-3 tracking-tight">Have one to add to the record?</h4>
@@ -481,7 +481,7 @@ function ProjectSkeleton() {
           <div className="h-4 w-5/6 bg-muted rounded animate-skeleton" />
         </div>
         <div className="lg:col-span-5">
-          <div className="h-96 bg-muted rounded-2xl animate-skeleton" />
+          <div className="h-96 bg-muted rounded-lg animate-skeleton" />
         </div>
       </section>
     </div>

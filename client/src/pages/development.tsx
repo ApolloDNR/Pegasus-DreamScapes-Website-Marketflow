@@ -109,7 +109,7 @@ function HeroSection() {
               <Link href="/submit">
                 <Button
                   size="lg"
-                  className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-2xl shadow-black/20 w-full sm:w-auto"
+                  className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20 w-full sm:w-auto"
                   data-testid="button-development-strategy-review"
                 >
                   Start a Strategy Review

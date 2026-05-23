@@ -128,9 +128,9 @@ function AboutHero() {
 
           <ScrollReveal className="lg:col-span-5" direction="right" delay={0.15}>
             <div className="relative">
-              <div className="absolute -inset-6 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="absolute -inset-6 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-lg" />
               <div
-                className="relative p-8 lg:p-10 rounded-2xl border border-cream/15 shadow-2xl shadow-black/40 backdrop-blur-sm"
+                className="relative p-8 lg:p-10 rounded-lg border border-cream/15 shadow-md shadow-black/40 backdrop-blur-sm"
                 style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}
               >
                 <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
@@ -268,7 +268,7 @@ function FounderSection() {
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <ScrollReveal className="lg:col-span-5" direction="left">
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-lg" />
               <div className="relative">
                 <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
                   <img
@@ -424,7 +424,7 @@ function CTASection() {
             <Link href="/submit">
               <Button
                 size="lg"
-                className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-white hover:bg-primary/90 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 min-h-[44px]"
+                className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-white hover:bg-primary/90 shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 min-h-[44px]"
                 data-testid="button-about-sell"
               >
                 Start a Strategy Review

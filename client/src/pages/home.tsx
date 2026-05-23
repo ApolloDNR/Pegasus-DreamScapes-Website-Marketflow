@@ -212,7 +212,7 @@ function EcosystemTeaserSection() {
     {
       heading: "Live",
       items: [
-        { name: "Pegasus Dreamscapes", href: "/" },
+        { name: "Pegasus DreamScapes", href: "/" },
         { name: "MarketFlow (Beta)", href: "/marketflow" },
         { name: "Strategy Lab", href: "/strategy-lab" },
       ],
@@ -257,7 +257,7 @@ function EcosystemTeaserSection() {
           {columns.map((col) => (
             <div
               key={col.heading}
-              className="rounded-2xl border border-border bg-card p-7"
+              className="rounded-lg border border-border bg-card p-7"
               data-testid={`column-ecosystem-${col.heading.toLowerCase().replace(/\s+/g, "-")}`}
             >
               <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
@@ -617,8 +617,8 @@ function MarketFlowBetaSection() {
 
           <ScrollReveal className="lg:col-span-5" direction="right" delay={0.2}>
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-3xl" />
-              <div className="relative p-8 lg:p-10 rounded-2xl border border-cream/15 shadow-2xl shadow-black/30 backdrop-blur-sm" style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}>
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-lg" />
+              <div className="relative p-8 lg:p-10 rounded-lg border border-cream/15 shadow-md shadow-black/30 backdrop-blur-sm" style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}>
                 <div className="flex items-center justify-between mb-6 pb-5 border-b border-cream/15">
                   <div className="flex items-center gap-2">
                     <motion.div
@@ -1408,7 +1408,7 @@ function FeaturedDealsSection() {
             <StaggerItem key={deal.id}>
               <Link href={`/marketflow/deals/${deal.id}`} data-testid={`link-featured-deal-${index}`}>
                 <motion.div 
-                  className="group bg-card rounded-lg border border-border/50 overflow-hidden hover:border-primary/20 hover:shadow-xl transition-all duration-300 h-full cursor-pointer"
+                  className="group bg-card rounded-lg border border-border/50 overflow-hidden hover:border-primary/20 hover:shadow-md transition-all duration-300 h-full cursor-pointer"
                   data-testid={`card-featured-deal-${index}`}
                   whileHover={{ y: -8 }}
                   transition={{ duration: 0.3 }}
@@ -1652,7 +1652,7 @@ function OperatingPrinciplesSection() {
 
         {/* Trust badges - enhanced styling */}
         <ScrollReveal className="mt-24" delay={0.3}>
-          <div className="bg-muted/30 rounded-2xl p-8 lg:p-12">
+          <div className="bg-muted/30 rounded-lg p-8 lg:p-12">
             <div className="text-center text-sm uppercase tracking-[0.2em] text-muted-foreground font-medium mb-10">
               {isEditMode ? (
                 <EditableText contentKey="home.whyChooseUs.title" fallback="Why Choose Us" />
@@ -1664,7 +1664,7 @@ function OperatingPrinciplesSection() {
                 whileHover={{ x: 4 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
@@ -1685,7 +1685,7 @@ function OperatingPrinciplesSection() {
                 whileHover={{ x: 4 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Award className="w-6 h-6 text-primary" />
                 </div>
                 <div>
@@ -1706,7 +1706,7 @@ function OperatingPrinciplesSection() {
                 whileHover={{ x: 4 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <BarChart3 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
@@ -1854,7 +1854,7 @@ function HeroSection() {
             <div className="relative">
               <div
                 aria-hidden="true"
-                className="absolute -inset-x-4 -inset-y-3 sm:-inset-x-6 sm:-inset-y-4 pointer-events-none rounded-2xl bg-[radial-gradient(ellipse_at_left,rgba(13,27,45,0.7)_0%,rgba(13,27,45,0.4)_55%,rgba(13,27,45,0)_100%)] blur-[2px]"
+                className="absolute -inset-x-4 -inset-y-3 sm:-inset-x-6 sm:-inset-y-4 pointer-events-none rounded-lg bg-[radial-gradient(ellipse_at_left,rgba(13,27,45,0.7)_0%,rgba(13,27,45,0.4)_55%,rgba(13,27,45,0)_100%)] blur-[2px]"
               />
               {/* Shortened body line — strategy-first positioning */}
               <motion.p
@@ -1897,7 +1897,7 @@ function HeroSection() {
               transition={{ duration: 0.6, delay: 1.05 }}
             >
               <a href="/submit" onClick={() => trackEvent("cta_click", { id: "hero_primary", to: "/submit" })}>
-                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
+                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_primary" fallback="Start a Strategy Review" />
                   ) : heroCtaPrimary}
@@ -2103,7 +2103,7 @@ function FeaturedProjectSection() {
 
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-stretch">
           {/* Editorial photo-light panel */}
-          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-navy to-charcoal text-cream p-10 lg:p-12 flex flex-col justify-between min-h-[420px]">
+          <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-navy to-charcoal text-cream p-10 lg:p-12 flex flex-col justify-between min-h-[420px]">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cream/40 to-primary opacity-80" />
             <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl" />
             <div className="relative">
@@ -3361,7 +3361,7 @@ function ContactSection() {
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-email"
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
                   <Mail className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
                 </div>
                 <div>
@@ -3379,7 +3379,7 @@ function ContactSection() {
                 whileHover={{ x: 4 }}
                 data-testid="link-contact-phone"
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
+                <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-lg transition-all duration-300">
                   <Phone className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
                 </div>
                 <div>
@@ -3396,7 +3396,7 @@ function ContactSection() {
                 whileHover={{ x: 4 }}
                 data-testid="text-contact-location"
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-primary" />
                 </div>
                 <div>

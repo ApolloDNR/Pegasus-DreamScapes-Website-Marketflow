@@ -367,7 +367,7 @@ function StatsSection() {
           {stats.map((stat, index) => (
             <StaggerItem key={index}>
               <div className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <stat.icon className="w-6 h-6 text-primary" />
                 </div>
                 <p className="text-3xl font-bold text-foreground mb-1" data-testid={`stat-value-${index}`}>

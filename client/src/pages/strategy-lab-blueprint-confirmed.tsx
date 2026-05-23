@@ -9,7 +9,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
   const orderId = params.get("orderId");
 
   useSEO({
-    title: "Blueprint order confirmed. Pegasus Dreamscapes.",
+    title: "Blueprint order confirmed. Pegasus DreamScapes.",
     description: "Your Pegasus Deal Blueprint order is in motion.",
     noIndex: true,
   });
