@@ -51,7 +51,8 @@ export default function ConnectPage() {
   useSEO({
     title: "Connect with Apollo",
     description:
-      "You found Apollo's card. Tell us why you reached out: submit a property, build, sell, capital, vendor, or just talk. Every path gets a serious response.",
+      "You found Apollo's card. Tell us why you reached out: property, build, sell, capital, vendor, or just talk.",
+    image: "/og/default.png",
   });
 
   return (

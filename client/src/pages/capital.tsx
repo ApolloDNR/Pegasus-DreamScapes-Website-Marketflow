@@ -13,7 +13,8 @@ export default function CapitalPage() {
   useSEO({
     title: "Capital Partnerships",
     description:
-      "Pegasus DreamScapes builds private capital relationships under written agreement. Conversations are individual, by introduction, and never a public solicitation.",
+      "Private capital relationships under written agreement. Conversations are individual, by introduction. Not a public solicitation.",
+    image: "/og/capital.png",
   });
 
   return (

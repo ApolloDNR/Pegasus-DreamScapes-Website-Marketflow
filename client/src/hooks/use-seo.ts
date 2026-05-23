@@ -9,15 +9,30 @@ interface SEOProps {
   noTagline?: boolean;
 }
 
-// Empire Doctrine v1.0.1 title pattern:
-//   [Page Title] · Pegasus DreamScapes · The Deal Architect
+// Empire Doctrine v1.0.1 — Wave 4 title pattern:
+//   [Page] · Pegasus DreamScapes
+// Tagline is dropped from per-page titles so they stay under the
+// 60-character SERP truncation limit. The home (no `title` passed)
+// still renders the brand + tagline as the bare-document title.
 const BRAND = "Pegasus DreamScapes";
 const TAGLINE = "The Deal Architect";
 const BASE_TITLE = `${BRAND} · ${TAGLINE}`;
 const BASE_DESCRIPTION =
   "Pegasus DreamScapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
 const SITE_URL = "https://pegasusdreamscapes.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.svg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
+
+const MAX_TITLE = 60;
+const MAX_DESC = 160;
+
+function clamp(value: string, max: number) {
+  if (value.length <= max) return value;
+  // Soft-truncate at the last word boundary before max-1 and append ellipsis.
+  const slice = value.slice(0, max - 1);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > max * 0.6 ? slice.slice(0, lastSpace) : slice;
+  return `${cut.replace(/[.,;:\-–—\s]+$/, "")}…`;
+}
 
 function setMeta(selector: string, attr: "name" | "property", key: string, value: string) {
   let el = document.head.querySelector<HTMLMetaElement>(selector);
@@ -39,12 +54,23 @@ function setLink(rel: string, href: string) {
   el.setAttribute("href", href);
 }
 
+function absoluteImage(image: string | undefined) {
+  const raw = image || DEFAULT_OG_IMAGE;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${SITE_URL}${raw}`;
+  return `${SITE_URL}/${raw}`;
+}
+
 export function useSEO({ title, description, type = "website", image, noIndex, noTagline }: SEOProps = {}) {
   useEffect(() => {
-    const suffix = noTagline ? BRAND : BASE_TITLE;
-    const fullTitle = title ? `${title} · ${suffix}` : BASE_TITLE;
-    const desc = description || BASE_DESCRIPTION;
-    const ogImage = image || DEFAULT_OG_IMAGE;
+    // Per-page titles always drop the tagline to stay under the SERP
+    // truncation limit. `noTagline` is accepted for backwards-compat with
+    // earlier callers but no longer changes behavior in v1.0.1.
+    void noTagline;
+    const rawTitle = title ? `${title} · ${BRAND}` : BASE_TITLE;
+    const fullTitle = clamp(rawTitle, MAX_TITLE);
+    const desc = clamp(description || BASE_DESCRIPTION, MAX_DESC);
+    const ogImage = absoluteImage(image);
     const url = typeof window !== "undefined" ? `${SITE_URL}${window.location.pathname}` : SITE_URL;
 
     document.title = fullTitle;
@@ -57,6 +83,8 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     setMeta('meta[property="og:type"]', "property", "og:type", type);
     setMeta('meta[property="og:url"]', "property", "og:url", url);
     setMeta('meta[property="og:image"]', "property", "og:image", ogImage);
+    setMeta('meta[property="og:image:width"]', "property", "og:image:width", "1200");
+    setMeta('meta[property="og:image:height"]', "property", "og:image:height", "630");
     setMeta('meta[property="og:site_name"]', "property", "og:site_name", BRAND);
 
     setMeta('meta[name="twitter:card"]', "name", "twitter:card", "summary_large_image");

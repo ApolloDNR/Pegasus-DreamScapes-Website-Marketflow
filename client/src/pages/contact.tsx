@@ -48,7 +48,7 @@ export default function Contact() {
   useSEO({
     title: "Contact",
     description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
-    image: "https://pegasusdreamscapes.com/og/contact.svg",
+    image: "/og/default.png",
   });
 
   return (

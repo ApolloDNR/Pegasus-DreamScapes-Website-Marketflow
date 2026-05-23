@@ -40,7 +40,8 @@ export default function NelsonDrPage() {
   useSEO({
     title: "Nelson Dr Case Study",
     description:
-      "Pegasus DreamScapes' first documented case study from Pleasant Hill, California. Real photos and final economics pending; placeholder live now.",
+      "Pegasus DreamScapes' first documented case study from the East Bay. Real photos and final economics pending.",
+    image: "/og/nelson-dr.png",
   });
 
   useEffect(() => {

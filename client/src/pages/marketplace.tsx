@@ -41,7 +41,7 @@ export default function MarketplacePage() {
   useSEO({
     title: "MarketFlow Beta",
     description: "MarketFlow is the private dealflow layer for reviewed opportunities, trusted operators, buyers, and capital relationships. Not a public marketplace.",
-    image: "https://pegasusdreamscapes.com/og/marketflow.svg",
+    image: "/og/marketflow.png",
   });
 
   useEffect(() => {

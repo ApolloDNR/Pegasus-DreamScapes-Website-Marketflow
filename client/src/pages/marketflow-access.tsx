@@ -42,7 +42,8 @@ export default function MarketflowAccessPage() {
   useSEO({
     title: "Request MarketFlow Access",
     description:
-      "Request access to MarketFlow, the private dealflow layer of Pegasus DreamScapes. Access is by introduction; tell us who connected you.",
+      "Request access to MarketFlow, the private dealflow layer of Pegasus DreamScapes. Access is by introduction.",
+    image: "/og/marketflow.png",
   });
 
   // Brief §11 analytics — page-view event for the access funnel.

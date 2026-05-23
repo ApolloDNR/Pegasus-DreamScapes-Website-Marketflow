@@ -87,8 +87,9 @@ import { useSiteContent } from "@/contexts/site-content-context";
 
 export default function Home() {
   useSEO({
-    description: "Pegasus DreamScapes Corp. is a strategy-first real estate operating company. Complex property, structured opportunity. Built on strategy. Governed by virtue. Executed with discipline.",
-    image: "https://pegasusdreamscapes.com/og/home.svg",
+    description:
+      "Strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.",
+    image: "/og/home.png",
   });
   
   return (

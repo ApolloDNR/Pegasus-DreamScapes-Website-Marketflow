@@ -667,7 +667,8 @@ export default function StrategyLabPage() {
   useSEO({
     title: "Strategy Lab",
     description:
-      "Run a property through the Pegasus lens. Lane fit, risk, scenario stress, and a recommended next step in seconds. Preliminary analysis, human review required.",
+      "Run a property through the Pegasus lens. Lane fit, risk, and a recommended next step. Preliminary; human review required.",
+    image: "/og/strategy-lab.png",
   });
 
   // Brief §11 analytics — fire `strategy_lab_started` once per mount

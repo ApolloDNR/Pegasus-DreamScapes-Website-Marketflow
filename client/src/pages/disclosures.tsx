@@ -7,7 +7,7 @@ export default function Disclosures() {
     title: "Disclosures",
     description:
       "Disclosures for Pegasus DreamScapes Corp. Not an offer to buy or sell securities. No guarantee of returns or principal protection. Educational content only.",
-    image: "https://pegasusdreamscapes.com/og/disclosures.svg",
+    image: "/og/default.png",
   });
 
   return (

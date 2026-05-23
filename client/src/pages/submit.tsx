@@ -70,7 +70,8 @@ export default function SubmitPage() {
   useSEO({
     title: "Submit a Property",
     description:
-      "Submit a property to Pegasus DreamScapes. Apollo reviews every serious submission. Every property gets a path. Honest review, no pressure.",
+      "Submit a property to Pegasus DreamScapes. Every property gets a path. Apollo reviews every serious submission. No pressure.",
+    image: "/og/submit.png",
   });
 
   // Brief §11 analytics — fire `submit_opened` once on mount (consent-gated).

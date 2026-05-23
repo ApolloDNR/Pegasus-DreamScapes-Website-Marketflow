@@ -62,7 +62,7 @@ export default function VendorNetwork() {
     title: "Vendor Network",
     description:
       "Apply to the Pegasus DreamScapes Corp. private vendor network. Vetted contractors, lenders, agents, and operators routed to active deal flow.",
-    image: "https://pegasusdreamscapes.com/og/vendor-network.svg",
+    image: "/og/default.png",
   });
 
   return (

@@ -86,9 +86,8 @@ export default function ProjectDetail() {
 
   useSEO({
     title: project ? `${project.name} · Projects` : "Project",
-    description: project?.description || "Documented real estate case study from Pegasus DreamScapes Corp.",
-    image: project?.afterImages?.[0],
-    noTagline: true,
+    description: project?.description || "Documented real estate case study from Pegasus DreamScapes.",
+    image: project?.afterImages?.[0] || "/og/projects.png",
   });
 
   if (isLoading) return <ProjectSkeleton />;

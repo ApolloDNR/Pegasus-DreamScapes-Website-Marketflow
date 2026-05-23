@@ -35,7 +35,7 @@ export default function Projects() {
   useSEO({
     title: "Projects",
     description: "Documented real estate case studies from Pegasus DreamScapes Corp. Strategy, structure, and execution recorded for every project.",
-    image: "https://pegasusdreamscapes.com/og/projects.svg",
+    image: "/og/projects.png",
   });
 
   return (

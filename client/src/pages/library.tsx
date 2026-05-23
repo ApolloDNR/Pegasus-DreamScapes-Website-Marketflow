@@ -19,6 +19,7 @@ export default function LibraryPage() {
     title: "Strategy Library",
     description:
       "The Pegasus DreamScapes Strategy Library: structured reads on real estate strategy, capital, and execution. No gurus. No hype.",
+    image: "/og/default.png",
   });
 
   const { data: articles = [], isLoading } = useQuery<Article[]>({
