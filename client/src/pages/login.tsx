@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
+import type { UserRole } from "@/lib/supabase";
 import {
   Form,
   FormControl,
@@ -27,7 +28,12 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
-  const { signIn, isLoading, profile } = useSupabaseAuth();
+  const { signIn, isLoading, profile, enterGuestMode } = useSupabaseAuth();
+
+  const handleGuestExplore = (role: UserRole) => {
+    enterGuestMode(role);
+    setLocation(getRoleDashboardPath(role));
+  };
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -166,18 +172,45 @@ export default function LoginPage() {
 
           <div className="mt-4 pt-4 border-t">
             <p className="text-sm text-muted-foreground text-center mb-3">
-              Want to explore first?
+              Want to explore first? Pick a preview role.
             </p>
-            <Link href="/marketflow/discover">
-              <Button 
-                variant="outline" 
-                className="w-full"
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleGuestExplore("investor")}
                 data-testid="button-explore-guest"
               >
                 <Eye className="w-4 h-4 mr-2" />
-                Explore as Guest
+                Investor
               </Button>
-            </Link>
+              <Button
+                variant="outline"
+                onClick={() => handleGuestExplore("buyer_retail")}
+                data-testid="button-explore-guest-buyer"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Buyer
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleGuestExplore("wholesaler")}
+                data-testid="button-explore-guest-wholesaler"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Wholesaler
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleGuestExplore("dreamscaper")}
+                data-testid="button-explore-guest-dreamscaper"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                DreamScaper
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
+              Preview only. Sample data. No real actions.
+            </p>
           </div>
 
           <div className="mt-4 text-center">

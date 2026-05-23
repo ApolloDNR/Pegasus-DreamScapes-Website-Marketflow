@@ -45,6 +45,22 @@ function AnalyticsBoot() {
 // Empire Doctrine v1.0.1 — Peggy is internal-only on the public surface.
 // Gate the floating dock to authenticated visitors so logged-out hero
 // landings are not obscured by the chat orb.
+function GuestEntry({
+  role,
+  to,
+}: {
+  role: import("@/lib/supabase").UserRole;
+  to: string;
+}) {
+  const { enterGuestMode, isAuthenticated, isGuestMode } = useSupabaseAuth();
+  useEffect(() => {
+    if (!isAuthenticated && !isGuestMode) {
+      enterGuestMode(role);
+    }
+  }, [enterGuestMode, isAuthenticated, isGuestMode, role]);
+  return <Redirect to={to} />;
+}
+
 function AuthGatedPeggyDock() {
   const { isAuthenticated } = useSupabaseAuth();
   if (!isAuthenticated) return null;
@@ -241,7 +257,7 @@ function Router() {
       <Route path="/marketflow/buyer">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
       <Route path="/marketflow/admin/:rest*">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
       <Route path="/marketflow/admin">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
-      <Route path="/marketflow/discover">{() => <Redirect to="/marketflow/deals" />}</Route>
+      <Route path="/marketflow/discover">{() => <GuestEntry role="investor" to="/marketflow/deals" />}</Route>
       <Route path="/marketflow/calculators">{() => <AuthGuard><MarketplaceCalculators /></AuthGuard>}</Route>
       <Route path="/marketflow/resources">{() => <AuthGuard><MarketplaceResources /></AuthGuard>}</Route>
       {/* Empire Doctrine v1.0.1 — private MarketFlow surfaces. The public

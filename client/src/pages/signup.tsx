@@ -77,7 +77,12 @@ const roleOptions = [
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
-  const { signUp, isLoading } = useSupabaseAuth();
+  const { signUp, isLoading, enterGuestMode } = useSupabaseAuth();
+
+  const handleGuestExplore = () => {
+    enterGuestMode("investor");
+    setLocation(getRoleDashboardPath("investor"));
+  };
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
@@ -395,16 +400,18 @@ export default function SignupPage() {
             <p className="text-sm text-muted-foreground text-center mb-3">
               Want to explore first?
             </p>
-            <Link href="/marketflow/discover">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                data-testid="button-explore-guest"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Explore as Guest
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleGuestExplore}
+              data-testid="button-explore-guest"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Explore as Guest
+            </Button>
+            <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
+              Preview only. Sample data. No real actions.
+            </p>
           </div>
 
           <div className="mt-4 text-center">

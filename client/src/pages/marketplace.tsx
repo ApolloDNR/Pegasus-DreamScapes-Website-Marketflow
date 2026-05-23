@@ -36,7 +36,7 @@ import {
 
 export default function MarketplacePage() {
   const [, setLocation] = useLocation();
-  const { isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { isLoading, isAuthenticated, userRole, isGuestMode } = useSupabaseAuth();
   const { isDemoMode } = useDemoMode();
 
   useSEO({
@@ -46,10 +46,10 @@ export default function MarketplacePage() {
   });
 
   useEffect(() => {
-    if (!isLoading && (isAuthenticated || isDemoMode)) {
+    if (!isLoading && (isAuthenticated || isDemoMode || isGuestMode)) {
       setLocation("/marketflow/deals");
     }
-  }, [isLoading, isAuthenticated, isDemoMode, setLocation]);
+  }, [isLoading, isAuthenticated, isDemoMode, isGuestMode, setLocation]);
 
   if (isLoading) {
     return (
@@ -92,10 +92,13 @@ export default function MarketplacePage() {
 
 function HeroSection() {
   const { enableDemoMode } = useDemoMode();
+  const { enterGuestMode } = useSupabaseAuth();
   const [, setLocation] = useLocation();
 
   const handleDemoMode = () => {
     enableDemoMode();
+    // Also enter guest mode so the AuthGuard on /marketflow/deals lets us through.
+    enterGuestMode("investor");
     setLocation("/marketflow/deals");
   };
 

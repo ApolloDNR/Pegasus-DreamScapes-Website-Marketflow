@@ -27,6 +27,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { GuestPreviewBanner } from "@/components/guest-preview-banner";
 
 interface DealStats {
   active: number;
@@ -79,6 +80,7 @@ export default function MarketplaceWholesalerPage() {
     <AuthGuard requiredRoles={["admin", "pegasus_wholesaler", "wholesaler"]}>
       <MarketplaceLayout>
         <div className="space-y-6">
+          <GuestPreviewBanner roleLabel="Wholesaler" />
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-serif font-bold" data-testid="text-page-title">
