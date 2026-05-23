@@ -439,7 +439,7 @@ function VendorFormSection() {
                 </Button>
               </Link>
             </div>
-          </div>
+          </CardSurface>
         ) : (
           <CardSurface className="p-8 lg:p-10 border-border/50 shadow-md">
             <Form {...form}>
