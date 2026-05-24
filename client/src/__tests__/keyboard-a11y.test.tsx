@@ -207,7 +207,28 @@ describe("Global focus-visible baseline (Empire Doctrine v1.0.1, Task #143)", ()
 const FOCUS_RING_SOURCES = [
   "client/src/components/navigation.tsx",
   "client/src/components/footer.tsx",
+  // Task #144: extend the "no focus-visible:outline-none without a
+  // replacement" static guard to every v1 public page file, so a
+  // regression on any page-level custom button / tab / accordion / form
+  // control fails CI the same way the navigation, footer, and /connect
+  // surfaces already do.
+  "client/src/pages/home.tsx",
+  "client/src/pages/about.tsx",
+  "client/src/pages/development.tsx",
+  "client/src/pages/submit.tsx",
+  "client/src/pages/capital.tsx",
   "client/src/pages/connect.tsx",
+  "client/src/pages/library.tsx",
+  "client/src/pages/projects.tsx",
+  "client/src/pages/project-nelson-dr.tsx",
+  "client/src/pages/vendor-network.tsx",
+  "client/src/pages/contact.tsx",
+  "client/src/pages/disclosures.tsx",
+  "client/src/pages/privacy.tsx",
+  "client/src/pages/terms.tsx",
+  "client/src/pages/marketplace.tsx",
+  "client/src/pages/marketflow-access.tsx",
+  "client/src/pages/strategy-lab.tsx",
 ];
 
 describe("Interactive elements never strip the global focus ring", () => {
