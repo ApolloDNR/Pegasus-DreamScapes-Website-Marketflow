@@ -62,10 +62,12 @@ export default function NelsonDrPage() {
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-3xl mx-auto px-6 lg:px-12">
-        <Link href="/projects">
-          <a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6" data-testid="link-nelson-back">
-            <ArrowLeft className="w-4 h-4" /> Back to Projects
-          </a>
+        <Link
+          href="/projects"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
+          data-testid="link-nelson-back"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Projects
         </Link>
 
         <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">

@@ -194,13 +194,12 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
             <ArrowRight className="w-4 h-4 mr-2 rotate-180" aria-hidden="true" />
             {copy.addAnotherLabel}
           </Button>
-          <Link href="/">
-            <a
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              data-testid={`link-success-home-${formType}`}
-            >
-              Back to home →
-            </a>
+          <Link
+            href="/"
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            data-testid={`link-success-home-${formType}`}
+          >
+            Back to home →
           </Link>
         </div>
       </CardSurface>

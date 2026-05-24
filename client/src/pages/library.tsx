@@ -106,24 +106,23 @@ export default function LibraryPage() {
             <ul className="divide-y divide-border">
               {published.map((article) => (
                 <li key={article.id} className="py-6">
-                  <Link href={`/library/${article.slug}`}>
-                    <a
-                      className="group flex items-start gap-5"
-                      data-testid={`link-library-${article.slug}`}
-                    >
-                      <BookOpen className="w-6 h-6 text-primary mt-1 shrink-0" />
-                      <div className="flex-1">
-                        <h2 className="font-serif text-2xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                          {article.title}
-                        </h2>
-                        {article.excerpt && (
-                          <p className="mt-2 text-base text-muted-foreground leading-relaxed">
-                            {article.excerpt}
-                          </p>
-                        )}
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-1 transition-all mt-2" />
-                    </a>
+                  <Link
+                    href={`/library/${article.slug}`}
+                    className="group flex items-start gap-5"
+                    data-testid={`link-library-${article.slug}`}
+                  >
+                    <BookOpen className="w-6 h-6 text-primary mt-1 shrink-0" />
+                    <div className="flex-1">
+                      <h2 className="font-serif text-2xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {article.title}
+                      </h2>
+                      {article.excerpt && (
+                        <p className="mt-2 text-base text-muted-foreground leading-relaxed">
+                          {article.excerpt}
+                        </p>
+                      )}
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-1 transition-all mt-2" />
                   </Link>
                 </li>
               ))}
