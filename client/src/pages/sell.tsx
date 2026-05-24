@@ -91,6 +91,12 @@ const sellerFormSchema = z.object({
 });
 
 type SellerFormValues = z.infer<typeof sellerFormSchema>;
+type HqIntakeReceipt = {
+  hqIntake?: {
+    reference?: string;
+    statusUrl?: string;
+  };
+};
 
 export default function Sell() {
   useSEO({
@@ -424,6 +430,7 @@ function OutcomeRoutingSection() {
 function LeadFormSection() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [hqReceipt, setHqReceipt] = useState<HqIntakeReceipt | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const { getUploadParameters } = useUpload();
 
@@ -498,9 +505,11 @@ function LeadFormSection() {
         notes: data.notes,
       };
 
-      return await apiRequest("POST", "/api/leads", unifiedLead);
+      const response = await apiRequest("POST", "/api/leads", unifiedLead);
+      return (await response.json()) as HqIntakeReceipt;
     },
-    onSuccess: () => {
+    onSuccess: (receipt) => {
+      setHqReceipt(receipt);
       setSubmitted(true);
       toast({
         title: "Submission received",
@@ -531,6 +540,22 @@ function LeadFormSection() {
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
             A real person reviews every submission. We'll be in touch within 1–2 business days with the Snapshot and the recommended path. The Snapshot is preliminary. Not an offer, valuation, or guarantee.
           </p>
+          {hqReceipt?.hqIntake?.reference ? (
+            <p className="mt-6 text-sm text-muted-foreground">
+              HQ reference:{" "}
+              <span className="font-supporting uppercase tracking-wider text-primary">
+                {hqReceipt.hqIntake.reference}
+              </span>
+            </p>
+          ) : null}
+          {hqReceipt?.hqIntake?.statusUrl ? (
+            <a
+              href={hqReceipt.hqIntake.statusUrl}
+              className="mt-4 inline-flex text-sm font-semibold text-primary hover:text-primary/80"
+            >
+              View status
+            </a>
+          ) : null}
         </div>
       </section>
     );

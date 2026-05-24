@@ -75,6 +75,14 @@ import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
+import {
+  HqIntakeBridgeError,
+  buildHqPayloadFromSellerLead,
+  buildHqPayloadFromUnifiedLead,
+  hqIntakeJson,
+  shouldBridgeLeadToHq,
+  submitHqPublicIntake,
+} from "./hq-intake-bridge";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
 import peggy from "./peggy";
@@ -2107,11 +2115,15 @@ export async function registerRoutes(
           message: fromError(result.error).toString() 
         });
       }
-      
-      const lead = await storage.createSellerLead(result.data);
-      console.log("New seller lead received:", lead.email);
-      return res.status(201).json(lead);
+
+      const hqIntake = await submitHqPublicIntake(buildHqPayloadFromSellerLead(result.data, req));
+      console.log("New seller lead bridged to Pegasus HQ:", result.data.email, hqIntake.reference ?? "");
+      return res.status(201).json(hqIntakeJson(hqIntake));
     } catch (error) {
+      if (error instanceof HqIntakeBridgeError) {
+        console.error("Error bridging seller lead to Pegasus HQ:", error.message);
+        return res.status(error.status).json({ message: error.message });
+      }
       console.error("Error creating seller lead:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -5931,7 +5943,35 @@ export async function registerRoutes(
           errors: fromError(parseResult.error).toString() 
         });
       }
-      
+
+      if (shouldBridgeLeadToHq(parseResult.data)) {
+        try {
+          const hqIntake = await submitHqPublicIntake(buildHqPayloadFromUnifiedLead(parseResult.data, req));
+          const leadData = parseResult.data;
+          const fullName = `${leadData.firstName || ""} ${leadData.lastName || ""}`.trim() || "Unknown";
+
+          sendSellerLeadNotification({
+            name: fullName,
+            email: leadData.email || "",
+            phone: leadData.phone || "",
+            address: leadData.address || "",
+            propertyType: (leadData.leadData as any)?.propertyType || "Unknown",
+            condition: (leadData.leadData as any)?.condition || "Unknown",
+            timeline: (leadData.leadData as any)?.timeline || "Unknown",
+            notes: leadData.notes || undefined,
+          }).catch((err) => console.error("Failed to send seller lead notification:", err));
+
+          return res.status(201).json(hqIntakeJson(hqIntake));
+        } catch (error) {
+          if (error instanceof HqIntakeBridgeError) {
+            console.error("Error bridging property lead to Pegasus HQ:", error.message);
+            return res.status(error.status).json({ message: error.message });
+          }
+          console.error("Error bridging property lead to Pegasus HQ:", error);
+          return res.status(502).json({ message: "Pegasus HQ intake is unavailable." });
+        }
+      }
+
       const lead = await storage.createLead(parseResult.data);
       
       // Send email notification based on lead type (non-blocking)
