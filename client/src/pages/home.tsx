@@ -438,14 +438,14 @@ function HeroSection() {
                 <span>California</span>
               </div>
               <div className="hidden lg:block h-6 w-px bg-white/15" aria-hidden="true" />
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 sm:gap-y-0 gap-x-4 sm:gap-x-0 flex-1 items-stretch" data-testid="hero-stats-preview">
+              <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.9fr)_minmax(0,1fr)_minmax(0,1.3fr)] gap-y-6 sm:gap-y-0 gap-x-4 sm:gap-x-0 flex-1 items-stretch" data-testid="hero-stats-preview">
                 <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-strategy">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">Strategy First</p>
                   <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Operating Doctrine</p>
                 </div>
                 <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-pillars">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">3 Pillars</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Build · Fund · Run</p>
+                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Development · Investments · Systems</p>
                 </div>
                 <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-lanes">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">8 Lanes</p>
