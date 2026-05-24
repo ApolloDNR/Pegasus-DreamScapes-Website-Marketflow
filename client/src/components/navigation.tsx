@@ -586,6 +586,20 @@ export function Navigation() {
                     {NAV_ITEMS.map((item) => (
                       <li key={item.label}>{renderNavLink(item, true)}</li>
                     ))}
+                    {/* Empire Doctrine v1.0.2 Part C.7 — Connect is
+                        un-buried on mobile: surfaced in the primary list
+                        in addition to its persistent placement in the
+                        More accordion (mobile/footer parity). */}
+                    <li>
+                      <Link
+                        href="/connect"
+                        onClick={() => setMobileOpen(false)}
+                        className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                        data-testid="link-nav-connect"
+                      >
+                        Connect
+                      </Link>
+                    </li>
                   </ul>
 
                   {/* Wave 2 — single "More" accordion mirroring desktop IA.

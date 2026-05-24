@@ -5924,6 +5924,20 @@ export async function registerRoutes(
         }
       }
 
+      // Empire Doctrine v1.0.2 Amendment 1 C.8 — Pegasus Buyboxes free
+      // interest list. Submissions arrive as email-only signals; insert
+      // the canonical placeholder firstName + source so the request
+      // satisfies the leads schema without forcing the public form to
+      // ask for a name. The buybox identity lives in leadData.buyboxId.
+      if (lt === "buybox_interest") {
+        if (!req.body.firstName || typeof req.body.firstName !== "string" || !req.body.firstName.trim()) {
+          req.body.firstName = "Buybox Subscriber";
+        }
+        if (!req.body.source || typeof req.body.source !== "string" || !req.body.source.trim()) {
+          req.body.source = "buyboxes";
+        }
+      }
+
       const parseResult = insertLeadSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ 

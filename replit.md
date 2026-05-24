@@ -134,6 +134,15 @@ Four families: Cinzel · Cormorant Garamond · Montserrat · Inter.
 - **`/connect` tap targets**: Six routing buttons upgraded to `min-h-[56px]`, with visible `active:` pressed state (scale + tinted background + copper border) and `focus-visible:` ring for keyboard parity. The "Request Beta Access" button in `/marketplace` now routes to `/marketflow/access` (was `/signup`).
 - **Brand-tuned error color**: `--destructive` retuned to a deeper, warmer red (`5 70% 38%` / dark `5 72% 52%`) and aliased through a `--form-error` token. `FormLabel`/`FormMessage` (`client/src/components/ui/form.tsx`) consume `text-[hsl(var(--form-error))]`, and `FormMessage` now sets `role="alert"` when an error is present.
 
+## Pegasus Buyboxes (Empire Doctrine v1.0.2 Amendment 1, Section C.8)
+
+Free buyer-interest list, surfaced on `/marketflow` as the `BuyboxesSection`. v1 ships with four placeholder profiles defined in `client/src/config/buyboxes.ts` (ADU-Friendly East Bay, Value-Add SFR, Estates/Probate, Small Multifamily). Founder-confirmed copy and ticket ranges arrive later.
+
+- **Submission path**: `POST /api/leads` with `leadType: "buybox_interest"`, `email`, `source: "buybox:<id>"`, and `leadData.buyboxId` / `leadData.buyboxTitle`. Uses the existing leads table (no new schema). No auth required; no public marketplace exposure.
+- **Notification flow**: Apollo / HQ contacts subscribers individually when a reviewed property matches a buybox profile. All matches pass Pegasus review before any buyer is contacted. There is no automated broadcast.
+- **C.8.7 disclosure (verbatim, flagged for Phil Deutscher legal review)**: "Subscribing means Pegasus will contact you via the contact method on your account when we have a deal matching this buybox profile. All opportunities are reviewed by Pegasus before being shared. There is no obligation to buy. You can unsubscribe at any time from your account dashboard." Surfaced under the Buyboxes grid via `BUYBOX_DISCLOSURE` in `client/src/config/buyboxes.ts`.
+- **MarketFlow Buyer Subscription (paid product)** remains a v2.5 deferral. Buyboxes is the free precursor.
+
 ## External Dependencies
 
 - **UI**: Radix · Tailwind · class-variance-authority · Lucide · Google Fonts (Playfair Display, Inter).

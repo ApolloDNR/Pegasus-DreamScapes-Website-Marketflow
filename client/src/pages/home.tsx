@@ -38,21 +38,74 @@ export default function Home() {
 }
 
 function PegasusQuestionSection() {
+  // Empire Doctrine v1.0.2 Part C.2 — three-door visitor journey
+  // surfaced on the home page. Property owners, strategy-curious
+  // visitors, and operator/buyer/capital relationships all have a
+  // first-touch path visible above the fold band.
+  const doors = [
+    {
+      label: "Submit a Property",
+      desc: "Owner or operator with a complex property. Start a structural read.",
+      href: "/submit",
+      testId: "home-door-submit",
+    },
+    {
+      label: "Try Strategy Lab",
+      desc: "Run the property against fourteen strategies. Quick Read or Full Path.",
+      href: "/strategy-lab",
+      testId: "home-door-strategy-lab",
+    },
+    {
+      label: "Join the Network",
+      desc: "Operator, buyer, or capital relationship. Private, reviewed, invite-only.",
+      href: "/marketflow",
+      testId: "home-door-marketflow",
+    },
+  ];
+
   return (
     <section className="py-24 lg:py-32 bg-background" data-testid="section-pegasus-question">
-      <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          The Pegasus Question
-        </p>
-        <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7">
-          What if the strategy <span className="italic">is</span> the deal?
-        </h2>
-        <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-          Most groups chase the property. We design the path. Sometimes that path
-          is an acquisition. Sometimes it is a joint venture, a creative-finance
-          structure, a referral, or an honest listing. The lane that fits the
-          situation is the lane we route it to.
-        </p>
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="text-center mb-14">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+            The Pegasus Question
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7">
+            What if the strategy <span className="italic">is</span> the deal?
+          </h2>
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            Most groups chase the property. We design the path. Sometimes that path
+            is an acquisition. Sometimes it is a joint venture, a creative-finance
+            structure, a referral, or an honest listing. The lane that fits the
+            situation is the lane we route it to.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-5" data-testid="home-doors">
+          {doors.map((d) => (
+            <Link
+              key={d.testId}
+              href={d.href}
+              onClick={() => trackCtaClick("home_doors", d.label, d.href)}
+            >
+              <div
+                className="group h-full p-6 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                data-testid={d.testId}
+              >
+                <p className="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                  {d.label}
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  {d.desc}
+                </p>
+                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
+                  Enter
+                  <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

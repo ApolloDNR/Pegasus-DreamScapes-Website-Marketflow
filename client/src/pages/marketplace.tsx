@@ -5,33 +5,21 @@ import { useDemoMode } from "@/contexts/demo-mode-context";
 import { useSEO } from "@/hooks/use-seo";
 import { useFeatureFlags } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LegalDisclaimer } from "@/components/legal-disclaimer";
-import { ScrollReveal, FadeIn, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
+import { BuyboxesSection } from "@/components/buyboxes-section";
+import { ScrollReveal, FadeIn } from "@/components/animations";
 import { trackCtaClick } from "@/lib/analytics";
-import { motion } from "framer-motion";
 import { SkeletonHero, SkeletonGrid } from "@/components/skeleton-primitives";
 import {
   Loader2,
-  Building2,
-  Hammer,
-  TrendingUp,
-  Home,
   ArrowRight,
-  Shield,
-  Users,
-  Award,
-  BarChart3,
-  Handshake,
   CheckCircle2,
-  Sparkles,
   Eye,
   Clock,
   Construction,
   Lock,
-  Target,
-  Network
 } from "lucide-react";
 
 export default function MarketplacePage() {
@@ -82,9 +70,8 @@ export default function MarketplacePage() {
       <section className="max-w-7xl mx-auto px-6 pt-6"><LegalDisclaimer /></section>
       <MarketFlowFunnelSection />
       <BetaFeaturesSection />
-      <StatsSection />
-      <RolesSection />
-      <HowItWorksSection />
+      <BuyboxesSection />
+      <MarketFlowBoundarySection />
       <CTASection />
     </div>
   );
@@ -132,14 +119,6 @@ function HeroSection() {
             <p className="text-lg text-cream/85 leading-relaxed max-w-3xl mx-auto mb-8" data-testid="text-marketplace-subtitle">
               MarketFlow is the private dealflow layer for reviewed opportunities, trusted operators, buyers, and capital relationships.
             </p>
-            <div className="max-w-2xl mx-auto mb-10 border-l-2 border-primary/60 pl-5 text-sm text-cream/80 leading-relaxed text-left" data-testid="text-marketplace-not">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold mb-2 font-supporting">What MarketFlow is not</p>
-              <ul className="space-y-1">
-                <li>· Not raw intake. Every property is routed through Pegasus HQ first.</li>
-                <li>· Not a public marketplace. Access is private, role-gated, and invite-only.</li>
-                <li>· Not an investment solicitation platform. Capital conversations happen privately, never as a public offering.</li>
-              </ul>
-            </div>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/marketflow/access"
@@ -363,233 +342,65 @@ function BetaFeaturesSection() {
   );
 }
 
-function StatsSection() {
-  const stats = [
-    { value: "Private Beta", label: "Access by review", icon: Building2 },
-    { value: "Submissions Open", label: "Deal intake available", icon: TrendingUp },
-    { value: "Role-Based", label: "Workflows in progress", icon: Users },
-    { value: "Disciplined", label: "Execution-focused system", icon: Award },
-  ];
-
+function MarketFlowBoundarySection() {
   return (
-    <section className="py-16 bg-card border-y border-border/50">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.1}>
-          {stats.map((stat, index) => (
-            <StaggerItem key={index}>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <stat.icon className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-3xl font-bold text-foreground mb-1" data-testid={`stat-value-${index}`}>
-                  {stat.value}
-                </p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </div>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
+    <section
+      className="py-20 lg:py-24 bg-card border-y border-border/50"
+      data-testid="section-marketflow-boundary"
+    >
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
+          What MarketFlow is not
+        </p>
+        <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] leading-tight mb-8">
+          The boundary is the doctrine.
+        </h2>
+        <ul className="space-y-4 text-base text-muted-foreground leading-relaxed" data-testid="text-marketplace-not">
+          <li className="flex gap-3"><span className="text-primary mt-1.5">·</span><span>Not raw intake. Every property is routed through Pegasus HQ first.</span></li>
+          <li className="flex gap-3"><span className="text-primary mt-1.5">·</span><span>Not a public marketplace. Access is private, role-gated, and invite-only.</span></li>
+          <li className="flex gap-3"><span className="text-primary mt-1.5">·</span><span>Not an investment solicitation platform. Capital conversations happen privately, never as a public offering.</span></li>
+          <li className="flex gap-3"><span className="text-primary mt-1.5">·</span><span>Not a lead aggregator. Buyboxes are free interest signals reviewed by Pegasus before any match is shared.</span></li>
+        </ul>
       </div>
     </section>
   );
 }
 
-function RolesSection() {
-  const roles = [
-    {
-      title: "Wholesalers",
-      icon: Building2,
-      description: "Submit off-market deals and connect with operators and investor interest.",
-      features: ["Submit deals for approval", "Set assignment fees", "Track deal status", "Build reputation"],
-      cta: "Join as Wholesaler",
-      href: "/signup?role=wholesaler",
-      color: "blue"
-    },
-    {
-      title: "Dreamscapers",
-      icon: Hammer,
-      description: "Acquire deals, transform properties, and raise capital from investors.",
-      features: ["Browse approved deals", "Submit JV requests", "Raise capital", "Track projects"],
-      cta: "Join as Dreamscaper",
-      href: "/signup?role=dreamscaper",
-      color: "primary"
-    },
-    {
-      title: "Investors",
-      icon: TrendingUp,
-      description: "Fund real estate projects and earn returns through debt or equity.",
-      features: ["Access curated deals", "Choose debt or equity", "Track investments", "Receive updates"],
-      cta: "Join as Investor",
-      href: "/signup?role=investor",
-      color: "green"
-    },
-    {
-      title: "Buyers",
-      icon: Home,
-      description: "Purchase finished homes or investment properties from our portfolio.",
-      features: ["Browse properties", "Submit offers", "Schedule showings", "Access off-market"],
-      cta: "Join as Buyer",
-      href: "/signup?role=buyer_retail",
-      color: "purple"
-    },
-  ];
-
-  const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
-    blue: { bg: "bg-blue-500/10", text: "text-blue-600", border: "border-blue-500/20" },
-    primary: { bg: "bg-primary/10", text: "text-primary", border: "border-primary/20" },
-    green: { bg: "bg-green-500/10", text: "text-green-600", border: "border-green-500/20" },
-    purple: { bg: "bg-purple-500/10", text: "text-purple-600", border: "border-purple-500/20" },
-  };
-
-  return (
-    <section className="py-20 lg:py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center mb-16">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">For Every Role</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-roles-section-title">
-            Find Your Place in the Marketplace
-          </h2>
-        </ScrollReveal>
-
-        <StaggerChildren className="grid md:grid-cols-2 gap-6" staggerDelay={0.1}>
-          {roles.map((role, index) => {
-            const colors = colorClasses[role.color];
-            return (
-              <StaggerItem key={index}>
-                <HoverLift>
-                  <Card className={`h-full border-2 ${colors.border}`} data-testid={`role-card-${role.title.toLowerCase()}`}>
-                    <CardHeader>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}>
-                          <role.icon className={`w-5 h-5 ${colors.text}`} />
-                        </div>
-                        <CardTitle>{role.title}</CardTitle>
-                      </div>
-                      <CardDescription className="text-base">{role.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 mb-6">
-                        {role.features.map((feature, i) => (
-                          <li key={i} className="flex items-center gap-2 text-sm">
-                            <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Link href={role.href}>
-                        <Button className="w-full" data-testid={`button-${role.title.toLowerCase()}-signup`}>
-                          {role.cta}
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                </HoverLift>
-              </StaggerItem>
-            );
-          })}
-        </StaggerChildren>
-      </div>
-    </section>
-  );
-}
-
-function HowItWorksSection() {
-  const steps = [
-    {
-      step: "1",
-      title: "Create Your Account",
-      description: "Sign up and choose your role in the marketplace. Complete your profile to build trust."
-    },
-    {
-      step: "2",
-      title: "Access the Marketplace",
-      description: "Browse deals, submit opportunities, or find investment options based on your role."
-    },
-    {
-      step: "3",
-      title: "Connect & Transact",
-      description: "Submit offers, express interest, or commit capital. Our platform facilitates the connection."
-    },
-    {
-      step: "4",
-      title: "Close & Grow",
-      description: "Complete transactions, build your track record, and unlock more opportunities."
-    },
-  ];
-
-  return (
-    <section className="py-20 lg:py-24 bg-card">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center mb-16">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-4 font-medium">Simple Process</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-how-it-works-title">
-            How It Works
-          </h2>
-        </ScrollReveal>
-
-        <StaggerChildren className="grid md:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.1}>
-          {steps.map((step, index) => (
-            <StaggerItem key={index}>
-              <div className="text-center" data-testid={`step-card-${index}`}>
-                <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                  {step.step}
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
-              </div>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
-      </div>
-    </section>
-  );
-}
 
 function CTASection() {
   return (
     <section className="py-20 lg:py-24 bg-background">
-      <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
+      <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
         <ScrollReveal>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 mb-6">
-            <Shield className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Trusted Platform</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" data-testid="text-final-cta-title">
-            Ready to Get Started?
+          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
+            Request Beta Access
+          </p>
+          <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-6" data-testid="text-final-cta-title">
+            Bring us the property. We'll show you the path.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
-            Join hundreds of real estate professionals who are finding deals, raising capital, 
-            and building wealth through the Pegasus Marketplace.
+          <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
+            MarketFlow is private and reviewed. If your work fits the standard, the network opens. If it does not, we will say so.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/signup">
-              <Button size="lg" data-testid="button-create-account-cta">
-                Create Free Account
+            <Link
+              href="/marketflow/access"
+              onClick={() => trackCtaClick("marketflow_landing", "Request Beta Access", "/marketflow/access")}
+            >
+              <Button
+                size="lg"
+                className="px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-white hover:bg-primary/90"
+                data-testid="button-create-account-cta"
+              >
+                Request Beta Access
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link href="/capital">
-              <Button size="lg" variant="outline" data-testid="button-learn-more">
-                Learn About Roles
+            <Link href="/submit">
+              <Button size="lg" variant="outline" className="px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-learn-more">
+                Submit a Property
               </Button>
             </Link>
-          </div>
-
-          <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <span>Free to join</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <span>Vetted members</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <span>Secure platform</span>
-            </div>
           </div>
         </ScrollReveal>
       </div>
