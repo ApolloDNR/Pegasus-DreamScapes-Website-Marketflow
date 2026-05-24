@@ -421,15 +421,15 @@ function HeroSection() {
               </a>
             </motion.div>
 
-            {/* Slim bottom row: location chips · 4-stat strip */}
+            {/* Editorial framework strip: location anchor + 4 doctrine markers */}
             <motion.div
-              className="mt-14 pt-7 border-t border-white/10 flex flex-col lg:flex-row lg:items-center gap-y-6 lg:gap-x-8"
+              className="mt-14 pt-8 border-t border-white/10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.3 }}
               data-testid="hero-bottom-row"
             >
-              <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/70 font-supporting" data-testid="hero-location-chips">
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-white/55 font-supporting font-medium mb-7" data-testid="hero-location-chips">
                 <MapPin className="w-3 h-3 text-primary/80" />
                 <span>Pleasant Hill</span>
                 <span className="text-white/25">·</span>
@@ -437,27 +437,35 @@ function HeroSection() {
                 <span className="text-white/25">·</span>
                 <span>California</span>
               </div>
-              <div className="hidden lg:block h-6 w-px bg-white/15" aria-hidden="true" />
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-start gap-y-6 gap-x-6 sm:gap-x-8 lg:gap-x-10 flex-1" data-testid="hero-stats-preview">
-                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-strategy">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">Strategy First</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Operating Doctrine</p>
-                </div>
-                <div className="hidden sm:block self-stretch w-px bg-white/15" aria-hidden="true" />
-                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-pillars">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">3 Pillars</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Development · Investments · Systems</p>
-                </div>
-                <div className="hidden sm:block self-stretch w-px bg-white/15" aria-hidden="true" />
-                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-lanes">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">8 Lanes</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Outcome Paths</p>
-                </div>
-                <div className="hidden sm:block self-stretch w-px bg-white/15" aria-hidden="true" />
-                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-pathway">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">4 Phases</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Development Pathway</p>
-                </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-10" data-testid="hero-stats-preview">
+                {[
+                  { id: "strategy",  index: "01", kicker: "Doctrine",     label: "Strategy First", descriptor: "The operating doctrine." },
+                  { id: "pillars",   index: "02", kicker: "Architecture", label: "3 Pillars",      descriptor: "Development, Investments, Systems." },
+                  { id: "lanes",     index: "03", kicker: "Outcomes",     label: "8 Lanes",        descriptor: "Every path a property can take." },
+                  { id: "pathway",   index: "04", kicker: "Trajectory",   label: "4 Phases",       descriptor: "ADU today. Neighborhoods tomorrow." },
+                ].map((stat) => (
+                  <div
+                    key={stat.id}
+                    className="relative flex flex-col gap-3 min-w-0 sm:pl-5 sm:border-l sm:border-white/12"
+                    data-testid={`hero-stat-${stat.id}`}
+                  >
+                    <div className="flex items-baseline gap-2.5">
+                      <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold tabular-nums">
+                        {stat.index}
+                      </span>
+                      <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold uppercase">
+                        {stat.kicker}
+                      </span>
+                    </div>
+                    <p className="font-serif text-xl sm:text-[22px] text-white leading-none tracking-tight">
+                      {stat.label}
+                    </p>
+                    <p className="text-[12px] text-white/55 leading-snug">
+                      {stat.descriptor}
+                    </p>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </div>
