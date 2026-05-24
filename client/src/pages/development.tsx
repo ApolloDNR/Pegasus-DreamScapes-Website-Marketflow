@@ -13,6 +13,10 @@ import {
   Network,
   ShieldCheck,
   CheckCircle2,
+  Home as HomeIcon,
+  Wrench,
+  Ruler,
+  Building2,
 } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -30,6 +34,7 @@ export default function Development() {
       <h1 className="sr-only">Pegasus Development. The Spine Pillar.</h1>
       <HeroSection />
       <PillarSection />
+      <ScopeTodaySection />
       <PhaseSection />
       <SupportingPillarsSection />
       <CTASection />
@@ -140,21 +145,126 @@ function PillarSection() {
   return (
     <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      <div className="max-w-5xl mx-auto px-6 lg:px-12 relative">
-        <ScrollReveal className="max-w-3xl">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <ScrollReveal className="lg:col-span-7">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+              <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">Why Development Leads</p>
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-6">
+              Development is what we do.{" "}
+              <span className="text-headline-gold">The rest is how we do it well.</span>
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-5">
+              Pegasus DreamScapes is a real estate development company at its core. The product is the building, the renovation, the addition, the neighborhood. Investments and Systems are not separate businesses; they are the two columns that hold Development up.
+            </p>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+              <span className="font-semibold text-foreground">Investments</span> bring the capital that funds the build. <span className="font-semibold text-foreground">Systems</span> bring the discipline that runs the build. The <span className="font-semibold text-foreground">Pegasus Standard</span> governs both so a project is read honestly, scoped tightly, and delivered as promised.
+            </p>
+            <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
+              Built on strategy. Governed by virtue. Executed with discipline.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal delay={0.15} className="lg:col-span-5">
+            <div className="relative rounded-sm border border-border/40 bg-card/40 p-8 sm:p-10" data-testid="pillar-diagram">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold text-center mb-8">
+                The Pegasus Architecture
+              </p>
+              <div className="grid grid-cols-3 gap-3 items-end mb-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-12 h-28 rounded-sm bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/25 flex items-end justify-center pb-3">
+                    <Briefcase className="w-5 h-5 text-primary/70" />
+                  </div>
+                  <p className="font-serif text-sm font-semibold mt-3">Investments</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.18em] mt-1">Funds it</p>
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-14 h-44 rounded-sm bg-gradient-to-b from-primary/35 to-primary/20 border-2 border-primary/50 flex items-end justify-center pb-3 shadow-md shadow-primary/10">
+                    <Hammer className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-serif text-base font-semibold mt-3 text-primary">Development</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.18em] mt-1">Builds it</p>
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-12 h-28 rounded-sm bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/25 flex items-end justify-center pb-3">
+                    <Network className="w-5 h-5 text-primary/70" />
+                  </div>
+                  <p className="font-serif text-sm font-semibold mt-3">Systems</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.18em] mt-1">Runs it</p>
+                </div>
+              </div>
+              <div className="border-t border-border/40 pt-5 text-center">
+                <ShieldCheck className="w-4 h-4 text-primary mx-auto mb-2" />
+                <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-supporting">
+                  Governed by The Pegasus Standard
+                </p>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ScopeTodaySection() {
+  const scope = [
+    {
+      icon: HomeIcon,
+      title: "ADU additions",
+      desc: "Detached and attached accessory dwelling units on East Bay residential lots. Permitting, design, build.",
+    },
+    {
+      icon: Wrench,
+      title: "Forced-value rehabs",
+      desc: "Heavy-lift cosmetic + structural rehabs that take a tired property to its highest defensible value.",
+    },
+    {
+      icon: Ruler,
+      title: "Fix-and-flip",
+      desc: "Acquired, repositioned, and resold inside a tight underwriting band. Honest comps, honest budgets.",
+    },
+    {
+      icon: Building2,
+      title: "BRRRR acquisitions",
+      desc: "Buy, rehab, rent, refinance, repeat. Holding what should be held, releasing what should be released.",
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-muted/15 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="max-w-3xl mb-14">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">Why Development Leads</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">What We Build Today</p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-6">
-            Development is what we do.{" "}
-            <span className="text-headline-gold">The rest is how we do it well.</span>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            Small-scale, residential, East Bay.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-            Every Pegasus pillar exists to make Development sharper: Investments fund and structure the projects, Systems run the operating discipline, and MarketFlow routes the deal flow that becomes built work. The product is the building, the renovation, the addition, the neighborhood. The other pillars are scaffolding.
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Phase 1 work is disciplined and concrete. Four lanes, all residential, all underwritten the same way. Larger work is the trajectory, not today's claim.
           </p>
-          <p className="text-base text-muted-foreground/85 leading-relaxed italic">
-            Built on strategy. Governed by virtue. Executed with discipline.
+        </ScrollReveal>
+
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.08}>
+          {scope.map((s, i) => (
+            <StaggerItem key={i}>
+              <CardSurface className="h-full p-6 border-border/40 hover:border-primary/30 transition-colors" data-testid={`scope-card-${i}`}>
+                <s.icon className="w-6 h-6 text-primary/70 mb-5" />
+                <h3 className="font-serif text-lg font-semibold mb-2 tracking-tight">{s.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+              </CardSurface>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.25} className="mt-12 max-w-3xl">
+          <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-5">
+            Ground-up infill and master-planned classical neighborhoods are on the pathway below. They are not part of today's Phase 1 scope.
           </p>
         </ScrollReveal>
       </div>
@@ -274,25 +384,46 @@ function SupportingPillarsSection() {
   const pillars = [
     {
       icon: Briefcase,
-      kicker: "Pillar · Investments",
-      title: "Capital that feeds the build.",
-      desc: "Direct acquisition, JV / co-GP, and creative-finance structures funded by aligned operating partners. Capital is matched to the project, not the other way around.",
+      kicker: "Pillar 02 · Investments",
+      role: "Funds the build",
+      title: "Capital matched to the project.",
+      desc: "Without aligned capital, a good project stalls. Investments exists so every Pegasus build has the right money behind it, structured the right way.",
+      items: [
+        "Direct acquisition on Pegasus-controlled deals",
+        "JV / co-GP partnerships with aligned operators",
+        "Creative-finance structures (seller-carry, subject-to)",
+        "Capital sized to the project, not the other way around",
+      ],
       cta: "Capital Partnerships",
-      href: "/invest",
+      href: "/capital",
     },
     {
       icon: Network,
-      kicker: "Pillar · Systems",
+      kicker: "Pillar 03 · Systems",
+      role: "Runs the build",
       title: "The operating discipline.",
-      desc: "BuildForge for project management, the Vendor Network for trade execution, MarketFlow for vetted deal flow, and the Pegasus Standard governing how every project is read, scoped, and run.",
+      desc: "Without discipline, a funded project still drifts. Systems is the operating layer that takes a green-lit project from intake to delivery without losing the plan.",
+      items: [
+        "BuildForge: project management and scope control",
+        "Vendor Network: vetted trades for execution",
+        "MarketFlow: private deal flow and intake routing",
+        "Strategy Lab: underwriting and path-decision tooling",
+      ],
       cta: "Vendor Network",
       href: "/vendor-network",
     },
     {
       icon: ShieldCheck,
-      kicker: "Pillar · Pegasus Standard",
-      title: "Governed by virtue.",
-      desc: "Every project is reviewed against the same doctrine: prudence on the underwriting, justice on the dealings, fortitude on the execution, temperance on the growth pace.",
+      kicker: "Governance · The Pegasus Standard",
+      role: "Governs both",
+      title: "One doctrine over every project.",
+      desc: "Capital and operations are only as honest as the rules that govern them. The Pegasus Standard is the single doctrine that disciplines both pillars and decides which projects move forward.",
+      items: [
+        "Prudence on the underwriting",
+        "Justice on the dealings",
+        "Fortitude on the execution",
+        "Temperance on the growth pace",
+      ],
       cta: "The Doctrine",
       href: "/about",
     },
@@ -304,14 +435,14 @@ function SupportingPillarsSection() {
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Supporting Pillars</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Two Supporting Pillars</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Investments and Systems exist for one reason.
+            What holds Development up.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            To make sure what Pegasus builds gets built right: funded correctly, scoped correctly, run correctly, governed correctly.
+            Development is the spine. Investments funds it. Systems runs it. The Pegasus Standard governs both. None of these are separate companies. They are the columns that keep what Pegasus builds upright.
           </p>
         </ScrollReveal>
 
@@ -319,14 +450,25 @@ function SupportingPillarsSection() {
           {pillars.map((p, i) => (
             <StaggerItem key={i}>
               <Link href={p.href}>
-                <CardSurface className="group h-full p-8 border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer" data-testid={`supporting-pillar-${i}`}>
-                  <div className="flex items-baseline justify-between mb-6">
+                <CardSurface className="group h-full p-8 border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer flex flex-col" data-testid={`supporting-pillar-${i}`}>
+                  <div className="flex items-baseline justify-between mb-5">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{p.kicker}</p>
                     <p.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
                   </div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground/80 font-supporting mb-3">
+                    {p.role}
+                  </p>
                   <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">{p.desc}</p>
-                  <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold inline-flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{p.desc}</p>
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {p.items.map((item, j) => (
+                      <li key={j} className="flex items-start gap-2.5 text-sm text-muted-foreground/90 leading-relaxed">
+                        <span className="mt-2 w-1 h-1 rounded-full bg-primary/50 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold inline-flex items-center gap-2 mt-auto">
                     {p.cta}
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </span>

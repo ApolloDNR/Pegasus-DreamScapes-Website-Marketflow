@@ -438,21 +438,21 @@ function HeroSection() {
                 <span>California</span>
               </div>
               <div className="hidden lg:block h-6 w-px bg-white/15" aria-hidden="true" />
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-5 gap-x-5 sm:gap-x-3 flex-1" data-testid="hero-stats-preview">
-                <div className="sm:pr-4 sm:border-r sm:border-white/15" data-testid="hero-stat-strategy">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-none mb-2">Strategy First</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 sm:gap-y-0 gap-x-4 sm:gap-x-0 flex-1 items-stretch" data-testid="hero-stats-preview">
+                <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-strategy">
+                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">Strategy First</p>
                   <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Operating Doctrine</p>
                 </div>
-                <div className="sm:px-4 sm:border-r sm:border-white/15" data-testid="hero-stat-pillars">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-none mb-2">3 Pillars</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Development · Investments · Systems</p>
+                <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-pillars">
+                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">3 Pillars</p>
+                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Build · Fund · Run</p>
                 </div>
-                <div className="sm:px-4 sm:border-r sm:border-white/15" data-testid="hero-stat-lanes">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-none mb-2">8 Lanes</p>
+                <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-lanes">
+                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">8 Lanes</p>
                   <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Outcome Paths</p>
                 </div>
-                <div className="sm:pl-4" data-testid="hero-stat-pathway">
-                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-none mb-2">4 Phases</p>
+                <div className="sm:px-5 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-pathway">
+                  <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">4 Phases</p>
                   <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Development Pathway</p>
                 </div>
               </div>
