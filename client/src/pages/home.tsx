@@ -438,22 +438,25 @@ function HeroSection() {
                 <span>California</span>
               </div>
               <div className="hidden lg:block h-6 w-px bg-white/15" aria-hidden="true" />
-              <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.9fr)_minmax(0,1fr)_minmax(0,1.3fr)] gap-y-6 sm:gap-y-0 gap-x-4 sm:gap-x-0 flex-1 items-stretch" data-testid="hero-stats-preview">
-                <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-strategy">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-start gap-y-6 gap-x-6 sm:gap-x-8 lg:gap-x-10 flex-1" data-testid="hero-stats-preview">
+                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-strategy">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">Strategy First</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Operating Doctrine</p>
+                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Operating Doctrine</p>
                 </div>
-                <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-pillars">
+                <div className="hidden sm:block self-stretch w-px bg-white/15" aria-hidden="true" />
+                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-pillars">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">3 Pillars</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Development · Investments · Systems</p>
+                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Development · Investments · Systems</p>
                 </div>
-                <div className="sm:px-5 sm:border-r sm:border-white/15 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-lanes">
+                <div className="hidden sm:block self-stretch w-px bg-white/15" aria-hidden="true" />
+                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-lanes">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">8 Lanes</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Outcome Paths</p>
+                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Outcome Paths</p>
                 </div>
-                <div className="sm:px-5 flex flex-col justify-start min-h-[3.75rem]" data-testid="hero-stat-pathway">
+                <div className="hidden sm:block self-stretch w-px bg-white/15" aria-hidden="true" />
+                <div className="flex flex-col justify-start min-h-[3.75rem] sm:min-w-0" data-testid="hero-stat-pathway">
                   <p className="font-serif text-base sm:text-lg font-medium text-white leading-tight mb-2 whitespace-nowrap">4 Phases</p>
-                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug">Development Pathway</p>
+                  <p className="text-[10px] text-white/55 uppercase tracking-[0.2em] leading-snug whitespace-nowrap">Development Pathway</p>
                 </div>
               </div>
             </motion.div>
