@@ -45,19 +45,47 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 //         (b) Assert the landmark order is header → main → footer in the
 //             DOM, so focus progression cannot skip the main landmark.
 
-vi.mock("@/contexts/supabase-auth-context", () => ({
-  useSupabaseAuth: () => ({
-    user: null,
-    profile: null,
+// Task #145 — make the auth mock mutable so the admin / HQ routes added
+// to PUBLIC_ROUTES below can render with an admin-authenticated session
+// (AuthGuard otherwise <Redirect>s away and the page never mounts). The
+// default state matches the original mock (unauthenticated) so the
+// existing v1 public-route assertions are preserved unchanged.
+const { authState, setAuthState, resetAuthState } = vi.hoisted(() => {
+  const defaults = {
+    user: null as unknown,
+    profile: null as unknown,
     isAuthenticated: false,
     isAdmin: false,
     isLoading: false,
-    userRole: null,
+    userRole: null as string | null,
     isGuestMode: false,
+    guestRole: null as string | null,
+    isWholesaler: false,
+    isDreamscaper: false,
+    isInvestor: false,
+    isBuyer: false,
+    isPegasus: false,
+    hasPermission: () => false,
     enterGuestMode: () => {},
     signOut: async () => {},
-  }),
+  };
+  const state: Record<string, unknown> = { ...defaults };
+  return {
+    authState: state,
+    setAuthState: (next: Record<string, unknown>) => {
+      Object.assign(state, defaults, next);
+    },
+    resetAuthState: () => {
+      Object.assign(state, defaults);
+    },
+  };
+});
+
+vi.mock("@/contexts/supabase-auth-context", () => ({
+  useSupabaseAuth: () => authState,
   getRoleDashboardPath: () => "/marketflow",
+  canAccessRoute: () => true,
+  isAdminRole: (role: string | null) => role === "admin",
   SupabaseAuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock("@/components/command-palette", () => ({ CommandPalette: () => null }));
@@ -67,6 +95,29 @@ vi.mock("@/lib/analytics", () => ({
   trackCtaClick: () => {},
   trackEvent: () => {},
   initAnalytics: () => {},
+}));
+
+// Heavy admin-only dependencies that pull in browser-only assets
+// (Uppy CSS, the marketflow sidebar shell, websocket-backed
+// notifications). For keyboard-a11y the page-level surface is what
+// matters, not the chrome — so swap them for thin pass-throughs.
+vi.mock("@/components/marketplace-layout", () => ({
+  MarketplaceLayout: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mock-marketplace-layout">{children}</div>
+  ),
+}));
+vi.mock("@/components/ObjectUploader", () => ({
+  ObjectUploader: ({ children }: { children: React.ReactNode }) => (
+    <button type="button" data-testid="mock-object-uploader">
+      {children}
+    </button>
+  ),
+}));
+vi.mock("@/components/notification-dropdown", () => ({
+  NotificationDropdown: () => null,
+}));
+vi.mock("@/hooks/use-upload", () => ({
+  useUpload: () => ({ getUploadParameters: async () => ({ method: "PUT", url: "" }) }),
 }));
 
 // jsdom polyfills — Radix primitives and ScrollReveal rely on these.
@@ -229,6 +280,14 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/marketplace.tsx",
   "client/src/pages/marketflow-access.tsx",
   "client/src/pages/strategy-lab.tsx",
+  // Task #145 — admin / HQ page files Apollo uses every day must
+  // observe the same "never strip the focus ring without a replacement"
+  // contract as the public surface, so a regression on a custom admin
+  // button / tab / form control fails CI here too.
+  "client/src/pages/admin-cta-events.tsx",
+  "client/src/pages/admin-vendors.tsx",
+  "client/src/pages/admin-strategy-lab.tsx",
+  "client/src/pages/marketplace-admin.tsx",
 ];
 
 describe("Interactive elements never strip the global focus ring", () => {
@@ -401,6 +460,11 @@ import TermsPage from "@/pages/terms";
 import MarketplacePage from "@/pages/marketplace";
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import StrategyLabPage from "@/pages/strategy-lab";
+// Task #145 — admin / HQ surfaces.
+import AdminCtaEventsPage from "@/pages/admin-cta-events";
+import AdminVendorsPage from "@/pages/admin-vendors";
+import AdminStrategyLabPage from "@/pages/admin-strategy-lab";
+import MarketplaceAdminPage from "@/pages/marketplace-admin";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
@@ -541,6 +605,21 @@ function regionFor(
   return "outside";
 }
 
+// Task #145 — Admin / HQ surfaces. These render only behind an
+// admin-authenticated session (AuthGuard / requiredRoles=["admin"]),
+// so they live in a sibling loop that flips the shared auth mock to
+// `admin` for the duration of the describe and restores the default
+// public state afterward. The contract enforced is identical to the
+// public loop above: skip-link first, header → main → footer
+// landmark order, every focused element has a visible focus
+// indicator, no class strips :focus-visible without a replacement.
+const ADMIN_ROUTES: RouteSpec[] = [
+  { path: "/admin/cta-events", Page: AdminCtaEventsPage },
+  { path: "/admin/vendors", Page: AdminVendorsPage },
+  { path: "/admin/strategy-lab", Page: AdminStrategyLabPage },
+  { path: "/marketflow/admin", Page: MarketplaceAdminPage },
+];
+
 describe("Per-page keyboard accessibility (every v1 public route)", () => {
   for (const route of PUBLIC_ROUTES) {
     describe(`${route.path}`, () => {
@@ -666,6 +745,135 @@ describe("Per-page keyboard accessibility (every v1 public route)", () => {
           expect(
             mainIdx,
             `${route.path}: a main tab stop must come before any footer tab stop. Visited regions: [${visitedRegions.join(", ")}]`,
+          ).toBeLessThan(footerIdx);
+        }
+      });
+    });
+  }
+});
+
+describe("Per-page keyboard accessibility (admin / HQ routes, Task #145)", () => {
+  beforeEach(() => {
+    setAuthState({
+      user: { id: "admin-test", email: "admin@pegasusdreamscapes.com" },
+      profile: { display_name: "Apollo", avatar_url: null },
+      isAuthenticated: true,
+      isAdmin: true,
+      userRole: "admin",
+      isPegasus: true,
+    });
+  });
+  afterEach(() => {
+    resetAuthState();
+  });
+
+  for (const route of ADMIN_ROUTES) {
+    describe(`${route.path}`, () => {
+      it("renders header → main → footer landmarks in DOM order", () => {
+        const { container } = renderRoute(route);
+        const all = Array.from(
+          container.querySelectorAll<HTMLElement>("header, main#main-content, footer"),
+        );
+        // Admin pages may add their own inner <header> banners or nested
+        // <main> regions inside the outer main; only the first <header>,
+        // the outer main#main-content, and the public <footer> matter
+        // for landmark order.
+        const firstHeader = all.find((el) => el.tagName.toLowerCase() === "header");
+        const outerMain = all.find(
+          (el) => el.tagName.toLowerCase() === "main" && el.id === "main-content",
+        );
+        const publicFooter = all.find((el) => el.tagName.toLowerCase() === "footer");
+        expect(firstHeader, `${route.path}: missing <header>`).toBeTruthy();
+        expect(outerMain, `${route.path}: missing <main id="main-content">`).toBeTruthy();
+        expect(publicFooter, `${route.path}: missing <footer>`).toBeTruthy();
+        const headerIdx = all.indexOf(firstHeader as HTMLElement);
+        const mainIdx = all.indexOf(outerMain as HTMLElement);
+        const footerIdx = all.indexOf(publicFooter as HTMLElement);
+        expect(headerIdx).toBeLessThan(mainIdx);
+        expect(mainIdx).toBeLessThan(footerIdx);
+      });
+
+      it("Tab traverses every focusable in header → main → footer order with visible focus", async () => {
+        const user = userEvent.setup({ delay: null });
+        const { container } = renderRoute(route);
+
+        const header = container.querySelector("header") as HTMLElement | null;
+        const main = container.querySelector("main#main-content") as HTMLElement | null;
+        const footer = container.querySelector("footer") as HTMLElement | null;
+        expect(header, `${route.path} missing <header>`).toBeTruthy();
+        expect(main, `${route.path} missing <main id="main-content">`).toBeTruthy();
+        expect(footer, `${route.path} missing <footer>`).toBeTruthy();
+
+        (document.body as HTMLElement).focus();
+        if (document.activeElement && document.activeElement !== document.body) {
+          (document.activeElement as HTMLElement).blur();
+        }
+
+        const visitedRegions: Region[] = [];
+        const indicatorFailures: string[] = [];
+        const stopDescriptions: string[] = [];
+        let firstStopTestId: string | null = null;
+
+        for (let step = 0; step < MAX_TAB_STOPS; step++) {
+          await user.tab();
+          const active = document.activeElement as HTMLElement | null;
+          if (!active || active === document.body) break;
+          if (step === 0) {
+            firstStopTestId = active.getAttribute("data-testid");
+          }
+          const region = regionFor(active, header, main, footer);
+          if (visitedRegions[visitedRegions.length - 1] !== region) {
+            visitedRegions.push(region);
+          }
+          const { ok, reason } = hasVisibleFocusIndicator(active);
+          const id = active.getAttribute("data-testid") || active.tagName.toLowerCase();
+          stopDescriptions.push(`#${step} ${region} ${id}`);
+          if (!ok) {
+            indicatorFailures.push(`${id} (${region}): ${reason}`);
+          }
+        }
+
+        expect(
+          stopDescriptions.length,
+          `${route.path}: Tab never landed on any focusable element`,
+        ).toBeGreaterThan(0);
+        expect(
+          stopDescriptions.length,
+          `${route.path}: Tab traversal exceeded MAX_TAB_STOPS=${MAX_TAB_STOPS}`,
+        ).toBeLessThan(MAX_TAB_STOPS);
+        expect(
+          firstStopTestId,
+          `${route.path}: first Tab from <body> must land on skip-to-content; landed on ${firstStopTestId ?? "<unknown>"}`,
+        ).toBe("link-skip-to-content");
+        expect(
+          indicatorFailures,
+          `${route.path}: focused elements with no visible focus indicator:\n  ${indicatorFailures.join("\n  ")}`,
+        ).toEqual([]);
+
+        const landmarkOrder = visitedRegions.filter((r) => r !== "outside");
+        const headerIdx = landmarkOrder.indexOf("header");
+        const mainIdx = landmarkOrder.indexOf("main");
+        const footerIdx = landmarkOrder.indexOf("footer");
+        expect(
+          headerIdx,
+          `${route.path}: Tab traversal never visited the header. Visited regions: [${visitedRegions.join(", ")}]`,
+        ).toBeGreaterThanOrEqual(0);
+        expect(
+          footerIdx,
+          `${route.path}: Tab traversal never visited the footer. Visited regions: [${visitedRegions.join(", ")}]`,
+        ).toBeGreaterThanOrEqual(0);
+        expect(
+          headerIdx,
+          `${route.path}: header tab stop must come before footer. Visited regions: [${visitedRegions.join(", ")}]`,
+        ).toBeLessThan(footerIdx);
+        if (mainIdx >= 0) {
+          expect(
+            headerIdx,
+            `${route.path}: header tab stop must come before main. Visited regions: [${visitedRegions.join(", ")}]`,
+          ).toBeLessThan(mainIdx);
+          expect(
+            mainIdx,
+            `${route.path}: main tab stop must come before footer. Visited regions: [${visitedRegions.join(", ")}]`,
           ).toBeLessThan(footerIdx);
         }
       });
