@@ -11,6 +11,14 @@ Public website for Pegasus Dreamscapes (Development • Investments • Systems)
 ## Required environment variables
 See `.env.example` for the complete deployment-ready variable list.
 
+## Pegasus HQ intake bridge
+Public property submissions from `/sell`, `/submit`, and the legacy `/api/seller-leads` endpoint are bridged into Pegasus HQ through `PEGASUS_HQ_PUBLIC_INTAKE_URL`.
+
+Default target:
+`https://pegasus-hq-operating-system.vercel.app/api/public/intake`
+
+This keeps real property opportunities in HQ's canonical `Submission -> Seed` operating spine instead of creating website-only intake records. Non-property inquiries such as contact, investor, vendor, and MarketFlow access requests continue to use the website's existing lead paths.
+
 ## Commands
 - Dev: `npm run dev`
 - Typecheck/lint checks: `npm run check`

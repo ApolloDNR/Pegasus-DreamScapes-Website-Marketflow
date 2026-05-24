@@ -26,6 +26,7 @@ interface SuccessViewProps {
   formType: SuccessFormType;
   onAddAnother: () => void;
   referenceTag?: string;
+  statusUrl?: string;
 }
 
 const TIMELINE = [
@@ -107,7 +108,7 @@ const FORM_COPY: Record<
   },
 };
 
-export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessViewProps) {
+export function SuccessView({ formType, onAddAnother, referenceTag, statusUrl }: SuccessViewProps) {
   const copy = FORM_COPY[formType];
 
   return (
@@ -134,6 +135,14 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
                 {referenceTag}
               </span>
             </p>
+          ) : null}
+          {statusUrl ? (
+            <a
+              href={statusUrl}
+              className="mt-4 inline-flex text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              View status
+            </a>
           ) : null}
         </div>
 

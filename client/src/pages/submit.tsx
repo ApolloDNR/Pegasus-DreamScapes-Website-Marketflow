@@ -50,6 +50,12 @@ const submitSchema = z.object({
 });
 
 type SubmitFormValues = z.infer<typeof submitSchema>;
+type HqIntakeReceipt = {
+  hqIntake?: {
+    reference?: string;
+    statusUrl?: string;
+  };
+};
 
 const INTENT_LABELS: Record<SubmitFormValues["intent"], string> = {
   sell: "I want to sell a property",
@@ -81,6 +87,7 @@ export default function SubmitPage() {
 
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [hqReceipt, setHqReceipt] = useState<HqIntakeReceipt | null>(null);
   const formMountedAt = useRef<number>(Date.now());
   const initialIntent = useMemo(() => useInitialIntent(), []);
 
@@ -133,11 +140,13 @@ export default function SubmitPage() {
           ts_elapsed_ms: elapsedMs,
         },
       };
-      return apiRequest("POST", "/api/leads", payload);
+      const response = await apiRequest("POST", "/api/leads", payload);
+      return (await response.json()) as HqIntakeReceipt;
     },
-    onSuccess: () => {
+    onSuccess: (receipt) => {
       // Brief §11 analytics — submit lifecycle complete.
       trackEvent("submit_completed", { intent: form.getValues("intent") });
+      setHqReceipt(receipt);
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -156,7 +165,8 @@ export default function SubmitPage() {
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           <SuccessView
             formType="submit"
-            referenceTag={form.getValues("intent")}
+            referenceTag={hqReceipt?.hqIntake?.reference ?? form.getValues("intent")}
+            statusUrl={hqReceipt?.hqIntake?.statusUrl}
             onAddAnother={() => {
               form.reset({
                 propertyAddress: "",
@@ -171,6 +181,7 @@ export default function SubmitPage() {
                 hp_company: "",
                 consent: undefined as unknown as true,
               });
+              setHqReceipt(null);
               formMountedAt.current = Date.now();
               setSubmitted(false);
               window.scrollTo({ top: 0, behavior: "smooth" });
