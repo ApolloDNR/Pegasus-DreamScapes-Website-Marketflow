@@ -198,6 +198,12 @@ function DoctrineSection() {
             <p className="text-foreground/90">
               The lane that fits the property is the lane we route it to. The owner gets a real read on their situation either way.
             </p>
+            <p
+              className="pt-2 font-serif italic text-xl sm:text-2xl text-foreground leading-snug tracking-tight"
+              data-testid="text-balanced-outcome-standard"
+            >
+              A good deal makes sense for every serious party involved.
+            </p>
           </div>
         </ScrollReveal>
       </div>

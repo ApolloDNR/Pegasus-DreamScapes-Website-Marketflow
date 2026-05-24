@@ -1,9 +1,29 @@
-# Pegasus DreamScapes Corp — Empire Doctrine v1.0.1 (Foundation Reset)
+# Pegasus DreamScapes Corp — Empire Doctrine v1.0.2 + Amendment 1
+
+## Doctrine version
+
+**Controlling doctrine: Empire Doctrine v1.0.2 + Amendment 1 (Pegasus Buyboxes).** Source files in project knowledge:
+
+- `attached_assets/Pasted--PEGASUS-DREAMSCAPES-EMPIRE-DOCTRINE-v1-0-2-Status-Lock_1779604340328.txt` — v1.0.2 (Parts A through G)
+- `attached_assets/Pasted--EMPIRE-DOCTRINE-v1-0-2-AMENDMENT-1-Status-Locked-Scope_1779634104279.txt` — Amendment 1 (Section C.8)
+
+v1.0.2 **ratifies the live visual baseline** (Deep Navy `#0D1B2D` · Rich Copper `#C77A3A` · Warm Cream `#F6EFE4` · Charcoal `#1E2328`; Cinzel · Cormorant Garamond · Montserrat · Inter) as canonical — the live code is the law, not the prior v1.0.1 declaration. v1.0.2 also adds the **Balanced Outcome Standard** (Part B) and codifies the structural, navigational, and content corrections in Parts C, D, F, G. Amendment 1 adds the Pegasus Buyboxes free buyer interest list (Section C.8) into v1 scope; the paid MarketFlow Buyer Subscription product remains a v2.5 deferral.
+
+## Anti-Drift Lock (Empire Doctrine v1.0.2 Part F)
+
+The doctrine `.md` / `.txt` files in project knowledge are the **only source of truth** for brand tokens, typography, product taxonomy, and strategic positioning. This `replit.md` is operational README only — it must point at the doctrine, not redefine it. If a value here ever diverges from the doctrine, the doctrine wins.
+
+Two automated tripwires defend the lock:
+
+- **`client/src/__tests__/doctrine-anti-drift.test.ts`** — fails the build if the live `--copper`, `--font-display`, `--font-serif`, `--font-supporting`, `--font-sans`, or `<meta name="theme-color">` values diverge from v1.0.2 Part A.
+- **`client/src/__tests__/public-voice.test.tsx`** — fails the build if the locked voice phrases (incl. v1.0.2 Part B Balanced Outcome Standard line) disappear from the live source.
+
+If a future change needs to touch these values, the change is a doctrine amendment first, code change second. Never the other way around.
 
 ## Overview
-Strategy-first real estate operating company in the East Bay (Pleasant Hill, California). Positioning: **"The Deal Architect"**. Every property gets a path. Honest review, disciplined execution, no marketing-fluff. The public website is the Foundation Reset: a small, locked, voice-disciplined v1 surface designed to hold the brand without overclaiming.
+Strategy-first real estate operating company in the East Bay (Pleasant Hill, California). Positioning: **"The Deal Architect"**. Every property gets a path. Honest review, disciplined execution, no marketing-fluff. The public website is a small, locked, voice-disciplined v1 surface designed to hold the brand without overclaiming.
 
-**Visual identity is the prior Final Brand Asset System — preserved in full** (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter, plus the original hero photo treatment, More dropdown, and editorial page layouts). The Foundation Reset (Task #124) changed **structure, navigation, info, and function only** — palette, typography, header design, and page-level visual treatments were intentionally rolled back to the pre-#124 design after the founder's explicit "upgrade not downgrade" direction.
+**Visual identity is the Final Brand Asset System — preserved in full and ratified by v1.0.2 Part A** (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter, plus the original hero photo treatment, More dropdown, and editorial page layouts). The Foundation Reset (Task #124) changed **structure, navigation, info, and function only**. v1.0.2 (Task #147) is a structural / doctrine reconciliation, not a visual reset — no palette, typography, header, or photo-treatment changes.
 
 ## User Preferences
 Preferred communication style: simple, everyday language.
@@ -16,19 +36,16 @@ Preferred communication style: simple, everyday language.
 - **Belief line** (about, locked): "Built on strategy. Governed by virtue. Executed with discipline."
 - **Founder**: Paolo "Apollo" Duran — Founder & Principal. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.
 - **Contact**: `apollo@pegasusdreamscapes.com` / `925-744-8525`. Replaces all legacy `hello@`/`info@`.
-- **Palette** (HSL tokens in `client/src/index.css` — Final Brand Asset System, preserved through Foundation Reset):
-  - Deep Navy `#0D1B2D` → `--navy`, `--foreground`, `--secondary`
-  - Rich Copper `#C77A3A` → `--primary`, `--accent`, `--ring`, `--copper`
-  - Warm Cream `#F6EFE4` → `--background`, `--cream`
-  - Charcoal `#1E2328` → `--charcoal`
-- **Type system** (four families — preserved through Foundation Reset):
-  - **Cinzel** → `font-display` (Trajan-style display caps, wordmark + stone-carved labels)
-  - **Cormorant Garamond** → `font-serif` (editorial headlines + H1/H2/H3)
-  - **Montserrat** → `font-supporting` (letterspaced kickers + UI labels)
-  - **Inter** → `font-sans` (body + forms + UI)
+- **Palette & Typography (canonical):** See **Empire Doctrine v1.0.2 Part A.1 (palette) and A.2 (typography)**. The live HSL tokens in `client/src/index.css` and the font family bindings (Cinzel · Cormorant Garamond · Montserrat · Inter) are the canonical source; the anti-drift test (`client/src/__tests__/doctrine-anti-drift.test.ts`) fails the build if any of `--copper`, `--font-display`, `--font-serif`, `--font-supporting`, `--font-sans`, or `<meta name="theme-color">` diverges from Part A. Operational binding (which token paints which UI surface) is documented inline in `client/src/index.css`.
 - **Logo**: SVG-first. `public/brand/pegasus-wordmark.svg`, `public/brand/pegasus-mark.svg`, `public/favicon.svg`. (Final illustrated mark TBD; current SVGs are typography-driven placeholders.)
 
-## Locked voice rules (Empire Doctrine v1.0.1)
+## Locked voice rules (Empire Doctrine v1.0.1 + v1.0.2 Part B)
+
+### Balanced Outcome Standard (Empire Doctrine v1.0.2 Part B)
+
+Public phrasing — used sparingly: **"A good deal makes sense for every serious party involved."** Surfaced on `/about` inside the Doctrine section as the closing line of the path-first / no-lead-dies block. Asserted in `public-voice.test.tsx`. The principle: Pegasus does not run deals where one party wins by another party losing; owners, operators, and capital partners are reviewed against the same standard.
+
+### Voice rules (v1.0.1, unchanged)
 
 - Required visible homepage lines (hard-locked by `public-voice.test.tsx`): "Complex property. Structured opportunity." / "Every property gets a path. Not every property gets an offer." / "Built on strategy. Governed by virtue. Executed with discipline." / "Dream it. Build it. Live it."
 - Canonical hero line: "Complex property. Structured opportunity." Nav subtitle: "The Deal Architect."

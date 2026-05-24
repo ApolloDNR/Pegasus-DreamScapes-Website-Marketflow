@@ -232,6 +232,15 @@ describe("Public voice rules (v1.3.1)", () => {
         "Pegasus reviews the path first and Pegasus participation second.",
       );
     });
+
+    // Empire Doctrine v1.0.2 Part B — Balanced Outcome Standard. Public
+    // phrasing surfaced on /about inside the Doctrine section.
+    it("/about renders the Balanced Outcome Standard line (Empire Doctrine v1.0.2 Part B)", () => {
+      const aboutSrc = read("client/src/pages/about.tsx");
+      expect(aboutSrc).toContain(
+        "A good deal makes sense for every serious party involved.",
+      );
+    });
   });
 });
 
