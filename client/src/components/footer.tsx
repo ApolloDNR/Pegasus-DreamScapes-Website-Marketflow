@@ -209,7 +209,6 @@ export function Footer() {
             </div>
 
             <div className="flex items-center gap-3 pt-4 border-t border-border/40 mt-2">
-              {/* Update href with your actual LinkedIn URL */}
               <a
                 href="https://www.linkedin.com/in/apolloduran"
                 target="_blank"

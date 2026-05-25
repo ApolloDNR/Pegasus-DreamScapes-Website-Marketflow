@@ -370,9 +370,13 @@ function HeroSection() {
       {/* Full-bleed background image with parallax effect */}
       <motion.div
         className="absolute inset-0 scale-105"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1.05 }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+        initial={reduceMotion ? false : { scale: 1.1 }}
+        animate={reduceMotion ? { scale: 1.05 } : { scale: 1.05 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }
+        }
       >
         {/* Task #148 guardrail #5 — video wiring stub. When
             HERO_VIDEO_SRC is set the <video> takes over with the

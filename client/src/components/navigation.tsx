@@ -359,7 +359,7 @@ export function Navigation() {
         className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
           onLightSurface
             ? "bg-[hsl(var(--paper)/0.92)] backdrop-blur-md border-b border-[hsl(var(--rule))]"
-            : "bg-transparent backdrop-blur-[2px]"
+            : "bg-transparent"
         }`}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 h-[76px] lg:h-[92px] flex items-center justify-between gap-6">
