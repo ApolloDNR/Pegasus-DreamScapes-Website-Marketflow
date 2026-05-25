@@ -11,10 +11,9 @@ import {
   FOOTER_MORE_EXTRA,
 } from "@/config/navigation";
 
-// Empire Doctrine v1.0.1 + Task #148 nav parity:
-//   • Desktop header surfaces exactly NAV_PRIMARY (four items —
-//     Development is a parent that wraps Projects + Development Path).
-//   • Desktop header may preserve a More dropdown sourced from NAV_MORE.
+// Empire Doctrine v1.0.1 nav parity:
+//   • Desktop header surfaces exactly NAV_PRIMARY (five items).
+//   • Desktop header has NO More dropdown (collapsed in the Foundation Reset).
 //   • Mobile sheet exposes NAV_PRIMARY + NAV_MORE.
 //   • Footer's column grid exposes NAV_PRIMARY + NAV_MORE (any column).
 //   • Mobile "More" set == Footer "More" set (label/href agreement).
@@ -75,9 +74,9 @@ beforeEach(() => {
 const user = () => userEvent.setup({ pointerEventsCheck: 0 });
 
 describe("Navigation parity (Empire Doctrine v1.0.1)", () => {
-  it("desktop header exposes exactly the four NAV_PRIMARY entries", () => {
+  it("desktop header exposes exactly the five NAV_PRIMARY entries", () => {
     renderWithRouter(<Navigation />);
-    expect(NAV_PRIMARY).toHaveLength(4);
+    expect(NAV_PRIMARY).toHaveLength(5);
     for (const item of NAV_PRIMARY) {
       const link = screen.getByTestId(`link-nav-${slugify(item.label)}`);
       expect(link.getAttribute("href")).toBe(item.href);

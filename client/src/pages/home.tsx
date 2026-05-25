@@ -2,20 +2,13 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { trackEvent, trackCtaClick } from "@/lib/analytics";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import { ArrowRight, MapPin } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { EditableText } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
 import { useSiteContent } from "@/contexts/site-content-context";
-import founderApolloPath from "@assets/image_1778735694150.png";
-
-// Task #148 guardrail #5 — hero video stays static this round. Wired as
-// a one-line feature flag so swapping in a real premium clip later is a
-// single edit. Ship with null → static `<HeroPicture>` renders. No
-// stock footage, no placeholder.
-const HERO_VIDEO_SRC: string | null = null;
 
 // Home page JSON-LD: WebSite + RealEstateAgent + LocalBusiness so Google
 // can surface the entity, sitelinks search box, and local knowledge panel.
@@ -95,7 +88,6 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSONLD) }}
       />
       <HeroSection />
-      <HeroStatsBand />
       <PegasusQuestionSection />
       <StrategyLabTeaserSection />
       <MeetApolloSection />
@@ -111,8 +103,6 @@ export default function Home() {
         Every property gets a path. Not every property gets an offer.
         Bring us the property. We'll show you the path.
         Most Strategy Snapshots are reviewed within 5 business days.
-        Built on strategy. Governed by virtue. Executed with discipline.
-        Dream it. Build it. Live it.
       </span>
     </div>
   );
@@ -147,20 +137,17 @@ function PegasusQuestionSection() {
     },
   ];
 
-  // Task #148 — dark-band continuity: this section carries the navy
-  // mood one band past the hero before the page transitions to cream.
   return (
-    <section className="py-24 lg:py-32 bg-[hsl(var(--navy))] text-cream relative" data-testid="section-pegasus-question">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" aria-hidden="true" />
+    <section className="py-24 lg:py-32 bg-background" data-testid="section-pegasus-question">
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
         <div className="text-center mb-14">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-[hsl(var(--bronze-soft))] font-supporting font-semibold mb-6">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
             The Pegasus Question
           </p>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7 text-cream">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7">
             What if the strategy <span className="italic">is</span> the deal?
           </h2>
-          <p className="text-lg sm:text-xl text-cream/75 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             Most groups chase the property. We design the path. Sometimes that path
             is an acquisition. Sometimes it is a joint venture, a creative-finance
             structure, a referral, or an honest listing. The lane that fits the
@@ -176,16 +163,16 @@ function PegasusQuestionSection() {
               onClick={() => trackCtaClick("home_doors", d.label, d.href)}
             >
               <div
-                className="group h-full p-6 rounded-lg border border-white/15 bg-white/[0.03] hover:border-[hsl(var(--bronze)/0.5)] hover:bg-white/[0.05] hover:-translate-y-0.5 transition-all duration-200"
+                className="group h-full p-6 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
                 data-testid={d.testId}
               >
-                <p className="font-serif text-xl font-semibold mb-2 text-cream group-hover:text-[hsl(var(--bronze-soft))] transition-colors">
+                <p className="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
                   {d.label}
                 </p>
-                <p className="text-sm text-cream/70 leading-relaxed mb-4">
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                   {d.desc}
                 </p>
-                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--bronze-soft))] font-supporting font-semibold">
+                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
                   {d.cta}
                   <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </span>
@@ -230,7 +217,7 @@ function StrategyLabTeaserSection() {
             </Link>
           </div>
           <div className="md:col-span-5">
-            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))] p-6 space-y-4">
+            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))]/60 p-6 backdrop-blur-sm space-y-4">
               <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">
                 Sample verdict · Fix &amp; Flip
               </p>
@@ -248,7 +235,7 @@ function StrategyLabTeaserSection() {
               </div>
               <div className="flex items-start gap-2 pt-1">
                 <span className="mt-1 w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                <p className="text-xs text-cream/75 leading-relaxed">Possible path: value-add renovation. Human review required before any offer or execution decision.</p>
+                <p className="text-xs text-cream/75 leading-relaxed">Pegasus participates. Value-add path structurally sound. Recommend full review.</p>
               </div>
             </div>
           </div>
@@ -322,7 +309,7 @@ function OperatorCredibilitySection() {
           <div className="md:col-span-2 space-y-6">
             <blockquote className="border-l-2 border-primary/40 pl-6">
               <p className="font-serif text-lg text-foreground/90 italic leading-relaxed mb-3">
-                &ldquo;Every Pegasus scope review starts with the contractor's lens. What it actually costs, what it actually takes, and where the real risk lives.&rdquo;
+                &ldquo;Every Pegasus scope review starts with the contractor's lens — what it actually costs, what it actually takes, and where the real risk lives.&rdquo;
               </p>
               <footer className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Apollo Duran</span>
@@ -350,67 +337,28 @@ function OperatorCredibilitySection() {
 function HeroSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
-  // Task #148 — every hero animation is gated behind
-  // prefers-reduced-motion (orbs, headline reveal, sub reveal, CTA
-  // reveal, sample card reveal). When reduced motion is requested
-  // the hero renders statically with no entrance or ambient motion.
-  const reduceMotion = useReducedMotion();
-  const fade = (delay: number) =>
-    reduceMotion
-      ? { initial: false as const, animate: { opacity: 1, y: 0, x: 0 } }
-      : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, delay } };
 
   const heroLine1 = getValue("home.hero.line1", "Complex property.");
   const heroLine2 = getValue("home.hero.line2", "Structured opportunity.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Start a Strategy Review");
   const heroCtaSecondary = getValue("home.hero.cta_secondary", "See Our Work");
+  const heroPhilosophical = "Built on strategy. Governed by virtue. Executed with discipline.";
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Full-bleed background image with parallax effect */}
       <motion.div
         className="absolute inset-0 scale-105"
-        initial={reduceMotion ? false : { scale: 1.1 }}
-        animate={reduceMotion ? { scale: 1.05 } : { scale: 1.05 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : { duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }
-        }
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1.05 }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
-        {/* Task #148 guardrail #5 — video wiring stub. When
-            HERO_VIDEO_SRC is set the <video> takes over with the
-            existing hero photo as both poster and graceful fallback.
-            Ships static this round; one-line swap when premium footage
-            arrives. */}
-        {HERO_VIDEO_SRC ? (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster="/hero/hero-1920.jpg"
-            className="absolute inset-0 w-full h-full object-cover"
-            data-testid="video-hero"
-          >
-            <source src={HERO_VIDEO_SRC} type="video/mp4" />
-          </video>
-        ) : (
-          <HeroPicture
-            alt="Pegasus DreamScapes Corp. luxury home at dusk with warm lighting"
-            className="absolute inset-0 w-full h-full object-cover"
-            priority
-          />
-        )}
+        <HeroPicture
+          alt="Pegasus DreamScapes Corp. luxury home at dusk with warm lighting"
+          className="absolute inset-0 w-full h-full object-cover"
+          priority
+        />
       </motion.div>
-
-      {/* Task #148 — diagonal dark gradient overlay (bottom-left dark →
-          top-right transparent) for subheadline legibility regardless
-          of monitor. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(to_top_right,rgba(13,27,45,0.92)_0%,rgba(13,27,45,0.55)_45%,rgba(13,27,45,0.1)_85%,transparent_100%)] pointer-events-none"
-      />
 
       {/* Premium cinematic overlay - luxury gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
@@ -421,39 +369,71 @@ function HeroSection() {
         className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[hsl(var(--navy)/0.92)] via-[hsl(var(--navy)/0.55)] to-transparent pointer-events-none"
       />
 
-      {/* Task #148 — animated gradient orbs gated behind
-          prefers-reduced-motion. When reduced motion is requested
-          they render as static, faint background lights only. */}
-      {!reduceMotion && (
-        <div className="hidden md:block absolute inset-0 opacity-30 overflow-hidden" aria-hidden="true">
-          <motion.div
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.4, 0.25] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/20 rounded-full blur-3xl"
-            animate={{ scale: [1.15, 1, 1.15], opacity: [0.3, 0.45, 0.3] }}
-            transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          />
-        </div>
-      )}
+      {/* Enhanced animated gradient orbs */}
+      <div className="hidden md:block absolute inset-0 opacity-40 overflow-hidden">
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/25 rounded-full blur-3xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            x: [0, -40, 0],
+            y: [0, 30, 0],
+            opacity: [0.4, 0.6, 0.4]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+        <motion.div
+          className="absolute top-1/2 right-1/3 w-48 h-48 bg-primary/15 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+          className="absolute bottom-1/3 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+          animate={{
+            y: [0, -50, 0],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+      </div>
 
       {/* Content - centered for more impact */}
       <div className="relative z-10 w-full py-32">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="max-w-4xl">
-            {/* Task #148 — hero restraint: ≤4 visible elements
-                (headline + sub, primary CTA + ghost link, sample card).
-                Eyebrow, philosophical, brand-tagline, and stat strip
-                moved out of the hero — stats now ride in
-                <HeroStatsBand /> directly below. */}
+            {/* Eyebrow tag — featured project anchor */}
+            <motion.div
+              className="flex items-center gap-3 mb-7"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              data-testid="hero-eyebrow"
+            >
+              <span className="h-px w-8 bg-primary" />
+              <p className="text-[11px] sm:text-[12px] uppercase tracking-[0.18em] text-primary font-semibold font-supporting">
+                Strategy-first · East Bay · California
+              </p>
+            </motion.div>
 
             {/* Premium headline — line 1 cream serif, line 2 italic gold gradient */}
             <h1 className="font-serif font-semibold mb-8 text-white [font-size:clamp(48px,7vw,96px)] [line-height:0.95] [letter-spacing:-0.02em]" data-testid="text-hero-headline">
               <motion.span
                 className="block"
-                {...fade(0.1)}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
               >
                 {isEditMode ? (
                   <EditableText contentKey="home.hero.line1" fallback="Complex property." />
@@ -461,7 +441,9 @@ function HeroSection() {
               </motion.span>
               <motion.span
                 className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent pb-2 overflow-visible"
-                {...fade(0.25)}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
               >
                 {isEditMode ? (
                   <EditableText contentKey="home.hero.line2" fallback="Structured opportunity." />
@@ -477,18 +459,43 @@ function HeroSection() {
               />
               {/* Shortened body line — strategy-first positioning */}
               <motion.p
-                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-10 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
-                {...fade(0.4)}
+                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-7 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.75 }}
                 data-testid="text-hero-subheadline"
               >
                 Where others see impossible, we see a path. A strategy-first real estate operating company that reviews the situation, then designs the route forward.
               </motion.p>
             </div>
 
+            {/* Philosophical line (locked v1.3.1) + brand tagline */}
+            <motion.div
+              className="mb-10 space-y-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+            >
+              <p
+                className="font-serif text-base sm:text-lg text-white/95 italic tracking-wide leading-snug [text-shadow:0_2px_16px_rgba(0,0,0,0.55)]"
+                data-testid="text-hero-philosophical"
+              >
+                {heroPhilosophical}
+              </p>
+              <div className="flex items-center gap-3" data-testid="text-hero-tagline">
+                <span className="h-px w-8 bg-primary/70" />
+                <p className="text-[11px] sm:text-xs uppercase tracking-[0.4em] text-primary/90 font-medium font-supporting">
+                  Dream it. Build it. Live it.
+                </p>
+              </div>
+            </motion.div>
+
             {/* Premium CTAs */}
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
-              {...fade(0.55)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.05 }}
             >
               <a
                 href="/submit"
@@ -504,137 +511,69 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              {/* Task #148 — secondary CTA demoted to a quiet ghost
-                  link beneath the single primary copper button. One
-                  dominant CTA per fold (Compass-style restraint). */}
-              <a
-                href="/projects"
-                onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects" })}
-                className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white font-supporting font-semibold transition-colors self-center sm:self-auto"
-                data-testid="link-hero-secondary"
-              >
-                {isEditMode ? (
-                  <EditableText contentKey="home.hero.cta_secondary" fallback="See Our Work" />
-                ) : heroCtaSecondary}
-                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              <a href="/projects" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects" })}>
+                <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-2 border-white/70 bg-white/5 text-white hover:bg-white/15 hover:border-white backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
+                  {isEditMode ? (
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="See Our Work" />
+                  ) : heroCtaSecondary}
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
               </a>
             </motion.div>
 
-            {/* Task #148 guardrail #3 — floating Sample Strategy Lab
-                Read card. Glass surface 2 of 3 (guardrail #4). Desktop
-                ≥lg only; copy is locked verbatim. */}
-            <motion.aside
-              className="hidden lg:block absolute top-1/2 right-12 -translate-y-1/2 z-20 w-[340px]"
-              {...fade(0.7)}
-              aria-label="Sample Strategy Lab read"
-              data-testid="hero-sample-card"
+            {/* Editorial framework strip: location anchor + 4 doctrine markers */}
+            <motion.div
+              className="mt-14 pt-8 border-t border-white/10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.3 }}
+              data-testid="hero-bottom-row"
             >
-              <div className="rounded-xl border border-white/15 bg-[hsl(var(--navy)/0.55)] backdrop-blur-xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.65)] p-6 ring-1 ring-inset ring-white/5">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(var(--bronze-soft))] font-supporting font-semibold mb-4">
-                  Sample Strategy Lab Read
-                </p>
-                <div className="space-y-2.5 mb-5">
-                  <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
-                    <span className="text-[11px] text-white/55 uppercase tracking-[0.18em]">ARV</span>
-                    <span className="font-serif text-base text-white">$840,000</span>
-                  </div>
-                  <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
-                    <span className="text-[11px] text-white/55 uppercase tracking-[0.18em]">Acquisition</span>
-                    <span className="font-serif text-base text-white">$600,000</span>
-                  </div>
-                  <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
-                    <span className="text-[11px] text-white/55 uppercase tracking-[0.18em]">Scope</span>
-                    <span className="font-serif text-base text-white">$95,000</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 mb-2">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[hsl(var(--bronze))] flex-shrink-0" />
-                  <p className="text-sm text-white font-serif leading-snug" data-testid="text-hero-sample-verdict">
-                    Possible path: value-add renovation
-                  </p>
-                </div>
-                <p className="text-[11px] text-white/55 leading-relaxed mb-5 pl-3.5" data-testid="text-hero-sample-footnote">
-                  Human review required before any offer or execution decision.
-                </p>
-                <Link
-                  href="/strategy-lab"
-                  className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--bronze-soft))] hover:text-white font-supporting font-semibold transition-colors"
-                  data-testid="link-hero-sample-strategy-lab"
-                >
-                  Open Strategy Lab
-                  <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                </Link>
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-white/55 font-supporting font-medium mb-7" data-testid="hero-location-chips">
+                <MapPin className="w-3 h-3 text-primary/80" />
+                <span>Pleasant Hill</span>
+                <span className="text-white/25">·</span>
+                <span>East Bay</span>
+                <span className="text-white/25">·</span>
+                <span>California</span>
               </div>
-            </motion.aside>
 
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-10" data-testid="hero-stats-preview">
+                {[
+                  { id: "experience", index: "01", kicker: "Experience",  label: "20+ Years",    descriptor: "Commercial & residential construction." },
+                  { id: "strategies", index: "02", kicker: "Strategies",  label: "14 Paths",     descriptor: "Every route a property can take." },
+                  { id: "market",     index: "03", kicker: "Market",      label: "East Bay, CA", descriptor: "Pleasant Hill · Concord · Walnut Creek." },
+                  { id: "license",    index: "04", kicker: "Licensed",    label: "DRE Licensed", descriptor: "#02333658 · Keller Williams East Bay." },
+                ].map((stat) => (
+                  <div
+                    key={stat.id}
+                    className="relative flex flex-col gap-3 min-w-0 sm:pl-5 sm:border-l sm:border-white/12"
+                    data-testid={`hero-stat-${stat.id}`}
+                  >
+                    <div className="flex items-baseline gap-2.5">
+                      <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold tabular-nums">
+                        {stat.index}
+                      </span>
+                      <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold uppercase">
+                        {stat.kicker}
+                      </span>
+                    </div>
+                    <p className="font-serif text-xl sm:text-[22px] text-white leading-none tracking-tight">
+                      {stat.label}
+                    </p>
+                    <p className="text-[12px] text-white/55 leading-snug">
+                      {stat.descriptor}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Premium accent bar at bottom */}
       <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
-    </section>
-  );
-}
-
-// Task #148 — Editorial stat continuation band. Lives directly under
-// the hero (no longer overlaid on the hero photo). Solid Deep Navy
-// surface so the dark-band continuity from hero → Pegasus Question
-// section is preserved without spending a glass surface here
-// (guardrail #4 keeps the glass budget at 3).
-function HeroStatsBand() {
-  const stats = [
-    { id: "experience", index: "01", kicker: "Experience", label: "20+ Years",    descriptor: "Commercial & residential construction." },
-    { id: "strategies", index: "02", kicker: "Strategies", label: "14 Paths",     descriptor: "Every route a property can take." },
-    { id: "market",     index: "03", kicker: "Market",     label: "East Bay, CA", descriptor: "Pleasant Hill · Concord · Walnut Creek." },
-    { id: "license",    index: "04", kicker: "Licensed",   label: "DRE Licensed", descriptor: "#02333658 · Keller Williams East Bay." },
-  ];
-  return (
-    <section
-      className="relative bg-[hsl(var(--navy))] border-t border-white/10 py-10 lg:py-12"
-      data-testid="hero-stats-band"
-      aria-label="Pegasus DreamScapes at a glance"
-    >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div
-          className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-white/55 font-supporting font-medium mb-7"
-          data-testid="hero-location-chips"
-        >
-          <MapPin className="w-3 h-3 text-primary/80" />
-          <span>Pleasant Hill</span>
-          <span className="text-white/25">·</span>
-          <span>East Bay</span>
-          <span className="text-white/25">·</span>
-          <span>California</span>
-        </div>
-        <div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-10"
-          data-testid="hero-stats-preview"
-        >
-          {stats.map((stat) => (
-            <div
-              key={stat.id}
-              className="relative flex flex-col gap-3 min-w-0 sm:pl-5 sm:border-l sm:border-white/12"
-              data-testid={`hero-stat-${stat.id}`}
-            >
-              <div className="flex items-baseline gap-2.5">
-                <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold tabular-nums">
-                  {stat.index}
-                </span>
-                <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold uppercase">
-                  {stat.kicker}
-                </span>
-              </div>
-              <p className="font-serif text-xl sm:text-[22px] text-white leading-none tracking-tight">
-                {stat.label}
-              </p>
-              <p className="text-[12px] text-white/55 leading-snug">
-                {stat.descriptor}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
@@ -713,19 +652,25 @@ function MeetApolloSection() {
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
         <div className="grid md:grid-cols-12 gap-10 items-center">
           <div className="md:col-span-4">
-            {/* Task #148 guardrail #8 — reuse the same founder asset
-                already imported on /about to avoid a 404 on the home
-                page when the legacy /images/founder/* files are absent. */}
-            <img
-              src={founderApolloPath}
-              alt="Apollo Duran, Founder of Pegasus DreamScapes"
-              className="w-full max-w-[300px] md:max-w-none aspect-[3/4] object-cover object-top grayscale brightness-90"
-              width={400}
-              height={533}
-              loading="lazy"
-              decoding="async"
-              data-testid="img-home-founder"
-            />
+            <picture>
+              <source
+                type="image/avif"
+                srcSet="/images/founder/apollo-400.avif 400w, /images/founder/apollo-800.avif 800w"
+                sizes="(max-width: 768px) 300px, 400px"
+              />
+              <source
+                type="image/webp"
+                srcSet="/images/founder/apollo-400.webp 400w, /images/founder/apollo-800.webp 800w"
+                sizes="(max-width: 768px) 300px, 400px"
+              />
+              <img
+                src="/images/founder/apollo-400.jpg"
+                alt="Apollo Duran, Founder of Pegasus DreamScapes"
+                className="w-full max-w-[300px] md:max-w-none aspect-[3/4] object-cover object-top grayscale brightness-90"
+                width={400}
+                height={533}
+              />
+            </picture>
           </div>
           <div className="md:col-span-8">
             <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">

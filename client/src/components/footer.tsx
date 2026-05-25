@@ -58,10 +58,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navPrimary("/strategy-lab"),
       extraLink("/submit", "Submit a Property", "submit"),
       navPrimary("/development"),
-      // Task #148 — Projects moved out of NAV_PRIMARY into the
-      // Development dropdown. Footer surfaces it as an extra link so
-      // the column IA is unchanged.
-      extraLink("/projects", "Projects", "projects"),
+      navPrimary("/projects"),
     ],
   },
   {
@@ -209,6 +206,7 @@ export function Footer() {
             </div>
 
             <div className="flex items-center gap-3 pt-4 border-t border-border/40 mt-2">
+              {/* Update href with your actual LinkedIn URL */}
               <a
                 href="https://www.linkedin.com/in/apolloduran"
                 target="_blank"
@@ -309,13 +307,6 @@ export function Footer() {
               <span className="sr-only">Equal Housing Opportunity. </span>Each office is independently owned and operated.
             </p>
           </div>
-          {/* Task #148 — copper hairline divider above the legal row.
-              Quiet brand seam; not a glass surface. */}
-          <div
-            aria-hidden="true"
-            className="mt-6 h-px bg-gradient-to-r from-transparent via-[hsl(var(--bronze)/0.45)] to-transparent"
-            data-testid="footer-copper-hairline"
-          />
           <div className="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-start gap-4">
               <img

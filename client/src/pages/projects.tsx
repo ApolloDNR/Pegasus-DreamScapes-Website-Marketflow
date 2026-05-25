@@ -309,35 +309,13 @@ function ProjectsGrid() {
           </div>
           </>
         ) : (
-          <>
-            <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 gap-7" staggerDelay={0.1}>
-              {filtered.flatMap((project, index) => {
-                const tile = (
-                  <StaggerItem key={`tile-${project.id}`}>
-                    <ProjectCard project={project} index={index} />
-                  </StaggerItem>
-                );
-                // Task #148 guardrail #2 — inline MarketFlow promo
-                // after the 4th tile when there are ≥4 case studies.
-                if (index === 3 && filtered.length >= 4) {
-                  return [
-                    tile,
-                    <StaggerItem key="marketflow-inline-promo">
-                      <MarketFlowInlinePromo />
-                    </StaggerItem>,
-                  ];
-                }
-                return [tile];
-              })}
-            </StaggerChildren>
-            {/* Fewer than four projects — render the subdued MarketFlow
-                line beneath the grid instead of inline. */}
-            {filtered.length > 0 && filtered.length < 4 && (
-              <div className="mt-16 pt-10 border-t border-border/40">
-                <MarketFlowSubduedCta />
-              </div>
-            )}
-          </>
+          <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 gap-7" staggerDelay={0.1}>
+            {filtered.map((project, index) => (
+              <StaggerItem key={project.id}>
+                <ProjectCard project={project} index={index} />
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
         )}
       </div>
     </section>
@@ -466,56 +444,6 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         </div>
       </motion.div>
     </Link>
-  );
-}
-
-function MarketFlowInlinePromo() {
-  // Task #148 guardrail #2 — discreet inline promo card. Matches
-  // project-tile aspect so the grid rhythm holds. Single MarketFlow
-  // mention per page; no neon, no over-claim.
-  return (
-    <Link href="/marketflow">
-      <div
-        className="group block h-full rounded-md border border-dashed border-primary/40 bg-primary/[0.03] hover:border-primary/60 hover:bg-primary/[0.06] transition-colors duration-200 p-7 lg:p-8 flex flex-col"
-        data-testid="card-projects-marketflow-promo"
-      >
-        <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">
-          MarketFlow · Private Network
-        </p>
-        <h3 className="font-serif text-2xl font-semibold tracking-tight leading-tight mb-3">
-          Want first look at the next one?
-        </h3>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
-          MarketFlow is the private layer where reviewed properties get routed to operators, buyers, and capital partners. Invite-only.
-        </p>
-        <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
-          Request Access <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-function MarketFlowSubduedCta() {
-  // Task #148 — when there are fewer than four projects, the inline
-  // tile would unbalance the grid. Render a quiet single-line CTA
-  // beneath the grid instead.
-  return (
-    <div className="text-center" data-testid="text-projects-marketflow-subdued">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">
-        MarketFlow · Private Network
-      </p>
-      <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-4 leading-relaxed">
-        Reviewed properties get routed to operators, buyers, and capital partners on a private, invite-only layer.
-      </p>
-      <Link
-        href="/marketflow"
-        className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-primary hover:text-primary/80 font-supporting font-semibold transition-colors"
-        data-testid="link-projects-marketflow-subdued"
-      >
-        Request Access <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-      </Link>
-    </div>
   );
 }
 
