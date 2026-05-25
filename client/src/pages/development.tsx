@@ -17,6 +17,8 @@ import {
   Wrench,
   Ruler,
   Building2,
+  Check,
+  Clock,
 } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -254,8 +256,15 @@ function ScopeTodaySection() {
         <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.08}>
           {scope.map((s, i) => (
             <StaggerItem key={i}>
-              <CardSurface className="h-full p-6 border-border/40 hover:border-primary/30 transition-colors" data-testid={`scope-card-${i}`}>
-                <s.icon className="w-6 h-6 text-primary/70 mb-5" />
+              <CardSurface className="h-full p-6 border-border/40 hover:border-primary/30 transition-colors group" data-testid={`scope-card-${i}`}>
+                <div className="flex items-start justify-between mb-5">
+                  <div className="w-11 h-11 rounded-sm bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 group-hover:border-primary/35 transition-colors">
+                    <s.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-[9px] uppercase tracking-[0.22em] text-primary/70 font-supporting font-semibold border border-primary/25 px-2 py-0.5 rounded-sm">
+                    Phase 1
+                  </span>
+                </div>
                 <h3 className="font-serif text-lg font-semibold mb-2 tracking-tight">{s.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
               </CardSurface>
@@ -339,19 +348,77 @@ function PhaseSection() {
           </p>
         </ScrollReveal>
 
+        {/* Horizontal progress rail — anchors the eye and shows where we are
+            on the pathway today. "You are here" sits under Phase 1. */}
+        <ScrollReveal delay={0.1} className="mb-10 hidden md:block">
+          <div className="relative max-w-5xl mx-auto px-2">
+            <div className="absolute top-3 left-0 right-0 h-px bg-gradient-to-r from-primary/40 via-border to-border/30" aria-hidden="true" />
+            <ol className="relative grid grid-cols-4 gap-4">
+              {phases.map((phase, idx) => (
+                <li key={phase.tag} className="flex flex-col items-center text-center">
+                  <span
+                    className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-supporting font-semibold ${
+                      idx === 0
+                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/40"
+                        : "bg-background border border-border text-muted-foreground"
+                    }`}
+                    aria-current={idx === 0 ? "step" : undefined}
+                  >
+                    {idx + 1}
+                  </span>
+                  <span
+                    className={`mt-2 text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold ${
+                      idx === 0 ? "text-primary" : "text-muted-foreground/70"
+                    }`}
+                  >
+                    {phase.label}
+                  </span>
+                  {idx === 0 && (
+                    <span className="text-[9px] italic text-muted-foreground/70 mt-0.5">
+                      You are here
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </ScrollReveal>
+
         <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-5" staggerDelay={0.1}>
           {phases.map((phase, index) => (
             <StaggerItem key={index}>
               <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.25 }} className="h-full">
               <CardSurface
-                className="relative h-full p-7 border-border/40 hover:border-primary/30 transition-all duration-300 group"
+                className={`relative h-full p-7 border-border/40 transition-all duration-300 group ${
+                  index === 0
+                    ? "border-primary/40 bg-primary/[0.025] hover:border-primary/60"
+                    : "hover:border-primary/30"
+                }`}
                 data-testid={`phase-card-${index}`}
               >
+                {index === 0 && (
+                  <span
+                    className="absolute -top-2.5 left-7 text-[9px] uppercase tracking-[0.22em] font-supporting font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded-sm shadow-sm"
+                    aria-hidden="true"
+                  >
+                    Today
+                  </span>
+                )}
                 <div className="flex items-baseline justify-between mb-6">
-                  <span className="font-serif text-3xl text-primary/30 group-hover:text-primary/60 transition-colors">
+                  <span
+                    className={`font-serif text-5xl leading-none transition-colors ${
+                      index === 0
+                        ? "text-primary"
+                        : "text-primary/25 group-hover:text-primary/55"
+                    }`}
+                  >
                     0{index + 1}
                   </span>
-                  <phase.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
+                  <phase.icon
+                    className={`w-5 h-5 transition-colors ${
+                      index === 0 ? "text-primary" : "text-primary/55 group-hover:text-primary"
+                    }`}
+                  />
                 </div>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-1">
                   {phase.tag} · {phase.label}
@@ -360,7 +427,12 @@ function PhaseSection() {
                 <ul className="space-y-2.5">
                   {phase.items.map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground leading-relaxed">
-                      <span className="mt-2 w-1 h-1 rounded-full bg-primary/50 flex-shrink-0" />
+                      <Check
+                        className={`mt-0.5 w-3.5 h-3.5 flex-shrink-0 ${
+                          index === 0 ? "text-primary" : "text-primary/45"
+                        }`}
+                        aria-hidden="true"
+                      />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -553,66 +625,69 @@ function RoutingFilterSection() {
         </ScrollReveal>
 
         <StaggerChildren className="grid md:grid-cols-3 gap-5" staggerDelay={0.1}>
-          {columns.map((col) => (
-            <StaggerItem key={col.eyebrow}>
-              <CardSurface
-                className={`h-full p-7 border-border/40 ${
-                  col.tone === "yes" ? "hover:border-primary/40" : "hover:border-border"
-                } transition-colors`}
-                data-testid={col.testid}
-              >
-                <div className="flex items-baseline justify-between mb-5">
-                  <p
-                    className={`text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold ${
-                      col.tone === "yes"
-                        ? "text-primary"
-                        : col.tone === "route"
-                        ? "text-foreground/70"
-                        : "text-muted-foreground/70"
-                    }`}
-                  >
-                    {col.eyebrow}
-                  </p>
-                  <span
-                    aria-hidden="true"
-                    className={`text-2xl font-serif leading-none ${
-                      col.tone === "yes"
-                        ? "text-primary"
-                        : col.tone === "route"
-                        ? "text-foreground/60"
-                        : "text-muted-foreground/50"
-                    }`}
-                  >
-                    {col.tone === "yes" ? "✓" : col.tone === "route" ? "→" : "·"}
-                  </span>
-                </div>
-                <h3 className="font-serif text-xl font-semibold mb-5 tracking-tight">
-                  {col.title}
-                </h3>
-                <ul className="space-y-2.5">
-                  {col.items.map((item, i) => (
-                    <li
-                      key={i}
-                      className={`flex items-start gap-2.5 text-sm leading-relaxed ${
-                        col.tone === "later" ? "text-muted-foreground/80" : "text-muted-foreground"
+          {columns.map((col) => {
+            const ToneIcon = col.tone === "yes" ? Check : col.tone === "route" ? ArrowRight : Clock;
+            const iconRing =
+              col.tone === "yes"
+                ? "bg-primary/12 border-primary/30 text-primary"
+                : col.tone === "route"
+                ? "bg-foreground/[0.06] border-foreground/20 text-foreground/75"
+                : "bg-muted-foreground/[0.08] border-muted-foreground/20 text-muted-foreground/80";
+            const bulletColor =
+              col.tone === "yes"
+                ? "bg-primary/60"
+                : col.tone === "route"
+                ? "bg-foreground/40"
+                : "bg-muted-foreground/40";
+            return (
+              <StaggerItem key={col.eyebrow}>
+                <CardSurface
+                  className={`h-full p-7 border-border/40 transition-colors ${
+                    col.tone === "yes"
+                      ? "hover:border-primary/40 bg-primary/[0.02]"
+                      : "hover:border-border"
+                  }`}
+                  data-testid={col.testid}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <span
+                      aria-hidden="true"
+                      className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center ${iconRing}`}
+                    >
+                      <ToneIcon className="w-4 h-4" />
+                    </span>
+                    <p
+                      className={`text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold ${
+                        col.tone === "yes"
+                          ? "text-primary"
+                          : col.tone === "route"
+                          ? "text-foreground/70"
+                          : "text-muted-foreground/70"
                       }`}
                     >
-                      <span
-                        className={`mt-2 w-1 h-1 rounded-full flex-shrink-0 ${
-                          col.tone === "yes"
-                            ? "bg-primary/60"
-                            : col.tone === "route"
-                            ? "bg-foreground/40"
-                            : "bg-muted-foreground/40"
+                      {col.eyebrow}
+                    </p>
+                  </div>
+                  <h3 className="font-serif text-xl font-semibold mb-5 tracking-tight">
+                    {col.title}
+                  </h3>
+                  <ul className="space-y-2.5">
+                    {col.items.map((item, i) => (
+                      <li
+                        key={i}
+                        className={`flex items-start gap-2.5 text-sm leading-relaxed ${
+                          col.tone === "later" ? "text-muted-foreground/80" : "text-muted-foreground"
                         }`}
-                      />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardSurface>
-            </StaggerItem>
-          ))}
+                      >
+                        <span className={`mt-2 w-1 h-1 rounded-full flex-shrink-0 ${bulletColor}`} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardSurface>
+              </StaggerItem>
+            );
+          })}
         </StaggerChildren>
 
         <ScrollReveal delay={0.25} className="mt-12 max-w-3xl mx-auto text-center">
