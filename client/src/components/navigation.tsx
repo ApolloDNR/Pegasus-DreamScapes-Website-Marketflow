@@ -105,8 +105,7 @@ function isItemActive(item: NavItem, location: string): boolean {
   // light up on /projects as well as /development).
   if (item.children) {
     for (const child of item.children) {
-      const childPrefix = child.matchPrefix ?? child.href;
-      if (matches(childPrefix)) return true;
+      if (matches(child.href)) return true;
     }
   }
   return false;
@@ -472,7 +471,7 @@ export function Navigation() {
                     >
                       <div className="rounded-lg border border-[hsl(var(--bronze)/0.25)] bg-background shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] overflow-hidden grid grid-cols-2">
                         <Link
-                          href="/projects/nelson-dr"
+                          href="/projects"
                           className="block p-5 border-r border-border/40 hover:bg-cream/50 dark:hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:bg-cream/60"
                           data-testid="link-nav-development-projects"
                         >
