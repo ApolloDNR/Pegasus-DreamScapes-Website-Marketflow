@@ -46,6 +46,9 @@ import { CommandPalette } from "./command-palette";
 import {
   NAV_PRIMARY,
   NAV_MORE,
+  NAV_MORE_GROUP_LABELS,
+  NAV_MORE_GROUP_ORDER,
+  getNavMoreByGroup,
   PRIMARY_CTA,
   type NavPrimaryItem,
 } from "@/config/navigation";
@@ -616,33 +619,48 @@ export function Navigation() {
                       <span>More</span>
                       <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
                     </summary>
-                    <ul className="space-y-1 pt-2">
-                      {MORE_ITEMS.map((item) => (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            onClick={() => setMobileOpen(false)}
-                            className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                            data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                          >
-                            {item.label}
-                          </Link>
-                        </li>
-                      ))}
+                    <div className="pt-2 space-y-5">
+                      {NAV_MORE_GROUP_ORDER.map((group) => {
+                        const items = getNavMoreByGroup(group);
+                        if (items.length === 0) return null;
+                        return (
+                          <div key={group} data-testid={`mobile-more-group-${group}`}>
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--muted-text))] font-supporting font-semibold mb-1 px-1">
+                              {NAV_MORE_GROUP_LABELS[group]}
+                            </p>
+                            <ul className="space-y-1">
+                              {items.map((item) => (
+                                <li key={`${group}-${item.href}`}>
+                                  <Link
+                                    href={item.href}
+                                    onClick={() => setMobileOpen(false)}
+                                    className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                                    data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                                  >
+                                    {item.label}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })}
                       {!isAuthenticated && (
-                        <li>
-                          <Link
-                            href="/login"
-                            onClick={() => setMobileOpen(false)}
-                            className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                            data-testid="link-mobile-signin"
-                          >
-                            <LogIn className="w-4 h-4" aria-hidden="true" />
-                            Sign In
-                          </Link>
-                        </li>
+                        <ul className="space-y-1 pt-1 border-t border-[hsl(var(--rule))]">
+                          <li>
+                            <Link
+                              href="/login"
+                              onClick={() => setMobileOpen(false)}
+                              className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                              data-testid="link-mobile-signin"
+                            >
+                              <LogIn className="w-4 h-4" aria-hidden="true" />
+                              Sign In
+                            </Link>
+                          </li>
+                        </ul>
                       )}
-                    </ul>
+                    </div>
                   </details>
                 </nav>
 

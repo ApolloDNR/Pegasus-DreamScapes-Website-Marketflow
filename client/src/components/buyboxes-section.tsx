@@ -123,7 +123,7 @@ export function BuyboxesSection() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-5" data-testid="buyboxes-grid">
-          {BUYBOXES.map((b) => (
+          {BUYBOXES.filter((b) => b.publicReady !== false).map((b) => (
             <BuyboxCard key={b.id} buybox={b} />
           ))}
         </div>

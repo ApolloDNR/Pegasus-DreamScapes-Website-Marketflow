@@ -406,7 +406,7 @@ function PrinciplesSection() {
             How we actually work.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mt-3">
-            The commitments below govern the execution layer — not the brand values, but the actual operating decisions: what we model, what we write down, how we graduate.
+            The commitments below govern the execution layer. Not the brand values, but the actual operating decisions: what we model, what we write down, how we graduate.
           </p>
         </ScrollReveal>
 

@@ -49,7 +49,11 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navMore("/library"),
       navMore("/connect"),
       navMore("/contact"),
-      extraLink("/faq", "FAQ", "faq"),
+      navMore("/faq"),
+      // Apollo guardrail #4: Projects also surfaces under Company in
+      // the More menu, even though it remains strongly surfaced as
+      // proof in the Services column below.
+      navMore("/projects"),
     ],
   },
   {

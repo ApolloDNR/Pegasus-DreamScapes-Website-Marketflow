@@ -309,7 +309,7 @@ function OperatorCredibilitySection() {
           <div className="md:col-span-2 space-y-6">
             <blockquote className="border-l-2 border-primary/40 pl-6">
               <p className="font-serif text-lg text-foreground/90 italic leading-relaxed mb-3">
-                &ldquo;Every Pegasus scope review starts with the contractor's lens — what it actually costs, what it actually takes, and where the real risk lives.&rdquo;
+                &ldquo;Every Pegasus scope review starts with the contractor's lens. What it actually costs, what it actually takes, and where the real risk lives.&rdquo;
               </p>
               <footer className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Apollo Duran</span>

@@ -148,6 +148,12 @@ const legacyRedirects: [string, string][] = [
   ["/buy", "/marketflow"],
   ["/partner", "/capital"],
   ["/invest", "/capital"],
+  // Phase 1 route-cleanup (Apollo guardrail #3 — redirects, not 410s,
+  // for paths that still have a clear canonical replacement).
+  ["/calculators", "/strategy-lab/classic"],
+  ["/education", "/library"],
+  ["/wholesale", "/submit?intent=deal-jv"],
+  ["/buyers", "/marketflow"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],
