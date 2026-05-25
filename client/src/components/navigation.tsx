@@ -46,9 +46,11 @@ import { CommandPalette } from "./command-palette";
 import {
   NAV_PRIMARY,
   NAV_MORE,
+  NAV_MORE_GROUPS,
   PRIMARY_CTA,
   type NavPrimaryItem,
 } from "@/config/navigation";
+const nelsonDrThumb = "/og/nelson-dr.png";
 
 // Locked Pass D grouping. Header desktop = 5 noun items + a "More" dropdown.
 // Mobile sheet mirrors the same set under its "More" group for parity.
@@ -235,6 +237,9 @@ function UserMenu({
 
 export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
+  // Task #148 — controlled open state so Escape can close the
+  // Development dropdown (hover/focus still trigger open).
+  const [devOpen, setDevOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [location, navigate] = useLocation();
   const { user, profile, isAuthenticated, isAdmin, signOut } = useSupabaseAuth();
@@ -420,16 +425,35 @@ export function Navigation() {
                     ? "text-white font-semibold"
                     : "text-white/85 hover:text-white";
                 return (
-                  <div key={item.label} className="relative group">
+                  <div
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={() => setDevOpen(true)}
+                    onMouseLeave={() => setDevOpen(false)}
+                    onFocus={() => setDevOpen(true)}
+                    onBlur={(e) => {
+                      // Only close when focus has actually left the wrapper.
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setDevOpen(false);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        setDevOpen(false);
+                        (document.activeElement as HTMLElement | null)?.blur();
+                      }
+                    }}
+                  >
                     <Link
                       href={item.href}
                       className={`${navLinkBase} ${colorClass} inline-flex items-center gap-1`}
                       data-testid={`link-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                       aria-current={active ? "page" : undefined}
                       aria-haspopup="true"
+                      aria-expanded={devOpen}
                     >
                       {item.label}
-                      <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" aria-hidden="true" />
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${devOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                       {active && (
                         <span
                           aria-hidden="true"
@@ -440,23 +464,30 @@ export function Navigation() {
                       )}
                     </Link>
                     {/* Solid (not frosted — guardrail #4) two-column
-                        Development panel. Hover open + focus-within for
-                        keyboard parity. */}
+                        Development panel. Hover/focus opens, Escape
+                        closes. Nelson Dr thumbnail per task spec. */}
                     <div
-                      className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-200 absolute top-full left-0 mt-2 w-[520px] z-50"
+                      className={`${devOpen ? "visible opacity-100 translate-y-0 pointer-events-auto" : "invisible opacity-0 translate-y-1 pointer-events-none"} transition-all duration-200 absolute top-full left-0 mt-2 w-[540px] z-50`}
                       data-testid="dropdown-development"
                     >
                       <div className="rounded-lg border border-[hsl(var(--bronze)/0.25)] bg-background shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] overflow-hidden grid grid-cols-2">
                         <Link
-                          href="/projects"
+                          href="/projects/nelson-dr"
                           className="block p-5 border-r border-border/40 hover:bg-cream/50 dark:hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:bg-cream/60"
                           data-testid="link-nav-development-projects"
                         >
                           <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2">
                             Projects
                           </p>
-                          <div className="aspect-[16/10] rounded-md bg-gradient-to-br from-primary/15 to-cream/30 dark:from-primary/10 dark:to-white/[0.04] flex items-center justify-center mb-3">
-                            <BookOpen className="w-6 h-6 text-primary/60" aria-hidden="true" />
+                          <div className="aspect-[16/10] rounded-md overflow-hidden mb-3 bg-cream/40 dark:bg-white/[0.04]">
+                            <img
+                              src={nelsonDrThumb}
+                              alt=""
+                              aria-hidden="true"
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                              data-testid="img-nav-nelson-thumb"
+                            />
                           </div>
                           <p className="font-serif text-base font-semibold text-foreground leading-snug mb-1">
                             Nelson Dr · Pleasant Hill
@@ -560,40 +591,55 @@ export function Navigation() {
                   </p>
                 </div>
 
-                {/* Items */}
+                {/* Task #148 — sectioned intent groups (Strategy ·
+                    Network · Company · Legal) with copper kicker labels
+                    and a copper left-bar on hover. Solid surface (no
+                    backdrop-blur). */}
                 <div className="py-2">
-                  {MORE_ITEMS.map((item) => {
-                    const meta = MORE_META[item.href];
-                    const Icon = meta?.icon ?? BookOpen;
-                    const testid = `link-nav-more-${item.label.toLowerCase().replace(/\s+/g, "-")}`;
-                    return (
-                      <Link key={item.href} href={item.href}>
-                        <DropdownMenuItem
-                          className="group cursor-pointer px-5 py-3 rounded-none border-l-2 border-transparent focus:bg-cream/60 focus:border-[hsl(var(--bronze))] dark:focus:bg-white/[0.06] data-[highlighted]:bg-cream/60 data-[highlighted]:border-[hsl(var(--bronze))] dark:data-[highlighted]:bg-white/[0.06]"
-                          data-testid={testid}
-                        >
-                          <div className="flex items-start gap-3.5 w-full">
-                            <div className="flex-shrink-0 mt-0.5 w-9 h-9 rounded-lg border border-primary/20 bg-cream/40 dark:bg-white/[0.03] flex items-center justify-center group-hover:border-primary/50 group-hover:bg-cream/70 dark:group-hover:bg-white/[0.06] transition-colors duration-200">
-                              <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="font-serif text-[15px] font-semibold tracking-tight text-foreground leading-none">
-                                  {item.label}
-                                </span>
-                                <ArrowRight className="w-3.5 h-3.5 text-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
+                  {NAV_MORE_GROUPS.map((group, gi) => (
+                    <div
+                      key={group.key}
+                      className={gi > 0 ? "mt-1 pt-2 border-t border-border/40" : ""}
+                      data-testid={`nav-more-group-${group.key}`}
+                    >
+                      <p
+                        className="px-5 pt-2 pb-1 text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold"
+                        data-testid={`nav-more-group-label-${group.key}`}
+                      >
+                        {group.label}
+                      </p>
+                      {group.items.map((item) => {
+                        const meta = MORE_META[item.href];
+                        const Icon = meta?.icon ?? BookOpen;
+                        const testid = `link-nav-more-${item.label.toLowerCase().replace(/\s+/g, "-")}`;
+                        return (
+                          <Link key={item.href} href={item.href}>
+                            <DropdownMenuItem
+                              className="group cursor-pointer px-5 py-2.5 rounded-none border-l-2 border-transparent focus:bg-cream/60 focus:border-[hsl(var(--bronze))] dark:focus:bg-white/[0.06] data-[highlighted]:bg-cream/60 data-[highlighted]:border-[hsl(var(--bronze))] dark:data-[highlighted]:bg-white/[0.06]"
+                              data-testid={testid}
+                            >
+                              <div className="flex items-start gap-3 w-full">
+                                <Icon className="flex-shrink-0 mt-0.5 w-4 h-4 text-primary" aria-hidden="true" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-serif text-[14px] font-semibold tracking-tight text-foreground leading-none">
+                                      {item.label}
+                                    </span>
+                                    <ArrowRight className="w-3.5 h-3.5 text-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
+                                  </div>
+                                  {meta?.tagline && (
+                                    <p className="mt-1 text-xs text-muted-foreground leading-snug">
+                                      {meta.tagline}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                              {meta?.tagline && (
-                                <p className="mt-1 text-xs text-muted-foreground leading-snug">
-                                  {meta.tagline}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      </Link>
-                    );
-                  })}
+                            </DropdownMenuItem>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
 
                 {!isAuthenticated && (
@@ -713,33 +759,40 @@ export function Navigation() {
                       <span>More</span>
                       <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
                     </summary>
-                    <ul className="space-y-1 pt-2">
-                      {MORE_ITEMS.map((item) => (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            onClick={() => setMobileOpen(false)}
-                            className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                            data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                          >
-                            {item.label}
-                          </Link>
-                        </li>
+                    <div className="pt-2 space-y-4">
+                      {NAV_MORE_GROUPS.map((group) => (
+                        <div key={group.key} data-testid={`mobile-more-group-${group.key}`}>
+                          <p className="px-1 pb-1 text-[10px] uppercase tracking-[0.3em] text-[hsl(var(--bronze))] font-supporting font-semibold">
+                            {group.label}
+                          </p>
+                          <ul className="space-y-1">
+                            {group.items.map((item) => (
+                              <li key={item.href}>
+                                <Link
+                                  href={item.href}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="block py-2.5 pl-3 border-l-2 border-transparent hover:border-[hsl(var(--bronze))] text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                                  data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                                >
+                                  {item.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
                       {!isAuthenticated && (
-                        <li>
-                          <Link
-                            href="/login"
-                            onClick={() => setMobileOpen(false)}
-                            className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                            data-testid="link-mobile-signin"
-                          >
-                            <LogIn className="w-4 h-4" aria-hidden="true" />
-                            Sign In
-                          </Link>
-                        </li>
+                        <Link
+                          href="/login"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                          data-testid="link-mobile-signin"
+                        >
+                          <LogIn className="w-4 h-4" aria-hidden="true" />
+                          Sign In
+                        </Link>
                       )}
-                    </ul>
+                    </div>
                   </details>
                 </nav>
 

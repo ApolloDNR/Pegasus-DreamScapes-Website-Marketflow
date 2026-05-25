@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { trackEvent, trackCtaClick } from "@/lib/analytics";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import { ArrowRight, MapPin } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
@@ -95,6 +95,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSONLD) }}
       />
       <HeroSection />
+      <HeroStatsBand />
       <PegasusQuestionSection />
       <StrategyLabTeaserSection />
       <MeetApolloSection />
@@ -110,6 +111,8 @@ export default function Home() {
         Every property gets a path. Not every property gets an offer.
         Bring us the property. We'll show you the path.
         Most Strategy Snapshots are reviewed within 5 business days.
+        Built on strategy. Governed by virtue. Executed with discipline.
+        Dream it. Build it. Live it.
       </span>
     </div>
   );
@@ -347,12 +350,20 @@ function OperatorCredibilitySection() {
 function HeroSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
+  // Task #148 — every hero animation is gated behind
+  // prefers-reduced-motion (orbs, headline reveal, sub reveal, CTA
+  // reveal, sample card reveal). When reduced motion is requested
+  // the hero renders statically with no entrance or ambient motion.
+  const reduceMotion = useReducedMotion();
+  const fade = (delay: number) =>
+    reduceMotion
+      ? { initial: false as const, animate: { opacity: 1, y: 0, x: 0 } }
+      : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, delay } };
 
   const heroLine1 = getValue("home.hero.line1", "Complex property.");
   const heroLine2 = getValue("home.hero.line2", "Structured opportunity.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Start a Strategy Review");
   const heroCtaSecondary = getValue("home.hero.cta_secondary", "See Our Work");
-  const heroPhilosophical = "Built on strategy. Governed by virtue. Executed with discipline.";
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
@@ -406,71 +417,39 @@ function HeroSection() {
         className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[hsl(var(--navy)/0.92)] via-[hsl(var(--navy)/0.55)] to-transparent pointer-events-none"
       />
 
-      {/* Enhanced animated gradient orbs */}
-      <div className="hidden md:block absolute inset-0 opacity-40 overflow-hidden">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 30, 0],
-            y: [0, -20, 0],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/25 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            x: [0, -40, 0],
-            y: [0, 30, 0],
-            opacity: [0.4, 0.6, 0.4]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        <motion.div
-          className="absolute top-1/2 right-1/3 w-48 h-48 bg-primary/15 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            rotate: [0, 180, 360]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.div
-          className="absolute bottom-1/3 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-2xl"
-          animate={{
-            y: [0, -50, 0],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-      </div>
+      {/* Task #148 — animated gradient orbs gated behind
+          prefers-reduced-motion. When reduced motion is requested
+          they render as static, faint background lights only. */}
+      {!reduceMotion && (
+        <div className="hidden md:block absolute inset-0 opacity-30 overflow-hidden" aria-hidden="true">
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.4, 0.25] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-champagne/20 rounded-full blur-3xl"
+            animate={{ scale: [1.15, 1, 1.15], opacity: [0.3, 0.45, 0.3] }}
+            transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+        </div>
+      )}
 
       {/* Content - centered for more impact */}
       <div className="relative z-10 w-full py-32">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="max-w-4xl">
-            {/* Eyebrow tag — featured project anchor */}
-            <motion.div
-              className="flex items-center gap-3 mb-7"
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              data-testid="hero-eyebrow"
-            >
-              <span className="h-px w-8 bg-primary" />
-              <p className="text-[11px] sm:text-[12px] uppercase tracking-[0.18em] text-primary font-semibold font-supporting">
-                Strategy-first · East Bay · California
-              </p>
-            </motion.div>
+            {/* Task #148 — hero restraint: ≤4 visible elements
+                (headline + sub, primary CTA + ghost link, sample card).
+                Eyebrow, philosophical, brand-tagline, and stat strip
+                moved out of the hero — stats now ride in
+                <HeroStatsBand /> directly below. */}
 
             {/* Premium headline — line 1 cream serif, line 2 italic gold gradient */}
             <h1 className="font-serif font-semibold mb-8 text-white [font-size:clamp(48px,7vw,96px)] [line-height:0.95] [letter-spacing:-0.02em]" data-testid="text-hero-headline">
               <motion.span
                 className="block"
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
+                {...fade(0.1)}
               >
                 {isEditMode ? (
                   <EditableText contentKey="home.hero.line1" fallback="Complex property." />
@@ -478,9 +457,7 @@ function HeroSection() {
               </motion.span>
               <motion.span
                 className="block italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent pb-2 overflow-visible"
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.5 }}
+                {...fade(0.25)}
               >
                 {isEditMode ? (
                   <EditableText contentKey="home.hero.line2" fallback="Structured opportunity." />
@@ -496,43 +473,18 @@ function HeroSection() {
               />
               {/* Shortened body line — strategy-first positioning */}
               <motion.p
-                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-7 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.75 }}
+                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-10 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
+                {...fade(0.4)}
                 data-testid="text-hero-subheadline"
               >
                 Where others see impossible, we see a path. A strategy-first real estate operating company that reviews the situation, then designs the route forward.
               </motion.p>
             </div>
 
-            {/* Philosophical line (locked v1.3.1) + brand tagline */}
-            <motion.div
-              className="mb-10 space-y-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
-            >
-              <p
-                className="font-serif text-base sm:text-lg text-white/95 italic tracking-wide leading-snug [text-shadow:0_2px_16px_rgba(0,0,0,0.55)]"
-                data-testid="text-hero-philosophical"
-              >
-                {heroPhilosophical}
-              </p>
-              <div className="flex items-center gap-3" data-testid="text-hero-tagline">
-                <span className="h-px w-8 bg-primary/70" />
-                <p className="text-[11px] sm:text-xs uppercase tracking-[0.4em] text-primary/90 font-medium font-supporting">
-                  Dream it. Build it. Live it.
-                </p>
-              </div>
-            </motion.div>
-
             {/* Premium CTAs */}
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.05 }}
+              {...fade(0.55)}
             >
               <a
                 href="/submit"
@@ -568,10 +520,8 @@ function HeroSection() {
                 Read card. Glass surface 2 of 3 (guardrail #4). Desktop
                 ≥lg only; copy is locked verbatim. */}
             <motion.aside
-              className="hidden lg:block absolute top-1/2 right-12 -translate-y-1/2 z-20 w-[340px] motion-reduce:animate-none"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.1 }}
+              className="hidden lg:block absolute top-1/2 right-12 -translate-y-1/2 z-20 w-[340px]"
+              {...fade(0.7)}
               aria-label="Sample Strategy Lab read"
               data-testid="hero-sample-card"
             >
@@ -613,59 +563,74 @@ function HeroSection() {
               </div>
             </motion.aside>
 
-            {/* Editorial framework strip: location anchor + 4 doctrine markers */}
-            <motion.div
-              className="mt-14 pt-8 border-t border-white/10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 1.3 }}
-              data-testid="hero-bottom-row"
-            >
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-white/55 font-supporting font-medium mb-7" data-testid="hero-location-chips">
-                <MapPin className="w-3 h-3 text-primary/80" />
-                <span>Pleasant Hill</span>
-                <span className="text-white/25">·</span>
-                <span>East Bay</span>
-                <span className="text-white/25">·</span>
-                <span>California</span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-10" data-testid="hero-stats-preview">
-                {[
-                  { id: "experience", index: "01", kicker: "Experience",  label: "20+ Years",    descriptor: "Commercial & residential construction." },
-                  { id: "strategies", index: "02", kicker: "Strategies",  label: "14 Paths",     descriptor: "Every route a property can take." },
-                  { id: "market",     index: "03", kicker: "Market",      label: "East Bay, CA", descriptor: "Pleasant Hill · Concord · Walnut Creek." },
-                  { id: "license",    index: "04", kicker: "Licensed",    label: "DRE Licensed", descriptor: "#02333658 · Keller Williams East Bay." },
-                ].map((stat) => (
-                  <div
-                    key={stat.id}
-                    className="relative flex flex-col gap-3 min-w-0 sm:pl-5 sm:border-l sm:border-white/12"
-                    data-testid={`hero-stat-${stat.id}`}
-                  >
-                    <div className="flex items-baseline gap-2.5">
-                      <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold tabular-nums">
-                        {stat.index}
-                      </span>
-                      <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold uppercase">
-                        {stat.kicker}
-                      </span>
-                    </div>
-                    <p className="font-serif text-xl sm:text-[22px] text-white leading-none tracking-tight">
-                      {stat.label}
-                    </p>
-                    <p className="text-[12px] text-white/55 leading-snug">
-                      {stat.descriptor}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Premium accent bar at bottom */}
       <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
+    </section>
+  );
+}
+
+// Task #148 — Editorial stat continuation band. Lives directly under
+// the hero (no longer overlaid on the hero photo). Solid Deep Navy
+// surface so the dark-band continuity from hero → Pegasus Question
+// section is preserved without spending a glass surface here
+// (guardrail #4 keeps the glass budget at 3).
+function HeroStatsBand() {
+  const stats = [
+    { id: "experience", index: "01", kicker: "Experience", label: "20+ Years",    descriptor: "Commercial & residential construction." },
+    { id: "strategies", index: "02", kicker: "Strategies", label: "14 Paths",     descriptor: "Every route a property can take." },
+    { id: "market",     index: "03", kicker: "Market",     label: "East Bay, CA", descriptor: "Pleasant Hill · Concord · Walnut Creek." },
+    { id: "license",    index: "04", kicker: "Licensed",   label: "DRE Licensed", descriptor: "#02333658 · Keller Williams East Bay." },
+  ];
+  return (
+    <section
+      className="relative bg-[hsl(var(--navy))] border-t border-white/10 py-10 lg:py-12"
+      data-testid="hero-stats-band"
+      aria-label="Pegasus DreamScapes at a glance"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div
+          className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-white/55 font-supporting font-medium mb-7"
+          data-testid="hero-location-chips"
+        >
+          <MapPin className="w-3 h-3 text-primary/80" />
+          <span>Pleasant Hill</span>
+          <span className="text-white/25">·</span>
+          <span>East Bay</span>
+          <span className="text-white/25">·</span>
+          <span>California</span>
+        </div>
+        <div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-10"
+          data-testid="hero-stats-preview"
+        >
+          {stats.map((stat) => (
+            <div
+              key={stat.id}
+              className="relative flex flex-col gap-3 min-w-0 sm:pl-5 sm:border-l sm:border-white/12"
+              data-testid={`hero-stat-${stat.id}`}
+            >
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold tabular-nums">
+                  {stat.index}
+                </span>
+                <span className="font-supporting text-[10px] tracking-[0.3em] text-primary/80 font-semibold uppercase">
+                  {stat.kicker}
+                </span>
+              </div>
+              <p className="font-serif text-xl sm:text-[22px] text-white leading-none tracking-tight">
+                {stat.label}
+              </p>
+              <p className="text-[12px] text-white/55 leading-snug">
+                {stat.descriptor}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

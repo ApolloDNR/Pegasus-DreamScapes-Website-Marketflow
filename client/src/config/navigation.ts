@@ -43,6 +43,38 @@ export const NAV_MORE: NavMoreItem[] = [
   { href: "/disclosures", label: "Disclosures" },
 ];
 
+// Task #148 — sectioned More dropdown (desktop + mobile). Items are
+// grouped by intent (Strategy · Network · Company · Legal); every
+// NAV_MORE entry must appear in exactly one group so the nav-parity
+// guarantee holds.
+export type NavMoreGroupKey = "strategy" | "network" | "company" | "legal";
+export const NAV_MORE_GROUPS: Array<{ key: NavMoreGroupKey; label: string; items: NavMoreItem[] }> = [
+  {
+    key: "strategy",
+    label: "Strategy",
+    items: [{ href: "/library", label: "Strategy Library" }],
+  },
+  {
+    key: "network",
+    label: "Network",
+    items: [
+      { href: "/vendor-network", label: "Vendor Network" },
+      { href: "/capital", label: "Capital" },
+      { href: "/connect", label: "Connect" },
+    ],
+  },
+  {
+    key: "company",
+    label: "Company",
+    items: [{ href: "/contact", label: "Contact" }],
+  },
+  {
+    key: "legal",
+    label: "Legal",
+    items: [{ href: "/disclosures", label: "Disclosures" }],
+  },
+];
+
 // Footer-only legal links surfaced under the Legal column.
 export const FOOTER_MORE_EXTRA: NavMoreItem[] = [];
 
