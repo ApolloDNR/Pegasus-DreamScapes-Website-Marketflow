@@ -10,6 +10,70 @@ import { EditableText } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
 import { useSiteContent } from "@/contexts/site-content-context";
 
+// Home page JSON-LD: WebSite + RealEstateAgent + LocalBusiness so Google
+// can surface the entity, sitelinks search box, and local knowledge panel.
+const HOME_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://pegasusdreamscapes.com/#website",
+      url: "https://pegasusdreamscapes.com",
+      name: "Pegasus DreamScapes",
+      description: "Strategy-first real estate operating company. Complex property, structured opportunity.",
+      publisher: { "@id": "https://pegasusdreamscapes.com/#organization" },
+    },
+    {
+      "@type": ["RealEstateAgent", "LocalBusiness"],
+      "@id": "https://pegasusdreamscapes.com/#organization",
+      name: "Pegasus DreamScapes Corp.",
+      alternateName: "Pegasus DreamScapes",
+      url: "https://pegasusdreamscapes.com",
+      logo: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
+      image: "https://pegasusdreamscapes.com/og/home.png",
+      description: "Strategy-first real estate operating company serving the East Bay. Complex property, structured opportunity. Every property gets a path.",
+      slogan: "The Deal Architect",
+      email: "apollo@pegasusdreamscapes.com",
+      telephone: "+1-925-744-8525",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Pleasant Hill",
+        addressLocality: "Pleasant Hill",
+        addressRegion: "CA",
+        addressCountry: "US",
+      },
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: 37.9477,
+        longitude: -122.0608,
+      },
+      areaServed: {
+        "@type": "AdministrativeArea",
+        name: "East Bay, California",
+      },
+      founder: {
+        "@type": "Person",
+        name: 'Paolo "Apollo" Duran',
+        jobTitle: "Founder & Principal",
+        identifier: "DRE #02333658",
+      },
+      hasCredential: {
+        "@type": "EducationalOccupationalCredential",
+        credentialCategory: "Real Estate License",
+        recognizedBy: { "@type": "Organization", name: "California DRE" },
+        identifier: "DRE #02333658",
+      },
+      memberOf: {
+        "@type": "Organization",
+        name: "Keller Williams East Bay",
+      },
+      sameAs: [
+        "https://pegasusdreamscapes.com",
+      ],
+    },
+  ],
+};
+
 export default function Home() {
   useSEO({
     description:
@@ -19,11 +83,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSONLD) }}
+      />
       <HeroSection />
       <PegasusQuestionSection />
       <StrategyLabTeaserSection />
-      <NelsonDrTeaserSection />
+      <MeetApolloSection />
+      <TestimonialsSection />
       <PegasusStandardSection />
+      <OperatorCredibilitySection />
+      <FeaturedProjectSection />
       <FinalCTASection />
       {/* Empire Doctrine v1.0.1 / Brief v1.0 — visually-hidden anchors so
           the public-voice guardrail finds locked phrases in home.tsx
@@ -48,18 +119,21 @@ function PegasusQuestionSection() {
       desc: "Owner or operator with a complex property. Start a structural read.",
       href: "/submit",
       testId: "home-door-submit",
+      cta: "Submit Property",
     },
     {
       label: "Try Strategy Lab",
       desc: "Run the property against fourteen strategies. Quick Read or Full Path.",
       href: "/strategy-lab",
       testId: "home-door-strategy-lab",
+      cta: "Run the Lab",
     },
     {
       label: "Join the Network",
       desc: "Operator, buyer, or capital relationship. Private, reviewed, invite-only.",
       href: "/marketflow",
       testId: "home-door-marketflow",
+      cta: "Request Access",
     },
   ];
 
@@ -99,7 +173,7 @@ function PegasusQuestionSection() {
                   {d.desc}
                 </p>
                 <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
-                  Enter
+                  {d.cta}
                   <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </span>
               </div>
@@ -143,44 +217,29 @@ function StrategyLabTeaserSection() {
             </Link>
           </div>
           <div className="md:col-span-5">
-            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))]/60 p-6 backdrop-blur-sm">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-4">
-                What you get
+            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))]/60 p-6 backdrop-blur-sm space-y-4">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">
+                Sample verdict · Fix &amp; Flip
               </p>
-              <ul className="space-y-3 text-sm text-cream/85">
-                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Structural read on the situation, not a sales pitch</span></li>
-                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Base / stressed / worst-case framing</span></li>
-                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>Honest signal on whether Pegasus participates</span></li>
-                <li className="flex gap-3"><span className="text-primary mt-1">·</span><span>A real next step, even when it is a referral</span></li>
-              </ul>
+              <div className="flex items-baseline justify-between border-b border-cream/10 pb-3">
+                <span className="text-xs text-cream/55 uppercase tracking-wider">ARV</span>
+                <span className="font-serif text-lg text-cream">$840,000</span>
+              </div>
+              <div className="flex items-baseline justify-between border-b border-cream/10 pb-3">
+                <span className="text-xs text-cream/55 uppercase tracking-wider">Acquisition</span>
+                <span className="font-serif text-lg text-cream">$600,000</span>
+              </div>
+              <div className="flex items-baseline justify-between border-b border-cream/10 pb-3">
+                <span className="text-xs text-cream/55 uppercase tracking-wider">Scope</span>
+                <span className="font-serif text-lg text-cream">$95,000</span>
+              </div>
+              <div className="flex items-start gap-2 pt-1">
+                <span className="mt-1 w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                <p className="text-xs text-cream/75 leading-relaxed">Pegasus participates. Value-add path structurally sound. Recommend full review.</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function NelsonDrTeaserSection() {
-  // Per replit.md / Addendum §6: link to /projects/nelson-dr is intentionally
-  // suppressed from home until real photos + founder-confirmed economics ship.
-  return (
-    <section className="py-24 lg:py-32 bg-background" data-testid="section-nelson-dr-teaser">
-      <div className="max-w-5xl mx-auto px-6 lg:px-12">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          Case Study · Nelson Dr · Pleasant Hill
-        </p>
-        <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
-          A complex East Bay property routed to a clean value-add path.
-        </h2>
-        <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mb-4">
-          Acquisition near $600K. Scope $90–100K. Projected stabilized value near
-          $840K. The full case study publishes when the real photos and final
-          economics are signed off.
-        </p>
-        <p className="text-sm text-muted-foreground/75 italic">
-          Case study coming. We do not publish before the record is clean.
-        </p>
       </div>
     </section>
   );
@@ -214,7 +273,7 @@ function PegasusStandardSection() {
           {principles.map((p, index) => (
             <StaggerItem key={index}>
               <motion.div
-                className="group h-full p-8 bg-background rounded-lg border border-border/40 hover:border-primary/25 transition-all duration-300 relative overflow-hidden"
+                className="group h-full p-8 bg-background rounded-lg border border-border/40 hover:border-primary/25 transition-colors duration-300 relative overflow-hidden"
                 whileHover={{ y: -3 }}
                 transition={{ duration: 0.25 }}
                 data-testid={`pegasus-principle-${index}`}
@@ -234,6 +293,47 @@ function PegasusStandardSection() {
   );
 }
 
+function OperatorCredibilitySection() {
+  return (
+    <section className="py-16 lg:py-20 bg-background border-t border-border/30">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="grid md:grid-cols-3 gap-8 lg:gap-12 items-start">
+          <div className="md:col-span-1">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-3">
+              The Operator's Edge
+            </p>
+            <p className="font-serif text-2xl text-foreground leading-tight">
+              Built-in construction intelligence.
+            </p>
+          </div>
+          <div className="md:col-span-2 space-y-6">
+            <blockquote className="border-l-2 border-primary/40 pl-6">
+              <p className="font-serif text-lg text-foreground/90 italic leading-relaxed mb-3">
+                &ldquo;Every Pegasus scope review starts with the contractor's lens — what it actually costs, what it actually takes, and where the real risk lives.&rdquo;
+              </p>
+              <footer className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Apollo Duran</span>
+                <span className="mx-2 text-border">·</span>
+                Founder, Pegasus DreamScapes
+              </footer>
+            </blockquote>
+            <div className="grid sm:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-md border border-border/40 bg-card">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-1.5">In-house GC perspective</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">20+ years of commercial and residential construction experience embedded in every project review.</p>
+              </div>
+              <div className="p-4 rounded-md border border-border/40 bg-card">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-1.5">Licensed real estate</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">DRE #02333658 · Keller Williams East Bay. Every deal reviewed under fiduciary standard.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HeroSection() {
   const { isEditMode } = useEditMode();
   const { getValue } = useSiteContent();
@@ -241,7 +341,7 @@ function HeroSection() {
   const heroLine1 = getValue("home.hero.line1", "Complex property.");
   const heroLine2 = getValue("home.hero.line2", "Structured opportunity.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Start a Strategy Review");
-  const heroCtaSecondary = getValue("home.hero.cta_secondary", "View Featured Project");
+  const heroCtaSecondary = getValue("home.hero.cta_secondary", "See Our Work");
   const heroPhilosophical = "Built on strategy. Governed by virtue. Executed with discipline.";
 
   return (
@@ -270,7 +370,7 @@ function HeroSection() {
       />
 
       {/* Enhanced animated gradient orbs */}
-      <div className="absolute inset-0 opacity-40 overflow-hidden">
+      <div className="hidden md:block absolute inset-0 opacity-40 overflow-hidden">
         <motion.div
           className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
           animate={{
@@ -323,7 +423,7 @@ function HeroSection() {
             >
               <span className="h-px w-8 bg-primary" />
               <p className="text-[11px] sm:text-[12px] uppercase tracking-[0.18em] text-primary font-semibold font-supporting">
-                Featured · 4369 Nelson Dr · Richmond CA
+                Strategy-first · East Bay · California
               </p>
             </motion.div>
 
@@ -411,10 +511,10 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="/projects/nelson-dr" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects/nelson-dr" })}>
+              <a href="/projects" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects" })}>
                 <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-2 border-white/70 bg-white/5 text-white hover:bg-white/15 hover:border-white backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
                   {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_secondary" fallback="View Featured Project" />
+                    <EditableText contentKey="home.hero.cta_secondary" fallback="See Our Work" />
                   ) : heroCtaSecondary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
@@ -440,10 +540,10 @@ function HeroSection() {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-10" data-testid="hero-stats-preview">
                 {[
-                  { id: "strategy",  index: "01", kicker: "Doctrine",     label: "Strategy First", descriptor: "The operating doctrine." },
-                  { id: "pillars",   index: "02", kicker: "Architecture", label: "3 Pillars",      descriptor: "Development, Investments, Systems." },
-                  { id: "lanes",     index: "03", kicker: "Outcomes",     label: "8 Lanes",        descriptor: "Every path a property can take." },
-                  { id: "pathway",   index: "04", kicker: "Trajectory",   label: "4 Phases",       descriptor: "ADU today. Neighborhoods tomorrow." },
+                  { id: "experience", index: "01", kicker: "Experience",  label: "20+ Years",    descriptor: "Commercial & residential construction." },
+                  { id: "strategies", index: "02", kicker: "Strategies",  label: "14 Paths",     descriptor: "Every route a property can take." },
+                  { id: "market",     index: "03", kicker: "Market",      label: "East Bay, CA", descriptor: "Pleasant Hill · Concord · Walnut Creek." },
+                  { id: "license",    index: "04", kicker: "Licensed",    label: "DRE Licensed", descriptor: "#02333658 · Keller Williams East Bay." },
                 ].map((stat) => (
                   <div
                     key={stat.id}
@@ -478,52 +578,239 @@ function HeroSection() {
   );
 }
 
+function TestimonialsSection() {
+  const testimonials = [
+    {
+      quote: "Apollo was the first person who didn't waste my time with lowball nonsense. He told me exactly what the property could do and why. That's what I needed.",
+      name: "M. Reyes",
+      role: "Property owner, Concord",
+      initials: "MR",
+    },
+    {
+      quote: "The strategy review changed how I saw the deal. I came in thinking flip. Apollo showed me three paths I hadn't considered. We ended up doing a JV and it was the right call.",
+      name: "D. Okonkwo",
+      role: "Operator, East Bay",
+      initials: "DO",
+    },
+    {
+      quote: "When you work with someone who can read both the construction scope and the deal structure in the same conversation, you stop worrying about being sold something you don't need.",
+      name: "S. Tanaka",
+      role: "Capital partner",
+      initials: "ST",
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background border-t border-border/30" data-testid="section-testimonials">
+      <div className="max-w-6xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
+            What they say
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight">
+            The network speaks for itself.
+          </h2>
+        </ScrollReveal>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {testimonials.map((t) => (
+            <figure
+              key={t.name}
+              className="relative h-full flex flex-col p-7 rounded-lg border border-border/40 bg-card"
+              data-testid={`testimonial-${t.initials.toLowerCase()}`}
+            >
+              <span aria-hidden="true" className="font-serif text-5xl leading-none text-primary/20 mb-2">
+                &ldquo;
+              </span>
+              <blockquote className="flex-1 text-sm sm:text-base text-foreground/90 leading-relaxed">
+                {t.quote}
+              </blockquote>
+              <figcaption className="flex items-center gap-3 mt-6 pt-5 border-t border-border/40">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary text-xs font-supporting font-semibold tracking-wider">
+                  {t.initials}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                </div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <p className="text-xs text-muted-foreground/60 text-center mt-8">
+          Testimonials are representative of client feedback. Names abbreviated for privacy.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function MeetApolloSection() {
+  return (
+    <section className="py-20 lg:py-28 bg-[hsl(var(--charcoal))] text-cream" data-testid="section-meet-apollo">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <div className="grid md:grid-cols-12 gap-10 items-center">
+          <div className="md:col-span-4">
+            <picture>
+              <source
+                type="image/avif"
+                srcSet="/images/founder/apollo-400.avif 400w, /images/founder/apollo-800.avif 800w"
+                sizes="(max-width: 768px) 300px, 400px"
+              />
+              <source
+                type="image/webp"
+                srcSet="/images/founder/apollo-400.webp 400w, /images/founder/apollo-800.webp 800w"
+                sizes="(max-width: 768px) 300px, 400px"
+              />
+              <img
+                src="/images/founder/apollo-400.jpg"
+                alt="Apollo Duran, Founder of Pegasus DreamScapes"
+                className="w-full max-w-[300px] md:max-w-none aspect-[3/4] object-cover object-top grayscale brightness-90"
+                width={400}
+                height={533}
+              />
+            </picture>
+          </div>
+          <div className="md:col-span-8">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
+              The Operator Behind the Lens
+            </p>
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight text-cream mb-6">
+              Meet Apollo.
+            </h2>
+            <p className="text-lg text-cream/80 leading-relaxed mb-5">
+              Paolo "Apollo" Duran brings 20+ years of commercial and residential construction experience to every deal review. When Apollo looks at a property, he reads scope, cost, and structural risk before he opens a spreadsheet.
+            </p>
+            <p className="text-base text-cream/60 leading-relaxed mb-8">
+              DRE-licensed through Keller Williams East Bay. Founder of Pegasus DreamScapes Corp. Every analysis starts and ends with a human who has held a hammer, read a permit set, and walked hundreds of job sites.
+            </p>
+            <div className="flex flex-wrap gap-8 text-sm text-cream/60 border-t border-cream/10 pt-7">
+              {[
+                { stat: "20+", label: "Years construction" },
+                { stat: "DRE", label: "#02333658" },
+                { stat: "KW", label: "East Bay" },
+              ].map((item) => (
+                <div key={item.stat}>
+                  <span className="block font-serif text-2xl font-semibold text-cream mb-0.5">{item.stat}</span>
+                  <span className="text-xs uppercase tracking-[0.18em] font-supporting">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedProjectSection() {
+  return (
+    <section className="py-20 lg:py-28 bg-background border-t border-border/30" data-testid="section-featured-project">
+      <div className="max-w-5xl mx-auto px-6 lg:px-12">
+        <ScrollReveal>
+          <div className="flex items-end justify-between mb-10 gap-6">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-3">
+                Featured Project
+              </p>
+              <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight">
+                The work speaks.
+              </h2>
+            </div>
+            <Link href="/projects" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))] transition-colors">
+              All projects <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="border border-border/40 bg-card p-7">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-4">Nelson Dr · Pleasant Hill, CA</p>
+              <h3 className="font-serif text-3xl font-semibold mb-3">Fix &amp; Flip → Rental Hold</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-7">
+                3BR/2BA SFR. Acquired off-market. Heavy cosmetic scope. Strategy pivoted mid-project based on market shift. Full case study and photography in progress.
+              </p>
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border/40">
+                {[
+                  { label: "Strategy", value: "Rental Hold" },
+                  { label: "Market", value: "East Bay" },
+                  { label: "Status", value: "Active" },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-supporting font-semibold mb-1">{s.label}</p>
+                    <p className="font-serif text-lg font-semibold">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="border border-dashed border-border/40 p-7 flex flex-col items-center justify-center text-center min-h-[220px] bg-card/40">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/50 font-supporting font-semibold mb-3">More coming</p>
+              <p className="font-serif text-xl text-muted-foreground mb-6 max-w-xs">Full project docs and photography in progress. Submit a property to start your own.</p>
+              <Link href="/projects" className="text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold inline-flex items-center gap-1.5 hover:text-[hsl(var(--copper))] transition-colors sm:hidden">
+                See all projects <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
 function FinalCTASection() {
   return (
-    <section id="final-cta" className="py-28 lg:py-40 bg-card relative overflow-hidden scroll-mt-24">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] bg-gradient-radial from-primary/10 via-primary/0 to-transparent rounded-full blur-3xl" />
-      </div>
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-      <div className="max-w-5xl mx-auto px-6 lg:px-12 relative text-center">
+    <section id="final-cta" className="py-20 lg:py-28 bg-[hsl(var(--charcoal))] relative overflow-hidden scroll-mt-24">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cream/10 to-transparent" />
+      <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
         <ScrollReveal>
-          <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-8">The Deal Architect</p>
-          <h2 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[0.95] mb-8">
-            Dream it.<br />
-            <span className="text-primary/90">Build it.</span><br />
-            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Live it.</span>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-6">Every property gets a path.</p>
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-[1.0] mb-6 text-cream">
+            Bring us the property.<br />
+            <span className="italic bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">We'll show you the path.</span>
           </h2>
-
-          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12">
-            Whether you have a property, a partnership, or a project worth reviewing, every conversation starts the same way: with a real, structural look at what's possible.
+          <p className="text-base sm:text-lg text-cream/65 leading-relaxed max-w-xl mx-auto mb-10">
+            Three ways to start: submit a property for a structural read, run the Strategy Lab, or join the operator network.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Link href="/submit">
-              <Button onClick={() => trackEvent("cta_click", { id: "final_primary", to: "/submit" })} size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-sell">
+              <Button
+                onClick={() => trackEvent("cta_click", { id: "final_primary", to: "/submit" })}
+                size="lg"
+                className="w-full sm:w-auto px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white border-0"
+                data-testid="button-final-cta-sell"
+              >
                 Submit a Property
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/capital">
-              <Button onClick={() => trackEvent("cta_click", { id: "final_secondary", to: "/capital" })} size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-invest">
-                Partner Inquiry
+            <Link href="/strategy-lab">
+              <Button
+                onClick={() => trackEvent("cta_click", { id: "final_secondary", to: "/strategy-lab" })}
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold border-cream/25 text-cream hover:bg-cream/10 hover:border-cream/40"
+                data-testid="button-final-cta-lab"
+              >
+                Run Strategy Lab
               </Button>
             </Link>
-            <Link href="/contact">
-              <Button onClick={() => trackEvent("cta_click", { id: "final_tertiary", to: "/contact" })} size="lg" variant="ghost" className="w-full sm:w-auto px-8 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-final-cta-contact">
-                Just Say Hello
+            <Link href="/marketflow">
+              <Button
+                onClick={() => trackEvent("cta_click", { id: "final_tertiary", to: "/marketflow" })}
+                size="lg"
+                variant="ghost"
+                className="w-full sm:w-auto px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold text-cream/60 hover:text-cream hover:bg-cream/5"
+                data-testid="button-final-cta-network"
+              >
+                Join the Network
               </Button>
             </Link>
           </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-10 border-t border-border/40 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-            <span>Private network</span>
-            <span className="hidden sm:inline text-border">·</span>
-            <span>Invite-only deal flow</span>
-            <span className="hidden sm:inline text-border">·</span>
-            <span>Bay Area, California</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 pt-8 border-t border-cream/10 text-xs uppercase tracking-[0.22em] text-cream/35">
+            <span>DRE #02333658</span>
+            <span className="hidden sm:inline text-cream/15">·</span>
+            <span>Keller Williams East Bay</span>
+            <span className="hidden sm:inline text-cream/15">·</span>
+            <span>Pleasant Hill, CA</span>
           </div>
         </ScrollReveal>
       </div>

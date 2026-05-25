@@ -4,6 +4,7 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   NAV_PRIMARY,
   NAV_MORE,
@@ -35,7 +36,17 @@ import { Footer } from "@/components/footer";
 
 function renderWithRouter(ui: React.ReactElement, path = "/") {
   const { hook } = memoryLocation({ path, static: true });
-  return render(<Router hook={hook}>{ui}</Router>);
+  // Footer's email-capture widget uses TanStack Query's useMutation, which
+  // requires a QueryClientProvider in the tree (the live app mounts the
+  // Footer inside one in App.tsx).
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <Router hook={hook}>{ui}</Router>
+    </QueryClientProvider>
+  );
 }
 
 // Radix triggers use pointer events that jsdom doesn't fully implement.

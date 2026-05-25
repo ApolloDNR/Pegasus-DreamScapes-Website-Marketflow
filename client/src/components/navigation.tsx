@@ -574,11 +574,17 @@ export function Navigation() {
                 </VisuallyHidden>
 
                 <div className="flex items-center justify-between pb-6 border-b border-[hsl(var(--rule))]">
-                  <span
-                    className="font-display text-sm tracking-[0.18em] text-[hsl(var(--ink))]"
+                  <Link
+                    href="/"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm"
+                    aria-label="Pegasus DreamScapes home"
                   >
-                    Pegasus DreamScapes
-                  </span>
+                    <img src={logoImage} alt="" aria-hidden="true" className="h-10 w-auto" />
+                    <span className="font-display text-sm tracking-[0.18em] text-[hsl(var(--ink))]">
+                      Pegasus DreamScapes
+                    </span>
+                  </Link>
                 </div>
 
                 <nav className="flex-1 py-6 overflow-y-auto" aria-label="Mobile navigation">

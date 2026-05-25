@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { Link } from "wouter";
-import { Mail, MapPin, ArrowUpRight, Phone, LogIn } from "lucide-react";
+import { Mail, MapPin, ArrowUpRight, Phone, LogIn, BarChart3, Linkedin } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { trackEvent } from "@/lib/analytics";
+import { apiRequest } from "@/lib/queryClient";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import logoImage from "@/assets/brand/pegasus-mark-full.png";
 import wordmarkImage from "@/assets/brand/pegasus-wordmark.svg";
 import { ThemeToggle } from "./theme-toggle";
@@ -43,6 +49,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navMore("/library"),
       navMore("/connect"),
       navMore("/contact"),
+      extraLink("/faq", "FAQ", "faq"),
     ],
   },
   {
@@ -72,7 +79,81 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
   },
 ];
 
+function FooterEmailCapture() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/leads", {
+        leadType: "newsletter",
+        source: "footer_email_capture",
+        firstName: name,
+        email,
+      });
+    },
+    onSuccess: () => {
+      trackEvent("newsletter_signup", { location: "footer" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || mutation.isPending) return;
+    mutation.mutate();
+  };
+
+  return (
+    <div className="mt-7 pt-7 border-t border-border/40" data-testid="footer-email-capture">
+      <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-1.5">
+        Strategy Updates
+      </p>
+      <p className="font-serif text-xl text-foreground mb-2">Stay in the loop.</p>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4 max-w-md">
+        Deals, frameworks, and East Bay market reads. No spam. One email when it matters.
+      </p>
+      {mutation.isSuccess ? (
+        <p className="text-sm font-supporting font-semibold text-primary" data-testid="text-footer-email-success">
+          You&apos;re in.
+        </p>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-3 max-w-md">
+          <Input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            aria-label="Email address"
+            data-testid="input-footer-email"
+          />
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="First name (optional)"
+            aria-label="First name (optional)"
+            data-testid="input-footer-name"
+          />
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            disabled={mutation.isPending}
+            className="px-0 h-auto text-[11px] uppercase tracking-[0.18em] text-primary hover:text-primary/80 hover:bg-transparent font-supporting font-semibold inline-flex items-center gap-1.5"
+            data-testid="button-footer-subscribe"
+          >
+            {mutation.isPending ? "Subscribing…" : "Subscribe"}
+            <ArrowUpRight className="w-3 h-3" />
+          </Button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export function Footer() {
+  const { isAuthenticated } = useSupabaseAuth();
   return (
     <footer className="bg-card border-t border-border/60">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
@@ -123,6 +204,24 @@ export function Footer() {
                 We respond to every serious submission within 48 hours, Monday through Friday.
               </p>
             </div>
+
+            <div className="flex items-center gap-3 pt-4 border-t border-border/40 mt-2">
+              {/* Update href with your actual LinkedIn URL */}
+              <a
+                href="https://www.linkedin.com/in/apolloduran"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent("social_tap", { platform: "linkedin", location: "footer" })}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+                aria-label="Pegasus DreamScapes on LinkedIn"
+                data-testid="link-footer-linkedin"
+              >
+                <Linkedin className="w-3.5 h-3.5" />
+              </a>
+              <span className="text-xs text-muted-foreground/50">Find us on LinkedIn</span>
+            </div>
+
+            <FooterEmailCapture />
           </div>
 
           {COLUMNS.map((col) => (
@@ -166,15 +265,24 @@ export function Footer() {
                 </span>
               </Link>
               <span className="text-border">·</span>
-              <Link href="/login">
-                <span
-                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  data-testid="link-footer-signin"
-                >
-                  <LogIn className="w-3 h-3" aria-hidden="true" />
-                  Sign In
-                </span>
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/marketflow/dashboard">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-dashboard">
+                    <BarChart3 className="w-3 h-3" aria-hidden="true" />
+                    Dashboard
+                  </span>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    data-testid="link-footer-signin"
+                  >
+                    <LogIn className="w-3 h-3" aria-hidden="true" />
+                    Sign In
+                  </span>
+                </Link>
+              )}
             </div>
           </div>
           <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium" data-testid="text-footer-dre">

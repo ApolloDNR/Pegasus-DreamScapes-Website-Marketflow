@@ -239,7 +239,7 @@ export default function SnapshotPropertyPage() {
                data-testid="link-download-pdf">
               <Download className="w-4 h-4" /> Download PDF
             </a>
-            <Link href="/sell" className="bg-[hsl(var(--copper))] text-white px-4 py-2.5 text-sm font-supporting font-semibold inline-flex items-center gap-2" data-testid="link-submit-property">
+            <Link href="/submit" className="bg-[hsl(var(--copper))] text-white px-4 py-2.5 text-sm font-supporting font-semibold inline-flex items-center gap-2" data-testid="link-submit-property">
               Submit to Pegasus <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

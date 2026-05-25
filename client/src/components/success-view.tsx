@@ -184,6 +184,28 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
           </ul>
         </div>
 
+        {formType === "submit" && (
+          <div className="mt-8 pt-8 border-t border-[hsl(var(--rule))]">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
+              While you wait
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Link href="/strategy-lab">
+                <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
+                  <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">Run Strategy Lab</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">See how your property scores across 14 strategies while we prepare the review.</p>
+                </div>
+              </Link>
+              <Link href="/projects">
+                <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
+                  <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">See Our Work</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Review completed projects and the structural approaches behind each one.</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div className="mt-10 pt-8 border-t border-[hsl(var(--rule))] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <Button
             onClick={onAddAnother}

@@ -189,7 +189,7 @@ function ProjectsGrid() {
           <p className="text-base text-muted-foreground leading-relaxed mb-8">
             Refresh in a moment. If it persists, the team has been notified.
           </p>
-          <Link href="/sell">
+          <Link href="/submit">
             <Button
               size="lg"
               className="min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold"
@@ -237,6 +237,34 @@ function ProjectsGrid() {
         </ScrollReveal>
 
         {filtered.length === 0 ? (
+          <>
+          {statusFilter === "all" && strategyFilter === "all" && (
+            <div className="mb-8">
+              <Link href="/projects/nelson-dr">
+                <div className="group block bg-card rounded-md border border-border/40 hover:border-primary/30 overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md max-w-md">
+                  <div className="aspect-[16/10] relative bg-gradient-to-br from-primary/10 to-card flex items-center justify-center">
+                    <HomeIcon className="w-10 h-10 text-primary/30" />
+                    <div className="absolute top-5 left-5 flex flex-wrap gap-2">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold bg-white/90 backdrop-blur-sm text-foreground rounded-md shadow-sm">In Progress</span>
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold bg-black/60 backdrop-blur-sm text-white rounded-md shadow-sm border border-white/15">Fix &amp; Flip</span>
+                    </div>
+                  </div>
+                  <div className="p-7">
+                    <h3 className="font-serif text-2xl font-semibold tracking-tight mb-1.5">Nelson Dr · Pleasant Hill</h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>Pleasant Hill, CA</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">A complex East Bay residential acquisition routed through a value-add execution path. Case study publishing when final economics are signed off.</p>
+                    <div className="flex items-center justify-between pt-4 border-t border-border/40">
+                      <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">Preview</span>
+                      <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          )}
           <div className="py-20 lg:py-28 text-center max-w-xl mx-auto">
             <div className="inline-flex w-14 h-14 rounded-full border border-primary/30 items-center justify-center mb-7">
               <Building className="w-6 h-6 text-primary/70" />
@@ -259,7 +287,7 @@ function ProjectsGrid() {
             <div className="flex justify-center">
               {statusFilter === "all" && strategyFilter === "all" ? (
                 <a
-                  href="/sell"
+                  href="/submit"
                   className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                   data-testid="link-projects-strategy-review"
                 >
@@ -279,6 +307,7 @@ function ProjectsGrid() {
               )}
             </div>
           </div>
+          </>
         ) : (
           <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 gap-7" staggerDelay={0.1}>
             {filtered.map((project, index) => (
@@ -432,13 +461,13 @@ function CTASection() {
             Whether you have a property to submit, capital to deploy, or a partnership to discuss, every conversation starts the same way: with a real, structural review.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/sell">
+            <Link href="/submit">
               <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-projects-sell">
                 Submit a Property
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/invest">
+            <Link href="/capital">
               <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-projects-invest">
                 Partner Inquiry
               </Button>

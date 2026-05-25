@@ -251,7 +251,7 @@ function CuratedArticles({ active }: { active: string }) {
                   <div className="mt-6 pt-5 border-t border-border/40">
                     <p className="text-[11px] text-muted-foreground/80 italic leading-relaxed">
                       Have a property that may fit?{" "}
-                      <Link href="/sell" className="text-primary hover:underline font-medium not-italic">
+                      <Link href="/submit" className="text-primary hover:underline font-medium not-italic">
                         Start a Strategy Review →
                       </Link>
                     </p>
@@ -417,7 +417,7 @@ function ClosingCTA() {
           Reading is one thing. A real read on a real property is the next step. Strategy Review is free, written, and routes every property to a path.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/sell">
+          <Link href="/submit">
             <Button size="lg" className="gap-2" data-testid="button-education-sell">
               Start a Strategy Review
               <ArrowRight className="w-4 h-4" />

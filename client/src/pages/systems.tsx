@@ -179,7 +179,7 @@ export default function SystemsPage() {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/sell"
+                href="/submit"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-supporting uppercase tracking-[0.18em] text-sm"
                 data-testid="link-systems-cta-sell"
               >

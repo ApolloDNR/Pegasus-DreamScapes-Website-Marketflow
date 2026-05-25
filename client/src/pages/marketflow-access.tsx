@@ -28,6 +28,31 @@ import { trackEvent } from "@/lib/analytics";
 import { Loader2 } from "lucide-react";
 import { SuccessView } from "@/components/success-view";
 
+function WhatYouGet() {
+  const perks = [
+    { title: "Reviewed deal flow", desc: "Every listing has passed a Pegasus structural read. No noise, no cold listings." },
+    { title: "Verified operator network", desc: "Buyers, wholesalers, and capital partners: all introduced, not anonymous." },
+    { title: "Private deal room", desc: "Negotiate, structure JVs, and coordinate capital in one place." },
+    { title: "Priority review queue", desc: "Submissions from network members jump the general intake queue." },
+  ];
+  return (
+    <div className="mb-8 p-6 rounded-lg border border-border/40 bg-card space-y-4" data-testid="marketflow-what-you-get">
+      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">What you get</p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {perks.map((p) => (
+          <div key={p.title} className="flex gap-3">
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">{p.title}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const accessSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
@@ -138,6 +163,8 @@ export default function MarketflowAccessPage() {
           Access is by introduction. Tell us who connected you and what role you would fill in the
           network.
         </p>
+
+        <WhatYouGet />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-5">

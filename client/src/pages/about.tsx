@@ -139,15 +139,14 @@ function AboutHero() {
             <div className="relative">
               <div className="absolute -inset-6 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-lg" />
               <div
-                className="relative p-8 lg:p-10 rounded-lg border border-cream/15 shadow-md shadow-black/40 backdrop-blur-sm"
-                style={{ backgroundColor: "hsl(var(--charcoal) / 0.85)" }}
+                className="relative p-8 lg:p-10 rounded-lg border border-cream/15 shadow-md shadow-black/40 backdrop-blur-sm bg-charcoal/85"
               >
                 <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
                   The shape of the company
                 </p>
                 <dl className="divide-y divide-cream/15">
                   <ShapeRow label="Positioning" value="The Deal Architect" />
-                  <ShapeRow label="Founder" value="Paolo &quot;Apollo&quot; Duran" />
+                  <ShapeRow label="Founder" value={'Paolo "Apollo" Duran'} />
                   <ShapeRow label="Entity" value="Pegasus DreamScapes Corp." />
                   <ShapeRow label="HQ" value="Pleasant Hill, California" />
                   <ShapeRow label="Stage" value="Private beta · Invite-only network" />
@@ -166,10 +165,9 @@ function ShapeRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between py-3.5">
       <dt className="text-[10px] uppercase tracking-[0.25em] text-cream/55 font-supporting">{label}</dt>
-      <dd
-        className="font-serif text-sm sm:text-base text-cream font-medium text-right"
-        dangerouslySetInnerHTML={{ __html: value }}
-      />
+      <dd className="font-serif text-sm sm:text-base text-cream font-medium text-right">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -407,6 +405,9 @@ function PrinciplesSection() {
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
             How we actually work.
           </h2>
+          <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mt-3">
+            The commitments below govern the execution layer — not the brand values, but the actual operating decisions: what we model, what we write down, how we graduate.
+          </p>
         </ScrollReveal>
 
         <StaggerChildren className="grid sm:grid-cols-2 gap-6 lg:gap-8" staggerDelay={0.08}>
@@ -460,6 +461,16 @@ function CTASection() {
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
+          </div>
+          <div className="mt-4">
+            <a
+              href="/contact"
+              className="inline-flex items-center gap-2 text-sm text-cream/70 hover:text-cream transition-colors"
+              data-testid="link-about-contact"
+            >
+              Or schedule a conversation
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
           </div>
           <p className="text-xs text-cream/55 mt-6 font-supporting">
             Or call Apollo direct: <a href="tel:+19257448525" className="text-primary hover:text-primary/80 transition-colors">925-744-8525</a>

@@ -390,13 +390,13 @@ function CTASection() {
           Put what you read into action. Whether the next move is a sale, a structure, or a capital relationship, we will tell you straight.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/sell">
+          <Link href="/submit">
             <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-resources-sell">
               <Home className="w-5 h-5" />
               Sell Your Property
             </Button>
           </Link>
-          <Link href="/invest">
+          <Link href="/capital">
             <Button size="lg" variant="outline" className="gap-2" data-testid="button-resources-invest">
               <TrendingUp className="w-5 h-5" />
               Become an Investor

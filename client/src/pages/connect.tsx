@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
 import { trackCtaClick } from "@/lib/analytics";
 import { Building2, Hammer, DollarSign, Banknote, Network, MessageSquare } from "lucide-react";
+import logoImage from "@/assets/brand/pegasus-mark-full.png";
 
 // Empire Doctrine v1.0.1 — Apollo's personal QR landing.
 // Six routing buttons. Public Peggy chat is explicitly excluded (v1.1).
@@ -51,17 +52,27 @@ export default function ConnectPage() {
   useSEO({
     title: "Connect with Apollo",
     description:
-      "You found Apollo's card. Tell us why you reached out: property, build, sell, capital, vendor, or just talk.",
-    image: "/og/default.png",
+      "Connect directly with Apollo Duran, Founder of Pegasus DreamScapes. Property situation, capital partnership, vendor inquiry, or just a conversation — pick your lane.",
+    image: "/og/about.png",
   });
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20">
+    <div className="min-h-screen bg-background pt-24 pb-20">
+      {/* Brand header strip */}
+      <div className="border-b border-border/40 bg-card mb-12">
+        <div className="max-w-3xl mx-auto px-6 lg:px-12 py-8 flex flex-col sm:flex-row items-center gap-4">
+          <img src={logoImage} alt="Pegasus DreamScapes" className="h-16 w-auto" />
+          <div className="text-center sm:text-left sm:border-l sm:border-border/50 sm:pl-6">
+            <p className="font-display text-base tracking-[0.18em] text-foreground">Pegasus DreamScapes</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mt-1">The Deal Architect</p>
+          </div>
+        </div>
+      </div>
       <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
         <p className="text-[11px] tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          Pegasus DreamScapes · Apollo
+          Apollo Duran · Founder & Principal
         </p>
-        <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-foreground leading-tight mb-6">
+        <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-foreground leading-tight mb-6">
           What brought you here?
         </h1>
         <p className="font-serif text-lg text-muted-foreground italic mb-12 max-w-xl mx-auto">

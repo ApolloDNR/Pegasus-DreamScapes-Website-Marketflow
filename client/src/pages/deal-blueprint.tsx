@@ -114,7 +114,7 @@ function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.85 }}
             >
-              <Link href="/sell">
+              <Link href="/submit">
                 <Button
                   size="lg"
                   className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20 w-full sm:w-auto"
@@ -477,7 +477,7 @@ function CTASection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-            <Link href="/sell">
+            <Link href="/submit">
               <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-blueprint-cta-sell">
                 Start a Strategy Review
                 <ArrowRight className="ml-3 w-4 h-4" />
@@ -491,7 +491,7 @@ function CTASection() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 pt-10 border-t border-border/40 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-            <Link href="/sell" className="hover:text-primary transition-colors inline-flex items-center gap-2" data-testid="link-blueprint-snapshot">
+            <Link href="/submit" className="hover:text-primary transition-colors inline-flex items-center gap-2" data-testid="link-blueprint-snapshot">
               <FileText className="w-3 h-3" />
               Free Snapshot
             </Link>
@@ -501,7 +501,7 @@ function CTASection() {
               Project Examples
             </Link>
             <span className="hidden sm:inline text-border">·</span>
-            <Link href="/invest" className="hover:text-primary transition-colors inline-flex items-center gap-2" data-testid="link-blueprint-invest">
+            <Link href="/capital" className="hover:text-primary transition-colors inline-flex items-center gap-2" data-testid="link-blueprint-invest">
               <Lock className="w-3 h-3" />
               Capital &amp; Partnerships
             </Link>

@@ -357,7 +357,7 @@ export default function SnapshotCalc() {
               Run your own
             </Button>
           </Link>
-          <Link href="/sell">
+          <Link href="/submit">
             <Button variant="outline" className="gap-2" data-testid="button-snapshot-submit">
               Submit a property
               <ArrowRight className="w-4 h-4" />

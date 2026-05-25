@@ -47,8 +47,8 @@ const contactFormSchema = insertContactSchema.extend({
 export default function Contact() {
   useSEO({
     title: "Contact",
-    description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response.",
-    image: "/og/default.png",
+    description: "Submit a property, start a private partner conversation, or ask a question. Every message gets a real, direct response from Apollo.",
+    image: "/og/home.png",
   });
 
   return (
@@ -125,7 +125,7 @@ function ContactRoutingSection() {
       title: "Have a property?",
       desc: "Submit it through the structured intake. Reviewed and routed within 24 business hours.",
       cta: "Submit a Property",
-      href: "/sell",
+      href: "/submit",
     },
     {
       icon: Briefcase,
@@ -133,7 +133,7 @@ function ContactRoutingSection() {
       title: "Partner inquiry?",
       desc: "Start a private conversation about deal-specific structures and active opportunities.",
       cta: "Partner Inquiry",
-      href: "/invest",
+      href: "/capital",
     },
     {
       icon: MessageSquare,
@@ -191,6 +191,23 @@ function ContactRoutingSection() {
               <a key={i} href={lane.href}>{Card}</a>
             );
           })}
+        </div>
+
+        <div className="mt-10 max-w-2xl mx-auto" data-testid="contact-direct-line">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 p-5 rounded-lg border border-primary/25 bg-primary/5 text-center sm:text-left">
+            <Phone className="w-5 h-5 text-primary flex-shrink-0" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Prefer to talk? Call or text Apollo directly at{" "}
+              <a
+                href="tel:+19257448525"
+                className="font-semibold text-foreground hover:text-primary transition-colors"
+                data-testid="link-contact-direct-phone"
+              >
+                925-744-8525
+              </a>
+              . Most calls answered same day, Monday–Friday, 9am–5pm PT.
+            </p>
+          </div>
         </div>
       </div>
     </section>

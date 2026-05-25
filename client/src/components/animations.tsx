@@ -42,11 +42,11 @@ export const staggerContainer: Variants = {
 };
 
 export const staggerItem: Variants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { 
-    opacity: 1, 
+  initial: { opacity: 0, y: 16 },
+  animate: {
+    opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }
   }
 };
 
@@ -124,7 +124,7 @@ export function ScrollReveal({
   className = "", 
   delay = 0,
   direction = "up",
-  threshold = 0.2
+  threshold = 0.08
 }: ScrollRevealProps) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -181,21 +181,22 @@ interface StaggerChildrenProps {
   staggerDelay?: number;
 }
 
-export function StaggerChildren({ 
-  children, 
+export function StaggerChildren({
+  children,
   className = "",
   staggerDelay = 0.1
 }: StaggerChildrenProps) {
   return (
     <motion.div
       initial="initial"
-      animate="animate"
+      whileInView="animate"
+      viewport={{ once: true, amount: 0.08 }}
       variants={{
         initial: {},
         animate: {
           transition: {
             staggerChildren: staggerDelay,
-            delayChildren: 0.1
+            delayChildren: 0.05
           }
         }
       }}

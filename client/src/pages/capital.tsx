@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
-import { ArrowRight, ShieldCheck, MessageSquare, Lock } from "lucide-react";
+import { ArrowRight, ShieldCheck, MessageSquare, Lock, Mail, Phone } from "lucide-react";
 
 // Empire Doctrine v1.0.1 — /capital is footer-only (NOT in primary nav).
 // Reg D 506(b)-safe language: capital relationships are private, by
@@ -39,7 +39,7 @@ export default function CapitalPage() {
       </section>
 
       <section className="py-20">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12 space-y-12">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12 space-y-4">
           <Block
             icon={<MessageSquare className="w-5 h-5" />}
             title="Conversations, not pitches."
@@ -55,6 +55,28 @@ export default function CapitalPage() {
             title="Private, individual, and on the record."
             body="Pegasus does not advertise capital opportunities. Every relationship is private and individual. Nothing on this site is an offer of guaranteed returns or principal protected investment products."
           />
+        </div>
+      </section>
+
+      <section className="py-16 bg-background">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12">
+          <div className="border border-border/40 rounded-lg p-8 bg-card flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex-1">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2">How it starts</p>
+              <p className="font-serif text-2xl font-semibold tracking-tight mb-2">Personal introduction required.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Every capital conversation begins after a personal introduction to Apollo. There is no general application. If you have been referred, reach out directly.</p>
+            </div>
+            <div className="flex-shrink-0 space-y-2 text-sm">
+              <a href="mailto:apollo@pegasusdreamscapes.com" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+                <Mail className="w-4 h-4 text-primary/70" />
+                apollo@pegasusdreamscapes.com
+              </a>
+              <a href="tel:+19257448525" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+                <Phone className="w-4 h-4 text-primary/70" />
+                925-744-8525
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -84,11 +106,13 @@ export default function CapitalPage() {
 
 function Block({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div className="grid grid-cols-12 gap-6 items-start">
-      <div className="col-span-2 sm:col-span-1 text-primary mt-1">{icon}</div>
-      <div className="col-span-10 sm:col-span-11">
-        <h3 className="font-serif text-2xl font-semibold text-foreground mb-3 tracking-tight">{title}</h3>
-        <p className="text-base text-muted-foreground leading-relaxed">{body}</p>
+    <div className="flex gap-6 p-7 rounded-lg border border-border/40 bg-card hover:border-primary/25 transition-colors duration-300">
+      <div className="flex-shrink-0 w-10 h-10 rounded-md border border-primary/20 bg-primary/5 flex items-center justify-center text-primary">
+        {icon}
+      </div>
+      <div>
+        <h3 className="font-serif text-xl font-semibold mb-2 tracking-tight">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
       </div>
     </div>
   );

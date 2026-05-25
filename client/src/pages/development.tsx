@@ -26,7 +26,7 @@ export default function Development() {
     title: "Development",
     description:
       "Pegasus Development is the spine pillar of Pegasus DreamScapes. Investments and Systems exist to feed and support what gets built. Phase by phase, ADU and value-add today, vertically integrated developer tomorrow.",
-    image: "/og/home.png",
+    image: "/og/default.png",
   });
 
   return (

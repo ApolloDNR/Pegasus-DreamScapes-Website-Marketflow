@@ -10,5 +10,7 @@ Disallow: /dashboard
 Disallow: /services
 Disallow: /login
 Disallow: /signup
+Disallow: /admin/
+Disallow: /snapshot/
 
 Sitemap: https://pegasusdreamscapes.com/sitemap.xml

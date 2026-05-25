@@ -54,6 +54,7 @@ export default function StrategyLabLibraryPage() {
   useSEO({
     title: "Property Library — Strategy Lab",
     description: "Your saved property snapshots. Open, share, or export any analysis you've run through the Pegasus lens.",
+    image: "/og/strategy-lab.png",
   });
   const { isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const [, navigate] = useLocation();

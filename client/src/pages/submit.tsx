@@ -66,6 +66,16 @@ function useInitialIntent(): SubmitFormValues["intent"] {
   return (allowed as string[]).includes(raw || "") ? (raw as SubmitFormValues["intent"]) : "property";
 }
 
+function useInitialRef(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("ref") || "";
+}
+
+function useInitialAddress(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("address") || "";
+}
+
 export default function SubmitPage() {
   useSEO({
     title: "Submit a Property",
@@ -83,11 +93,13 @@ export default function SubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const formMountedAt = useRef<number>(Date.now());
   const initialIntent = useMemo(() => useInitialIntent(), []);
+  const initialRef = useMemo(() => useInitialRef(), []);
+  const initialAddress = useMemo(() => useInitialAddress(), []);
 
   const form = useForm<SubmitFormValues>({
     resolver: zodResolver(submitSchema),
     defaultValues: {
-      propertyAddress: "",
+      propertyAddress: initialAddress,
       propertyType: "sfr",
       condition: "moderate",
       intent: initialIntent,
@@ -128,6 +140,7 @@ export default function SubmitPage() {
           timeline: data.timeline,
           situation: data.situation,
           consent: true,
+          ref: initialRef || undefined,
           hp_company: data.hp_company || "",
           ts_mounted_at: formMountedAt.current,
           ts_elapsed_ms: elapsedMs,
@@ -149,6 +162,23 @@ export default function SubmitPage() {
       });
     },
   });
+
+  const watchedValues = form.watch([
+    "propertyAddress",
+    "propertyType",
+    "condition",
+    "intent",
+    "timeline",
+    "situation",
+    "name",
+    "email",
+    "phone",
+  ]);
+  const progressSteps = [
+    { label: "Property", complete: !!(watchedValues[0] && watchedValues[1] && watchedValues[2]) },
+    { label: "Situation", complete: !!(watchedValues[3] && watchedValues[4] && (watchedValues[5]?.length ?? 0) >= 20) },
+    { label: "Contact", complete: !!(watchedValues[6] && watchedValues[7] && watchedValues[8]) },
+  ];
 
   if (submitted) {
     return (
@@ -194,10 +224,20 @@ export default function SubmitPage() {
           <p className="font-serif text-xl text-white/85 italic leading-snug max-w-2xl">
             Apollo reviews every serious submission himself. You will get a real answer.
           </p>
+          <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-white/10" data-testid="submit-trust-row">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">Licensed</span>
+            <span className="text-white/30 text-xs">·</span>
+            <span className="text-xs text-white/60">DRE #02333658 · Keller Williams East Bay</span>
+            <span className="text-white/30 text-xs">·</span>
+            <span className="text-xs text-white/60">Fiduciary standard on every review</span>
+          </div>
         </div>
       </section>
 
+      <HowItWorksSection />
+
       <section className="max-w-3xl mx-auto px-6 lg:px-12 py-16">
+        <SubmitProgress steps={progressSteps} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-12">
             {/* Honeypot — hidden field. Real users never see or fill it. */}
@@ -435,6 +475,105 @@ export default function SubmitPage() {
         </Form>
       </section>
     </div>
+  );
+}
+
+function SubmitProgress({ steps }: { steps: { label: string; complete: boolean }[] }) {
+  return (
+    <div className="mb-12" data-testid="submit-progress">
+      <ol className="flex items-center">
+        {steps.map((step, i) => {
+          const isLast = i === steps.length - 1;
+          return (
+            <li
+              key={step.label}
+              className={`flex items-center ${isLast ? "" : "flex-1"}`}
+              data-testid={`submit-progress-step-${i}`}
+            >
+              <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                <span
+                  className={`flex items-center justify-center w-7 h-7 rounded-full border text-[11px] font-supporting font-semibold transition-colors ${
+                    step.complete
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "bg-transparent border-border text-muted-foreground"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {i + 1}
+                </span>
+                <span
+                  className={`text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold transition-colors ${
+                    step.complete ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+              {!isLast && (
+                <span
+                  className={`h-px flex-1 mx-3 -mt-6 transition-colors ${
+                    step.complete ? "bg-primary" : "bg-border/60"
+                  }`}
+                  aria-hidden="true"
+                />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function HowItWorksSection() {
+  const steps = [
+    {
+      index: "01",
+      label: "Submit",
+      desc: "Fill out the structured intake. Property, situation, contact. Takes about 3 minutes.",
+    },
+    {
+      index: "02",
+      label: "Review",
+      desc: "Apollo reads your submission personally and pulls comps within 5 business days.",
+    },
+    {
+      index: "03",
+      label: "Path",
+      desc: "You get a structural read — which lane fits, what the numbers say, what happens next.",
+    },
+    {
+      index: "04",
+      label: "Outcome",
+      desc: "Offer, JV structure, referral, or a straight answer. Every submission gets a real response.",
+    },
+  ];
+
+  return (
+    <section className="border-t border-border/30 bg-card py-14 lg:py-16" data-testid="section-how-it-works">
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
+          How it works
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0 border border-border/40">
+          {steps.map((step, i) => (
+            <div
+              key={step.index}
+              className={`p-6 ${i < steps.length - 1 ? "border-b sm:border-b-0 sm:border-r lg:border-b-0 lg:border-r border-border/40" : ""}`}
+              data-testid={`how-step-${i}`}
+            >
+              <div className="flex items-baseline gap-2 mb-3">
+                <span className="font-supporting text-[10px] tracking-[0.28em] text-primary/70 font-semibold tabular-nums">
+                  {step.index}
+                </span>
+              </div>
+              <p className="font-serif text-xl font-semibold text-foreground mb-2">{step.label}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

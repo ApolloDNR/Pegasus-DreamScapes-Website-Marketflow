@@ -22,6 +22,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import { CookieConsent } from "@/components/cookie-consent";
 import { initAnalytics } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { motion, AnimatePresence } from "framer-motion";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -129,6 +130,7 @@ const SnapshotCalc = lazy(() => import("@/pages/snapshot-calc"));
 const SnapshotCalcGate = lazy(() => import("@/pages/snapshot-calc-gate"));
 const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
 const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
+const FAQ = lazy(() => import("@/pages/faq"));
 const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
 
@@ -213,6 +215,7 @@ function Router() {
       <Route path="/library/:slug" component={ArticleDetail} />
       <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
+      <Route path="/faq" component={FAQ} />
       <Route path="/contact" component={Contact} />
       {/* Empire Doctrine v1.0.1: /systems, /ecosystem, /education, /calculators,
        * /buyers, /wholesale, /capital-raising, /dreamspace are removed from
@@ -293,6 +296,25 @@ function Router() {
   );
 }
 
+function PageRouteTransition() {
+  const [location] = useLocation();
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
+      >
+        <ErrorBoundary>
+          <Router />
+        </ErrorBoundary>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -313,9 +335,7 @@ function App() {
                           <a href="#main-content" className="skip-to-content">Skip to main content</a>
                           <Navigation />
                           <main id="main-content" className="flex-1" tabIndex={-1}>
-                            <ErrorBoundary>
-                              <Router />
-                            </ErrorBoundary>
+                            <PageRouteTransition />
                           </main>
                           <Footer />
                         </div>

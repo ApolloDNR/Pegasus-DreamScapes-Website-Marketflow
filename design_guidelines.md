@@ -15,20 +15,21 @@ Drawing inspiration from luxury real estate brands with a **clean, editorial aes
 
 **Company Name**: Pegasus Dreamscapes
 
-**Official Slogan** (for logo + brand): "Where Designed Profits Are Crafted."
+**Official Slogan** (for logo + brand): "The Deal Architect"
 
-**Homepage Hero Line**: "DESIGNED PROFITS ELEVATED COMMUNITIES"
+**Homepage Hero Line**: "Complex property. Structured opportunity."
 
-**Subheadline**: "At Pegasus Dreamscapes, we specialize in turning distressed properties into stunning homes that empower communities and elevate living standards."
+**Subheadline**: "A strategy-first real estate operating company. Every property gets a path."
 
-**Mission**: "Pegasus Dreamscapes exists to elevate communities by transforming distressed homes, underperforming neighborhoods, and forgotten blocks into restored, thriving, and beautiful environments. We design profits with intention — creating win–win outcomes for sellers, investors, and the communities we serve."
+**Mission**: "Pegasus DreamScapes is a strategy-first real estate operating company. We work the complex situations and the properties other groups walk away from. Every property gets a serious review — and a real path, even when that path is a referral."
 
 **The Dreamscaper Creed**:
-- We are Dreamscapers.
-- We repair what's broken.
-- We restore what's forgotten.
-- We protect what matters.
-- We elevate communities through design, discipline, and intention.
+- Clarity over confusion.
+- Discipline over hype.
+- Stewardship over extraction.
+- Honor over pressure.
+- Truth over easy promises.
+- Human review over blind automation.
 
 ---
 

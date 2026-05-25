@@ -249,9 +249,7 @@ export default function Calculators() {
       ? (new URLSearchParams(window.location.search).get("tab") || "").toLowerCase()
       : "";
   const hasValidTabParam = (CALC_TABS as readonly string[]).includes(rawTabParam);
-  const ogImage = hasValidTabParam
-    ? `https://pegasusdreamscapes.com/og/calculators-${activeTab}.svg`
-    : "https://pegasusdreamscapes.com/og/calculators.svg";
+  const ogImage = "/og/strategy-lab.png";
   useSEO({
     title: seo.title,
     description: seo.description,
@@ -431,13 +429,13 @@ function CTASection() {
           Numbers tell you whether to engage. Strategy tells you how. Bring a real situation and we'll route it to the path that fits.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/sell">
+          <Link href="/submit">
             <Button size="lg" className="gap-2 min-h-[48px] px-7 bg-primary hover:bg-primary/90 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-cta-sell">
               <Building2 className="w-4 h-4" />
               Submit a property
             </Button>
           </Link>
-          <Link href="/invest">
+          <Link href="/capital">
             <Button size="lg" variant="outline" className="gap-2 min-h-[48px] px-7 border-primary/40 hover:border-primary hover:bg-primary/5 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-cta-invest">
               <Wallet className="w-4 h-4 text-primary" />
               Explore capital
@@ -782,7 +780,7 @@ function ARVCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.roi, undefined, results.meetsRule)} />
               </div>
-              <Link href="/sell">
+              <Link href="/submit">
                 <Button data-testid="button-arv-cta">
                   Submit Your Property
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -1116,7 +1114,7 @@ function ROICalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.cashOnCashReturn, results.monthlyCashFlow)} />
               </div>
-              <Link href="/invest">
+              <Link href="/capital">
                 <Button data-testid="button-roi-cta">
                   Become an Investor
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -1540,7 +1538,7 @@ function BRRRRCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.cashOnCash, results.monthlyCashFlow)} />
               </div>
-              <Link href="/invest">
+              <Link href="/capital">
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-brrrr-cta">
                   Join Investor Network
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -2000,7 +1998,7 @@ function CashFlowCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(0, results.monthlyCashFlow)} />
               </div>
-              <Link href="/invest">
+              <Link href="/capital">
                 <Button data-testid="button-cashflow-cta">
                   Explore Opportunities
                   <ArrowRight className="w-4 h-4 ml-2" />

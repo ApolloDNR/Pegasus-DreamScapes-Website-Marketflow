@@ -472,13 +472,13 @@ function BodySection({ project }: { project: Project }) {
                     Submit a property, or open a private partner conversation about the next project.
                   </p>
                   <div className="flex flex-col gap-3">
-                    <Link href="/sell">
+                    <Link href="/submit">
                       <Button className="w-full bg-cream text-charcoal hover:bg-cream/95 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-sell">
                         Submit a Property
                         <ArrowRight className="ml-2 w-3.5 h-3.5" />
                       </Button>
                     </Link>
-                    <Link href="/invest">
+                    <Link href="/capital">
                       <Button variant="outline" className="w-full bg-transparent border-cream/30 text-cream hover:bg-cream/10 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-invest">
                         Partner Inquiry
                       </Button>

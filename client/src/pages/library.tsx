@@ -99,9 +99,30 @@ export default function LibraryPage() {
               ))}
             </ul>
           ) : published.length === 0 ? (
-            <p className="text-muted-foreground" data-testid="text-library-empty">
-              The library is being staged. New entries publish as Apollo signs off.
-            </p>
+            <div className="py-16 text-center max-w-xl mx-auto" data-testid="text-library-empty">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+                Coming soon
+              </p>
+              <h2 className="font-serif text-3xl font-semibold mb-4 tracking-tight">
+                The library is being staged.
+              </h2>
+              <p className="text-base text-muted-foreground leading-relaxed mb-8">
+                New entries publish as Apollo signs off. In the meantime, the Strategy Lab runs a live structural read on any property you bring in.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/strategy-lab">
+                  <Button size="lg" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-library-empty-lab">
+                    Open Strategy Lab
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/submit">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-library-empty-submit">
+                    Submit a Property
+                  </Button>
+                </Link>
+              </div>
+            </div>
           ) : (
             <ul className="divide-y divide-border">
               {published.map((article) => (

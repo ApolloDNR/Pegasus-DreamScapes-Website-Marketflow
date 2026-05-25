@@ -1540,6 +1540,14 @@ export default function StrategyLabPage() {
   // ── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Mobile note — Quick Read works on mobile; Full Path is desktop-only */}
+      <div className="lg:hidden bg-background border-b border-border/40 px-6 py-3 flex items-center gap-2.5 mt-[76px]">
+        <Info className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
+        <p className="text-xs text-muted-foreground leading-snug">
+          Quick Read works here.{" "}
+          <span className="text-foreground font-medium">Full Path requires a larger screen.</span>
+        </p>
+      </div>
       {/* Hero */}
       <section className="border-b border-[hsl(var(--rule))]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-10 pt-28 lg:pt-32 pb-10">
@@ -1583,7 +1591,10 @@ export default function StrategyLabPage() {
               </button>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-6 max-w-3xl leading-relaxed">
+          <p className="mt-6 text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary" data-testid="text-lab-free-badge">
+            Free · No account required · Results in seconds
+          </p>
+          <p className="text-xs text-muted-foreground mt-3 max-w-3xl leading-relaxed">
             Preliminary analysis only. Human review required before any offer, strategy
             release, or execution decision. Outputs are illustrative and do not constitute
             an offer of guaranteed returns or principal protection.
@@ -1657,7 +1668,7 @@ export default function StrategyLabPage() {
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   });
                 }}
-                className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "full" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
+                className={`hidden lg:block px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "full" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
                 data-testid="mode-full"
               >
                 Full Path
@@ -1720,65 +1731,6 @@ export default function StrategyLabPage() {
 
       {/* PathMap is rendered by InstrumentWorkbench in Full Path mode; Quick Read has none. */}
       {/* (Full Path PathMap moved into InstrumentWorkbench.) */}
-
-      {/* Portable calculators — canonical card row. Deep-link to /strategy-lab/classic?tab=. Always visible. */}
-      <section className="border-b border-[hsl(var(--rule))] bg-[hsl(var(--paper))]" data-testid="strategy-lab-calc-row" aria-labelledby="portable-calc-heading">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-10 py-10">
-          <div className="flex items-end justify-between gap-6 mb-5">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="h-px w-8 bg-primary/70" aria-hidden="true" />
-                <span className="text-[11px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary">
-                  Portable calculators
-                </span>
-              </div>
-              <h2 id="portable-calc-heading" className="mt-3 font-serif text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-foreground">
-                Need just one number? Pull the right calculator.
-              </h2>
-            </div>
-            <Link
-              href="/strategy-lab/classic"
-              className="hidden md:inline text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))]"
-              data-testid="link-classic-suite"
-            >
-              See the classic suite →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-testid="calc-tiles">
-            {[
-              { tab: "arv", label: "ARV", desc: "70% rule, comps in, MAO out." },
-              { tab: "roi", label: "ROI", desc: "Cap rate, CoC, total return." },
-              { tab: "brrrr", label: "BRRRR", desc: "Cash left in deal after refi." },
-              { tab: "cashflow", label: "Cash Flow", desc: "Rent vs PITI plus opex." },
-              { tab: "wholesale", label: "Wholesale MAO", desc: "Assignment fee headroom." },
-              { tab: "piti", label: "PITI", desc: "Housing affordability, 28/36." },
-              { tab: "ownvsrent", label: "Own vs Rent", desc: "Net worth crossover year." },
-              { tab: "hardmoney", label: "Hard Money", desc: "Short-term carry cost." },
-            ].map((c) => (
-              <Link
-                key={c.tab}
-                href={`/strategy-lab/classic?tab=${c.tab}`}
-                className="group relative block border border-[hsl(var(--rule))] bg-background hover:bg-[hsl(var(--paper))] hover:border-[hsl(var(--copper))]/60 transition-colors p-4"
-                data-testid={`calc-tile-${c.tab}`}
-              >
-                <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
-                  Calculator
-                </div>
-                <h3 className="mt-1.5 font-serif text-xl font-semibold tracking-tight leading-tight text-foreground">
-                  {c.label}
-                </h3>
-                <p className="mt-1.5 text-sm text-muted-foreground leading-snug">{c.desc}</p>
-                <span
-                  className="absolute right-3 bottom-3 text-[hsl(var(--copper))] opacity-0 group-hover:opacity-100 transition-opacity text-base"
-                  aria-hidden="true"
-                >
-                  →
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── Quick Read (one-screen) ───────────────────────────────────── */}
       {mode === "quick" && (
@@ -2068,6 +2020,23 @@ export default function StrategyLabPage() {
                         : "Free runs used. Sign in to keep going."}
                     </div>
                   )}
+
+                  {topLane && (
+                    <div className="mt-4 pt-4 border-t border-[hsl(var(--rule))]">
+                      <p className="text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold mb-2">Ready for a real review?</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                        Apollo reviews every serious submission personally. Submit this property for a full structural read.
+                      </p>
+                      <a
+                        href={`/submit?intent=property${form.address ? `&address=${encodeURIComponent(form.address)}` : ""}`}
+                        className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--copper))] text-white px-4 py-3 text-xs font-supporting font-semibold tracking-wide uppercase hover:bg-[hsl(27_56%_44%)] transition-colors"
+                        data-testid="link-quick-verdict-submit-bridge"
+                      >
+                        Submit for Full Review
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
                 </>
               )}
             </aside>
@@ -2123,6 +2092,65 @@ export default function StrategyLabPage() {
           fireTouchpoint={fireTouchpoint}
         />
       )}
+
+      {/* Portable calculators — canonical card row. Deep-link to /strategy-lab/classic?tab=. Always visible. */}
+      <section className="border-t border-b border-[hsl(var(--rule))] bg-[hsl(var(--paper))]" data-testid="strategy-lab-calc-row" aria-labelledby="portable-calc-heading">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-10 py-10">
+          <div className="flex items-end justify-between gap-6 mb-5">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="h-px w-8 bg-primary/70" aria-hidden="true" />
+                <span className="text-[11px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary">
+                  Portable calculators
+                </span>
+              </div>
+              <h2 id="portable-calc-heading" className="mt-3 font-serif text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-foreground">
+                Need just one number? Pull the right calculator.
+              </h2>
+            </div>
+            <Link
+              href="/strategy-lab/classic"
+              className="hidden md:inline text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))]"
+              data-testid="link-classic-suite"
+            >
+              See the classic suite →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-testid="calc-tiles">
+            {[
+              { tab: "arv", label: "ARV", desc: "70% rule, comps in, MAO out." },
+              { tab: "roi", label: "ROI", desc: "Cap rate, CoC, total return." },
+              { tab: "brrrr", label: "BRRRR", desc: "Cash left in deal after refi." },
+              { tab: "cashflow", label: "Cash Flow", desc: "Rent vs PITI plus opex." },
+              { tab: "wholesale", label: "Wholesale MAO", desc: "Assignment fee headroom." },
+              { tab: "piti", label: "PITI", desc: "Housing affordability, 28/36." },
+              { tab: "ownvsrent", label: "Own vs Rent", desc: "Net worth crossover year." },
+              { tab: "hardmoney", label: "Hard Money", desc: "Short-term carry cost." },
+            ].map((c) => (
+              <Link
+                key={c.tab}
+                href={`/strategy-lab/classic?tab=${c.tab}`}
+                className="group relative block border border-[hsl(var(--rule))] bg-background hover:bg-[hsl(var(--paper))] hover:border-[hsl(var(--copper))]/60 transition-colors p-4"
+                data-testid={`calc-tile-${c.tab}`}
+              >
+                <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
+                  Calculator
+                </div>
+                <h3 className="mt-1.5 font-serif text-xl font-semibold tracking-tight leading-tight text-foreground">
+                  {c.label}
+                </h3>
+                <p className="mt-1.5 text-sm text-muted-foreground leading-snug">{c.desc}</p>
+                <span
+                  className="absolute right-3 bottom-3 text-[hsl(var(--copper))] opacity-0 group-hover:opacity-100 transition-opacity text-base"
+                  aria-hidden="true"
+                >
+                  →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Mobile sticky Verdict drawer (Task #84) — Full Path only */}
       {mode === "full" && snapshot && topLane && (
@@ -2193,6 +2221,22 @@ export default function StrategyLabPage() {
                     <Activity className="w-3.5 h-3.5" /> Submit
                   </button>
                 </div>
+                {topLane && (
+                  <div className="mt-4 pt-4 border-t border-[hsl(var(--rule))]">
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold mb-2">Ready for a real review?</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                      Apollo reviews every serious submission personally. Submit this property for a full structural read.
+                    </p>
+                    <a
+                      href={`/submit?intent=property${form.address ? `&address=${encodeURIComponent(form.address)}` : ""}`}
+                      className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--copper))] text-white px-4 py-3 text-xs font-supporting font-semibold tracking-wide uppercase hover:bg-[hsl(27_56%_44%)] transition-colors"
+                      data-testid="link-full-verdict-submit-bridge"
+                    >
+                      Submit for Full Review
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}

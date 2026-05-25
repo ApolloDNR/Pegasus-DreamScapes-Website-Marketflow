@@ -332,14 +332,14 @@ export default function SnapshotStatus() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <NextStepCard
-                href="/sell"
+                href="/submit"
                 icon={Building}
                 title="Sell to Pegasus"
                 desc="Continue the conversation toward a direct acquisition or a wholesale assignment."
                 testId="next-step-sell"
               />
               <NextStepCard
-                href="/invest"
+                href="/capital"
                 icon={Hammer}
                 title="Build with Pegasus"
                 desc="Explore a JV or partnership build, when the lot or scope warrants it."
