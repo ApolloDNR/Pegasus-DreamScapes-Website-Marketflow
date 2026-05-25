@@ -15,7 +15,7 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
     items: [
       {
         q: "What kinds of properties do you review?",
-        a: "Any situation where the path forward isn't obvious — deferred maintenance, distressed title, contested ownership, development potential, or creative structure. SFR through small multifamily in the East Bay and surrounding areas.",
+        a: "Any situation where the path forward isn't obvious: deferred maintenance, distressed title, contested ownership, development potential, or creative structure. SFR through small multifamily in the East Bay and surrounding areas.",
       },
       {
         q: "Is there a fee to submit?",
@@ -23,7 +23,7 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
       },
       {
         q: "How long does a review take?",
-        a: "Most Strategy Snapshots are reviewed within 5 business days. If we need more information, we reach out directly — no auto-emails.",
+        a: "Most Strategy Snapshots are reviewed within 5 business days. If we need more information, we reach out directly. No auto-emails.",
       },
       {
         q: "Do you guarantee an offer?",
@@ -36,7 +36,7 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
     items: [
       {
         q: "What makes Pegasus different from a regular real estate investor?",
-        a: "Strategy first. We review the structural situation before we decide on a lane — acquisition, JV, creative finance, referral, or something else entirely. We don't chase properties. We design paths.",
+        a: "Strategy first. We review the structural situation before we decide on a lane: acquisition, JV, creative finance, referral, or something else entirely. We don't chase properties. We design paths.",
       },
       {
         q: "Is Apollo licensed?",
@@ -44,7 +44,7 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
       },
       {
         q: "Can you help if I just want to list my property?",
-        a: "Yes. If a traditional sale is the right path, we'll route you there — through our KW East Bay relationship or an appropriate referral.",
+        a: "Yes. If a traditional sale is the right path, we'll route you there through our KW East Bay relationship or an appropriate referral.",
       },
       {
         q: "What is the Strategy Lab?",
@@ -61,7 +61,7 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
     items: [
       {
         q: "What is MarketFlow?",
-        a: "The private deal network where reviewed opportunities, trusted operators, buyers, and capital relationships connect. It's not a public marketplace — access is by introduction.",
+        a: "The private deal network where reviewed opportunities, trusted operators, buyers, and capital relationships connect. It's not a public marketplace. Access is by introduction.",
       },
       {
         q: "How do I get access to MarketFlow?",
