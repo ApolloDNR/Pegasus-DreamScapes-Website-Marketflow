@@ -239,9 +239,11 @@ function Router() {
       <Route path="/snapshot/calc/:token" component={SnapshotCalcGate} />
       <Route path="/snapshot/property/:token" component={SnapshotProperty} />
       <Route path="/snapshot/:token" component={SnapshotStatus} />
-      {/* Empire Doctrine v1.0.1: /deal-blueprint is removed from the
-       * public v1 surface and redirects to /strategy-lab. */}
-      <Route path="/deal-blueprint">{() => <Redirect to="/strategy-lab" />}</Route>
+      {/* Phase 2 Copy Proposal — Surface 3: /deal-blueprint is now a real
+       * stub page (tier 03 of the Strategy Lab funnel) instead of a
+       * redirect. Intake routes through /submit?intent=blueprint which
+       * posts with leadType: "blueprint_request" for separate triage. */}
+      <Route path="/deal-blueprint" component={DealBlueprint} />
       {/* Legacy /dashboard route. Kept as a redirect because the auth-aware
        * destination lives at /marketflow/dashboard; the role router there
        * forwards staff vs. operator vs. investor to the right surface. */}

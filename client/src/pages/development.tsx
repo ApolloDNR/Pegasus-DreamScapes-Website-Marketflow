@@ -34,6 +34,7 @@ export default function Development() {
       <h1 className="sr-only">Pegasus Development. The Spine Pillar.</h1>
       <HeroSection />
       <PillarSection />
+      <RoutingFilterSection />
       <ScopeTodaySection />
       <PhaseSection />
       <SupportingPillarsSection />
@@ -403,11 +404,14 @@ function SupportingPillarsSection() {
       role: "Runs the build",
       title: "The operating discipline.",
       desc: "Without discipline, a funded project still drifts. Systems is the operating layer that takes a green-lit project from intake to delivery without losing the plan.",
+      // Phase 2 Surface 1.2: honest status tags per Systems component.
+      // Visitors will look for any "live" capability and need to find it,
+      // so we mark beta and internal-only surfaces explicitly.
       items: [
-        "BuildForge: project management and scope control",
-        "Vendor Network: vetted trades for execution",
-        "MarketFlow: private deal flow and intake routing",
-        "Strategy Lab: underwriting and path-decision tooling",
+        "Vendor Network: vetted trades for execution (live)",
+        "Strategy Lab: underwriting and path-decision tooling (live)",
+        "MarketFlow: private deal flow and intake routing (beta, invite-only)",
+        "BuildForge: project management and scope control (internal, not a public surface yet)",
       ],
       cta: "Vendor Network",
       href: "/vendor-network",
@@ -482,6 +486,145 @@ function SupportingPillarsSection() {
   );
 }
 
+// Phase 2 Copy Proposal — Surface 1.3: the honest Phase-1 filter.
+// Visitors land on Development looking for one answer: will you do
+// something with my property? This section answers it explicitly with
+// three lists — what we'll review now, what we'll route honestly, and
+// what we're not the right fit for yet. Highest-value Development-page
+// change because it removes inference.
+function RoutingFilterSection() {
+  const bringIt = [
+    "ADU additions and JADU conversions",
+    "Forced-value rehabs (cosmetic-plus, not full reframe)",
+    "Fix-and-flip in the East Bay",
+    "BRRRR-eligible single-family",
+    "2 to 4 unit small multifamily with a clear path",
+    "Complex situations: probate, deferred maintenance, contested title, creative finance",
+  ];
+  const routeIt = [
+    "Straight retail listings (KW East Bay or appropriate referral)",
+    "Properties outside our geography (network referral)",
+    "Deals where someone else is the better fit (we say so)",
+  ];
+  const notYet = [
+    "Ground-up infill on raw land (Phase 3 trajectory, not today)",
+    "Master-planned development (Phase 4 trajectory, not today)",
+    "Large-scale multifamily (5+ units)",
+  ];
+
+  const columns = [
+    {
+      eyebrow: "Bring it",
+      title: "We'll review it now.",
+      tone: "yes" as const,
+      items: bringIt,
+      testid: "routing-bring",
+    },
+    {
+      eyebrow: "We'll route it",
+      title: "Honest hand-off.",
+      tone: "route" as const,
+      items: routeIt,
+      testid: "routing-route",
+    },
+    {
+      eyebrow: "Not yet",
+      title: "Trajectory, not today.",
+      tone: "later" as const,
+      items: notYet,
+      testid: "routing-not-yet",
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background border-y border-border/40 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+        <ScrollReveal className="max-w-3xl mb-14">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">What we'll look at today</p>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            Bring us this. We'll route the rest.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Phase 1 means we don't take everything. Below is the honest filter: what we'll review now, what we'll route honestly elsewhere, and what we're not the right fit for yet.
+          </p>
+        </ScrollReveal>
+
+        <StaggerChildren className="grid md:grid-cols-3 gap-5" staggerDelay={0.1}>
+          {columns.map((col) => (
+            <StaggerItem key={col.eyebrow}>
+              <CardSurface
+                className={`h-full p-7 border-border/40 ${
+                  col.tone === "yes" ? "hover:border-primary/40" : "hover:border-border"
+                } transition-colors`}
+                data-testid={col.testid}
+              >
+                <div className="flex items-baseline justify-between mb-5">
+                  <p
+                    className={`text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold ${
+                      col.tone === "yes"
+                        ? "text-primary"
+                        : col.tone === "route"
+                        ? "text-foreground/70"
+                        : "text-muted-foreground/70"
+                    }`}
+                  >
+                    {col.eyebrow}
+                  </p>
+                  <span
+                    aria-hidden="true"
+                    className={`text-2xl font-serif leading-none ${
+                      col.tone === "yes"
+                        ? "text-primary"
+                        : col.tone === "route"
+                        ? "text-foreground/60"
+                        : "text-muted-foreground/50"
+                    }`}
+                  >
+                    {col.tone === "yes" ? "✓" : col.tone === "route" ? "→" : "·"}
+                  </span>
+                </div>
+                <h3 className="font-serif text-xl font-semibold mb-5 tracking-tight">
+                  {col.title}
+                </h3>
+                <ul className="space-y-2.5">
+                  {col.items.map((item, i) => (
+                    <li
+                      key={i}
+                      className={`flex items-start gap-2.5 text-sm leading-relaxed ${
+                        col.tone === "later" ? "text-muted-foreground/80" : "text-muted-foreground"
+                      }`}
+                    >
+                      <span
+                        className={`mt-2 w-1 h-1 rounded-full flex-shrink-0 ${
+                          col.tone === "yes"
+                            ? "bg-primary/60"
+                            : col.tone === "route"
+                            ? "bg-foreground/40"
+                            : "bg-muted-foreground/40"
+                        }`}
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardSurface>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        <ScrollReveal delay={0.25} className="mt-12 max-w-3xl mx-auto text-center">
+          <p className="text-base text-foreground/85 italic font-serif">
+            Every property gets a path. Not every property gets an offer.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-28 lg:py-36 bg-card relative overflow-hidden">
@@ -506,9 +649,9 @@ function CTASection() {
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/strategy-lab">
+            <Link href="/deal-blueprint">
               <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold" data-testid="button-development-cta-blueprint">
-                Pegasus Deal Blueprint
+                Request a Deal Blueprint
               </Button>
             </Link>
           </div>

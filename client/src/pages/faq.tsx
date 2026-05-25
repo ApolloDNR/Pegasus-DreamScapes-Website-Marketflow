@@ -50,6 +50,10 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
         q: "What is the Strategy Lab?",
         a: "A free property analysis tool that runs your inputs against 14 real estate strategies (Fix & Flip, BRRRR, ADU, Wholesale, etc.) and produces a preliminary verdict. It's a starting point, not a final answer. Apollo reviews the situation before any decisions are made.",
       },
+      {
+        q: "What's the difference between the Quick Read, the Full Path Analyzer, and a Deal Blueprint?",
+        a: "Three tiers of the same Strategy Lab tool. The Quick Read is free, instant, no account required: lane fit, verdict, headline math. The Full Path Analyzer is free with a Pegasus account and it adds scenarios, a risk register, sensitivity analysis, and a saved snapshot you can share. The Deal Blueprint is a paid, human-prepared memo for a specific property: underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. Most submissions don't need a Blueprint. We tell you which tier fits before you commit.",
+      },
     ],
   },
   {
@@ -66,6 +70,19 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
       {
         q: "I don't have an introduction. Can I still get in?",
         a: "Reach out through the contact form. If there's a fit and the timing is right, we'll figure it out.",
+      },
+    ],
+  },
+  {
+    eyebrow: "Buyboxes",
+    items: [
+      {
+        q: "What are the Pegasus Buyboxes?",
+        a: "A free interest list. You tell us the kind of deal you want to see (ADU upside, value-add, repositioning) and we contact you only when a reviewed property matches that profile. No fee. No subscription. No public marketplace. Every match is reviewed by Pegasus before anyone is contacted.",
+      },
+      {
+        q: "If I sign up for a Buybox, am I committing to buy?",
+        a: "No. Subscribing to a Buybox profile means you'll be notified when we have a reviewed property that matches. There is no obligation to buy, no auto-send, and you can unsubscribe at any time.",
       },
     ],
   },

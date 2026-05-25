@@ -1563,8 +1563,16 @@ export default function StrategyLabPage() {
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mt-5 max-w-2xl font-serif">
-                Run the property through the Pegasus lens. Lane fit, risk register, scenario
-                stress, and a recommended next step. Preliminary, transparent, and editable.
+                Run the property through the Pegasus lens.
+              </p>
+              <p
+                className="text-base sm:text-lg text-foreground leading-relaxed mt-3 max-w-2xl font-serif font-semibold"
+                data-testid="text-lab-five-step-promise"
+              >
+                Start with a property. See which lanes fit. See where the risks are. See what the numbers say. Decide the next step.
+              </p>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mt-3 max-w-2xl font-serif italic">
+                Preliminary, transparent, and editable. Human review required before any offer or release.
               </p>
             </div>
             <div className="lg:col-span-4 xl:col-span-5 flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3 lg:items-end lg:justify-end">
@@ -1632,6 +1640,51 @@ export default function StrategyLabPage() {
                 Paid tier. Underwriting + structure + outreach scripts, written by the Pegasus team.
               </div>
             </div>
+          </div>
+
+          {/* Phase 2 polish — "feels guided, not lost" strip. A 3-step
+              wayfinding bridge between the tier ribbon and the form.
+              Quick-Read only; in Full Path the section anchors in the
+              sticky sub-nav already serve as the map. */}
+          <div
+            className={`${mode === "full" ? "hidden" : ""} mt-4 flex flex-col sm:flex-row sm:items-stretch gap-0 sm:gap-0 border border-[hsl(var(--rule))] bg-card/40 divide-y sm:divide-y-0 sm:divide-x divide-[hsl(var(--rule))]`}
+            data-testid="ribbon-how-it-works"
+            aria-label="How the Strategy Lab works in three steps"
+          >
+            {[
+              {
+                num: "1",
+                title: "Enter the property",
+                desc: "Address + a few inputs. ~30 seconds.",
+              },
+              {
+                num: "2",
+                title: "See the read",
+                desc: "Lane fit, headline math, risks. Instant.",
+              },
+              {
+                num: "3",
+                title: "Decide the next step",
+                desc: "Save it, share it, or request a Blueprint.",
+              },
+            ].map((step) => (
+              <div key={step.num} className="flex items-start gap-3 px-4 py-3 flex-1">
+                <span
+                  aria-hidden="true"
+                  className="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary font-serif text-sm font-semibold flex items-center justify-center"
+                >
+                  {step.num}
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-foreground leading-tight">
+                    {step.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground leading-snug mt-0.5">
+                    {step.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         {/* Brand stripe accent. */}

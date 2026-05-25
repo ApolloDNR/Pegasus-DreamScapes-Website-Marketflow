@@ -25,8 +25,12 @@ import { Loader2 } from "lucide-react";
 
 // Empire Doctrine v1.0.1 — canonical submission page.
 // Three groups: Property / Situation / Contact.
-// Intent prefill via ?intent=deal-jv|property|adu|sell.
+// Intent prefill via ?intent=deal-jv|property|adu|sell|blueprint.
 // Server-side spam check: honeypot ("hp_company") + time-on-form (>3s).
+// Phase 2 Copy Proposal — Surface 3: intent=blueprint switches the
+// payload leadType to "blueprint_request" so Apollo's HQ triage queue
+// can route paid-tier Deal Blueprint intakes separately from general
+// property submissions. Free property intakes keep leadType "submit".
 
 const submitSchema = z.object({
   // Property
@@ -34,7 +38,7 @@ const submitSchema = z.object({
   propertyType: z.enum(["sfr", "duplex", "multifamily", "land", "mixed", "other"]),
   condition: z.enum(["turnkey", "light", "moderate", "heavy", "teardown", "unknown"]),
   // Situation
-  intent: z.enum(["sell", "property", "adu", "deal-jv", "explore"]),
+  intent: z.enum(["sell", "property", "adu", "deal-jv", "explore", "blueprint"]),
   timeline: z.enum(["asap", "30-60", "60-90", "exploratory"]),
   situation: z.string().min(20, "Tell us a little more. At least a couple sentences."),
   // Contact
@@ -57,12 +61,13 @@ const INTENT_LABELS: Record<SubmitFormValues["intent"], string> = {
   adu: "ADU or value-add scope",
   "deal-jv": "Wholesale deal or JV opportunity",
   explore: "Exploring options",
+  blueprint: "Request a Deal Blueprint (paid)",
 };
 
 function useInitialIntent(): SubmitFormValues["intent"] {
   if (typeof window === "undefined") return "property";
   const raw = new URLSearchParams(window.location.search).get("intent");
-  const allowed: SubmitFormValues["intent"][] = ["sell", "property", "adu", "deal-jv", "explore"];
+  const allowed: SubmitFormValues["intent"][] = ["sell", "property", "adu", "deal-jv", "explore", "blueprint"];
   return (allowed as string[]).includes(raw || "") ? (raw as SubmitFormValues["intent"]) : "property";
 }
 
@@ -125,9 +130,16 @@ export default function SubmitPage() {
         throw new Error("Form submitted too fast. Please try again.");
       }
       const [first, ...rest] = data.name.split(" ");
+      // Phase 2 Surface 3: route Deal Blueprint intakes through a
+      // dedicated leadType so HQ triage can prioritize paid-tier
+      // requests separately from free property submissions.
+      const resolvedLeadType =
+        data.intent === "blueprint" ? "blueprint_request" : "submit";
+      const resolvedSource =
+        data.intent === "blueprint" ? "blueprint_page" : "submit_page";
       const payload = {
-        leadType: "submit",
-        source: "submit_page",
+        leadType: resolvedLeadType,
+        source: resolvedSource,
         firstName: first || "",
         lastName: rest.join(" "),
         email: data.email,
