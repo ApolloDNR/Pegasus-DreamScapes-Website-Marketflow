@@ -540,7 +540,7 @@ function HowItWorksSection() {
     {
       index: "03",
       label: "Path",
-      desc: "You get a structural read — which lane fits, what the numbers say, what happens next.",
+      desc: "You get a structural read. Which lane fits, what the numbers say, what happens next.",
     },
     {
       index: "04",

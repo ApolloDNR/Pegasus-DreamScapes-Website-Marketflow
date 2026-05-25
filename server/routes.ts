@@ -5924,6 +5924,20 @@ export async function registerRoutes(
         }
       }
 
+      // Task #148 — Footer newsletter capture. The footer subscribe
+      // widget posts { leadType: "newsletter", source, firstName, email }.
+      // firstName is an optional UX field; if missing, default it so the
+      // leads schema (firstName required) accepts the row. Scope is
+      // website endpoint only — no HQ Supabase mutation, no new table.
+      if (lt === "newsletter") {
+        if (!req.body.firstName || typeof req.body.firstName !== "string" || !req.body.firstName.trim()) {
+          req.body.firstName = "Newsletter Subscriber";
+        }
+        if (!req.body.source || typeof req.body.source !== "string" || !req.body.source.trim()) {
+          req.body.source = "footer_email_capture";
+        }
+      }
+
       // Empire Doctrine v1.0.2 Amendment 1 C.8 — Pegasus Buyboxes free
       // interest list. Submissions arrive as email-only signals; insert
       // the canonical placeholder firstName + source so the request

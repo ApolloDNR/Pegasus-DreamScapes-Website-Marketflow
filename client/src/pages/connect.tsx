@@ -52,7 +52,7 @@ export default function ConnectPage() {
   useSEO({
     title: "Connect with Apollo",
     description:
-      "Connect directly with Apollo Duran, Founder of Pegasus DreamScapes. Property situation, capital partnership, vendor inquiry, or just a conversation — pick your lane.",
+      "Connect directly with Apollo Duran, Founder of Pegasus DreamScapes. Property situation, capital partnership, vendor inquiry, or just a conversation. Pick your lane.",
     image: "/og/about.png",
   });
 

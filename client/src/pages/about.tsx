@@ -139,7 +139,7 @@ function AboutHero() {
             <div className="relative">
               <div className="absolute -inset-6 bg-gradient-to-br from-primary/15 via-transparent to-champagne/10 blur-2xl rounded-lg" />
               <div
-                className="relative p-8 lg:p-10 rounded-lg border border-cream/15 shadow-md shadow-black/40 backdrop-blur-sm bg-charcoal/85"
+                className="relative p-8 lg:p-10 rounded-lg border border-cream/15 shadow-md shadow-black/40 bg-charcoal"
               >
                 <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
                   The shape of the company
@@ -406,7 +406,7 @@ function PrinciplesSection() {
             How we actually work.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mt-3">
-            The commitments below govern the execution layer — not the brand values, but the actual operating decisions: what we model, what we write down, how we graduate.
+            The commitments below govern the execution layer. Not the brand values, but the actual operating decisions: what we model, what we write down, how we graduate.
           </p>
         </ScrollReveal>
 

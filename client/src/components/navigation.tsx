@@ -95,8 +95,19 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
 
 function isItemActive(item: NavItem, location: string): boolean {
   const prefix = item.matchPrefix ?? item.href;
-  if (prefix === "/") return location === "/";
-  return location === prefix || location.startsWith(prefix + "/");
+  const matches = (p: string) =>
+    p === "/" ? location === "/" : location === p || location.startsWith(p + "/");
+  if (matches(prefix)) return true;
+  // Task #148 — a parent item is also active when the current
+  // location matches any of its children (e.g. Development should
+  // light up on /projects as well as /development).
+  if (item.children) {
+    for (const child of item.children) {
+      const childPrefix = child.matchPrefix ?? child.href;
+      if (matches(childPrefix)) return true;
+    }
+  }
+  return false;
 }
 
 function NotificationBell({ onLightSurface }: { onLightSurface: boolean }) {
@@ -256,7 +267,10 @@ export function Navigation() {
   const onLightSurface = scrolled || !isDarkHero;
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24);
+    // Task #148 — header floats transparent over the hero and only
+    // gains the frosted-glass plate after ~80px of scroll (Compass
+    // restraint pattern). Glass surface 1 of 3 (guardrail #4).
+    const handleScroll = () => setScrolled(window.scrollY > 80);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -388,12 +402,95 @@ export function Navigation() {
             </span>
           </Link>
 
-          {/* Desktop nav — 5 noun items + More dropdown */}
+          {/* Desktop nav — Task #148: 4 primary items (Development
+              first as a dropdown parent, then Strategy Lab, MarketFlow,
+              About) + More dropdown on the right. */}
           <nav
             className="hidden lg:flex items-center gap-1"
             aria-label="Primary navigation"
           >
             {NAV_ITEMS.map((item) => {
+              if (item.children && item.children.length > 0) {
+                const active = isItemActive(item, location);
+                const colorClass = onLightSurface
+                  ? active
+                    ? "text-[hsl(var(--ink))] font-semibold"
+                    : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
+                  : active
+                    ? "text-white font-semibold"
+                    : "text-white/85 hover:text-white";
+                return (
+                  <div key={item.label} className="relative group">
+                    <Link
+                      href={item.href}
+                      className={`${navLinkBase} ${colorClass} inline-flex items-center gap-1`}
+                      data-testid={`link-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                      aria-current={active ? "page" : undefined}
+                      aria-haspopup="true"
+                    >
+                      {item.label}
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" aria-hidden="true" />
+                      {active && (
+                        <span
+                          aria-hidden="true"
+                          className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
+                            onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
+                          }`}
+                        />
+                      )}
+                    </Link>
+                    {/* Solid (not frosted — guardrail #4) two-column
+                        Development panel. Hover open + focus-within for
+                        keyboard parity. */}
+                    <div
+                      className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-200 absolute top-full left-0 mt-2 w-[520px] z-50"
+                      data-testid="dropdown-development"
+                    >
+                      <div className="rounded-lg border border-[hsl(var(--bronze)/0.25)] bg-background shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] overflow-hidden grid grid-cols-2">
+                        <Link
+                          href="/projects"
+                          className="block p-5 border-r border-border/40 hover:bg-cream/50 dark:hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:bg-cream/60"
+                          data-testid="link-nav-development-projects"
+                        >
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2">
+                            Projects
+                          </p>
+                          <div className="aspect-[16/10] rounded-md bg-gradient-to-br from-primary/15 to-cream/30 dark:from-primary/10 dark:to-white/[0.04] flex items-center justify-center mb-3">
+                            <BookOpen className="w-6 h-6 text-primary/60" aria-hidden="true" />
+                          </div>
+                          <p className="font-serif text-base font-semibold text-foreground leading-snug mb-1">
+                            Nelson Dr · Pleasant Hill
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-snug">
+                            The documented record. Strategy, structure, execution.
+                          </p>
+                          <span className="inline-flex items-center gap-1 mt-3 text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold">
+                            See projects <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                          </span>
+                        </Link>
+                        <Link
+                          href="/development"
+                          className="block p-5 hover:bg-cream/50 dark:hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:bg-cream/60"
+                          data-testid="link-nav-development-services"
+                        >
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2">
+                            Development Path
+                          </p>
+                          <p className="font-serif text-base font-semibold text-foreground leading-snug mb-2">
+                            The Pegasus development practice.
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-snug mb-3">
+                            ADU, value-add, and small-scale residential today. Multi-unit and ground-up on the trajectory.
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold">
+                            See development services <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                          </span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
               if (item.label !== "MarketFlow") return renderNavLink(item);
               const active = isItemActive(item, location);
               const colorClass = onLightSurface

@@ -9,6 +9,13 @@ import { HeroPicture } from "@/components/hero-picture";
 import { EditableText } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
 import { useSiteContent } from "@/contexts/site-content-context";
+import founderApolloPath from "@assets/image_1778735694150.png";
+
+// Task #148 guardrail #5 — hero video stays static this round. Wired as
+// a one-line feature flag so swapping in a real premium clip later is a
+// single edit. Ship with null → static `<HeroPicture>` renders. No
+// stock footage, no placeholder.
+const HERO_VIDEO_SRC: string | null = null;
 
 // Home page JSON-LD: WebSite + RealEstateAgent + LocalBusiness so Google
 // can surface the entity, sitelinks search box, and local knowledge panel.
@@ -137,17 +144,20 @@ function PegasusQuestionSection() {
     },
   ];
 
+  // Task #148 — dark-band continuity: this section carries the navy
+  // mood one band past the hero before the page transitions to cream.
   return (
-    <section className="py-24 lg:py-32 bg-background" data-testid="section-pegasus-question">
+    <section className="py-24 lg:py-32 bg-[hsl(var(--navy))] text-cream relative" data-testid="section-pegasus-question">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" aria-hidden="true" />
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
         <div className="text-center mb-14">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[hsl(var(--bronze-soft))] font-supporting font-semibold mb-6">
             The Pegasus Question
           </p>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-tight mb-7 text-cream">
             What if the strategy <span className="italic">is</span> the deal?
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-cream/75 leading-relaxed max-w-2xl mx-auto">
             Most groups chase the property. We design the path. Sometimes that path
             is an acquisition. Sometimes it is a joint venture, a creative-finance
             structure, a referral, or an honest listing. The lane that fits the
@@ -163,16 +173,16 @@ function PegasusQuestionSection() {
               onClick={() => trackCtaClick("home_doors", d.label, d.href)}
             >
               <div
-                className="group h-full p-6 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                className="group h-full p-6 rounded-lg border border-white/15 bg-white/[0.03] hover:border-[hsl(var(--bronze)/0.5)] hover:bg-white/[0.05] hover:-translate-y-0.5 transition-all duration-200"
                 data-testid={d.testId}
               >
-                <p className="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                <p className="font-serif text-xl font-semibold mb-2 text-cream group-hover:text-[hsl(var(--bronze-soft))] transition-colors">
                   {d.label}
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                <p className="text-sm text-cream/70 leading-relaxed mb-4">
                   {d.desc}
                 </p>
-                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
+                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--bronze-soft))] font-supporting font-semibold">
                   {d.cta}
                   <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </span>
@@ -217,7 +227,7 @@ function StrategyLabTeaserSection() {
             </Link>
           </div>
           <div className="md:col-span-5">
-            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))]/60 p-6 backdrop-blur-sm space-y-4">
+            <div className="rounded-lg border border-cream/15 bg-[hsl(var(--charcoal))] p-6 space-y-4">
               <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">
                 Sample verdict · Fix &amp; Flip
               </p>
@@ -235,7 +245,7 @@ function StrategyLabTeaserSection() {
               </div>
               <div className="flex items-start gap-2 pt-1">
                 <span className="mt-1 w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                <p className="text-xs text-cream/75 leading-relaxed">Pegasus participates. Value-add path structurally sound. Recommend full review.</p>
+                <p className="text-xs text-cream/75 leading-relaxed">Possible path: value-add renovation. Human review required before any offer or execution decision.</p>
               </div>
             </div>
           </div>
@@ -309,7 +319,7 @@ function OperatorCredibilitySection() {
           <div className="md:col-span-2 space-y-6">
             <blockquote className="border-l-2 border-primary/40 pl-6">
               <p className="font-serif text-lg text-foreground/90 italic leading-relaxed mb-3">
-                &ldquo;Every Pegasus scope review starts with the contractor's lens — what it actually costs, what it actually takes, and where the real risk lives.&rdquo;
+                &ldquo;Every Pegasus scope review starts with the contractor's lens. What it actually costs, what it actually takes, and where the real risk lives.&rdquo;
               </p>
               <footer className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Apollo Duran</span>
@@ -353,12 +363,39 @@ function HeroSection() {
         animate={{ scale: 1.05 }}
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
-        <HeroPicture
-          alt="Pegasus DreamScapes Corp. luxury home at dusk with warm lighting"
-          className="absolute inset-0 w-full h-full object-cover"
-          priority
-        />
+        {/* Task #148 guardrail #5 — video wiring stub. When
+            HERO_VIDEO_SRC is set the <video> takes over with the
+            existing hero photo as both poster and graceful fallback.
+            Ships static this round; one-line swap when premium footage
+            arrives. */}
+        {HERO_VIDEO_SRC ? (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/hero/hero-1920.jpg"
+            className="absolute inset-0 w-full h-full object-cover"
+            data-testid="video-hero"
+          >
+            <source src={HERO_VIDEO_SRC} type="video/mp4" />
+          </video>
+        ) : (
+          <HeroPicture
+            alt="Pegasus DreamScapes Corp. luxury home at dusk with warm lighting"
+            className="absolute inset-0 w-full h-full object-cover"
+            priority
+          />
+        )}
       </motion.div>
+
+      {/* Task #148 — diagonal dark gradient overlay (bottom-left dark →
+          top-right transparent) for subheadline legibility regardless
+          of monitor. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(to_top_right,rgba(13,27,45,0.92)_0%,rgba(13,27,45,0.55)_45%,rgba(13,27,45,0.1)_85%,transparent_100%)] pointer-events-none"
+      />
 
       {/* Premium cinematic overlay - luxury gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
@@ -511,15 +548,70 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <a href="/projects" onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects" })}>
-                <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto border-2 border-white/70 bg-white/5 text-white hover:bg-white/15 hover:border-white backdrop-blur-md font-semibold transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-invest">
-                  {isEditMode ? (
-                    <EditableText contentKey="home.hero.cta_secondary" fallback="See Our Work" />
-                  ) : heroCtaSecondary}
-                  <ArrowRight className="ml-3 w-4 h-4" />
-                </Button>
+              {/* Task #148 — secondary CTA demoted to a quiet ghost
+                  link beneath the single primary copper button. One
+                  dominant CTA per fold (Compass-style restraint). */}
+              <a
+                href="/projects"
+                onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/projects" })}
+                className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/70 hover:text-white font-supporting font-semibold transition-colors self-center sm:self-auto"
+                data-testid="link-hero-secondary"
+              >
+                {isEditMode ? (
+                  <EditableText contentKey="home.hero.cta_secondary" fallback="See Our Work" />
+                ) : heroCtaSecondary}
+                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
               </a>
             </motion.div>
+
+            {/* Task #148 guardrail #3 — floating Sample Strategy Lab
+                Read card. Glass surface 2 of 3 (guardrail #4). Desktop
+                ≥lg only; copy is locked verbatim. */}
+            <motion.aside
+              className="hidden lg:block absolute top-1/2 right-12 -translate-y-1/2 z-20 w-[340px] motion-reduce:animate-none"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.1 }}
+              aria-label="Sample Strategy Lab read"
+              data-testid="hero-sample-card"
+            >
+              <div className="rounded-xl border border-white/15 bg-[hsl(var(--navy)/0.55)] backdrop-blur-xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.65)] p-6 ring-1 ring-inset ring-white/5">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-[hsl(var(--bronze-soft))] font-supporting font-semibold mb-4">
+                  Sample Strategy Lab Read
+                </p>
+                <div className="space-y-2.5 mb-5">
+                  <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
+                    <span className="text-[11px] text-white/55 uppercase tracking-[0.18em]">ARV</span>
+                    <span className="font-serif text-base text-white">$840,000</span>
+                  </div>
+                  <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
+                    <span className="text-[11px] text-white/55 uppercase tracking-[0.18em]">Acquisition</span>
+                    <span className="font-serif text-base text-white">$600,000</span>
+                  </div>
+                  <div className="flex items-baseline justify-between border-b border-white/10 pb-2">
+                    <span className="text-[11px] text-white/55 uppercase tracking-[0.18em]">Scope</span>
+                    <span className="font-serif text-base text-white">$95,000</span>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 mb-2">
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[hsl(var(--bronze))] flex-shrink-0" />
+                  <p className="text-sm text-white font-serif leading-snug" data-testid="text-hero-sample-verdict">
+                    Possible path: value-add renovation
+                  </p>
+                </div>
+                <p className="text-[11px] text-white/55 leading-relaxed mb-5 pl-3.5" data-testid="text-hero-sample-footnote">
+                  Human review required before any offer or execution decision.
+                </p>
+                <Link
+                  href="/strategy-lab"
+                  className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[hsl(var(--bronze-soft))] hover:text-white font-supporting font-semibold transition-colors"
+                  data-testid="link-hero-sample-strategy-lab"
+                >
+                  Open Strategy Lab
+                  <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                </Link>
+              </div>
+            </motion.aside>
 
             {/* Editorial framework strip: location anchor + 4 doctrine markers */}
             <motion.div
@@ -652,25 +744,19 @@ function MeetApolloSection() {
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
         <div className="grid md:grid-cols-12 gap-10 items-center">
           <div className="md:col-span-4">
-            <picture>
-              <source
-                type="image/avif"
-                srcSet="/images/founder/apollo-400.avif 400w, /images/founder/apollo-800.avif 800w"
-                sizes="(max-width: 768px) 300px, 400px"
-              />
-              <source
-                type="image/webp"
-                srcSet="/images/founder/apollo-400.webp 400w, /images/founder/apollo-800.webp 800w"
-                sizes="(max-width: 768px) 300px, 400px"
-              />
-              <img
-                src="/images/founder/apollo-400.jpg"
-                alt="Apollo Duran, Founder of Pegasus DreamScapes"
-                className="w-full max-w-[300px] md:max-w-none aspect-[3/4] object-cover object-top grayscale brightness-90"
-                width={400}
-                height={533}
-              />
-            </picture>
+            {/* Task #148 guardrail #8 — reuse the same founder asset
+                already imported on /about to avoid a 404 on the home
+                page when the legacy /images/founder/* files are absent. */}
+            <img
+              src={founderApolloPath}
+              alt="Apollo Duran, Founder of Pegasus DreamScapes"
+              className="w-full max-w-[300px] md:max-w-none aspect-[3/4] object-cover object-top grayscale brightness-90"
+              width={400}
+              height={533}
+              loading="lazy"
+              decoding="async"
+              data-testid="img-home-founder"
+            />
           </div>
           <div className="md:col-span-8">
             <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
