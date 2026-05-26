@@ -1766,6 +1766,13 @@ export const leads = pgTable("leads", {
   utmCampaign: varchar("utm_campaign", { length: 100 }),
   referredBy: varchar("referred_by", { length: 255 }), // User ID if referral
   
+  // === HQ FORWARDING (Task #153) ===
+  // ID returned by Pegasus HQ after successful forwarding via
+  // /api/public/intake. Empty until HQ accepts the payload. After HQ
+  // ratification, this is the canonical cross-system reference.
+  hqSubmissionId: varchar("hq_submission_id", { length: 64 }),
+  hqForwardedAt: timestamp("hq_forwarded_at"),
+
   // === TIMESTAMPS ===
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1778,10 +1785,55 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
   stage: true,
   assignedAt: true,
   contactAttempts: true,
-  conversionDate: true
+  conversionDate: true,
+  hqSubmissionId: true,
+  hqForwardedAt: true,
 });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
+
+// Task #153 — Pegasus HQ outbox. Every website capture that should land
+// in HQ (leads, peggy conversations, vendor applications, buybox subs)
+// gets written to its local table first, then a copy of the canonical HQ
+// payload is queued here. The forwarder drains the outbox: 4xx => failed
+// (don't retry), 5xx/timeout/network => retry with backoff. On success
+// the row is marked forwarded and the originating row gets the
+// hq_submission_id back. This is the "we never silently lose a lead even
+// if HQ is down" guarantee.
+export const hqOutbox = pgTable("hq_outbox", {
+  id: serial("id").primaryKey(),
+  // Stable client-generated id (UUID v4). Same key replayed = no-op on HQ.
+  idempotencyKey: varchar("idempotency_key", { length: 64 }).notNull().unique(),
+  // What surface this came from: lead | peggy | vendor | buybox | cta_batch
+  surface: varchar("surface", { length: 32 }).notNull(),
+  // Local row id this payload was generated from (for back-reference)
+  sourceId: integer("source_id"),
+  // The exact JSON body POSTed to HQ /api/public/intake
+  payload: jsonb("payload").notNull(),
+  // pending | forwarding | forwarded | failed
+  status: varchar("status", { length: 16 }).notNull().default("pending"),
+  attempts: integer("attempts").notNull().default(0),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  lastError: text("last_error"),
+  // HQ-returned identifier on success
+  hqSubmissionId: varchar("hq_submission_id", { length: 64 }),
+  forwardedAt: timestamp("forwarded_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertHqOutboxSchema = createInsertSchema(hqOutbox).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  attempts: true,
+  lastAttemptAt: true,
+  lastError: true,
+  hqSubmissionId: true,
+  forwardedAt: true,
+});
+export type InsertHqOutbox = z.infer<typeof insertHqOutboxSchema>;
+export type HqOutbox = typeof hqOutbox.$inferSelect;
 
 // Empire Doctrine v1.0.1 Wave 3 — CTA click attribution.
 // Lightweight first-party event store for primary surface CTAs. Distinct
@@ -1848,6 +1900,10 @@ export const peggyConversations = pgTable("peggy_conversations", {
   recordingStoppedAt: timestamp("recording_stopped_at"),
   // Total call duration in seconds (phone only)
   durationSec: integer("duration_sec"),
+
+  // === HQ FORWARDING (Task #153) ===
+  hqSubmissionId: varchar("hq_submission_id", { length: 64 }),
+  hqForwardedAt: timestamp("hq_forwarded_at"),
 
   // === INTAKE (Task #151 — Peggy ASAP chat) ===
   // Structured intake captured progressively during the conversation

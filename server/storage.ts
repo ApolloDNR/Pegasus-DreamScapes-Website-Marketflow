@@ -57,6 +57,7 @@ import {
   type DealMessage, type InsertDealMessage,
   type Lead, type InsertLead,
   type CtaEvent, type InsertCtaEvent,
+  hqOutbox, type HqOutbox, type InsertHqOutbox,
   type PeggyConversation, type InsertPeggyConversation,
   type PeggyMessage, type InsertPeggyMessage,
   type SavedAnalysis, type InsertSavedAnalysis,
@@ -432,9 +433,15 @@ export interface IStorage {
   createLead(lead: InsertLead): Promise<Lead>;
   getLeads(filters?: { leadType?: string; stage?: string; assignedTo?: string }): Promise<Lead[]>;
   getLead(id: number): Promise<Lead | undefined>;
-  updateLead(id: number, data: Partial<InsertLead>): Promise<Lead | undefined>;
+  updateLead(id: number, data: Partial<InsertLead> & { hqSubmissionId?: string; hqForwardedAt?: Date }): Promise<Lead | undefined>;
   updateLeadStage(id: number, stage: string): Promise<Lead | undefined>;
   assignLead(id: number, assignedTo: string): Promise<Lead | undefined>;
+
+  // Pegasus HQ outbox (Task #153)
+  createHqOutbox(row: InsertHqOutbox): Promise<HqOutbox>;
+  updateHqOutbox(id: number, patch: Partial<HqOutbox>): Promise<HqOutbox | undefined>;
+  getHqOutbox(id: number): Promise<HqOutbox | undefined>;
+  getHqOutboxList(filters?: { status?: string; limit?: number }): Promise<HqOutbox[]>;
 
   // CTA Events (Empire Doctrine v1.0.1 Wave 3)
   createCtaEvent(event: InsertCtaEvent): Promise<CtaEvent>;
@@ -2375,6 +2382,39 @@ export class DatabaseStorage implements IStorage {
   async createCtaEvent(event: InsertCtaEvent): Promise<CtaEvent> {
     const [created] = await db.insert(ctaEvents).values(event).returning();
     return created;
+  }
+
+  // ====== Pegasus HQ Outbox (Task #153) ======
+  async createHqOutbox(row: InsertHqOutbox): Promise<HqOutbox> {
+    const [created] = await db.insert(hqOutbox).values(row).returning();
+    return created;
+  }
+
+  async updateHqOutbox(id: number, patch: Partial<HqOutbox>): Promise<HqOutbox | undefined> {
+    const [updated] = await db
+      .update(hqOutbox)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(hqOutbox.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getHqOutbox(id: number): Promise<HqOutbox | undefined> {
+    const [row] = await db.select().from(hqOutbox).where(eq(hqOutbox.id, id));
+    return row;
+  }
+
+  async getHqOutboxList(filters?: { status?: string; limit?: number }): Promise<HqOutbox[]> {
+    const limit = filters?.limit ?? 100;
+    if (filters?.status) {
+      return db
+        .select()
+        .from(hqOutbox)
+        .where(eq(hqOutbox.status, filters.status))
+        .orderBy(desc(hqOutbox.createdAt))
+        .limit(limit);
+    }
+    return db.select().from(hqOutbox).orderBy(desc(hqOutbox.createdAt)).limit(limit);
   }
 
   async getCtaEvents(sinceDays: number = 30): Promise<CtaEvent[]> {

@@ -78,6 +78,7 @@ import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
 import peggy from "./peggy";
+import { forward as hqForward, outreachReasonForLeadType, retryOutboxRow as hqRetryOutboxRow, drainPending as hqDrainPending, isHqHealthy } from "./integrations/hq-client";
 import { 
   createUserProfile, 
   createUserReputation, 
@@ -6068,7 +6069,41 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createLead(parseResult.data);
-      
+
+      // Task #153 — Forward to Pegasus HQ. Outbox-first: this always
+      // queues; the network call is fire-and-forget. The site never
+      // blocks on HQ availability. leadType maps to outreachReason per
+      // the locked replit.md contract.
+      try {
+        const surface: "lead" | "vendor" | "buybox" =
+          parseResult.data.leadType === "vendor"
+            ? "vendor"
+            : parseResult.data.leadType === "buybox_interest"
+              ? "buybox"
+              : "lead";
+        await hqForward({
+          surface,
+          sourceId: lead.id,
+          payload: {
+            propertyAddress: parseResult.data.address || undefined,
+            contactName: `${parseResult.data.firstName || ""} ${parseResult.data.lastName || ""}`.trim() || "Unknown",
+            contactEmail: parseResult.data.email || undefined,
+            contactPhone: parseResult.data.phone || undefined,
+            outreachReason: outreachReasonForLeadType(parseResult.data.leadType),
+            sourceChannel: `website:${parseResult.data.source || parseResult.data.leadType}`,
+            consentContact: true,
+            consentCcpaAcknowledged: true,
+            extra: {
+              leadType: parseResult.data.leadType,
+              leadData: parseResult.data.leadData,
+              notes: parseResult.data.notes,
+            },
+          },
+        });
+      } catch (err) {
+        console.error("[hq-forward] queue error (non-blocking):", err);
+      }
+
       // Send email notification based on lead type (non-blocking)
       const leadData = parseResult.data;
       const fullName = `${leadData.firstName || ''} ${leadData.lastName || ''}`.trim() || 'Unknown';
@@ -6120,6 +6155,50 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error creating lead:", error);
       res.status(500).json({ message: "Failed to create lead" });
+    }
+  });
+
+  // Task #153 — Pegasus HQ outbox admin. Read pending/failed/forwarded
+  // payloads, retry a failed row, drain all pending. Gated to admins.
+  const requireAdminEmail = async (req: any, res: Response, next: NextFunction) => {
+    const email = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
+    if (!email || !ADMIN_EMAILS.includes(email)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+  };
+
+  app.get("/api/admin/hq-outbox", isHybridAuthenticated, requireAdminEmail, async (req, res) => {
+    try {
+      const status = (req.query.status as string) || undefined;
+      const limit = Number(req.query.limit) || 100;
+      const rows = await storage.getHqOutboxList({ status, limit });
+      const healthy = await isHqHealthy();
+      res.json({ rows, hqHealthy: healthy });
+    } catch (err) {
+      console.error("hq-outbox list error:", err);
+      res.status(500).json({ message: "Failed to load outbox" });
+    }
+  });
+
+  app.post("/api/admin/hq-outbox/:id/retry", isHybridAuthenticated, requireAdminEmail, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const result = await hqRetryOutboxRow(id);
+      res.json({ ok: !!result?.hq_submission_id, result });
+    } catch (err) {
+      console.error("hq-outbox retry error:", err);
+      res.status(500).json({ message: "Retry failed" });
+    }
+  });
+
+  app.post("/api/admin/hq-outbox/drain", isHybridAuthenticated, requireAdminEmail, async (_req, res) => {
+    try {
+      const result = await hqDrainPending(50);
+      res.json(result);
+    } catch (err) {
+      console.error("hq-outbox drain error:", err);
+      res.status(500).json({ message: "Drain failed" });
     }
   });
 
