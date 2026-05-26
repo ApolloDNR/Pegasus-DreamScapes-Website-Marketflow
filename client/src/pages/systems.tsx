@@ -32,7 +32,7 @@ const SYSTEMS: SystemCard[] = [
     name: "Strategy Lab",
     status: "LIVE",
     icon: FlaskConical,
-    description: "Public-facing strategy tool. Run a Quick Read or Full Path Builder on a property, compare possible lanes, and decide whether to save a Snapshot, submit to Pegasus, or request a Deal Blueprint.",
+    description: "Public-facing strategy tool. Run a preliminary read or open the Strategy Snapshot Builder on a property, compare possible lanes, and decide whether to save a Snapshot, submit to Pegasus, or request a Deal Blueprint.",
     href: "/strategy-lab",
   },
   {

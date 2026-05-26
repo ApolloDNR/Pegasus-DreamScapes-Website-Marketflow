@@ -53,7 +53,7 @@ function HeroSection() {
           transition={{ duration: 0.7, delay: 0.3 }}
           data-testid="text-blueprint-hero"
         >
-          When the Quick Read{" "}
+          When the Strategy Snapshot{" "}
           <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
             isn't enough.
           </span>
@@ -101,7 +101,7 @@ function HeroSection() {
               className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-cream/30 text-cream hover:bg-cream/10 backdrop-blur-md font-semibold"
               data-testid="button-blueprint-quick-read"
             >
-              Run the Free Quick Read First
+              Run the Free Strategy Snapshot First
             </Button>
           </Link>
         </motion.div>
@@ -208,7 +208,7 @@ function WhenItsRight() {
               Most deals don't need a Blueprint.
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-5">
-              A Quick Read or Full Path Analyzer run is usually enough. We will
+              A Strategy Snapshot run is usually enough. We will
               tell you when it isn't.
             </p>
             <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
@@ -253,7 +253,7 @@ function HowItWorks() {
       tag: "Step 02",
       icon: ShieldCheck,
       title: "We confirm the right tier.",
-      desc: "Pegasus reviews the intake. If a Quick Read or Full Path is enough, we say so and route you there.",
+      desc: "Pegasus reviews the intake. If a Strategy Snapshot is enough, we say so and route you there.",
     },
     {
       tag: "Step 03",
@@ -387,7 +387,7 @@ function CTASection() {
                 className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold"
                 data-testid="button-blueprint-cta-strategy-lab"
               >
-                Try the Free Quick Read
+                Try the Free Strategy Snapshot
               </Button>
             </Link>
           </div>

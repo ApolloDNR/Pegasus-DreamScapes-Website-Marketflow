@@ -51,8 +51,8 @@ const SECTIONS: { eyebrow: string; items: QA[] }[] = [
         a: "A free property analysis tool that runs your inputs against 14 real estate strategies (Fix & Flip, BRRRR, ADU, Wholesale, etc.) and produces a preliminary verdict. It's a starting point, not a final answer. Apollo reviews the situation before any decisions are made.",
       },
       {
-        q: "What's the difference between the Quick Read, the Full Path Analyzer, and a Deal Blueprint?",
-        a: "Three tiers of the same Strategy Lab tool. The Quick Read is free, instant, no account required: lane fit, verdict, headline math. The Full Path Analyzer is free with a Pegasus account and it adds scenarios, a risk register, sensitivity analysis, and a saved snapshot you can share. The Deal Blueprint is a paid, human-prepared memo for a specific property: underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. Most submissions don't need a Blueprint. We tell you which tier fits before you commit.",
+        q: "What's the difference between a Strategy Snapshot and a Deal Blueprint?",
+        a: "Two depths of the same Strategy Lab tool. The Strategy Snapshot is preliminary and informational: a free preliminary read with no account required (lane fit, verdict, headline math), or a fuller saved snapshot with a Pegasus account (scenarios, risk register, sensitivity, sharable). The Deal Blueprint is a paid, human-prepared memo for a specific property: underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. Most submissions don't need a Blueprint. We tell you which fits before you commit.",
       },
     ],
   },

@@ -343,6 +343,28 @@ describe("Public voice rules (v1.3.1)", () => {
       }
     });
 
+    // Website Structure v1 FINAL §2 — locked four-product taxonomy
+    // (Strategy Lab · Strategy Review · Strategy Snapshot · Deal
+    // Blueprint). User-visible labels "Quick Read" and "Full Path
+    // Analyzer" looked like additional products and have been removed
+    // from public copy in favor of descriptive language anchored on
+    // Strategy Snapshot.
+    it("no public page surfaces legacy 'Quick Read' / 'Full Path Analyzer' product-like labels (v1 FINAL §2)", () => {
+      const FORBIDDEN_PRODUCT_DRIFT = [
+        "Quick Read",
+        "Full Path Analyzer",
+      ];
+      for (const rel of PUBLIC_PAGE_FILES) {
+        const src = stripComments(read(rel));
+        for (const phrase of FORBIDDEN_PRODUCT_DRIFT) {
+          expect(
+            src.includes(phrase),
+            `Legacy product-like label '${phrase}' still present in ${rel}`,
+          ).toBe(false);
+        }
+      }
+    });
+
     // Website Structure v1 FINAL §6 — Peggy six-section composition:
     // Hero / Where Peggy works / What Peggy does / What Peggy does NOT
     // do / Sample transcript / Phone gates + CTA.

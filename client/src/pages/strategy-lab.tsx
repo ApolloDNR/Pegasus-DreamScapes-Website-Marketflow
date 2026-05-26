@@ -1544,8 +1544,8 @@ export default function StrategyLabPage() {
       <div className="lg:hidden bg-background border-b border-border/40 px-6 py-3 flex items-center gap-2.5 mt-[76px]">
         <Info className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
         <p className="text-xs text-muted-foreground leading-snug">
-          Quick Read works here.{" "}
-          <span className="text-foreground font-medium">Full Path requires a larger screen.</span>
+          The preliminary read works here.{" "}
+          <span className="text-foreground font-medium">The full Strategy Snapshot builder requires a larger screen.</span>
         </p>
       </div>
       {/* Hero */}
@@ -1615,7 +1615,7 @@ export default function StrategyLabPage() {
           >
             <div className="p-4 border-b sm:border-b-0 sm:border-r border-[hsl(var(--rule))]">
               <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">
-                01 · Free Quick Read
+                01 · Free Preliminary Read
               </div>
               <div className="text-sm font-semibold text-foreground mb-0.5">Run any address now</div>
               <div className="text-xs text-muted-foreground leading-snug">
@@ -1624,7 +1624,7 @@ export default function StrategyLabPage() {
             </div>
             <div className="p-4 border-b sm:border-b-0 sm:border-r border-[hsl(var(--rule))]">
               <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">
-                02 · Full Path Analyzer
+                02 · Strategy Snapshot Builder
               </div>
               <div className="text-sm font-semibold text-foreground mb-0.5">Save · Share · PDF</div>
               <div className="text-xs text-muted-foreground leading-snug">
@@ -1707,7 +1707,7 @@ export default function StrategyLabPage() {
                 className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold transition-colors ${mode === "quick" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
                 data-testid="mode-quick"
               >
-                Quick Read
+                Preliminary
               </button>
               <button
                 type="button"
@@ -1724,7 +1724,7 @@ export default function StrategyLabPage() {
                 className={`hidden lg:block px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "full" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
                 data-testid="mode-full"
               >
-                Full Path
+                Full Snapshot
               </button>
             </div>
             {mode === "full" && (
@@ -1798,7 +1798,7 @@ export default function StrategyLabPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-px w-6 bg-primary/60" aria-hidden="true" />
                   <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
-                    Quick Read
+                    Preliminary Read
                   </div>
                 </div>
                 <h2 className="font-serif text-3xl font-semibold tracking-tight leading-tight">
@@ -1870,7 +1870,7 @@ export default function StrategyLabPage() {
                 ))}
               </Field>
               <div className="pt-2 text-[11px] text-muted-foreground leading-snug">
-                Need scenarios, risks, sensitivity, or PDF export? Switch to Full Path on the right.
+                Need scenarios, risks, sensitivity, or PDF export? Switch to the Strategy Snapshot Builder on the right.
               </div>
 
               {/* Hidden defaults — now editable inline. The static fallbacks
@@ -1937,7 +1937,7 @@ export default function StrategyLabPage() {
                   <li className="flex justify-between gap-3"><span>Loan term</span><span className="tabular-nums text-foreground">30 yr fixed</span></li>
                 </ul>
                 <p className="text-[11px] text-muted-foreground leading-snug pt-2">
-                  Need to edit vacancy, tax, insurance, or comps? Switch to <span className="font-semibold text-foreground">Full Path</span>.
+                  Need to edit vacancy, tax, insurance, or comps? Switch to the <span className="font-semibold text-foreground">Strategy Snapshot Builder</span>.
                 </p>
               </details>
             </section>
@@ -2041,7 +2041,7 @@ export default function StrategyLabPage() {
                             </li>
                           </ul>
                           <p className="mt-2 text-[10px] text-muted-foreground leading-snug">
-                            Edit any assumption above to recompute. Full Path adds Stressed / Worst scenarios, DSCR, and the lane-by-lane sensitivity grid.
+                            Edit any assumption above to recompute. The Strategy Snapshot Builder adds Stressed / Worst scenarios, DSCR, and the lane-by-lane sensitivity grid.
                           </p>
                         </details>
                       )}
