@@ -38,6 +38,7 @@ export default function Development() {
       <PillarSection />
       <RoutingFilterSection />
       <PhaseSection />
+      <ProjectsCaseStudiesSection />
       <CTASection />
     </div>
   );
@@ -161,7 +162,7 @@ function PillarSection() {
               Pegasus DreamScapes is a real estate development company at its core. The product is the building, the renovation, the addition, the neighborhood. Investments and Systems are not separate businesses; they are the two columns that hold Development up.
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-              <span className="font-semibold text-foreground">Investments</span> bring the capital that funds the build. <span className="font-semibold text-foreground">Systems</span> bring the discipline that runs the build. The <span className="font-semibold text-foreground">Pegasus Standard</span> governs both so a project is read honestly, scoped tightly, and delivered as promised.
+              <span className="font-semibold text-foreground">Investments</span> bring the capital that funds the build. <span className="font-semibold text-foreground">Systems</span> bring the discipline that runs the build. The <span className="font-semibold text-foreground">Dreamscaper Standard</span> governs both so a project is read honestly, scoped tightly, and delivered as promised.
             </p>
             <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
               Built on strategy. Governed by virtue. Executed with discipline.
@@ -199,7 +200,7 @@ function PillarSection() {
               <div className="border-t border-border/40 pt-5 text-center">
                 <ShieldCheck className="w-4 h-4 text-primary mx-auto mb-2" />
                 <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-supporting">
-                  Governed by The Pegasus Standard
+                  Governed by The Dreamscaper Standard
                 </p>
               </div>
             </div>
@@ -488,10 +489,10 @@ function SupportingPillarsSection() {
     },
     {
       icon: ShieldCheck,
-      kicker: "Governance · The Pegasus Standard",
+      kicker: "Governance · The Dreamscaper Standard",
       role: "Governs both",
       title: "One doctrine over every project.",
-      desc: "Capital and operations are only as honest as the rules that govern them. The Pegasus Standard is the single doctrine that disciplines both pillars and decides which projects move forward.",
+      desc: "Capital and operations are only as honest as the rules that govern them. The Dreamscaper Standard is the single doctrine that disciplines both pillars and decides which projects move forward.",
       items: [
         "Prudence on the underwriting",
         "Justice on the dealings",
@@ -516,7 +517,7 @@ function SupportingPillarsSection() {
             What holds Development up.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Development is the spine. Investments funds it. Systems runs it. The Pegasus Standard governs both. None of these are separate companies. They are the columns that keep what Pegasus builds upright.
+            Development is the spine. Investments funds it. Systems runs it. The Dreamscaper Standard governs both. None of these are separate companies. They are the columns that keep what Pegasus builds upright.
           </p>
         </ScrollReveal>
 
@@ -693,6 +694,96 @@ function RoutingFilterSection() {
             Every property gets a path. Not every property gets an offer.
           </p>
         </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+// Website Structure v1 FINAL §4 — Projects merged into Development.
+// "Projects & Case Studies" anchor section on the Development page;
+// the standalone /projects index remains for direct links but is no
+// longer in the primary nav.
+function ProjectsCaseStudiesSection() {
+  const projects = [
+    {
+      slug: "nelson-dr",
+      title: "Nelson Dr — Cosmetic-plus Reposition",
+      kicker: "Case study · Pleasant Hill",
+      desc: "Inherited single-family. Deferred maintenance, dated systems, clean title. Routed to a cosmetic-plus reposition with a contained scope and a defensible exit.",
+    },
+    {
+      slug: null,
+      title: "ADU additions — East Bay",
+      kicker: "Active lane",
+      desc: "Detached ADUs and JADU conversions on Pegasus-reviewed lots. Permits, contractor governance, and unit economics handled inside one Development pipeline.",
+    },
+    {
+      slug: null,
+      title: "Forced-value rehabs",
+      kicker: "Active lane",
+      desc: "Cosmetic-plus interiors, system replacements, and selective structural lifts. Underwritten to a defensible highest value, never the most aspirational one.",
+    },
+  ];
+  return (
+    <section
+      id="projects-case-studies"
+      className="py-24 lg:py-32 bg-background border-y border-border/40 scroll-mt-24"
+      data-testid="section-development-projects"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-12">
+          <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold mb-4">
+            Projects &amp; Case Studies
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+            What Development looks like in practice.
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Projects live inside Development now. The standalone Projects page kept its URL for direct links, but the case studies are read here, next to the lanes that produced them.
+          </p>
+        </ScrollReveal>
+        <div className="grid md:grid-cols-3 gap-5 mb-9">
+          {projects.map((p) => {
+            const inner = (
+              <CardSurface className="h-full p-7 border-border/40 hover:border-primary/40 transition-colors">
+                <p className="text-[11px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">
+                  {p.kicker}
+                </p>
+                <h3 className="font-serif text-xl font-semibold tracking-tight mb-3">
+                  {p.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {p.desc}
+                </p>
+                {p.slug && (
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-primary font-semibold">
+                    Read the case study
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                )}
+              </CardSurface>
+            );
+            return p.slug ? (
+              <Link
+                key={p.title}
+                href={`/projects/${p.slug}`}
+                data-testid={`link-development-project-${p.slug}`}
+                className="block"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div key={p.title}>{inner}</div>
+            );
+          })}
+        </div>
+        <Link
+          href="/projects"
+          data-testid="link-development-all-projects"
+          className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))] transition-colors"
+        >
+          See every project <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </section>
   );

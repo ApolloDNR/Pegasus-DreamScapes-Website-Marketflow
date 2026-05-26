@@ -102,6 +102,7 @@ const CapitalPage = lazy(() => import("@/pages/capital"));
 const ConnectPage = lazy(() => import("@/pages/connect"));
 const NelsonDrPage = lazy(() => import("@/pages/project-nelson-dr"));
 const MarketflowAccess = lazy(() => import("@/pages/marketflow-access"));
+const MarketflowBuyboxes = lazy(() => import("@/pages/marketflow-buyboxes"));
 const Contact = lazy(() => import("@/pages/contact"));
 const DealflowProject = lazy(() => import("@/pages/dealflow-project"));
 const DealflowCommunity = lazy(() => import("@/pages/dealflow-community"));
@@ -280,6 +281,9 @@ function Router() {
       {/* MarketFlow Routes with Supabase Auth */}
       <Route path="/marketflow" component={Marketplace} />
       <Route path="/marketflow/access" component={MarketflowAccess} />
+      {/* Website Structure v1 FINAL §7 — Pegasus Buyboxes moved off the
+       * MarketFlow landing into a dedicated public surface. */}
+      <Route path="/marketflow/buyboxes" component={MarketflowBuyboxes} />
       <Route path="/marketflow/wholesaler/:rest*">{() => <AuthGuard><MarketplaceWholesaler /></AuthGuard>}</Route>
       <Route path="/marketflow/wholesaler">{() => <AuthGuard><MarketplaceWholesaler /></AuthGuard>}</Route>
       <Route path="/marketflow/dreamscaper/:rest*">{() => <AuthGuard><MarketplaceDreamscaper /></AuthGuard>}</Route>

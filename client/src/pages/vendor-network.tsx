@@ -267,14 +267,14 @@ function PegasusStandardSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Pegasus Standard</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Dreamscaper Standard</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
             The bar we hold every vendor to.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
-            Built on strategy. Governed by virtue. Executed with discipline. Vendors who fit the Pegasus Standard get routed to real work, repeatedly.
+            Built on strategy. Governed by virtue. Executed with discipline. Vendors who fit the Dreamscaper Standard get routed to real work, repeatedly.
           </p>
         </ScrollReveal>
 

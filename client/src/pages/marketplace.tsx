@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LegalDisclaimer } from "@/components/legal-disclaimer";
-import { BuyboxesSection } from "@/components/buyboxes-section";
 import { ScrollReveal, FadeIn } from "@/components/animations";
 import { trackCtaClick } from "@/lib/analytics";
 import { SkeletonHero, SkeletonGrid } from "@/components/skeleton-primitives";
@@ -70,7 +69,33 @@ export default function MarketplacePage() {
       <section className="max-w-7xl mx-auto px-6 pt-6"><LegalDisclaimer /></section>
       <MarketFlowFunnelSection />
       <BetaFeaturesSection />
-      <BuyboxesSection />
+      {/* Website Structure v1 FINAL §7 — Pegasus Buyboxes moved off the
+          MarketFlow landing into a dedicated /marketflow/buyboxes page. A
+          single teaser links there so the gated landing stays focused on
+          the access funnel. */}
+      <section className="py-16 lg:py-20 bg-muted/15 border-y border-border/30">
+        <div className="max-w-5xl mx-auto px-6 lg:px-12 text-center">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            Pegasus Buyboxes
+          </p>
+          <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4 leading-tight">
+            What we're actively underwriting.
+          </h2>
+          <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-7">
+            Four named buyboxes with target geographies, deal types, and underwriting bands. Request a notification when a fit shows up.
+          </p>
+          <Link href="/marketflow/buyboxes">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-sm uppercase tracking-[0.15em] px-7 py-6 font-semibold"
+              data-testid="button-marketflow-buyboxes"
+            >
+              See the Pegasus Buyboxes <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
       <MarketFlowBoundarySection />
       <CTASection />
     </div>

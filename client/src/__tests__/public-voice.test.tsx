@@ -306,6 +306,81 @@ describe("Public voice rules (v1.3.1)", () => {
       );
     });
 
+    // Website Structure v1 FINAL §3 — home renders the 5 surface teasers
+    // (Deal Architecture · Development · Strategy Lab · WWA · MarketFlow)
+    // as discrete sections with stable data-testids.
+    it("home.tsx renders the five surface teaser sections (v1 FINAL §3)", () => {
+      const homeSrc = read("client/src/pages/home.tsx");
+      for (const id of [
+        "section-home-deal-architecture",
+        "section-home-development",
+        "section-home-strategy-lab",
+        "section-home-work-with-apollo",
+        "section-home-marketflow",
+      ]) {
+        expect(homeSrc.includes(id), `Missing teaser section: ${id}`).toBe(true);
+      }
+    });
+
+    // Website Structure v1 FINAL §4 — Projects merged into Development.
+    // Dedicated "Projects & Case Studies" anchor on /development.
+    it("/development surfaces the 'Projects & Case Studies' merge (v1 FINAL §4)", () => {
+      const src = read("client/src/pages/development.tsx");
+      expect(src).toContain("Projects &amp; Case Studies");
+      expect(src).toContain("section-development-projects");
+    });
+
+    // Website Structure v1 FINAL §3.8 — every public surfacing of the
+    // governance doctrine uses "Dreamscaper Standard", not "Pegasus
+    // Standard". Source-layer scan across all public pages.
+    it("no public page surfaces the legacy 'Pegasus Standard' name", () => {
+      for (const rel of PUBLIC_PAGE_FILES) {
+        const src = stripComments(read(rel));
+        expect(
+          src.includes("Pegasus Standard"),
+          `Legacy 'Pegasus Standard' still present in ${rel}`,
+        ).toBe(false);
+      }
+    });
+
+    // Website Structure v1 FINAL §6 — Peggy six-section composition:
+    // Hero / Where Peggy works / What Peggy does / What Peggy does NOT
+    // do / Sample transcript / Phone gates + CTA.
+    it("/peggy renders the six locked sections (v1 FINAL §6)", () => {
+      const src = read("client/src/pages/peggy.tsx");
+      for (const id of [
+        "section-peggy-where",
+        "section-peggy-does",
+        "section-peggy-transcript",
+        "section-peggy-phone",
+        "section-peggy-cta",
+      ]) {
+        expect(src.includes(id), `Missing Peggy section: ${id}`).toBe(true);
+      }
+      expect(src).toContain("Where Peggy works");
+      expect(src).toContain("Sample transcript");
+    });
+
+    // Amendment 2 §D / launch gate #4 — public Peggy widget renders the
+    // explicit "in private training" notify line.
+    it("public Peggy widget surfaces the notify-me copy (Amendment 2 §D)", () => {
+      const src = read("client/src/components/peggy-public-note.tsx");
+      expect(src).toContain("Peggy is in private training.");
+      expect(src).toContain("Notify me when she's live");
+    });
+
+    // Website Structure v1 FINAL §7 — Pegasus Buyboxes moved off the
+    // MarketFlow landing to a dedicated /marketflow/buyboxes surface.
+    it("Buyboxes are mounted at /marketflow/buyboxes, not on marketplace.tsx (v1 FINAL §7)", () => {
+      const marketplaceSrc = read("client/src/pages/marketplace.tsx");
+      expect(marketplaceSrc).not.toMatch(/<BuyboxesSection\s*\/>/);
+      const buyboxesPageSrc = read("client/src/pages/marketflow-buyboxes.tsx");
+      expect(buyboxesPageSrc.length).toBeGreaterThan(0);
+      expect(buyboxesPageSrc).toContain("BuyboxesSection");
+      const appSrc = read("client/src/App.tsx");
+      expect(appSrc).toContain('path="/marketflow/buyboxes"');
+    });
+
     // Website Structure v1 FINAL §8 — locked legal disclosure block in
     // footer, surfaces on every page.
     it("footer surfaces the locked legal disclosure block (v1 FINAL §8)", () => {

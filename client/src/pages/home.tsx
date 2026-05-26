@@ -4,7 +4,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { trackEvent, trackCtaClick } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
-import { ArrowRight, Sparkles, ClipboardList, Calculator, Network as NetworkIcon, Home as HomeIcon, Handshake, Hammer, Key } from "lucide-react";
+import { ArrowRight, Sparkles, ClipboardList, Calculator, Network as NetworkIcon, Home as HomeIcon, Handshake, Hammer, Key, Layers, Compass, Lock } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { EditableText } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
@@ -79,10 +79,19 @@ export default function Home() {
           The Amendment 2 Four-Doors block is replaced by the six-card
           "What brings you here?" role router; PegasusStandardSection is
           renamed to "The Dreamscaper Standard". */}
+      {/* Website Structure v1 FINAL §3 — locked nine-section composition:
+          Hero, What Brings You Here, Deal Architecture, Development,
+          Strategy Lab, Work With Apollo, MarketFlow, Dreamscaper Standard,
+          Final CTA. Trust strip + Nelson proof + Operator are kept as
+          supporting context but do not count against the nine. */}
       <HeroSection />
       <TrustStripSection />
-      <PegasusQuestionSection />
       <WhatBringsYouHereSection />
+      <DealArchitectureTeaserSection />
+      <DevelopmentTeaserSection />
+      <StrategyLabTeaserSection />
+      <WorkWithApolloTeaserSection />
+      <MarketFlowTeaserSection />
       <NelsonProofSection />
       <OperatorSection />
       <DreamscaperStandardSection />
@@ -424,6 +433,293 @@ function WhatBringsYouHereSection() {
             </StaggerItem>
           ))}
         </StaggerChildren>
+      </div>
+    </section>
+  );
+}
+
+// Website Structure v1 FINAL §3.3 — Deal Architecture teaser.
+// Ten-lane outcome map: surface the lanes, link to the full page.
+function DealArchitectureTeaserSection() {
+  const lanes = [
+    "Direct acquisition",
+    "Creative finance",
+    "JV / co-GP",
+    "Wholesale",
+    "Listing",
+    "Buyer rep",
+    "BRRRR",
+    "ADU upside",
+    "Value-add",
+    "Routed referral",
+  ];
+  return (
+    <section
+      className="py-24 lg:py-32 bg-background border-t border-border/30"
+      data-testid="section-home-deal-architecture"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-12">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            §3 · Deal Architecture
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
+            Ten lanes, one disciplined read.
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            Every property routes through the same review. The lane that fits the situation wins. The lanes that don't are explicitly named and routed elsewhere.
+          </p>
+        </ScrollReveal>
+        <div className="flex flex-wrap gap-2 mb-9" data-testid="home-deal-architecture-lanes">
+          {lanes.map((lane) => (
+            <span
+              key={lane}
+              className="inline-flex items-center text-[11px] uppercase tracking-[0.18em] font-supporting font-semibold border border-border/60 bg-card px-3 py-1.5 rounded-sm text-foreground/80"
+            >
+              {lane}
+            </span>
+          ))}
+        </div>
+        <Link
+          href="/deal-architecture"
+          onClick={() => trackCtaClick("home_deal_architecture", "See the full map", "/deal-architecture")}
+          className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))] transition-colors"
+          data-testid="link-home-deal-architecture"
+        >
+          See the full Deal Architecture map <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// Website Structure v1 FINAL §3.4 — Development teaser.
+function DevelopmentTeaserSection() {
+  const lanes = [
+    { title: "ADU additions", desc: "Detached and attached ADUs on East Bay residential lots." },
+    { title: "Forced-value rehabs", desc: "Cosmetic and structural lifts to defensible highest value." },
+    { title: "Fix-and-flip", desc: "Acquired, repositioned, resold inside a tight underwriting band." },
+    { title: "BRRRR acquisitions", desc: "Buy, rehab, rent, refinance, repeat." },
+    { title: "Small multifamily", desc: "2–4 unit conversions and acquisitions." },
+    { title: "Ground-up infill", desc: "Trajectory: Pegasus-controlled lots, Pegasus-operated builds." },
+    { title: "Master-planned neighborhoods", desc: "Phase 4: classical neighborhoods at scale." },
+  ];
+  return (
+    <section
+      className="py-24 lg:py-32 bg-muted/15 border-t border-border/30"
+      data-testid="section-home-development"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-12">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            §4 · Development
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
+            Build first. Everything else supports it.
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            Seven build lanes, phased honestly. Today's scope is small-scale residential. The trajectory is a vertically integrated developer.
+          </p>
+        </ScrollReveal>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-9" data-testid="home-development-lanes">
+          {lanes.map((l) => (
+            <div
+              key={l.title}
+              className="p-5 rounded-lg border border-border/50 bg-card"
+            >
+              <p className="font-serif text-base font-semibold mb-1.5">{l.title}</p>
+              <p className="text-sm text-muted-foreground leading-snug">{l.desc}</p>
+            </div>
+          ))}
+        </div>
+        <Link
+          href="/development"
+          onClick={() => trackCtaClick("home_development", "Inside Development", "/development")}
+          className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))] transition-colors"
+          data-testid="link-home-development"
+        >
+          Inside Pegasus Development <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// Website Structure v1 FINAL §3.5 — Strategy Lab teaser + four named products.
+function StrategyLabTeaserSection() {
+  const products = [
+    { name: "Strategy Lab", desc: "Public calculator surface. Your preliminary read in minutes." },
+    { name: "Strategy Review", desc: "Human-reviewed conversation off the Submit form." },
+    { name: "Strategy Snapshot", desc: "Preliminary written read. Most are reviewed within 5 business days." },
+    { name: "Deal Blueprint", desc: "Paid, full underwriting and path document." },
+  ];
+  return (
+    <section
+      className="py-24 lg:py-32 bg-background border-t border-border/30"
+      data-testid="section-home-strategy-lab"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-12">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            §5 · Strategy Lab
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
+            Run the situation through the Pegasus lens.
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            Four named products. One taxonomy. The output is your preliminary read, never a 5th product name.
+          </p>
+        </ScrollReveal>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-9" data-testid="home-strategy-lab-products">
+          {products.map((p) => (
+            <div
+              key={p.name}
+              className="p-5 rounded-lg border border-border/50 bg-card hover:border-primary/40 transition-colors"
+            >
+              <p className="font-serif text-base font-semibold text-primary mb-2">{p.name}</p>
+              <p className="text-sm text-muted-foreground leading-snug">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/strategy-lab"
+            onClick={() => trackCtaClick("home_strategy_lab", "Open Strategy Lab", "/strategy-lab")}
+          >
+            <Button
+              size="lg"
+              className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-primary text-white hover:bg-primary/90 font-semibold"
+              data-testid="button-home-strategy-lab"
+            >
+              Open Strategy Lab <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+          <Link
+            href="/deal-blueprint"
+            onClick={() => trackCtaClick("home_strategy_lab", "Request a Deal Blueprint", "/deal-blueprint")}
+          >
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-sm uppercase tracking-[0.15em] px-7 py-6 font-semibold"
+              data-testid="button-home-deal-blueprint"
+            >
+              Request a Deal Blueprint
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Website Structure v1 FINAL §3.6 — Work With Apollo teaser.
+// Licensed representation panel. DRE/KW disclosure surfaced verbatim.
+function WorkWithApolloTeaserSection() {
+  const lanes = [
+    { title: "List With Apollo", desc: "Full-service KW listing." },
+    { title: "Buy With Apollo", desc: "Buyer representation, end to end." },
+    { title: "Investor Buyer Representation", desc: "Operator and investor-side buyer rep." },
+    { title: "Home Value / Listing Strategy Review", desc: "Pre-listing strategy session." },
+  ];
+  return (
+    <section
+      className="py-24 lg:py-32 bg-[hsl(var(--navy))] text-cream border-t border-cream/10"
+      data-testid="section-home-work-with-apollo"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-12">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            §6 · Work With Apollo
+          </p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5 text-cream">
+            Licensed representation, through KW East Bay.
+          </h2>
+          <p className="text-base sm:text-lg text-cream/80 leading-relaxed">
+            Four lanes for owners and buyers who want a real estate agent. Apollo is the agent. Pegasus is the strategy company.
+          </p>
+        </ScrollReveal>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-9" data-testid="home-wwa-lanes">
+          {lanes.map((l) => (
+            <div
+              key={l.title}
+              className="p-5 rounded-lg border border-cream/15 bg-cream/[0.04]"
+            >
+              <p className="font-serif text-base font-semibold mb-2 text-cream">{l.title}</p>
+              <p className="text-sm text-cream/70 leading-snug">{l.desc}</p>
+            </div>
+          ))}
+        </div>
+        <Link
+          href="/work-with-apollo"
+          onClick={() => trackCtaClick("home_wwa", "Work With Apollo", "/work-with-apollo")}
+        >
+          <Button
+            size="lg"
+            className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white font-semibold"
+            data-testid="button-home-wwa"
+          >
+            Work With Apollo <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// Website Structure v1 FINAL §3.7 — MarketFlow teaser.
+// Gated public landing. Status badge: private beta, invite-only.
+function MarketFlowTeaserSection() {
+  return (
+    <section
+      className="py-24 lg:py-32 bg-muted/20 border-t border-border/30"
+      data-testid="section-home-marketflow"
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              §7 · MarketFlow
+            </p>
+            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-supporting font-semibold bg-[hsl(var(--navy))] text-cream px-2 py-0.5 rounded-sm">
+              <Lock className="w-3 h-3" aria-hidden="true" />
+              Private beta · invite only
+            </span>
+          </div>
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
+            The private dealflow layer.
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-2">
+            MarketFlow is the gated network for reviewed opportunities, trusted operators, buyers, and capital relationships. No raw intake reaches the network. The review is the doctrine.
+          </p>
+        </ScrollReveal>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/marketflow"
+            onClick={() => trackCtaClick("home_marketflow", "See MarketFlow", "/marketflow")}
+          >
+            <Button
+              size="lg"
+              className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-primary text-white hover:bg-primary/90 font-semibold"
+              data-testid="button-home-marketflow"
+            >
+              See MarketFlow <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+          <Link
+            href="/marketflow/buyboxes"
+            onClick={() => trackCtaClick("home_marketflow", "Pegasus Buyboxes", "/marketflow/buyboxes")}
+          >
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-sm uppercase tracking-[0.15em] px-7 py-6 font-semibold"
+              data-testid="button-home-marketflow-buyboxes"
+            >
+              Pegasus Buyboxes
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );

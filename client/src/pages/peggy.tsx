@@ -3,7 +3,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
-import { ArrowRight, Sparkles, Check, X } from "lucide-react";
+import { ArrowRight, Sparkles, Check, X, Globe, Phone, Server, Network as NetworkIcon } from "lucide-react";
 
 // Empire Doctrine Amendment 2 §D — public Peggy surface. The positioning
 // line below is verbatim and asserted by public-voice.test.tsx. The
@@ -79,7 +79,48 @@ export default function Peggy() {
         <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
       </section>
 
-      <section className="py-20 lg:py-28 bg-background">
+      {/* Website Structure v1 FINAL §6 — Peggy six-section composition.
+          §2 · Where Peggy works. Plugs into website, phone, HQ, and the
+          ecosystem apps. Each surface carries its own status badge. */}
+      <section
+        className="py-20 lg:py-28 bg-background border-t border-border/30"
+        data-testid="section-peggy-where"
+      >
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
+          <ScrollReveal className="max-w-3xl mb-12">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+              Where Peggy works
+            </p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-5 leading-tight">
+              One intelligence, multiple surfaces.
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+              The same Peggy shows up across every Pegasus surface. Same voice. Same guardrails. Same hand-off to Apollo.
+            </p>
+          </ScrollReveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: Globe, label: "Website", desc: "Public dock on every page. Leave a note while Peggy is in training.", status: "private-training" as const },
+              { icon: Phone, label: "Phone · 925-744-8525", desc: "Inbound voice with consent, gated by four launch rules.", status: "in-development" as const },
+              { icon: Server, label: "HQ", desc: "Internal operator console. Routes structured intake to the right reviewer.", status: "in-development" as const },
+              { icon: NetworkIcon, label: "Ecosystem apps", desc: "BuildForge, CapStack, MarketFlow. Same Peggy, scoped to each surface.", status: "in-development" as const },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="p-5 rounded-lg border border-border/50 bg-card flex flex-col gap-3"
+                data-testid={`peggy-surface-${s.label.toLowerCase().split(" ")[0].replace(/[^a-z]/g, "")}`}
+              >
+                <s.icon className="w-5 h-5 text-[hsl(var(--copper))]" aria-hidden="true" />
+                <p className="font-serif text-base font-semibold">{s.label}</p>
+                <p className="text-sm text-muted-foreground leading-snug flex-1">{s.desc}</p>
+                <StatusBadge kind={s.status} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 lg:py-28 bg-muted/15 border-t border-border/30" data-testid="section-peggy-does">
         <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-10">
             <ScrollReveal>
@@ -119,7 +160,51 @@ export default function Peggy() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-20 bg-muted/20 border-t border-border/30">
+      {/* Website Structure v1 FINAL §6 / Peggy §5 — Sample transcript.
+          Shows the actual conversational arc: ID, qualify, route, hand-off.
+          Italics + non-spaced punctuation only to satisfy the voice rule. */}
+      <section
+        className="py-20 lg:py-28 bg-background border-t border-border/30"
+        data-testid="section-peggy-transcript"
+      >
+        <div className="max-w-3xl mx-auto px-6 lg:px-12">
+          <ScrollReveal className="mb-10">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+              Sample transcript
+            </p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-5 leading-tight">
+              What a Peggy conversation actually sounds like.
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              Illustrative only. Real conversations vary. Peggy discloses she is an AI assistant on the first turn, every time.
+            </p>
+          </ScrollReveal>
+          <div className="space-y-3 font-serif text-base leading-relaxed" data-testid="peggy-transcript-body">
+            <div className="rounded-lg bg-card border border-border/50 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1.5">Peggy</p>
+              <p className="text-foreground/90 italic">"Hi, I'm Peggy with Pegasus DreamScapes. I'm Pegasus' AI strategy assistant. What's the property you're thinking about?"</p>
+            </div>
+            <div className="rounded-lg bg-muted/30 border border-border/30 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-supporting font-semibold mb-1.5">Owner</p>
+              <p className="text-foreground/85">"Single-family in Concord. Inherited it last year. Deferred maintenance."</p>
+            </div>
+            <div className="rounded-lg bg-card border border-border/50 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1.5">Peggy</p>
+              <p className="text-foreground/90 italic">"Got it. Probate situation or already through? And what's the deferred work, cosmetic, systems, or structural?"</p>
+            </div>
+            <div className="rounded-lg bg-muted/30 border border-border/30 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-supporting font-semibold mb-1.5">Owner</p>
+              <p className="text-foreground/85">"Probate's cleared. Roof, panel, and the kitchen is original."</p>
+            </div>
+            <div className="rounded-lg bg-card border border-border/50 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1.5">Peggy</p>
+              <p className="text-foreground/90 italic">"That's a Strategy Review fit. I'll route it to Apollo with what we've got and book a 20-minute call. I won't quote a number; that's the human review. Cool?"</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 lg:py-20 bg-muted/20 border-t border-border/30" data-testid="section-peggy-phone">
         <div className="max-w-3xl mx-auto px-6 lg:px-12">
           <ScrollReveal>
             <div className="flex items-center gap-3 mb-4">
@@ -158,7 +243,7 @@ export default function Peggy() {
         </div>
       </section>
 
-      <section className="py-20 lg:py-28 bg-[hsl(var(--charcoal))] text-cream">
+      <section className="py-20 lg:py-28 bg-[hsl(var(--charcoal))] text-cream" data-testid="section-peggy-cta">
         <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
           <ScrollReveal>
             <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-6 leading-tight">

@@ -89,8 +89,8 @@ export function PeggyPublicNote() {
                   In private training
                 </span>
               </div>
-              <p className="text-[12px] text-cream/80 leading-snug">
-                Hi, I'm Peggy — Pegasus' AI strategy assistant. I'm in private training right now. Leave a note and Apollo will pick it up.
+              <p className="text-[12px] text-cream/80 leading-snug" data-testid="text-peggy-private-training">
+                Peggy is in private training. Notify me when she's live, or leave a note and Apollo will pick it up.
               </p>
             </div>
             <button
