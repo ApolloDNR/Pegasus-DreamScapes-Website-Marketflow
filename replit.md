@@ -1,32 +1,38 @@
-# Pegasus DreamScapes Corp — Empire Doctrine v1.0.2 + Amendment 1
+# Pegasus DreamScapes Corp — Empire Doctrine v1.0.2 + Amendment 1 + Amendment 2
 
 ## Doctrine version
 
-**Controlling doctrine: Empire Doctrine v1.0.2 + Amendment 1 (Pegasus Buyboxes).** Source files in project knowledge:
+**Controlling doctrine: Empire Doctrine v1.0.2 + Amendment 1 + Amendment 2.** Canonical source files in project knowledge:
 
 - `attached_assets/Pasted--PEGASUS-DREAMSCAPES-EMPIRE-DOCTRINE-v1-0-2-Status-Lock_1779604340328.txt` — v1.0.2 (Parts A through G)
-- `attached_assets/Pasted--EMPIRE-DOCTRINE-v1-0-2-AMENDMENT-1-Status-Locked-Scope_1779634104279.txt` — Amendment 1 (Section C.8)
+- `attached_assets/Pasted--EMPIRE-DOCTRINE-v1-0-2-AMENDMENT-1-Status-Locked-Scope_1779634104279.txt` — Amendment 1 (Section C.8 — Pegasus Buyboxes)
+- `attached_assets/Empire-Doctrine-v1.0.2-Amendment-2_1779817906000.md` — Amendment 2 (two-audience discipline, four doors, Peggy positioning, /ecosystem, status badges, "what we are not", credentials policy, Peggy phone §D.4 safety gates)
 
-v1.0.2 **ratifies the live visual baseline** (Deep Navy `#0D1B2D` · Rich Copper `#C77A3A` · Warm Cream `#F6EFE4` · Charcoal `#1E2328`; Cinzel · Cormorant Garamond · Montserrat · Inter) as canonical — the live code is the law, not the prior v1.0.1 declaration. v1.0.2 also adds the **Balanced Outcome Standard** (Part B) and codifies the structural, navigational, and content corrections in Parts C, D, F, G. Amendment 1 adds the Pegasus Buyboxes free buyer interest list (Section C.8) into v1 scope; the paid MarketFlow Buyer Subscription product remains a v2.5 deferral.
+v1.0.2 **ratifies the live visual baseline** (Deep Navy `#0D1B2D` · Rich Copper `#C77A3A` · Warm Cream `#F6EFE4` · Charcoal `#1E2328`; Cinzel · Cormorant Garamond · Montserrat · Inter) as canonical. Amendment 1 adds the **Pegasus Buyboxes** free buyer interest list. **Amendment 2 (ratified by Task #149)** is additive — it does not change the visual baseline, palette, typography, or v1.0.2 voice rules. It adds: the two-audience discipline, the four-doors funnel (Peggy first), the eight-section homepage composition, the `/ecosystem` footer-only release valve, status badges as a required design element, the "what we are not" anti-claims block, the credentials policy (no fake badges), and the Peggy phone §D.4 launch gates. **Code execution of Amendment 2 ships in Task #150** — Amendment 2 itself is doctrine ratification only.
 
 ## Anti-Drift Lock (Empire Doctrine v1.0.2 Part F)
 
 The doctrine `.md` / `.txt` files in project knowledge are the **only source of truth** for brand tokens, typography, product taxonomy, and strategic positioning. This `replit.md` is operational README only — it must point at the doctrine, not redefine it. If a value here ever diverges from the doctrine, the doctrine wins.
 
-Two automated tripwires defend the lock:
+Two automated tripwires defend the lock today:
 
 - **`client/src/__tests__/doctrine-anti-drift.test.ts`** — fails the build if the live `--copper`, `--font-display`, `--font-serif`, `--font-supporting`, `--font-sans`, or `<meta name="theme-color">` values diverge from v1.0.2 Part A.
-- **`client/src/__tests__/public-voice.test.tsx`** — fails the build if the locked voice phrases (incl. v1.0.2 Part B Balanced Outcome Standard line) disappear from the live source.
+- **`client/src/__tests__/public-voice.test.tsx`** — fails the build if locked voice phrases (incl. v1.0.2 Part B Balanced Outcome Standard line) disappear from the live source.
 
-If a future change needs to touch these values, the change is a doctrine amendment first, code change second. Never the other way around.
+**Amendment 2 will extend the tripwires in Task #150**: `public-voice.test.tsx` gains assertions for the "What we are not" block (/about), the Peggy positioning line ("One intelligence, multiple surfaces") on /peggy, forbidden-phrase checks for "chatbot" and "20+ years" attributed to Pegasus-the-company; `nav-parity.test.tsx` gains `/ecosystem` under a footer-only `ecosystem` group in NAV_MORE. If a future change needs to touch any of these values, the change is a doctrine amendment first, code change second. Never the other way around.
 
 ## Overview
 Strategy-first real estate operating company in the East Bay (Pleasant Hill, California). Positioning: **"The Deal Architect"**. Every property gets a path. Honest review, disciplined execution, no marketing-fluff. The public website is a small, locked, voice-disciplined v1 surface designed to hold the brand without overclaiming.
 
-**Visual identity is the Final Brand Asset System — preserved in full and ratified by v1.0.2 Part A** (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter, plus the original hero photo treatment, More dropdown, and editorial page layouts). The Foundation Reset (Task #124) changed **structure, navigation, info, and function only**. v1.0.2 (Task #147) is a structural / doctrine reconciliation, not a visual reset — no palette, typography, header, or photo-treatment changes.
+**Two audiences (Amendment 2 §B):** property holders (Audience A — want a path on a specific property) and ecosystem participants (Audience B — want to understand what Pegasus is building). Every public surface must serve **one** audience clearly. Audience A = home, /strategy-lab, /submit, /projects, /about, /development. Audience B = `/ecosystem` (footer-only). Mixed-but-Audience-B-leaning = /marketflow, /capital, /vendor-network.
+
+**Visual identity is the Final Brand Asset System — preserved in full and ratified by v1.0.2 Part A** (Deep Navy / Rich Copper / Warm Cream / Charcoal, with Cinzel · Cormorant · Montserrat · Inter). Amendment 2 does **not** change the visual baseline.
 
 ## User Preferences
+
 Preferred communication style: simple, everyday language.
+
+**Working Rule M.1 (binding, Amendment 2):** every completion message must include two explicit lists — (1) what was done and how it improved the project, (2) what is unfinished, lazy, or stubbed. No silent gaps. No "shipped" without a corresponding "here's what I didn't do."
 
 ## Brand Identity (canonical)
 
@@ -34,134 +40,175 @@ Preferred communication style: simple, everyday language.
 - **Tagline**: The Deal Architect.
 - **Motto** (footer, locked): "Dream it. Build it. Live it."
 - **Belief line** (about, locked): "Built on strategy. Governed by virtue. Executed with discipline."
-- **Founder**: Paolo "Apollo" Duran — Founder & Principal. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.
+- **Founder**: Paolo "Apollo" Duran — Founder & Principal.
+- **Locked credentials (Amendment 2 §I — verified before any go-live):**
+  - **DRE #02333658** (Apollo Duran)
+  - **Keller Williams East Bay** — "Each office is independently owned and operated" disclosure required
+  - **NAR** — National Association of Realtors, NRDS member **#159537628**
+  - **CAR** — California Association of Realtors via **Contra Costa Association of Realtors (CCAR) #36424**
+- **Forbidden credential logos** (Amendment 2 §I — no fake credentialing): NAHB, BNI, BiggerPockets, ULI, NMHC, NAIOP, IRR, Inman, or any certification/membership not actually held. Listing one of these is a **launch-blocking violation**.
+- **Real founder headshot**: `attached_assets/image_1779813562612.png` — pending srcset transcode to `/images/founder/apollo-{w}.{avif|webp|jpg}` in Task #150.
 - **Contact**: `apollo@pegasusdreamscapes.com` / `925-744-8525`. Replaces all legacy `hello@`/`info@`.
-- **Palette & Typography (canonical):** See **Empire Doctrine v1.0.2 Part A.1 (palette) and A.2 (typography)**. The live HSL tokens in `client/src/index.css` and the font family bindings (Cinzel · Cormorant Garamond · Montserrat · Inter) are the canonical source; the anti-drift test (`client/src/__tests__/doctrine-anti-drift.test.ts`) fails the build if any of `--copper`, `--font-display`, `--font-serif`, `--font-supporting`, `--font-sans`, or `<meta name="theme-color">` diverges from Part A. Operational binding (which token paints which UI surface) is documented inline in `client/src/index.css`.
-- **Logo**: SVG-first. `public/brand/pegasus-wordmark.svg`, `public/brand/pegasus-mark.svg`, `public/favicon.svg`. (Final illustrated mark TBD; current SVGs are typography-driven placeholders.)
+- **Palette & Typography (canonical):** See **Empire Doctrine v1.0.2 Part A**. Live HSL tokens in `client/src/index.css` and the four font families (Cinzel · Cormorant Garamond · Montserrat · Inter) are the canonical source; the anti-drift test fails the build if `--copper`, `--font-display`, `--font-serif`, `--font-supporting`, `--font-sans`, or `<meta name="theme-color">` diverges from Part A.
+- **Logo**: SVG-first. `public/brand/pegasus-wordmark.svg`, `public/brand/pegasus-mark.svg`, `public/favicon.svg`. (Final illustrated mark TBD.)
 
-## Locked voice rules (Empire Doctrine v1.0.1 + v1.0.2 Part B)
+## Locked voice rules (v1.0.1 + v1.0.2 Part B + Amendment 2)
 
-### Balanced Outcome Standard (Empire Doctrine v1.0.2 Part B)
+### Required visible homepage phrases (hard-locked by `public-voice.test.tsx`)
+"Complex property. Structured opportunity." / "Every property gets a path. Not every property gets an offer." / "Built on strategy. Governed by virtue. Executed with discipline." / "Dream it. Build it. Live it."
 
-Public phrasing — used sparingly: **"A good deal makes sense for every serious party involved."** Surfaced on `/about` inside the Doctrine section as the closing line of the path-first / no-lead-dies block. Asserted in `public-voice.test.tsx`. The principle: Pegasus does not run deals where one party wins by another party losing; owners, operators, and capital partners are reviewed against the same standard.
+### Balanced Outcome Standard (v1.0.2 Part B)
+Public phrasing — used sparingly: **"A good deal makes sense for every serious party involved."** Surfaced on `/about` inside the Doctrine section.
 
-### Voice rules (v1.0.1, unchanged)
+### Forbidden public phrases
+"Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," generic luxury/guru language. **Added by Amendment 2:** "chatbot" (Peggy is an assistant/concierge/associate/intake analyst, never a chatbot); "20+ years" or any decade-claim **attributed to Pegasus the company** (the construction experience belongs to the team — Moises Duran — not to the corporation). Negative disclosure use ("not an offer of guaranteed returns or principal protected investment products") is preserved on `/capital` and `/terms`.
 
-- Required visible homepage lines (hard-locked by `public-voice.test.tsx`): "Complex property. Structured opportunity." / "Every property gets a path. Not every property gets an offer." / "Built on strategy. Governed by virtue. Executed with discipline." / "Dream it. Build it. Live it."
-- Canonical hero line: "Complex property. Structured opportunity." Nav subtitle: "The Deal Architect."
-- No spaced em-dashes in public copy. Preserved exclusions: `return "—"` empty-cell formatters, code comments, en-dash number ranges (`90–100K`), editorial title attributions (`Page Title — Pegasus DreamScapes`).
-- Forbidden public phrases: "Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," generic luxury/guru language. Negative disclosure use ("not an offer of guaranteed returns or principal protected investment products") is preserved on `/capital` and `/terms`.
-- No fake stats, no fake testimonials, no BBB claims, no implication of public investment access.
-- Development Pathway language discipline: Phase 1 = today's actual scope (ADU / value-add / small-scale residential). Phases 2–4 framed as trajectory. Do NOT overclaim large-scale development as current capability.
+### Other rules
+No spaced em-dashes in public copy (preserved exclusions: `return "—"` empty-cell formatters, code comments, en-dash number ranges like `90–100K`, editorial title attributions). No fake stats, no fake testimonials, no BBB claims, no implication of public investment access. Development Pathway language discipline: Phase 1 = today's actual scope (ADU / value-add / small-scale residential).
 
-## Public routes (locked v1.0.1)
+## "What we are not" (Amendment 2 §H — locked /about block)
+
+Mandatory on /about, above the Doctrine block, verbatim:
+
+> **What we are not.** We are not just a cash buyer. We are not a brokerage. We are not a construction company. We are not a proptech app. We are not a marketplace. Pegasus is a strategy-first real estate operating company. We review complex property situations and design the right path forward.
+
+Asserted by `public-voice.test.tsx` after Task #150 ships the block.
+
+## The Four Doors (Amendment 2 §C — friction ladder)
+
+Replaces the prior three-door framing. Each door catches a different visitor mindset:
+
+| Door | Friction | For | Surface |
+|---|---|---|---|
+| 1. Talk to Peggy | Lowest — just chat | "I'm not sure what I have yet" | Floating widget + `/peggy` |
+| 2. Submit a Property | Medium — form | "I know what I have, review it" | `/submit` (primary CTA) |
+| 3. Try Strategy Lab | Medium — tool | "I want to run the numbers myself" | `/strategy-lab` |
+| 4. Join the Network | High — vetted | Operators · capital · vendors | `/marketflow` + `/capital` + `/vendor-network` |
+
+**Locked**: door order on the homepage is **Peggy first, Submit second**. Submit remains the primary header + final CTA.
+
+## Peggy — locked positioning (Amendment 2 §D)
+
+Verbatim public positioning line (will be asserted on `/peggy` after #150):
+
+> Peggy — Pegasus' AI strategy assistant. One intelligence, multiple surfaces. Plugs into website, phone, HQ, and the ecosystem apps.
+
+**What Peggy does (public):** listens to a property situation, asks one qualifying question at a time, routes to the right path, captures structured intake, hands every conversation to Apollo as a daily inbound report.
+
+**What Peggy does NOT do (publish on `/peggy`):** never quotes a price or makes an offer · never makes a binding commitment · never gives legal/tax/investment advice · never shares other clients' data · never claims outcomes · never bypasses human review for actual offers.
+
+**Voice:** warm, calm, precise. Never bubbly. Never robotic. First turn always discloses she is an AI assistant.
+
+### Peggy phone (§D.4) — four non-negotiable launch gates
+Apollo has chosen to ship Peggy on the existing **925-744-8525** line ASAP. Doctrine ratifies the scope but **locks four hard launch gates** before voice cutover (Task #152):
+
+1. **CA two-party recording consent (Penal Code §632)** — opening turn: "This call is recorded for quality and training. Please say 'stop recording' if you'd prefer I don't." If caller declines, recording stops and conversation continues unrecorded.
+2. **Fair Housing refusals** — hard-refuse any conversation touching familial status, race, national origin, religion, disability, or protected-class steering. Refusal: "I can't help with that — Pegasus reviews every property on the property's merits, not the parties involved. Let me get you to Apollo directly."
+3. **DRE licensing exposure** — Peggy never represents on price, terms, value, fitness, or investment quality. She qualifies and routes; she does not advise.
+4. **Civil Code §1695 (home equity sales contract law)** — if a caller indicates the property is in foreclosure/default AND they are an owner-occupant, Peggy reads the §1695 disclosure and routes immediately to Apollo. No qualifying questions beyond identity + callback method.
+
+Phil Deutscher review recommended but not hard-blocking per Apollo's ASAP override.
+
+## Status badges (Amendment 2 §G — required design element)
+
+Every public mention of an ecosystem product (HQ, BuildForge, CapStack, MarketFlow, Peggy, Buyboxes) must carry a status badge from the locked vocabulary:
+
+- **Live** — copper pill — fully shipped, public, supported.
+- **Private beta — invite only** — navy pill — exists, gated, request-access only.
+- **In private training** — warm cream pill, navy text — being built, placeholder UI.
+- **Internal, not a public surface yet** — charcoal pill, cream text — exists internally, no public destination.
+- **In development** — outline pill — planned, not yet built.
+
+No exceptions. This is the single highest-leverage anti-overclaim discipline in the doctrine.
+
+## Public routes (locked v1.0.1 + Amendment 1 + Amendment 2)
 
 Five-item primary nav plus footer-only secondary routes.
 
-- **Primary nav**: `/strategy-lab`, `/projects`, `/development`, `/marketflow`, `/about`.
-- **Primary CTA** (header + hero + most pages): "Submit a Property" → `/submit`.
-- **Footer-only**: `/library`, `/capital`, `/vendor-network`, `/connect`, `/contact`, `/disclosures`, `/privacy`, `/terms`.
-- **Submission canonical**: `/submit` (three groups: Property / Situation / Contact; honeypot `hp_company` + 3s time-on-form anti-spam; `leadType: "submit"` posting to `/api/leads`; ?intent= prefill for `sell|property|adu|deal-jv|explore`).
-- **Project case studies**: `/projects` index, `/projects/nelson-dr` placeholder (Website Brief v1.0 §9.1 / Addendum §6 — seven canonical section H2s: Situation · Strategy · Structure · Scope · Execution · Result · Lesson; "case study coming" panel, no public profit numbers, link suppressed from homepage until real photos + founder-confirmed economics ship).
-- **MarketFlow**: `/marketflow` is a gated public landing page (what it is / what it is not / Request Beta Access). All dashboards / role surfaces remain behind `/marketflow/<role>` and are not part of the v1 public surface. `/marketflow/access` is the request-access form (`leadType: "marketflow_access"`).
-- **Connect**: `/connect` is Apollo's personal QR landing — six routing buttons (property / build / sell / capital / vendor / talk to Apollo).
-- **Capital**: `/capital` is informational only. Reg D 506(b)-safe language. No public investment product, no solicitation. "Conversations, not pitches." "Written agreement on every deal." "Private, individual, and on the record."
-- **Library**: `/library` mounts the existing Strategy Library content (article shell preserved at `/library/:slug`).
-- **Privacy / Terms**: Both pages carry a "Draft · Pending Legal Review" banner pending qualified counsel review.
+- **Primary nav (unchanged by Amendment 2)**: `/strategy-lab`, `/projects`, `/development`, `/marketflow`, `/about`.
+- **Primary CTA**: "Submit a Property" → `/submit`.
+- **Footer-only**: `/library`, `/capital`, `/vendor-network`, `/connect`, `/contact`, `/disclosures`, `/privacy`, `/terms`. **Amendment 2 adds:** `/ecosystem` (footer-only, Audience B release valve — single page with four product cards (Pegasus HQ · MarketFlow · BuildForge · CapStack) each carrying a status badge from §G; header: "The Pegasus Ecosystem — what we're building, honestly"; no CTA except "Request to learn more" → `/connect`).
+- **Amendment 2 also adds:** `/peggy` — public Peggy surface (positioning line + "what she does / what she does not do" published as a premium signal).
+- **Submission canonical**: `/submit` (Property / Situation / Contact; honeypot `hp_company` + 3s anti-spam; `leadType: "submit"` posting to `/api/leads`; `?intent=` prefill).
+- **Project case studies**: `/projects` index, `/projects/nelson-dr` placeholder. Suppressed from homepage proof slot until ≥3 real photos + founder-confirmed economics ship (Amendment 2 §J gate).
+- **MarketFlow**: `/marketflow` is a gated public landing; role dashboards live behind `/marketflow/<role>`. `/marketflow/access` = request-access form.
+- **Connect**: `/connect` is Apollo's QR landing — six routing buttons.
+- **Capital**: `/capital` informational only. Reg D 506(b)-safe language. "Conversations, not pitches." "Written agreement on every deal."
+- **Library**: `/library` mounts the existing Strategy Library content (article shell at `/library/:slug`).
+- **Privacy / Terms**: "Draft · Pending Legal Review" banner pending qualified counsel review.
 
 ### Retired routes (App.tsx `legacyRedirects`)
-
-`/sell → /submit?intent=sell`, `/submit-deal → /submit?intent=deal-jv`, `/submit-property → /submit?intent=property`, `/wholesale → /submit?intent=deal-jv`, `/services → /development`, `/resources → /library`, `/buyers → /marketflow`, `/buy → /marketflow`, `/dreamspace → /capital`, `/partner → /capital`, `/capital-raising → /capital`, `/invest → /capital`, `/calculators → /strategy-lab/classic`, `/education → /library`. Phase 1 of the Purposeful-Page-Rewrite pass (Apollo guardrail #3) converted `/calculators`, `/education`, `/wholesale`, `/buyers` from removed-from-surface paths into proper redirects with a clear canonical replacement — 410s are reserved for paths with no useful destination. The original calculator suite remains accessible at `/strategy-lab/classic`.
+`/sell → /submit?intent=sell`, `/submit-deal → /submit?intent=deal-jv`, `/submit-property → /submit?intent=property`, `/wholesale → /submit?intent=deal-jv`, `/services → /development`, `/resources → /library`, `/buyers → /marketflow`, `/buy → /marketflow`, `/dreamspace → /capital`, `/partner → /capital`, `/capital-raising → /capital`, `/invest → /capital`, `/calculators → /strategy-lab/classic`, `/education → /library`. Calculator suite remains at `/strategy-lab/classic`.
 
 ## Navigation grouping (locked v1.0.1, OLD visual design)
 
-- **Desktop header**: Strategy Lab · Projects · Development · MarketFlow · About plus a **More** dropdown sourced from `NAV_MORE`. Brand wordmark left (illustrated Pegasus mark + Cinzel "PEGASUS DREAMSCAPES" + Montserrat "THE DEAL ARCHITECT" subtitle), "Submit a Property" copper CTA right. The original visual treatment is preserved; the More dropdown is intentional and `nav-parity.test.tsx` only requires content parity, not absence.
-- **NAV_MORE intent grouping (Phase 1 of Purposeful-Page-Rewrite pass)**: every `NAV_MORE` item carries a `group` field — `learn` / `network` / `company` / `legal` — and `getNavMoreByGroup` plus `NAV_MORE_GROUP_ORDER` drive grouped renders. Current set: Learn (Strategy Library, FAQ), Network (Vendor Network, Capital), Company (Projects, Connect, Contact), Legal (Disclosures). Projects appears in both `NAV_PRIMARY` and `NAV_MORE` (guardrail #4 — kept strongly surfaced as proof, additionally anchored under Company). Deal Blueprint is intentionally NOT in `NAV_MORE` — `/deal-blueprint` still redirects to `/strategy-lab` and a real destination ships in Phase 2 (no dead links, guardrail #2).
-- **Mobile sheet**: NAV_PRIMARY at top, then a "More" accordion that renders `NAV_MORE` in grouped sections with kicker headings (Learn / Network / Company / Legal). Each group container carries a `mobile-more-group-{group}` testid; individual links keep their `link-mobile-{slug}` testids.
-- **Footer**: Four-column IA grid per Website Brief v1.0 §3 — **Company** (About · Strategy Library · Connect · Contact) · **Services** (Strategy Lab · Submit a Property · Development · Projects) · **Network** (MarketFlow · Vendor Network · Capital) · **Legal** (Privacy · Terms · Disclosures). Brand block (logo + tagline + 48-hour response promise + apollo@/925.../Pleasant Hill, CA contact strip) occupies the leading 4-of-12 column. Per `nav-parity.test.tsx`, every NAV_PRIMARY label is surfaced as `link-footer-{slug}` and every NAV_MORE label as `link-footer-more-{slug}` regardless of column. Bottom row preserves theme toggle, MarketFlow BETA pill, Sign In link, DRE #02333658, KW East Bay, "Each office is independently owned and operated," the "Nothing on this website is an offer ... not a solicitation of securities" disclosure, and the © stamp.
-- **Active-route highlighting**: copper underline + `font-semibold` + `aria-current="page"` on desktop; left copper border on mobile.
+- **Desktop header**: NAV_PRIMARY + **More** dropdown sourced from `NAV_MORE`. Brand wordmark left, copper "Submit a Property" CTA right.
+- **NAV_MORE intent grouping**: every item carries a `group` field — `learn` / `network` / `company` / `legal`. `/ecosystem` joins under a new `ecosystem` group in Task #150 (footer-only assertion in `nav-parity.test.tsx`).
+- **Mobile sheet**: NAV_PRIMARY at top, then a "More" accordion rendering `NAV_MORE` in grouped sections with kicker headings.
+- **Footer**: Four-column IA grid — **Company** (About · Strategy Library · Connect · Contact) · **Services** (Strategy Lab · Submit a Property · Development · Projects) · **Network** (MarketFlow · Vendor Network · Capital) · **Legal** (Privacy · Terms · Disclosures). Brand block (logo + tagline + 48-hour response + contact strip) occupies leading 4-of-12. Bottom row: theme toggle, MarketFlow BETA pill, Sign In, DRE #02333658, KW East Bay disclosure, securities disclosure, © stamp.
+- **Active-route highlighting**: copper underline + `font-semibold` + `aria-current="page"` desktop; left copper border mobile.
 
-## Homepage section order
+## Homepage section order (Amendment 2 §E — eight sections, ships in Task #150)
 
-Exactly six sections (Empire Doctrine v1.0.1 §3 / Website Brief v1.0):
+Replaces the v1.0.1 six-section composition. Locked order:
 
-1. **Hero** (`HeroSection`) — "Complex property. Structured opportunity." + "Start a Strategy Review" / "View Featured Project" CTAs.
-2. **The Pegasus Question** (`PegasusQuestionSection`) — "What if the strategy is the deal?"
-3. **Strategy Lab teaser** (`StrategyLabTeaserSection`) — split panel + "Open Strategy Lab" CTA + "Bring us the property. We'll show you the path." locked phrase.
-4. **Nelson Dr Case Study** (`NelsonDrTeaserSection`) — placeholder mode; link to `/projects/nelson-dr` intentionally suppressed until photos + economics are signed off.
-5. **The Pegasus Standard** (`PegasusStandardSection`) — six commitments verbatim.
-6. **Final CTA** (`FinalCTASection`) — "If it is complex, we want to see it." → `/submit` + `/contact`.
+1. **Hero** — "Complex property. Structured opportunity." + one-sentence subhead. Primary CTA Submit a Property; secondary text link "or talk to Peggy." No four-stat bar.
+2. **Trust strip** — single horizontal line: *"Decades of East Bay construction in the team · DRE #02333658 · KW East Bay · NAR · CAR · Pleasant Hill, CA"*. **Attribution lock**: "20+ years" is forbidden as a Pegasus-the-company stat — attribute construction experience to the team (Moises Duran).
+3. **The Pegasus Question** — manifesto moment. "What should you do with this property?" + 3–4 editorial sentences. **No product-pill grid** (resolved in v1.0.1; do not re-introduce).
+4. **The Four Doors** — Peggy · Submit · Strategy Lab · Join the Network. Peggy slightly more prominent (subtle copper border or "available now" dot).
+5. **Nelson Dr — the proof** — image-first, full-width. Real photos (launch gate). Property line + paragraph + three data pills (Acquired ~$600K · Renovation ~$90–100K · Sold ~$840K) + CTA to full case study.
+6. **The Operator** — single Apollo section (merge of prior "Operator Behind the Lens" + "Operator's Edge"). Real photo, two paragraphs, DRE/KW credentials, one pull quote.
+7. **The Pegasus Standard** — six commitments verbatim. Visual upgrade: Cinzel numerals 01–06 large + copper.
+8. **Final CTA** — "Bring us the property. We'll show you the path." Submit a Property + Talk to Peggy.
 
-A `<span class="sr-only">` block at the bottom of the page carries the locked doctrine anchors ("Every property gets a path. Not every property gets an offer.", "Bring us the property. We'll show you the path.", "Most Strategy Snapshots are reviewed within 5 business days.") so the public-voice guardrail finds them on the home source even when sections are rearranged. The motto and belief line are also rendered as visually hidden `<span>`s in the hero. Older composition sections (`WhatBringsYouHereSection`, `FreeSnapshotSection`, `EcosystemTeaserSection`, `FeaturedProjectSection`, `MarketFlowBetaSection`, `FounderSection`) remain in the file but are no longer mounted in the v1.0.1 Home composition.
+`<span class="sr-only">` doctrine anchors stay at the bottom of the page for the public-voice guardrail.
 
-## Canonical typography
+## Launch-readiness gates (Amendment 2 §J — additive to v1.0.2 Part G)
 
-Four families: Cinzel · Cormorant Garamond · Montserrat · Inter.
+No public deploy until each is true:
 
-- **Hero H1**: `font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[1.02]` (Cormorant Garamond). Optional copper accent on second line via `text-primary`.
-- **Wordmark / display caps**: `font-display` (Cinzel) with wide letterspacing.
-- **Section H2**: `font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight`.
-- **Card H3**: `font-serif text-2xl sm:text-3xl font-semibold tracking-tight leading-tight`.
-- **Kicker (section)**: `text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold` (Montserrat).
-- **Body lead**: `text-lg sm:text-xl text-muted-foreground leading-relaxed` (Inter).
-- **Body**: `text-base text-muted-foreground leading-relaxed` (Inter).
-- **Use semantic tokens, not literals**: `text-primary` (not `text-copper`), `text-foreground` (not `text-navy`).
+1. No "in progress" / "coming soon" / "sample" copy on any public page.
+2. `/projects/nelson-dr` has ≥3 real photos + founder-confirmed numbers (or the page is delisted from primary nav).
+3. All nav links resolve to real pages. No orphan footer links.
+4. Peggy floating widget either responds OR is hidden — no broken state.
+5. All forms submit + trigger confirmation email in Pegasus voice.
+6. DRE / KW / NAR / CAR disclosure block visible in footer.
+7. Privacy, Terms, Disclosures have real content (even short).
+8. Favicon, OG image, page titles, meta descriptions present on every page.
+9. Mobile pass on hero, four doors, Nelson, Apollo, Standard, footer.
+10. Hero loads < 1.5s on mobile.
 
-## Visual baseline
+## Explicit doctrine rejections (Amendment 2 §K — do NOT integrate)
 
-- Light mode = warm cream (Warm Cream `#F6EFE4`).
-- Dark surfaces = Deep Navy `#0D1B2D` (`bg-[hsl(var(--navy))]`) and Charcoal `#1E2328`.
-- Primary CTAs copper, secondary outline. CTA pill style: `text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm`.
-- **Theme**: defaults to `system`. Manual Light/Dark/System toggle persists to `localStorage` under `pegasus-ui-theme`.
+- "Quick Read" as a fifth public product term (locked taxonomy: Strategy Lab, Strategy Review, Strategy Snapshot, Deal Blueprint).
+- "20+ years construction" attributed to Pegasus-the-company.
+- Cal.com / Savvycal / any scheduling embed (undoes Strategy-Review-as-friction-wall).
+- Eight-product-pill grid mixing property strategies with Pegasus participation lanes.
+- Fake credential logos (NAHB, BNI, BiggerPockets, ULI, NMHC, NAIOP, IRR, Inman unless real membership held).
 
-## Key features (carried forward from v1.3.1)
+## Pegasus Buyboxes (Amendment 1, Section C.8) — unchanged by Amendment 2
 
-- **Strategy Lab** (`/strategy-lab`): Two modes (Quick Read + Full Path / InstrumentWorkbench). Rebuild is **scoped out of Foundation Reset** per Brief §15 — kept live as-is for now and will be re-done in its own follow-up task.
-- **MarketFlow Platform**: Private dealflow layer. Public surface is gated landing only. Role dashboards live behind `/marketflow/<role>`.
-- **Vendor Network** (`/vendor-network`): Intake + qualification path. Footer-only link.
-- **Peggy AI Assistant**: Internal-only in v1.0.1. Public Peggy chat is explicitly excluded from `/connect` and the public surface.
-- **Admin Edit Mode**: Inline CMS for admins (allowlist `apollosynd@gmail.com`, `admin@pegasusdreamscapes.com`).
+Free buyer-interest list, surfaced on `/marketflow` as `BuyboxesSection`. Phase 1 working names in `client/src/config/buyboxes.ts`: **The Foundation Value-Add** (`value-add-sfr`), **The Annex ADU Upside** (`adu-east-bay`), **The Signature Repositioning** (`estates-probate`), **The Structured Opportunity** (`small-multifamily`, `publicReady: false` until Phil Deutscher reviews disclosure language). CTA: **"Request Notification"**. Submission: `POST /api/leads` with `leadType: "buybox_interest"`, `source: "buybox:<id>"`. C.8.7 disclosure surfaced via `BUYBOX_DISCLOSURE`. MarketFlow Buyer Subscription (paid) remains a v2.5 deferral.
 
-## Tests (locked v1.0.1)
+## Tests (locked)
 
-- **`client/src/__tests__/public-voice.test.tsx`**: scans the v1 public page set (home, about, development, submit, capital, connect, library, projects, project-nelson-dr, project-detail, vendor-network, contact, disclosures, strategy-lab, marketplace, marketflow-access, terms, privacy, footer, navigation) for forbidden phrases + spaced em-dashes; asserts home doctrine lines; asserts footer renders the motto, about renders the belief line, about renders the Path-First Review Standard line.
-- **`client/src/__tests__/nav-parity.test.tsx`**: asserts NAV_PRIMARY has exactly five entries; desktop header surfaces them; desktop has NO More dropdown; mobile sheet surfaces NAV_PRIMARY + NAV_MORE; footer surfaces NAV_PRIMARY + NAV_MORE; mobile More set and footer More set agree on label + href.
+- **`client/src/__tests__/public-voice.test.tsx`**: scans the v1 public page set for forbidden phrases + spaced em-dashes; asserts home doctrine lines + footer motto + about belief line + Path-First Review Standard. **Task #150 extends** with "What we are not" assertion on /about, Peggy positioning assertion on /peggy, "chatbot" + "20+ years (Pegasus-attributed)" forbidden checks.
+- **`client/src/__tests__/nav-parity.test.tsx`**: NAV_PRIMARY = exactly five entries; desktop header surfaces them + has a More dropdown; mobile sheet surfaces NAV_PRIMARY + NAV_MORE; footer surfaces both. **Task #150 extends** with `/ecosystem` as a footer-only route under a new `ecosystem` group in NAV_MORE.
+- **`client/src/__tests__/doctrine-anti-drift.test.ts`**: visual-token tripwires per v1.0.2 Part A. No changes from Amendment 2.
 
-## Lead-Capture UX & Attribution (Wave 3 — Task #134)
+## Operational notes (Phase 2 + Wave 3 — kept as pointers, not redefined)
 
-- **Unified success surface**: `client/src/components/success-view.tsx` (`<SuccessView formType="submit|contact|marketflow_access|vendor" />`) replaces the prior toast-on-success / inline confirmation patterns on `/submit`, `/contact`, `/marketflow/access`, and `/vendor-network`. Every success state now shows the same four-step timeline (Received → Triaged → Strategy review → Path decision), per-form expectations, and an "Add another" path that resets the form and scrolls to top. Error toasts are preserved.
-- **First-party CTA attribution**: `cta_events` table (Drizzle) with `POST /api/events` (rate-limited 120/60s, validated, 204-on-error) and admin-only `GET /api/hq/cta-events` (last 30 days). `trackCtaClick(source, label, href)` in `client/src/lib/analytics.ts` is the canonical wire — mirrors Plausible (consent-gated) plus a fire-and-forget `sendBeacon`/keepalive POST (NOT consent-gated; first-party operational telemetry, no cookies, no PII). Wired on: nav "Submit a Property" (desktop + mobile), home hero "Start a Strategy Review", marketplace "Request Beta Access", and the six `/connect` routing buttons.
-- **Admin attribution surface**: `/admin/cta-events` (HQ-only, gated via `ADMIN_EMAILS`) renders source+label aggregates and the 100 most recent events. Source list: `nav_desktop`, `nav_mobile`, `home_hero`, `marketflow_landing`, `connect`.
-- **`/connect` tap targets**: Six routing buttons upgraded to `min-h-[56px]`, with visible `active:` pressed state (scale + tinted background + copper border) and `focus-visible:` ring for keyboard parity. The "Request Beta Access" button in `/marketplace` now routes to `/marketflow/access` (was `/signup`).
-- **Brand-tuned error color**: `--destructive` retuned to a deeper, warmer red (`5 70% 38%` / dark `5 72% 52%`) and aliased through a `--form-error` token. `FormLabel`/`FormMessage` (`client/src/components/ui/form.tsx`) consume `text-[hsl(var(--form-error))]`, and `FormMessage` now sets `role="alert"` when an error is present.
+- **Lead-capture UX (Wave 3 / Task #134)**: unified success surface `client/src/components/success-view.tsx` on /submit, /contact, /marketflow/access, /vendor-network. First-party CTA attribution via `cta_events` table + `trackCtaClick(source, label, href)` in `client/src/lib/analytics.ts`. Admin surface: `/admin/cta-events`. Brand-tuned `--destructive` + `--form-error` token.
+- **Phase 2 Copy Proposal** (`.local/phase-2-copy-proposal.md`, Apollo-approved): Development page `RoutingFilterSection`; Strategy Lab 5-line guided promise + `ribbon-how-it-works`; **Deal Blueprint** mounted at `/deal-blueprint` (intake via `/submit?intent=blueprint`, `leadType: "blueprint_request"`); FAQ Quick Read vs Full Path vs Blueprint Q&A + Buyboxes Q&As.
+- **/connect premium polish**: BrandStrip · GreetingHero (founder portrait + contact pills + `trackCtaClick("connect", ...)`) · RouteGrid · PeggyPresenceCard ("Private beta" pill — public Peggy chat remains excluded from /connect per v1.0.1 doctrine) · Footnote.
 
-## Phase 2 Copy Proposal — Surface execution (Doctrine v1.0.2)
+## Website → Pegasus HQ integration (Task #153, sequenced after #150)
 
-Apollo blanket-approved the Phase 2 Copy Proposal at `.local/phase-2-copy-proposal.md` for execution ahead of the investor demo. Surfaces shipped:
-
-- **Surface 1 — Development page (`client/src/pages/development.tsx`)**: new `RoutingFilterSection` mounted between `PillarSection` and `ScopeTodaySection` — three columns (Bring it · We'll route it · Not yet) that make the Phase 1 filter explicit; SupportingPillars Systems items carry honest `(live)`, `(beta, invite-only)`, `(internal, not a public surface yet)` status tags so visitors find live capability without inference; bottom CTA now routes to `/deal-blueprint` (was `/strategy-lab`) with label "Request a Deal Blueprint".
-- **Surface 2 — Strategy Lab (`client/src/pages/strategy-lab.tsx`)**: hero body softened to the 5-line guided promise ("Start with a property. See which lanes fit. See where the risks are. See what the numbers say. Decide the next step."), asserted via `data-testid="text-lab-five-step-promise"`. A second 3-step wayfinding strip (`ribbon-how-it-works`, Quick-Read only) sits below the existing 3-tier funnel ribbon to bridge the hero to the form ("Enter the property → See the read → Decide the next step"); addresses Apollo's "feels like a prototype, more guided" feedback.
-- **Surface 3 — Deal Blueprint (`client/src/pages/deal-blueprint.tsx`)**: full stub page mounted at `/deal-blueprint` (App.tsx route changed from a `Redirect` to `<Route path="/deal-blueprint" component={DealBlueprint} />`). Six sections — Hero · WhatsInside (4 sections) · WhenItsRight · HowItWorks (4 steps) · Pricing (placeholder "Pricing on request"; Apollo to provide concrete range) · CTA. Intake routes through `/submit?intent=blueprint` and posts with `leadType: "blueprint_request"` + `source: "blueprint_page"` so the HQ triage queue can route paid-tier requests separately from free property submissions (option B per Apollo's backend decision). The submit form (`client/src/pages/submit.tsx`) gained `"blueprint"` as a Zod-allowed intent and `INTENT_LABELS["blueprint"] = "Request a Deal Blueprint (paid)"`. `leadType` varchar(20) holds "blueprint_request" (17 chars) with room to spare.
-- **Surface 4 — FAQ (`client/src/pages/faq.tsx`)**: added Quick Read vs Full Path vs Blueprint Q&A under "Working with Pegasus"; new "Buyboxes" section with two Q&As (what they are + opt-out clarity).
-
-## `/connect` premium polish (QR landing for investor demo)
-
-Apollo's QR-funnel landing page rebuilt as a premium, photo-led surface for the investor presentation. Same URL works for QR scans, direct nav, and shared links — one destination, multiple ingress paths. Composition: `BrandStrip` (logo + tagline + animated "Live · East Bay" indicator) · `GreetingHero` (dark charcoal hero with founder portrait left, "Glad you're here." greeting right, contact pills for phone/email/Pleasant Hill location, full CTA attribution via `trackCtaClick("connect", ...)`) · `RouteGrid` (the existing six routing buttons polished with hover lift, copper arrow indicators, and stagger entry; analytics wiring preserved) · `PeggyPresenceCard` (Peggy surfaced as brand signal with "Private beta" pill — public Peggy chat remains excluded from `/connect` per v1.0.1 doctrine; this card lifts the lid on v1.1 without overclaiming today) · `Footnote` (DRE + KW + securities disclaimer rewritten to avoid the forbidden "guaranteed returns" phrase). Founder photo uses the same `/images/founder/apollo-{w}.{avif|webp|jpg}` srcset chain as About with `image_1778735694150.png` as the attached-asset fallback.
-
-## Pegasus Buyboxes (Empire Doctrine v1.0.2 Amendment 1, Section C.8)
-
-Free buyer-interest list, surfaced on `/marketflow` as the `BuyboxesSection`. v1 ships with **Apollo-approved Phase 1 working names** defined in `client/src/config/buyboxes.ts`: **The Foundation Value-Add** (id `value-add-sfr`), **The Annex ADU Upside** (id `adu-east-bay`), **The Signature Repositioning** (id `estates-probate`), and **The Structured Opportunity** (id `small-multifamily`). Buybox IDs are intentionally stable for analytics keyed off `buybox:<id>` source strings. The CTA is **"Request Notification"** — guardrail #1 explicitly frames Buyboxes as a free interest list, not a paid subscription.
-
-**Phase 1 publicReady gate (Apollo guardrail #1)**: each `Buybox` carries an optional `publicReady?: boolean` flag (default true). **The Structured Opportunity ships with `publicReady: false`** and is filtered out of the public `BuyboxesSection` render until Phil Deutscher reviews the disclosure language for that profile. The other three render publicly. Founder-confirmed profile bodies and ticket ranges arrive later (Phase 2 Copy Proposal Document).
-
-- **Submission path**: `POST /api/leads` with `leadType: "buybox_interest"`, `email`, `source: "buybox:<id>"`, and `leadData.buyboxId` / `leadData.buyboxTitle`. Uses the existing leads table (no new schema). No auth required; no public marketplace exposure.
-- **Notification flow**: Apollo / HQ contacts subscribers individually when a reviewed property matches a buybox profile. All matches pass Pegasus review before any buyer is contacted. There is no automated broadcast.
-- **C.8.7 disclosure (verbatim, flagged for Phil Deutscher legal review)**: "Subscribing means Pegasus will contact you via the contact method on your account when we have a deal matching this buybox profile. All opportunities are reviewed by Pegasus before being shared. There is no obligation to buy. You can unsubscribe at any time from your account dashboard." Surfaced under the Buyboxes grid via `BUYBOX_DISCLOSURE` in `client/src/config/buyboxes.ts`.
-- **MarketFlow Buyer Subscription (paid product)** remains a v2.5 deferral. Buyboxes is the free precursor.
+HQ endpoint live in code at `https://pegasus-hq-operating-system.vercel.app/api/public/intake`. `/api/health` currently returns 503 (missing Supabase envs on Vercel — Apollo/Codex action). Payload contract locked with HQ agent: `propertyAddress`, `contactName`, `outreachReason`, `sourceChannel`, `consentContact`, `consentCcpaAcknowledged`, `idempotencyKey`. Env var: `PEGASUS_HQ_PUBLIC_INTAKE_URL`. No HMAC in v1. **Outbox/no-op fallback** by default — site never blocks on HQ availability; auto-flips to live forwarding once `/api/health` returns 200, no redeploy. leadType → outreachReason mapping: `submit` → `property_review`, `vendor` → `vendor_application`, `buybox_interest` → `buybox_interest`, `blueprint_request` → `paid_blueprint_request`, `peggy_note` → `peggy_inbound`; Peggy phone uses `sourceChannel: website:peggy:phone`.
 
 ## External Dependencies
 
-- **UI**: Radix · Tailwind · class-variance-authority · Lucide · Google Fonts (Playfair Display, Inter).
+- **UI**: Radix · Tailwind · class-variance-authority · Lucide · Google Fonts (Cinzel · Cormorant Garamond · Montserrat · Inter).
 - **Data/Forms**: React Hook Form · Zod · TanStack Query · drizzle-zod.
 - **Database**: Supabase · Drizzle · Neon serverless PostgreSQL.
 - **Auth**: passport · express-session · connect-pg-simple · Supabase Auth.
@@ -171,6 +218,6 @@ Free buyer-interest list, surfaced on `/marketflow` as the `BuyboxesSection`. v1
 
 ## Authoritative blueprints
 
-- `docs/architecture/website-experience-blueprint-v1.md` — public website doctrine v1.0 (legacy reference).
-- `docs/architecture/website-marketflow-blueprint-v1.3.1.md` — v1.3.1 controlling document (legacy reference; superseded for v1 public surface by Empire Doctrine v1.0.1).
-- **Empire Doctrine v1.0.1** — Foundation Reset task brief (`.local/tasks/task-124.md`). Controlling document for the current v1 public website + MarketFlow gated landing.
+- `docs/architecture/website-experience-blueprint-v1.md` — v1.0 (legacy reference).
+- `docs/architecture/website-marketflow-blueprint-v1.3.1.md` — v1.3.1 (legacy, superseded for v1 public surface by Empire Doctrine).
+- **Empire Doctrine v1.0.2 + Amendment 1 + Amendment 2** — controlling. Sources listed at top of this file.
