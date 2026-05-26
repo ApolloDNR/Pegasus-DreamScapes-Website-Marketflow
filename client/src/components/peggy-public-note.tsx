@@ -24,7 +24,7 @@ export function PeggyPublicNote() {
   const submit = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/leads", {
-        leadType: "peggy_note",
+        leadType: "peggy_notify",
         source: "peggy_public_dock",
         contactName: name,
         contactInfo: contact,

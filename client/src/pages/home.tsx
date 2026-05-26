@@ -84,16 +84,17 @@ export default function Home() {
           Strategy Lab, Work With Apollo, MarketFlow, Dreamscaper Standard,
           Final CTA. Trust strip + Nelson proof + Operator are kept as
           supporting context but do not count against the nine. */}
+      {/* Website Structure v1 FINAL §3 — strict nine-section composition,
+          no extras. TrustStrip / NelsonProof / Operator sections live in
+          the source but are not mounted on the public home until the
+          doctrine explicitly amends §3 to allow them. */}
       <HeroSection />
-      <TrustStripSection />
       <WhatBringsYouHereSection />
       <DealArchitectureTeaserSection />
       <DevelopmentTeaserSection />
       <StrategyLabTeaserSection />
       <WorkWithApolloTeaserSection />
       <MarketFlowTeaserSection />
-      <NelsonProofSection />
-      <OperatorSection />
       <DreamscaperStandardSection />
       <FinalCTASection />
       {/* Empire Doctrine v1.0.1 / Brief v1.0 — visually-hidden anchors so

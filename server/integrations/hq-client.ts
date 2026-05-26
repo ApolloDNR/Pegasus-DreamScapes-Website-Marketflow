@@ -24,6 +24,9 @@ import { storage } from "../storage";
 //                buybox_interest   => buybox_interest
 //                blueprint_request => paid_blueprint_request
 //                peggy_note        => peggy_inbound
+//                peggy_notify      => peggy_inbound  (public Peggy widget
+//                                                      while Peggy is in
+//                                                      private training)
 //
 // Outbox-first design: every payload is written to hq_outbox BEFORE the
 // network call. If forwarding succeeds, we mark forwarded + write the
@@ -89,6 +92,7 @@ const LEAD_TYPE_TO_REASON: Record<string, string> = {
   buybox_interest: "buybox_interest",
   blueprint_request: "paid_blueprint_request",
   peggy_note: "peggy_inbound",
+  peggy_notify: "peggy_inbound",
   investor: "capital_inquiry",
   buyer: "buyer_inquiry",
   contact: "general_inquiry",

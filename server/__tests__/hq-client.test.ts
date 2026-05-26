@@ -74,6 +74,7 @@ describe("outreachReasonForLeadType — replit.md leadType→reason map", () => 
     expect(outreachReasonForLeadType("buybox_interest")).toBe("buybox_interest");
     expect(outreachReasonForLeadType("blueprint_request")).toBe("paid_blueprint_request");
     expect(outreachReasonForLeadType("peggy_note")).toBe("peggy_inbound");
+    expect(outreachReasonForLeadType("peggy_notify")).toBe("peggy_inbound");
   });
   it("falls back to general_inquiry for unknowns", () => {
     expect(outreachReasonForLeadType("anything_else")).toBe("general_inquiry");
