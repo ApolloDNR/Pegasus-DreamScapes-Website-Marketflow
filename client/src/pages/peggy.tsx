@@ -122,18 +122,38 @@ export default function Peggy() {
       <section className="py-16 lg:py-20 bg-muted/20 border-t border-border/30">
         <div className="max-w-3xl mx-auto px-6 lg:px-12">
           <ScrollReveal>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-              On the phone · 925-744-8525
-            </p>
+            <div className="flex items-center gap-3 mb-4">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+                On the phone · 925-744-8525
+              </p>
+              <StatusBadge kind="in-development" />
+            </div>
             <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight mb-5 leading-tight">
               Voice launch is gated, by design.
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-3">
               Peggy is launching on Pegasus' main line. Four hard gates apply before any voice cutover: California two-party recording consent (Penal Code §632), Fair Housing refusals on any protected-class steering, DRE licensing discipline (Peggy never advises on price, terms, value, or fitness), and Civil Code §1695 disclosure if a caller indicates the property is in foreclosure and they are owner-occupant.
             </p>
-            <p className="text-sm text-muted-foreground/85 italic">
+            <p className="text-sm text-muted-foreground/85 italic mb-6">
               These are not features. They are the floor.
             </p>
+            <div className="border-l-2 border-[hsl(var(--copper)/0.4)] pl-5 py-1">
+              <p
+                className="text-[11px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-2"
+                data-testid="text-peggy-phone-consent-kicker"
+              >
+                What you hear first
+              </p>
+              <p
+                className="text-base text-foreground/90 leading-relaxed italic"
+                data-testid="text-peggy-phone-consent"
+              >
+                "Hi, this is Peggy with Pegasus DreamScapes. This call is recorded for quality and training. Please say 'stop recording' if you'd prefer I don't, and the call continues unrecorded."
+              </p>
+              <p className="text-xs text-muted-foreground/75 mt-3">
+                Recordings are encrypted, retained 90 days, and deleted on request. See the Privacy Policy for the full retention and deletion practice.
+              </p>
+            </div>
           </ScrollReveal>
         </div>
       </section>

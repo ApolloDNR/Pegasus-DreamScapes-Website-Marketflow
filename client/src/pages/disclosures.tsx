@@ -7,6 +7,7 @@ const JUMP_NAV = [
   { id: "disclosure-realestate", label: "Real estate", icon: HomeIcon },
   { id: "disclosure-education", label: "Education", icon: BookOpen },
   { id: "disclosure-peggy", label: "Peggy", icon: MessageSquare },
+  { id: "disclosure-recording", label: "Call recording", icon: Shield },
   { id: "disclosure-marketflow", label: "MarketFlow", icon: Shield },
   { id: "disclosure-fairhousing", label: "Fair housing", icon: Shield },
 ];
@@ -137,12 +138,35 @@ export default function Disclosures() {
               <p>
                 Decisions on offers, structures, and capital relationships are always made by Pegasus operators, not by the AI. Peggy responses are conversational guidance, not contractual representations of the company.
               </p>
+              <p>
+                Peggy enforces four hard refusal categories, on every channel (chat, phone, ecosystem apps): (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Triggering any of these routes the conversation immediately to Apollo for direct human review.
+              </p>
             </DisclosureBlock>
           </ScrollReveal>
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
               idx={4}
+              icon={Shield}
+              kicker="Call recording (Peggy phone)"
+              title="Two-party consent, 90-day retention, deletion on request."
+              testId="disclosure-recording"
+            >
+              <p>
+                California is a two-party consent state under Penal Code §632. The first turn of every call on 925-744-8525 includes a verbatim recording disclosure and a clear way to stop the recording. If you ask Peggy to stop recording, recording stops immediately and the conversation continues. We do not condition the call on consent.
+              </p>
+              <p>
+                If you call about a property in foreclosure, notice of default, or pending trustee sale and you are the owner-occupant, Peggy reads the California Civil Code §1695 disclosure and routes you directly to Apollo. Peggy will not ask qualifying questions about the property or the loan in that path; she will collect only your name and a callback number so Apollo can speak with you personally.
+              </p>
+              <p>
+                Recordings and transcripts are stored encrypted, retained 90 days, and deleted on request. See the Privacy Policy for the full mechanism.
+              </p>
+            </DisclosureBlock>
+          </ScrollReveal>
+
+          <ScrollReveal delay={0.1}>
+            <DisclosureBlock
+              idx={6}
               icon={Shield}
               kicker="MarketFlow access"
               title="Private dealflow. Invite-only."

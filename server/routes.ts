@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
@@ -5816,6 +5816,47 @@ export async function registerRoutes(
       res.status(500).json({ message: "Failed to finish conversation" });
     }
   });
+
+  // Task #152 — Peggy phone webhook (vendor-agnostic; see server/peggy-phone.ts).
+  // Vendor (Vapi / Bland / Retell) POSTs each caller turn here and posts the
+  // end-of-call event here. We verify the HMAC signature, route to the right
+  // handler, and return a JSON instruction packet for the vendor to execute.
+  //
+  // Apollo-side setup: set PEGGY_PHONE_WEBHOOK_SECRET, point vendor's webhook
+  // URL at /api/peggy/phone/webhook, and configure the vendor to sign with the
+  // same secret (HMAC-SHA256 over the raw body, sent in x-peggy-signature).
+  app.post(
+    "/api/peggy/phone/webhook",
+    express.raw({ type: "application/json", limit: "256kb" }),
+    async (req: any, res) => {
+      try {
+        const rawBody = (req.body instanceof Buffer ? req.body : Buffer.from(req.body || ""))
+          .toString("utf8");
+        const signature =
+          (req.headers["x-peggy-signature"] as string | undefined) ||
+          (req.headers["x-vapi-secret"] as string | undefined);
+        const phone = await import("./peggy-phone");
+        if (!phone.verifyPhoneWebhookSignature(rawBody, signature)) {
+          return res.status(401).json({ message: "Invalid signature" });
+        }
+        const payload = JSON.parse(rawBody);
+        if (payload.event === "turn") {
+          const result = await phone.handlePhoneTurn(payload);
+          return res.json(result);
+        }
+        if (payload.event === "end" || payload.event === "call_ended") {
+          await phone.handlePhoneEnd(payload);
+          return res.json({ ok: true });
+        }
+        // Unknown event — acknowledge to keep the vendor happy, log for review.
+        console.warn("[peggy-phone] Unknown webhook event:", payload.event);
+        return res.json({ ok: true });
+      } catch (error) {
+        console.error("Error in Peggy phone webhook:", error);
+        res.status(500).json({ message: "Phone webhook failure" });
+      }
+    },
+  );
 
   // Task #151 — admin: list last 30 days of Peggy conversations.
   app.get("/api/admin/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {

@@ -1835,6 +1835,20 @@ export const peggyConversations = pgTable("peggy_conversations", {
   isActive: boolean("is_active").default(true),
   isPinned: boolean("is_pinned").default(false),
 
+  // === CHANNEL (Task #152 — Peggy ASAP phone) ===
+  // web | phone. Voice conversations share schema with chat for daily-report parity.
+  channel: varchar("channel", { length: 16 }).default("web").notNull(),
+  // E.164 caller ID for phone channel
+  callerNumber: varchar("caller_number", { length: 32 }),
+  // Vendor-side call identifier (Vapi callId, etc.) for cross-referencing recordings
+  callSid: varchar("call_sid", { length: 128 }),
+  // Recording consent state: pending | granted | declined | revoked
+  recordingConsent: varchar("recording_consent", { length: 16 }),
+  // Set when caller says "stop recording" mid-call (CA Penal Code §632)
+  recordingStoppedAt: timestamp("recording_stopped_at"),
+  // Total call duration in seconds (phone only)
+  durationSec: integer("duration_sec"),
+
   // === INTAKE (Task #151 — Peggy ASAP chat) ===
   // Structured intake captured progressively during the conversation
   intake: jsonb("intake"),
