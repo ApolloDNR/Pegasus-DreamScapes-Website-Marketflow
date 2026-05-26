@@ -52,6 +52,10 @@ const PUBLIC_PAGE_FILES = [
   // valve) and /peggy (public Peggy surface).
   "client/src/pages/ecosystem.tsx",
   "client/src/pages/peggy.tsx",
+  // Website Structure v1 FINAL §1 / §4 — Work With Apollo + Deal
+  // Architecture are new primary-nav surfaces.
+  "client/src/pages/work-with-apollo.tsx",
+  "client/src/pages/deal-architecture.tsx",
   "client/src/components/footer.tsx",
   "client/src/components/navigation.tsx",
 ];
@@ -278,6 +282,42 @@ describe("Public voice rules (v1.3.1)", () => {
       expect(peggySrc).toContain(
         "Pegasus' AI strategy assistant. One intelligence, multiple surfaces. Plugs into website, phone, HQ, and the ecosystem apps.",
       );
+    });
+
+    // Website Structure v1 FINAL §3.8 — "Pegasus Standard" renamed to
+    // "Dreamscaper Standard" on home.
+    it("home.tsx surfaces 'The Dreamscaper Standard' (v1 FINAL §3.8)", () => {
+      const homeSrc = read("client/src/pages/home.tsx");
+      expect(homeSrc).toContain("The Dreamscaper Standard");
+    });
+
+    // Website Structure v1 FINAL §3.9 — final CTA copy update.
+    it("home.tsx surfaces the 'help find the path' final CTA (v1 FINAL §3.9)", () => {
+      const homeSrc = read("client/src/pages/home.tsx");
+      expect(homeSrc).toContain("We'll help find the path.");
+    });
+
+    // Website Structure v1 FINAL §4 — Work With Apollo locked DRE/KW
+    // disclosure, verbatim.
+    it("/work-with-apollo renders the locked DRE/KW disclosure (v1 FINAL §4)", () => {
+      const src = read("client/src/pages/work-with-apollo.tsx");
+      expect(src).toContain(
+        "Licensed real estate services are provided by Paolo \\\"Apollo\\\" Duran through Keller Williams Realty East Bay. Pegasus DreamScapes is a separate development, investment, and property strategy company.",
+      );
+    });
+
+    // Website Structure v1 FINAL §8 — locked legal disclosure block in
+    // footer, surfaces on every page.
+    it("footer surfaces the locked legal disclosure block (v1 FINAL §8)", () => {
+      const src = read("client/src/components/footer.tsx");
+      expect(src).toContain("Legal disclosure");
+      expect(src).toContain("California Corporation");
+      expect(src).toContain("DRE #02333658");
+      expect(src).toContain("Keller Williams Realty East Bay");
+      expect(src).toContain("separate development, investment");
+      expect(src).toContain("is an offer or solicitation of");
+      expect(src).toContain("Strategy Snapshots are preliminary");
+      expect(src).toContain("Equal Housing Opportunity");
     });
   });
 

@@ -16,11 +16,11 @@ import {
   FOOTER_MORE_EXTRA,
 } from "@/config/navigation";
 
-// Empire Doctrine v1.0.1 / Website Brief v1.0 §3 — footer link grid uses
-// the four canonical columns: Company / Services / Network / Legal.
-// Per nav-parity test every NAV_PRIMARY label must appear as a
-// `link-footer-{slug}` testid and every NAV_MORE label as a
-// `link-footer-more-{slug}` testid somewhere in the footer (any column).
+// Website Structure v1 FINAL §8 — footer link grid uses the four
+// canonical columns: Company / Tools / Network / Legal. Per nav-parity
+// test every NAV_PRIMARY label must appear as a `link-footer-{slug}`
+// testid and every NAV_MORE label as a `link-footer-more-{slug}` testid
+// somewhere in the footer (any column).
 type FooterLink = { href: string; label: string; testId: string };
 
 const slugify = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
@@ -45,31 +45,29 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
   {
     heading: "Company",
     links: [
-      navPrimary("/about"),
+      navMore("/about"),
       navMore("/library"),
       navMore("/connect"),
       navMore("/contact"),
       navMore("/faq"),
       navMore("/peggy"),
-      // Apollo guardrail #4: Projects also surfaces under Company in
-      // the More menu, even though it remains strongly surfaced as
-      // proof in the Services column below.
       navMore("/projects"),
     ],
   },
   {
-    heading: "Services",
+    heading: "Tools",
     links: [
+      navPrimary("/deal-architecture"),
       navPrimary("/strategy-lab"),
-      extraLink("/submit", "Submit a Property", "submit"),
       navPrimary("/development"),
-      navPrimary("/projects"),
+      extraLink("/submit", "Submit a Property", "submit"),
     ],
   },
   {
     heading: "Network",
     links: [
       navPrimary("/marketflow"),
+      navPrimary("/work-with-apollo"),
       navMore("/vendor-network"),
       navMore("/capital"),
       // Amendment 2 §C — footer-only Audience-B release valve.
@@ -291,6 +289,37 @@ export function Footer() {
                 </Link>
               )}
             </div>
+          </div>
+          {/* Website Structure v1 FINAL §8 — locked legal disclosure
+              block. Surfaces on every page. Asserted by
+              public-voice.test.tsx. */}
+          <div
+            className="rounded-md border border-border/50 bg-background/40 p-5 mb-6"
+            data-testid="footer-legal-disclosure"
+          >
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
+              Legal disclosure
+            </p>
+            <ul className="space-y-1.5 text-[11px] text-muted-foreground/85 leading-relaxed font-supporting">
+              <li>Pegasus DreamScapes Corp. is a California Corporation.</li>
+              <li>
+                Founder Paolo &ldquo;Apollo&rdquo; Duran is a licensed California real estate
+                agent. DRE #02333658, Keller Williams Realty East Bay
+                (each office independently owned and operated).
+              </li>
+              <li>
+                Pegasus DreamScapes is a separate development, investment,
+                and property strategy company.
+              </li>
+              <li>
+                Nothing on this site is an offer or solicitation of
+                securities.
+              </li>
+              <li>
+                Strategy Snapshots are preliminary and informational.
+              </li>
+              <li>Equal Housing Opportunity.</li>
+            </ul>
           </div>
           <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium" data-testid="text-footer-dre">
             Founder · Paolo &ldquo;Apollo&rdquo; Duran · DRE #02333658 · Keller Williams East Bay

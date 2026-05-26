@@ -74,6 +74,13 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/disclosures",
     "/privacy",
     "/terms",
+    // Amendment 2 §C / §D — /ecosystem (footer-only Audience-B release
+    // valve) and /peggy (public Peggy surface) are canonical.
+    "/ecosystem",
+    "/peggy",
+    // Website Structure v1 FINAL §1 / §4 — new primary-nav surfaces.
+    "/deal-architecture",
+    "/work-with-apollo",
   ];
 
   // Retired routes that MUST exit via either a 301 redirect or a 410 Gone.
@@ -88,7 +95,9 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/buyers",
     "/wholesale",
     "/systems",
-    "/ecosystem",
+    // Amendment 2 §C restored /ecosystem as a footer-only Audience-B
+    // release valve. Website Structure v1 FINAL §6 preserves it. No
+    // longer retired.
     "/dreamspace",
     "/capital-raising",
     "/education",

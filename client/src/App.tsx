@@ -142,6 +142,8 @@ const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
 const Ecosystem = lazy(() => import("@/pages/ecosystem"));
 const Peggy = lazy(() => import("@/pages/peggy"));
+const WorkWithApollo = lazy(() => import("@/pages/work-with-apollo"));
+const DealArchitecture = lazy(() => import("@/pages/deal-architecture"));
 
 const legacyRedirects: [string, string][] = [
   // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
@@ -237,6 +239,11 @@ function Router() {
        * Audience-B release valve. /peggy is the public Peggy surface. */}
       <Route path="/ecosystem" component={Ecosystem} />
       <Route path="/peggy" component={Peggy} />
+      {/* Website Structure v1 FINAL §1 / §4 — Work With Apollo (licensed
+       * representation) and Deal Architecture (outcome-lane map) are
+       * primary-nav surfaces. */}
+      <Route path="/work-with-apollo" component={WorkWithApollo} />
+      <Route path="/deal-architecture" component={DealArchitecture} />
       <Route path="/contact" component={Contact} />
       {/* Empire Doctrine v1.0.1 / Amendment 2: /systems, /education,
        * /calculators, /buyers, /wholesale, /capital-raising, /dreamspace

@@ -4,10 +4,10 @@ export type NavPrimaryItem = {
   matchPrefix?: string;
 };
 
-// Empire Doctrine Amendment 2 §C — More-menu groups visitor intent across
+// Website Structure v1 FINAL §1 — More-menu groups visitor intent across
 // Learn / Network / Company / Ecosystem / Legal. The mobile sheet renders
 // these groups with kicker headings; the footer maps them into the
-// canonical four-column IA (Company / Services / Network / Legal). The
+// canonical four-column IA (Company / Tools / Network / Legal). The
 // `ecosystem` group is the footer-only Audience-B release valve (/ecosystem).
 export type NavMoreGroup = "learn" | "network" | "company" | "ecosystem" | "legal";
 
@@ -25,14 +25,16 @@ export const NAV_MORE_GROUP_LABELS: Record<NavMoreGroup, string> = {
   legal: "Legal",
 };
 
-// Empire Doctrine v1.0.1 primary nav (five items). Amendment 2 keeps the
-// five-item primary set; /ecosystem and /peggy are footer-only.
+// Website Structure v1 FINAL §1 — five primary nav nouns plus the More
+// dropdown. Order is locked: Deal Architecture · Development · Strategy
+// Lab · Work With Apollo · MarketFlow. /projects is no longer in primary
+// nav; it is reachable from /development and from the More dropdown.
 export const NAV_PRIMARY: NavPrimaryItem[] = [
-  { href: "/strategy-lab", label: "Strategy Lab", matchPrefix: "/strategy-lab" },
-  { href: "/projects", label: "Projects", matchPrefix: "/projects" },
+  { href: "/deal-architecture", label: "Deal Architecture", matchPrefix: "/deal-architecture" },
   { href: "/development", label: "Development", matchPrefix: "/development" },
+  { href: "/strategy-lab", label: "Strategy Lab", matchPrefix: "/strategy-lab" },
+  { href: "/work-with-apollo", label: "Work With Apollo", matchPrefix: "/work-with-apollo" },
   { href: "/marketflow", label: "MarketFlow", matchPrefix: "/marketflow" },
-  { href: "/about", label: "About", matchPrefix: "/about" },
 ];
 
 export const NAV_MORE: NavMoreItem[] = [
@@ -44,8 +46,11 @@ export const NAV_MORE: NavMoreItem[] = [
   { href: "/vendor-network", label: "Vendor Network", group: "network" },
   { href: "/capital", label: "Capital", group: "network" },
 
-  // Company — who we are + how to reach us. Apollo guardrail #4:
-  // Projects also appears here as a Company anchor.
+  // Company — who we are + how to reach us. About moves here under the
+  // v1 FINAL nav restructure (it is no longer in primary). Projects also
+  // surfaces here as a Company anchor; the index page stays alive as a
+  // deep link though the primary entry point is /development.
+  { href: "/about", label: "About", group: "company" },
   { href: "/projects", label: "Projects", group: "company" },
   { href: "/connect", label: "Connect", group: "company" },
   { href: "/contact", label: "Contact", group: "company" },

@@ -4,7 +4,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { trackEvent, trackCtaClick } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
-import { ArrowRight, Sparkles, ClipboardList, Calculator, Network as NetworkIcon } from "lucide-react";
+import { ArrowRight, Sparkles, ClipboardList, Calculator, Network as NetworkIcon, Home as HomeIcon, Handshake, Hammer, Key } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { EditableText } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
@@ -75,14 +75,17 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSONLD) }}
       />
-      {/* Empire Doctrine Amendment 2 §E — eight-section home composition. */}
+      {/* Website Structure v1 FINAL §3 — nine-section home composition.
+          The Amendment 2 Four-Doors block is replaced by the six-card
+          "What brings you here?" role router; PegasusStandardSection is
+          renamed to "The Dreamscaper Standard". */}
       <HeroSection />
       <TrustStripSection />
       <PegasusQuestionSection />
-      <FourDoorsSection />
+      <WhatBringsYouHereSection />
       <NelsonProofSection />
       <OperatorSection />
-      <PegasusStandardSection />
+      <DreamscaperStandardSection />
       <FinalCTASection />
       {/* Empire Doctrine v1.0.1 / Brief v1.0 — visually-hidden anchors so
           the public-voice guardrail finds locked phrases in home.tsx
@@ -90,7 +93,9 @@ export default function Home() {
       <span className="sr-only" data-testid="home-locked-anchors">
         Every property gets a path. Not every property gets an offer.
         Bring us the property. We'll show you the path.
+        Bring us the property. We'll help find the path.
         Most Strategy Snapshots are reviewed within 5 business days.
+        The Dreamscaper Standard.
       </span>
     </div>
   );
@@ -215,10 +220,10 @@ function HeroSection() {
               </div>
             </motion.div>
 
-            {/* Amendment 2 §E.1 — primary CTA Submit; secondary is a
-                quiet text link to Peggy. No four-stat bar. */}
+            {/* Website Structure v1 FINAL §3.1 — three hero CTAs:
+                Submit (primary), Open Strategy Lab, Work With Apollo. */}
             <motion.div
-              className="flex flex-col sm:flex-row gap-5 sm:items-center"
+              className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.05 }}
@@ -230,22 +235,32 @@ function HeroSection() {
                   trackCtaClick("home_hero", heroCtaPrimary, "/submit");
                 }}
               >
-                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
+                <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-8 py-7 w-full sm:w-auto bg-primary text-white hover:bg-primary/90 font-semibold shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5" data-testid="button-hero-sell">
                   {isEditMode ? (
                     <EditableText contentKey="home.hero.cta_primary" fallback="Submit a Property" />
                   ) : heroCtaPrimary}
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </a>
-              <Link
-                href="/peggy"
-                onClick={() => trackEvent("cta_click", { id: "hero_secondary", to: "/peggy" })}
-                className="inline-flex items-center gap-2 text-sm text-cream/85 hover:text-cream font-supporting tracking-wide transition-colors"
-                data-testid="link-hero-peggy"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                <span>or talk to Peggy</span>
-                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              <Link href="/strategy-lab" onClick={() => trackCtaClick("home_hero", "Open Strategy Lab", "/strategy-lab")}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-sm uppercase tracking-[0.15em] px-8 py-7 w-full sm:w-auto border-cream/40 text-cream hover:bg-cream/10 hover:border-cream/60 font-semibold"
+                  data-testid="button-hero-strategy-lab"
+                >
+                  Open Strategy Lab
+                </Button>
+              </Link>
+              <Link href="/work-with-apollo" onClick={() => trackCtaClick("home_hero", "Work With Apollo", "/work-with-apollo")}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-sm uppercase tracking-[0.15em] px-8 py-7 w-full sm:w-auto border-cream/40 text-cream hover:bg-cream/10 hover:border-cream/60 font-semibold"
+                  data-testid="button-hero-work-with-apollo"
+                >
+                  Work With Apollo
+                </Button>
               </Link>
             </motion.div>
           </div>
@@ -315,93 +330,93 @@ function PegasusQuestionSection() {
   );
 }
 
-// Amendment 2 §C / §E.4 — the four doors. Peggy first, subtly more
-// prominent. Submit remains the primary CTA path.
-function FourDoorsSection() {
-  const doors = [
+// Website Structure v1 FINAL §3.2 — six-card role router. Replaces the
+// Amendment 2 Four-Doors block. Each card catches a different visitor
+// intent and routes to the surface that fits.
+function WhatBringsYouHereSection() {
+  const cards = [
     {
-      label: "Talk to Peggy",
-      desc: "Not sure what you have yet? Start a low-friction conversation with our AI strategy assistant.",
-      href: "/peggy",
-      icon: Sparkles,
-      cta: "Open Peggy",
-      testId: "home-door-peggy",
-      featured: true,
+      label: "I own a property",
+      desc: "You hold the title. You want a structural read on what to do with it.",
+      href: "/submit?intent=property",
+      icon: HomeIcon,
+      cta: "Submit a Property",
+      testId: "home-router-own",
     },
     {
-      label: "Submit a Property",
-      desc: "Know what you have. Want a structural read. The shortest path to a real conversation.",
-      href: "/submit",
+      label: "I have a deal",
+      desc: "Wholesaler or agent with a property in hand. Send it for review.",
+      href: "/submit?intent=deal-jv",
       icon: ClipboardList,
-      cta: "Submit Property",
-      testId: "home-door-submit",
+      cta: "Send the Deal",
+      testId: "home-router-deal",
     },
     {
-      label: "Try Strategy Lab",
-      desc: "Run the property against the playbook. Quick Read, Full Path, or full Deal Blueprint.",
+      label: "I want to list or buy a home",
+      desc: "Licensed representation with Apollo through Keller Williams East Bay.",
+      href: "/work-with-apollo",
+      icon: Key,
+      cta: "Work With Apollo",
+      testId: "home-router-list-buy",
+    },
+    {
+      label: "I want to partner with Pegasus",
+      desc: "Capital or co-GP conversations. Written agreement on every deal.",
+      href: "/capital",
+      icon: Handshake,
+      cta: "Open Capital",
+      testId: "home-router-partner",
+    },
+    {
+      label: "I see development potential",
+      desc: "ADU upside, value-add, BRRRR, small multifamily, or ground-up infill.",
+      href: "/development",
+      icon: Hammer,
+      cta: "See Development",
+      testId: "home-router-development",
+    },
+    {
+      label: "I want to analyze a property",
+      desc: "Run the situation through the Pegasus lens yourself.",
       href: "/strategy-lab",
       icon: Calculator,
-      cta: "Run the Lab",
-      testId: "home-door-strategy-lab",
-    },
-    {
-      label: "Join the Network",
-      desc: "Operator, capital, or vendor. Vetted, invite-only, reviewed.",
-      href: "/marketflow",
-      icon: NetworkIcon,
-      cta: "Request Access",
-      testId: "home-door-marketflow",
+      cta: "Open Strategy Lab",
+      testId: "home-router-strategy-lab",
     },
   ];
 
   return (
-    <section className="py-24 lg:py-32 bg-muted/15 border-t border-border/30" data-testid="section-four-doors">
+    <section className="py-24 lg:py-32 bg-muted/15 border-t border-border/30" data-testid="section-what-brings-you-here">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="max-w-3xl mx-auto text-center mb-14">
           <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            Four doors
+            Pick your lane
           </p>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
-            Every visitor has a path in.
+            What brings you here?
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Pick the friction that matches the moment. All four route to the same human review.
+            Six entry points. All six route to the same disciplined review.
           </p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.07}>
-          {doors.map((d) => (
-            <StaggerItem key={d.testId}>
-              <Link
-                href={d.href}
-                onClick={() => trackCtaClick("home_doors", d.label, d.href)}
-              >
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" staggerDelay={0.06}>
+          {cards.map((c) => (
+            <StaggerItem key={c.testId}>
+              <Link href={c.href} onClick={() => trackCtaClick("home_router", c.label, c.href)}>
                 <div
-                  className={`group relative h-full p-6 rounded-lg border bg-card hover:-translate-y-0.5 transition-all duration-200 ${
-                    d.featured
-                      ? "border-[hsl(var(--copper)/0.6)] shadow-md shadow-[hsl(var(--copper)/0.08)]"
-                      : "border-border/60 hover:border-primary/40"
-                  }`}
-                  data-testid={d.testId}
+                  className="group relative h-full p-6 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                  data-testid={c.testId}
                 >
-                  {d.featured && (
-                    <span
-                      className="absolute top-4 right-4 flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] font-supporting font-semibold text-[hsl(var(--copper))]"
-                      data-testid="badge-peggy-available"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--copper))]" aria-hidden="true" />
-                      Available now
-                    </span>
-                  )}
                   <div className="w-10 h-10 rounded-sm bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                    <d.icon className="w-4 h-4 text-primary" aria-hidden="true" />
+                    <c.icon className="w-4 h-4 text-primary" aria-hidden="true" />
                   </div>
                   <p className="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                    {d.label}
+                    {c.label}
                   </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{d.desc}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{c.desc}</p>
                   <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
-                    {d.cta}
+                    {c.cta}
                     <ArrowRight className="w-3 h-3" aria-hidden="true" />
                   </span>
                 </div>
@@ -555,9 +570,10 @@ function OperatorSection() {
   );
 }
 
-// Amendment 2 §E.7 — Six commitments. Visual upgrade: Cinzel display
-// numerals 01–06, large and copper, per doctrine.
-function PegasusStandardSection() {
+// Website Structure v1 FINAL §3.8 — renamed from "The Pegasus Standard"
+// to "The Dreamscaper Standard". Six commitments. Cinzel display
+// numerals 01–06, large and copper, per doctrine v1.0.2 Part A.
+function DreamscaperStandardSection() {
   const principles = [
     { title: "Clarity over confusion", desc: "Every situation gets a plain-language read. No jargon, no hidden steps." },
     { title: "Discipline over hype", desc: "Underwriting and process come before growth. We say no often." },
@@ -568,12 +584,12 @@ function PegasusStandardSection() {
   ];
 
   return (
-    <section id="pegasus-standard" className="py-24 lg:py-32 bg-card relative overflow-hidden">
+    <section id="dreamscaper-standard" className="py-24 lg:py-32 bg-card relative overflow-hidden" data-testid="section-dreamscaper-standard">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            The Pegasus Standard
+            The Dreamscaper Standard
           </p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-[-0.02em] mb-6">
             Six commitments. Every conversation.
@@ -624,16 +640,16 @@ function FinalCTASection() {
           <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-6">
             Every property gets a path.
           </p>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-[1.0] mb-6 text-cream">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-[1.0] mb-6 text-cream" data-testid="text-final-cta-headline">
             Bring us the property.<br />
             <span className="italic bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-              We'll show you the path.
+              We'll help find the path.
             </span>
           </h2>
           <p className="text-base sm:text-lg text-cream/65 leading-relaxed max-w-xl mx-auto mb-10">
-            Two ways to start. Submit a property for a structural read, or open a low-friction conversation with Peggy.
+            Three ways to start. Submit a property, run the numbers yourself in Strategy Lab, or work with Apollo directly through KW East Bay.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center mb-10">
             <Link href="/submit">
               <Button
                 onClick={() => trackEvent("cta_click", { id: "final_primary", to: "/submit" })}
@@ -645,16 +661,26 @@ function FinalCTASection() {
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/peggy">
+            <Link href="/strategy-lab">
               <Button
-                onClick={() => trackEvent("cta_click", { id: "final_secondary", to: "/peggy" })}
+                onClick={() => trackEvent("cta_click", { id: "final_strategy_lab", to: "/strategy-lab" })}
                 size="lg"
                 variant="outline"
                 className="w-full sm:w-auto px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold border-cream/25 text-cream hover:bg-cream/10 hover:border-cream/40"
-                data-testid="button-final-cta-peggy"
+                data-testid="button-final-cta-strategy-lab"
               >
-                <Sparkles className="mr-2 w-4 h-4" />
-                Talk to Peggy
+                Open Strategy Lab
+              </Button>
+            </Link>
+            <Link href="/work-with-apollo">
+              <Button
+                onClick={() => trackEvent("cta_click", { id: "final_wwa", to: "/work-with-apollo" })}
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold border-cream/25 text-cream hover:bg-cream/10 hover:border-cream/40"
+                data-testid="button-final-cta-wwa"
+              >
+                Work With Apollo
               </Button>
             </Link>
           </div>

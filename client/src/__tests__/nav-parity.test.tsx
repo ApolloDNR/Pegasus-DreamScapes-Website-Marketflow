@@ -73,14 +73,34 @@ beforeEach(() => {
 
 const user = () => userEvent.setup({ pointerEventsCheck: 0 });
 
-describe("Navigation parity (Empire Doctrine v1.0.1)", () => {
+describe("Navigation parity (Website Structure v1 FINAL)", () => {
   it("desktop header exposes exactly the five NAV_PRIMARY entries", () => {
     renderWithRouter(<Navigation />);
+    // Website Structure v1 FINAL §1 — five noun items plus the More
+    // dropdown (the sixth visible primary slot). NAV_PRIMARY remains a
+    // five-item array; "More" is a dropdown trigger, not a NAV_PRIMARY
+    // entry.
     expect(NAV_PRIMARY).toHaveLength(5);
+    const expectedHrefs = new Set([
+      "/deal-architecture",
+      "/development",
+      "/strategy-lab",
+      "/work-with-apollo",
+      "/marketflow",
+    ]);
     for (const item of NAV_PRIMARY) {
+      expect(expectedHrefs.has(item.href)).toBe(true);
       const link = screen.getByTestId(`link-nav-${slugify(item.label)}`);
       expect(link.getAttribute("href")).toBe(item.href);
     }
+  });
+
+  it("/projects is not in NAV_PRIMARY (v1 FINAL: moved into /development + More)", () => {
+    expect(NAV_PRIMARY.find((i) => i.href === "/projects")).toBeUndefined();
+  });
+
+  it("/work-with-apollo is in NAV_PRIMARY (v1 FINAL §1)", () => {
+    expect(NAV_PRIMARY.find((i) => i.href === "/work-with-apollo")).toBeDefined();
   });
 
   it("desktop header may expose a More dropdown sourced from NAV_MORE", () => {
