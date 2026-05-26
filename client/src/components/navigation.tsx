@@ -277,8 +277,13 @@ export function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // v1 FINAL polish — primary nav now carries five nouns (Deal
+  // Architecture, Development, Strategy Lab, Work With Apollo,
+  // MarketFlow). "Work With Apollo" is long. whitespace-nowrap +
+  // tightened lg padding + xl breathing room keeps the lineup on a
+  // single row without forcing tiny type.
   const navLinkBase =
-    "relative px-3 py-2 text-[13px] tracking-[0.04em] font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
+    "relative whitespace-nowrap px-2.5 xl:px-3 py-2 text-[12.5px] xl:text-[13px] tracking-[0.04em] font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
 
   const renderNavLink = (item: NavItem, isMobile = false) => {
     const active = isItemActive(item, location);
@@ -405,7 +410,7 @@ export function Navigation() {
 
           {/* Desktop nav — 5 noun items + More dropdown */}
           <nav
-            className="hidden lg:flex items-center gap-1"
+            className="hidden lg:flex items-center gap-0.5 xl:gap-1"
             aria-label="Primary navigation"
           >
             {NAV_ITEMS.map((item) => {
@@ -465,7 +470,7 @@ export function Navigation() {
               <DropdownMenuContent
                 align="end"
                 sideOffset={12}
-                className="w-[380px] p-0 overflow-hidden rounded-lg border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background"
+                className="w-[420px] p-0 overflow-hidden rounded-lg border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background"
               >
                 {/* Editorial header */}
                 <div className="relative px-5 pt-5 pb-4 bg-gradient-to-b from-cream/70 to-cream/20 dark:from-white/[0.04] dark:to-transparent">
@@ -478,38 +483,56 @@ export function Navigation() {
                   </p>
                 </div>
 
-                {/* Items */}
-                <div className="py-2">
-                  {MORE_ITEMS.map((item) => {
-                    const meta = MORE_META[item.href];
-                    const Icon = meta?.icon ?? BookOpen;
-                    const testid = `link-nav-more-${item.label.toLowerCase().replace(/\s+/g, "-")}`;
+                {/* Grouped items — Website Structure v1 FINAL §1 mega-menu
+                    parity with the mobile sheet. Each NAV_MORE_GROUP gets
+                    a kicker heading so visitor intent (Learn / Network /
+                    Company / Ecosystem / Legal) is legible at a glance. */}
+                <div className="py-2 max-h-[70vh] overflow-y-auto">
+                  {NAV_MORE_GROUP_ORDER.map((group, gIdx) => {
+                    const items = getNavMoreByGroup(group);
+                    if (items.length === 0) return null;
                     return (
-                      <Link key={item.href} href={item.href}>
-                        <DropdownMenuItem
-                          className="group cursor-pointer px-5 py-3 rounded-none border-l-2 border-transparent focus:bg-cream/60 focus:border-[hsl(var(--bronze))] dark:focus:bg-white/[0.06] data-[highlighted]:bg-cream/60 data-[highlighted]:border-[hsl(var(--bronze))] dark:data-[highlighted]:bg-white/[0.06]"
-                          data-testid={testid}
-                        >
-                          <div className="flex items-start gap-3.5 w-full">
-                            <div className="flex-shrink-0 mt-0.5 w-9 h-9 rounded-lg border border-primary/20 bg-cream/40 dark:bg-white/[0.03] flex items-center justify-center group-hover:border-primary/50 group-hover:bg-cream/70 dark:group-hover:bg-white/[0.06] transition-colors duration-200">
-                              <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="font-serif text-[15px] font-semibold tracking-tight text-foreground leading-none">
-                                  {item.label}
-                                </span>
-                                <ArrowRight className="w-3.5 h-3.5 text-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
-                              </div>
-                              {meta?.tagline && (
-                                <p className="mt-1 text-xs text-muted-foreground leading-snug">
-                                  {meta.tagline}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      </Link>
+                      <div
+                        key={group}
+                        data-testid={`desktop-more-group-${group}`}
+                        className={gIdx > 0 ? "mt-1 pt-2 border-t border-[hsl(var(--rule))]/60" : ""}
+                      >
+                        <p className="px-5 pt-2 pb-1.5 text-[10px] uppercase tracking-[0.3em] text-[hsl(var(--muted-text))] font-supporting font-semibold">
+                          {NAV_MORE_GROUP_LABELS[group]}
+                        </p>
+                        {items.map((item) => {
+                          const meta = MORE_META[item.href];
+                          const Icon = meta?.icon ?? BookOpen;
+                          const testid = `link-nav-more-${item.label.toLowerCase().replace(/\s+/g, "-")}`;
+                          return (
+                            <Link key={item.href} href={item.href}>
+                              <DropdownMenuItem
+                                className="group cursor-pointer px-5 py-2.5 rounded-none border-l-2 border-transparent focus:bg-cream/60 focus:border-[hsl(var(--bronze))] dark:focus:bg-white/[0.06] data-[highlighted]:bg-cream/60 data-[highlighted]:border-[hsl(var(--bronze))] dark:data-[highlighted]:bg-white/[0.06]"
+                                data-testid={testid}
+                              >
+                                <div className="flex items-start gap-3 w-full">
+                                  <div className="flex-shrink-0 mt-0.5 w-8 h-8 rounded-md border border-primary/20 bg-cream/40 dark:bg-white/[0.03] flex items-center justify-center group-hover:border-primary/50 group-hover:bg-cream/70 dark:group-hover:bg-white/[0.06] transition-colors duration-200">
+                                    <Icon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="font-serif text-[14px] font-semibold tracking-tight text-foreground leading-tight">
+                                        {item.label}
+                                      </span>
+                                      <ArrowRight className="w-3.5 h-3.5 text-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
+                                    </div>
+                                    {meta?.tagline && (
+                                      <p className="mt-0.5 text-[11.5px] text-muted-foreground leading-snug">
+                                        {meta.tagline}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     );
                   })}
                 </div>
