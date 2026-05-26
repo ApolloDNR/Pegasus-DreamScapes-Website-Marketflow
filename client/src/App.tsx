@@ -91,6 +91,7 @@ const StrategyLabBlueprintConfirmed = lazy(() => import("@/pages/strategy-lab-bl
 const AdminStrategyLab = lazy(() => import("@/pages/admin-strategy-lab"));
 const AdminVendors = lazy(() => import("@/pages/admin-vendors"));
 const AdminCtaEvents = lazy(() => import("@/pages/admin-cta-events"));
+const AdminPeggyConversations = lazy(() => import("@/pages/admin-peggy-conversations"));
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
 const Library = lazy(() => import("@/pages/library"));
@@ -221,6 +222,7 @@ function Router() {
       <Route path="/admin/strategy-lab" component={AdminStrategyLab} />
       <Route path="/admin/vendors" component={AdminVendors} />
       <Route path="/admin/cta-events" component={AdminCtaEvents} />
+      <Route path="/admin/peggy/conversations" component={AdminPeggyConversations} />
       <Route path="/strategy-lab/classic" component={Calculators} />
       {/* /library is canonical; /resources 301s to /library via legacyRedirects.
        * /library/:slug keeps the existing article shell working. */}

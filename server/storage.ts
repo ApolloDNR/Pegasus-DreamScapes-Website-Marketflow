@@ -450,6 +450,10 @@ export interface IStorage {
   createPeggyMessage(message: InsertPeggyMessage): Promise<PeggyMessage>;
   getPeggyMessages(conversationId: number): Promise<PeggyMessage[]>;
   updatePeggyMessageFeedback(id: number, feedback: string, feedbackNotes?: string): Promise<PeggyMessage | undefined>;
+  // Task #151 — admin + daily report
+  getPeggyConversationsSince(sinceMs: number): Promise<PeggyConversation[]>;
+  getPeggyConversationsForReport(sinceMs: number): Promise<PeggyConversation[]>;
+  markPeggyConversationsReported(ids: number[]): Promise<void>;
   
   // Saved Analyses (Calculators)
   createSavedAnalysis(analysis: InsertSavedAnalysis): Promise<SavedAnalysis>;
@@ -2498,6 +2502,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(peggyMessages.id, id))
       .returning();
     return updated;
+  }
+
+  // Task #151 — admin + daily-report helpers
+  async getPeggyConversationsSince(sinceMs: number): Promise<PeggyConversation[]> {
+    const since = new Date(sinceMs);
+    return db.select().from(peggyConversations)
+      .where(sql`${peggyConversations.updatedAt} >= ${since}`)
+      .orderBy(desc(peggyConversations.updatedAt));
+  }
+
+  async getPeggyConversationsForReport(sinceMs: number): Promise<PeggyConversation[]> {
+    const since = new Date(sinceMs);
+    return db.select().from(peggyConversations)
+      .where(sql`${peggyConversations.updatedAt} >= ${since} AND ${peggyConversations.reportedAt} IS NULL`)
+      .orderBy(desc(peggyConversations.updatedAt));
+  }
+
+  async markPeggyConversationsReported(ids: number[]): Promise<void> {
+    if (ids.length === 0) return;
+    await db.update(peggyConversations)
+      .set({ reportedAt: new Date() })
+      .where(sql`${peggyConversations.id} = ANY(${ids})`);
   }
 
   // ============================================

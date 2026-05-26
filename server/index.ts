@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { seedProjects, seedArticles, seedCommunityCategories, seedDealflowData, seedLibraryBeginnerPath, seedLibraryGlossary } from "./seed";
+import { startPeggyCron } from "./peggy-cron";
 
 const app = express();
 const httpServer = createServer(app);
@@ -68,6 +69,7 @@ app.use((req, res, next) => {
   await seedCommunityCategories();
   await seedDealflowData();
   await registerRoutes(httpServer, app);
+  startPeggyCron();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

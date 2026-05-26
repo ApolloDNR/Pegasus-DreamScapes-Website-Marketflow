@@ -1834,7 +1834,29 @@ export const peggyConversations = pgTable("peggy_conversations", {
   // === STATUS ===
   isActive: boolean("is_active").default(true),
   isPinned: boolean("is_pinned").default(false),
-  
+
+  // === INTAKE (Task #151 — Peggy ASAP chat) ===
+  // Structured intake captured progressively during the conversation
+  intake: jsonb("intake"),
+  // Peggy's read of where this conversation should go:
+  // submit_property | strategy_lab | strategy_review | capital_intake |
+  // vendor_intake | deal_blueprint | human_required
+  disposition: varchar("disposition", { length: 40 }),
+  routedTo: varchar("routed_to", { length: 80 }),
+  contactName: varchar("contact_name", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  // One-line summary of the conversation for Apollo's inbound report
+  summary: text("summary"),
+  // Set true the moment any §1695 or Fair Housing trigger fires;
+  // when true we email Apollo immediately.
+  humanRequired: boolean("human_required").default(false),
+  // Why human_required was set (audit trail)
+  humanRequiredReason: varchar("human_required_reason", { length: 80 }),
+  // Whether the daily report has already notified on this conversation
+  reportedAt: timestamp("reported_at"),
+  endedAt: timestamp("ended_at"),
+
   // === TIMESTAMPS ===
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1845,7 +1867,9 @@ export const insertPeggyConversationSchema = createInsertSchema(peggyConversatio
   createdAt: true, 
   updatedAt: true,
   messageCount: true,
-  lastMessageAt: true
+  lastMessageAt: true,
+  reportedAt: true,
+  endedAt: true
 });
 export type InsertPeggyConversation = z.infer<typeof insertPeggyConversationSchema>;
 export type PeggyConversation = typeof peggyConversations.$inferSelect;

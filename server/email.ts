@@ -105,6 +105,112 @@ function logEmailFallback(options: SendGridMailOptions): EmailResult {
   return { success: true, fallback: true };
 }
 
+// Task #151 — Peggy daily inbound report + immediate human_required notification.
+const APOLLO_EMAIL = process.env.APOLLO_NOTIFICATION_EMAIL || "apollo@pegasusdreamscapes.com";
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export async function sendPeggyHumanRequired(args: {
+  conversation: { id: number; sessionId: string; createdAt?: Date | null; intake?: any; humanRequiredReason?: string | null };
+  transcript: Array<{ role: string; content: string; createdAt?: Date | null }>;
+  reason: string;
+}): Promise<EmailResult> {
+  const { conversation, transcript, reason } = args;
+  const reasonLabel = reason === "fair_housing" ? "Fair Housing trigger" : reason === "section_1695" ? "Civil Code §1695 (foreclosure + owner-occupant)" : reason;
+
+  const transcriptHtml = transcript
+    .map(m => `<div style="margin: 8px 0;"><strong style="color:#0D1B2D;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">${escapeHtml(m.role)}</strong><br/>${escapeHtml(m.content)}</div>`)
+    .join("");
+
+  const html = `
+    <h2 style="color:#0D1B2D;font-family:Georgia,serif;">Peggy: human review required</h2>
+    <p><strong>Reason:</strong> ${escapeHtml(reasonLabel)}</p>
+    <p><strong>Conversation ID:</strong> ${conversation.id}</p>
+    <p><strong>Session:</strong> ${escapeHtml(conversation.sessionId)}</p>
+    <hr style="border:none;border-top:1px solid #ddd;margin:16px 0;"/>
+    <h3 style="color:#0D1B2D;">Transcript</h3>
+    ${transcriptHtml}
+    <hr style="border:none;border-top:1px solid #ddd;margin:16px 0;"/>
+    <p><a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/admin/peggy/conversations" style="display:inline-block;padding:10px 20px;background:#C77A3A;color:white;text-decoration:none;border-radius:4px;">Open in HQ</a></p>
+  `;
+
+  return sendEmail({
+    to: APOLLO_EMAIL,
+    subject: `Peggy: human review required (${reasonLabel}) — #${conversation.id}`,
+    html,
+  });
+}
+
+export async function sendPeggyDailyReport(args: {
+  conversations: Array<{
+    id: number;
+    summary?: string | null;
+    disposition?: string | null;
+    contactName?: string | null;
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+    humanRequired?: boolean | null;
+    createdAt?: Date | null;
+    messageCount?: number | null;
+  }>;
+}): Promise<EmailResult> {
+  const { conversations } = args;
+  const total = conversations.length;
+  const dispositionCounts = conversations.reduce<Record<string, number>>((acc, c) => {
+    const k = c.disposition || "unclassified";
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+  const dispositionRows = Object.entries(dispositionCounts)
+    .map(([k, v]) => `<tr><td style="padding:6px 12px;border:1px solid #ddd;">${escapeHtml(k)}</td><td style="padding:6px 12px;border:1px solid #ddd;text-align:right;">${v}</td></tr>`)
+    .join("");
+
+  const conversationRows = conversations
+    .map(c => `
+      <tr>
+        <td style="padding:6px 12px;border:1px solid #ddd;">#${c.id}</td>
+        <td style="padding:6px 12px;border:1px solid #ddd;">${escapeHtml(c.disposition || "—")}</td>
+        <td style="padding:6px 12px;border:1px solid #ddd;">${escapeHtml(c.contactName || "—")}${c.contactEmail ? ` · ${escapeHtml(c.contactEmail)}` : ""}${c.contactPhone ? ` · ${escapeHtml(c.contactPhone)}` : ""}</td>
+        <td style="padding:6px 12px;border:1px solid #ddd;">${escapeHtml(c.summary || "—")}</td>
+        <td style="padding:6px 12px;border:1px solid #ddd;text-align:center;">${c.humanRequired ? "⚠️" : ""}</td>
+      </tr>
+    `)
+    .join("");
+
+  const html = `
+    <h2 style="color:#0D1B2D;font-family:Georgia,serif;">Peggy: daily inbound report</h2>
+    <p>${total} conversation${total === 1 ? "" : "s"} in the last 24 hours.</p>
+    <h3 style="color:#0D1B2D;margin-top:24px;">Dispositions</h3>
+    <table style="border-collapse:collapse;">${dispositionRows || '<tr><td style="padding:6px 12px;">no data</td></tr>'}</table>
+    <h3 style="color:#0D1B2D;margin-top:24px;">Conversations</h3>
+    <table style="border-collapse:collapse;width:100%;">
+      <thead>
+        <tr style="background:#F6EFE4;">
+          <th style="padding:6px 12px;border:1px solid #ddd;text-align:left;">ID</th>
+          <th style="padding:6px 12px;border:1px solid #ddd;text-align:left;">Disposition</th>
+          <th style="padding:6px 12px;border:1px solid #ddd;text-align:left;">Contact</th>
+          <th style="padding:6px 12px;border:1px solid #ddd;text-align:left;">Summary</th>
+          <th style="padding:6px 12px;border:1px solid #ddd;text-align:center;">Human?</th>
+        </tr>
+      </thead>
+      <tbody>${conversationRows || '<tr><td colspan="5" style="padding:12px;text-align:center;">No new conversations.</td></tr>'}</tbody>
+    </table>
+    <p style="margin-top:24px;"><a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/admin/peggy/conversations" style="display:inline-block;padding:10px 20px;background:#C77A3A;color:white;text-decoration:none;border-radius:4px;">Open Peggy HQ</a></p>
+  `;
+
+  return sendEmail({
+    to: APOLLO_EMAIL,
+    subject: `Peggy daily report — ${total} conversation${total === 1 ? "" : "s"}`,
+    html,
+  });
+}
+
 export async function sendEmail(options: Omit<SendGridMailOptions, 'from'> & { from?: string }): Promise<EmailResult> {
   const emailOptions: SendGridMailOptions = {
     ...options,

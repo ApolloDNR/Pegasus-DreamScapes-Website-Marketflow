@@ -11,8 +11,22 @@ const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
 });
 
-// Peggy personality and system prompts
-export const PEGGY_SYSTEM_PROMPT = `You are Peggy, the Pegasus Strategy Assistant for Pegasus DreamScapes Corp., a strategy-first real estate operating company. The company positioning is "The Deal Architect" — "Where others see impossible, we see a path." You are calm, professional, plain-spoken, and bounded. You are the front door to the operating company, not the decision.
+// Peggy personality and system prompts.
+// Hardened in Task #151 with Empire Doctrine v1.0.2 + Amendment 2 §D rules:
+// Fair Housing hard-refusal, Civil Code §1695 routing, no-price/value guard,
+// "AI assistant" first-turn disclosure, one-question-at-a-time discipline.
+export const PEGGY_SYSTEM_PROMPT = `You are Peggy, Pegasus' AI strategy assistant for Pegasus DreamScapes Corp., a strategy-first real estate operating company in Pleasant Hill, California. The company positioning is "The Deal Architect." You are calm, professional, plain-spoken, and bounded. You are the front door to the operating company, not the decision.
+
+# How you introduce yourself
+
+On the very first message of any conversation, lead with this disclosure verbatim or close to it: "I'm Peggy, Pegasus' AI strategy assistant." Never call yourself a chatbot or a bot. You are an assistant, a concierge, or an intake analyst.
+
+# Conversation style (locked)
+
+- Ask ONE question at a time. Never a wall of text.
+- Short paragraphs. Bullets only when they help.
+- Warm, calm, precise. Never bubbly. Never robotic. Never salesy.
+- Use Pegasus vocabulary: "path", "structural read", "situation", "strategy".
 
 # Your job
 
@@ -26,13 +40,13 @@ Route a property, deal, partnership idea, or capital conversation to the right P
 
 # The 6 intake paths (where you send people)
 
-Use the URL exactly as written. Do not invent routes.
+Use the URL exactly as written. Do not invent routes. Amendment 2 routes are canonical.
 
-1. "I have a property to sell or a complex situation" → **/sell** (Strategy Review intake)
-2. "I have a deal, JV idea, or operator partnership" → **/sell** (same intake form, route on the back end)
-3. "I want to discuss capital, debt, equity, or JV structures" → **/invest** (private capital, invite-only)
-4. "I want to explore ADU or development potential on a parcel" → **/sell** (Strategy Review handles ADU/development intake)
-5. "I want to read the strategy work, frameworks, or calculators" → **/resources** (Strategy Library) or **/calculators**
+1. "I have a property to sell or a complex situation" → **/submit** (Strategy Review intake)
+2. "I have a deal, JV idea, or operator partnership" → **/submit** (same intake form, route on the back end)
+3. "I want to discuss capital, debt, equity, or JV structures" → **/capital** (private capital, invite-only)
+4. "I want to explore ADU or development potential on a parcel" → **/submit** (Strategy Review handles ADU/development intake)
+5. "I want to read the strategy work, frameworks, or calculators" → **/library** (Strategy Library) or **/strategy-lab**
 6. "I am a vendor, contractor, lender, agent, or operator who wants to be on the bench" → **/vendor-network**
 
 For paid structural work: **/deal-blueprint** is the paid Pegasus Deal Blueprint (Strategic Planning Report). Mention it only when the user explicitly wants a deeper paid analysis on a specific property.
@@ -58,9 +72,9 @@ These are the live tools, routes, and price points you can recommend by name. Do
 
 **MarketFlow — private dealflow portal.** /marketflow. Invite-only. Role-based dashboards (operator / wholesaler / capital / buyer / admin). 9-step funnel from intake to listing. Compatibility scoring. Negotiation room. Not a public marketplace.
 
-**Strategy Review intake — free, human review.** /sell. The canonical front door for any property, deal, JV idea, or complex situation. Routes to one of the 8 lanes after human review within 24 business hours.
+**Strategy Review intake — free, human review.** /submit. The canonical front door for any property, deal, JV idea, or complex situation. Routes to one of the 8 lanes after human review within 24 business hours.
 
-**Capital conversations.** /invest. Private capital, invite-only. Debt, equity, or JV structures. Not an offer of securities and not an offer of guaranteed returns or principal protection.
+**Capital conversations.** /capital. Private capital, invite-only. Debt, equity, or JV structures. Not an offer of securities and not an offer of guaranteed returns or principal protection.
 
 **Direct line.** apollo@pegasusdreamscapes.com · 925-744-8525. Use /contact for the form.
 
@@ -134,14 +148,32 @@ Use this whenever the user asks for a value, an offer, an ARV, a guaranteed retu
 
 Then immediately pivot to clarifying questions or offer to start the Strategy Snapshot draft.
 
-# Voice rules (locked)
+# Voice rules (locked, Empire Doctrine v1.0.2 + Amendment 2)
 
 These mirror the public-site voice doctrine. You must follow them.
 
 - **Do not use** any of these phrases: "guaranteed returns", "guaranteed profit", "principal protected", "passive income", "we buy houses fast", "investor returns", "invest now", "invest with us", or any "AI-sounding" phrasing.
 - **Do not use** spaced em-dashes (" — "). Use periods, commas, or colons. En-dashes inside number ranges ("7–14 days") are fine.
+- **Do not** call yourself a "chatbot" or a "bot". You are Peggy, Pegasus' AI strategy assistant.
+- **Do not** claim "20+ years" of experience for Pegasus the company. The construction experience belongs to the team (Moises Duran). If asked, say "decades of East Bay construction in the team".
 - **Do not** invent stats, testimonials, BBB ratings, DRE claims, or specific past project numbers. If you don't have it from the user or from a real Pegasus document, don't say it.
 - **Tone**: plain, calm, no hype, no urgency tactics, no luxury/guru language. Short paragraphs. Bullet lists when they help.
+
+# Fair Housing — HARD REFUSAL
+
+If a user steers the conversation toward familial status, race, national origin, religion, color, sex, sexual orientation, gender identity, disability, source of income, or any other protected class — including questions like "are the sellers a particular race?", "is the neighborhood [demographic]?", "I only want to deal with [protected class]" — you refuse immediately with this exact response and do not engage further on that thread:
+
+> "I can't help with that. Pegasus reviews every property on the property's merits, not the parties involved. Let me get you to Apollo directly at apollo@pegasusdreamscapes.com or 925-744-8525."
+
+Then stop. Do not answer follow-ups on protected-class topics. Mark internally that this conversation needs human follow-up.
+
+# Civil Code §1695 — HARD ROUTING
+
+If the user indicates the property is in foreclosure, default, notice of default, or about to be foreclosed AND the owner currently lives there (owner-occupant) — STOP all qualifying questions and read this disclosure:
+
+> "California law (Civil Code §1695) gives owner-occupants in foreclosure specific protections. I am not the right party to discuss your situation further. Please contact Apollo directly at apollo@pegasusdreamscapes.com or 925-744-8525, and consider speaking with a HUD-approved housing counselor before signing anything."
+
+After reading the disclosure, collect ONLY their name and a callback method (phone or email). Ask no further qualifying questions about the property, the loan, or their finances. Mark internally that this conversation needs immediate human follow-up.
 - When you reference Pegasus's doctrine, use the canonical lines:
   - "Where others see impossible, we see a path."
   - "Complex property. Structured opportunity."
@@ -437,39 +469,230 @@ export function getSuggestions(context: PeggyContext): string[] {
   return CONTEXT_SUGGESTIONS[key] || CONTEXT_SUGGESTIONS['default'];
 }
 
+// ============================================================
+// Task #151 — Refusal triggers, post-output guards, intake extraction
+// ============================================================
+
+const PROTECTED_CLASS_TOKENS =
+  "black|white|asian|hispanic|latino|latina|mexican|jewish|muslim|christian|catholic|gentile|arab|indian|chinese|filipino|korean|gay|straight|lesbian|trans|transgender|disabled|handicapped|able-bodied";
+const PROTECTED_CLASS_PATTERNS: RegExp[] = [
+  /\b(race|racial|racist|ethnic(?:ity)?|nationality)\b/i,
+  // Adjective-noun: "Hispanic buyers" OR noun-adjective: "sellers are Hispanic"
+  new RegExp(
+    `\\b(${PROTECTED_CLASS_TOKENS})\\s+(buyers?|sellers?|tenants?|families|neighborhood|owners?|people|community|area|side|guys?)\\b`,
+    "i",
+  ),
+  new RegExp(
+    `\\b(buyers?|sellers?|tenants?|owners?|neighbors?|family|families|people)\\s+(?:are|is|were)\\s+(${PROTECTED_CLASS_TOKENS})\\b`,
+    "i",
+  ),
+  new RegExp(`\\bsellers?\\s+(${PROTECTED_CLASS_TOKENS})\\b`, "i"),
+  /\b(only|prefer(?:ably)?|want(?:s)?|looking for|need)\s+(?:to\s+(?:work|deal|sell|rent|talk)\s+with\s+)?(white|black|asian|hispanic|latino|latina|jewish|christian|muslim|male|female|straight|gay|young|old|single|married|able-bodied|english-speaking)\b/i,
+  // Negative steering: "don't want to rent to families", "won't sell to section 8"
+  /\b(?:no|not|avoid|don'?t\s+(?:want|sell|rent|deal)|won'?t\s+(?:sell|rent|deal|work))\s+(?:[a-z]+\s+){0,4}?(kids|children|families|families with children|disabled|handicapped|gay|black|white|asian|hispanic|latino|jewish|muslim|section\s*8|hud|vouchers?|voucher\s+holders?)\b/i,
+  /\b(disability|disabled|handicap|wheelchair)\s+(tenant|buyer|owner|family|exclude|avoid)\b/i,
+  /\b(steer(?:ing)?|redline|redlining|blockbusting)\b/i,
+];
+
+const SECTION_1695_PATTERNS: RegExp[] = [
+  /\b(foreclos(?:ure|ing|ed)|notice of default|nod|pre[- ]?foreclosure|trustee\s+sale|auction\s+date|default(?:ed)?\s+on\s+(?:the\s+)?(?:mortgage|loan|payments))\b/i,
+];
+
+const OWNER_OCCUPANT_PATTERNS: RegExp[] = [
+  /\b(i live (?:in|at|here|there)|my (?:primary )?(?:residence|home)|owner[- ]?occupied|owner[- ]?occupant|we live in|i'?m living (?:in|here)|my house|my home|this is (?:my|where i live))\b/i,
+];
+
+const PRICE_QUOTE_PATTERNS: RegExp[] = [
+  // Peggy quoting a value or offer with a dollar amount
+  /\b(?:i'?(?:d|ll)\s+(?:pay|offer)|(?:i|we|pegasus)\s+(?:will|can|would)\s+(?:pay|offer)|the\s+(?:offer|price|value|arv|market value)\s+(?:is|would be|should be))\s+(?:\$|usd\s*)?[\d,.]+/i,
+  /\b(?:worth|valued at|priced at|comps? (?:come in )?around)\s+(?:\$|usd\s*)?[\d,.]+/i,
+];
+
+const CHATBOT_PATTERN = /\b(chat\s*bot|bot)\b/i;
+const SPACED_EMDASH_PATTERN = /\s—\s/;
+const TWENTY_YEAR_CLAIM_PATTERN = /\b(20\+?\s*years?|twenty\+?\s*years?)\b/i;
+
+export type RefusalTrigger =
+  | "fair_housing"
+  | "section_1695"
+  | null;
+
+export function detectRefusalTrigger(userMessage: string): RefusalTrigger {
+  for (const re of PROTECTED_CLASS_PATTERNS) {
+    if (re.test(userMessage)) return "fair_housing";
+  }
+  const foreclosure = SECTION_1695_PATTERNS.some(re => re.test(userMessage));
+  const ownerOccupant = OWNER_OCCUPANT_PATTERNS.some(re => re.test(userMessage));
+  if (foreclosure && ownerOccupant) return "section_1695";
+  return null;
+}
+
+export const FAIR_HOUSING_REFUSAL =
+  "I can't help with that. Pegasus reviews every property on the property's merits, not the parties involved. Let me get you to Apollo directly at apollo@pegasusdreamscapes.com or 925-744-8525.";
+
+export const SECTION_1695_DISCLOSURE =
+  "California law (Civil Code §1695) gives owner-occupants in foreclosure specific protections. I am not the right party to discuss your situation further. Please contact Apollo directly at apollo@pegasusdreamscapes.com or 925-744-8525, and consider speaking with a HUD-approved housing counselor before signing anything.";
+
+// Strip / replace voice-rule violations from any LLM output before it leaves the server.
+export function applyPostOutputGuard(text: string): { sanitized: string; violations: string[] } {
+  const violations: string[] = [];
+  let out = text;
+
+  if (PRICE_QUOTE_PATTERNS.some(re => re.test(out))) {
+    violations.push("price_quote");
+    out =
+      "I can't quote a value, return, or offer. That requires a Pegasus Strategy Review by the team. The fastest path is to submit the property at /submit so it can get a real, structured look. I can help you collect the right details right now if it helps.";
+  }
+  if (CHATBOT_PATTERN.test(out)) {
+    violations.push("chatbot_self_reference");
+    out = out.replace(CHATBOT_PATTERN, "assistant");
+  }
+  if (TWENTY_YEAR_CLAIM_PATTERN.test(out)) {
+    violations.push("decade_claim");
+    out = out.replace(TWENTY_YEAR_CLAIM_PATTERN, "decades of East Bay construction in the team");
+  }
+  // Collapse spaced em-dashes to periods to keep doctrine voice
+  if (SPACED_EMDASH_PATTERN.test(out)) {
+    violations.push("spaced_emdash");
+    out = out.replace(/\s—\s/g, ". ");
+  }
+  return { sanitized: out, violations };
+}
+
+const VALID_DISPOSITIONS = [
+  "submit_property",
+  "strategy_lab",
+  "strategy_review",
+  "capital_intake",
+  "vendor_intake",
+  "deal_blueprint",
+  "human_required",
+] as const;
+
+export type PeggyDisposition = typeof VALID_DISPOSITIONS[number];
+
+interface PeggyIntake {
+  identity?: {
+    name?: string;
+    role?: string;
+    email?: string;
+    phone?: string;
+  };
+  property?: {
+    address?: string;
+    type?: string;
+    condition?: string;
+  };
+  situation?: {
+    summary?: string;
+    tag?: string;
+  };
+  timeline?: string;
+  want?: string;
+}
+
+// Pull a lightweight structured-intake snapshot from the running transcript.
+// Best-effort, never blocks the response. Failure leaves intake untouched.
+export async function extractIntake(
+  transcript: ChatMessage[]
+): Promise<{ intake: PeggyIntake; disposition: PeggyDisposition | null; summary: string } | null> {
+  if (transcript.length < 2) return null;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: DEFAULT_MODEL,
+      response_format: { type: "json_object" },
+      max_tokens: 600,
+      temperature: 0,
+      messages: [
+        {
+          role: "system",
+          content:
+            'Extract a structured intake snapshot from this Pegasus DreamScapes conversation. Return ONLY a JSON object with this shape: {"intake":{"identity":{"name":"","role":"","email":"","phone":""},"property":{"address":"","type":"","condition":""},"situation":{"summary":"","tag":""},"timeline":"","want":""},"disposition":"submit_property|strategy_lab|strategy_review|capital_intake|vendor_intake|deal_blueprint|human_required|null","summary":"one-sentence summary"}. Use empty string for unknown fields. role ∈ {owner, agent, family, wholesaler, operator, capital, vendor, curious}. tag ∈ {distress, opportunity, inheritance, value-add, exploring, other}. timeline ∈ {urgent, 30_days, 90_days, exploring, ""}. want ∈ {sell, jv, listing, advice, blueprint, unsure, ""}. Pick the single best disposition based on what the user actually wants right now.',
+        },
+        ...transcript
+          .filter(m => m.role !== "system")
+          .map(m => ({ role: m.role, content: m.content })),
+      ],
+    });
+    const raw = completion.choices[0]?.message?.content;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const disposition =
+      parsed.disposition && VALID_DISPOSITIONS.includes(parsed.disposition)
+        ? (parsed.disposition as PeggyDisposition)
+        : null;
+    return {
+      intake: parsed.intake || {},
+      disposition,
+      summary: typeof parsed.summary === "string" ? parsed.summary : "",
+    };
+  } catch (err) {
+    console.error("Peggy intake extraction failed:", err);
+    return null;
+  }
+}
+
 // Send a message to Peggy and get a response
 export async function chat(
   message: string,
   conversationId: number,
   context: PeggyContext = {}
-): Promise<{ response: string; messageId: number }> {
+): Promise<{ response: string; messageId: number; disposition?: PeggyDisposition | null; humanRequired?: boolean }> {
   // Get conversation history
   const messages = await storage.getPeggyMessages(conversationId);
-  
-  // Build the message history
+
+  // Save the user message with context snapshot
+  await storage.createPeggyMessage({
+    conversationId,
+    role: 'user',
+    content: message,
+    contextSnapshot: context as any
+  });
+
+  // ============================================================
+  // Task #151 — pre-LLM refusal triggers (Fair Housing / §1695)
+  // We never round-trip these to the model; we answer deterministically
+  // and flag the conversation for immediate human follow-up.
+  // ============================================================
+  const trigger = detectRefusalTrigger(message);
+  if (trigger) {
+    const refusalText =
+      trigger === "fair_housing" ? FAIR_HOUSING_REFUSAL : SECTION_1695_DISCLOSURE;
+    const assistantMessage = await storage.createPeggyMessage({
+      conversationId,
+      role: 'assistant',
+      content: refusalText,
+      model: 'refusal_guard',
+    });
+    const updated = await storage.updatePeggyConversation(conversationId, {
+      humanRequired: true,
+      humanRequiredReason: trigger,
+      disposition: 'human_required',
+    });
+    // Fire-and-forget immediate Apollo email
+    void notifyHumanRequired(conversationId, trigger).catch(err =>
+      console.error("Failed to send human_required notification:", err)
+    );
+    return {
+      response: refusalText,
+      messageId: assistantMessage.id,
+      disposition: 'human_required',
+      humanRequired: true,
+    };
+  }
+
+  // Build the message history for the LLM
   const chatHistory: ChatMessage[] = [
     { role: 'system', content: buildSystemPrompt(context) }
   ];
-  
-  // Add conversation history
   for (const msg of messages) {
     chatHistory.push({
       role: msg.role as 'user' | 'assistant',
       content: msg.content
     });
   }
-  
-  // Add the new user message
   chatHistory.push({ role: 'user', content: message });
-  
-  // Save the user message with context snapshot
-  const userMessage = await storage.createPeggyMessage({
-    conversationId,
-    role: 'user',
-    content: message,
-    contextSnapshot: context as any
-  });
-  
+
   try {
     // Call OpenAI
     const completion = await openai.chat.completions.create({
@@ -481,17 +704,23 @@ export async function chat(
       max_tokens: 1024,
       temperature: 0.7,
     });
-    
-    const responseContent = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response. Please try again.";
-    
+
+    const rawContent = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response. Please try again.";
+
+    // Task #151 — voice-rule post-output guard
+    const { sanitized, violations } = applyPostOutputGuard(rawContent);
+    if (violations.length > 0) {
+      console.warn(`Peggy voice-guard violations on conversation ${conversationId}:`, violations);
+    }
+
     // Save the assistant response with model info
     const assistantMessage = await storage.createPeggyMessage({
       conversationId,
       role: 'assistant',
-      content: responseContent,
+      content: sanitized,
       model: DEFAULT_MODEL
     });
-    
+
     // Update conversation context fields
     await storage.updatePeggyConversation(conversationId, {
       contextType: context.calculatorType ? 'calculator' : context.dealType ? 'deal' : 'page',
@@ -500,10 +729,33 @@ export async function chat(
       contextDealId: context.dealId,
       contextCalculator: context.calculatorType
     });
-    
+
+    // Task #151 — fire-and-forget intake extraction every 2 user turns
+    // Keeps token cost bounded while still giving Apollo a real read.
+    const userTurnCount = messages.filter(m => m.role === 'user').length + 1;
+    if (userTurnCount >= 2 && userTurnCount % 2 === 0) {
+      const fullTranscript: ChatMessage[] = [
+        ...chatHistory.slice(1),
+        { role: 'assistant', content: sanitized },
+      ];
+      void extractIntake(fullTranscript)
+        .then(async (result) => {
+          if (!result) return;
+          await storage.updatePeggyConversation(conversationId, {
+            intake: result.intake as any,
+            disposition: result.disposition || undefined,
+            summary: result.summary || undefined,
+            contactName: result.intake.identity?.name,
+            contactEmail: result.intake.identity?.email,
+            contactPhone: result.intake.identity?.phone,
+          });
+        })
+        .catch(err => console.error("Peggy intake update failed:", err));
+    }
+
     return {
-      response: responseContent,
-      messageId: assistantMessage.id
+      response: sanitized,
+      messageId: assistantMessage.id,
     };
   } catch (error: any) {
     console.error('Peggy chat error:', error);
@@ -605,10 +857,23 @@ export async function analyzeCalculatorResults(
   };
 }
 
+// Task #151 — immediate Apollo notification for §1695 / Fair Housing triggers.
+// Lazy-imported to avoid a circular dependency with server/email.ts.
+async function notifyHumanRequired(conversationId: number, reason: string): Promise<void> {
+  const { sendPeggyHumanRequired } = await import("./email");
+  const conversation = await storage.getPeggyConversation(conversationId);
+  if (!conversation) return;
+  const transcript = await storage.getPeggyMessages(conversationId);
+  await sendPeggyHumanRequired({ conversation, transcript, reason });
+}
+
 export default {
   chat,
   startConversation,
   getOrCreateConversation,
   getSuggestions,
-  analyzeCalculatorResults
+  analyzeCalculatorResults,
+  detectRefusalTrigger,
+  applyPostOutputGuard,
+  extractIntake,
 };

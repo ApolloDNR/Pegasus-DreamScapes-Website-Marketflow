@@ -5755,19 +5755,99 @@ export async function registerRoutes(
   });
 
   // Send a message to Peggy
-  app.post("/api/peggy/chat", rateLimit(20, 60000), async (req: any, res) => {
+  // Task #151 — bumped from 20/60s to 30/60s per Amendment 2 §D.
+  app.post("/api/peggy/chat", rateLimit(30, 60000), async (req: any, res) => {
     try {
       const { conversationId, message, context } = req.body;
-      
+
       if (!conversationId || !message) {
         return res.status(400).json({ message: "conversationId and message are required" });
       }
-      
+
       const result = await peggy.chat(message, conversationId, context);
       res.json(result);
     } catch (error) {
       console.error("Error in Peggy chat:", error);
       res.status(500).json({ message: "Failed to get response from Peggy" });
+    }
+  });
+
+  // Task #151 — mark a conversation done. Triggers final intake extraction
+  // pass and (if disposition resolved to human_required) an immediate email.
+  app.post("/api/peggy/conversations/:id/finish", async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) {
+        return res.status(400).json({ message: "Invalid conversation id" });
+      }
+      const conversation = await storage.getPeggyConversation(id);
+      if (!conversation) return res.status(404).json({ message: "Conversation not found" });
+
+      const messages = await storage.getPeggyMessages(id);
+      const transcript = messages
+        .filter(m => m.role !== "system")
+        .map(m => ({ role: m.role as "user" | "assistant", content: m.content }));
+
+      const extracted = await peggy.extractIntake(transcript);
+      const patch: any = { endedAt: new Date() };
+      if (extracted) {
+        patch.intake = extracted.intake;
+        patch.disposition = extracted.disposition || conversation.disposition || undefined;
+        patch.summary = extracted.summary || conversation.summary || undefined;
+        if (extracted.intake.identity?.name) patch.contactName = extracted.intake.identity.name;
+        if (extracted.intake.identity?.email) patch.contactEmail = extracted.intake.identity.email;
+        if (extracted.intake.identity?.phone) patch.contactPhone = extracted.intake.identity.phone;
+      }
+      const updated = await storage.updatePeggyConversation(id, patch);
+
+      // If this conversation ended on human_required, make sure Apollo got an email
+      if (updated?.disposition === "human_required" && !updated?.reportedAt) {
+        const { sendPeggyHumanRequired } = await import("./email");
+        await sendPeggyHumanRequired({
+          conversation: updated,
+          transcript: messages,
+          reason: updated.humanRequiredReason || "manual_finish",
+        });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error finishing Peggy conversation:", error);
+      res.status(500).json({ message: "Failed to finish conversation" });
+    }
+  });
+
+  // Task #151 — admin: list last 30 days of Peggy conversations.
+  app.get("/api/admin/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
+      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const sinceMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const conversations = await storage.getPeggyConversationsSince(sinceMs);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error listing Peggy conversations:", error);
+      res.status(500).json({ message: "Failed to list conversations" });
+    }
+  });
+
+  // Task #151 — admin: fetch a single conversation + transcript.
+  app.get("/api/admin/peggy/conversations/:id", isHybridAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
+      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const id = Number(req.params.id);
+      const conversation = await storage.getPeggyConversation(id);
+      if (!conversation) return res.status(404).json({ message: "Conversation not found" });
+      const messages = await storage.getPeggyMessages(id);
+      res.json({ conversation, messages });
+    } catch (error) {
+      console.error("Error fetching Peggy conversation:", error);
+      res.status(500).json({ message: "Failed to fetch conversation" });
     }
   });
 
