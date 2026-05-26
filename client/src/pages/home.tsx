@@ -440,19 +440,22 @@ function WhatBringsYouHereSection() {
 }
 
 // Website Structure v1 FINAL §3.3 — Deal Architecture teaser.
-// Ten-lane outcome map: surface the lanes, link to the full page.
+// Ten-lane outcome map rendered as a structured card grid so visitors
+// can read each lane's intent at a glance instead of skipping over a
+// flat chip strip. Three-step routing band sits on top so the section
+// reads as a routing decision, not a menu.
 function DealArchitectureTeaserSection() {
   const lanes = [
-    "Direct acquisition",
-    "Creative finance",
-    "JV / co-GP",
-    "Wholesale",
-    "Listing",
-    "Buyer rep",
-    "BRRRR",
-    "ADU upside",
-    "Value-add",
-    "Routed referral",
+    { num: "01", title: "Direct acquisition", desc: "Pegasus buys outright at a structurally honest number." },
+    { num: "02", title: "Creative finance", desc: "Seller-carry, sub-to, lease-option when the situation calls for it." },
+    { num: "03", title: "JV / co-GP", desc: "Capital and discipline alongside an aligned operator." },
+    { num: "04", title: "Wholesale assignment", desc: "Routed to the right operator in our network." },
+    { num: "05", title: "Listing through KW", desc: "Clean MLS listing through Apollo's KW East Bay license." },
+    { num: "06", title: "Buyer representation", desc: "Owner-occupant and investor-side buyer rep." },
+    { num: "07", title: "BRRRR acquisition", desc: "Buy, rehab, rent, refinance, repeat." },
+    { num: "08", title: "ADU upside", desc: "Detached or attached ADUs on East Bay residential lots." },
+    { num: "09", title: "Value-add rehab", desc: "Heavy cosmetic and structural lifts to highest defensible value." },
+    { num: "10", title: "Routed referral", desc: "If the right path is outside Pegasus, we route the owner there." },
   ];
   return (
     <section
@@ -467,18 +470,53 @@ function DealArchitectureTeaserSection() {
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
             Ten lanes, one disciplined read.
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-3">
             Every property routes through the same review. The lane that fits the situation wins. The lanes that don't are explicitly named and routed elsewhere.
           </p>
+          <p className="font-serif text-lg sm:text-xl italic text-foreground/85 leading-snug">
+            "Bring us the property. We'll help find the path."
+          </p>
         </ScrollReveal>
-        <div className="flex flex-wrap gap-2 mb-9" data-testid="home-deal-architecture-lanes">
+
+        {/* Three-beat routing band */}
+        <div
+          className="grid sm:grid-cols-3 gap-3 mb-10 p-5 rounded-lg border border-border/50 bg-muted/20"
+          data-testid="home-deal-architecture-routing"
+        >
+          {[
+            { step: "01", label: "Submit", desc: "Address, condition, what you're solving for." },
+            { step: "02", label: "Apollo reads it", desc: "Comps, capital, timeline, exposure, the Pegasus lens." },
+            { step: "03", label: "We name the lane", desc: "One of the ten below, including a routed referral." },
+          ].map((s) => (
+            <div key={s.step} className="flex items-start gap-3">
+              <span className="flex-shrink-0 w-8 h-8 rounded-full border border-primary/30 bg-background flex items-center justify-center text-[10px] tracking-[0.15em] text-primary font-supporting font-semibold">
+                {s.step}
+              </span>
+              <div>
+                <p className="font-serif text-sm font-semibold tracking-tight leading-tight">{s.label}</p>
+                <p className="text-xs text-muted-foreground leading-snug mt-0.5">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-9"
+          data-testid="home-deal-architecture-lanes"
+        >
           {lanes.map((lane) => (
-            <span
-              key={lane}
-              className="inline-flex items-center text-[11px] uppercase tracking-[0.18em] font-supporting font-semibold border border-border/60 bg-card px-3 py-1.5 rounded-sm text-foreground/80"
+            <div
+              key={lane.title}
+              className="group p-4 rounded-lg border border-border/50 bg-card hover:border-primary/40 transition-colors"
             >
-              {lane}
-            </span>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-2">
+                Lane {lane.num}
+              </p>
+              <p className="font-serif text-[15px] font-semibold tracking-tight mb-1.5 leading-tight">
+                {lane.title}
+              </p>
+              <p className="text-xs text-muted-foreground leading-snug">{lane.desc}</p>
+            </div>
           ))}
         </div>
         <Link
