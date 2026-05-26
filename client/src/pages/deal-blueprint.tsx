@@ -333,16 +333,16 @@ function PricingSection() {
             </p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Pricing on request.
+            Quoted per property.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-            Blueprint fees are quoted per property after the scoping review.
-            Pricing depends on the deal's complexity, the structure work
-            required, and the urgency.
+            Every Blueprint is scoped before it is priced. The fee reflects the
+            depth of the read: the structure work required, the complexity of
+            the chain-of-title, and the urgency of the decision.
           </p>
           <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
-            No Blueprint is started without a written scope and approved fee.
-            You know the number before any work begins.
+            No Blueprint is started without a written scope and an approved
+            fee. You know the number before any work begins.
           </p>
         </ScrollReveal>
       </div>
