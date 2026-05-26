@@ -4,7 +4,35 @@ import { useSEO } from "@/hooks/use-seo";
 import { trackEvent, trackCtaClick } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
-import { ArrowRight, Sparkles, ClipboardList, Calculator, Network as NetworkIcon, Home as HomeIcon, Handshake, Hammer, Key, Layers, Compass, Lock } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  ClipboardList,
+  Calculator,
+  Network as NetworkIcon,
+  Home as HomeIcon,
+  Handshake,
+  Hammer,
+  Key,
+  Layers,
+  Compass,
+  Lock,
+  Building2,
+  Wrench,
+  RefreshCw,
+  TreePine,
+  Castle,
+  FileText,
+  Search,
+  Briefcase,
+  ClipboardCheck,
+  Database,
+  Shield,
+  Send,
+  Target,
+  Map as MapIcon,
+  TrendingUp,
+} from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
 import { EditableText } from "@/components/editable";
 import { useEditMode } from "@/contexts/edit-mode-context";
@@ -533,26 +561,41 @@ function DealArchitectureTeaserSection() {
 }
 
 // Website Structure v1 FINAL §3.4 — Development teaser.
+// Visual upgrade: phased journey (Now → Next → Trajectory) rails the
+// seven build lanes against an honest growth arc.
 function DevelopmentTeaserSection() {
   const lanes = [
-    { title: "ADU additions", desc: "Detached and attached ADUs on East Bay residential lots." },
-    { title: "Forced-value rehabs", desc: "Cosmetic and structural lifts to defensible highest value." },
-    { title: "Fix-and-flip", desc: "Acquired, repositioned, resold inside a tight underwriting band." },
-    { title: "BRRRR acquisitions", desc: "Buy, rehab, rent, refinance, repeat." },
-    { title: "Small multifamily", desc: "2–4 unit conversions and acquisitions." },
-    { title: "Ground-up infill", desc: "Trajectory: Pegasus-controlled lots, Pegasus-operated builds." },
-    { title: "Master-planned neighborhoods", desc: "Phase 4: classical neighborhoods at scale." },
+    { icon: HomeIcon, title: "ADU additions", desc: "Detached and attached ADUs on East Bay lots.", phase: "Now" },
+    { icon: Wrench, title: "Forced-value rehabs", desc: "Cosmetic and structural lifts to defensible value.", phase: "Now" },
+    { icon: RefreshCw, title: "Fix-and-flip", desc: "Acquired, repositioned, resold inside a tight band.", phase: "Now" },
+    { icon: Building2, title: "BRRRR acquisitions", desc: "Buy, rehab, rent, refinance, repeat.", phase: "Now" },
+    { icon: Layers, title: "Small multifamily", desc: "2–4 unit conversions and acquisitions.", phase: "Next" },
+    { icon: TreePine, title: "Ground-up infill", desc: "Pegasus-controlled lots, Pegasus-operated builds.", phase: "Next" },
+    { icon: Castle, title: "Master-planned neighborhoods", desc: "Phase 4: classical neighborhoods at scale.", phase: "Horizon" },
   ];
+  const phaseStyles: Record<string, string> = {
+    Now: "bg-[hsl(var(--copper)/0.15)] text-[hsl(var(--copper))] border-[hsl(var(--copper)/0.3)]",
+    Next: "bg-primary/10 text-primary border-primary/25",
+    Horizon: "bg-muted/40 text-muted-foreground border-border/60",
+  };
   return (
     <section
-      className="py-24 lg:py-32 bg-muted/15 border-t border-border/30"
+      className="relative py-24 lg:py-32 bg-muted/15 border-t border-border/30 overflow-hidden"
       data-testid="section-home-development"
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="max-w-3xl mb-12">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            §4 · Development
-          </p>
+      {/* Decorative gradient orb */}
+      <div className="pointer-events-none absolute -top-32 -right-32 w-[36rem] h-[36rem] rounded-full bg-primary/[0.06] blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" aria-hidden="true" />
+
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-14">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="font-display text-[42px] leading-none text-[hsl(var(--copper))] tabular-nums tracking-tight">04</span>
+            <span className="h-px w-12 bg-[hsl(var(--copper))]" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Development
+            </p>
+          </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
             Build first. Everything else supports it.
           </h2>
@@ -560,13 +603,29 @@ function DevelopmentTeaserSection() {
             Seven build lanes, phased honestly. Today's scope is small-scale residential. The trajectory is a vertically integrated developer.
           </p>
         </ScrollReveal>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-9" data-testid="home-development-lanes">
+
+        {/* Phase legend */}
+        <div className="flex flex-wrap items-center gap-2 mb-6 text-[10px] uppercase tracking-[0.2em] font-supporting font-semibold">
+          {["Now", "Next", "Horizon"].map((p) => (
+            <span key={p} className={`px-2.5 py-1 rounded-full border ${phaseStyles[p]}`}>{p}</span>
+          ))}
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10" data-testid="home-development-lanes">
           {lanes.map((l) => (
             <div
               key={l.title}
-              className="p-5 rounded-lg border border-border/50 bg-card"
+              className="group relative p-5 rounded-lg border border-border/50 bg-card hover:border-[hsl(var(--copper)/0.45)] hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-15px_rgba(13,27,45,0.25)] transition-all duration-200"
             >
-              <p className="font-serif text-base font-semibold mb-1.5">{l.title}</p>
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-[hsl(var(--copper)/0.15)] group-hover:border-[hsl(var(--copper)/0.35)] transition-colors">
+                  <l.icon className="w-4 h-4 text-primary group-hover:text-[hsl(var(--copper))] transition-colors" aria-hidden="true" />
+                </div>
+                <span className={`text-[9px] uppercase tracking-[0.2em] font-supporting font-semibold px-2 py-0.5 rounded-full border ${phaseStyles[l.phase]}`}>
+                  {l.phase}
+                </span>
+              </div>
+              <p className="font-serif text-base font-semibold tracking-tight mb-1.5 leading-tight">{l.title}</p>
               <p className="text-sm text-muted-foreground leading-snug">{l.desc}</p>
             </div>
           ))}
@@ -585,23 +644,32 @@ function DevelopmentTeaserSection() {
 }
 
 // Website Structure v1 FINAL §3.5 — Strategy Lab teaser + four named products.
+// Visual upgrade: products framed as an escalating ladder
+// (Self-serve → Conversation → Written → Paid Document) with icons,
+// numerals, and a value-ladder kicker per card.
 function StrategyLabTeaserSection() {
   const products = [
-    { name: "Strategy Lab", desc: "Public calculator surface. Your preliminary read in minutes." },
-    { name: "Strategy Review", desc: "Human-reviewed conversation off the Submit form." },
-    { name: "Strategy Snapshot", desc: "Preliminary written read. Most are reviewed within 5 business days." },
-    { name: "Deal Blueprint", desc: "Paid, full underwriting and path document." },
+    { icon: Calculator, name: "Strategy Lab", tier: "Self-serve", desc: "Public calculator surface. Your preliminary read in minutes." },
+    { icon: Compass, name: "Strategy Review", tier: "Conversation", desc: "Human-reviewed conversation off the Submit form." },
+    { icon: FileText, name: "Strategy Snapshot", tier: "Written", desc: "Preliminary written read. Most Strategy Snapshots are reviewed within 5 business days." },
+    { icon: ClipboardCheck, name: "Deal Blueprint", tier: "Paid Document", desc: "Paid, full underwriting and path document." },
   ];
   return (
     <section
-      className="py-24 lg:py-32 bg-background border-t border-border/30"
+      className="relative py-24 lg:py-32 bg-background border-t border-border/30 overflow-hidden"
       data-testid="section-home-strategy-lab"
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="max-w-3xl mb-12">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            §5 · Strategy Lab
-          </p>
+      <div className="pointer-events-none absolute -top-32 -left-32 w-[36rem] h-[36rem] rounded-full bg-[hsl(var(--copper)/0.05)] blur-3xl" aria-hidden="true" />
+
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-14">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="font-display text-[42px] leading-none text-[hsl(var(--copper))] tabular-nums tracking-tight">05</span>
+            <span className="h-px w-12 bg-[hsl(var(--copper))]" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Strategy Lab
+            </p>
+          </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
             Run the situation through the Pegasus lens.
           </h2>
@@ -609,13 +677,27 @@ function StrategyLabTeaserSection() {
             Four named products. One taxonomy. The output is your preliminary read, never a 5th product name.
           </p>
         </ScrollReveal>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-9" data-testid="home-strategy-lab-products">
-          {products.map((p) => (
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10" data-testid="home-strategy-lab-products">
+          {products.map((p, i) => (
             <div
               key={p.name}
-              className="p-5 rounded-lg border border-border/50 bg-card hover:border-primary/40 transition-colors"
+              className="group relative p-6 rounded-lg border border-border/50 bg-card hover:border-[hsl(var(--copper)/0.45)] hover:-translate-y-1 hover:shadow-[0_14px_36px_-18px_rgba(13,27,45,0.3)] transition-all duration-200 overflow-hidden"
             >
-              <p className="font-serif text-base font-semibold text-primary mb-2">{p.name}</p>
+              {/* Watermark numeral */}
+              <span
+                className="font-display absolute top-3 right-4 text-5xl text-foreground/[0.05] leading-none tracking-tight pointer-events-none select-none group-hover:text-[hsl(var(--copper)/0.18)] transition-colors duration-300"
+                aria-hidden="true"
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-[hsl(var(--copper)/0.15)] group-hover:border-[hsl(var(--copper)/0.35)] transition-colors">
+                <p.icon className="w-4 h-4 text-primary group-hover:text-[hsl(var(--copper))] transition-colors" aria-hidden="true" />
+              </div>
+              <p className="text-[9px] uppercase tracking-[0.22em] text-muted-foreground font-supporting font-semibold mb-1.5">
+                {p.tier}
+              </p>
+              <p className="font-serif text-lg font-semibold text-primary mb-2 leading-tight">{p.name}</p>
               <p className="text-sm text-muted-foreground leading-snug">{p.desc}</p>
             </div>
           ))}
@@ -654,37 +736,63 @@ function StrategyLabTeaserSection() {
 
 // Website Structure v1 FINAL §3.6 — Work With Apollo teaser.
 // Licensed representation panel. DRE/KW disclosure surfaced verbatim.
+// Visual upgrade: dark-mode panel with gold credential pill, iconified
+// lane cards, copper accent corners.
 function WorkWithApolloTeaserSection() {
   const lanes = [
-    { title: "List With Apollo", desc: "Full-service KW listing." },
-    { title: "Buy With Apollo", desc: "Buyer representation, end to end." },
-    { title: "Investor Buyer Representation", desc: "Operator and investor-side buyer rep." },
-    { title: "Home Value / Listing Strategy Review", desc: "Pre-listing strategy session." },
+    { icon: HomeIcon, title: "List With Apollo", desc: "Full-service KW listing." },
+    { icon: Key, title: "Buy With Apollo", desc: "Buyer representation, end to end." },
+    { icon: Briefcase, title: "Investor Buyer Representation", desc: "Operator and investor-side buyer rep." },
+    { icon: ClipboardCheck, title: "Home Value / Listing Strategy Review", desc: "Pre-listing strategy session." },
   ];
   return (
     <section
-      className="py-24 lg:py-32 bg-[hsl(var(--navy))] text-cream border-t border-cream/10"
+      className="relative py-24 lg:py-32 bg-[hsl(var(--navy))] text-cream border-t border-cream/10 overflow-hidden"
       data-testid="section-home-work-with-apollo"
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="max-w-3xl mb-12">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            §6 · Work With Apollo
-          </p>
+      {/* Decorative gradient orbs */}
+      <div className="pointer-events-none absolute -top-40 right-1/4 w-[40rem] h-[40rem] rounded-full bg-[hsl(var(--copper)/0.12)] blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-40 -left-32 w-[32rem] h-[32rem] rounded-full bg-primary/[0.15] blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--copper)/0.4)] to-transparent" aria-hidden="true" />
+
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-14">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="font-display text-[42px] leading-none text-[hsl(var(--copper))] tabular-nums tracking-tight">06</span>
+            <span className="h-px w-12 bg-[hsl(var(--copper))]" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-[hsl(var(--copper))] font-supporting font-semibold">
+              Work With Apollo
+            </p>
+          </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5 text-cream">
             Licensed representation, through KW East Bay.
           </h2>
-          <p className="text-base sm:text-lg text-cream/80 leading-relaxed">
+          <p className="text-base sm:text-lg text-cream/80 leading-relaxed mb-5">
             Four lanes for owners and buyers who want a real estate agent. Apollo is the agent. Pegasus is the strategy company.
           </p>
+          {/* Credential pill */}
+          <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 rounded-full border border-cream/15 bg-cream/[0.04] text-[10px] uppercase tracking-[0.22em] text-cream/70 font-supporting">
+            <span className="flex items-center gap-1.5">
+              <Shield className="w-3 h-3 text-[hsl(var(--copper))]" aria-hidden="true" />
+              DRE #02333658
+            </span>
+            <span className="text-cream/20">·</span>
+            <span>Keller Williams East Bay</span>
+          </div>
         </ScrollReveal>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-9" data-testid="home-wwa-lanes">
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10" data-testid="home-wwa-lanes">
           {lanes.map((l) => (
             <div
               key={l.title}
-              className="p-5 rounded-lg border border-cream/15 bg-cream/[0.04]"
+              className="group relative p-6 rounded-lg border border-cream/15 bg-cream/[0.04] hover:bg-cream/[0.07] hover:border-[hsl(var(--copper)/0.45)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
             >
-              <p className="font-serif text-base font-semibold mb-2 text-cream">{l.title}</p>
+              {/* Top copper accent that reveals on hover */}
+              <span className="absolute top-0 left-0 right-0 h-[2px] bg-[hsl(var(--copper))] opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+              <div className="w-10 h-10 rounded-md bg-[hsl(var(--copper)/0.12)] border border-[hsl(var(--copper)/0.3)] flex items-center justify-center mb-5">
+                <l.icon className="w-4 h-4 text-[hsl(var(--copper))]" aria-hidden="true" />
+              </div>
+              <p className="font-serif text-base font-semibold mb-2 text-cream leading-tight">{l.title}</p>
               <p className="text-sm text-cream/70 leading-snug">{l.desc}</p>
             </div>
           ))}
@@ -708,17 +816,38 @@ function WorkWithApolloTeaserSection() {
 
 // Website Structure v1 FINAL §3.7 — MarketFlow teaser.
 // Gated public landing. Status badge: private beta, invite-only.
+// Visual upgrade: gated-network diagram (raw intake → review → network)
+// so visitors understand the doctrine, not just the badge.
 function MarketFlowTeaserSection() {
+  const pillars = [
+    { icon: Target, label: "Reviewed opportunities", desc: "Every property earns inclusion through the same disciplined review." },
+    { icon: NetworkIcon, label: "Trusted operators", desc: "Vetted builders, capital partners, and aligned operators." },
+    { icon: Database, label: "Buyer + capital matching", desc: "Routes the right deal to the right relationship, not a blast list." },
+  ];
   return (
     <section
-      className="py-24 lg:py-32 bg-muted/20 border-t border-border/30"
+      className="relative py-24 lg:py-32 bg-muted/20 border-t border-border/30 overflow-hidden"
       data-testid="section-home-marketflow"
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="max-w-3xl mb-10">
-          <div className="flex items-center gap-3 mb-4">
+      {/* Background grid pattern */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+        aria-hidden="true"
+      />
+      <div className="pointer-events-none absolute -top-40 right-1/4 w-[36rem] h-[36rem] rounded-full bg-primary/[0.06] blur-3xl" aria-hidden="true" />
+
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl mb-12">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <span className="font-display text-[42px] leading-none text-[hsl(var(--copper))] tabular-nums tracking-tight">07</span>
+            <span className="h-px w-12 bg-[hsl(var(--copper))]" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
-              §7 · MarketFlow
+              MarketFlow
             </p>
             <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-supporting font-semibold bg-[hsl(var(--navy))] text-cream px-2 py-0.5 rounded-sm">
               <Lock className="w-3 h-3" aria-hidden="true" />
@@ -732,6 +861,55 @@ function MarketFlowTeaserSection() {
             MarketFlow is the gated network for reviewed opportunities, trusted operators, buyers, and capital relationships. No raw intake reaches the network. The review is the doctrine.
           </p>
         </ScrollReveal>
+
+        {/* Flow diagram: raw intake → review → gated network */}
+        <div
+          className="grid sm:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-3 sm:gap-4 mb-10 p-6 rounded-lg border border-border/50 bg-card"
+          data-testid="home-marketflow-flow"
+        >
+          <div className="text-center">
+            <div className="inline-flex w-12 h-12 rounded-full bg-muted/40 border border-border/60 items-center justify-center mb-2">
+              <Send className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <p className="font-serif text-sm font-semibold tracking-tight">Raw intake</p>
+            <p className="text-xs text-muted-foreground mt-1">Every property submitted</p>
+          </div>
+          <ArrowRight className="hidden sm:block w-5 h-5 text-primary mx-auto" aria-hidden="true" />
+          <div className="text-center">
+            <div className="inline-flex w-12 h-12 rounded-full bg-[hsl(var(--copper)/0.15)] border border-[hsl(var(--copper)/0.4)] items-center justify-center mb-2">
+              <Shield className="w-5 h-5 text-[hsl(var(--copper))]" aria-hidden="true" />
+            </div>
+            <p className="font-serif text-sm font-semibold tracking-tight text-[hsl(var(--copper))]">The Review</p>
+            <p className="text-xs text-muted-foreground mt-1">Pegasus underwriting lens</p>
+          </div>
+          <ArrowRight className="hidden sm:block w-5 h-5 text-primary mx-auto" aria-hidden="true" />
+          <div className="text-center">
+            <div className="inline-flex w-12 h-12 rounded-full bg-primary/15 border border-primary/40 items-center justify-center mb-2">
+              <Lock className="w-5 h-5 text-primary" aria-hidden="true" />
+            </div>
+            <p className="font-serif text-sm font-semibold tracking-tight text-primary">MarketFlow</p>
+            <p className="text-xs text-muted-foreground mt-1">Gated network</p>
+          </div>
+        </div>
+
+        {/* Three pillars */}
+        <div className="grid sm:grid-cols-3 gap-4 mb-10">
+          {pillars.map((p) => (
+            <div
+              key={p.label}
+              className="group p-5 rounded-lg border border-border/50 bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <p.icon className="w-4 h-4 text-primary" aria-hidden="true" />
+                </div>
+                <p className="font-serif text-base font-semibold tracking-tight">{p.label}</p>
+              </div>
+              <p className="text-sm text-muted-foreground leading-snug">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="flex flex-wrap gap-3">
           <Link
             href="/marketflow"
