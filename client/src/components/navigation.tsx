@@ -94,6 +94,18 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
     icon: Mail,
     tagline: "Reach Apollo and the strategy desk directly.",
   },
+  "/peggy": {
+    icon: Sparkles,
+    tagline: "Pegasus' AI strategy assistant. One intelligence, multiple surfaces.",
+  },
+  "/ecosystem": {
+    icon: Layers,
+    tagline: "The Pegasus Ecosystem. What we're building, honestly.",
+  },
+  "/faq": {
+    icon: BookOpen,
+    tagline: "Common questions from owners, operators, and capital partners.",
+  },
 };
 
 function isItemActive(item: NavItem, location: string): boolean {

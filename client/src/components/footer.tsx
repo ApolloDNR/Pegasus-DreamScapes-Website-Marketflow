@@ -50,6 +50,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navMore("/connect"),
       navMore("/contact"),
       navMore("/faq"),
+      navMore("/peggy"),
       // Apollo guardrail #4: Projects also surfaces under Company in
       // the More menu, even though it remains strongly surfaced as
       // proof in the Services column below.
@@ -71,6 +72,8 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navPrimary("/marketflow"),
       navMore("/vendor-network"),
       navMore("/capital"),
+      // Amendment 2 §C — footer-only Audience-B release valve.
+      navMore("/ecosystem"),
     ],
   },
   {
@@ -291,6 +294,9 @@ export function Footer() {
           </div>
           <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium" data-testid="text-footer-dre">
             Founder · Paolo &ldquo;Apollo&rdquo; Duran · DRE #02333658 · Keller Williams East Bay
+          </p>
+          <p className="mt-2 text-[11px] text-muted-foreground/85 font-supporting" data-testid="text-footer-credentials">
+            NAR member NRDS #159537628 · CAR via CCAR #36424 · Pleasant Hill, California
           </p>
           <div className="mt-3 flex items-center gap-3">
             <svg

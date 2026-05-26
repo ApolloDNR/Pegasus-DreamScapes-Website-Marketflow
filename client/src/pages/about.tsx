@@ -88,12 +88,45 @@ export default function About() {
   return (
     <div className="min-h-screen bg-background">
       <AboutHero />
+      <WhatWeAreNotSection />
       <DoctrineSection />
       <PillarsSection />
       <FounderSection />
       <PrinciplesSection />
       <CTASection />
     </div>
+  );
+}
+
+// Empire Doctrine Amendment 2 §H — locked /about block, verbatim. The
+// public-voice test asserts the heading and body text below; do not
+// edit without amending the doctrine first.
+function WhatWeAreNotSection() {
+  return (
+    <section className="py-20 lg:py-24 bg-background border-t border-border/30">
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <ScrollReveal>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+              Anti-claims
+            </p>
+          </div>
+          <h2
+            className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-6 leading-tight"
+            data-testid="text-what-we-are-not-heading"
+          >
+            What we are not.
+          </h2>
+          <p
+            className="text-lg text-foreground/85 leading-relaxed max-w-3xl"
+            data-testid="text-what-we-are-not-body"
+          >
+            We are not just a cash buyer. We are not a brokerage. We are not a construction company. We are not a proptech app. We are not a marketplace. Pegasus is a strategy-first real estate operating company. We review complex property situations and design the right path forward.
+          </p>
+        </ScrollReveal>
+      </div>
+    </section>
   );
 }
 
@@ -227,7 +260,7 @@ function PillarsSection() {
       icon: Network,
       kicker: "Pillar 03",
       title: "Pegasus Systems",
-      desc: "The operating layer. MarketFlow private dealflow, Peggy strategy assistant, Strategy Library, and the vendor network that makes execution repeatable.",
+      desc: "The operating layer. Private dealflow, the AI strategy assistant, the strategy library, and the vendor network that makes execution repeatable. See /ecosystem for the honest status of each surface.",
     },
   ];
 

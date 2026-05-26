@@ -37,9 +37,7 @@ export default function Development() {
       <HeroSection />
       <PillarSection />
       <RoutingFilterSection />
-      <ScopeTodaySection />
       <PhaseSection />
-      <SupportingPillarsSection />
       <CTASection />
     </div>
   );
@@ -315,7 +313,7 @@ function PhaseSection() {
       icon: Building,
       items: [
         "Ground-up infill construction on Pegasus-controlled lots",
-        "BuildForge-supported project management",
+        "Pegasus-operated project management and scope control",
         "Multiple active construction projects",
       ],
     },

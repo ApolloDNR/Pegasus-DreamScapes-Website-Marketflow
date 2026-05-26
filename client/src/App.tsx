@@ -8,6 +8,7 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { PeggyProvider } from "@/contexts/peggy-context";
 import { PeggyDock } from "@/components/peggy-dock";
+import { PeggyPublicNote } from "@/components/peggy-public-note";
 import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context";
 import { DealActionProvider } from "@/contexts/deal-action-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
@@ -62,10 +63,14 @@ function GuestEntry({
   return <Redirect to={to} />;
 }
 
+// Empire Doctrine Amendment 2 §D / launch gate #4 — Peggy is either
+// responsive or hidden, never a broken state. Authenticated operators
+// get the full conversational dock; public visitors get the
+// "leave a note" public dock so the floating widget never bounces.
 function AuthGatedPeggyDock() {
   const { isAuthenticated } = useSupabaseAuth();
-  if (!isAuthenticated) return null;
-  return <PeggyDock />;
+  if (isAuthenticated) return <PeggyDock />;
+  return <PeggyPublicNote />;
 }
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
@@ -133,6 +138,8 @@ const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
 const FAQ = lazy(() => import("@/pages/faq"));
 const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
+const Ecosystem = lazy(() => import("@/pages/ecosystem"));
+const Peggy = lazy(() => import("@/pages/peggy"));
 
 const legacyRedirects: [string, string][] = [
   // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
@@ -222,11 +229,15 @@ function Router() {
       <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
       <Route path="/faq" component={FAQ} />
+      {/* Empire Doctrine Amendment 2 §C — /ecosystem is the footer-only
+       * Audience-B release valve. /peggy is the public Peggy surface. */}
+      <Route path="/ecosystem" component={Ecosystem} />
+      <Route path="/peggy" component={Peggy} />
       <Route path="/contact" component={Contact} />
-      {/* Empire Doctrine v1.0.1: /systems, /ecosystem, /education, /calculators,
-       * /buyers, /wholesale, /capital-raising, /dreamspace are removed from
-       * the public surface. /calculators not registered here (only the
-       * /strategy-lab/classic alias is kept as an internal sub-route). */}
+      {/* Empire Doctrine v1.0.1 / Amendment 2: /systems, /education,
+       * /calculators, /buyers, /wholesale, /capital-raising, /dreamspace
+       * are removed from the public surface. /ecosystem is restored by
+       * Amendment 2 §C as the footer-only Audience-B release valve. */}
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/disclosures" component={Disclosures} />

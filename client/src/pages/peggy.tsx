@@ -1,0 +1,177 @@
+import { Link } from "wouter";
+import { useSEO } from "@/hooks/use-seo";
+import { ScrollReveal } from "@/components/animations";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
+import { ArrowRight, Sparkles, Check, X } from "lucide-react";
+
+// Empire Doctrine Amendment 2 §D — public Peggy surface. The positioning
+// line below is verbatim and asserted by public-voice.test.tsx. The
+// "what Peggy does NOT do" list is the premium signal — publishing the
+// guardrails is itself the credibility move.
+
+// Empire Doctrine Amendment 2 §D — locked positioning line, verbatim.
+// Em-dash is non-spaced per public-voice rules.
+const PEGGY_POSITIONING =
+  "Peggy—Pegasus' AI strategy assistant. One intelligence, multiple surfaces. Plugs into website, phone, HQ, and the ecosystem apps.";
+
+const DOES = [
+  "Listens to a property situation and asks one qualifying question at a time.",
+  "Routes the conversation to the right path: submit, strategy lab, capital, or a direct call with Apollo.",
+  "Captures structured intake so nothing gets lost between channels.",
+  "Hands every conversation to Apollo as a daily inbound report.",
+  "Discloses she is an AI assistant on the first turn, every time.",
+];
+
+const DOES_NOT = [
+  "Never quotes a price or makes an offer.",
+  "Never makes a binding commitment on behalf of Pegasus.",
+  "Never gives legal, tax, or investment advice.",
+  "Never shares other clients' data.",
+  "Never claims outcomes or guarantees.",
+  "Never bypasses human review for an actual offer.",
+];
+
+export default function Peggy() {
+  useSEO({
+    title: "Peggy — AI Strategy Assistant",
+    description:
+      "Peggy is Pegasus DreamScapes' AI strategy assistant. One intelligence, multiple surfaces. Listens, qualifies, routes, and hands every conversation to Apollo.",
+    image: "/og/default.png",
+  });
+
+  return (
+    <div className="min-h-screen bg-background">
+      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 bg-navy text-cream overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute top-1/3 left-1/4 w-[28rem] h-[28rem] bg-primary/15 rounded-full blur-3xl" />
+        </div>
+        <div className="relative max-w-5xl mx-auto px-6 lg:px-12">
+          <ScrollReveal>
+            <div className="flex items-center gap-3 mb-6">
+              <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+                The AI strategy assistant
+              </p>
+              <StatusBadge kind="private-training" />
+            </div>
+            <h1
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[0.98] mb-8"
+              data-testid="text-peggy-headline"
+            >
+              Meet{" "}
+              <span className="italic bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
+                Peggy.
+              </span>
+            </h1>
+            <p
+              className="font-serif text-lg sm:text-xl text-cream/90 italic leading-relaxed max-w-3xl mb-6"
+              data-testid="text-peggy-positioning"
+            >
+              {PEGGY_POSITIONING}
+            </p>
+            <p className="text-base sm:text-lg text-cream/75 leading-relaxed max-w-2xl">
+              Warm, calm, precise. Never bubbly. Never robotic. She qualifies the situation, routes it to the right path, and hands the conversation to Apollo. She is an assistant. Not a salesperson. Not a decision-maker.
+            </p>
+          </ScrollReveal>
+        </div>
+        <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
+      </section>
+
+      <section className="py-20 lg:py-28 bg-background">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-2 gap-10">
+            <ScrollReveal>
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+                What Peggy does
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-7 leading-tight">
+                Listens. Qualifies. Routes.
+              </h2>
+              <ul className="space-y-4" data-testid="list-peggy-does">
+                {DOES.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-base text-foreground/85 leading-relaxed">
+                    <Check className="mt-1 w-4 h-4 flex-shrink-0 text-[hsl(var(--copper))]" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.1}>
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+                What Peggy does NOT do
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-7 leading-tight">
+                The guardrails are the premium signal.
+              </h2>
+              <ul className="space-y-4 border-l-2 border-[hsl(var(--copper)/0.4)] pl-6" data-testid="list-peggy-does-not">
+                {DOES_NOT.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-base text-foreground/85 leading-relaxed">
+                    <X className="mt-1 w-4 h-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 lg:py-20 bg-muted/20 border-t border-border/30">
+        <div className="max-w-3xl mx-auto px-6 lg:px-12">
+          <ScrollReveal>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+              On the phone · 925-744-8525
+            </p>
+            <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight mb-5 leading-tight">
+              Voice launch is gated, by design.
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed mb-3">
+              Peggy is launching on Pegasus' main line. Four hard gates apply before any voice cutover: California two-party recording consent (Penal Code §632), Fair Housing refusals on any protected-class steering, DRE licensing discipline (Peggy never advises on price, terms, value, or fitness), and Civil Code §1695 disclosure if a caller indicates the property is in foreclosure and they are owner-occupant.
+            </p>
+            <p className="text-sm text-muted-foreground/85 italic">
+              These are not features. They are the floor.
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      <section className="py-20 lg:py-28 bg-[hsl(var(--charcoal))] text-cream">
+        <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
+          <ScrollReveal>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-6 leading-tight">
+              Bring Peggy a situation.
+            </h2>
+            <p className="text-base text-cream/80 leading-relaxed max-w-xl mx-auto mb-9">
+              Open the dock in the corner of any page, or submit a property for a full strategy review.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/submit">
+                <Button
+                  size="lg"
+                  className="px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white"
+                  data-testid="button-peggy-submit"
+                >
+                  Submit a Property
+                  <ArrowRight className="ml-3 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/connect">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold border-cream/25 text-cream hover:bg-cream/10 hover:border-cream/40"
+                  data-testid="button-peggy-connect"
+                >
+                  Reach Apollo
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+    </div>
+  );
+}

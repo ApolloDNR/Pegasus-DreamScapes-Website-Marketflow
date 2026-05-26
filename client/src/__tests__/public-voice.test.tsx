@@ -48,6 +48,10 @@ const PUBLIC_PAGE_FILES = [
   "client/src/pages/marketflow-access.tsx",
   "client/src/pages/terms.tsx",
   "client/src/pages/privacy.tsx",
+  // Empire Doctrine Amendment 2 §C — /ecosystem (footer-only release
+  // valve) and /peggy (public Peggy surface).
+  "client/src/pages/ecosystem.tsx",
+  "client/src/pages/peggy.tsx",
   "client/src/components/footer.tsx",
   "client/src/components/navigation.tsx",
 ];
@@ -60,7 +64,17 @@ const FORBIDDEN_PHRASES = [
   "Guaranteed Returns",
   "Principal Protected",
   "we buy houses fast",
+  // Empire Doctrine Amendment 2 §B — Peggy is an AI strategy assistant,
+  // never a "chatbot". The word is forbidden on every public page.
+  "chatbot",
 ];
+
+// Amendment 2 §B / §K — "20+ years" attributed to Pegasus-the-company is
+// forbidden. The construction experience belongs to the team
+// (Moises Duran), not to the corporation. This is asserted separately
+// from FORBIDDEN_PHRASES because the substring "20+ years" is allowed
+// in attributed contexts ("Apollo's father, Moises Duran, ... 20+ years").
+const PEGASUS_ATTRIBUTED_DECADE = /20\+\s*years?/i;
 
 // Files allowed to mention forbidden-phrase strings because they exist
 // only as negative disclosure ("not an offer of ...") on /invest and /terms.
@@ -240,6 +254,41 @@ describe("Public voice rules (v1.3.1)", () => {
       expect(aboutSrc).toContain(
         "A good deal makes sense for every serious party involved.",
       );
+    });
+
+    // Empire Doctrine Amendment 2 §H — locked /about "What we are not"
+    // anti-claims block, verbatim.
+    it("/about renders the 'What we are not' anti-claims block (Amendment 2 §H)", () => {
+      const aboutSrc = read("client/src/pages/about.tsx");
+      expect(aboutSrc).toContain("What we are not");
+      expect(aboutSrc).toContain("We are not just a cash buyer");
+      expect(aboutSrc).toContain("We are not a brokerage");
+      expect(aboutSrc).toContain("We are not a construction company");
+      expect(aboutSrc).toContain("We are not a proptech app");
+      expect(aboutSrc).toContain("We are not a marketplace");
+      expect(aboutSrc).toContain(
+        "strategy-first real estate operating company",
+      );
+    });
+
+    // Empire Doctrine Amendment 2 §D — locked Peggy positioning line.
+    // Non-spaced em-dash to satisfy the voice rule.
+    it("/peggy renders the locked positioning line (Amendment 2 §D)", () => {
+      const peggySrc = read("client/src/pages/peggy.tsx");
+      expect(peggySrc).toContain(
+        "Pegasus' AI strategy assistant. One intelligence, multiple surfaces. Plugs into website, phone, HQ, and the ecosystem apps.",
+      );
+    });
+  });
+
+  // Amendment 2 §B / §K — "20+ years" attributed to Pegasus the company
+  // is forbidden. The construction experience belongs to the team
+  // (Moises Duran). On /about, the substring is allowed because it sits
+  // inside a Moises-attributed sentence. On home, it must not appear.
+  describe("Amendment 2 §K — '20+ years' attribution discipline", () => {
+    it("home.tsx never mentions '20+ years'", () => {
+      const homeSrc = stripComments(read("client/src/pages/home.tsx"));
+      expect(PEGASUS_ATTRIBUTED_DECADE.test(homeSrc)).toBe(false);
     });
   });
 });
