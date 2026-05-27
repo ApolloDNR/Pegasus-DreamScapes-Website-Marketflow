@@ -216,35 +216,9 @@ export default function WorkWithApollo() {
         className="scroll-mt-24 py-24 lg:py-32 bg-[hsl(var(--charcoal))] text-cream"
         data-testid="section-wwa-meet-apollo"
       >
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          <div className="grid md:grid-cols-12 gap-10 lg:gap-14 items-center">
-            <div className="md:col-span-5">
-              <picture>
-                <source
-                  type="image/avif"
-                  srcSet="/images/founder/apollo-480.avif 480w, /images/founder/apollo-768.avif 768w, /images/founder/apollo-1200.avif 1200w"
-                  sizes="(max-width: 1024px) 90vw, 480px"
-                />
-                <source
-                  type="image/webp"
-                  srcSet="/images/founder/apollo-480.webp 480w, /images/founder/apollo-768.webp 768w, /images/founder/apollo-1200.webp 1200w"
-                  sizes="(max-width: 1024px) 90vw, 480px"
-                />
-                <img
-                  src="/images/founder/apollo-768.jpg"
-                  srcSet="/images/founder/apollo-480.jpg 480w, /images/founder/apollo-768.jpg 768w, /images/founder/apollo-1200.jpg 1200w"
-                  sizes="(max-width: 1024px) 90vw, 480px"
-                  alt="Paolo &quot;Apollo&quot; Duran, Founder of Pegasus DreamScapes"
-                  width={768}
-                  height={960}
-                  className="w-full aspect-[4/5] object-cover object-top rounded-lg border border-cream/15"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </picture>
-            </div>
-
-            <div className="md:col-span-7">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12">
+          <div>
+            <div>
               <div className="flex items-center gap-3 mb-5">
                 <span className="font-display text-[36px] leading-none text-[hsl(var(--copper))] tabular-nums tracking-tight">01</span>
                 <span className="h-px w-10 bg-[hsl(var(--copper))]" />
