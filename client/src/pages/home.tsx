@@ -228,13 +228,25 @@ function HeroSection() {
                 className="absolute -inset-x-4 -inset-y-3 sm:-inset-x-6 sm:-inset-y-4 pointer-events-none rounded-lg bg-[radial-gradient(ellipse_at_left,rgba(13,27,45,0.7)_0%,rgba(13,27,45,0.4)_55%,rgba(13,27,45,0)_100%)] blur-[2px]"
               />
               <motion.p
-                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-7 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
+                className="relative font-serif text-xl sm:text-2xl lg:text-[26px] text-[hsl(var(--cream))] max-w-2xl mb-4 leading-[1.45] tracking-[-0.005em] [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.75 }}
                 data-testid="text-hero-subheadline"
               >
                 Where others see impossible, we see a path. A strategy-first real estate operating company that reviews the situation, then designs the route forward.
+              </motion.p>
+              {/* Website Structure v1 FINAL §3.1 — plain-English product
+                  line, sits under the lyrical subheadline so visitors who
+                  scan past the doctrine still learn what we actually do. */}
+              <motion.p
+                className="relative text-sm sm:text-base text-white/90 font-supporting max-w-2xl mb-7 leading-relaxed [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.85 }}
+                data-testid="text-hero-product-line"
+              >
+                We buy, build, list, and structure deals on East Bay residential property.
               </motion.p>
             </div>
 
@@ -368,58 +380,52 @@ function PegasusQuestionSection() {
   );
 }
 
-// Website Structure v1 FINAL §3.2 — six-card role router. Replaces the
-// Amendment 2 Four-Doors block. Each card catches a different visitor
-// intent and routes to the surface that fits.
+// Website Structure v1 FINAL §3.2 — four-tile audience-select.
+// Replaces the six-card generic role router with the four audiences
+// Apollo named directly: Sellers · Buyers · Capital Partners · Vendors.
+// Each tile is the front door for one audience and routes to that
+// audience's canonical surface.
 function WhatBringsYouHereSection() {
   const cards = [
     {
-      label: "I own a property",
-      desc: "You hold the title. You want a structural read on what to do with it.",
+      eyebrow: "Sellers",
+      label: "I have a property.",
+      desc: "Complex, distressed, inherited, tired, or just complicated. Send it for a structural read.",
       href: "/submit?intent=property",
       icon: HomeIcon,
       cta: "Submit a Property",
-      testId: "home-router-own",
+      testId: "home-audience-sellers",
+      source: "home-audience-select",
     },
     {
-      label: "I have a deal",
-      desc: "Wholesaler or agent with a property in hand. Send it for review.",
-      href: "/submit?intent=deal-jv",
-      icon: ClipboardList,
-      cta: "Send the Deal",
-      testId: "home-router-deal",
-    },
-    {
-      label: "I want to list or buy a home",
-      desc: "Licensed representation with Apollo through Keller Williams East Bay.",
+      eyebrow: "Buyers",
+      label: "I'm a homebuyer.",
+      desc: "List or buy a home with Apollo through Keller Williams East Bay.",
       href: "/work-with-apollo",
       icon: Key,
       cta: "Work With Apollo",
-      testId: "home-router-list-buy",
+      testId: "home-audience-buyers",
+      source: "home-audience-select",
     },
     {
-      label: "I want to partner with Pegasus",
-      desc: "Capital or co-GP conversations. Written agreement on every deal.",
+      eyebrow: "Capital Partners",
+      label: "I'm a capital partner.",
+      desc: "JV, co-GP, or capital conversations. Written agreement on every deal.",
       href: "/capital",
       icon: Handshake,
       cta: "Open Capital",
-      testId: "home-router-partner",
+      testId: "home-audience-capital",
+      source: "home-audience-select",
     },
     {
-      label: "I see development potential",
-      desc: "ADU upside, value-add, BRRRR, small multifamily, or ground-up infill.",
-      href: "/development",
+      eyebrow: "Vendors",
+      label: "I build or supply.",
+      desc: "GCs, subs, suppliers, and aligned operators. Join the vendor network.",
+      href: "/vendor-network",
       icon: Hammer,
-      cta: "See Development",
-      testId: "home-router-development",
-    },
-    {
-      label: "I want to analyze a property",
-      desc: "Run the situation through the Pegasus lens yourself.",
-      href: "/strategy-lab",
-      icon: Calculator,
-      cta: "Open Strategy Lab",
-      testId: "home-router-strategy-lab",
+      cta: "Vendor Network",
+      testId: "home-audience-vendors",
+      source: "home-audience-select",
     },
   ];
 
@@ -434,28 +440,36 @@ function WhatBringsYouHereSection() {
             What brings you here?
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Six entry points. All six route to the same disciplined review.
+            Four front doors. All four route through the same disciplined review.
           </p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" staggerDelay={0.06}>
+        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" staggerDelay={0.06}>
           {cards.map((c) => (
             <StaggerItem key={c.testId}>
-              <Link href={c.href} onClick={() => trackCtaClick("home_router", c.label, c.href)}>
+              <Link href={c.href} onClick={() => trackCtaClick(c.source, c.eyebrow, c.href)}>
                 <div
-                  className="group relative h-full p-6 rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                  className="group relative h-full p-7 rounded-lg border border-border/60 bg-card hover:border-[hsl(var(--copper)/0.5)] hover:-translate-y-1 hover:shadow-[0_18px_40px_-22px_rgba(13,27,45,0.35)] transition-all duration-200 overflow-hidden"
                   data-testid={c.testId}
                 >
-                  <div className="w-10 h-10 rounded-sm bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                    <c.icon className="w-4 h-4 text-primary" aria-hidden="true" />
+                  {/* Top copper accent reveals on hover */}
+                  <span
+                    className="absolute top-0 left-0 right-0 h-[2px] bg-[hsl(var(--copper))] opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-hidden="true"
+                  />
+                  <div className="w-12 h-12 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-[hsl(var(--copper)/0.15)] group-hover:border-[hsl(var(--copper)/0.4)] transition-colors">
+                    <c.icon className="w-5 h-5 text-primary group-hover:text-[hsl(var(--copper))] transition-colors" aria-hidden="true" />
                   </div>
-                  <p className="font-serif text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-[hsl(var(--copper))] font-supporting font-semibold mb-2">
+                    {c.eyebrow}
+                  </p>
+                  <p className="font-serif text-xl font-semibold mb-2 leading-tight group-hover:text-primary transition-colors">
                     {c.label}
                   </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{c.desc}</p>
-                  <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">{c.desc}</p>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-primary font-supporting font-semibold group-hover:text-[hsl(var(--copper))] transition-colors">
                     {c.cta}
-                    <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                   </span>
                 </div>
               </Link>

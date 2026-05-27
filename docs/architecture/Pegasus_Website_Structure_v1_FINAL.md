@@ -27,13 +27,12 @@ Deal Architecture · Development · Strategy Lab · Work With Apollo · MarketFl
 ## 3. Homepage — nine sections (locked order)
 
 1. **Hero** — "Complex property. / Structured opportunity." · sub: strategy-first real estate operating company · CTAs: **Submit a Property · Open Strategy Lab · Work With Apollo**.
-2. **What brings you here?** — six-card role router (replaces the Amendment 2 Four Doors entirely):
-   - I own a property → `/submit?intent=property`
-   - I have a deal (wholesaler / agent) → `/submit?intent=deal-jv`
-   - I want to list or buy a home → `/work-with-apollo`
-   - I want to partner with Pegasus → `/capital`
-   - I see development potential → `/development`
-   - I want to analyze a property → `/strategy-lab`
+2. **What brings you here?** — four-tile audience-select (Task #158 amendment; replaces the prior six-card role router and the Amendment 2 Four Doors). The four tiles are the four audiences Apollo named directly:
+   - **Sellers** — "I have a property." → `/submit?intent=property`
+   - **Buyers** — "I'm a homebuyer." → `/work-with-apollo`
+   - **Capital Partners** — "I'm a capital partner." → `/capital`
+   - **Vendors** — "I build or supply." → `/vendor-network`
+   Strategy Lab and Development each have their own dedicated locked sections (§3.4 and §3.5) and don't need a redundant front-door tile here.
 3. **Deal Architecture** — ten outcome-lane chips (direct acquisition · creative finance · JV / co-GP · wholesale · listing · buyer rep · BRRRR · ADU upside · value-add · routed referral).
 4. **Development** — seven lanes (ADU additions · forced-value rehabs · fix-and-flip · BRRRR acquisitions · small multifamily · ground-up infill · master-planned neighborhoods).
 5. **Strategy Lab** — promise + the four named products.
