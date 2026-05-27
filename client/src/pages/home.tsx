@@ -103,12 +103,13 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSONLD) }}
       />
-      {/* Website Structure v1 FINAL §3 (Task #158 amendment) — eight-
-          section funnel: Hero, audience-select, Nelson proof, Strategy
-          Lab, "What we do" surface index (4 cards: Deal Architecture,
-          Development, Work With Apollo, MarketFlow), Operator,
-          Dreamscaper Standard, Final CTA. */}
+      {/* Website Structure v1 FINAL §3 (Task #158 amendment) — funnel
+          composition: Hero, Trust strip, audience-select, Nelson proof,
+          Strategy Lab, "What we do" 5-card surface index (Deal
+          Architecture, Development, Strategy Lab, Work With Apollo,
+          MarketFlow), Operator, Dreamscaper Standard, Final CTA. */}
       <HeroSection />
+      <TrustStripSection />
       <WhatBringsYouHereSection />
       <NelsonProofSection />
       <StrategyLabTeaserSection />
@@ -592,6 +593,16 @@ function StrategyLabTeaserSection() {
         source: "home-what-we-do",
       },
       {
+        eyebrow: "Strategy Lab",
+        title: "Tools, conversations, written reads.",
+        desc: "Self-serve calculators, Strategy Review, Strategy Snapshot, and the paid Deal Blueprint. The product ladder.",
+        href: "/strategy-lab",
+        cta: "Open Strategy Lab",
+        icon: ClipboardCheck,
+        testId: "section-home-strategy-lab",
+        source: "home-what-we-do",
+      },
+      {
         eyebrow: "Work With Apollo",
         title: "Licensed representation, through KW East Bay.",
         desc: "Four lanes for owners and buyers who want a real estate agent. Apollo is the agent. Pegasus is the strategy company.",
@@ -611,9 +622,23 @@ function StrategyLabTeaserSection() {
         testId: "section-home-marketflow",
         source: "home-what-we-do",
         badge: "Private beta · invite only",
-        subLink: { href: "/marketflow/buyboxes", label: "Pegasus Buyboxes" },
+        subLinks: [
+          { href: "/marketflow/access", label: "Request beta access" },
+          { href: "/marketflow/buyboxes", label: "Pegasus Buyboxes" },
+        ] as { href: string; label: string }[],
       },
-    ];
+    ] as Array<{
+      eyebrow: string;
+      title: string;
+      desc: string;
+      href: string;
+      cta: string;
+      icon: typeof MapIcon;
+      testId: string;
+      source: string;
+      badge?: string;
+      subLinks?: { href: string; label: string }[];
+    }>;
     return (
       <section
         className="relative py-24 lg:py-32 bg-muted/15 border-t border-border/30 overflow-hidden"
@@ -626,14 +651,14 @@ function StrategyLabTeaserSection() {
               What we do
             </p>
             <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
-              Four surfaces. One operating company.
+              Five surfaces. One operating company.
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
               Each surface has its own deep page. This band is the index.
             </p>
           </ScrollReveal>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
             {cards.map((c) => (
               <div
                 key={c.testId}
@@ -674,19 +699,24 @@ function StrategyLabTeaserSection() {
                     <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                   </span>
                 </div>
-                {c.subLink && (
-                  <Link
-                    href={c.subLink.href}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      trackCtaClick(c.source, c.subLink!.label, c.subLink!.href);
-                    }}
-                    className="relative mt-3 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-[hsl(var(--copper))] font-supporting font-medium transition-colors w-fit"
-                    data-testid={`sublink-${c.testId}`}
-                  >
-                    + {c.subLink.label}
-                    <ArrowRight className="w-2.5 h-2.5" aria-hidden="true" />
-                  </Link>
+                {c.subLinks && c.subLinks.length > 0 && (
+                  <div className="mt-3 flex flex-col gap-1.5">
+                    {c.subLinks.map((sl) => (
+                      <Link
+                        key={sl.href}
+                        href={sl.href}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          trackCtaClick(c.source, sl.label, sl.href);
+                        }}
+                        className="relative inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-[hsl(var(--copper))] font-supporting font-medium transition-colors w-fit"
+                        data-testid={`sublink-${c.testId}-${sl.href.split('/').pop()}`}
+                      >
+                        + {sl.label}
+                        <ArrowRight className="w-2.5 h-2.5" aria-hidden="true" />
+                      </Link>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}

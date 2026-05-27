@@ -24,22 +24,23 @@ Deal Architecture · Development · Strategy Lab · Work With Apollo · MarketFl
 3. **Strategy Snapshot** — preliminary, informational written read. Reviewed within 5 business days.
 4. **Deal Blueprint** — paid full underwriting + path doc.
 
-## 3. Homepage — eight sections (locked order, Task #158 amendment)
+## 3. Homepage — funnel composition (Task #158 amendment)
 
-Task #158 (Nov 2026 funnel rebuild) supersedes the prior nine-section composition. The homepage is now a funnel: hero → audience sort → proof → product → surface index → operator → standard → final CTA. Deep dives live on their own pages.
+Task #158 (Nov 2026 funnel rebuild) supersedes the prior flat nine-section composition. The homepage is now a funnel: hero → trust strip → audience sort → proof → product → surface index → operator → standard → final CTA. Deep dives live on their own pages.
 
 1. **Hero** — "Complex property. / Structured opportunity." · plain-English product line ("We buy, build, list, and structure deals on East Bay residential property.") · CTAs: **Submit a Property · Open Strategy Lab · Work With Apollo**.
-2. **What brings you here?** — four-tile audience-select. The four tiles are the four audiences Apollo named directly:
+2. **Trust strip** (unchanged) — credentials row directly under Hero.
+3. **What brings you here?** — four-tile audience-select. The four tiles are the four audiences Apollo named directly:
    - **Sellers** — "I have a property." → `/submit?intent=property`
    - **Buyers** — "I'm a homebuyer." → `/work-with-apollo`
    - **Capital Partners** — "I'm a capital partner." → `/capital`
    - **Vendors** — "I build or supply." → `/vendor-network`
-3. **Nelson Dr — the proof** (pulled forward from buried §10 in the old structure). Image-first case-study card with the three pills (Acquired / Renovation / Sold) and a link to `/projects/nelson-dr`. Gated on real photos + founder-confirmed numbers per launch gate §J.2.
-4. **Strategy Lab** (pulled forward from buried §7 in the old structure). Promise + the four named products (Strategy Lab · Strategy Review · Strategy Snapshot · Deal Blueprint).
-5. **What we do** — single compact band, four cards (Deal Architecture · Development · Work With Apollo · MarketFlow). Replaces the prior four separate full-height teaser sections. Each card carries the historical `section-home-<slug>` data-testid so the public-voice guardrail still finds the surface references. MarketFlow card includes the `Private beta · invite only` status badge and a Pegasus Buyboxes sub-link.
-6. **Operator** (pulled forward from buried §11 in the old structure). Apollo bio + father-attributed construction lineage (Moises Duran). DRE / KW / NAR / CAR credentials.
-7. **The Dreamscaper Standard** — six commitments. (Replaces "Pegasus Standard" copy.)
-8. **Final CTA** — "Bring us the property. We'll help find the path." · three buttons mirror Hero.
+4. **Nelson Dr — the proof** (pulled forward from the buried §10 slot in the old structure). Image-first case-study card with three pills (Acquired / Renovation / Sold) and a link to `/projects/nelson-dr`. Gated on real photos + founder-confirmed numbers per launch gate §J.2.
+5. **Strategy Lab** (pulled forward from the buried §7 slot in the old structure). Promise + the four named products (Strategy Lab · Strategy Review · Strategy Snapshot · Deal Blueprint).
+6. **What we do** — single compact band, five cards: Deal Architecture · Development · Strategy Lab · Work With Apollo · MarketFlow. Replaces the prior four separate full-height teaser sections. Each card carries the historical `section-home-<slug>` data-testid so the public-voice guardrail still finds the surface references. MarketFlow card includes the `Private beta · invite only` status badge plus two sub-links: **Request beta access** (`/marketflow/access`) and **Pegasus Buyboxes** (`/marketflow/buyboxes`).
+7. **Operator** (pulled forward from the buried §11 slot in the old structure). Apollo bio + father-attributed construction lineage (Moises Duran). DRE / KW / NAR / CAR credentials.
+8. **The Dreamscaper Standard** — six commitments. (Replaces "Pegasus Standard" copy.)
+9. **Final CTA** — "Bring us the property. We'll help find the path." · three buttons mirror Hero.
 
 The locked sr-only doctrine anchors stay at the bottom of `home.tsx` for the public-voice guardrail.
 
