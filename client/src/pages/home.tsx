@@ -496,11 +496,11 @@ function WhatBringsYouHereSection() {
 
 // ─────────────────────────────────────────────────────────────────────
 // NELSON DR PROOF — Amendment 2 §E.5.
-// CinematicV3 duotone treatment: grayscale + navy multiply on the
-// hero image, architect's project plate (Year · Type · Location),
-// real numbers preserved (Acquired ~$600K · Reno ~$90–100K · Sold ~$840K).
-// Real photos remain an open launch gate (§J.2) — full case study at
-// /projects/nelson-dr.
+// Real Nelson Dr exterior photo (full color) with a navy gradient
+// at the base for architect's project plate legibility (Year · Type
+// · Location). Real numbers preserved (Acquired ~$600K · Reno
+// ~$90–100K · Sold ~$840K). The full /projects/nelson-dr case study
+// body is still gated on founder-confirmed copy (§J.2).
 // ─────────────────────────────────────────────────────────────────────
 function NelsonProofSection() {
   return (
@@ -519,13 +519,30 @@ function NelsonProofSection() {
           {/* Duotone image with architect's plate overlay (v3 treatment) */}
           <div className="md:col-span-7">
             <div className="relative aspect-[4/3] overflow-hidden border border-cream/10 bg-[hsl(var(--charcoal))]">
-              <HeroPicture
-                alt="Nelson Dr · Pleasant Hill · Pegasus DreamScapes case study"
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ filter: "grayscale(1) sepia(0.1)" }}
-              />
-              <div className="absolute inset-0 bg-[hsl(var(--navy))] mix-blend-multiply opacity-50" aria-hidden="true" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--navy))]/80 via-transparent to-transparent" aria-hidden="true" />
+              <picture>
+                <source
+                  type="image/avif"
+                  srcSet="/images/nelson/nelson-exterior-768.avif 768w, /images/nelson/nelson-exterior-1280.avif 1280w"
+                  sizes="(min-width: 768px) 58vw, 100vw"
+                />
+                <source
+                  type="image/webp"
+                  srcSet="/images/nelson/nelson-exterior-768.webp 768w, /images/nelson/nelson-exterior-1280.webp 1280w"
+                  sizes="(min-width: 768px) 58vw, 100vw"
+                />
+                <img
+                  src="/images/nelson/nelson-exterior-1280.jpg"
+                  srcSet="/images/nelson/nelson-exterior-768.jpg 768w, /images/nelson/nelson-exterior-1280.jpg 1280w"
+                  sizes="(min-width: 768px) 58vw, 100vw"
+                  alt="Nelson Dr · Pleasant Hill · Pegasus DreamScapes case study"
+                  width={1280}
+                  height={960}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </picture>
+              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--navy))]/85 via-[hsl(var(--navy))]/10 to-transparent" aria-hidden="true" />
 
               {/* Architect's project plate */}
               <div className="absolute bottom-6 left-6 right-6">

@@ -745,7 +745,36 @@ function ProjectsCaseStudiesSection() {
         <div className="grid md:grid-cols-3 gap-5 mb-9">
           {projects.map((p) => {
             const inner = (
-              <CardSurface className="h-full p-7 border-border/40 hover:border-primary/40 transition-colors">
+              <CardSurface className="h-full overflow-hidden border-border/40 hover:border-primary/40 transition-colors flex flex-col">
+                {p.slug === "nelson-dr" && (
+                  <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        srcSet="/images/nelson/nelson-kitchen-480.avif 480w, /images/nelson/nelson-kitchen-768.avif 768w"
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                      />
+                      <source
+                        type="image/webp"
+                        srcSet="/images/nelson/nelson-kitchen-480.webp 480w, /images/nelson/nelson-kitchen-768.webp 768w"
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                      />
+                      <img
+                        src="/images/nelson/nelson-kitchen-768.jpg"
+                        srcSet="/images/nelson/nelson-kitchen-480.jpg 480w, /images/nelson/nelson-kitchen-768.jpg 768w"
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                        alt="Nelson Dr · renovated kitchen"
+                        width={768}
+                        height={432}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        data-testid="img-development-project-nelson-dr"
+                      />
+                    </picture>
+                  </div>
+                )}
+                <div className="p-7 flex-1 flex flex-col">
                 <p className="text-[11px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-3">
                   {p.kicker}
                 </p>
@@ -761,6 +790,7 @@ function ProjectsCaseStudiesSection() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 )}
+                </div>
               </CardSurface>
             );
             return p.slug ? (
