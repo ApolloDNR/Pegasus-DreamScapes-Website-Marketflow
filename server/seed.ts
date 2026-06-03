@@ -169,8 +169,8 @@ const initialArticles = [
   {
     slug: "what-is-a-strategy-snapshot",
     title: "What is a Strategy Snapshot?",
-    excerpt: "The free, written read every reviewed property gets. What goes in it, what doesn't, and how it leads to a Pegasus Deal Blueprint or a routed lane.",
-    content: `# What is a Strategy Snapshot?\n\nA Strategy Snapshot is the free, written read Pegasus produces on every reviewed property. It's educational, not an offer.\n\n## What's in it\n- Read on the property and the seller's situation\n- The two or three structures that could fit\n- Likely lane: development, wholesale, listing, capital, or pass\n- What we'd need to go deeper\n\n## What's not in it\n- A binding offer\n- A guaranteed purchase price\n- Securities or investment advice\n\nFrom a Snapshot, sellers can either route to the lane that fits, or commission a paid Pegasus Deal Blueprint for a deeper structuring document.\n\n*Educational only. Not legal, tax, or securities advice.*`,
+    excerpt: "The free, written read every reviewed property gets. What goes in it, what doesn't, and how it leads to a routed lane or privately scoped written review.",
+    content: `# What is a Strategy Snapshot?\n\nA Strategy Snapshot is the free, written read Pegasus produces on every reviewed property. It's educational, not an offer.\n\n## What's in it\n- Read on the property and the seller's situation\n- The two or three structures that could fit\n- Likely lane: development, wholesale, listing, capital, or pass\n- What we'd need to go deeper\n\n## What's not in it\n- A binding offer\n- A guaranteed purchase price\n- Securities or investment advice\n\nFrom a Snapshot, sellers can route to the lane that fits, submit for Pegasus review, or ask the team to privately scope a deeper written operator memo.\n\n*Educational only. Not legal, tax, or securities advice.*`,
     category: "Pegasus Standard",
     author: "Pegasus DreamScapes",
     published: true,
@@ -918,7 +918,7 @@ const initialGlossaryTerms = [
   { term: "Seller Financing", definition: "The seller acts as the lender, carrying back a note instead of receiving full cash at closing.", sortOrder: 5 },
   { term: "Subject-To", definition: "Buyer takes title subject to the existing mortgage, which stays in the seller's name.", sortOrder: 6 },
   { term: "Strategy Snapshot", definition: "Pegasus's free written read on a reviewed property. Educational only, not an offer.", sortOrder: 7 },
-  { term: "Deal Blueprint", definition: "Paid, in-depth structuring document for a complex property. Maps multiple lanes side-by-side.", sortOrder: 8 },
+  { term: "Written Operator Review", definition: "Privately scoped human memo for a complex property after Pegasus has enough context to review the situation.", sortOrder: 8 },
 ];
 
 // Seed sentinels live in site_content so the defaults are only ever inserted

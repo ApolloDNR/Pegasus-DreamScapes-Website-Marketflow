@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 // Website Brief v1.0 — Organization + Person JSON-LD for the About page so
-// search engines surface Pegasus DreamScapes Corp. and its founder with
+// search engines surface Pegasus Dreamscapes Corp. and its founder with
 // the canonical entity attributes (legal name, founder, contact).
 const ABOUT_JSONLD = {
   "@context": "https://schema.org",
@@ -34,8 +34,8 @@ const ABOUT_JSONLD = {
     {
       "@type": "Organization",
       "@id": "https://pegasusdreamscapes.com/#organization",
-      name: "Pegasus DreamScapes Corp.",
-      alternateName: "Pegasus DreamScapes",
+      name: "Pegasus Dreamscapes Corp.",
+      alternateName: "Pegasus Dreamscapes",
       url: "https://pegasusdreamscapes.com",
       logo: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
       slogan: "The Deal Architect",
@@ -66,7 +66,7 @@ export default function About() {
   useSEO({
     title: "About",
     description:
-      "Pegasus DreamScapes Corp. is a strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Built on strategy. Governed by virtue. Executed with discipline.",
+      "Pegasus Dreamscapes Corp. is a strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Built on strategy. Governed by virtue. Executed with discipline.",
     image: "/og/about.png",
   });
 
@@ -116,7 +116,7 @@ function AboutHero() {
               </p>
             </div>
             <h1
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] mb-8 leading-[0.98]"
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-normal mb-8 leading-[0.98]"
               data-testid="text-about-headline"
             >
               A real estate company,<br />
@@ -125,7 +125,7 @@ function AboutHero() {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-cream/90 leading-relaxed max-w-2xl mb-6">
-              Pegasus DreamScapes is a strategy-first real estate operating company. We work the complex situations, the half-broken pro formas, and the properties other groups walk away from. Every property gets a serious review. Not every property gets an offer.
+              Pegasus Dreamscapes is a strategy-first real estate operating company. We work the complex situations, the half-broken pro formas, and the properties other groups walk away from. Every property gets a serious review. Not every property gets an offer.
             </p>
             <p
               className="font-serif text-base sm:text-lg text-cream/85 italic tracking-wide leading-snug"
@@ -148,7 +148,7 @@ function AboutHero() {
                 <dl className="divide-y divide-cream/15">
                   <ShapeRow label="Positioning" value="The Deal Architect" />
                   <ShapeRow label="Founder" value="Paolo &quot;Apollo&quot; Duran" />
-                  <ShapeRow label="Entity" value="Pegasus DreamScapes Corp." />
+                  <ShapeRow label="Entity" value="Pegasus Dreamscapes Corp." />
                   <ShapeRow label="HQ" value="Pleasant Hill, California" />
                   <ShapeRow label="Stage" value="Private beta · Invite-only network" />
                 </dl>
@@ -185,7 +185,7 @@ function DoctrineSection() {
               The Doctrine
             </p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-8 leading-tight">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-8 leading-tight">
             No lead dies. Every property gets a path.
           </h2>
           <div className="space-y-5 text-lg text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-7 max-w-3xl">
@@ -237,7 +237,7 @@ function PillarsSection() {
               Three Pillars
             </p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             One operating company. Three pillars.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -291,7 +291,7 @@ function FounderSection() {
                       height={960}
                       loading="lazy"
                       decoding="async"
-                      alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
+                      alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus Dreamscapes Corp."
                       className="absolute inset-0 w-full h-full object-cover object-top"
                       data-testid="img-founder-apollo"
                       onError={(e) => {
@@ -312,7 +312,7 @@ function FounderSection() {
                     Paolo &quot;Apollo&quot; Duran
                   </h3>
                   <p className="text-sm text-muted-foreground mb-5">
-                    Pegasus DreamScapes Corp.
+                    Pegasus Dreamscapes Corp.
                   </p>
                   <blockquote className="font-serif text-base italic text-foreground/85 leading-relaxed border-l-2 border-primary pl-5 mb-5">
                     &ldquo;Where others see impossible, we see a path. The deal is the architecture of the situation, not the situation itself.&rdquo;
@@ -339,13 +339,13 @@ function FounderSection() {
                 The Operator
               </p>
             </div>
-            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-7 leading-tight">
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-7 leading-tight">
               Strategy is the product.<br />
               <span className="italic">Discipline is the moat.</span>
             </h2>
             <div className="space-y-5 text-base text-muted-foreground leading-relaxed">
               <p>
-                Apollo founded Pegasus DreamScapes to do real estate the way it should be done: a long-arc operating company instead of a quarterly transaction shop. Every project is treated as a structural problem first and a profit number second.
+                Apollo founded Pegasus Dreamscapes to do real estate the way it should be done: a long-arc operating company instead of a quarterly transaction shop. Every project is treated as a structural problem first and a profit number second.
               </p>
               <p>
                 The build discipline runs in the family. Apollo's father, Moises Duran, is a licensed General Contractor with more than 20 years of commercial and residential construction experience; that operator's lens sits inside every Pegasus project review.
@@ -398,7 +398,7 @@ function PrinciplesSection() {
               Operating Principles
             </p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             How we actually work.
           </h2>
         </ScrollReveal>
@@ -437,7 +437,7 @@ function CTASection() {
           <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-5">
             Continue the conversation
           </p>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-8">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-normal mb-8">
             Dream it. Build it. Live it.
           </h2>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl mx-auto mb-10">

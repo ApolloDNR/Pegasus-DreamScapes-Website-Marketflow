@@ -94,7 +94,7 @@ export default function ProjectDetail() {
 
   useSEO({
     title: project ? `${project.name} · Projects` : "Project",
-    description: project?.description || "Documented real estate case study from Pegasus DreamScapes.",
+    description: project?.description || "Documented real estate case study from Pegasus Dreamscapes.",
     image: project?.afterImages?.[0] || "/og/projects.png",
   });
 
@@ -104,7 +104,7 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen">
       <ProjectJsonLd project={project} />
-      <h1 className="sr-only">Project Detail — Pegasus DreamScapes</h1>
+      <h1 className="sr-only">Project Detail — Pegasus Dreamscapes</h1>
       <HeroSection project={project} />
       <BodySection project={project} />
       <RoutingSection />
@@ -117,7 +117,7 @@ function ProjectJsonLd({ project }: { project: Project }) {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
     name: project.name,
-    description: project.description || `${project.name} case study from Pegasus DreamScapes Corp.`,
+    description: project.description || `${project.name} case study from Pegasus Dreamscapes Corp.`,
     url: `https://pegasusdreamscapes.com/projects/${project.slug}`,
     address: {
       "@type": "PostalAddress",
@@ -129,7 +129,7 @@ function ProjectJsonLd({ project }: { project: Project }) {
     image: project.afterImages?.[0],
     provider: {
       "@type": "Organization",
-      name: "Pegasus DreamScapes Corp.",
+      name: "Pegasus Dreamscapes Corp.",
       url: "https://pegasusdreamscapes.com",
     },
   };
@@ -231,7 +231,7 @@ function HeroSection({ project }: { project: Project }) {
           </motion.div>
 
           <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-6 max-w-4xl"
+            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-6 max-w-4xl"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
@@ -472,13 +472,13 @@ function BodySection({ project }: { project: Project }) {
                     Submit a property, or open a private partner conversation about the next project.
                   </p>
                   <div className="flex flex-col gap-3">
-                    <Link href="/sell">
+                    <Link href="/submit?intent=property">
                       <Button className="w-full bg-cream text-charcoal hover:bg-cream/95 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-sell">
                         Submit a Property
                         <ArrowRight className="ml-2 w-3.5 h-3.5" />
                       </Button>
                     </Link>
-                    <Link href="/invest">
+                    <Link href="/capital">
                       <Button variant="outline" className="w-full bg-transparent border-cream/30 text-cream hover:bg-cream/10 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-invest">
                         Partner Inquiry
                       </Button>
@@ -505,7 +505,7 @@ function RoutingSection() {
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="text-center mb-12">
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold font-supporting mb-4">Where to next</p>
-          <h2 className="font-serif text-4xl font-semibold tracking-[-0.02em]">Continue the conversation.</h2>
+          <h2 className="font-serif text-4xl font-semibold tracking-normal">Continue the conversation.</h2>
         </ScrollReveal>
         <div className="grid sm:grid-cols-2 gap-5">
           {lanes.map((lane, i) => (

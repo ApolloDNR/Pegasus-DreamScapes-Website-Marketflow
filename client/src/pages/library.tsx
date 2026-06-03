@@ -19,7 +19,7 @@ export default function LibraryPage() {
   useSEO({
     title: "Strategy Library",
     description:
-      "The Pegasus DreamScapes Strategy Library: structured reads on real estate strategy, capital, and execution. No gurus. No hype.",
+      "The Pegasus Dreamscapes Strategy Library: structured reads on real estate strategy, capital, and execution. No gurus. No hype.",
     image: "/og/default.png",
   });
 
@@ -59,7 +59,7 @@ export default function LibraryPage() {
           <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
             Strategy Library
           </p>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-white leading-tight mb-6">
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-normal text-white leading-tight mb-6">
             Read first. Decide second.
           </h1>
           <p className="font-serif text-xl text-white/85 italic leading-snug max-w-2xl">
@@ -133,7 +133,7 @@ export default function LibraryPage() {
 
       <section className="py-16 bg-[hsl(var(--stone))] border-y border-border">
         <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
-          <h2 className="font-serif text-3xl font-semibold tracking-[-0.02em] text-foreground mb-4">
+          <h2 className="font-serif text-3xl font-semibold tracking-normal text-foreground mb-4">
             Done reading? Bring us the situation.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-8">

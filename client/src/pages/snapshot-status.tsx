@@ -2,7 +2,7 @@
  * Snapshot Status — UI-only submitter view (v1.3.1).
  *
  * This page shows a property submitter the status of their Strategy Snapshot
- * after they submit through `/sell`. It is intentionally a NARROW submitter
+ * after they submit through `/submit`. It is intentionally a NARROW submitter
  * view: no internal lane scoring, no RACI, no buy-box fail reasons, no admin
  * data. It does not expose any HQ internals.
  *
@@ -21,7 +21,7 @@
  *  - Snapshot release: HQ moves the lead to "Snapshot Ready" and writes the
  *                     PDF/URL to the lead record. Polling or realtime push
  *                     surfaces it here.
- *  - Next-step selection: when the submitter clicks Sell / Build / Blueprint /
+ *  - Next-step selection: when the submitter clicks Review / Develop / Memo /
  *                        Save, POST `recordSnapshotNextStep(token, choice)` to
  *                        HQ; HQ updates the lead and confirms the route.
  *  - Auth: token-based only. No login required for the submitter.
@@ -60,7 +60,7 @@ interface SnapshotFixture {
   submittedAt: string;
   needsInfoMessage?: string;
   snapshotSummary?: string;
-  selectedNextStep?: "sell" | "build" | "blueprint" | "save";
+  selectedNextStep?: "submit" | "development" | "review" | "save";
 }
 
 const FIXTURES: Record<SnapshotState, SnapshotFixture> = {
@@ -94,7 +94,7 @@ const FIXTURES: Record<SnapshotState, SnapshotFixture> = {
     submittedAt: "5 days ago",
     snapshotSummary:
       "We reviewed the property against eight outcome lanes. Strongest paths: a structured acquisition or a JV/build given the lot's secondary-unit potential.",
-    selectedNextStep: "blueprint",
+    selectedNextStep: "review",
   },
 };
 
@@ -175,7 +175,7 @@ export default function SnapshotStatus() {
   useSEO({
     title: "Strategy Snapshot Status",
     description:
-      "Track the status of your Strategy Snapshot submission with Pegasus DreamScapes Corp.",
+      "Track the status of your Strategy Snapshot submission with Pegasus Dreamscapes Corp.",
     noIndex: true,
   });
 
@@ -211,7 +211,7 @@ export default function SnapshotStatus() {
             </div>
             <div className="flex-1">
               <h1
-                className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-3"
+                className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-3"
                 data-testid="text-snapshot-title"
               >
                 {meta.title}
@@ -332,25 +332,25 @@ export default function SnapshotStatus() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <NextStepCard
-                href="/sell"
+                href="/submit?intent=snapshot-acquisition"
                 icon={Building}
-                title="Sell to Pegasus"
-                desc="Continue the conversation toward a direct acquisition or a wholesale assignment."
-                testId="next-step-sell"
+                title="Submit for review"
+                desc="Continue toward a human read of the best participation lane for this property."
+                testId="next-step-submit"
               />
               <NextStepCard
-                href="/invest"
+                href="/development"
                 icon={Hammer}
-                title="Build with Pegasus"
-                desc="Explore a JV or partnership build, when the lot or scope warrants it."
-                testId="next-step-build"
+                title="Explore development"
+                desc="Look at ADU, rehab, and value-add paths when the lot or scope warrants it."
+                testId="next-step-development"
               />
               <NextStepCard
-                href="/deal-blueprint"
+                href="/submit?intent=strategy-review"
                 icon={FileText}
-                title="Get the Deal Blueprint"
-                desc="Commission a paid Pegasus Deal Blueprint, a deeper, structured analysis."
-                testId="next-step-blueprint"
+                title="Request a written review"
+                desc="Ask Pegasus to scope a deeper operator memo after the facts are reviewed."
+                testId="next-step-review"
               />
               <NextStepCard
                 href="#save"
@@ -419,7 +419,7 @@ export default function SnapshotStatus() {
               className="text-xs tracking-[0.15em]"
               data-testid="button-snapshot-home"
             >
-              Back to Pegasus DreamScapes
+              Back to Pegasus Dreamscapes
             </Button>
           </Link>
         </div>
@@ -515,14 +515,14 @@ function NextStepCard({
   return <a href={href}>{inner}</a>;
 }
 
-function labelForChoice(c?: "sell" | "build" | "blueprint" | "save"): string {
+function labelForChoice(c?: "submit" | "development" | "review" | "save"): string {
   switch (c) {
-    case "sell":
-      return "Sell to Pegasus";
-    case "build":
-      return "Build with Pegasus";
-    case "blueprint":
-      return "Get the Deal Blueprint";
+    case "submit":
+      return "Submit for review";
+    case "development":
+      return "Explore development";
+    case "review":
+      return "Request a written review";
     case "save":
       return "Save and decide later";
     default:

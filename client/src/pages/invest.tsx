@@ -54,7 +54,7 @@ export default function Invest() {
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Capital and Partnership Inquiries — Pegasus DreamScapes</h1>
+      <h1 className="sr-only">Capital and Partnership Inquiries — Pegasus Dreamscapes</h1>
       <HeroSection />
       <NonOfferDisclaimerSection />
       <FounderSection />
@@ -96,7 +96,7 @@ function FounderSection() {
             <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
               <img
                 src={founderApolloPath}
-                alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus DreamScapes Corp."
+                alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus Dreamscapes Corp."
                 className="absolute inset-0 w-full h-full object-cover object-top"
                 data-testid="img-founder-apollo"
               />
@@ -115,11 +115,11 @@ function FounderSection() {
               <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
               <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold font-supporting">The Operator</p>
             </div>
-            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-6" data-testid="text-founder-name">
+            <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-6" data-testid="text-founder-name">
               You'll talk to a real person.
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              Pegasus DreamScapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
+              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
             </p>
             <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-primary pl-5">
               "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."
@@ -135,7 +135,7 @@ function FounderSection() {
               </a>
               <div className="px-5 py-4">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold font-supporting mb-1">Entity</p>
-                <p className="font-serif text-base text-foreground">Pegasus DreamScapes Corp</p>
+                <p className="font-serif text-base text-foreground">Pegasus Dreamscapes Corp</p>
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@ function MarketFlowConnectionSection() {
               <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
               <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold font-supporting">Live deal flow</p>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em]">
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal">
               See active opportunities in MarketFlow.
             </h2>
           </div>
@@ -186,7 +186,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Capital and partnerships at Pegasus DreamScapes Corp."
+          alt="Capital and partnerships at Pegasus Dreamscapes Corp."
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -211,7 +211,7 @@ function HeroSection() {
             </motion.div>
 
             <motion.h1
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
@@ -319,7 +319,7 @@ function PrinciplesSection() {
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Operating Principles</p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             How we treat your capital.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -389,7 +389,7 @@ function PartnershipStructuresSection() {
             <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Structures</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Three ways capital participates.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -456,7 +456,7 @@ function ProjectSnapshotSection() {
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="mb-12 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-3">Illustrative Snapshot</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em]" data-testid="text-project-snapshot">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal" data-testid="text-project-snapshot">
             What a project page looks like.
           </h2>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto mt-5 leading-relaxed">
@@ -568,7 +568,7 @@ function InvestorFormSection() {
         <div className="max-w-2xl mx-auto px-6 text-center">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-investor-success">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-normal" data-testid="text-investor-success">
             Welcome to the conversation.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -588,7 +588,7 @@ function InvestorFormSection() {
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">Partner Inquiry</p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-investor-form-title">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-normal" data-testid="text-investor-form-title">
             Start with context.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
@@ -740,7 +740,7 @@ function DisclaimerSection() {
       <div className="max-w-3xl mx-auto px-6 lg:px-12">
         <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-semibold mb-4 text-center">Important Disclosures</p>
         <p className="text-sm text-muted-foreground text-center leading-relaxed" data-testid="text-disclaimer">
-          This page is informational only and does not constitute an offer to sell or a solicitation of an offer to buy any security or investment product. Pegasus DreamScapes does not make public investment offerings. Any partnership opportunities are discussed individually with prospective partners after suitability review and are documented under proper legal structure. All real estate investments involve risk including the potential loss of principal. Past project outcomes are not indicative of future results. Nothing on this page is an offer of guaranteed returns or principal protection.
+          This page is informational only and does not constitute an offer to sell or a solicitation of an offer to buy any security or investment product. Pegasus Dreamscapes does not make public investment offerings. Any partnership opportunities are discussed individually with prospective partners after suitability review and are documented under proper legal structure. All real estate investments involve risk including the potential loss of principal. Past project outcomes are not indicative of future results. Nothing on this page is an offer of guaranteed returns or principal protection.
         </p>
         <div className="text-center mt-8">
           <Link href="/contact">

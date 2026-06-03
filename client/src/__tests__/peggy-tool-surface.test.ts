@@ -1,6 +1,13 @@
 // @vitest-environment node
-import { describe, it, expect } from "vitest";
-import { PEGGY_SYSTEM_PROMPT } from "../../../server/peggy";
+import { beforeAll, describe, it, expect } from "vitest";
+
+let PEGGY_SYSTEM_PROMPT = "";
+
+beforeAll(async () => {
+  process.env.DATABASE_URL ??= "postgres://postgres:postgres@localhost:5432/postgres";
+  process.env.AI_INTEGRATIONS_OPENAI_API_KEY ??= "test-key";
+  ({ PEGGY_SYSTEM_PROMPT } = await import("../../../server/peggy"));
+});
 
 describe("Peggy system prompt: tool surface enumeration", () => {
   it("enumerates Strategy Lab Quick Read and Full Path modes", () => {
@@ -30,20 +37,21 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("/api/pdf/strategy-snapshot/by-id/:id");
   });
 
-  it("enumerates the three Deal Blueprint tiers with locked default prices", () => {
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/deal-blueprint");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("$497");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("$897");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("$1,497");
+  it("routes deeper written review privately instead of exposing a public Blueprint price sheet", () => {
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/deal-blueprint");
+    expect(PEGGY_SYSTEM_PROMPT).toContain("/submit?intent=strategy-review");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("$497");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("$897");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("$1,497");
   });
 
-  it("names Strategy Library, Vendor Network, MarketFlow, Sell, Invest, Contact routes", () => {
+  it("names Strategy Library, Vendor Network, MarketFlow, Submit, Capital, Contact routes", () => {
     for (const route of [
-      "/resources",
+      "/library",
       "/vendor-network",
       "/marketflow",
-      "/sell",
-      "/invest",
+      "/submit",
+      "/capital",
       "/contact",
     ]) {
       expect(PEGGY_SYSTEM_PROMPT).toContain(route);

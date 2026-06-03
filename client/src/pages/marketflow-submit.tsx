@@ -159,7 +159,7 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
                 </div>
                 
                 <div className="flex flex-col gap-3">
-                  <Link href="/partner">
+                  <Link href="/marketflow/access">
                     <Button className="w-full gap-2" data-testid="button-apply-wholesaler">
                       <Sparkles className="w-4 h-4" />
                       Apply to Become a Wholesaler

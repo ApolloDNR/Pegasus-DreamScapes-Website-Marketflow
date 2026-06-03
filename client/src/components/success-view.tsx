@@ -120,7 +120,7 @@ export function SuccessView({ formType, onAddAnother, referenceTag, statusUrl }:
             {copy.kicker}
           </p>
           <h2
-            className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-5"
+            className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal text-foreground mb-5"
             data-testid={`text-success-headline-${formType}`}
           >
             {copy.headline}

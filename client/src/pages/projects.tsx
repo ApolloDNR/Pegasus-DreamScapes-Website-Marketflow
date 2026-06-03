@@ -35,13 +35,13 @@ const STATUS_LABEL: Record<string, string> = {
 export default function Projects() {
   useSEO({
     title: "Projects",
-    description: "Documented real estate case studies from Pegasus DreamScapes Corp. Strategy, structure, and execution recorded for every project.",
+    description: "Documented real estate case studies from Pegasus Dreamscapes Corp. Strategy, structure, and execution recorded for every project.",
     image: "/og/projects.png",
   });
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Projects and Case Studies — Pegasus DreamScapes</h1>
+      <h1 className="sr-only">Projects and Case Studies — Pegasus Dreamscapes</h1>
       <HeroSection />
       <ProjectsGrid />
       <CTASection />
@@ -59,7 +59,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Projects portfolio from Pegasus DreamScapes Corp."
+          alt="Projects portfolio from Pegasus Dreamscapes Corp."
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -80,7 +80,7 @@ function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8 max-w-3xl"
+            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-8 max-w-3xl"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
@@ -189,7 +189,7 @@ function ProjectsGrid() {
           <p className="text-base text-muted-foreground leading-relaxed mb-8">
             Refresh in a moment. If it persists, the team has been notified.
           </p>
-          <Link href="/sell">
+          <Link href="/submit?intent=property">
             <Button
               size="lg"
               className="min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold"
@@ -248,18 +248,18 @@ function ProjectsGrid() {
             </p>
             <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
               {statusFilter === "all" && strategyFilter === "all"
-                ? "First case study coming soon."
+                ? "Case files are being documented."
                 : "Nothing in this slice yet."}
             </h3>
             <p className="text-base text-muted-foreground mb-8 leading-relaxed">
               {statusFilter === "all" && strategyFilter === "all"
-                ? "Pegasus is in build mode. The first case studies are being documented now. In the meantime, the door is open for a Strategy Review on your situation."
+                ? "Pegasus only publishes project records when the facts, photos, scope, and economics can be shown cleanly. In the meantime, the door is open for a Strategy Review on your situation."
                 : "Clear the filters to see the full set, or start a Strategy Review and we will route your situation to the right lane."}
             </p>
             <div className="flex justify-center">
               {statusFilter === "all" && strategyFilter === "all" ? (
                 <a
-                  href="/sell"
+                  href="/submit?intent=property"
                   className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                   data-testid="link-projects-strategy-review"
                 >
@@ -425,20 +425,20 @@ function CTASection() {
       <div className="max-w-4xl mx-auto px-6 lg:px-12 relative text-center">
         <ScrollReveal>
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-6">The Next Project</p>
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] mb-6" data-testid="text-projects-cta">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-normal mb-6" data-testid="text-projects-cta">
             Have one to add to the record?
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
             Whether you have a property to submit, capital to deploy, or a partnership to discuss, every conversation starts the same way: with a real, structural review.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/sell">
+            <Link href="/submit?intent=property">
               <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-projects-sell">
                 Submit a Property
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/invest">
+            <Link href="/capital">
               <Button size="lg" variant="outline" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-projects-invest">
                 Partner Inquiry
               </Button>

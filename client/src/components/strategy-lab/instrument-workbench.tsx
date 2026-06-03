@@ -1,5 +1,5 @@
 /**
- * Workbench Instrument — graduated production component for the Strategy Lab
+ * Workbench Instrument: graduated production component for the Strategy Lab
  * Full Path mode. Visual contract sourced from
  *   artifacts/mockup-sandbox/src/components/mockups/strategy-lab-redesign/WorkbenchInstrument.tsx
  * and wired to the live engine snapshot + mutations from
@@ -36,26 +36,26 @@ const TONE_FRAMES: Record<Tone, { kicker: string; verdict: string; cta: string }
   owner: {
     kicker: "For the homeowner",
     verdict:
-      "Your home reads as a viable refi-and-hold for a long-term operator. If you sell as-is, a serious buyer pays in the $410–$430k range. If you'd rather not list, we can talk about a private path.",
-    cta: "Talk to Apollo about a private offer",
+      "Your home reads as a viable refi-and-hold for a long-term operator. If you sell as-is, a disciplined review may support a $410-$430k as-is range. If you do not want a public listing, Pegasus can review the cleanest private path.",
+    cta: "Start a Pegasus review",
   },
   wholesaler: {
     kicker: "For the wholesaler",
     verdict:
-      "Property assigns. Spread to ARV is 18%, refi math holds at 75% LTV with $40k cash left in. If your buyer is a BRRRR operator, push assignment at $425–$435k. If you're walking, comp depth is the only thing in the way.",
-    cta: "Submit to Pegasus's buyer list",
+      "The spread may support an assignment or operator route if the comps and scope hold. Pegasus would verify the math, buyer fit, and execution risk before any distribution decision.",
+    cta: "Submit for Pegasus review",
   },
   capital: {
     kicker: "For the capital partner",
     verdict:
-      "Deal structures as a 75% senior + 25% LP equity refinance with $40k of operator capital at close. DSCR 1.42 at 7.25%. Two open variables would tighten confidence: comp depth and a walk-through of 1985-era systems.",
-    cta: "Open the capital stack modeler",
+      "The early structure reads like a senior debt plus operator-equity scenario, but capital conversations require verified numbers, documents, and fit. Two open variables would tighten confidence: comp depth and a walk-through of 1985-era systems.",
+    cta: "Review the capital posture",
   },
   admin: {
     kicker: "For Pegasus HQ",
     verdict:
-      "Route: BRRRR operator network (3 active). Submission SLA 48h. Confidence 72%, range 65–78%. Two flags before any offer: comp depth (3/5) and unverified plumbing/electrical on a 1985 build.",
-    cta: "Route to operator network",
+      "Route: BRRRR operator review. Submission SLA 48h. Confidence 72%, range 65-78%. Two flags before any participation decision: comp depth (3/5) and unverified plumbing/electrical on a 1985 build.",
+    cta: "Route for human review",
   },
 };
 
@@ -73,11 +73,11 @@ const SCENARIO_NUMBERS: Record<
 
 /* ── lane name + subtitle for the mockup row ────────────────────────────── */
 const LANE_SUBTITLES: Record<StrategyLane, string> = {
-  flip: "Light reno · short hold",
+  flip: "Light reno | short hold",
   wholetail: "Light cosmetic resale",
   brrrr: "Refi-and-hold",
   rental_hold: "Long-term cash flow",
-  adu_development: "Add unit · upside lot",
+  adu_development: "Add unit | upside lot",
   ground_up: "Tear-down + new build",
   wholesale: "Assign to operator",
   jv: "JV with capital",
@@ -154,15 +154,8 @@ export interface InstrumentWorkbenchProps {
   runsLeft: number;
   freeRunLimit: number;
 
-  // Blueprint upsell
-  blueprintTiers: Array<{
-    key: string;
-    title: string;
-    priceCents: number;
-    turnaroundDays: string;
-    description: string;
-  }>;
-  onOpenBlueprintTier: (key: string) => void;
+  // Written review scope
+  onRequestWrittenReview: (intent: string) => void;
 
   // touchpoints
   fireTouchpoint: (event: string, data?: any) => void;
@@ -233,8 +226,7 @@ export function InstrumentWorkbench(props: InstrumentWorkbenchProps) {
           saveIsPending={props.saveIsPending}
           submitIsPending={props.submitIsPending}
           analysisId={props.analysisId}
-          blueprintTiers={props.blueprintTiers}
-          onOpenBlueprintTier={props.onOpenBlueprintTier}
+          onRequestWrittenReview={props.onRequestWrittenReview}
         />
       </div>
 
@@ -260,7 +252,7 @@ export function InstrumentWorkbench(props: InstrumentWorkbenchProps) {
             className="text-[10px] tracking-[0.22em]"
             style={{ fontFamily: FONT_SUP, color: MUTED }}
           >
-            Pegasus DreamScapes Corp · Private network · Apollo · 925-744-8525
+            Pegasus Dreamscapes Corp | Private network | Apollo | 925-744-8525
           </div>
         </div>
         <div
@@ -326,7 +318,7 @@ function SubjectHeader({
                 fontFamily: FONT_SUP,
               }}
             >
-              Full Path · Free tier
+              Full Path | Free tier
             </span>
           </div>
           <div
@@ -343,7 +335,7 @@ function SubjectHeader({
             className="text-[9px] tracking-[0.25em] uppercase mb-1.5 font-semibold text-right"
             style={{ fontFamily: FONT_SUP, color: MUTED }}
           >
-            Reading lens · UI preview
+            Reading lens | UI preview
           </div>
           <div
             className="flex items-center rounded-sm border p-0.5"
@@ -407,7 +399,7 @@ function PathMap({
           className="text-[9px] tracking-[0.28em] uppercase"
           style={{ fontFamily: FONT_SUP, color: MUTED }}
         >
-          Path · Stage {doneCount} of {steps.length} · Full read
+          Path | Stage {doneCount} of {steps.length} | Full read
         </div>
         <div
           className="text-[9px] tracking-[0.2em] uppercase"
@@ -510,30 +502,30 @@ function LeftRail({
       className="pr-0 lg:pr-6 lg:border-r pb-6 lg:pb-0"
       style={{ borderColor: RULE }}
     >
-      <Kicker num="§ 1–2" label="Subject" />
+      <Kicker num="1-2" label="Subject" />
       <div className="mt-3 space-y-3">
-        <Fact k="Address" v={form.address || "—"} />
+        <Fact k="Address" v={form.address || "-"} />
         <Fact
           k="City"
-          v={[form.city, form.state, form.zip].filter(Boolean).join(", ") || "—"}
+          v={[form.city, form.state, form.zip].filter(Boolean).join(", ") || "-"}
         />
         <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-          <Fact k="Beds" v={form.beds || "—"} compact />
-          <Fact k="Baths" v={form.baths || "—"} compact />
-          <Fact k="SQFT" v={form.sqft || "—"} compact />
-          <Fact k="Built" v={form.yearBuilt || "—"} compact />
+          <Fact k="Beds" v={form.beds || "-"} compact />
+          <Fact k="Baths" v={form.baths || "-"} compact />
+          <Fact k="SQFT" v={form.sqft || "-"} compact />
+          <Fact k="Built" v={form.yearBuilt || "-"} compact />
         </div>
-        <Fact k="Condition" v={form.condition || "—"} compact />
-        <Fact k="Occupancy" v={form.occupancyStatus || "—"} compact />
+        <Fact k="Condition" v={form.condition || "-"} compact />
+        <Fact k="Occupancy" v={form.occupancyStatus || "-"} compact />
       </div>
 
-      {/* Tier · what's unlocked */}
+      {/* Tier: what's unlocked */}
       <div className="mt-6 pt-4 border-t" style={{ borderColor: RULE }}>
         <div
           className="text-[9px] tracking-[0.25em] uppercase font-semibold mb-2"
           style={{ fontFamily: FONT_SUP, color: NAVY }}
         >
-          Tier · what's unlocked
+          Tier | what's unlocked
         </div>
         <div className="space-y-1.5">
           <TierRow label="Lane Fit Board" on />
@@ -546,7 +538,7 @@ function LeftRail({
         </div>
       </div>
 
-      {/* Run-history banner — anon only */}
+      {/* Run-history banner: anon only */}
       {!isAuthenticated && (
         <div
           className="mt-6 p-3 rounded-sm"
@@ -576,7 +568,7 @@ function LeftRail({
             style={{ fontFamily: FONT_SUP, color: COPPER, borderColor: COPPER }}
             data-testid="instrument-claim-runs"
           >
-            Claim anonymous runs →
+            Claim anonymous runs
           </a>
         </div>
       )}
@@ -599,7 +591,7 @@ function LeftRail({
           className="mt-3 text-[10px] italic"
           style={{ fontFamily: FONT_SERIF, color: MUTED }}
         >
-          Where others see impossible, we see a path.
+          Every serious path starts with a clean read.
         </div>
       )}
     </aside>
@@ -623,7 +615,7 @@ function TierRow({ label, on }: { label: string; on?: boolean }) {
           fontWeight: 600,
         }}
       >
-        {on ? "Free" : "Blueprint"}
+        {on ? "Free" : "Review"}
       </span>
     </div>
   );
@@ -652,7 +644,7 @@ function CenterColumn({
     <section className="px-0 lg:px-8 py-6 lg:py-0">
       {/* Scenario tabs */}
       <div className="flex items-end justify-between mb-3 flex-wrap gap-2">
-        <Kicker num="§ 3" label="Numbers · Scenario set" active />
+        <Kicker num="3" label="Numbers | Scenario set" active />
         <div className="flex items-center gap-1">
           {(["conservative", "base", "aggressive"] as Scenario[]).map((s) => (
             <button
@@ -674,7 +666,7 @@ function CenterColumn({
           <button
             type="button"
             disabled
-            title="Scenario library · Blueprint"
+            title="Scenario library | Advanced review"
             className="px-2.5 py-1.5 text-[10px] tracking-[0.18em] uppercase font-semibold rounded-sm border opacity-60 cursor-not-allowed"
             style={{ fontFamily: FONT_SUP, borderColor: RULE, color: MUTED }}
           >
@@ -683,7 +675,7 @@ function CenterColumn({
         </div>
       </div>
 
-      {/* Compact input row — wired live to form */}
+      {/* Compact input row: wired live to form */}
       <div
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-5 border-b"
         style={{ borderColor: RULE }}
@@ -723,10 +715,10 @@ function CenterColumn({
       <div className="mb-7">
         <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
           <Kicker
-            num="§ 4"
+            num="4"
             label={
               snapshot?.lanes.length
-                ? `Lane Fit Board · ${snapshot.lanes.length} lanes`
+                ? `Lane Fit Board | ${snapshot.lanes.length} lanes`
                 : "Lane Fit Board"
             }
             active
@@ -786,12 +778,12 @@ function CenterColumn({
           className="text-[10px] mt-3 italic leading-relaxed"
           style={{ fontFamily: FONT_SERIF, color: MUTED }}
         >
-          Confidence bands are a ±7 placeholder until the engine returns a
-          true range. The top lane is the engine's verdict for this scenario.
+          Confidence bands are preliminary until human review confirms the
+          range. The top lane is the engine's verdict for this scenario.
         </div>
       </div>
 
-      {/* Reverse Solver — preview/blueprint */}
+      {/* Reverse Solver: preview/review */}
       <div
         className="mb-7 rounded-sm"
         style={{
@@ -826,7 +818,7 @@ function CenterColumn({
                 border: `1px solid ${COPPER}`,
               }}
             >
-              Preview · Blueprint
+              Preview | Review
             </span>
           </div>
           <span
@@ -886,7 +878,7 @@ function CenterColumn({
               <button
                 type="button"
                 disabled
-                title="Reverse solver · Blueprint"
+                title="Reverse solver | Advanced review"
                 className="py-2 text-[10px] tracking-[0.2em] uppercase font-semibold cursor-not-allowed opacity-60"
                 style={{
                   fontFamily: FONT_SUP,
@@ -901,16 +893,16 @@ function CenterColumn({
               className="text-[11px] mt-3 italic"
               style={{ color: MUTED, fontFamily: FONT_SERIF }}
             >
-              The solver ships with the Blueprint tier. Preview only.
+              Advanced solver support is scoped during operator review. Preview only.
             </div>
           </div>
         )}
       </div>
 
-      {/* Risk register — wired to engine */}
+      {/* Risk register: wired to engine */}
       <div className="mb-7">
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <Kicker num="§ 5" label="Risk Register · named with mitigations" active />
+          <Kicker num="5" label="Risk Register | named with mitigations" active />
           <span
             className="text-[10px] tracking-[0.2em] uppercase"
             style={{ fontFamily: FONT_SUP, color: MUTED }}
@@ -933,10 +925,10 @@ function CenterColumn({
         </div>
       </div>
 
-      {/* What would change my mind — static narrative from mockup */}
+      {/* What would change my mind: static narrative from mockup */}
       <div className="mb-2">
         <div className="flex items-baseline justify-between mb-3">
-          <Kicker num="§ 6" label="What would change my mind" active />
+          <Kicker num="6" label="What would change my mind" active />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <FlipCard
@@ -1139,7 +1131,7 @@ function LaneRow({
           fontWeight: top ? 600 : 500,
         }}
       >
-        {lo}–{hi}%
+        {lo}-{hi}%
       </div>
       <div
         className="w-28 text-right text-[9px] tracking-[0.18em] uppercase font-semibold"
@@ -1190,7 +1182,7 @@ function RiskRow({ risk }: { risk: RiskFlag }) {
           className="text-[11.5px] mt-0.5 leading-relaxed italic"
           style={{ fontFamily: FONT_SERIF, color: MUTED }}
         >
-          → {risk.detail}
+          Detail: {risk.detail}
         </div>
       </div>
     </div>
@@ -1251,8 +1243,7 @@ function RightVerdict({
   saveIsPending,
   submitIsPending,
   analysisId,
-  blueprintTiers,
-  onOpenBlueprintTier,
+  onRequestWrittenReview,
 }: {
   tone: Tone;
   frame: typeof TONE_FRAMES[Tone];
@@ -1267,12 +1258,11 @@ function RightVerdict({
   saveIsPending: boolean;
   submitIsPending: boolean;
   analysisId: number | null;
-  blueprintTiers: InstrumentWorkbenchProps["blueprintTiers"];
-  onOpenBlueprintTier: (key: string) => void;
+  onRequestWrittenReview: (intent: string) => void;
 }) {
   const conf = topLane?.confidence.score ?? 0;
   const band: [number, number] = [clampPct(conf - 7), clampPct(conf + 7)];
-  const primary = topLane?.economics?.primaryValue ?? "—";
+  const primary = topLane?.economics?.primaryValue ?? "-";
   const primaryLabel = topLane?.economics?.primaryMetric ?? "Top metric";
 
   return (
@@ -1302,7 +1292,7 @@ function RightVerdict({
               className="text-[10px] tracking-[0.28em] uppercase font-semibold"
               style={{ fontFamily: FONT_SUP, color: COPPER }}
             >
-              Verdict · Live
+              Verdict | Live
             </span>
           </div>
           <span
@@ -1330,7 +1320,7 @@ function RightVerdict({
               style={{ fontFamily: FONT_SERIF, fontWeight: 500, color: CREAM }}
               data-testid="instrument-conf-band"
             >
-              {topLane ? `${band[0]}–${band[1]}%` : "—"}
+              {topLane ? `${band[0]}-${band[1]}%` : "-"}
             </span>
             <span
               className="text-[11px] italic"
@@ -1394,7 +1384,7 @@ function RightVerdict({
             style={{ fontFamily: FONT_SERIF, fontWeight: 500, color: CREAM }}
             data-testid="instrument-top-lane"
           >
-            {topLane ? LANE_PRESENTATION_NAMES[topLane.lane] ?? topLane.laneLabel : "—"}
+            {topLane ? LANE_PRESENTATION_NAMES[topLane.lane] ?? topLane.laneLabel : "-"}
           </div>
           <div
             className="text-[11px] mt-0.5 italic"
@@ -1419,7 +1409,7 @@ function RightVerdict({
             className="text-[9px] tracking-[0.25em] uppercase font-semibold mb-1.5"
             style={{ fontFamily: FONT_SUP, color: COPPER }}
           >
-            {frame.kicker} · UI preview
+            {frame.kicker} | UI preview
           </div>
           <p
             className="text-[12.5px] leading-[1.6]"
@@ -1470,7 +1460,7 @@ function RightVerdict({
         )}
       </div>
 
-      {/* Capital stack modeler tease — routes to /deal-blueprint */}
+      {/* Capital posture preview: keep the public path inside Strategy Lab. */}
       <div
         className="rounded-sm overflow-hidden"
         style={{
@@ -1497,7 +1487,7 @@ function RightVerdict({
                 border: `1px solid ${COPPER}`,
               }}
             >
-              Blueprint preview
+              Review preview
             </span>
           </div>
         </div>
@@ -1537,14 +1527,15 @@ function RightVerdict({
               </span>
             </div>
           </div>
-          <a
-            href="/deal-blueprint"
+          <button
+            type="button"
+            onClick={() => onRequestWrittenReview("strategy-review")}
             className="text-[10px] tracking-[0.18em] uppercase font-semibold border-b pb-0.5 inline-block mt-1"
             style={{ fontFamily: FONT_SUP, color: COPPER, borderColor: COPPER }}
             data-testid="instrument-open-modeler"
           >
-            Open modeler →
-          </a>
+            Request written review
+          </button>
         </div>
       </div>
 
@@ -1609,7 +1600,7 @@ function RightVerdict({
             style={{ fontFamily: FONT_SUP, borderColor: NAVY, color: NAVY }}
             data-testid="btn-save-snapshot"
           >
-            {saveIsPending ? "Saving…" : analysisId ? "Update" : "Save"}
+            {saveIsPending ? "Saving..." : analysisId ? "Update" : "Save"}
           </button>
           <button
             type="button"
@@ -1650,7 +1641,7 @@ function RightVerdict({
             }}
             data-testid="btn-submit-pegasus"
           >
-            {submitIsPending ? "Sending…" : frame.cta}
+            {submitIsPending ? "Sending..." : frame.cta}
           </button>
           <div className="flex items-center gap-2 mt-2.5">
             <div
@@ -1661,7 +1652,7 @@ function RightVerdict({
               className="text-[9px] tracking-[0.22em] uppercase font-semibold"
               style={{ fontFamily: FONT_SUP, color: CREAM }}
             >
-              SLA · 48 business hours
+              SLA | 48 business hours
             </span>
             <span
               className="text-[9px] italic"
@@ -1670,7 +1661,7 @@ function RightVerdict({
                 fontFamily: FONT_SERIF,
               }}
             >
-              · or it escalates
+              or it escalates
             </span>
           </div>
         </div>
@@ -1690,68 +1681,50 @@ function RightVerdict({
         </div>
       </div>
 
-      {/* Blueprint tiers list (preserved) */}
-      {blueprintTiers.length > 0 && (
+      <div
+        className="rounded-sm p-4"
+        style={{
+          border: `1px solid ${COPPER}`,
+          backgroundColor: "rgba(199,122,58,0.04)",
+        }}
+        data-testid="card-written-review-scope"
+      >
         <div
-          className="rounded-sm p-4"
-          style={{
-            border: `1px solid ${COPPER}`,
-            backgroundColor: "rgba(199,122,58,0.04)",
-          }}
-          data-testid="card-blueprint-upsell"
+          className="text-[10px] tracking-[0.22em] uppercase font-semibold mb-2"
+          style={{ fontFamily: FONT_SUP, color: NAVY }}
+        >
+          Written operator review
+        </div>
+        <p
+          className="text-xs leading-relaxed mb-3"
+          style={{ fontFamily: FONT_SERIF, color: NAVY }}
+        >
+          If this read needs a human memo, route it through the formal intake.
+          Pegasus scopes the review privately after the property context is
+          clear.
+        </p>
+        <button
+          type="button"
+          onClick={() => onRequestWrittenReview("strategy-review")}
+          className="w-full border px-3 py-2.5 text-left hover-elevate"
+          style={{ borderColor: RULE, backgroundColor: CREAM }}
+          data-testid="btn-written-review-scope"
         >
           <div
-            className="text-[10px] tracking-[0.22em] uppercase font-semibold mb-2"
+            className="text-xs font-semibold tracking-wide"
             style={{ fontFamily: FONT_SUP, color: NAVY }}
           >
-            Pegasus Deal Blueprint
+            Request review scope
           </div>
           <p
-            className="text-xs leading-relaxed mb-3"
-            style={{ fontFamily: FONT_SERIF, color: NAVY }}
+            className="text-[11px] leading-snug mt-1"
+            style={{ color: MUTED, fontFamily: FONT_SERIF }}
           >
-            Want a written underwriting and structure memo for this property,
-            prepared by the Pegasus team? Pick a tier. We confirm scope and
-            start work.
+            Continue to the property submission flow with the Strategy Review
+            intent attached.
           </p>
-          <div className="space-y-2">
-            {blueprintTiers.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => onOpenBlueprintTier(t.key)}
-                className="w-full text-left border px-3 py-2.5 hover-elevate"
-                style={{ borderColor: RULE, backgroundColor: CREAM }}
-                data-testid={`btn-blueprint-tier-${t.key}`}
-              >
-                <div className="flex items-baseline justify-between gap-2 mb-1">
-                  <div
-                    className="text-xs font-semibold tracking-wide"
-                    style={{ fontFamily: FONT_SUP, color: NAVY }}
-                  >
-                    {t.title}
-                  </div>
-                  <div
-                    className="text-sm tabular-nums font-semibold"
-                    style={{ color: COPPER }}
-                  >
-                    ${(t.priceCents / 100).toLocaleString()}
-                  </div>
-                </div>
-                <div className="text-[11px]" style={{ color: MUTED }}>
-                  Turnaround: {t.turnaroundDays}
-                </div>
-                <p
-                  className="text-[11px] leading-snug mt-1"
-                  style={{ color: MUTED, fontFamily: FONT_SERIF }}
-                >
-                  {t.description}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+        </button>
+      </div>
     </aside>
   );
 }
@@ -1817,13 +1790,13 @@ function TrailDrawer({ show, toggle }: { show: boolean; toggle: () => void }) {
           style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace", color: CREAM }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-0.5">
-            <TrailLine ts="10:42:01" tag="LANE" msg="Lanes eligible · scored across 3 pillars" />
-            <TrailLine ts="10:42:03" tag="INPUT" msg="Scenario · BASE selected" />
-            <TrailLine ts="10:42:05" tag="CALC" msg="All-in $498k · spread $112k" />
-            <TrailLine ts="10:42:05" tag="LANE" msg="BRRRR · 67% → 72%" tone="up" />
+            <TrailLine ts="10:42:01" tag="LANE" msg="Lanes eligible | scored across 3 pillars" />
+            <TrailLine ts="10:42:03" tag="INPUT" msg="Scenario | BASE selected" />
+            <TrailLine ts="10:42:05" tag="CALC" msg="All-in $498k | spread $112k" />
+            <TrailLine ts="10:42:05" tag="LANE" msg="BRRRR | 67% to 72%" tone="up" />
             <TrailLine ts="10:42:06" tag="RISK" msg="Comp depth 3/5 flagged" tone="warn" />
             <TrailLine ts="10:42:08" tag="LENS" msg="Tone frame applied" />
-            <TrailLine ts="10:42:09" tag="VERDICT" msg="Top lane locked · range computed" tone="verdict" />
+            <TrailLine ts="10:42:09" tag="VERDICT" msg="Top lane locked | range computed" tone="verdict" />
             <TrailLine ts="10:42:10" tag="EXPORT" msg="Snapshot PDF generated" />
           </div>
         </div>
@@ -1895,7 +1868,7 @@ function Kicker({
         className="text-[10px] tracking-[0.28em] uppercase font-semibold"
         style={{ fontFamily: FONT_SUP, color: active ? COPPER : MUTED }}
       >
-        {num} · {label}
+        {num} | {label}
       </div>
       {active && <div className="w-12 h-px" style={{ backgroundColor: COPPER }} />}
     </div>

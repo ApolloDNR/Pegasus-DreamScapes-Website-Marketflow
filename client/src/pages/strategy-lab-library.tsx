@@ -139,7 +139,7 @@ export default function StrategyLabLibraryPage() {
       <section className="border-b border-[hsl(var(--rule))]">
         <div className="max-w-[1180px] mx-auto px-6 lg:px-10 py-12">
           <div className="text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary mb-3">Strategy Lab · Property Library</div>
-          <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-[1.02]">Your saved snapshots.</h1>
+          <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal leading-[1.02]">Your saved snapshots.</h1>
           <p className="font-serif text-lg text-muted-foreground mt-3 max-w-2xl">Every property you've run through the Pegasus lens. Open it back up, refresh the math, share it with a partner, or submit it for human review.</p>
           <div className="mt-6">
             <Link href="/strategy-lab" className="inline-flex items-center gap-2 bg-[hsl(var(--copper))] text-white px-5 py-2.5 text-sm font-supporting font-semibold" data-testid="link-new-analysis">

@@ -9,8 +9,8 @@ export default function StrategyLabBlueprintConfirmedPage() {
   const orderId = params.get("orderId");
 
   useSEO({
-    title: "Blueprint order confirmed. Pegasus DreamScapes.",
-    description: "Your Pegasus Deal Blueprint order is in motion.",
+    title: "Written review confirmed. Pegasus Dreamscapes.",
+    description: "Your Pegasus written operator review is in motion.",
     noIndex: true,
   });
 
@@ -24,13 +24,13 @@ export default function StrategyLabBlueprintConfirmedPage() {
     <div className="min-h-screen bg-background text-foreground">
       <section className="max-w-[820px] mx-auto px-6 lg:px-10 py-16 lg:py-24">
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
-          Pegasus Deal Blueprint
+          Written operator review
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-tight leading-tight mb-4">
           Order confirmed. Work begins.
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed mb-10">
-          Thank you. Your Blueprint order is in our queue
+          Thank you. Your written review request is in our queue
           {orderId ? <> (reference <span className="font-mono text-foreground" data-testid="text-order-id">#{orderId}</span>)</> : null}.
           You will receive a confirmation email shortly with next steps. If we
           asked you to confirm scope, please reply to that thread so we can
@@ -44,7 +44,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
           <ul className="text-sm leading-relaxed space-y-2 text-foreground">
             <li>1. Apollo's team reviews your inputs and confirms the scope.</li>
             <li>2. Underwriting, structure, and the written memo are prepared.</li>
-            <li>3. The completed Blueprint is delivered to your inbox.</li>
+            <li>3. The completed memo is delivered to your inbox.</li>
           </ul>
         </div>
 

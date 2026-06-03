@@ -17,7 +17,7 @@ export default function StrategyLabSubmittedPage() {
   const id = params.get("id");
 
   useSEO({
-    title: "Submission received. Pegasus DreamScapes.",
+    title: "Submission received. Pegasus Dreamscapes.",
     description: "Your Strategy Lab snapshot is in the review queue.",
     noIndex: true,
   });
@@ -48,7 +48,7 @@ export default function StrategyLabSubmittedPage() {
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
           Submission received
         </div>
-        <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
+        <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal leading-tight mb-6">
           Your snapshot is in the review queue.
         </h1>
         <p className="text-lg text-muted-foreground leading-relaxed mb-8">

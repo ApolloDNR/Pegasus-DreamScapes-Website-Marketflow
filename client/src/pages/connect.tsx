@@ -1,49 +1,63 @@
 import { Link } from "wouter";
+import { ArrowRight, Banknote, Building2, Hammer, Handshake, Network, Route } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import { trackCtaClick } from "@/lib/analytics";
-import { Building2, Hammer, DollarSign, Banknote, Network, MessageSquare } from "lucide-react";
-
-// Empire Doctrine v1.0.1 — Apollo's personal QR landing.
-// Six routing buttons. Public Peggy chat is explicitly excluded (v1.1).
-// Wave 3: 56px+ tap targets, visible :active/:focus-visible state, and
-// every click is attributed via trackCtaClick(source, label).
+import { ComplianceNote, ProcessRail, SectionIntro, SplitHero } from "@/components/site-visuals";
 
 const ROUTES = [
   {
     href: "/submit?intent=property",
     label: "I have a property situation",
-    sub: "Bring us the address and the situation.",
+    sub: "Ownership pressure, deferred maintenance, messy terms, timing, or an unusual opportunity.",
     icon: Building2,
   },
   {
+    href: "/submit?intent=offer",
+    label: "I want Pegasus to review a possible offer",
+    sub: "As-is sale, direct acquisition, assignment, or another structure where Pegasus may participate after review.",
+    icon: Route,
+  },
+  {
+    href: "/work-with-apollo",
+    label: "I may want listing representation",
+    sub: "Apollo's licensed Keller Williams lane for owners and investors considering a listing strategy.",
+    icon: Handshake,
+  },
+  {
     href: "/development",
-    label: "I want to build, renovate, or develop",
-    sub: "Pegasus Development. Phased trajectory.",
+    label: "I want to build or renovate",
+    sub: "ADU, rehab, value-add, infill, or a project that needs a clearer operating path.",
     icon: Hammer,
   },
   {
-    href: "/submit?intent=sell",
-    label: "I want to sell a property",
-    sub: "Strategy-first review across every lane.",
-    icon: DollarSign,
-  },
-  {
     href: "/capital",
-    label: "I am interested in capital partnerships",
-    sub: "Private, individual conversations only.",
+    label: "I am a capital relationship",
+    sub: "Private, documented conversations only. No public offer and no public investment product.",
     icon: Banknote,
   },
   {
     href: "/vendor-network",
-    label: "I am a vendor or operator",
-    sub: "Join the Pegasus Vendor Network.",
+    label: "I am an operator or vendor",
+    sub: "Trade, contractor, broker, consultant, buyer, or service partner with real execution capability.",
     icon: Network,
   },
+];
+
+const nextSteps = [
   {
-    href: "/contact",
-    label: "I just want to talk to Apollo",
-    sub: "Direct line. apollo@pegasusdreamscapes.com.",
-    icon: MessageSquare,
+    label: "Step 01",
+    title: "Pick the lane that matches the reason you scanned.",
+    body: "This page is built for real-world conversations: cards, QR scans, referrals, and property moments where speed matters.",
+  },
+  {
+    label: "Step 02",
+    title: "Send the minimum useful context.",
+    body: "A property address, the pressure, timeline, role, and contact path are enough to start a serious review.",
+  },
+  {
+    label: "Step 03",
+    title: "Pegasus routes the next move.",
+    body: "The answer may be acquisition, development, representation, referral, MarketFlow, or a clean pass.",
   },
 ];
 
@@ -51,58 +65,94 @@ export default function ConnectPage() {
   useSEO({
     title: "Connect with Apollo",
     description:
-      "You found Apollo's card. Tell us why you reached out: property, build, sell, capital, vendor, or just talk.",
+      "The Pegasus Dreamscapes card and QR landing page. Route your property, build, capital, vendor, or direct Apollo conversation.",
     image: "/og/default.png",
   });
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20">
-      <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
-        <p className="text-[11px] tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          Pegasus DreamScapes · Apollo
-        </p>
-        <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-foreground leading-tight mb-6">
-          What brought you here?
-        </h1>
-        <p className="font-serif text-lg text-muted-foreground italic mb-12 max-w-xl mx-auto">
-          Pick the route that fits. We will get you to the right place.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <SplitHero
+        eyebrow="Pegasus Dreamscapes / Apollo"
+        title={
+          <>
+            You found the card.
+            <span className="block pt-2 italic text-[#D4B483]">Now choose the right lane.</span>
+          </>
+        }
+        subtitle="This page exists to route a real conversation into the correct Pegasus path."
+        body="No maze. No public marketplace pitch. Pick the reason you came here and Pegasus will move the situation to the right surface."
+        primaryCta={{ label: "Submit a Property", href: "/submit" }}
+        secondaryCta={{ label: "Contact Apollo", href: "/contact" }}
+        visual="connect"
+        visualTitle="Card to route map"
+        visualCaption="A QR scan moves a real-world conversation into the correct operating lane without making the visitor decode the whole company."
+        labels={[
+          { label: "Primary", value: "Submit" },
+          { label: "Private", value: "Capital" },
+          { label: "Licensed", value: "Apollo" },
+        ]}
+      />
 
-      <div className="max-w-3xl mx-auto px-6 lg:px-12 space-y-3">
-        {ROUTES.map((r) => {
-          const Icon = r.icon;
-          const slug = r.label.toLowerCase().split(" ").slice(0, 4).join("-");
-          return (
-            <Link
-              key={r.href}
-              href={r.href}
-              onClick={() => trackCtaClick("connect", r.label, r.href)}
-              className="
-                group block min-h-[56px] rounded-md border border-border bg-card
-                px-5 sm:px-6 py-4 sm:py-5
-                transition-colors transition-transform duration-150
-                hover:border-primary hover:bg-primary/[0.04]
-                active:scale-[0.99] active:bg-primary/[0.08] active:border-primary
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background
-              "
-              data-testid={`link-connect-${slug}`}
-            >
-              <div className="flex items-start gap-5">
-                <span className="shrink-0 w-12 h-12 rounded-sm bg-primary/10 text-primary flex items-center justify-center group-active:bg-primary/20 transition-colors">
-                  <Icon className="w-5 h-5" aria-hidden="true" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-serif text-xl text-foreground group-hover:text-primary group-active:text-primary transition-colors">
-                    {r.label}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">{r.sub}</p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+      <section className="py-20 lg:py-28">
+        <div className="mx-auto max-w-7xl px-6 lg:px-12">
+          <SectionIntro
+            eyebrow="Route selection"
+            title="The right first click depends on the situation."
+            body="The QR target is calm, exact, and useful. Each path below sends the visitor to the surface that can actually handle that kind of conversation."
+          />
+
+          <div className="mt-12 grid gap-3 md:grid-cols-2">
+            {ROUTES.map((route) => {
+              const Icon = route.icon;
+              const slug = route.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+              return (
+                <Link
+                  key={route.href}
+                  href={route.href}
+                  onClick={() => trackCtaClick("connect", route.label, route.href)}
+                  className="group block rounded-md border border-border bg-card p-5 transition-colors hover:border-primary/55 hover:bg-primary/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  data-testid={`link-connect-${slug}`}
+                >
+                  <div className="flex items-start gap-5">
+                    <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-sm border border-primary/20 bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <h2 className="font-serif text-2xl font-semibold leading-tight text-foreground group-hover:text-primary">
+                          {route.label}
+                        </h2>
+                        <ArrowRight className="mt-1 h-4 w-4 flex-shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                      </div>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{route.sub}</p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-card py-20 lg:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-12 lg:px-12">
+          <div className="lg:col-span-4">
+            <SectionIntro
+              eyebrow="Next move"
+              title="The card is not the pitch. It is the router."
+              body="A professional contact page should reduce friction and increase clarity. Pegasus earns trust by moving the person to the correct lane first."
+            />
+          </div>
+          <div className="lg:col-span-8">
+            <ProcessRail items={nextSteps} />
+            <div className="mt-6">
+              <ComplianceNote>
+                Submitting a route selection or property request does not create an agency relationship, investment relationship, offer, valuation, or commitment. Licensed real estate services, when applicable, are handled through Apollo's Keller Williams lane.
+              </ComplianceNote>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

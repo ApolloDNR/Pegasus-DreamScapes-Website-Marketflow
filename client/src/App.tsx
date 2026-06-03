@@ -72,9 +72,12 @@ import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 
 const About = lazy(() => import("@/pages/about"));
+const DealArchitecture = lazy(() => import("@/pages/deal-architecture"));
 const Development = lazy(() => import("@/pages/development"));
-const Sell = lazy(() => import("@/pages/sell"));
-const Invest = lazy(() => import("@/pages/invest"));
+const WorkWithApollo = lazy(() => import("@/pages/work-with-apollo"));
+const Ecosystem = lazy(() => import("@/pages/ecosystem"));
+const PeggyAI = lazy(() => import("@/pages/peggy-ai"));
+const DreamscaperStandard = lazy(() => import("@/pages/dreamscaper-standard"));
 const Projects = lazy(() => import("@/pages/projects"));
 const ProjectDetail = lazy(() => import("@/pages/project-detail"));
 const Calculators = lazy(() => import("@/pages/calculators"));
@@ -86,7 +89,6 @@ const AdminStrategyLab = lazy(() => import("@/pages/admin-strategy-lab"));
 const AdminVendors = lazy(() => import("@/pages/admin-vendors"));
 const AdminCtaEvents = lazy(() => import("@/pages/admin-cta-events"));
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
-const Resources = lazy(() => import("@/pages/resources"));
 const Library = lazy(() => import("@/pages/library"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
 const SubmitPage = lazy(() => import("@/pages/submit"));
@@ -127,10 +129,7 @@ const Disclosures = lazy(() => import("@/pages/disclosures"));
 const SnapshotStatus = lazy(() => import("@/pages/snapshot-status"));
 const SnapshotCalc = lazy(() => import("@/pages/snapshot-calc"));
 const SnapshotCalcGate = lazy(() => import("@/pages/snapshot-calc-gate"));
-const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
 const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
-const Systems = lazy(() => import("@/pages/systems"));
-const Education = lazy(() => import("@/pages/education"));
 
 const legacyRedirects: [string, string][] = [
   // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
@@ -191,7 +190,12 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
+      <Route path="/deal-architecture" component={DealArchitecture} />
       <Route path="/development" component={Development} />
+      <Route path="/work-with-apollo" component={WorkWithApollo} />
+      <Route path="/ecosystem" component={Ecosystem} />
+      <Route path="/peggy-ai" component={PeggyAI} />
+      <Route path="/dreamscaper-standard" component={DreamscaperStandard} />
       {/* Empire Doctrine v1.0.1 — canonical submission route. */}
       <Route path="/submit" component={SubmitPage} />
       <Route path="/capital" component={CapitalPage} />
@@ -214,10 +218,8 @@ function Router() {
       <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
       <Route path="/contact" component={Contact} />
-      {/* Empire Doctrine v1.0.1: /systems, /ecosystem, /education, /calculators,
-       * /buyers, /wholesale, /capital-raising, /dreamspace are removed from
-       * the public surface. /calculators not registered here (only the
-       * /strategy-lab/classic alias is kept as an internal sub-route). */}
+      {/* /calculators is not registered on the public surface; only
+       * /strategy-lab/classic is kept as an internal sub-route. */}
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/disclosures" component={Disclosures} />
@@ -296,7 +298,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="pegasus-ui-theme">
+      <ThemeProvider defaultTheme="dark" storageKey="pegasus-ui-theme">
         <SupabaseAuthProvider>
           <SiteContentProvider>
             <EditModeProvider>

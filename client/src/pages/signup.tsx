@@ -155,7 +155,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-serif" data-testid="text-signup-title">
-            Join Pegasus DreamScapes
+            Join Pegasus Dreamscapes
           </CardTitle>
           <CardDescription>
             {step === 1

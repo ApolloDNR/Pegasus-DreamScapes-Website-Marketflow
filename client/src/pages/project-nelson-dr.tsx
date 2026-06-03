@@ -1,46 +1,57 @@
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { useSEO } from "@/hooks/use-seo";
 import { useEffect } from "react";
-import { Construction, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
+import { ArrowLeft, FileSearch, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { CardSurface } from "@/components/ui/card-primitives";
+import { useSEO } from "@/hooks/use-seo";
 
-// Empire Doctrine v1.0.1 / Addendum §6 — Nelson Dr is held behind a
-// "case study coming" placeholder until real photos + founder-confirmed
-// economics are signed off. The page skeleton uses the eight section H2s
-// from Brief §9.1 so structure ships; bodies are intentionally empty.
-//
-// Public-safe economics: acquisition ~$600K, scope ~$90–100K, projected
-// stabilized value ~$840K. No profit / ROI / net figures are surfaced
-// publicly per Addendum §6.
-
-// Website Brief v1.0 §9.1 — seven canonical case-study H2s.
 const SECTIONS = [
-  "Situation",
-  "Strategy",
-  "Structure",
-  "Scope",
-  "Execution",
-  "Result",
-  "Lesson",
+  {
+    title: "Situation",
+    body: "East Bay residential value-add profile with enough constraint to require a structured read instead of a simple buy/list answer.",
+  },
+  {
+    title: "Strategy",
+    body: "Preserve optionality while the team verifies scope, comparable sales, rent posture, and the cleanest stabilization path.",
+  },
+  {
+    title: "Structure",
+    body: "Reviewed as a Pegasus acquisition and development file. Public numbers stay limited until the record is complete.",
+  },
+  {
+    title: "Scope",
+    body: "Rehab, systems, exterior presentation, leasing readiness, and execution sequencing are the core workstreams under review.",
+  },
+  {
+    title: "Execution",
+    body: "Contractor documentation, before/after photography, budget discipline, and milestone evidence must be clean before publication.",
+  },
+  {
+    title: "Result",
+    body: "Final result language is intentionally withheld until the project record can be published without guesswork or promotional math.",
+  },
+  {
+    title: "Lesson",
+    body: "A premium case study is proof, not theater. Pegasus publishes the file when the facts are strong enough to carry it.",
+  },
 ];
 
 const NELSON_JSONLD = {
   "@context": "https://schema.org",
   "@type": "CreativeWork",
-  name: "Nelson Dr · Pleasant Hill case study",
-  about: "Pegasus DreamScapes value-add residential acquisition",
-  creator: { "@type": "Person", name: "Paolo \"Apollo\" Duran" },
-  publisher: { "@type": "Organization", name: "Pegasus DreamScapes Corp." },
+  name: "Nelson Dr Pleasant Hill case file",
+  about: "Pegasus Dreamscapes value-add residential acquisition",
+  creator: { "@type": "Person", name: 'Paolo "Apollo" Duran' },
+  publisher: { "@type": "Organization", name: "Pegasus Dreamscapes Corp." },
   inLanguage: "en",
-  workStatus: "placeholder",
+  workStatus: "incomplete",
 };
 
 export default function NelsonDrPage() {
   useSEO({
-    title: "Nelson Dr Case Study",
+    title: "Nelson Dr Case File",
     description:
-      "Pegasus DreamScapes' first documented case study from the East Bay. Real photos and final economics pending.",
+      "Pegasus Dreamscapes East Bay case file under review. Public-safe numbers, structure, and publication boundaries.",
     image: "/og/nelson-dr.png",
   });
 
@@ -61,58 +72,71 @@ export default function NelsonDrPage() {
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
-      <div className="max-w-3xl mx-auto px-6 lg:px-12">
+      <div className="mx-auto max-w-3xl px-6 lg:px-12">
         <Link
           href="/projects"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
           data-testid="link-nelson-back"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Projects
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back to Projects
         </Link>
 
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
-          Case Study · Nelson Dr
+        <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-primary font-supporting">
+          Case File · Under Review
         </p>
-        <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-foreground leading-tight mb-6">
+        <h1 className="mb-6 font-serif text-4xl font-semibold leading-tight tracking-normal text-foreground sm:text-5xl">
           Nelson Dr · Pleasant Hill
         </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed mb-2">
+        <p className="mb-2 text-lg leading-relaxed text-muted-foreground">
           A complex East Bay residential acquisition routed through a value-add execution path.
         </p>
-        <p className="text-base text-muted-foreground/85 leading-relaxed mb-12">
-          Acquisition near $600K. Scope $90–100K. Projected stabilized value near $840K.
+        <p className="mb-12 text-base leading-relaxed text-muted-foreground/85">
+          Public-safe frame: acquisition near $600K, scope near $90K-100K, projected stabilized value near $840K. No final result, profit, ROI, or guarantee is published here.
         </p>
 
-        <CardSurface className="p-8 sm:p-10 text-center mb-12">
-          <Construction className="w-10 h-10 text-primary mx-auto mb-5" />
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-3">
-            Case study coming
-          </p>
-          <h2 className="font-serif text-2xl text-foreground mb-3">
-            Real photos and final economics pending founder approval.
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            We do not publish a case study before the record is clean. The structural sections are
-            queued below; each gets its body when Apollo signs off.
-          </p>
+        <CardSurface className="mb-12 p-7 sm:p-9">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-primary/30 bg-primary/10">
+              <FileSearch className="h-5 w-5 text-primary" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary font-supporting">
+                Publication Standard
+              </p>
+              <h2 className="mb-3 font-serif text-2xl text-foreground">
+                The file is open. The proof is not final.
+              </h2>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                Pegasus can show the structure before publishing the victory lap. Photos, final scope evidence, and confirmed economics stay off the public site until Apollo signs the record.
+              </p>
+            </div>
+          </div>
         </CardSurface>
 
-        <div className="space-y-8 opacity-75">
-          {SECTIONS.map((title) => (
-            <section key={title}>
-              <h2 className="font-serif text-2xl font-semibold text-foreground border-b border-border pb-2 mb-3">
-                {title}
+        <div className="grid gap-4">
+          {SECTIONS.map((section) => (
+            <section key={section.title} className="border border-border/60 bg-card/70 p-5 sm:p-6">
+              <h2 className="mb-3 font-serif text-2xl font-semibold text-foreground">
+                {section.title}
               </h2>
-              <p className="text-sm text-muted-foreground italic">Coming soon.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{section.body}</p>
             </section>
           ))}
+        </div>
+
+        <div className="mt-10 flex items-start gap-3 border-t border-border pt-6 text-sm text-muted-foreground">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          <p>
+            This case file is informational only. It is not an offer, appraisal, investment solicitation, guarantee, or claim of final project performance.
+          </p>
         </div>
 
         <div className="mt-16 text-center">
           <Link href="/submit">
             <Button
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm"
+              className="h-12 rounded-sm bg-primary px-8 text-[12px] font-semibold uppercase tracking-[0.18em] text-primary-foreground hover:bg-primary/90"
               data-testid="button-nelson-submit"
             >
               Submit a Property

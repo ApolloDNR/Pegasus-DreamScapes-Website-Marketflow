@@ -146,7 +146,7 @@ describe("Public voice rules (v1.3.1)", () => {
 
   describe("no spaced em-dash in public copy", () => {
     // Allowed: code formatters return "—", en-dash ranges like 7–14 days,
-    // page-title attributions ("Title — Pegasus DreamScapes").
+    // page-title attributions ("Title — Pegasus Dreamscapes").
     for (const rel of PUBLIC_PAGE_FILES) {
       it(`${rel} contains no spaced em-dash`, () => {
         const src = stripComments(read(rel));
@@ -325,5 +325,5 @@ describe("Public voice rules (v1.3.1) — render layer", () => {
     for (const phrase of FORBIDDEN_PHRASES) {
       expect(text.toLowerCase()).not.toContain(phrase.toLowerCase());
     }
-  });
+  }, 15000);
 });

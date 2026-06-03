@@ -16,11 +16,11 @@ describe("Peggy quick-prompt route mapping", () => {
 
     it("maps each label to its canonical route", () => {
       const map = Object.fromEntries(prompts.map((p) => [p.label, p.href]));
-      expect(map["I have a property"]).toBe("/sell");
-      expect(map["I have a deal or JV idea"]).toBe("/sell");
-      expect(map["I want to discuss capital"]).toBe("/invest");
-      expect(map["ADU / development"]).toBe("/sell");
-      expect(map["Learn strategies"]).toBe("/resources");
+      expect(map["I have a property"]).toBe("/submit?intent=property");
+      expect(map["I have a deal or JV idea"]).toBe("/submit?intent=deal-jv");
+      expect(map["Capital conversation"]).toBe("/capital");
+      expect(map["ADU / development"]).toBe("/submit?intent=adu");
+      expect(map["Learn strategies"]).toBe("/library");
       expect(map["Vendor or operator"]).toBe("/vendor-network");
     });
 
@@ -70,10 +70,10 @@ describe("Peggy quick-prompt route mapping", () => {
   describe("marketflow / marketplace context", () => {
     const prompts = getQuickPrompts("/marketflow");
 
-    it("includes a 'Request access' prompt that routes to /contact", () => {
+    it("includes a 'Request access' prompt that routes to the access request form", () => {
       const requestAccess = prompts.find((p) => p.label === "Request access");
       expect(requestAccess).toBeDefined();
-      expect(requestAccess?.href).toBe("/contact");
+      expect(requestAccess?.href).toBe("/marketflow/access");
       expect(requestAccess?.context).toBe("marketplace");
     });
 
@@ -85,7 +85,8 @@ describe("Peggy quick-prompt route mapping", () => {
 
     it("appends the first two router prompts for cross-routing", () => {
       const hrefs = prompts.map((p) => p.href).filter(Boolean);
-      expect(hrefs.filter((h) => h === "/sell").length).toBeGreaterThanOrEqual(2);
+      expect(hrefs).toContain("/submit?intent=property");
+      expect(hrefs).toContain("/submit?intent=deal-jv");
     });
   });
 });

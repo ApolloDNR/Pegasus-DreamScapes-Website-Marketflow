@@ -1,105 +1,82 @@
-# Navigation Map (v1.3.1, post Task #109)
+# Navigation Map
 
-Single source of truth for which public routes are reachable from which
-nav surface. The canonical link lists live in
-`client/src/config/navigation.ts` and are consumed by:
+Status: current public launch surface as of 2026-06-03.
 
-- `client/src/components/navigation.tsx` (desktop header + mobile sheet)
-- `client/src/components/footer.tsx`
+This document mirrors the route model in `client/src/config/navigation.ts`,
+`client/src/components/navigation.tsx`, and `client/src/components/footer.tsx`.
+The website should route visitors by intent without reviving the retired
+`/sell`, `/invest`, `/resources`, or `/dealflow` public IA.
 
-Parity across header dropdown, mobile sheet, and footer is enforced by
-`client/src/__tests__/nav-parity.test.tsx`.
+## Header Primary
 
-## Header primary (`NAV_PRIMARY`)
+| Label | Route | Job |
+|---|---|---|
+| Deal Architecture | `/deal-architecture` | Explain how Pegasus reads and structures complex property situations. |
+| Development | `/development` | Show ADU, rehab, value-add, and build strategy. |
+| Strategy Lab | `/strategy-lab` | Give a preliminary property read before human review. |
+| Work With Apollo | `/work-with-apollo` | Separate licensed KW representation from Pegasus operating-company work. |
+| MarketFlow | `/marketflow` | Introduce the private reviewed-opportunity network. |
 
-| Label      | Route          | Notes                          |
-|------------|----------------|--------------------------------|
-| Approach   | `/sell`        | Strategy Review intake         |
-| Projects   | `/projects`    | Built work + project detail    |
-| Capital    | `/invest`      | Capital partnerships           |
-| MarketFlow | `/marketflow`  | Private beta portal (badge)    |
-| About      | `/about`       | Founder + company              |
+Primary CTA: `Submit a Property` -> `/submit`.
 
-## Header "More" dropdown (`NAV_MORE`)
+## More Menu
 
-Mirrored verbatim in the mobile sheet "More" group and the footer "More"
-column.
+| Label | Route | Job |
+|---|---|---|
+| Connect | `/connect` | QR/card routing into the correct Pegasus door. |
+| About Pegasus | `/about` | Founder and company context. |
+| Pegasus Ecosystem | `/ecosystem` | Explain website, HQ, Peggy, MarketFlow, and future systems. |
+| Dreamscaper Standard | `/dreamscaper-standard` | State the operating standard and public trust posture. |
+| Peggy AI | `/peggy-ai` | Explain Peggy as guided intake, not a decision-maker. |
+| Vendor Network | `/vendor-network` | Route operators and vendors into qualification. |
+| Contact | `/contact` | General routed contact path. |
+| Disclosures | `/disclosures` | Compliance, brokerage, AI, securities, and Equal Housing disclosures. |
 
-| Label            | Route             |
-|------------------|-------------------|
-| Strategy Library | `/resources`      |
-| Strategy Lab     | `/strategy-lab`   |
-| Calculators      | `/calculators`    |
-| Deal Blueprint   | `/deal-blueprint` |
-| Vendor Network   | `/vendor-network` |
-| Contact          | `/contact`        |
-| Disclosures      | `/disclosures`    |
+## Footer Extras
 
-Unauthenticated users additionally see "Sign In" → `/login` in the header
-dropdown and the mobile sheet.
+| Label | Route | Notes |
+|---|---|---|
+| Projects | `/projects` | Proof and case-study surface. |
+| Capital & Partnerships | `/capital` | Private relationship conversations with securities-safe language. |
+| Strategy Library | `/library` | Canonical educational/library route. |
+| Login | `/login` | Auth entry. |
+| Privacy | `/privacy` | Legal. |
+| Terms | `/terms` | Legal. |
 
-## Footer-only extras (`FOOTER_MORE_EXTRA`)
+## Canonical Public Doors
 
-Currently empty. Reserved for footer-only legal or housekeeping links so
-they can be added without bloating the header dropdown.
+The launch website should make these doors obvious:
 
-The footer also surfaces:
+| Door | Route | Audience |
+|---|---|---|
+| Submit | `/submit` | Owners, agents, wholesalers, operators, referral partners, property situations. |
+| Connect | `/connect` | QR/card scans and direct introductions. |
+| Strategy Lab | `/strategy-lab` | Users who want a preliminary self-serve read. |
+| Work With Apollo | `/work-with-apollo` | Sellers and buyers who may need licensed representation. |
+| Development | `/development` | ADU, rehab, value-add, infill, and project conversations. |
+| Capital | `/capital` | Private capital and partnership relationships only. |
+| MarketFlow | `/marketflow` | Private reviewed-opportunity network access. |
+| Peggy AI | `/peggy-ai` | Guided intake and routing support. |
 
-- `Submit a Property` → `/sell` (Engage column)
-- `Privacy` / `Terms` / `Disclosures` (legal row)
-- `Sign In` → `/login` and `MarketFlow` → `/marketflow` (utility row)
+## Legacy Redirects
 
-## Deliberate deep-link / flow-result routes
+Legacy routes remain in `client/src/App.tsx` so old links do not break, but
+they should not be used in new public copy or navigation:
 
-These render real pages but are not in the top nav. They are reached
-from contextual links inside the experience:
+- `/sell` -> `/submit?intent=sell`
+- `/submit-deal` -> `/submit?intent=deal-jv`
+- `/submit-property` -> `/submit?intent=property`
+- `/resources` -> `/library`
+- `/invest` and `/partner` -> `/capital`
+- `/services` -> `/development`
+- `/buy`, `/dealflow`, `/portal`, `/marketplace`, and marketplace descendants -> MarketFlow equivalents.
 
-| Route                                    | Reached from                                         |
-|------------------------------------------|------------------------------------------------------|
-| `/` (Home)                               | Logo wordmark                                        |
-| `/development`                           | Home "Development" router tile, internal CTAs (the spine pillar page) |
-| `/education`                             | Home "Learning" router tile (Guided Learning Path), article-detail breadcrumbs |
-| `/resources`                             | "More ▾" Strategy Library link (Field Notes & Tools) |
-| `/sell?intent=deal-jv`                   | Home "Deal Sources" router tile, `/submit-deal` redirect (preselects wholesaler + Deal/JV intent) |
-| `/strategy-lab/library`                  | Strategy Lab subnav                                  |
-| `/strategy-lab/classic`                  | Strategy Lab subnav (legacy 8-tile suite)            |
-| `/strategy-lab/submitted`                | Form-result page                                     |
-| `/strategy-lab/blueprint-confirmed`      | Stripe/invoice return page                           |
-| `/resources/:slug`                       | Strategy Library article cards                       |
-| `/projects/:slug`                        | Projects grid                                        |
-| `/snapshot/:token`                       | Snapshot share URL                                   |
-| `/snapshot/calc/:token`                  | Snapshot share URL (canonical)                       |
-| `/snapshot/property/:token`              | Snapshot share URL (alias)                           |
-| `/privacy`, `/terms`                     | Footer legal row                                     |
-| `/login`, `/signup`                      | Auth entry points (footer + nav dropdown)            |
-| `/admin/strategy-lab`                    | Staff-only; reached from admin tooling               |
-| `/profile/:userId`                       | MarketFlow community contexts                        |
-| `/offer-studio/:dealType/:dealId`        | Deal action flow inside MarketFlow                   |
-| `/dealflow/project/:id`                  | Deal context links                                   |
-| MarketFlow `/marketflow/*` routes        | Role-gated inside the portal                         |
+## Update Rule
 
-## Legacy redirects (in `App.tsx` `legacyRedirects`)
+When changing public navigation, update these in the same pass:
 
-Listed in code; they cover retired funnel routes (`/wholesale`,
-`/submit-deal` → `/sell?intent=deal-jv`, `/services` → `/development`,
-`/buyers`, `/buy`, `/dreamspace`, `/partner`, `/capital-raising`, all
-`/marketplace/*`, `/dealflow/*`, `/portal/*`, `/community`, `/hq`).
-
-Two non-funnel redirects worth calling out:
-
-- `/strategy-library` → `/resources` (matches the visible "Strategy
-  Library" nav label; previously pointed at `/education`, which caused
-  the label/route collision flagged by Task #109).
-- `/dashboard` → `/marketflow/dashboard` (the auth-aware role router
-  lives at the MarketFlow path; the standalone `/dashboard` page was
-  retired).
-
-## Adding or renaming nav entries
-
-1. Edit `client/src/config/navigation.ts` (one file).
-2. If the new entry belongs in the header "More" dropdown, add a
-   `MORE_META` entry in `client/src/components/navigation.tsx` so it
-   gets an icon + tagline.
-3. Re-run `npx vitest run client/src/__tests__/nav-parity.test.tsx` to
-   confirm header / mobile sheet / footer stay in sync.
-4. Update this document.
+1. `client/src/config/navigation.ts`
+2. `client/src/components/navigation.tsx` metadata for More menu items
+3. `client/src/components/footer.tsx` if footer-only links change
+4. Route tests covering nav parity, public voice, and keyboard traversal
+5. This file

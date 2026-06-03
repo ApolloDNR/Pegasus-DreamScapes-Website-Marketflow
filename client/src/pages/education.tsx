@@ -45,7 +45,7 @@ export default function Education() {
   useSEO({
     title: "Strategy Library",
     description:
-      "Pegasus DreamScapes Strategy Library. Real estate strategy education on creative finance, development, capital, and the Pegasus standard. Educational only, not legal, tax, or securities advice.",
+      "Pegasus Dreamscapes Strategy Library. Real estate strategy education on creative finance, development, capital, and the Pegasus standard. Educational only, not legal, tax, or securities advice.",
     image: "https://pegasusdreamscapes.com/og/education.svg",
   });
 
@@ -108,7 +108,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Pegasus DreamScapes Strategy Library"
+          alt="Pegasus Dreamscapes Strategy Library"
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -131,7 +131,7 @@ function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
+            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
@@ -207,7 +207,7 @@ function CuratedArticles({ active }: { active: string }) {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Core Articles</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Start where you are.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -283,7 +283,7 @@ function BeginnerPathSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Beginner Path</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             New here? Read in this order.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -327,7 +327,7 @@ function GlossarySection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Glossary</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Plain-language definitions.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -374,7 +374,7 @@ function RemoteArticlesSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">From the Library</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Latest published reads.
           </h2>
         </ScrollReveal>
@@ -410,22 +410,22 @@ function ClosingCTA() {
     <section className="py-28 lg:py-36 bg-background">
       <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
         <GraduationCap className="w-12 h-12 text-primary mx-auto mb-8" />
-        <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5" data-testid="text-education-cta">
+        <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5" data-testid="text-education-cta">
           Have a property that may fit?
         </h2>
         <p className="text-base text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
           Reading is one thing. A real read on a real property is the next step. Strategy Review is free, written, and routes every property to a path.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/sell">
+          <Link href="/submit?intent=strategy-review">
             <Button size="lg" className="gap-2" data-testid="button-education-sell">
               Start a Strategy Review
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <Link href="/deal-blueprint">
-            <Button size="lg" variant="outline" className="gap-2" data-testid="button-education-blueprint">
-              Pegasus Deal Blueprint
+          <Link href="/strategy-lab">
+            <Button size="lg" variant="outline" className="gap-2" data-testid="button-education-strategy-lab">
+              Open Strategy Lab
             </Button>
           </Link>
         </div>
