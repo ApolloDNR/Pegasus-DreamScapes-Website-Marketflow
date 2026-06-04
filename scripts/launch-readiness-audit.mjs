@@ -78,6 +78,12 @@ const requiredRootPublicFiles = [
   "public/og/default.png",
 ];
 
+const requiredLaunchOpsFiles = [
+  "docs/LAUNCH_CUTOVER.md",
+  "scripts/live-launch-smoke.mjs",
+  "scripts/production-env-check.mjs",
+];
+
 const scanTargets = [
   "README.md",
   "client/index.html",
@@ -166,6 +172,7 @@ const generatedRoutesSource = await readProjectFile("scripts/generate-sitemap.mj
 const serverRoutesSource = await readProjectFile("server/routes.ts");
 const buildScriptSource = await readProjectFile("script/build.ts");
 const gitignore = await readProjectFile(".gitignore");
+const packageJson = await readProjectFile("package.json");
 
 const sitemapRoutes = extractSitemapRoutes(sitemap);
 const clientSitemapRoutes = extractSitemapRoutes(clientSitemap);
@@ -197,6 +204,11 @@ for (const key of requiredEnvKeys) {
 for (const file of requiredRootPublicFiles) {
   requireCheck(await exists(file), `${file} is missing from the root public launch assets`);
 }
+
+for (const file of requiredLaunchOpsFiles) {
+  requireCheck(await exists(file), `${file} is missing from launch operations assets`);
+}
+
 requireCheck(
   buildScriptSource.includes('cp("public", "dist/public"'),
   "script/build.ts does not copy root public launch assets into dist/public",
@@ -204,6 +216,7 @@ requireCheck(
 requireCheck(serverRoutesSource.includes('app.get("/api/health"'), "server/routes.ts is missing /api/health");
 requireCheck(serverRoutesSource.includes('app.get("/api/readiness"'), "server/routes.ts is missing /api/readiness");
 requireCheck(gitignore.includes("screenshots/codex-preview/"), ".gitignore does not ignore local browser QA artifacts");
+requireCheck(packageJson.includes('"smoke:live": "node scripts/live-launch-smoke.mjs"'), "package.json is missing the live launch smoke command");
 
 const filesToScan = [];
 for (const target of scanTargets) {

@@ -16,6 +16,7 @@ The launch surface is the public face for cards, QR traffic, property intake, St
 - `npm run dev` - local development server.
 - `npm run audit:launch` - static launch route, SEO, brand, asset, and copy guard.
 - `npm run env:production` - no-secrets production environment readiness check.
+- `npm run smoke:live` - live DNS, health, readiness, robots, sitemap, and homepage launch smoke.
 - `npm run check` - TypeScript check.
 - `npm run build` - generate sitemap, build Vite client, copy public assets, and bundle server.
 - `npm test` - Vitest suite.
@@ -113,6 +114,8 @@ For each public route verify:
 12. Submit one real production `/submit` smoke test and verify both HQ intake receipt and staff email delivery.
 13. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
 14. Complete qualified legal/compliance review before public QR/card distribution.
+
+See `docs/LAUNCH_CUTOVER.md` for the current DNS/deployment cutover state and the exact live smoke gate. As of the latest local check, `pegasusdreamscapes.com` still resolves to Squarespace, so DNS must be moved to the production Node host before the site can be called live.
 
 Production runtime expectations:
 

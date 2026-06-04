@@ -8,6 +8,7 @@
     "build": "tsx script/build.ts",
     "audit:launch": "node scripts/launch-readiness-audit.mjs",
     "env:production": "node scripts/production-env-check.mjs",
+    "smoke:live": "node scripts/live-launch-smoke.mjs",
     "verify:launch": "npm run audit:launch && npm run check && npm run build && npm test",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
