@@ -105,4 +105,23 @@ describe("live launch smoke core", () => {
     expect(result.baseUrl).toBe(baseUrl);
     expect(result.canonicalUrl).toBe(canonicalUrl);
   });
+
+  it("calls out the Replit run shell when a deployment URL is not serving the app", async () => {
+    const { runLaunchSmoke } = await import("../../scripts/live-launch-smoke-core.mjs");
+
+    const result = await runLaunchSmoke({
+      baseUrl,
+      skipDns: true,
+      fetchImpl: vi.fn(async () => ({
+        status: 404,
+        headers: new Headers({ "content-type": "text/html;charset=utf-8" }),
+        text: async () => "<!DOCTYPE html><title>Run this app to see the result</title>",
+      })),
+      resolve4: async () => [],
+      resolveCname: async () => [],
+    });
+
+    expect(result.failures.length).toBeGreaterThan(0);
+    expect(result.failures.map((failure) => failure.detail).join("\n")).toContain("Replit run shell detected");
+  });
 });

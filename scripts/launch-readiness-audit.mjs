@@ -222,13 +222,14 @@ requireCheck(serverRoutesSource.includes('app.get("/api/health"'), "server/route
 requireCheck(serverRoutesSource.includes('app.get("/api/readiness"'), "server/routes.ts is missing /api/readiness");
 requireCheck(gitignore.includes("screenshots/codex-preview/"), ".gitignore does not ignore local browser QA artifacts");
 requireCheck(packageJson.includes('"smoke:live": "node scripts/live-launch-smoke.mjs"'), "package.json is missing the live launch smoke command");
-requireCheck(launchCutoverDoc.includes("c40f3f4"), "docs/LAUNCH_CUTOVER.md is missing the current launch commit baseline");
+requireCheck(launchCutoverDoc.includes("4caddfc"), "docs/LAUNCH_CUTOVER.md is missing the current launch commit baseline");
 requireCheck(replitHandoffDoc.includes("deployment target: `autoscale`"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing Replit autoscale deployment guidance");
 requireCheck(
   replitHandoffDoc.includes("npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns"),
   "docs/REPLIT_DEPLOY_HANDOFF.md is missing pre-DNS Replit smoke guidance",
 );
 requireCheck(replitHandoffDoc.includes("Do Not Launch If"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the no-launch gate list");
+requireCheck(replitHandoffDoc.includes("Run this app to see the result"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the Replit run-shell no-launch gate");
 requireCheck(replitHandoffDoc.includes("ext-sq.squarespace.com"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the current Squarespace DNS cutover note");
 requireCheck(liveSmokeSource.includes("--skip-dns"), "scripts/live-launch-smoke.mjs is missing the pre-cutover DNS skip option");
 requireCheck(liveSmokeSource.includes("--canonical="), "scripts/live-launch-smoke.mjs is missing the canonical URL option");
