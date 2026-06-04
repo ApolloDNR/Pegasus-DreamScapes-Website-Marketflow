@@ -331,11 +331,11 @@ export function Navigation() {
             : "bg-[hsl(var(--navy)/0.84)] backdrop-blur-md"
         }`}
       >
-        <div className="relative mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-6 lg:h-[80px] lg:px-10">
+        <div className="relative mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-6 lg:h-[80px] lg:px-10">
           {/* Wordmark — semantic <a>, NOT an <h1> */}
           <Link
             href="/"
-            className="flex min-w-0 max-w-[calc(100vw-6.5rem)] flex-1 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:max-w-none sm:flex-none sm:flex-shrink-0 lg:gap-4 group"
+            className="flex min-w-0 w-[190px] flex-none items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:w-auto sm:max-w-none sm:flex-shrink-0 lg:gap-4 group"
             aria-label="Pegasus Dreamscapes home"
             data-testid="link-logo"
           >
@@ -497,7 +497,7 @@ export function Navigation() {
           </nav>
 
           {/* Right cluster — public state is exactly: bronze CTA. Auth state adds account utilities. */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {isAuthenticated ? (
               <>
                 <NotificationBell onLightSurface={onLightSurface} />
@@ -510,31 +510,44 @@ export function Navigation() {
                 />
               </>
             ) : (
-              <Link
-                href={PRIMARY_CTA.href}
-                className="hidden xl:block"
-                onClick={() => trackCtaClick("nav_desktop", PRIMARY_CTA.label, PRIMARY_CTA.href)}
-              >
-                <Button
-                  size="sm"
-                  className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
-                  data-testid="button-nav-cta"
+              <>
+                <Link
+                  href={PRIMARY_CTA.href}
+                  className="hidden xl:block"
+                  onClick={() => trackCtaClick("nav_desktop", PRIMARY_CTA.label, PRIMARY_CTA.href)}
                 >
-                  {PRIMARY_CTA.label}
-                  <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
-                </Button>
-              </Link>
+                  <Button
+                    size="sm"
+                    className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
+                    data-testid="button-nav-cta"
+                  >
+                    {PRIMARY_CTA.label}
+                    <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
+                  </Button>
+                </Link>
+              </>
             )}
 
             {/* Mobile menu trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`fixed right-5 top-4 z-[80] inline-flex h-10 w-10 items-center justify-center rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:right-6 lg:top-5 xl:hidden ${
+                  className={`pegasus-mobile-menu-trigger fixed right-5 top-[18px] z-[9999] inline-flex h-10 w-10 items-center justify-center rounded-sm border shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 xl:hidden ${
                     onLightSurface
                       ? "border-[hsl(var(--rule))] text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
-                      : "border-white/15 bg-white/[0.03] text-white hover:border-[hsl(var(--bronze)/0.55)] hover:bg-white/10"
+                      : "border-white/25 bg-white/[0.08] text-white hover:border-[hsl(var(--bronze)/0.65)] hover:bg-white/12"
                   }`}
+                  style={{
+                    position: "fixed",
+                    top: "18px",
+                    right: "20px",
+                    zIndex: 9999,
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: "#C87A3A",
+                    color: "#fff",
+                    borderColor: "rgba(255,255,255,0.28)",
+                  }}
                   aria-label="Open navigation menu"
                   data-testid="button-mobile-menu"
                 >

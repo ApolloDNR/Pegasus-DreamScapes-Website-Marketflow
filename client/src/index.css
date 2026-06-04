@@ -313,6 +313,15 @@ html {
   outline-offset: 2px;
 }
 
+/* Keep the mobile menu trigger inside narrow phone viewports, including browser
+   environments that report a wider layout viewport than the usable canvas. */
+@media (max-width: 520px) {
+  .pegasus-mobile-menu-trigger {
+    right: auto !important;
+    left: min(330px, calc(100vw - 60px)) !important;
+  }
+}
+
 /* Bronze focus ring on every focusable surface */
 :focus-visible {
   outline: 2px solid hsl(var(--bronze));
