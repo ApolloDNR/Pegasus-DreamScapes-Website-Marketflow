@@ -33,6 +33,19 @@ function getDomain(): string | null {
   return fromEnv;
 }
 
+function firstPartyCtaEventsEnabled(): boolean {
+  const fromWindow =
+    typeof window !== "undefined"
+      ? (window as unknown as { __PEGASUS_CTA_EVENTS_ENABLED__?: boolean })
+          .__PEGASUS_CTA_EVENTS_ENABLED__
+      : undefined;
+  if (typeof fromWindow === "boolean") return fromWindow;
+
+  const fromEnv = (import.meta as { env?: Record<string, string | undefined> }).env
+    ?.VITE_CTA_EVENTS_ENABLED;
+  return fromEnv === "true" || fromEnv === "1";
+}
+
 function injectScript() {
   if (typeof document === "undefined") return;
   if (document.getElementById(SCRIPT_ID)) return;
@@ -84,17 +97,14 @@ export function trackEvent(name: string, props?: Record<string, unknown>): void 
   }
 }
 
-// Empire Doctrine v1.0.1 Wave 3 — first-party CTA attribution.
+// First-party CTA attribution.
 //
 // `trackCtaClick` is the canonical wire for primary-surface CTAs ("Submit
 // a Property", "Start a Strategy Review", "Request Beta Access",
 // "Connect"). It does two things:
 //   1. Mirrors the click into Plausible (consent-gated, like trackEvent).
-//   2. Posts to /api/events for the first-party cta_events store the
-//      admin /admin/cta-events surface reads from. The POST is fire-and-
-//      forget with keepalive so it survives navigation, and is NOT gated
-//      on analytics consent — it is first-party operational telemetry
-//      (no cookies, no PII), the same shape as a server access log entry.
+//   2. Optionally posts to /api/events when VITE_CTA_EVENTS_ENABLED=true
+//      and the deployed host has the Express API plus database configured.
 export function trackCtaClick(
   source: string,
   label: string,
@@ -104,6 +114,7 @@ export function trackCtaClick(
   // 1. Plausible mirror (consent-gated).
   trackEvent("cta_click", { source, label, href });
   // 2. First-party event beacon.
+  if (!firstPartyCtaEventsEnabled()) return;
   try {
     const path =
       typeof window.location !== "undefined" ? window.location.pathname : "";

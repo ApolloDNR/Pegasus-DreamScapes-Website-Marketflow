@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { portalServicesEnabled, portalServicesUnavailableError } from "@/lib/runtime-config";
 
 interface SiteContent {
   id: number;
@@ -26,6 +27,7 @@ const SiteContentContext = createContext<SiteContentContextType | null>(null);
 
 export function SiteContentProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const servicesEnabled = portalServicesEnabled();
   const [pendingChanges] = useState<Set<string>>(new Set());
 
   const { data: contentList = [], isLoading } = useQuery<SiteContent[]>({
@@ -35,6 +37,7 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    enabled: servicesEnabled,
   });
 
   const content = contentList.reduce((acc, item) => {
@@ -49,6 +52,10 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
       type?: string;
       metadata?: Record<string, unknown>;
     }) => {
+      if (!servicesEnabled) {
+        throw portalServicesUnavailableError();
+      }
+
       return apiRequest("PUT", "/api/admin/site-content", { key, value, type, metadata });
     },
     onSuccess: () => {
@@ -76,7 +83,7 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
   return (
     <SiteContentContext.Provider value={{
       content,
-      isLoading,
+      isLoading: servicesEnabled ? isLoading : false,
       getValue,
       getMetadata,
       updateContent,

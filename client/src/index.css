@@ -1,4 +1,4 @@
-/* Fonts loaded via <link> in client/index.html (subset to weights actually used). */
+/* Fonts are self-hosted through @fontsource imports in main.tsx. */
 
 @tailwind base;
 @tailwind components;
