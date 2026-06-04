@@ -30,11 +30,12 @@ That means the public domain is still on Squarespace. It cannot prove `/api/heal
 3. Run `npm run env:production` in the host environment or an equivalent secret-safe host check.
 4. Confirm the host serves `GET /api/health` with JSON from `pegasus-dreamscapes-website`.
 5. Confirm `GET /api/readiness` returns `200` and `status: "ready"`.
-6. Point `pegasusdreamscapes.com` and `www.pegasusdreamscapes.com` away from Squarespace and to the production host.
-7. Wait for DNS propagation.
-8. Run `npm run smoke:live`.
-9. Submit one real production `/submit` smoke test and verify both Pegasus HQ intake receipt and staff notification email delivery.
-10. Complete qualified legal/compliance review before public QR/card distribution.
+6. Before moving DNS, run `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns` against the deployed host URL.
+7. Point `pegasusdreamscapes.com` and `www.pegasusdreamscapes.com` away from Squarespace and to the production host.
+8. Wait for DNS propagation.
+9. Run `npm run smoke:live`.
+10. Submit one real production `/submit` smoke test and verify both Pegasus HQ intake receipt and staff notification email delivery.
+11. Complete qualified legal/compliance review before public QR/card distribution.
 
 ## Required Production Environment
 
@@ -64,6 +65,8 @@ Optional:
 - `npm run check`
 - `npm run build`
 - `npm test`
+- `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns`
 - `npm run smoke:live`
 
 `npm run smoke:live` intentionally fails while the domain still points at Squarespace or `/api/readiness` is not ready.
+Use `--skip-dns` only for a pre-cutover deployment URL check, not for final production launch approval.
