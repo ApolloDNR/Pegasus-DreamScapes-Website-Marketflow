@@ -8,7 +8,7 @@ This handoff is for taking the already-merged launch website from GitHub `main` 
 
 - GitHub repo: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`
 - Production branch: `main`
-- Minimum launch commit: `c40f3f4` (`Add live launch cutover smoke`)
+- Minimum launch commit: `4caddfc` (`Fix mobile launch navigation (#15)`)
 - Replit config file: `.replit`
 - Replit deployment target: `autoscale`
 - Build command: `npm run build`
@@ -19,7 +19,7 @@ This handoff is for taking the already-merged launch website from GitHub `main` 
 
 1. Open the existing Replit project connected to this website repo.
 2. Sync or pull the latest GitHub `main` branch.
-3. Confirm the deployed source is at `c40f3f4` or newer.
+3. Confirm the deployed source is at `4caddfc` or newer.
 4. Confirm `.replit` still uses autoscale deployment with build `npm run build` and run `npm run start`.
 5. Add the required production environment variables in Replit Secrets or Deployment environment settings.
 6. Run `npm run env:production` in the Replit shell or an equivalent secret-safe host check.
@@ -66,9 +66,21 @@ The latest local DNS check showed Squarespace records still serving the public d
 
 Replace those records with the exact DNS records shown by Replit custom domains. Do not guess or hard-code a Replit target without confirming it in Replit.
 
+## Current Replit Preview Status
+
+Checked on 2026-06-04:
+
+- `https://41a8aaaf-db4e-44db-8781-c0795f489b15-00-3hxadsutgm3ci.spock.replit.dev`
+- Pre-DNS smoke failed because the URL returned Replit's `Run this app to see the result` 404 shell for the homepage, `/api/health`, `/api/readiness`, `/robots.txt`, and `/sitemap.xml`.
+
+This URL is not a valid production candidate until it serves the Pegasus Express app and passes:
+
+`npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns`
+
 ## Do Not Launch If
 
-- The deployed source is older than `c40f3f4`.
+- The deployed source is older than `4caddfc`.
+- The Replit deployment URL shows `Run this app to see the result`.
 - `/api/readiness` returns `503` or lists missing required configuration.
 - `pegasusdreamscapes.com` still resolves to Squarespace.
 - `/submit` does not create the expected Pegasus HQ intake record.

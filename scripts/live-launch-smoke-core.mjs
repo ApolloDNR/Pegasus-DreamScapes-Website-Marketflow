@@ -59,7 +59,7 @@ export async function runLaunchSmoke({
 
   await check("Home page serves Pegasus Dreamscapes", async () => {
     const res = await request("/", normalizedBaseUrl, fetchImpl);
-    assert(res.status === 200, `Expected 200, received ${res.status}.`);
+    assert(res.status === 200, formatUnexpectedResponse(res, 200));
     assert(res.body.includes("Pegasus Dreamscapes"), "Home page does not contain Pegasus Dreamscapes.");
     assert(!res.body.includes("Squarespace"), "Home page still appears to be served by Squarespace.");
   });
@@ -79,7 +79,7 @@ export async function runLaunchSmoke({
 
   await check("/robots.txt exposes production crawl policy", async () => {
     const res = await request("/robots.txt", normalizedBaseUrl, fetchImpl);
-    assert(res.status === 200, `Expected 200, received ${res.status}.`);
+    assert(res.status === 200, formatUnexpectedResponse(res, 200));
     assert(res.body.includes("Allow: /"), "robots.txt is missing Allow: /.");
     assert(!/^Disallow: \/\s*$/m.test(res.body), "robots.txt is still fully disallowing the site.");
     assert(res.body.includes(`${normalizedCanonicalUrl}/sitemap.xml`), "robots.txt is missing the production sitemap URL.");
@@ -87,7 +87,7 @@ export async function runLaunchSmoke({
 
   await check("/sitemap.xml lists launch routes", async () => {
     const res = await request("/sitemap.xml", normalizedBaseUrl, fetchImpl);
-    assert(res.status === 200, `Expected 200, received ${res.status}.`);
+    assert(res.status === 200, formatUnexpectedResponse(res, 200));
     for (const route of REQUIRED_SITEMAP_ROUTES) {
       const loc = `${normalizedCanonicalUrl}${route === "/" ? "/" : route}`;
       assert(res.body.includes(`<loc>${loc}</loc>`), `sitemap.xml is missing ${route}.`);
@@ -115,7 +115,7 @@ async function lookupDns(hostname, resolve4, resolveCname) {
 
 async function requestJson(pathname, expectedStatus, baseUrl, fetchImpl) {
   const res = await request(pathname, baseUrl, fetchImpl);
-  assert(res.status === expectedStatus, `Expected ${expectedStatus}, received ${res.status}. Body starts: ${res.body.slice(0, 80)}`);
+  assert(res.status === expectedStatus, formatUnexpectedResponse(res, expectedStatus));
   assert(res.contentType.includes("application/json"), `Expected JSON, received ${res.contentType || "no content-type"}.`);
 
   try {
@@ -144,6 +144,20 @@ async function request(pathname, baseUrl, fetchImpl) {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function formatUnexpectedResponse(res, expectedStatus) {
+  const bodySummary = summarizeBody(res.body);
+  const suffix = bodySummary ? ` ${bodySummary}` : "";
+  return `Expected ${expectedStatus}, received ${res.status}.${suffix}`;
+}
+
+function summarizeBody(body) {
+  if (body.includes("Run this app to see the result")) {
+    return "Replit run shell detected: the deployment URL is not running the Pegasus Node app yet.";
+  }
+  const compact = body.replace(/\s+/g, " ").trim().slice(0, 120);
+  return compact ? `Body starts: ${compact}` : "";
 }
 
 function normalizeBaseUrl(value) {

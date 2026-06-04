@@ -13,11 +13,17 @@ Observed DNS:
 
 That means the public domain is still on Squarespace. It cannot prove `/api/health`, `/api/readiness`, or the Pegasus HQ intake bridge until DNS points to the deployed Node host.
 
+Known Replit preview checked on 2026-06-04:
+
+- `https://41a8aaaf-db4e-44db-8781-c0795f489b15-00-3hxadsutgm3ci.spock.replit.dev`
+- Pre-DNS smoke with `--skip-dns` failed because the URL returned Replit's `Run this app to see the result` 404 shell for the homepage, `/api/health`, `/api/readiness`, `/robots.txt`, and `/sitemap.xml`.
+- Treat that URL as not deployed until it returns the Pegasus Express health JSON and production readiness JSON.
+
 ## Source Baseline
 
 - GitHub repo: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`
 - Production branch: `main`
-- Current verified main merge: `c40f3f4` (`Add live launch cutover smoke`)
+- Current verified main merge: `4caddfc` (`Fix mobile launch navigation (#15)`)
 - Replit deployment config: `.replit`
 - Build command: `npm run build`
 - Start command: `npm run start`
@@ -70,3 +76,11 @@ Optional:
 
 `npm run smoke:live` intentionally fails while the domain still points at Squarespace or `/api/readiness` is not ready.
 Use `--skip-dns` only for a pre-cutover deployment URL check, not for final production launch approval.
+
+## Latest Local Verification Evidence
+
+From local `main` at `4caddfc`:
+
+- `npm run smoke:live` equivalent failed `6/6` because production DNS still resolves to Squarespace, the home page does not contain Pegasus Dreamscapes, API endpoints return HTML instead of JSON, and robots/sitemap are not public app assets.
+- `npm run smoke:live -- --base=https://41a8aaaf-db4e-44db-8781-c0795f489b15-00-3hxadsutgm3ci.spock.replit.dev --canonical=https://pegasusdreamscapes.com --skip-dns` failed `5/5` because the Replit preview is not running the Pegasus Node app.
+- Local code verification after PR #15: launch audit passed, TypeScript passed, production build passed, and full Vitest passed with 510 tests.
