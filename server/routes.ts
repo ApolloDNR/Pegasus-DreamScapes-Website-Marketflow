@@ -97,6 +97,7 @@ import {
 import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { getLaunchLiveness, getLaunchReadiness } from "./launch-readiness";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -204,6 +205,15 @@ export async function registerRoutes(
   
   // Add Supabase auth middleware to extract user from JWT tokens
   app.use(supabaseAuthMiddleware);
+
+  app.get("/api/health", (_req, res) => {
+    res.json(getLaunchLiveness());
+  });
+
+  app.get("/api/readiness", (_req, res) => {
+    const readiness = getLaunchReadiness();
+    res.status(readiness.status === "ready" ? 200 : 503).json(readiness);
+  });
 
   // Legacy 301 aliases for retired public routes. Keeps inbound links and
   // search-engine equity flowing to the current path. Must be registered
