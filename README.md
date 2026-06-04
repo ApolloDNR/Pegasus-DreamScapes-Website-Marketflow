@@ -115,7 +115,7 @@ For each public route verify:
 13. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
 14. Complete qualified legal/compliance review before public QR/card distribution.
 
-See `docs/LAUNCH_CUTOVER.md` for the current DNS/deployment cutover state and the exact live smoke gate. As of the latest local check, `pegasusdreamscapes.com` still resolves to Squarespace, so DNS must be moved to the production Node host before the site can be called live.
+See `docs/LAUNCH_CUTOVER.md` for the current DNS/deployment cutover state and the exact live smoke gate. See `docs/REPLIT_DEPLOY_HANDOFF.md` for the Replit-specific sync, secrets, autoscale deploy, DNS, and no-launch checks. As of the latest local check, `pegasusdreamscapes.com` still resolves to Squarespace, so DNS must be moved to the production Node host before the site can be called live.
 
 Production runtime expectations:
 
