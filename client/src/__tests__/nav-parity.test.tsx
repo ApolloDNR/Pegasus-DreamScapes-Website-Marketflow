@@ -99,6 +99,21 @@ describe("Navigation parity (Empire Doctrine v1.0.1)", () => {
     }
   });
 
+  it("mobile navigation keeps submit reachable without crowding the smallest header", async () => {
+    renderWithRouter(<Navigation />);
+
+    expect(screen.queryByTestId("button-mobile-header-cta")).toBeNull();
+
+    const mobileMenu = screen.getByTestId("button-mobile-menu");
+    expect(mobileMenu.className).toContain("fixed");
+    expect(mobileMenu.className).toContain("right-5");
+    expect(mobileMenu.className).toContain("z-[9999]");
+    expect(mobileMenu.getAttribute("style")).toContain("background-color: rgb(200, 122, 58)");
+
+    await user().click(screen.getByTestId("button-mobile-menu"));
+    expect(await screen.findByTestId("button-mobile-cta")).toHaveTextContent("Submit a Property");
+  });
+
   it("footer surfaces NAV_PRIMARY (any column) and NAV_MORE (+ extras)", () => {
     renderWithRouter(<Footer />);
     for (const item of NAV_PRIMARY) {
