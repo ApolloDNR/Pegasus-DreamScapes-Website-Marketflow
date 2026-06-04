@@ -16,7 +16,7 @@ The launch surface is the public face for cards, QR traffic, property intake, St
 - `npm run dev` - local development server.
 - `npm run audit:launch` - static launch route, SEO, brand, asset, and copy guard.
 - `npm run env:production` - no-secrets production environment readiness check.
-- `npm run smoke:live` - live DNS, health, readiness, robots, sitemap, and homepage launch smoke. Use `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns` only for a pre-DNS deployment URL check.
+- `npm run smoke:live` - live DNS, health, readiness, robots, sitemap, deployed commit, and homepage launch smoke. Use `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --expected-commit=<sha> --skip-dns` only for a pre-DNS deployment URL check.
 - `npm run check` - TypeScript check.
 - `npm run build` - generate sitemap, build Vite client, copy public assets, and bundle server.
 - `npm test` - Vitest suite.
@@ -27,6 +27,7 @@ The launch surface is the public face for cards, QR traffic, property intake, St
 
 - `GET /api/health` is a liveness check. It returns `200` when the Node process is serving requests.
 - `GET /api/readiness` is a redacted launch wiring check. It returns `200` only when required production configuration is present and valid; otherwise it returns `503` with missing/invalid check names and no secret values.
+- Both endpoints include non-secret build metadata when the host sets `APP_BUILD_COMMIT` or another supported Git commit environment variable.
 
 ## Required Production Environment
 
@@ -46,7 +47,7 @@ Hard launch requirements:
 - `SESSION_SECRET`
 - `REPL_ID`
 
-`ISSUER_URL` is optional if the default Replit OIDC issuer is correct. `PORT` is optional and defaults to `5000`.
+`ISSUER_URL` is optional if the default Replit OIDC issuer is correct. `PORT` is optional and defaults to `5000`. `APP_BUILD_COMMIT` is optional but recommended for launch cutover proof; set it to the deployed Git commit and run smoke with `--expected-commit=<sha>`.
 
 ## Pegasus HQ Intake Bridge
 
@@ -111,9 +112,10 @@ For each public route verify:
 9. Confirm `/og/default.png`, favicon, Apple touch icon, and brand SVGs load.
 10. Confirm `/api/health` returns `200`.
 11. Confirm `/api/readiness` returns `200` with no required failures.
-12. Submit one real production `/submit` smoke test and verify both HQ intake receipt and staff email delivery.
-13. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
-14. Complete qualified legal/compliance review before public QR/card distribution.
+12. If `APP_BUILD_COMMIT` is set, run `npm run smoke:live -- --expected-commit=<sha>` and confirm the deployed build matches the intended commit.
+13. Submit one real production `/submit` smoke test and verify both HQ intake receipt and staff email delivery.
+14. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
+15. Complete qualified legal/compliance review before public QR/card distribution.
 
 See `docs/LAUNCH_CUTOVER.md` for the current DNS/deployment cutover state and the exact live smoke gate. See `docs/REPLIT_DEPLOY_HANDOFF.md` for the Replit-specific sync, secrets, autoscale deploy, pre-DNS smoke, DNS, and no-launch checks. As of the latest local check, `pegasusdreamscapes.com` still resolves to Squarespace, so DNS must be moved to the production Node host before the site can be called live.
 

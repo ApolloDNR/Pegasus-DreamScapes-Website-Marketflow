@@ -23,7 +23,8 @@ Known Replit preview checked on 2026-06-04:
 
 - GitHub repo: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`
 - Production branch: `main`
-- Current verified main merge: `4caddfc` (`Fix mobile launch navigation (#15)`)
+- Current verified main merge: `036c606` (`Update launch cutover status (#16)`)
+- Minimum launch app commit: `4caddfc` (`Fix mobile launch navigation (#15)`)
 - Replit deployment config: `.replit`
 - Build command: `npm run build`
 - Start command: `npm run start`
@@ -34,14 +35,15 @@ Known Replit preview checked on 2026-06-04:
 1. Deploy the latest `main` branch to the production Node host.
 2. Configure the required production environment variables in the host. Do not paste secrets into chat.
 3. Run `npm run env:production` in the host environment or an equivalent secret-safe host check.
-4. Confirm the host serves `GET /api/health` with JSON from `pegasus-dreamscapes-website`.
-5. Confirm `GET /api/readiness` returns `200` and `status: "ready"`.
-6. Before moving DNS, run `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns` against the deployed host URL.
-7. Point `pegasusdreamscapes.com` and `www.pegasusdreamscapes.com` away from Squarespace and to the production host.
-8. Wait for DNS propagation.
-9. Run `npm run smoke:live`.
-10. Submit one real production `/submit` smoke test and verify both Pegasus HQ intake receipt and staff notification email delivery.
-11. Complete qualified legal/compliance review before public QR/card distribution.
+4. Set `APP_BUILD_COMMIT` to the deployed Git commit when the host does not already expose a supported commit variable.
+5. Confirm the host serves `GET /api/health` with JSON from `pegasus-dreamscapes-website`.
+6. Confirm `GET /api/readiness` returns `200` and `status: "ready"`.
+7. Before moving DNS, run `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --expected-commit=<sha> --skip-dns` against the deployed host URL.
+8. Point `pegasusdreamscapes.com` and `www.pegasusdreamscapes.com` away from Squarespace and to the production host.
+9. Wait for DNS propagation.
+10. Run `npm run smoke:live -- --expected-commit=<sha>`.
+11. Submit one real production `/submit` smoke test and verify both Pegasus HQ intake receipt and staff notification email delivery.
+12. Complete qualified legal/compliance review before public QR/card distribution.
 
 ## Required Production Environment
 
@@ -63,6 +65,7 @@ Optional:
 
 - `ISSUER_URL`
 - `PORT`
+- `APP_BUILD_COMMIT` for deployed commit proof if the host does not set another supported Git commit environment variable
 
 ## Verification Commands
 
@@ -71,16 +74,17 @@ Optional:
 - `npm run check`
 - `npm run build`
 - `npm test`
-- `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns`
-- `npm run smoke:live`
+- `npm run smoke:live -- --base=<deployment-url> --canonical=https://pegasusdreamscapes.com --expected-commit=<sha> --skip-dns`
+- `npm run smoke:live -- --expected-commit=<sha>`
 
 `npm run smoke:live` intentionally fails while the domain still points at Squarespace or `/api/readiness` is not ready.
 Use `--skip-dns` only for a pre-cutover deployment URL check, not for final production launch approval.
 
 ## Latest Local Verification Evidence
 
-From local `main` at `4caddfc`:
+From local `main` at `036c606`:
 
 - `npm run smoke:live` equivalent failed `6/6` because production DNS still resolves to Squarespace, the home page does not contain Pegasus Dreamscapes, API endpoints return HTML instead of JSON, and robots/sitemap are not public app assets.
 - `npm run smoke:live -- --base=https://41a8aaaf-db4e-44db-8781-c0795f489b15-00-3hxadsutgm3ci.spock.replit.dev --canonical=https://pegasusdreamscapes.com --skip-dns` failed `5/5` because the Replit preview is not running the Pegasus Node app.
 - Local code verification after PR #15: launch audit passed, TypeScript passed, production build passed, and full Vitest passed with 510 tests.
+- Launch handoff verification after PR #16: focused smoke-core tests passed, launch audit passed, TypeScript passed, and GitHub launch verification passed.

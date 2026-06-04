@@ -81,6 +81,7 @@ const requiredRootPublicFiles = [
 const requiredLaunchOpsFiles = [
   "docs/LAUNCH_CUTOVER.md",
   "docs/REPLIT_DEPLOY_HANDOFF.md",
+  "server/build-info.ts",
   "scripts/live-launch-smoke-core.mjs",
   "scripts/live-launch-smoke.mjs",
   "scripts/production-env-check.mjs",
@@ -177,6 +178,7 @@ const gitignore = await readProjectFile(".gitignore");
 const packageJson = await readProjectFile("package.json");
 const launchCutoverDoc = await readProjectFile("docs/LAUNCH_CUTOVER.md");
 const replitHandoffDoc = await readProjectFile("docs/REPLIT_DEPLOY_HANDOFF.md");
+const liveSmokeCoreSource = await readProjectFile("scripts/live-launch-smoke-core.mjs");
 const liveSmokeSource = await readProjectFile("scripts/live-launch-smoke.mjs");
 
 const sitemapRoutes = extractSitemapRoutes(sitemap);
@@ -223,16 +225,20 @@ requireCheck(serverRoutesSource.includes('app.get("/api/readiness"'), "server/ro
 requireCheck(gitignore.includes("screenshots/codex-preview/"), ".gitignore does not ignore local browser QA artifacts");
 requireCheck(packageJson.includes('"smoke:live": "node scripts/live-launch-smoke.mjs"'), "package.json is missing the live launch smoke command");
 requireCheck(launchCutoverDoc.includes("4caddfc"), "docs/LAUNCH_CUTOVER.md is missing the current launch commit baseline");
+requireCheck(launchCutoverDoc.includes("APP_BUILD_COMMIT"), "docs/LAUNCH_CUTOVER.md is missing deployed commit metadata guidance");
 requireCheck(replitHandoffDoc.includes("deployment target: `autoscale`"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing Replit autoscale deployment guidance");
 requireCheck(
-  replitHandoffDoc.includes("npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns"),
+  replitHandoffDoc.includes("npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --expected-commit=<sha> --skip-dns"),
   "docs/REPLIT_DEPLOY_HANDOFF.md is missing pre-DNS Replit smoke guidance",
 );
+requireCheck(replitHandoffDoc.includes("APP_BUILD_COMMIT"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing deployed commit metadata guidance");
 requireCheck(replitHandoffDoc.includes("Do Not Launch If"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the no-launch gate list");
 requireCheck(replitHandoffDoc.includes("Run this app to see the result"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the Replit run-shell no-launch gate");
 requireCheck(replitHandoffDoc.includes("ext-sq.squarespace.com"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the current Squarespace DNS cutover note");
 requireCheck(liveSmokeSource.includes("--skip-dns"), "scripts/live-launch-smoke.mjs is missing the pre-cutover DNS skip option");
 requireCheck(liveSmokeSource.includes("--canonical="), "scripts/live-launch-smoke.mjs is missing the canonical URL option");
+requireCheck(liveSmokeSource.includes("--expected-commit="), "scripts/live-launch-smoke.mjs is missing the deployed commit option");
+requireCheck(liveSmokeCoreSource.includes("Deployed build matches expected commit"), "scripts/live-launch-smoke-core.mjs is missing the deployed commit check");
 
 const filesToScan = [];
 for (const target of scanTargets) {

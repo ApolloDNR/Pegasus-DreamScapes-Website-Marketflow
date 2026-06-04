@@ -1,3 +1,5 @@
+import { getBuildInfo } from "./build-info";
+
 type CheckStatus = "pass" | "fail" | "warn";
 
 type LaunchCheck = {
@@ -132,6 +134,7 @@ export function getLaunchLiveness(env: NodeJS.ProcessEnv = process.env) {
     service: "pegasus-dreamscapes-website",
     status: "ok",
     environment: normalize(env.NODE_ENV) || "development",
+    build: getBuildInfo(env),
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
   };
@@ -147,6 +150,7 @@ export function getLaunchReadiness(env: NodeJS.ProcessEnv = process.env) {
     service: "pegasus-dreamscapes-website",
     status: requiredFailures.length === 0 ? "ready" : "not_ready",
     environment: normalize(env.NODE_ENV) || "development",
+    build: getBuildInfo(env),
     timestamp: new Date().toISOString(),
     checks,
     summary: {

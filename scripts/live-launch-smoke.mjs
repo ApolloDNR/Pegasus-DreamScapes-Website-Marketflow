@@ -5,14 +5,16 @@ import { DEFAULT_BASE_URL, runLaunchSmoke } from "./live-launch-smoke-core.mjs";
 const args = new Set(process.argv.slice(2));
 const baseArg = process.argv.slice(2).find((arg) => arg.startsWith("--base="));
 const canonicalArg = process.argv.slice(2).find((arg) => arg.startsWith("--canonical="));
+const expectedCommitArg = process.argv.slice(2).find((arg) => arg.startsWith("--expected-commit="));
 const skipDns = args.has("--skip-dns");
 
 if (args.has("--help")) {
   console.log([
-    "Usage: node scripts/live-launch-smoke.mjs [--base=https://pegasusdreamscapes.com] [--canonical=https://pegasusdreamscapes.com] [--skip-dns]",
+    "Usage: node scripts/live-launch-smoke.mjs [--base=https://pegasusdreamscapes.com] [--canonical=https://pegasusdreamscapes.com] [--expected-commit=<sha>] [--skip-dns]",
     "",
-    "Checks DNS, /api/health, /api/readiness, robots.txt, sitemap.xml, and the home page.",
+    "Checks DNS, /api/health, /api/readiness, robots.txt, sitemap.xml, deployed commit, and the home page.",
     "Use --canonical when a temporary deployment URL should serve production robots and sitemap URLs.",
+    "Use --expected-commit to prove the live server is running the intended Git commit when the host exposes build metadata.",
     "Use --skip-dns only for pre-cutover deployment URL checks, such as a Replit deployment URL before custom-domain DNS is moved.",
     "The default smoke intentionally fails while the production domain still points at Squarespace or readiness is not 200.",
   ].join("\n"));
@@ -22,6 +24,7 @@ if (args.has("--help")) {
 const result = await runLaunchSmoke({
   baseUrl: baseArg?.slice("--base=".length) || process.env.SITE_URL || DEFAULT_BASE_URL,
   canonicalUrl: canonicalArg?.slice("--canonical=".length) || process.env.SITE_URL || baseArg?.slice("--base=".length) || DEFAULT_BASE_URL,
+  expectedCommit: expectedCommitArg?.slice("--expected-commit=".length) || process.env.EXPECTED_BUILD_COMMIT || "",
   skipDns,
 });
 

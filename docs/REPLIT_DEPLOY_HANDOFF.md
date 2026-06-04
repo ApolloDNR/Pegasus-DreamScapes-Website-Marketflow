@@ -8,7 +8,8 @@ This handoff is for taking the already-merged launch website from GitHub `main` 
 
 - GitHub repo: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`
 - Production branch: `main`
-- Minimum launch commit: `4caddfc` (`Fix mobile launch navigation (#15)`)
+- Current verified main merge: `036c606` (`Update launch cutover status (#16)`)
+- Minimum launch app commit: `4caddfc` (`Fix mobile launch navigation (#15)`)
 - Replit config file: `.replit`
 - Replit deployment target: `autoscale`
 - Build command: `npm run build`
@@ -22,19 +23,21 @@ This handoff is for taking the already-merged launch website from GitHub `main` 
 3. Confirm the deployed source is at `4caddfc` or newer.
 4. Confirm `.replit` still uses autoscale deployment with build `npm run build` and run `npm run start`.
 5. Add the required production environment variables in Replit Secrets or Deployment environment settings.
-6. Run `npm run env:production` in the Replit shell or an equivalent secret-safe host check.
-7. Deploy the autoscale app.
-8. Check the Replit deployment URL before touching DNS by running `npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns`, then confirm:
+6. Set `APP_BUILD_COMMIT` to the deployed Git commit if Replit does not automatically expose a supported Git commit variable.
+7. Run `npm run env:production` in the Replit shell or an equivalent secret-safe host check.
+8. Deploy the autoscale app.
+9. Check the Replit deployment URL before touching DNS by running `npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --expected-commit=<sha> --skip-dns`, then confirm:
    - `/api/health` returns JSON with `service: "pegasus-dreamscapes-website"`.
+   - `/api/health` includes `build.shortCommit` matching the expected deploy commit.
    - `/api/readiness` returns `200` with `status: "ready"`.
    - `/robots.txt` returns the public robots file.
    - `/sitemap.xml` returns production URLs for the launch route set.
-9. Attach the production custom domains in Replit.
-10. Move DNS records at the domain registrar to the exact records Replit provides for the custom domain.
-11. Wait for DNS propagation.
-12. Run `npm run smoke:live`.
-13. Submit one real production `/submit` smoke and confirm both Pegasus HQ intake receipt and staff notification email delivery.
-14. Complete qualified legal/compliance review before public QR/card distribution.
+10. Attach the production custom domains in Replit.
+11. Move DNS records at the domain registrar to the exact records Replit provides for the custom domain.
+12. Wait for DNS propagation.
+13. Run `npm run smoke:live -- --expected-commit=<sha>`.
+14. Submit one real production `/submit` smoke and confirm both Pegasus HQ intake receipt and staff notification email delivery.
+15. Complete qualified legal/compliance review before public QR/card distribution.
 
 ## Required Production Environment
 
@@ -56,6 +59,7 @@ Optional:
 
 - `ISSUER_URL`
 - `PORT`
+- `APP_BUILD_COMMIT` for deployed commit proof if Replit does not expose another supported Git commit environment variable
 
 ## DNS Cutover Notes
 
@@ -75,11 +79,12 @@ Checked on 2026-06-04:
 
 This URL is not a valid production candidate until it serves the Pegasus Express app and passes:
 
-`npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns`
+`npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --expected-commit=<sha> --skip-dns`
 
 ## Do Not Launch If
 
 - The deployed source is older than `4caddfc`.
+- The deployment cannot prove the expected commit through `/api/health` build metadata.
 - The Replit deployment URL shows `Run this app to see the result`.
 - `/api/readiness` returns `503` or lists missing required configuration.
 - `pegasusdreamscapes.com` still resolves to Squarespace.
