@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from "vitest";
 import { render, screen, cleanup, within } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
@@ -419,6 +419,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
 });
 
 // ---------------------------------------------------------------------------
@@ -508,13 +509,17 @@ describe("marketflow-submit page gating", () => {
 });
 
 describe("marketflow-deals page gating", () => {
-  it("logged-out users do not see role-gated JV quick actions or the guest banner", async () => {
-    setAuthState("loggedOut");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
+  let MarketflowDealsPage: React.ComponentType;
 
-    renderWithProviders(<MarketflowDeals />);
+  beforeAll(async () => {
+    const module = await import("@/pages/marketflow-deals");
+    MarketflowDealsPage = module.default;
+  }, 15_000);
+
+  it("logged-out users do not see role-gated JV quick actions or the guest banner", () => {
+    setAuthState("loggedOut");
+
+    renderWithProviders(<MarketflowDealsPage />);
 
     // Sample-data preview still renders the page header.
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
@@ -526,13 +531,10 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("guest mode shows the guest preview banner but withholds JV quick actions", async () => {
+  it("guest mode shows the guest preview banner but withholds JV quick actions", () => {
     setAuthState("guest");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
 
-    renderWithProviders(<MarketflowDeals />);
+    renderWithProviders(<MarketflowDealsPage />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
     expect(screen.getByTestId("button-exit-guest")).toBeInTheDocument();
@@ -541,13 +543,10 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("investors see deals but DO NOT see the wholesaler-only JV quick action", async () => {
+  it("investors see deals but DO NOT see the wholesaler-only JV quick action", () => {
     setAuthState("investor");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
 
-    renderWithProviders(<MarketflowDeals />);
+    renderWithProviders(<MarketflowDealsPage />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
     // Investor sample card renders (deals visible, not hidden).
@@ -558,13 +557,10 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("dreamscapers see deals but DO NOT see the wholesaler-only JV quick action", async () => {
+  it("dreamscapers see deals but DO NOT see the wholesaler-only JV quick action", () => {
     setAuthState("dreamscaper");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
 
-    renderWithProviders(<MarketflowDeals />);
+    renderWithProviders(<MarketflowDealsPage />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
     expect(
@@ -574,13 +570,10 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("wholesalers see the role-gated JV quick action on JV-allowed deals", async () => {
+  it("wholesalers see the role-gated JV quick action on JV-allowed deals", () => {
     setAuthState("wholesaler");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
 
-    renderWithProviders(<MarketflowDeals />);
+    renderWithProviders(<MarketflowDealsPage />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
     expect(
@@ -593,13 +586,10 @@ describe("marketflow-deals page gating", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("admins see the JV quick action (admin satisfies the wholesaler-or-admin gate)", async () => {
+  it("admins see the JV quick action (admin satisfies the wholesaler-or-admin gate)", () => {
     setAuthState("admin");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
 
-    renderWithProviders(<MarketflowDeals />);
+    renderWithProviders(<MarketflowDealsPage />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
     expect(

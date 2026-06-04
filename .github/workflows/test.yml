@@ -1,4 +1,4 @@
-name: Tests
+name: Launch Verification
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    name: npm test
+    name: launch verification
     runs-on: ubuntu-latest
     env:
       AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
@@ -23,6 +23,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run launch audit
+        run: npm run audit:launch
+
+      - name: Run TypeScript check
+        run: npm run check
+
+      - name: Run production build
+        run: npm run build
 
       - name: Run test suite
         run: npm test

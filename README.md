@@ -1,116 +1,142 @@
-# Pegasus DreamScapes Website + MarketFlow
+# Pegasus Dreamscapes Website + MarketFlow
 
-## Overview
-Public website for Pegasus Dreamscapes (Development • Investments • Systems) plus MarketFlow private beta workflows.
+Public website for Pegasus Dreamscapes plus the reviewed MarketFlow private beta surface.
 
-## Local setup
-1. Install deps: `npm install`
-2. Copy env vars into `.env`
-3. Run development server: `npm run dev`
+The launch surface is the public face for cards, QR traffic, property intake, Strategy Lab, Work With Apollo, and the private network story. It is not a public securities marketplace, not a guaranteed-offer funnel, and not a replacement for licensed real estate or professional review.
 
-## Required environment variables
-See `.env.example` for the complete deployment-ready variable list.
+## Local Setup
 
-## Pegasus HQ intake bridge
-Public property submissions from `/sell`, `/submit`, and the legacy `/api/seller-leads` endpoint are bridged into Pegasus HQ through `PEGASUS_HQ_PUBLIC_INTAKE_URL`.
-
-Default target:
-`https://pegasus-hq-operating-system.vercel.app/api/public/intake`
-
-This keeps real property opportunities in HQ's canonical `Submission -> Seed` operating spine instead of creating website-only intake records. Non-property inquiries such as contact, investor, vendor, and MarketFlow access requests continue to use the website's existing lead paths.
+1. Install dependencies: `npm install`
+2. Copy `.env.example` to `.env` and fill local values.
+3. Run the development server: `npm run dev`
+4. Run checks before pushing: `npm run verify:launch`
 
 ## Commands
-- Dev: `npm run dev`
-- Typecheck/lint checks: `npm run check`
-- Build: `npm run build`
-- Production start: `npm run start`
 
-## Deployment notes
-- Configure all production environment variables.
-- Configure Supabase Auth Site URL and allowed redirect URLs for your production domain.
-- Configure outbound email provider (SendGrid) and verified sender address.
-- Confirm database migration/push workflow used by your host before deploy.
-- App should run on a standard Node host that supports `npm run build` and `npm run start`.
+- `npm run dev` - local development server.
+- `npm run audit:launch` - static launch route, SEO, brand, asset, and copy guard.
+- `npm run env:production` - no-secrets production environment readiness check.
+- `npm run check` - TypeScript check.
+- `npm run build` - generate sitemap, build Vite client, copy public assets, and bundle server.
+- `npm test` - Vitest suite.
+- `npm run verify:launch` - launch audit, TypeScript, production build, and tests.
+- `npm run start` - production server from `dist/index.cjs` on Linux/host environments.
 
-## Production deployment checklist
-1. `npm install`
-2. `npm run check`
-3. `npm run build`
-4. `npm run start`
+## Required Production Environment
 
-Production runtime expectations:
-- Server respects `PORT` (defaults to `5000` if unset).
-- In production, the server serves API routes and the built Vite client from `dist/public`.
-- Build output includes server bundle at `dist/index.js` and static client assets in `dist/public`.
+See `.env.example` for the deployment-ready variable list. Before launch, run `npm run env:production` in the host environment or locally with the production `.env` present. The checker reports missing/invalid keys without printing secret values.
 
-## CMS content override launch checklist
-`SiteContentProvider` loads homepage editable content from `/api/site-content`. Existing database values override local fallback copy on the home page. Before launch, confirm these keys in your production `site_content` table are either empty/removed or set to approved values:
+Hard launch requirements:
 
-- `home.hero.kicker` → `Development • Investments • Systems`
-- `home.hero.line1` → `Real estate execution,`
-- `home.hero.line2` → `built with`
-- `home.hero.line3` → `discipline.`
-- `home.hero.subheadline` → `Pegasus Dreamscapes is a real estate development, investment, and systems company built to source opportunities, structure deals, manage execution, and create long-term value.`
-- `home.hero.cta_primary` → `Submit a Property`
-- `home.hero.cta_secondary` → `Explore MarketFlow`
-- `home.stats.0.value` → `Founder-Led`
-- `home.stats.0.label` → `Execution Focus`
-- `home.stats.1.value` → `East Bay`
-- `home.stats.1.label` → `Local Roots`
-- `home.stats.2.value` → `Three Pillars`
-- `home.stats.2.label` → `Development • Investments • Systems`
-- `home.stats.3.value` → `Private Beta`
-- `home.stats.3.label` → `MarketFlow in Active Development`
-- `home.testimonials.kicker` → `Operating Principles`
-- `home.testimonials.title` → `Discipline Before Scale`
-- `home.testimonials.description` → `The standards guiding Pegasus Dreamscapes as we build, invest, and systemize real estate execution.`
+- `DATABASE_URL`
+- `SITE_URL=https://pegasusdreamscapes.com`
+- `PEGASUS_HQ_PUBLIC_INTAKE_URL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SENDGRID_API_KEY`
+- `DEFAULT_FROM_EMAIL`
+- `STAFF_NOTIFICATION_EMAIL`
+- `SESSION_SECRET`
+- `REPL_ID`
 
-## Email notification checklist (SendGrid)
-- Seller leads should notify `STAFF_NOTIFICATION_EMAIL`.
-- Investor/partner inquiries should notify `STAFF_NOTIFICATION_EMAIL`.
-- Contact form submissions should notify `STAFF_NOTIFICATION_EMAIL`.
-- Submit-deal / offer notifications should notify `STAFF_NOTIFICATION_EMAIL`.
-- `DEFAULT_FROM_EMAIL` must be a verified sender in SendGrid.
-- If `SENDGRID_API_KEY` is missing, the server logs the email payload fallback and does not crash.
+`ISSUER_URL` is optional if the default Replit OIDC issuer is correct. `PORT` is optional and defaults to `5000`.
 
-## Supabase auth production checklist
-- Set `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
-- In Supabase Auth settings, set Site URL to the production domain (for example `https://pegasusdreamscapes.com`).
-- Add allowed redirect URLs for production and canonical auth callback paths used by this app.
-- Validate login redirect flow from production.
-- Validate signup redirect flow from production.
-- Validate logout redirect flow back to public site.
-- If Replit Auth is enabled, also set `ISSUER_URL`, `REPL_ID`, and `SESSION_SECRET`, and verify there is no conflicting auth UX with Supabase-authenticated areas.
+## Pegasus HQ Intake Bridge
 
-## Public route launch QA checklist
-Check each route before launch:
+Public property submissions from `/submit`, legacy seller/deal aliases, and the legacy `/api/seller-leads` endpoint bridge into Pegasus HQ through `PEGASUS_HQ_PUBLIC_INTAKE_URL`.
+
+Default target:
+
+`https://pegasus-hq-operating-system.vercel.app/api/public/intake`
+
+This keeps real property opportunities in HQ's canonical `Submission -> Seed` operating spine instead of creating website-only intake records. Contact, investor, vendor, and MarketFlow access requests continue to use the website's existing lead paths and staff notification email.
+
+## Launch Route Set
+
+Primary public routes to smoke before public distribution:
+
 - `/`
-- `/about`
-- `/services`
-- `/sell`
-- `/invest`
-- `/buyers`
-- `/submit-deal`
+- `/connect`
+- `/submit`
+- `/work-with-apollo`
+- `/deal-architecture`
+- `/strategy-lab`
+- `/development`
+- `/capital`
 - `/marketflow`
+- `/marketflow/access`
+- `/peggy-ai`
+- `/about`
+- `/projects`
+- `/projects/nelson-dr`
+- `/ecosystem`
+- `/dreamscaper-standard`
+- `/library`
+- `/vendor-network`
 - `/contact`
+- `/disclosures`
 - `/privacy`
 - `/terms`
 
-For each route verify:
+Legacy routes such as `/sell`, `/invest`, `/services`, `/resources`, and `/submit-deal` are redirects or retired surfaces. They should not appear in the public sitemap.
+
+For each public route verify:
+
 - Page renders without visible runtime errors.
-- Nav + footer links work.
-- No fake stats or fake testimonials are visible.
-- No placeholder phone number appears.
-- No unsupported DRE/BBB/A+ claims appear.
-- No public investment return claims appear.
-- MarketFlow is clearly labeled as private beta.
-- Forms show success and error states.
-- Mobile layout is acceptable.
+- Header, mobile navigation, footer, and primary CTA work.
+- Copy uses locked `Pegasus Dreamscapes` casing.
+- No guaranteed offers, guaranteed outcomes, public securities solicitation, fake testimonials, or unsupported claims appear.
+- MarketFlow is clearly private beta / reviewed access, not a public marketplace.
+- Work With Apollo keeps KW/DRE role separation visible.
+- Legal pages are reachable from the footer.
+- Mobile layout has no horizontal overflow or hidden primary action.
 
-## Performance note
-Current build may emit large chunk-size warnings. Treat this as a post-launch optimization unless a minimal, low-risk improvement is identified.
+## Production Deployment Checklist
 
-## Known beta limitations
-- MarketFlow is private beta; features and access may be limited.
-- Advanced role dashboards are still in-progress.
-- Deal visibility/matching workflows are review-based during beta.
+1. Confirm PR checks are green.
+2. Configure production environment variables without exposing secrets in chat.
+3. Run `npm run env:production` in the production environment.
+4. Run `npm run build`.
+5. Start with `npm run start`.
+6. Confirm `https://pegasusdreamscapes.com` serves the app over SSL.
+7. Confirm `/robots.txt` allows the public site and disallows private/admin/API surfaces.
+8. Confirm `/sitemap.xml` lists the 22 launch routes with `https://pegasusdreamscapes.com` URLs.
+9. Confirm `/og/default.png`, favicon, Apple touch icon, and brand SVGs load.
+10. Submit one real production `/submit` smoke test and verify both HQ intake receipt and staff email delivery.
+11. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
+12. Complete qualified legal/compliance review before public QR/card distribution.
+
+Production runtime expectations:
+
+- Server respects `PORT`.
+- Server bundle is `dist/index.cjs`.
+- Static client assets and public launch assets are served from `dist/public`.
+- `script/build.ts` regenerates sitemap files before each build and copies root `public` assets into `dist/public`.
+
+## CMS Content Override Launch Checklist
+
+`SiteContentProvider` loads homepage editable content from `/api/site-content`. Existing database values can override local fallback copy on the home page. Before launch, confirm production `site_content` rows are either empty/removed or set to approved values for the current homepage.
+
+## Email Notification Checklist
+
+- Property submissions should notify `STAFF_NOTIFICATION_EMAIL`.
+- Investor/partner inquiries should notify `STAFF_NOTIFICATION_EMAIL`.
+- Contact form submissions should notify `STAFF_NOTIFICATION_EMAIL`.
+- MarketFlow access requests should notify `STAFF_NOTIFICATION_EMAIL`.
+- `DEFAULT_FROM_EMAIL` must be a verified sender in SendGrid.
+- If `SENDGRID_API_KEY` is missing, the server logs the email payload fallback and does not crash, but launch email smoke is not complete.
+
+## Supabase Auth Checklist
+
+- Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+- In Supabase Auth settings, set Site URL to `https://pegasusdreamscapes.com`.
+- Add allowed redirect URLs for production and canonical auth callback paths used by this app.
+- Validate login, signup, and logout redirects from production.
+- If Replit Auth remains enabled, also set `ISSUER_URL`, `REPL_ID`, and `SESSION_SECRET`.
+
+## Known Post-Launch Maintenance
+
+- Build may emit large chunk-size warnings; treat as a post-launch performance pass unless a low-risk code split is identified.
+- Browserslist data may need routine refresh.
+- The current public launch can ship before deep polishing of every historical/internal MarketFlow dashboard route, but private/admin surfaces must stay out of the public sitemap and robots policy.

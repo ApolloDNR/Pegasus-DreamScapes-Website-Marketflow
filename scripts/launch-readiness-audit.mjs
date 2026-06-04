@@ -79,6 +79,7 @@ const requiredRootPublicFiles = [
 ];
 
 const scanTargets = [
+  "README.md",
   "client/index.html",
   "client/src",
   "server",
