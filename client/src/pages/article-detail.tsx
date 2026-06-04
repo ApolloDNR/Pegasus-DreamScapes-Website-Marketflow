@@ -65,6 +65,10 @@ export default function ArticleDetail() {
   useEffect(() => {
     if (!article) return;
     const id = "ld-article";
+    const updatedAt =
+      (article as Article & { updatedAt?: Date | string | null }).updatedAt ??
+      article.publishedAt ??
+      article.createdAt;
     const ld = {
       "@context": "https://schema.org",
       "@type": "Article",
@@ -74,15 +78,15 @@ export default function ArticleDetail() {
       datePublished: article.publishedAt
         ? new Date(article.publishedAt as unknown as string).toISOString()
         : undefined,
-      dateModified: article.updatedAt
-        ? new Date(article.updatedAt as unknown as string).toISOString()
+      dateModified: updatedAt
+        ? new Date(updatedAt as unknown as string).toISOString()
         : undefined,
       author: article.author
         ? { "@type": "Person", name: article.author }
-        : { "@type": "Organization", name: "Pegasus DreamScapes Corp." },
+        : { "@type": "Organization", name: "Pegasus Dreamscapes Corp." },
       publisher: {
         "@type": "Organization",
-        name: "Pegasus DreamScapes Corp.",
+        name: "Pegasus Dreamscapes Corp.",
         logo: {
           "@type": "ImageObject",
           url: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
@@ -206,7 +210,7 @@ export default function ArticleDetail() {
                   </li>
                   <li>
                     <Link
-                      href={`/education?category=${article.libraryCategoryKey}`}
+                      href={`/library?category=${article.libraryCategoryKey}`}
                       className="hover:text-primary transition-colors"
                       data-testid="link-breadcrumb-category"
                     >
@@ -225,7 +229,7 @@ export default function ArticleDetail() {
           <h1
             className={
               isLibraryArticle
-                ? "font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.02em] mb-6"
+                ? "font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-normal mb-6"
                 : "text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
             }
             data-testid="text-article-title"
@@ -262,7 +266,7 @@ export default function ArticleDetail() {
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="p-8 sm:p-10 text-center">
                 <GraduationCap className="w-10 h-10 text-primary mx-auto mb-5" />
-                <h3 className="font-serif text-2xl sm:text-3xl font-semibold tracking-[-0.01em] mb-3" data-testid="text-library-cta">
+                <h3 className="font-serif text-2xl sm:text-3xl font-semibold tracking-normal mb-3" data-testid="text-library-cta">
                   Have a property that may fit?
                 </h3>
                 <p className="text-muted-foreground leading-relaxed mb-7 max-w-2xl mx-auto">
@@ -276,8 +280,8 @@ export default function ArticleDetail() {
                     </Button>
                   </Link>
                   <Link href="/strategy-lab">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto" data-testid="button-library-blueprint">
-                      Pegasus Deal Blueprint
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto" data-testid="button-library-strategy-lab">
+                      Open Strategy Lab
                     </Button>
                   </Link>
                 </div>
@@ -325,12 +329,12 @@ export default function ArticleDetail() {
                 Related reads
               </p>
             </div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-[-0.01em] mb-8">
+            <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-normal mb-8">
               More from {libraryLabel}
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {relatedArticles.map((a, i) => (
-                <Link key={a.id} href={`/resources/${a.slug}`}>
+                <Link key={a.id} href={`/library/${a.slug}`}>
                   <article
                     className="group h-full p-6 bg-card rounded-lg border border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer flex flex-col"
                     data-testid={`related-article-${i}`}

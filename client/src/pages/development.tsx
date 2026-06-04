@@ -1,35 +1,116 @@
 import { Link } from "wouter";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import {
   ArrowRight,
+  Briefcase,
+  Building,
+  CheckCircle2,
+  Compass,
   Hammer,
   Layers,
-  Building,
-  Compass,
-  Briefcase,
   Network,
   ShieldCheck,
-  CheckCircle2,
+  type LucideIcon,
 } from "lucide-react";
 import { HeroPicture } from "@/components/hero-picture";
-import { CardSurface } from "@/components/ui/card-primitives";
+
+type Phase = {
+  label: string;
+  title: string;
+  body: string;
+  items: string[];
+  icon: LucideIcon;
+};
+
+type SupportPillar = {
+  kicker: string;
+  title: string;
+  desc: string;
+  cta: string;
+  href: string;
+  icon: LucideIcon;
+};
+
+const operatingRows = [
+  ["Mandate", "Build disciplined East Bay residential value before scaling the machine."],
+  ["Current scope", "ADU additions, forced-value rehabs, fix-and-flip, BRRRR, and small infill projects."],
+  ["Control point", "A project does not move forward until the path, capital, scope, and risk are legible."],
+  ["Long arc", "Earn the right to become a vertically integrated developer through documented execution."],
+];
+
+const phases: Phase[] = [
+  {
+    label: "Phase 01 / Today",
+    title: "Foundation",
+    body: "Small-scale projects where discipline, speed, cost control, and documentation matter more than theatrics.",
+    icon: Hammer,
+    items: ["ADU additions", "Forced-value rehabs", "Fix-and-flip", "BRRRR acquisitions"],
+  },
+  {
+    label: "Phase 02 / Next",
+    title: "Expansion",
+    body: "Repeatable development patterns, tighter vendor control, and selective co-developer relationships.",
+    icon: Layers,
+    items: ["Small multi-unit conversions", "2-4 unit projects", "Co-developer relationships", "Expanded scope"],
+  },
+  {
+    label: "Phase 03 / Growth",
+    title: "Vertical Integration",
+    body: "Pegasus-controlled sites, project management discipline, and multiple active construction tracks.",
+    icon: Building,
+    items: ["Ground-up infill", "BuildForge-supported management", "Vendor bench depth", "Capital timing discipline"],
+  },
+  {
+    label: "Phase 04 / Legacy",
+    title: "Generational",
+    body: "Larger development only after the operating base proves it can carry the weight.",
+    icon: Compass,
+    items: ["Classical neighborhoods", "Larger-scale development", "Long-hold value", "A durable real estate company"],
+  },
+];
+
+const supportPillars: SupportPillar[] = [
+  {
+    icon: Briefcase,
+    kicker: "Capital",
+    title: "Capital follows the project.",
+    desc: "Direct acquisition, JV, co-GP, and creative-finance relationships are matched to the real project, not forced into a generic pitch.",
+    cta: "Capital Partnerships",
+    href: "/capital",
+  },
+  {
+    icon: Network,
+    kicker: "Systems",
+    title: "Operations make the work repeatable.",
+    desc: "BuildForge, MarketFlow, vendor discipline, and the Pegasus Standard keep projects readable before they become expensive.",
+    cta: "Vendor Network",
+    href: "/vendor-network",
+  },
+  {
+    icon: ShieldCheck,
+    kicker: "Standard",
+    title: "The doctrine protects the pace.",
+    desc: "Prudence in the underwriting, clean dealing, disciplined execution, and controlled growth are treated as operating requirements.",
+    cta: "The Doctrine",
+    href: "/about",
+  },
+];
 
 export default function Development() {
   useSEO({
     title: "Development",
     description:
-      "Pegasus Development is the spine pillar of Pegasus DreamScapes. Investments and Systems exist to feed and support what gets built. Phase by phase, ADU and value-add today, vertically integrated developer tomorrow.",
+      "Pegasus Development is the spine pillar of Pegasus Dreamscapes. Small-scale value creation today, vertically integrated development over time.",
     image: "/og/home.png",
   });
 
   return (
-    <div className="min-h-screen">
-      <h1 className="sr-only">Pegasus Development. The Spine Pillar.</h1>
+    <div className="min-h-screen bg-background">
+      <h1 className="sr-only">Pegasus Development. The spine pillar.</h1>
       <HeroSection />
-      <PillarSection />
+      <MandateSection />
       <PhaseSection />
       <SupportingPillarsSection />
       <CTASection />
@@ -39,95 +120,70 @@ export default function Development() {
 
 function HeroSection() {
   return (
-    <section className="relative min-h-[78vh] flex items-center overflow-hidden pt-20">
-      <motion.div
-        className="absolute inset-0 scale-105"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1.05 }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      >
+    <section className="relative overflow-hidden bg-[hsl(var(--navy))] text-cream">
+      <div className="absolute inset-0">
         <HeroPicture
           alt="Pegasus Development. Strategy-first real estate developer."
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           priority
         />
-      </motion.div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/85" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,15,25,0.90)_0%,rgba(8,15,25,0.72)_48%,rgba(8,15,25,0.34)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[hsl(var(--navy))] to-transparent" />
+      </div>
 
-      <div className="relative z-10 w-full py-24">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-8">
-            <motion.div
-              className="flex items-center gap-4 mb-6"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div className="h-px w-10 bg-primary" />
-              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">
-                Pegasus Development · The Spine Pillar
-              </p>
-            </motion.div>
-
-            <motion.h1
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-cream leading-[0.95] tracking-[-0.02em] mb-8 [text-shadow:0_2px_14px_rgba(0,0,0,0.6)]"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
+      <div className="relative z-10 flex min-h-[78vh] items-center pt-28 pb-16">
+        <div className="mx-auto w-full max-w-7xl px-6 lg:px-12">
+          <div className="min-w-0 max-w-[22rem] sm:max-w-5xl">
+            <Eyebrow text="Pegasus Development / Spine Pillar" light />
+            <h2
+              className="mt-6 max-w-[22rem] font-serif text-4xl font-semibold leading-[1.02] text-white sm:max-w-5xl sm:text-6xl sm:leading-[0.96] lg:text-7xl"
               data-testid="text-development-hero"
             >
-              We build first.{" "}
-              <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-                Everything else supports it.
-              </span>
-            </motion.h1>
+              Build the real estate.
+              <span className="block pt-2 italic text-[#D4B483]">Then structure everything around it.</span>
+            </h2>
+            <p className="mt-7 max-w-[22rem] text-lg leading-relaxed text-cream/80 sm:max-w-2xl sm:text-xl">
+              Pegasus Dreamscapes is, at its core, a real estate development company. Capital, systems, and deal flow exist to support the work that gets built.
+            </p>
+            <p className="mt-4 max-w-[22rem] font-serif text-lg italic leading-relaxed text-white/90 sm:max-w-xl">
+              Small-scale and disciplined today. Vertically integrated over time.
+            </p>
 
-            <motion.p
-              className="font-serif text-lg sm:text-xl text-cream/90 italic max-w-2xl mb-4 leading-snug"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.55 }}
-            >
-              Complex property. Structured opportunity.
-            </motion.p>
-
-            <motion.p
-              className="text-base sm:text-lg text-cream/85 max-w-2xl mb-10 leading-relaxed font-light"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
-            >
-              Pegasus DreamScapes is, at its core, a real estate development company. Investments and Systems exist to feed and support what gets built. Today the work is small-scale and disciplined; the trajectory is a vertically integrated developer producing ground-up infill and, in time, master-planned classical neighborhoods.
-            </motion.p>
-
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.85 }}
-            >
-              <Link href="/submit">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link href="/submit?intent=adu">
                 <Button
                   size="lg"
-                  className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20 w-full sm:w-auto"
+                  className="h-14 w-full max-w-[22rem] rounded-sm bg-primary px-8 text-sm font-semibold uppercase text-white hover:bg-primary/90 sm:w-auto sm:max-w-none"
                   data-testid="button-development-strategy-review"
                 >
                   Start a Strategy Review
-                  <ArrowRight className="ml-3 w-4 h-4" />
+                  <ArrowRight className="ml-3 h-4 w-4" aria-hidden="true" />
                 </Button>
               </Link>
               <Link href="/projects">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto text-sm uppercase tracking-[0.15em] px-10 py-7 border-cream/30 text-cream hover:bg-cream/10 backdrop-blur-md font-semibold"
+                  className="h-14 w-full max-w-[22rem] rounded-sm border-white/40 bg-white/5 px-8 text-sm font-semibold uppercase text-white hover:bg-white/10 sm:w-auto sm:max-w-none"
                   data-testid="button-development-projects"
                 >
                   See Built Work
                 </Button>
               </Link>
-            </motion.div>
+            </div>
+
+            <div className="mt-12 grid border-y border-white/20 text-sm text-white/75 sm:grid-cols-3">
+              {[
+                ["Current lane", "ADU / rehab / value-add"],
+                ["Operating posture", "Documented before scaled"],
+                ["Growth rule", "Earn the next phase"],
+              ].map(([label, value]) => (
+                <div key={label} className="border-white/20 py-4 sm:border-r sm:px-5 first:sm:pl-0 last:sm:border-r-0">
+                  <p className="text-xs uppercase text-primary">{label}</p>
+                  <p className="mt-1 font-serif text-xl text-white">{value}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -136,26 +192,38 @@ function HeroSection() {
   );
 }
 
-function PillarSection() {
+function MandateSection() {
   return (
-    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      <div className="max-w-5xl mx-auto px-6 lg:px-12 relative">
-        <ScrollReveal className="max-w-3xl">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">Why Development Leads</p>
-          </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-6">
-            Development is what we do.{" "}
-            <span className="text-headline-gold">The rest is how we do it well.</span>
+    <section className="bg-background py-24 lg:py-32">
+      <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-12 lg:px-12">
+        <ScrollReveal className="lg:col-span-5">
+          <Eyebrow text="Development mandate" />
+          <h2 className="mt-5 font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+            The premium move is operational clarity.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-            Every Pegasus pillar exists to make Development sharper: Investments fund and structure the projects, Systems run the operating discipline, and MarketFlow routes the deal flow that becomes built work. The product is the building, the renovation, the addition, the neighborhood. The other pillars are scaffolding.
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            Development is not a mood board. The work is scope, capital, sequencing, risk, and a clear reason for building in the first place.
           </p>
-          <p className="text-base text-muted-foreground/85 leading-relaxed italic">
-            Built on strategy. Governed by virtue. Executed with discipline.
-          </p>
+        </ScrollReveal>
+
+        <ScrollReveal className="lg:col-span-7" direction="left">
+          <div className="border border-border bg-card">
+            <div className="border-b border-border p-6 sm:p-8">
+              <p className="text-xs uppercase text-primary">Operating memo</p>
+              <h3 className="mt-3 font-serif text-3xl font-semibold">Development before decoration.</h3>
+            </div>
+            <div className="divide-y divide-border">
+              {operatingRows.map(([label, value], index) => (
+                <div key={label} className="grid gap-4 p-6 sm:grid-cols-[7rem_1fr] sm:p-7">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-serif text-2xl text-primary/70">{String(index + 1).padStart(2, "0")}</span>
+                    <p className="text-xs uppercase text-primary">{label}</p>
+                  </div>
+                  <p className="font-serif text-2xl leading-snug text-foreground">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </ScrollReveal>
       </div>
     </section>
@@ -163,106 +231,51 @@ function PillarSection() {
 }
 
 function PhaseSection() {
-  const phases = [
-    {
-      tag: "Phase 1",
-      label: "Today",
-      title: "Foundation",
-      icon: Hammer,
-      items: [
-        "ADU additions and forced-value rehabs",
-        "Fix-and-flip projects",
-        "BRRRR acquisitions",
-        "Small-scale development",
-      ],
-    },
-    {
-      tag: "Phase 2",
-      label: "Next",
-      title: "Expansion",
-      icon: Layers,
-      items: [
-        "Small multi-unit conversions",
-        "2–4 unit projects",
-        "Co-developer relationships",
-        "Expanded Pegasus Development scope",
-      ],
-    },
-    {
-      tag: "Phase 3",
-      label: "Growth",
-      title: "Vertical Integration",
-      icon: Building,
-      items: [
-        "Ground-up infill construction on Pegasus-controlled lots",
-        "BuildForge-supported project management",
-        "Multiple active construction projects",
-      ],
-    },
-    {
-      tag: "Phase 4",
-      label: "Legacy",
-      title: "Generational",
-      icon: Compass,
-      items: [
-        "Master-planned classical neighborhoods",
-        "Larger-scale development",
-        "A generational real estate company",
-      ],
-    },
-  ];
-
   return (
-    <section className="py-24 lg:py-32 bg-muted/20 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
-        <ScrollReveal className="max-w-3xl mb-14">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-sm uppercase tracking-[0.3em] text-primary font-semibold">The Development Pathway</p>
-          </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+    <section className="bg-card py-24 lg:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-12">
+        <ScrollReveal className="max-w-3xl">
+          <Eyebrow text="The development pathway" />
+          <h2 className="mt-5 font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
             Built phase by phase.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Each phase is earned, not assumed. We graduate to the next stage when the prior stage is consistently profitable, well-documented, and operationally repeatable.
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            Each phase is earned. Pegasus graduates only when the prior stage is profitable, documented, and operationally repeatable.
           </p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-5" staggerDelay={0.1}>
-          {phases.map((phase, index) => (
-            <StaggerItem key={index}>
-              <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.25 }} className="h-full">
-              <CardSurface
-                className="relative h-full p-7 border-border/40 hover:border-primary/30 transition-all duration-300 group"
-                data-testid={`phase-card-${index}`}
-              >
-                <div className="flex items-baseline justify-between mb-6">
-                  <span className="font-serif text-3xl text-primary/30 group-hover:text-primary/60 transition-colors">
-                    0{index + 1}
-                  </span>
-                  <phase.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
-                </div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold mb-1">
-                  {phase.tag} · {phase.label}
-                </p>
-                <h3 className="font-serif text-2xl font-semibold mb-5 tracking-tight">{phase.title}</h3>
-                <ul className="space-y-2.5">
-                  {phase.items.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground leading-relaxed">
-                      <span className="mt-2 w-1 h-1 rounded-full bg-primary/50 flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardSurface>
-              </motion.div>
-            </StaggerItem>
-          ))}
+        <StaggerChildren className="mt-12 divide-y divide-border border border-border bg-background" staggerDelay={0.06}>
+          {phases.map((phase, index) => {
+            const Icon = phase.icon;
+            return (
+              <StaggerItem key={phase.label}>
+                <article className="grid gap-7 p-6 transition-colors duration-300 hover:bg-card/70 sm:p-8 lg:grid-cols-[7rem_1fr_22rem] lg:items-start">
+                  <div>
+                    <p className="font-serif text-4xl text-primary/40">{String(index + 1).padStart(2, "0")}</p>
+                    <Icon className="mt-5 h-5 w-5 text-primary" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-primary">{phase.label}</p>
+                    <h3 className="mt-2 font-serif text-3xl font-semibold">{phase.title}</h3>
+                    <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">{phase.body}</p>
+                  </div>
+                  <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 lg:grid-cols-1">
+                    {phase.items.map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <span className="mt-2 h-px w-5 flex-shrink-0 bg-primary/60" aria-hidden="true" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </StaggerItem>
+            );
+          })}
         </StaggerChildren>
 
-        <ScrollReveal delay={0.3} className="mt-12 max-w-3xl">
-          <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-5">
-            This is the path, not a claim of where we already stand. Today's Development scope is ADU additions, forced-value rehabs, fix-and-flip, BRRRR, and small-scale projects.
+        <ScrollReveal delay={0.2} className="mt-10 max-w-3xl border-l-2 border-primary/40 pl-5">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            This is a trajectory, not a claim that every future phase is already active. The present public lane is disciplined small-scale residential value creation.
           </p>
         </ScrollReveal>
       </div>
@@ -271,70 +284,44 @@ function PhaseSection() {
 }
 
 function SupportingPillarsSection() {
-  const pillars = [
-    {
-      icon: Briefcase,
-      kicker: "Pillar · Investments",
-      title: "Capital that feeds the build.",
-      desc: "Direct acquisition, JV / co-GP, and creative-finance structures funded by aligned operating partners. Capital is matched to the project, not the other way around.",
-      cta: "Capital Partnerships",
-      href: "/invest",
-    },
-    {
-      icon: Network,
-      kicker: "Pillar · Systems",
-      title: "The operating discipline.",
-      desc: "BuildForge for project management, the Vendor Network for trade execution, MarketFlow for vetted deal flow, and the Pegasus Standard governing how every project is read, scoped, and run.",
-      cta: "Vendor Network",
-      href: "/vendor-network",
-    },
-    {
-      icon: ShieldCheck,
-      kicker: "Pillar · Pegasus Standard",
-      title: "Governed by virtue.",
-      desc: "Every project is reviewed against the same doctrine: prudence on the underwriting, justice on the dealings, fortitude on the execution, temperance on the growth pace.",
-      cta: "The Doctrine",
-      href: "/about",
-    },
-  ];
-
   return (
-    <section className="py-24 lg:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-sm uppercase tracking-[0.25em] text-primary font-semibold">The Supporting Pillars</p>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
-          </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Investments and Systems exist for one reason.
+    <section className="bg-background py-24 lg:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-12">
+        <ScrollReveal className="mx-auto max-w-3xl text-center">
+          <Eyebrow text="Supporting system" center />
+          <h2 className="mt-5 font-serif text-4xl font-semibold leading-tight sm:text-5xl">
+            Capital and systems exist for one reason.
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            To make sure what Pegasus builds gets built right: funded correctly, scoped correctly, run correctly, governed correctly.
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            To make sure what Pegasus builds gets built right: funded correctly, scoped correctly, run correctly, and governed correctly.
           </p>
         </ScrollReveal>
 
-        <StaggerChildren className="grid md:grid-cols-3 gap-6" staggerDelay={0.1}>
-          {pillars.map((p, i) => (
-            <StaggerItem key={i}>
-              <Link href={p.href}>
-                <CardSurface className="group h-full p-8 border-border/40 hover:border-primary/30 transition-all duration-300 cursor-pointer" data-testid={`supporting-pillar-${i}`}>
-                  <div className="flex items-baseline justify-between mb-6">
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">{p.kicker}</p>
-                    <p.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
+        <div className="mt-12 divide-y divide-border border-y border-border">
+          {supportPillars.map((pillar, index) => {
+            const Icon = pillar.icon;
+            return (
+              <Link key={pillar.title} href={pillar.href}>
+                <article className="group grid gap-5 py-7 transition-colors duration-300 hover:bg-card/70 sm:grid-cols-[5rem_1fr_auto] sm:items-center sm:px-5">
+                  <div className="flex h-14 w-14 items-center justify-center border border-primary/35 bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
-                  <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">{p.desc}</p>
-                  <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold inline-flex items-center gap-2">
-                    {p.cta}
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <div>
+                    <p className="text-xs uppercase text-primary">
+                      {String(index + 1).padStart(2, "0")} / {pillar.kicker}
+                    </p>
+                    <h3 className="mt-2 font-serif text-2xl font-semibold">{pillar.title}</h3>
+                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{pillar.desc}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase text-primary">
+                    {pillar.cta}
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                   </span>
-                </CardSurface>
+                </article>
               </Link>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -342,36 +329,53 @@ function SupportingPillarsSection() {
 
 function CTASection() {
   return (
-    <section className="py-28 lg:py-36 bg-card relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] bg-gradient-radial from-primary/10 via-primary/0 to-transparent rounded-full blur-3xl" />
-      </div>
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-      <div className="max-w-4xl mx-auto px-6 lg:px-12 relative text-center">
+    <section className="relative overflow-hidden bg-[hsl(var(--navy))] py-24 text-cream lg:py-32">
+      <div className="absolute inset-x-0 top-0 h-px bg-primary/50" />
+      <div className="mx-auto max-w-4xl px-6 text-center lg:px-12">
         <ScrollReveal>
-          <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-8" />
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <CheckCircle2 className="mx-auto mb-7 h-8 w-8 text-primary" aria-hidden="true" />
+          <h2 className="font-serif text-4xl font-semibold leading-tight text-white sm:text-5xl">
             Have an ADU, infill lot, or value-add project?
           </h2>
-          <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            Bring us the address and the situation. A real person reviews every submission and routes it to the cleanest path: build it with Pegasus, co-develop, partner on capital, or honest referral.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-cream/75">
+            Bring us the address and the situation. A real person reviews every submission and routes it to the cleanest path: build with Pegasus, co-develop, partner on capital, or refer honestly.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/submit">
-              <Button size="lg" className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold" data-testid="button-development-cta-sell">
+          <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/submit?intent=adu">
+              <Button
+                size="lg"
+                className="h-14 w-full rounded-sm px-8 text-sm font-semibold uppercase sm:w-auto"
+                data-testid="button-development-cta-sell"
+              >
                 Start a Strategy Review
-                <ArrowRight className="ml-3 w-4 h-4" />
+                <ArrowRight className="ml-3 h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
             <Link href="/strategy-lab">
-              <Button size="lg" variant="outline" className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold" data-testid="button-development-cta-blueprint">
-                Pegasus Deal Blueprint
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 w-full rounded-sm border-white/40 bg-white/5 px-8 text-sm font-semibold uppercase text-white hover:bg-white/10 sm:w-auto"
+                data-testid="button-development-cta-blueprint"
+              >
+                Open Strategy Lab
               </Button>
             </Link>
           </div>
         </ScrollReveal>
       </div>
     </section>
+  );
+}
+
+function Eyebrow({ text, light = false, center = false }: { text: string; light?: boolean; center?: boolean }) {
+  return (
+    <div className={`flex min-w-0 flex-wrap items-center gap-3 ${center ? "justify-center" : ""}`}>
+      <span className="h-px w-10 bg-primary" aria-hidden="true" />
+      <p className={`min-w-0 text-xs font-semibold uppercase ${light ? "text-primary" : "text-primary"}`}>
+        {text}
+      </p>
+      {center ? <span className="h-px w-10 bg-primary" aria-hidden="true" /> : null}
+    </div>
   );
 }

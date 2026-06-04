@@ -1,7 +1,7 @@
 import { useSEO } from "@/hooks/use-seo";
 import { Link } from "wouter";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
-import { ArrowRight, Building2, Command, Network, FlaskConical, Bot, ClipboardCheck, HardHat, Coins, Wrench } from "lucide-react";
+import { ArrowRight, Building2, Command, Network, FlaskConical, Bot, FileSearch, HardHat, Coins, Wrench } from "lucide-react";
 
 type Status = "LIVE" | "BETA" | "IN BUILD" | "COMING SOON" | "INTAKE ONLY";
 
@@ -15,7 +15,7 @@ type SystemCard = {
 
 const SYSTEMS: SystemCard[] = [
   {
-    name: "Pegasus DreamScapes",
+    name: "Pegasus Dreamscapes",
     status: "LIVE",
     icon: Building2,
     description: "Strategy-first real estate operating company built around Development, Investments, and Systems.",
@@ -32,7 +32,7 @@ const SYSTEMS: SystemCard[] = [
     name: "Strategy Lab",
     status: "LIVE",
     icon: FlaskConical,
-    description: "Public-facing strategy tool. Run a Quick Read or Full Path Builder on a property, compare possible lanes, and decide whether to save a Snapshot, submit to Pegasus, or request a Deal Blueprint.",
+    description: "Public-facing strategy tool. Run a Quick Read or Full Path Builder on a property, compare possible lanes, and decide whether to save a Snapshot or submit to Pegasus for review.",
     href: "/strategy-lab",
   },
   {
@@ -48,11 +48,11 @@ const SYSTEMS: SystemCard[] = [
     description: "Pegasus Strategy Assistant. Guides intake, explains high-level strategies, prepares drafts, and helps route users. Does not make offers, guarantee outcomes, approve deals, or give legal/tax/securities advice.",
   },
   {
-    name: "Deal Blueprint",
+    name: "Written Review",
     status: "IN BUILD",
-    icon: ClipboardCheck,
-    description: "Paid strategy and execution report created after a free Strategy Snapshot when a user wants a deeper plan.",
-    href: "/deal-blueprint",
+    icon: FileSearch,
+    description: "Private operator memo path scoped after Pegasus understands the property, the pressure, and the cleanest participation lane.",
+    href: "/submit?intent=strategy-review",
   },
   {
     name: "BuildForge",
@@ -86,7 +86,7 @@ const STATUS_STYLES: Record<Status, string> = {
 export default function SystemsPage() {
   useSEO({
     title: "Pegasus Systems — The operating infrastructure behind the company",
-    description: "Pegasus DreamScapes is building a connected operating ecosystem for strategy-first real estate execution. Some tools are live today. Others are being developed from real operational needs inside the company.",
+    description: "Pegasus Dreamscapes is building a connected operating ecosystem for strategy-first real estate execution. Some tools are live today. Others are being developed from real operational needs inside the company.",
   });
 
   return (
@@ -98,13 +98,13 @@ export default function SystemsPage() {
               Pegasus Systems
             </p>
             <h1
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] leading-[0.98] mb-6"
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-normal leading-[0.98] mb-6"
               data-testid="text-systems-title"
             >
               The operating infrastructure behind the company.
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-              Pegasus DreamScapes is building a connected operating ecosystem for strategy-first real estate execution.
+              Pegasus Dreamscapes is building a connected operating ecosystem for strategy-first real estate execution.
               Some tools are live today. Others are being developed from real operational needs inside the company.
             </p>
           </header>
@@ -179,7 +179,7 @@ export default function SystemsPage() {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/sell"
+                href="/submit?intent=property"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-supporting uppercase tracking-[0.18em] text-sm"
                 data-testid="link-systems-cta-sell"
               >

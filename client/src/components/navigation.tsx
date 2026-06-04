@@ -58,38 +58,43 @@ import {
 type NavItem = NavPrimaryItem & { useAnchor?: boolean };
 const NAV_ITEMS: NavItem[] = NAV_PRIMARY;
 const MORE_ITEMS = NAV_MORE;
+const DESKTOP_LABELS: Record<string, string> = {};
 
 // Editorial metadata for the More mega-menu. Keys must match NAV_MORE hrefs.
 // Tested separately by `nav-parity.test.tsx` which only asserts label presence,
 // so adding icons + taglines stays within guardrails.
 const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
-  "/library": {
-    icon: BookOpen,
-    tagline: "Frameworks, lane reads, and the operating doctrine.",
+  "/connect": {
+    icon: MessageSquare,
+    tagline: "The QR and card landing page for direct next steps.",
   },
-  "/strategy-lab": {
-    icon: Calculator,
-    tagline: "Run a property through the Pegasus lens. Fourteen strategies, one verdict.",
+  "/about": {
+    icon: BookOpen,
+    tagline: "The company, the founder, and the operating doctrine.",
+  },
+  "/ecosystem": {
+    icon: Layers,
+    tagline: "How Strategy Lab, Peggy, MarketFlow, and HQ fit together.",
+  },
+  "/dreamscaper-standard": {
+    icon: ClipboardCheck,
+    tagline: "The commitments behind every review and routed outcome.",
+  },
+  "/peggy-ai": {
+    icon: Sparkles,
+    tagline: "Pegasus's AI strategy assistant and public guidance layer.",
   },
   "/vendor-network": {
     icon: Network,
     tagline: "Trusted operators, trades, and capital partners.",
   },
-  "/capital": {
-    icon: ClipboardCheck,
-    tagline: "Conversations, not pitches. Written agreement on every deal.",
-  },
-  "/connect": {
-    icon: Layers,
-    tagline: "Six routes to Apollo. Pick the lane that fits.",
-  },
-  "/disclosures": {
-    icon: BookOpen,
-    tagline: "DRE, KW East Bay, and securities-safe disclosures.",
-  },
   "/contact": {
     icon: Mail,
     tagline: "Reach Apollo and the strategy desk directly.",
+  },
+  "/disclosures": {
+    icon: FileText,
+    tagline: "DRE, KW East Bay, Equal Housing, and securities-safe language.",
   },
 };
 
@@ -247,13 +252,9 @@ export function Navigation() {
     }
   };
 
-  // Wave 1 — pages with a dark navy/photographic hero. The nav floats fully
-  // transparent over these at scroll = 0 (no border, no dark gradient band)
-  // and only transitions to the cream surface on scroll. Every other route
-  // sits on a light surface from the first paint.
-  const DARK_HERO_ROUTES = ["/", "/about"];
-  const isDarkHero = DARK_HERO_ROUTES.includes(location);
-  const onLightSurface = scrolled || !isDarkHero;
+  // The public shell now stays on a single dark glass surface so route changes
+  // feel steady and the header never flashes from cream to navy mid-scroll.
+  const onLightSurface = false;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24);
@@ -263,25 +264,19 @@ export function Navigation() {
   }, []);
 
   const navLinkBase =
-    "relative px-3 py-2 text-[13px] tracking-[0.04em] font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
+    "relative whitespace-nowrap px-2.5 py-2 text-[12px] tracking-[0.03em] font-semibold rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2";
 
   const renderNavLink = (item: NavItem, isMobile = false) => {
     const active = isItemActive(item, location);
     // Active state keeps high-contrast ink/white text (WCAG AA) and uses the
     // copper underline + font weight for state. Bronze on cream is too light
     // for normal text contrast.
-    const desktopColor = onLightSurface
-      ? active
-        ? "text-[hsl(var(--ink))] font-semibold"
-        : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
-      : active
-        ? "text-white font-semibold"
-        : "text-white/85 hover:text-white";
+    const desktopColor = "!text-white hover:!text-white";
     const className = isMobile
-      ? `relative block py-3 text-base transition-colors ${
+      ? `relative block rounded-sm px-4 py-3 text-base transition-colors ${
           active
-            ? "text-[hsl(var(--ink))] font-semibold border-l-2 border-[hsl(var(--bronze))] pl-3"
-            : "text-[hsl(var(--ink))] font-medium hover:text-[hsl(var(--bronze))]"
+            ? "bg-white/[0.06] text-white font-semibold border-l-2 border-[hsl(var(--bronze))]"
+            : "text-cream/80 font-medium hover:bg-white/[0.04] hover:text-white"
         }`
       : `${navLinkBase} ${desktopColor}`;
     const testId = `link-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`;
@@ -289,9 +284,7 @@ export function Navigation() {
     const underline = !isMobile && active ? (
       <span
         aria-hidden="true"
-        className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
-          onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
-        }`}
+        className="absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full bg-[hsl(var(--bronze))]"
       />
     ) : null;
     if (item.useAnchor) {
@@ -305,7 +298,7 @@ export function Navigation() {
           aria-current={ariaCurrent}
           onClick={() => isMobile && setMobileOpen(false)}
         >
-          {item.label}
+          {isMobile ? item.label : DESKTOP_LABELS[item.href] ?? item.label}
           {underline}
         </a>
       );
@@ -319,44 +312,38 @@ export function Navigation() {
         aria-current={ariaCurrent}
         onClick={() => isMobile && setMobileOpen(false)}
       >
-        {item.label}
+        {isMobile ? item.label : DESKTOP_LABELS[item.href] ?? item.label}
         {underline}
       </Link>
     );
   };
 
   const moreActive = MORE_ITEMS.some((m) => location === m.href || location.startsWith(m.href + "/"));
-  const moreDesktopColor = onLightSurface
-    ? moreActive
-      ? "text-[hsl(var(--ink))] font-semibold"
-      : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
-    : moreActive
-      ? "text-white font-semibold"
-      : "text-white/85 hover:text-white";
+  const moreDesktopColor = "!text-white hover:!text-white";
 
   return (
     <>
       <CommandPalette />
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-          onLightSurface
-            ? "bg-[hsl(var(--paper)/0.92)] backdrop-blur-md border-b border-[hsl(var(--rule))]"
-            : "bg-transparent backdrop-blur-[2px]"
+        className={`fixed top-0 left-0 right-0 z-50 border-b border-white/10 transition-all duration-300 ${
+          scrolled
+            ? "bg-[hsl(var(--navy)/0.96)] shadow-[0_20px_60px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+            : "bg-[hsl(var(--navy)/0.84)] backdrop-blur-md"
         }`}
       >
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 h-[76px] lg:h-[92px] flex items-center justify-between gap-6">
+        <div className="relative mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-6 lg:h-[80px] lg:px-10">
           {/* Wordmark — semantic <a>, NOT an <h1> */}
           <Link
             href="/"
-            className="flex items-center gap-3 lg:gap-4 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm group"
-            aria-label="Pegasus DreamScapes home"
+            className="flex min-w-0 max-w-[calc(100vw-6.5rem)] flex-1 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:max-w-none sm:flex-none sm:flex-shrink-0 lg:gap-4 group"
+            aria-label="Pegasus Dreamscapes home"
             data-testid="link-logo"
           >
             <img
               src={logoImage}
               alt=""
               aria-hidden="true"
-              className={`h-14 lg:h-16 w-auto transition-transform duration-300 group-hover:scale-[1.03] ${
+              className={`hidden h-11 w-auto transition-transform duration-300 group-hover:scale-[1.03] sm:block lg:h-12 ${
                 onLightSurface
                   ? "[filter:drop-shadow(0_2px_4px_rgba(13,27,45,0.18))]"
                   : "[filter:drop-shadow(0_3px_8px_rgba(0,0,0,0.45))]"
@@ -370,16 +357,16 @@ export function Navigation() {
               }`}
               aria-hidden="true"
             />
-            <span className="hidden sm:flex flex-col leading-tight">
+            <span className="flex min-w-0 flex-col leading-tight">
               <span
-                className={`font-display text-[15px] lg:text-[17px] tracking-[0.18em] ${
+                className={`truncate font-display text-[13px] tracking-[0.12em] sm:text-[14px] sm:tracking-[0.16em] lg:text-[16px] ${
                   onLightSurface ? "text-[hsl(var(--ink))]" : "text-white"
                 }`}
               >
-                Pegasus DreamScapes
+                Pegasus Dreamscapes
               </span>
               <span
-                className={`text-[9px] lg:text-[10px] tracking-[0.32em] uppercase font-supporting mt-1 ${
+                className={`mt-1 truncate font-supporting text-[8px] uppercase tracking-[0.24em] sm:text-[9px] sm:tracking-[0.32em] lg:text-[10px] ${
                   onLightSurface ? "text-[hsl(var(--bronze))]" : "text-[hsl(var(--bronze-soft))]"
                 }`}
               >
@@ -390,19 +377,13 @@ export function Navigation() {
 
           {/* Desktop nav — 5 noun items + More dropdown */}
           <nav
-            className="hidden lg:flex items-center gap-1"
+            className="hidden xl:flex items-center gap-0.5"
             aria-label="Primary navigation"
           >
             {NAV_ITEMS.map((item) => {
               if (item.label !== "MarketFlow") return renderNavLink(item);
               const active = isItemActive(item, location);
-              const colorClass = onLightSurface
-                ? active
-                  ? "text-[hsl(var(--ink))] font-semibold"
-                  : "text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))]"
-                : active
-                  ? "text-white font-semibold"
-                  : "text-white/85 hover:text-white";
+              const colorClass = "!text-white hover:!text-white";
               return (
                 <Link
                   key={item.label}
@@ -412,15 +393,13 @@ export function Navigation() {
                   aria-current={active ? "page" : undefined}
                 >
                   MarketFlow
-                  <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--bronze))] rounded">
+                  <span className="rounded-sm border border-[hsl(var(--bronze)/0.35)] bg-[hsl(var(--bronze)/0.12)] px-1.5 py-0.5 text-[8px] font-semibold tracking-wider text-[hsl(var(--bronze))]">
                     BETA
                   </span>
                   {active && (
                     <span
                       aria-hidden="true"
-                      className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
-                        onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
-                      }`}
+                      className="absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full bg-[hsl(var(--bronze))]"
                     />
                   )}
                 </Link>
@@ -440,9 +419,7 @@ export function Navigation() {
                   {moreActive && (
                     <span
                       aria-hidden="true"
-                      className={`absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full ${
-                        onLightSurface ? "bg-[hsl(var(--bronze))]" : "bg-white"
-                      }`}
+                      className="absolute left-3 right-3 -bottom-0.5 h-[2px] rounded-full bg-[hsl(var(--bronze))]"
                     />
                   )}
                 </button>
@@ -450,15 +427,15 @@ export function Navigation() {
               <DropdownMenuContent
                 align="end"
                 sideOffset={12}
-                className="w-[380px] p-0 overflow-hidden rounded-lg border border-primary/20 shadow-[0_30px_70px_-20px_rgba(13,27,45,0.45),0_0_0_1px_rgba(199,122,58,0.06)] bg-background"
+                className="w-[410px] overflow-hidden rounded-sm border border-white/10 bg-[hsl(var(--navy))] p-0 text-cream shadow-[0_30px_80px_-20px_rgba(0,0,0,0.72),0_0_0_1px_rgba(199,122,58,0.16)]"
               >
                 {/* Editorial header */}
-                <div className="relative px-5 pt-5 pb-4 bg-gradient-to-b from-cream/70 to-cream/20 dark:from-white/[0.04] dark:to-transparent">
-                  <span aria-hidden="true" className="absolute inset-x-5 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                <div className="relative px-5 pt-5 pb-4 bg-white/[0.035]">
+                  <span aria-hidden="true" className="absolute inset-x-5 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                   <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-1.5">
                     More from Pegasus
                   </p>
-                  <p className="font-serif text-base text-foreground leading-snug tracking-tight">
+                  <p className="font-serif text-base text-white leading-snug">
                     Tools, the network, and the fine print.
                   </p>
                 </div>
@@ -472,22 +449,22 @@ export function Navigation() {
                     return (
                       <Link key={item.href} href={item.href}>
                         <DropdownMenuItem
-                          className="group cursor-pointer px-5 py-3 rounded-none border-l-2 border-transparent focus:bg-cream/60 focus:border-[hsl(var(--bronze))] dark:focus:bg-white/[0.06] data-[highlighted]:bg-cream/60 data-[highlighted]:border-[hsl(var(--bronze))] dark:data-[highlighted]:bg-white/[0.06]"
+                          className="group cursor-pointer rounded-none border-l-2 border-transparent px-5 py-3 focus:border-[hsl(var(--bronze))] focus:bg-white/[0.06] data-[highlighted]:border-[hsl(var(--bronze))] data-[highlighted]:bg-white/[0.06]"
                           data-testid={testid}
                         >
                           <div className="flex items-start gap-3.5 w-full">
-                            <div className="flex-shrink-0 mt-0.5 w-9 h-9 rounded-lg border border-primary/20 bg-cream/40 dark:bg-white/[0.03] flex items-center justify-center group-hover:border-primary/50 group-hover:bg-cream/70 dark:group-hover:bg-white/[0.06] transition-colors duration-200">
+                            <div className="flex-shrink-0 mt-0.5 flex h-9 w-9 items-center justify-center rounded-sm border border-primary/25 bg-white/[0.035] transition-colors duration-200 group-hover:border-primary/55 group-hover:bg-white/[0.07]">
                               <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="font-serif text-[15px] font-semibold tracking-tight text-foreground leading-none">
+                                <span className="font-serif text-[15px] font-semibold text-white leading-none">
                                   {item.label}
                                 </span>
                                 <ArrowRight className="w-3.5 h-3.5 text-primary opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
                               </div>
                               {meta?.tagline && (
-                                <p className="mt-1 text-xs text-muted-foreground leading-snug">
+              <p className="mt-1 text-xs text-cream/70 leading-snug">
                                   {meta.tagline}
                                 </p>
                               )}
@@ -500,11 +477,11 @@ export function Navigation() {
                 </div>
 
                 {!isAuthenticated && (
-                  <div className="relative px-5 py-3 bg-gradient-to-b from-background to-cream/30 dark:to-white/[0.02]">
+                  <div className="relative px-5 py-3 bg-white/[0.025]">
                     <span aria-hidden="true" className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                     <Link href="/login" className="block">
                       <DropdownMenuItem
-                        className="cursor-pointer rounded-md px-3 py-2 gap-2 text-foreground hover:bg-cream/50 dark:hover:bg-white/[0.04] focus:bg-cream/60 focus:ring-2 focus:ring-[hsl(var(--bronze))] focus:ring-offset-1 focus:ring-offset-background dark:focus:bg-white/[0.06]"
+                        className="cursor-pointer gap-2 rounded-sm px-3 py-2 text-cream hover:bg-white/[0.04] focus:bg-white/[0.06] focus:ring-2 focus:ring-[hsl(var(--bronze))] focus:ring-offset-1 focus:ring-offset-[hsl(var(--navy))]"
                         data-testid="link-nav-more-signin"
                       >
                         <LogIn className="w-4 h-4 text-primary" aria-hidden="true" />
@@ -535,7 +512,7 @@ export function Navigation() {
             ) : (
               <Link
                 href={PRIMARY_CTA.href}
-                className="hidden sm:block"
+                className="hidden xl:block"
                 onClick={() => trackCtaClick("nav_desktop", PRIMARY_CTA.label, PRIMARY_CTA.href)}
               >
                 <Button
@@ -553,10 +530,10 @@ export function Navigation() {
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`lg:hidden p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
+                  className={`fixed right-5 top-4 z-[80] inline-flex h-10 w-10 items-center justify-center rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:right-6 lg:top-5 xl:hidden ${
                     onLightSurface
-                      ? "text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
-                      : "text-white hover:bg-white/10"
+                      ? "border-[hsl(var(--rule))] text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
+                      : "border-white/15 bg-white/[0.03] text-white hover:border-[hsl(var(--bronze)/0.55)] hover:bg-white/10"
                   }`}
                   aria-label="Open navigation menu"
                   data-testid="button-mobile-menu"
@@ -566,19 +543,20 @@ export function Navigation() {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full sm:max-w-sm bg-[hsl(var(--paper))] border-l border-[hsl(var(--rule))] flex flex-col"
+                className="flex w-full flex-col border-l border-white/10 bg-[hsl(var(--navy))] text-cream sm:max-w-sm"
               >
                 <VisuallyHidden>
                   <SheetTitle>Site navigation</SheetTitle>
                   <SheetDescription>Primary links and account actions</SheetDescription>
                 </VisuallyHidden>
 
-                <div className="flex items-center justify-between pb-6 border-b border-[hsl(var(--rule))]">
-                  <span
-                    className="font-display text-sm tracking-[0.18em] text-[hsl(var(--ink))]"
-                  >
-                    Pegasus DreamScapes
-                  </span>
+                <div className="flex items-center justify-between border-b border-white/10 pb-6">
+                  <div className="flex items-center gap-3">
+                    <img src={logoImage} alt="" aria-hidden="true" className="h-10 w-auto [filter:drop-shadow(0_3px_8px_rgba(0,0,0,0.35))]" />
+                    <span className="font-display text-sm tracking-[0.16em] text-white">
+                      Pegasus Dreamscapes
+                    </span>
+                  </div>
                 </div>
 
                 <nav className="flex-1 py-6 overflow-y-auto" aria-label="Mobile navigation">
@@ -591,8 +569,8 @@ export function Navigation() {
                   {/* Wave 2 — single "More" accordion mirroring desktop IA.
                       Uses native <details> so children stay in DOM when
                       collapsed (nav-parity test queries by testId). */}
-                  <details className="group mt-8 pt-6 border-t border-[hsl(var(--rule))]" data-testid="mobile-more-accordion">
-                    <summary className="flex items-center justify-between cursor-pointer list-none py-2 text-[11px] uppercase tracking-[0.28em] text-[hsl(var(--muted-text))] font-supporting font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm">
+                  <details open className="group mt-8 border-t border-white/10 pt-6" data-testid="mobile-more-accordion">
+                    <summary className="flex cursor-pointer list-none items-center justify-between rounded-sm py-2 font-supporting text-[11px] font-semibold uppercase tracking-[0.24em] text-cream/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--navy))]">
                       <span>More</span>
                       <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
                     </summary>
@@ -602,7 +580,7 @@ export function Navigation() {
                           <Link
                             href={item.href}
                             onClick={() => setMobileOpen(false)}
-                            className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                            className="block rounded-sm px-4 py-3 text-base font-medium text-cream/80 transition-colors hover:bg-white/[0.04] hover:text-white"
                             data-testid={`link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                           >
                             {item.label}
@@ -614,7 +592,7 @@ export function Navigation() {
                           <Link
                             href="/login"
                             onClick={() => setMobileOpen(false)}
-                            className="flex items-center gap-2 py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
+                            className="flex items-center gap-2 rounded-sm px-4 py-3 text-base font-medium text-cream/80 transition-colors hover:bg-white/[0.04] hover:text-white"
                             data-testid="link-mobile-signin"
                           >
                             <LogIn className="w-4 h-4" aria-hidden="true" />
@@ -626,7 +604,7 @@ export function Navigation() {
                   </details>
                 </nav>
 
-                <div className="pt-6 border-t border-[hsl(var(--rule))]">
+                <div className="border-t border-white/10 pt-6">
                   <Link
                     href={PRIMARY_CTA.href}
                     onClick={() => {

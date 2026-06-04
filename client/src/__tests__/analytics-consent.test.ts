@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { writeConsent, resetConsent, readConsent, CONSENT_STORAGE_KEY } from "@/lib/consent";
-import { trackEvent, initAnalytics } from "@/lib/analytics";
+import { trackCtaClick, trackEvent, initAnalytics } from "@/lib/analytics";
 
 vi.stubEnv("VITE_PLAUSIBLE_DOMAIN", "pegasusdreamscapes.com");
 
@@ -20,11 +20,16 @@ describe("Analytics consent gate (Website Brief v1.0 §11)", () => {
     window.localStorage.removeItem(CONSENT_STORAGE_KEY);
     document.getElementById("pegasus-plausible-script")?.remove();
     delete (window as unknown as { plausible?: unknown }).plausible;
+    delete (window as unknown as { __PEGASUS_CTA_EVENTS_ENABLED__?: boolean })
+      .__PEGASUS_CTA_EVENTS_ENABLED__;
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     (window as unknown as { __PEGASUS_PLAUSIBLE_DOMAIN__: string }).__PEGASUS_PLAUSIBLE_DOMAIN__ =
       "pegasusdreamscapes.com";
+    delete (window as unknown as { __PEGASUS_CTA_EVENTS_ENABLED__?: boolean })
+      .__PEGASUS_CTA_EVENTS_ENABLED__;
   });
 
   it("defaults to off — readConsent reports analytics=false before any decision", () => {
@@ -75,5 +80,36 @@ describe("Analytics consent gate (Website Brief v1.0 §11)", () => {
     expect(stub).toHaveBeenCalledTimes(2);
     expect(stub).toHaveBeenNthCalledWith(1, "strategy_lab_started", undefined);
     expect(stub).toHaveBeenNthCalledWith(2, "cta_click", { props: { id: "hero_primary" } });
+  });
+
+  it("trackCtaClick does not POST first-party events unless explicitly enabled", () => {
+    const beacon = vi.fn(() => true);
+    const fetchMock = vi.fn();
+    Object.defineProperty(navigator, "sendBeacon", {
+      configurable: true,
+      value: beacon,
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    trackCtaClick("hero", "Submit a Property", "/submit");
+
+    expect(beacon).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("trackCtaClick posts the first-party event when explicitly enabled", () => {
+    const beacon = vi.fn(() => true);
+    Object.defineProperty(navigator, "sendBeacon", {
+      configurable: true,
+      value: beacon,
+    });
+    (window as unknown as { __PEGASUS_CTA_EVENTS_ENABLED__?: boolean }).__PEGASUS_CTA_EVENTS_ENABLED__ =
+      true;
+
+    trackCtaClick("hero", "Submit a Property", "/submit");
+
+    expect(beacon).toHaveBeenCalledTimes(1);
+    expect(beacon.mock.calls[0][0]).toBe("/api/events");
+    expect(beacon.mock.calls[0][1]).toBeInstanceOf(Blob);
   });
 });

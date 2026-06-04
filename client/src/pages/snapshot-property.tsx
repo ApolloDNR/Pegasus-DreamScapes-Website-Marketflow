@@ -57,9 +57,9 @@ export default function SnapshotPropertyPage() {
 
   useSEO({
     title: addr
-      ? `Strategy Snapshot · ${addr} · Pegasus DreamScapes.`
-      : "Strategy Snapshot · Pegasus DreamScapes.",
-    description: topLane?.headline ?? "A preliminary structural read by Pegasus DreamScapes.",
+      ? `Strategy Snapshot · ${addr} · Pegasus Dreamscapes.`
+      : "Strategy Snapshot · Pegasus Dreamscapes.",
+    description: topLane?.headline ?? "A preliminary structural read by Pegasus Dreamscapes.",
     image: token ? `/og/snapshot/${token}` : undefined,
   });
 
@@ -103,7 +103,7 @@ export default function SnapshotPropertyPage() {
           <div className="text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold text-[hsl(var(--copper))] mb-4">
             Property Strategy Snapshot · {data.visibility === "full" ? "Full Tier" : "Summary Tier"}
           </div>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-[1.02]">
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-normal leading-[1.02]">
             {addr}
           </h1>
           {sub && <p className="font-serif italic text-lg sm:text-xl text-cream/80 mt-3">{sub}</p>}
@@ -141,7 +141,7 @@ export default function SnapshotPropertyPage() {
         {isFull && (
           <section data-testid="section-numbers">
             <div className="text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary mb-2">Section 01</div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">The Numbers</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal mb-4">The Numbers</h2>
             <div className="border-t border-[hsl(var(--copper))]" />
             <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-3 mt-6">
               {[
@@ -165,7 +165,7 @@ export default function SnapshotPropertyPage() {
         {isFull && (snap.risks ?? []).length > 0 && (
           <section data-testid="section-risks">
             <div className="text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary mb-2">Section 02</div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">Risk Register</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal mb-4">Risk Register</h2>
             <div className="border-t border-[hsl(var(--copper))]" />
             <ul className="mt-6 space-y-3">
               {(snap.risks ?? []).map((r: RiskFlag, i: number) => (
@@ -186,7 +186,7 @@ export default function SnapshotPropertyPage() {
         {isFull && (snap.capitalStack ?? []).length > 0 && (
           <section data-testid="section-stack">
             <div className="text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary mb-2">Section 03</div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">Capital Stack</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal mb-4">Capital Stack</h2>
             <div className="border-t border-[hsl(var(--copper))]" />
             <div className="mt-6 space-y-3">
               {((snap.capitalStack ?? []) as CapitalStackEntry[]).map((e, i) => {
@@ -214,7 +214,7 @@ export default function SnapshotPropertyPage() {
         {snap.memo && (
           <section data-testid="section-memo">
             <div className="text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary mb-2">{isFull ? "Section 04" : "Section 01"}</div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">Decision Memo</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal mb-4">Decision Memo</h2>
             <div className="border-t border-[hsl(var(--copper))]" />
             <p className="font-serif text-xl leading-relaxed mt-6 max-w-3xl">{snap.memo.paragraph}</p>
             {snap.memo.nextStep && (
@@ -239,7 +239,7 @@ export default function SnapshotPropertyPage() {
                data-testid="link-download-pdf">
               <Download className="w-4 h-4" /> Download PDF
             </a>
-            <Link href="/sell" className="bg-[hsl(var(--copper))] text-white px-4 py-2.5 text-sm font-supporting font-semibold inline-flex items-center gap-2" data-testid="link-submit-property">
+            <Link href="/submit?intent=property" className="bg-[hsl(var(--copper))] text-white px-4 py-2.5 text-sm font-supporting font-semibold inline-flex items-center gap-2" data-testid="link-submit-property">
               Submit to Pegasus <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

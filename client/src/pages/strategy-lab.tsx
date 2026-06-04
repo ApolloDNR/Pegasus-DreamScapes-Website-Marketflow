@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
+  BarChart3,
+  Calculator,
   Plus,
   Minus,
   Pencil,
@@ -23,9 +25,13 @@ import {
   AlertTriangle,
   Info,
   Activity,
+  FileText,
+  Gauge,
   X as XIcon,
   Lock,
   Library,
+  MapPinned,
+  SlidersHorizontal,
   Copy,
   Check,
 } from "lucide-react";
@@ -36,7 +42,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { usePeggyContext } from "@/contexts/peggy-context";
-import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +69,8 @@ import {
   frameDecisionMemo,
   type PropertyInput,
   type CompEntry,
+  type StrategySnapshot,
+  type LaneFitResult,
   type SubmitterRole,
   type ConditionRating,
   type LabSubmitterRole,
@@ -663,6 +670,198 @@ function CompPadRow({
 // ───────────────────────────────────────────────────────────────────────────
 // Page
 // ───────────────────────────────────────────────────────────────────────────
+const calculatorTiles = [
+  { tab: "arv", label: "ARV", desc: "70% rule, comps in, MAO out." },
+  { tab: "roi", label: "ROI", desc: "Cap rate, CoC, total return." },
+  { tab: "brrrr", label: "BRRRR", desc: "Cash left in deal after refi." },
+  { tab: "cashflow", label: "Cash Flow", desc: "Rent vs PITI plus opex." },
+  { tab: "wholesale", label: "Wholesale MAO", desc: "Assignment fee headroom." },
+  { tab: "piti", label: "PITI", desc: "Housing affordability, 28/36." },
+  { tab: "ownvsrent", label: "Own vs Rent", desc: "Net worth crossover year." },
+  { tab: "hardmoney", label: "Hard Money", desc: "Short-term carry cost." },
+];
+
+function StrategyLabHeroVisual({
+  snapshot,
+  topLane,
+  comps,
+}: {
+  snapshot: StrategySnapshot | null;
+  topLane: LaneFitResult | undefined;
+  comps: CompEntry[];
+}) {
+  const confidence = topLane?.confidence?.score ?? 0;
+  const confidenceWidth = snapshot ? Math.max(14, Math.min(confidence, 100)) : 28;
+  const statusRows = [
+    {
+      label: "Lane fit",
+      value: topLane?.laneLabel ?? "Awaiting price",
+      meta: topLane?.verdictLabel ?? "Ready",
+    },
+    {
+      label: "Risk register",
+      value: snapshot ? `${snapshot.risks.length} active` : "Awaiting inputs",
+      meta: snapshot ? "Live" : "Idle",
+    },
+    {
+      label: "Comp depth",
+      value: `${comps.length} comp${comps.length === 1 ? "" : "s"}`,
+      meta: comps.length >= 3 ? "Stronger" : "Thin",
+    },
+  ];
+
+  return (
+    <div
+      className="relative overflow-hidden border border-[hsl(var(--cream)/0.16)] bg-[linear-gradient(145deg,rgba(8,15,25,0.92),rgba(19,31,49,0.82)_55%,rgba(45,31,24,0.72))] shadow-md shadow-black/25"
+      data-testid="strategy-lab-hero-visual"
+    >
+      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(199,122,58,0.85),transparent)]" aria-hidden="true" />
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-5 border-b border-white/10 pb-5">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary">
+              Strategy Snapshot
+            </div>
+            <div className="mt-2 font-serif text-3xl font-semibold leading-none text-white">
+              Decision console
+            </div>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center border border-primary/35 bg-primary/10">
+            <Gauge className="h-5 w-5 text-primary" aria-hidden="true" />
+          </div>
+        </div>
+
+        <div className="relative mt-5 min-h-[285px] overflow-hidden border border-white/10 bg-white/[0.035] p-5">
+          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 470 285" fill="none" aria-hidden="true">
+            <path d="M74 184 L112 146 L150 184 V226 H74 Z" fill="rgba(246,239,228,0.045)" stroke="rgba(199,122,58,0.72)" />
+            <path d="M96 226 V198 H124 V226" stroke="rgba(246,239,228,0.36)" />
+            <path d="M150 205 C220 205,238 70,338 58" stroke="rgba(199,122,58,0.72)" strokeWidth="2" />
+            <path d="M150 205 C222 205,255 137,350 134" stroke="rgba(199,122,58,0.55)" strokeWidth="2" />
+            <path d="M150 205 C224 205,258 217,332 218" stroke="rgba(246,239,228,0.28)" />
+            <path d="M160 118 C206 78,260 50,328 42" stroke="rgba(246,239,228,0.17)" />
+            <path d="M164 138 C221 103,280 92,360 94" stroke="rgba(246,239,228,0.13)" />
+            <circle cx="150" cy="205" r="5" fill="rgb(199,122,58)" />
+          </svg>
+
+          <div className="relative flex h-full min-h-[245px] flex-col justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="w-full border border-primary/30 bg-[hsl(var(--navy)/0.76)] px-4 py-3 text-cream sm:max-w-[160px]">
+                <MapPinned className="mb-3 h-5 w-5 text-primary" aria-hidden="true" />
+                <div className="text-[10px] uppercase tracking-[0.18em] font-supporting font-semibold text-white/70">
+                  Property signal
+                </div>
+                <div className="mt-1 text-xs leading-snug text-white/60">
+                  facts, pressure, timeline
+                </div>
+              </div>
+              <div className="w-full space-y-2 text-right sm:w-auto">
+                {[
+                  ["As-Is", "current truth", true],
+                  ["Stabilized", "clean ops", true],
+                  ["Optimized", "created value", false],
+                ].map(([label, note, active]) => (
+                  <div
+                    key={label as string}
+                    className={`min-w-0 border px-3 py-2 text-left sm:min-w-36 ${
+                      active
+                        ? "border-primary/40 bg-primary/10"
+                        : "border-white/10 bg-white/[0.035]"
+                    }`}
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.18em] font-supporting font-semibold text-primary">
+                      {label}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-white/60">{note}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              {statusRows.map((row) => (
+                <div key={row.label} className="border border-white/10 bg-[rgba(8,15,25,0.58)] p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] font-supporting font-semibold text-primary">
+                    {row.label}
+                  </div>
+                  <div className="mt-2 font-serif text-base font-semibold leading-tight text-white">
+                    {row.value}
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/50">
+                    {row.meta}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-white/10 pt-4">
+          <div className="flex items-center justify-between gap-4 text-xs text-white/60">
+            <span className="uppercase tracking-[0.2em] font-supporting font-semibold text-primary">
+              Confidence
+            </span>
+            <span className="font-mono tabular-nums text-white">
+              {snapshot ? `${confidence}/100` : "Ready"}
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 bg-white/10">
+            <div className="h-full bg-primary transition-all" style={{ width: `${confidenceWidth}%` }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StrategyLabTierRibbon({ mode }: { mode: "quick" | "full" }) {
+  return (
+    <div
+      className={`${mode === "full" ? "hidden" : ""} mt-10 grid grid-cols-1 overflow-hidden border border-[hsl(var(--cream)/0.16)] bg-[rgba(8,15,25,0.58)] sm:grid-cols-3`}
+      data-testid="ribbon-funnel-tiers"
+    >
+      {[
+        {
+          icon: Calculator,
+          label: "01",
+          title: "Quick Read",
+          body: `Run any address. Lane fit, verdict, and headline math. ${FREE_RUN_LIMIT} free runs before sign-in.`,
+        },
+        {
+          icon: SlidersHorizontal,
+          label: "02",
+          title: "Full Path",
+          body: "Scenario testing, risk register, sensitivity, snapshot PDF, and saved property library.",
+        },
+        {
+          icon: FileText,
+          label: "03",
+          title: "Human memo",
+          body: "A written operator memo when the automated read deserves a deeper human review.",
+        },
+      ].map((tier, index) => {
+        const Icon = tier.icon;
+        return (
+          <div
+            key={tier.title}
+            className={`p-5 ${index < 2 ? "border-b sm:border-b-0 sm:border-r" : ""} border-[hsl(var(--cream)/0.14)]`}
+          >
+            <div className="mb-5 flex items-center justify-between">
+              <span className="font-mono text-xs text-primary">{tier.label}</span>
+              <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+            </div>
+            <div className="font-serif text-xl font-semibold leading-tight text-white">
+              {tier.title}
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--cream)/0.64)]">
+              {tier.body}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StrategyLabPage() {
   useSEO({
     title: "Strategy Lab",
@@ -1196,7 +1395,7 @@ export default function StrategyLabPage() {
     },
   });
 
-  // ── Task #85 — Funnel telemetry, Submit-to-Pegasus, Blueprint upsell ──
+  // Funnel telemetry, Submit-to-Pegasus, and written review routing.
   // Lightweight fire-and-forget event log. Best-effort: failures are
   // intentionally swallowed so the lab never blocks on analytics.
   const fireTouchpoint = useCallback(
@@ -1322,62 +1521,6 @@ export default function StrategyLabPage() {
     },
     onError: (err: any) => {
       toast({ title: "Could not submit", description: err?.message ?? "Try again.", variant: "destructive" });
-    },
-  });
-
-  // Blueprint tiers (CMS-overridable via site_content)
-  const blueprintTiersQuery = useQuery<{
-    tiers: Array<{ key: string; title: string; priceCents: number; description: string; turnaroundDays: string }>;
-    stripeEnabled: boolean;
-  }>({
-    queryKey: ["/api/strategy-lab/blueprint-tiers"],
-  });
-  const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false);
-  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
-  const [blueprintForm, setBlueprintForm] = useState({ buyerName: "", email: "", phone: "", notes: "" });
-  const blueprintOrderMutation = useMutation({
-    mutationFn: async (vals: { tierId: string; buyerName: string; email: string; phone: string; notes: string }) => {
-      let id = analysisId;
-      if (!id && snapshot) {
-        const payload = buildAnalysisPayload();
-        if (payload) {
-          const res = await apiRequest("POST", "/api/property-analyses", payload);
-          const created = await res.json();
-          id = created.id;
-          setAnalysisId(created.id);
-        }
-      }
-      const res = await apiRequest("POST", "/api/strategy-lab/blueprint-order", {
-        propertyAnalysisId: id ?? undefined,
-        sessionId: sessionIdRef.current,
-        tier: vals.tierId,
-        contactName: vals.buyerName || undefined,
-        contactEmail: vals.email || undefined,
-        contactPhone: vals.phone || undefined,
-        notes: vals.notes || undefined,
-      });
-      return (await res.json()) as {
-        orderId: number;
-        paymentMethod: "stripe" | "invoice";
-        paymentStatus: string;
-        checkoutUrl: string | null;
-      };
-    },
-    onSuccess: (data) => {
-      fireTouchpoint("blueprint_order_created", { orderId: data.orderId, paymentMethod: data.paymentMethod });
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-        return;
-      }
-      setBlueprintDialogOpen(false);
-      toast({
-        title: "Order received. Invoice incoming.",
-        description: "Apollo's team will email a custom invoice within one business day.",
-      });
-      navigate(`/strategy-lab/blueprint-confirmed?orderId=${data.orderId}`);
-    },
-    onError: (err: any) => {
-      toast({ title: "Could not place order", description: err?.message ?? "Try again.", variant: "destructive" });
     },
   });
 
@@ -1541,106 +1684,82 @@ export default function StrategyLabPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
-      <section className="border-b border-[hsl(var(--rule))]">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-10 pt-28 lg:pt-32 pb-10">
-          <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            Strategy Lab
-          </div>
-          <div className="grid lg:grid-cols-12 gap-8 items-end">
-            <div className="lg:col-span-8 xl:col-span-7 min-w-0">
-              <h1 className="font-serif font-semibold tracking-[-0.02em] leading-[1.04]">
-                <span className="block text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl">Strategy Lab.</span>
-                <span className="block italic bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent text-2xl sm:text-3xl lg:text-4xl xl:text-[2.75rem] mt-2">
-                  One address in. Every angle out.
+      <section className="relative overflow-hidden border-b border-[hsl(var(--rule))] bg-[hsl(var(--navy))] text-[hsl(var(--cream))]">
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(8,15,25,0.96)_0%,rgba(16,30,49,0.92)_48%,rgba(33,39,45,0.88)_100%)]" aria-hidden="true" />
+        <div className="absolute left-0 top-28 h-px w-1/2 bg-[linear-gradient(90deg,rgba(199,122,58,0.8),transparent)]" aria-hidden="true" />
+        <div className="absolute bottom-0 right-0 h-px w-2/3 bg-[linear-gradient(90deg,transparent,rgba(246,239,228,0.18),rgba(199,122,58,0.72))]" aria-hidden="true" />
+        <div className="relative max-w-[1320px] mx-auto px-6 lg:px-10 pt-28 lg:pt-36 pb-12">
+          <div className="grid w-full min-w-0 max-w-full lg:grid-cols-12 gap-10 items-center">
+            <div className="w-full min-w-0 max-w-[22rem] sm:max-w-none lg:col-span-7">
+              <div className="flex items-center gap-3 text-[11px] uppercase text-primary font-supporting font-semibold mb-5">
+                <span className="h-px w-9 bg-primary" aria-hidden="true" />
+                <span>Strategy Lab | Preliminary property read</span>
+              </div>
+              <h1 className="font-serif font-semibold leading-[1.01]">
+                <span className="block text-4xl sm:text-6xl lg:text-7xl">Turn one property</span>
+                <span className="block italic text-[#D4B483] text-3xl sm:text-5xl lg:text-6xl mt-2">
+                  into a decision.
                 </span>
               </h1>
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mt-5 max-w-2xl font-serif">
-                Run the property through the Pegasus lens. Lane fit, risk register, scenario
-                stress, and a recommended next step. Preliminary, transparent, and editable.
+              <p className="mt-6 max-w-[22rem] break-words font-serif text-base leading-relaxed text-[hsl(var(--cream)/0.82)] sm:max-w-2xl sm:text-lg">
+                Run the address through the Pegasus lens: current truth, stabilized path,
+                created value, risk, and the clearest next move before anyone starts selling
+                the answer.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                <button
+                  onClick={() => {
+                    document
+                      .getElementById("section-identity")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="w-full max-w-[22rem] bg-[hsl(var(--copper))] px-6 py-3 text-sm font-supporting font-semibold uppercase text-white transition-colors hover:bg-[hsl(27_56%_44%)] sm:w-auto sm:max-w-none"
+                  data-testid="cta-start-analysis"
+                >
+                  Start an Analysis
+                </button>
+                <button
+                  onClick={() => {
+                    setForm(EXAMPLE_STATE);
+                    setExampleLoaded(true);
+                  }}
+                  className="w-full max-w-[22rem] border border-[hsl(var(--cream)/0.35)] bg-white/5 px-6 py-3 text-sm font-supporting font-semibold uppercase text-[hsl(var(--cream))] transition-colors hover:bg-white/10 sm:w-auto sm:max-w-none"
+                  data-testid="cta-example-snapshot"
+                >
+                  View Example Snapshot
+                </button>
+              </div>
+              <p className="mt-6 max-w-[22rem] break-words text-xs leading-relaxed text-[hsl(var(--cream)/0.64)] sm:max-w-3xl">
+                Preliminary analysis only. Human review required before any offer, strategy
+                release, or execution decision. Outputs are illustrative and do not constitute
+                an offer, appraisal, lending decision, or guaranteed result.
               </p>
             </div>
-            <div className="lg:col-span-4 xl:col-span-5 flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3 lg:items-end lg:justify-end">
-              <button
-                onClick={() => {
-                  document
-                    .getElementById("section-identity")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="bg-[hsl(var(--copper))] text-primary-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(27_56%_44%)] transition-colors"
-                data-testid="cta-start-analysis"
-              >
-                Start an Analysis
-              </button>
-              <button
-                onClick={() => {
-                  setForm(EXAMPLE_STATE);
-                  setExampleLoaded(true);
-                }}
-                className="border border-[hsl(var(--rule))] text-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(var(--ink)/0.04)] transition-colors"
-                data-testid="cta-example-snapshot"
-              >
-                View Example Snapshot
-              </button>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-6 max-w-3xl leading-relaxed">
-            Preliminary analysis only. Human review required before any offer, strategy
-            release, or execution decision. Outputs are illustrative and do not constitute
-            an offer of guaranteed returns or principal protection.
-          </p>
 
-          {/* ── 3-tier funnel ribbon (intake-only, hidden in Full Path) ── */}
-          <div
-            className={`${mode === "full" ? "hidden" : ""} mt-8 grid grid-cols-1 sm:grid-cols-3 border border-[hsl(var(--rule))] bg-background`}
-            data-testid="ribbon-funnel-tiers"
-          >
-            <div className="p-4 border-b sm:border-b-0 sm:border-r border-[hsl(var(--rule))]">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">
-                01 · Free Quick Read
-              </div>
-              <div className="text-sm font-semibold text-foreground mb-0.5">Run any address now</div>
-              <div className="text-xs text-muted-foreground leading-snug">
-                No account. Lane fit, verdict, headline math. {FREE_RUN_LIMIT} free runs before sign-in.
-              </div>
-            </div>
-            <div className="p-4 border-b sm:border-b-0 sm:border-r border-[hsl(var(--rule))]">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">
-                02 · Full Path Analyzer
-              </div>
-              <div className="text-sm font-semibold text-foreground mb-0.5">Save · Share · PDF</div>
-              <div className="text-xs text-muted-foreground leading-snug">
-                Free with a Pegasus account. Scenarios, risk register, sensitivity, snapshot PDF.
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-[hsl(var(--copper))] mb-1">
-                03 · Pegasus Deal Blueprint
-              </div>
-              <div className="text-sm font-semibold text-foreground mb-0.5">Human-prepared memo</div>
-              <div className="text-xs text-muted-foreground leading-snug">
-                Paid tier. Underwriting + structure + outreach scripts, written by the Pegasus team.
-              </div>
+            <div className="w-full min-w-0 max-w-[22rem] sm:max-w-full lg:col-span-5">
+              <StrategyLabHeroVisual snapshot={snapshot} topLane={topLane} comps={comps} />
             </div>
           </div>
+
+          <StrategyLabTierRibbon mode={mode} />
         </div>
-        {/* Brand stripe accent. */}
         <div className="brand-stripe" aria-hidden="true" />
       </section>
 
       {/* Sticky sub-nav: mode toggle + section anchors + status */}
       <div
-        className="sticky top-16 lg:top-20 z-30 border-b border-[hsl(var(--rule))] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        className="sticky top-16 lg:top-20 z-30 border-b border-white/10 bg-[hsl(var(--navy)/0.96)] text-[hsl(var(--cream))] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.75)] backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--navy)/0.88)]"
         data-testid="strategy-lab-subnav"
       >
         <div className="max-w-[1320px] mx-auto px-6 lg:px-10 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4 flex-wrap">
-            <div className="inline-flex border border-[hsl(var(--rule))]" role="tablist" aria-label="Strategy Lab mode">
+            <div className="inline-flex border border-white/10 bg-white/[0.035]" role="tablist" aria-label="Strategy Lab mode">
               <button
                 type="button"
                 role="tab"
                 aria-selected={mode === "quick"}
                 onClick={() => setMode("quick")}
-                className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold transition-colors ${mode === "quick" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold transition-colors ${mode === "quick" ? "bg-primary text-primary-foreground" : "text-[hsl(var(--cream)/0.70)] hover:bg-white/[0.055] hover:text-white"}`}
                 data-testid="mode-quick"
               >
                 Quick Read
@@ -1657,7 +1776,7 @@ export default function StrategyLabPage() {
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   });
                 }}
-                className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "full" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
+                className={`border-l border-white/10 px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold transition-colors ${mode === "full" ? "bg-primary text-primary-foreground" : "text-[hsl(var(--cream)/0.70)] hover:bg-white/[0.055] hover:text-white"}`}
                 data-testid="mode-full"
               >
                 Full Path
@@ -1666,7 +1785,7 @@ export default function StrategyLabPage() {
             {mode === "full" && (
               <nav
                 aria-label="Strategy Lab sections"
-                className="hidden md:flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] font-supporting font-semibold text-muted-foreground"
+                className="hidden md:flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] font-supporting font-semibold text-[hsl(var(--cream)/0.58)]"
                 data-testid="subnav-section-anchors"
               >
                 {[
@@ -1680,7 +1799,7 @@ export default function StrategyLabPage() {
                     key={a.id}
                     type="button"
                     onClick={() => document.getElementById(a.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                    className="px-2 py-1 hover:text-foreground transition-colors"
+                    className="px-2 py-1 hover:text-white transition-colors"
                     data-testid={`subnav-${a.id}`}
                   >
                     {a.label}
@@ -1689,7 +1808,7 @@ export default function StrategyLabPage() {
               </nav>
             )}
           </div>
-          <div className="text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
+          <div className="text-xs text-[hsl(var(--cream)/0.66)] flex items-center gap-3 flex-wrap">
             {exampleLoaded && (
               <>
                 <button
@@ -1699,12 +1818,12 @@ export default function StrategyLabPage() {
                     setExampleLoaded(false);
                     setSelectedLane(null);
                   }}
-                  className="underline underline-offset-2 hover:text-foreground"
+                  className="underline underline-offset-2 hover:text-white"
                   data-testid="btn-clear-example"
                 >
                   Clear example
                 </button>
-                <span className="px-2 py-0.5 border border-[hsl(var(--rule))] text-[10px] uppercase tracking-[0.16em] font-supporting font-semibold text-muted-foreground">
+                <span className="px-2 py-0.5 border border-white/10 bg-white/[0.035] text-[10px] uppercase tracking-[0.16em] font-supporting font-semibold text-[hsl(var(--cream)/0.64)]">
                   Illustrative example
                 </span>
               </>
@@ -1722,29 +1841,29 @@ export default function StrategyLabPage() {
       {/* (Full Path PathMap moved into InstrumentWorkbench.) */}
 
       {/* Portable calculators — canonical card row. Deep-link to /strategy-lab/classic?tab=. Always visible. */}
-      <section className="border-b border-[hsl(var(--rule))] bg-[hsl(var(--paper))]" data-testid="strategy-lab-calc-row" aria-labelledby="portable-calc-heading">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-10 py-10">
-          <div className="flex items-end justify-between gap-6 mb-5">
+      <section className="border-b border-[hsl(var(--rule))] bg-[hsl(var(--navy))]" data-testid="strategy-lab-calc-row" aria-labelledby="portable-calc-heading">
+        <div className="mx-auto grid max-w-[1320px] gap-8 px-6 py-12 lg:grid-cols-[0.82fr_1.6fr] lg:px-10 lg:py-14">
+          <div className="flex min-w-0 flex-col justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <span className="h-px w-8 bg-primary/70" aria-hidden="true" />
                 <span className="text-[11px] uppercase tracking-[0.3em] font-supporting font-semibold text-primary">
-                  Portable calculators
+                  Calculator dock
                 </span>
               </div>
-              <h2 id="portable-calc-heading" className="mt-3 font-serif text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-foreground">
-                Need just one number? Pull the right calculator.
+              <h2 id="portable-calc-heading" className="mt-4 max-w-sm font-serif text-3xl font-semibold leading-tight text-white sm:text-4xl">
+                Pull one number without leaving the lab.
               </h2>
             </div>
             <Link
               href="/strategy-lab/classic"
-              className="hidden md:inline text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))]"
+              className="mt-7 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary hover:text-[#D4B483]"
               data-testid="link-classic-suite"
             >
               See the classic suite →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-testid="calc-tiles">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="calc-tiles">
             {[
               { tab: "arv", label: "ARV", desc: "70% rule, comps in, MAO out." },
               { tab: "roi", label: "ROI", desc: "Cap rate, CoC, total return." },
@@ -1758,18 +1877,21 @@ export default function StrategyLabPage() {
               <Link
                 key={c.tab}
                 href={`/strategy-lab/classic?tab=${c.tab}`}
-                className="group relative block border border-[hsl(var(--rule))] bg-background hover:bg-[hsl(var(--paper))] hover:border-[hsl(var(--copper))]/60 transition-colors p-4"
+                className="group relative block min-h-[148px] overflow-hidden border border-white/10 bg-white/[0.035] p-4 transition-colors hover:border-primary/50 hover:bg-white/[0.06]"
                 data-testid={`calc-tile-${c.tab}`}
               >
-                <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
-                  Calculator
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center border border-primary/30 bg-primary/10">
+                    <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-primary opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
                 </div>
-                <h3 className="mt-1.5 font-serif text-xl font-semibold tracking-tight leading-tight text-foreground">
+                <h3 className="mt-5 font-serif text-xl font-semibold leading-tight text-white">
                   {c.label}
                 </h3>
-                <p className="mt-1.5 text-sm text-muted-foreground leading-snug">{c.desc}</p>
+                <p className="mt-2 text-sm leading-snug text-[hsl(var(--cream)/0.62)]">{c.desc}</p>
                 <span
-                  className="absolute right-3 bottom-3 text-[hsl(var(--copper))] opacity-0 group-hover:opacity-100 transition-opacity text-base"
+                  className="hidden"
                   aria-hidden="true"
                 >
                   →
@@ -1782,25 +1904,26 @@ export default function StrategyLabPage() {
 
       {/* ── Quick Read (one-screen) ───────────────────────────────────── */}
       {mode === "quick" && (
-        <main className="max-w-5xl mx-auto px-6 lg:px-10 py-8" data-testid="quick-read-layout">
-          <div className="grid gap-6 lg:grid-cols-2 items-start">
+        <main className="mx-auto max-w-[1320px] px-6 py-12 lg:px-10 lg:py-16" data-testid="quick-read-layout">
+          <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.65fr)]">
             {/* Compact 5-field form */}
             <section
-              className="border border-[hsl(var(--rule))] bg-background shadow-[0_1px_0_rgba(13,27,45,0.04),0_8px_24px_-12px_rgba(13,27,45,0.18)] p-6 lg:p-7 space-y-5"
+              className="relative overflow-hidden border border-[hsl(var(--rule))] bg-card/90 p-6 shadow-[0_28px_70px_-42px_rgba(0,0,0,0.95)] lg:p-8 space-y-5"
               data-testid="quick-form"
             >
-              <div className="pb-4 border-b border-[hsl(var(--rule))]">
+              <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,hsl(var(--copper)),rgba(212,180,131,0.72),transparent)]" aria-hidden="true" />
+              <div className="pb-5 border-b border-[hsl(var(--rule))]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-px w-6 bg-primary/60" aria-hidden="true" />
                   <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
                     Quick Read
                   </div>
                 </div>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight leading-tight">
-                  Five fields. One verdict.
+                <h2 className="font-serif text-4xl font-semibold leading-tight">
+                  Five fields. One real read.
                 </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-                  The basics. Pegasus reads the most likely outcome lane and the headline number, live as you type.
+                <p className="max-w-2xl text-sm text-muted-foreground leading-relaxed mt-3">
+                  Enter the core facts first. Pegasus reads the likely lane, pressure points, and headline number live as you type.
                 </p>
               </div>
               <Field label="Address">
@@ -1938,9 +2061,12 @@ export default function StrategyLabPage() {
             </section>
 
             {/* Stripped 3-card verdict */}
-            <aside className="space-y-3 lg:sticky lg:top-24" data-testid="quick-verdict">
+            <aside className="space-y-4 lg:sticky lg:top-28" data-testid="quick-verdict">
               {!snapshot || !topLane ? (
-                <div className="border border-dashed border-[hsl(var(--rule))] p-6 text-center">
+                <div className="relative overflow-hidden border border-dashed border-[hsl(var(--rule))] bg-card/60 p-7 text-center shadow-[0_24px_60px_-42px_rgba(0,0,0,0.9)]">
+                  <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center border border-primary/30 bg-primary/10">
+                    <Activity className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </div>
                   <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
                     Pegasus Verdict
                   </div>
@@ -1952,7 +2078,7 @@ export default function StrategyLabPage() {
                 <>
                   {/* Card 1 — Top lane */}
                   <div
-                    className="border border-[hsl(var(--copper))] bg-[hsl(var(--copper)/0.05)] p-4"
+                    className="border border-[hsl(var(--copper))] bg-[hsl(var(--copper)/0.07)] p-5 shadow-[0_20px_55px_-42px_rgba(0,0,0,0.9)]"
                     data-testid="quick-card-lane"
                   >
                     <div className="flex items-baseline justify-between mb-2">
@@ -1973,7 +2099,7 @@ export default function StrategyLabPage() {
 
                   {/* Card 2 — Confidence */}
                   <div
-                    className="border border-[hsl(var(--rule))] p-4"
+                    className="border border-[hsl(var(--rule))] bg-card/70 p-5"
                     data-testid="quick-card-confidence"
                   >
                     <div className="flex items-baseline justify-between mb-2">
@@ -1991,6 +2117,12 @@ export default function StrategyLabPage() {
                           ? "Moderate"
                           : "Thin"}
                     </div>
+                    <div className="mt-3 h-1.5 bg-muted">
+                      <div
+                        className="h-full bg-primary"
+                        style={{ width: `${Math.max(12, Math.min(topLane.confidence.score, 100))}%` }}
+                      />
+                    </div>
                     <p className="text-[11px] text-muted-foreground leading-snug mt-1">
                       {topLane.confidence.score >= 70
                         ? "Inputs support this read."
@@ -2003,7 +2135,7 @@ export default function StrategyLabPage() {
                   {/* Card 3 — Primary metric */}
                   {topLane.economics && (
                     <div
-                      className="border border-[hsl(var(--rule))] p-4"
+                      className="border border-[hsl(var(--rule))] bg-card/70 p-5"
                       data-testid="quick-card-metric"
                     >
                       <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
@@ -2114,11 +2246,9 @@ export default function StrategyLabPage() {
           isAuthenticated={isAuthenticated}
           runsLeft={runsLeft}
           freeRunLimit={FREE_RUN_LIMIT}
-          blueprintTiers={blueprintTiersQuery.data?.tiers ?? []}
-          onOpenBlueprintTier={(key) => {
-            setSelectedTierId(key);
-            setBlueprintDialogOpen(true);
-            fireTouchpoint("blueprint_tier_open", { tierId: key });
+          onRequestWrittenReview={(intent) => {
+            fireTouchpoint("strategy_review_scope_open", { intent });
+            navigate("/submit?intent=strategy-review");
           }}
           fireTouchpoint={fireTouchpoint}
         />
@@ -2485,89 +2615,6 @@ export default function StrategyLabPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Blueprint Order Dialog (Task #85) ───────────────────────────── */}
-      <Dialog open={blueprintDialogOpen} onOpenChange={setBlueprintDialogOpen}>
-        <DialogContent className="sm:max-w-lg" data-testid="dialog-blueprint-order">
-          <DialogHeader>
-            <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary mb-2">
-              Pegasus Deal Blueprint
-            </div>
-            <DialogTitle className="font-serif text-2xl">
-              {(() => {
-                const t = blueprintTiersQuery.data?.tiers.find((x) => x.key === selectedTierId);
-                return t ? `${t.title}: $${(t.priceCents / 100).toLocaleString()}` : "Order a Blueprint";
-              })()}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Confirm your contact info and we'll either send a Stripe checkout link or a custom invoice within one business day. Work begins once payment is received.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div>
-              <Label htmlFor="bp-name" className="text-xs font-supporting font-semibold">Name</Label>
-              <Input
-                id="bp-name"
-                value={blueprintForm.buyerName}
-                onChange={(e) => setBlueprintForm((s) => ({ ...s, buyerName: e.target.value }))}
-                data-testid="input-bp-name"
-              />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="bp-email" className="text-xs font-supporting font-semibold">Email</Label>
-                <Input
-                  id="bp-email"
-                  type="email"
-                  value={blueprintForm.email}
-                  onChange={(e) => setBlueprintForm((s) => ({ ...s, email: e.target.value }))}
-                  data-testid="input-bp-email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="bp-phone" className="text-xs font-supporting font-semibold">Phone</Label>
-                <Input
-                  id="bp-phone"
-                  value={blueprintForm.phone}
-                  onChange={(e) => setBlueprintForm((s) => ({ ...s, phone: e.target.value }))}
-                  data-testid="input-bp-phone"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="bp-notes" className="text-xs font-supporting font-semibold">Anything we should know?</Label>
-              <Textarea
-                id="bp-notes"
-                rows={3}
-                value={blueprintForm.notes}
-                onChange={(e) => setBlueprintForm((s) => ({ ...s, notes: e.target.value }))}
-                data-testid="textarea-bp-notes"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <button
-              type="button"
-              className="border border-[hsl(var(--rule))] px-4 py-2 text-sm font-supporting font-semibold"
-              onClick={() => setBlueprintDialogOpen(false)}
-              data-testid="btn-bp-cancel"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={!selectedTierId || blueprintOrderMutation.isPending}
-              onClick={() => {
-                if (!selectedTierId) return;
-                blueprintOrderMutation.mutate({ tierId: selectedTierId, ...blueprintForm });
-              }}
-              className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
-              data-testid="btn-bp-confirm"
-            >
-              {blueprintOrderMutation.isPending ? "Placing order…" : "Place order"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

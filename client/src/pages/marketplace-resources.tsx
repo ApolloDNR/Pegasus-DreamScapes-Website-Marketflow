@@ -159,7 +159,7 @@ function ArticlesSection() {
           <p className="text-sm text-muted-foreground">Insights and analysis from our team</p>
         </div>
         {articles && articles.length > 6 && (
-          <Link href="/resources">
+          <Link href="/library">
             <Button variant="ghost" size="sm">
               View All <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
@@ -177,7 +177,7 @@ function ArticlesSection() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayArticles.map((article) => (
-            <Link key={article.id} href={`/resources/${article.slug}`}>
+            <Link key={article.id} href={`/library/${article.slug}`}>
               <Card className="h-full hover-elevate cursor-pointer" data-testid={`article-card-${article.id}`}>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">

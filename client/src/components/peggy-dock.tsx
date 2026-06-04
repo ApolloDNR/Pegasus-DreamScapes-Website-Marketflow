@@ -33,7 +33,6 @@ import {
   ChevronDown,
   ChevronUp,
   Bot,
-  DollarSign,
   Hammer,
   BookOpen,
   Network,
@@ -200,11 +199,11 @@ interface QuickPrompt {
 
 export function getQuickPrompts(page?: string, labAnalysis?: PeggyContextData['labAnalysis']): QuickPrompt[] {
   const routerPrompts: QuickPrompt[] = [
-    { icon: Home, label: "I have a property", prompt: "I have a property I'd like to discuss.", context: "router", href: "/sell" },
-    { icon: GitBranch, label: "I have a deal or JV idea", prompt: "I have a deal or JV idea to route.", context: "router", href: "/sell" },
-    { icon: DollarSign, label: "I want to discuss capital", prompt: "I want to discuss a private capital or partnership conversation.", context: "router", href: "/invest" },
-    { icon: Hammer, label: "ADU / development", prompt: "I want to explore ADU or development potential.", context: "router", href: "/sell" },
-    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies. Point me to the Strategy Library.", context: "router", href: "/resources" },
+    { icon: Home, label: "I have a property", prompt: "I have a property situation and want Pegasus to review the right path.", context: "router", href: "/submit?intent=property" },
+    { icon: GitBranch, label: "I have a deal or JV idea", prompt: "I have a deal, assignment, or JV idea to route through Pegasus.", context: "router", href: "/submit?intent=deal-jv" },
+    { icon: TrendingUp, label: "Capital conversation", prompt: "I want to discuss a private capital or partnership relationship.", context: "router", href: "/capital" },
+    { icon: Hammer, label: "ADU / development", prompt: "I want to explore ADU, rehab, or development potential.", context: "router", href: "/submit?intent=adu" },
+    { icon: BookOpen, label: "Learn strategies", prompt: "I want to understand the Pegasus strategy library.", context: "router", href: "/library" },
     { icon: Network, label: "Vendor or operator", prompt: "I'm a vendor or operator interested in the Pegasus network. What's the right way in?", context: "router", href: "/vendor-network" },
   ];
 
@@ -227,12 +226,12 @@ export function getQuickPrompts(page?: string, labAnalysis?: PeggyContextData['l
   if (page?.includes('marketflow') || page?.includes('marketplace')) {
     return [
       { icon: Building2, label: "What is MarketFlow?", prompt: "What is MarketFlow and how do deals get in?", context: "marketplace" },
-      { icon: Target, label: "Request access", prompt: "How do I request access to MarketFlow?", context: "marketplace", href: "/contact" },
+      { icon: Target, label: "Request access", prompt: "How do I request access to MarketFlow?", context: "marketplace", href: "/marketflow/access" },
       ...routerPrompts.slice(0, 2),
     ];
   }
 
-  // Strategy Lab — lab-aware prompts prepended to the standard router prompts
+  // Strategy Lab: lab-aware prompts prepended to the standard router prompts
   // so the user keeps full access to the rest of Peggy's intake routes.
   if (page === 'strategy-lab') {
     const laneLabel = labAnalysis?.topLaneLabel ?? null;
@@ -632,7 +631,7 @@ export function PeggyDock() {
                       The Deal Architect
                     </p>
                     <h3 className="font-serif text-base font-semibold leading-none tracking-tight">
-                      Peggy <span className="text-muted-foreground font-normal">·</span> Strategy Assistant
+                      Peggy <span className="text-muted-foreground font-normal">|</span> Strategy Assistant
                     </h3>
                   </div>
                 </div>
@@ -708,7 +707,7 @@ export function PeggyDock() {
                     </p>
                     <div className="flex items-center justify-center gap-3 mb-7">
                       <span className="h-px w-8 bg-primary/40" />
-                      <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-supporting">Where others see impossible</span>
+                      <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-supporting">Start with the situation</span>
                       <span className="h-px w-8 bg-primary/40" />
                     </div>
                     
@@ -783,7 +782,7 @@ export function PeggyDock() {
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Ask Peggy anything…"
+                    placeholder="Tell Peggy what is going on..."
                     disabled={chatMutation.isPending || !conversationId}
                     className="flex-1 border-0 bg-transparent px-0 h-9 text-sm shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/70"
                     data-testid="input-peggy-message"
@@ -807,7 +806,7 @@ export function PeggyDock() {
                 </form>
                 
                 <p className="text-[10px] text-muted-foreground/80 text-center mt-3 font-supporting tracking-wide">
-                  Peggy is an AI assistant. Strategy reads, not legal or financial advice.
+                  Peggy guides intake. Human review controls offers, agency, and execution decisions.
                 </p>
               </div>
             </Card>

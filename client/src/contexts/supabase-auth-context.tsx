@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { getSupabase, type UserRole, type UserProfile } from '@/lib/supabase';
+import { portalServicesEnabled, portalServicesUnavailableError } from '@/lib/runtime-config';
 import { 
   isAdminRole, 
   isWholesalerRole, 
@@ -46,6 +47,7 @@ interface SupabaseAuthContextType {
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
+  const servicesEnabled = portalServicesEnabled();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -68,6 +70,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   });
 
   const fetchProfile = useCallback(async (userId: string) => {
+    if (!servicesEnabled) {
+      return null;
+    }
+
     try {
       const response = await fetch(`/api/supabase/profile/${userId}`);
       if (!response.ok) {
@@ -78,7 +84,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       console.error('Error fetching profile:', err);
       return null;
     }
-  }, []);
+  }, [servicesEnabled]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -91,6 +97,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     let mounted = true;
 
     const initAuth = async () => {
+      if (!servicesEnabled) {
+        if (mounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         // First, check for Replit Auth user (primary auth method)
         const replitAuthResponse = await fetch('/api/auth/user');
@@ -222,7 +235,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     return () => {
       mounted = false;
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, servicesEnabled]);
 
   const signUp = async (
     email: string, 
@@ -230,6 +243,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     role: UserRole,
     displayName: string
   ): Promise<{ error: Error | null }> => {
+    if (!servicesEnabled) {
+      return { error: portalServicesUnavailableError() };
+    }
+
     try {
       const supabase = await getSupabase();
       
@@ -277,6 +294,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signIn = async (email: string, password: string): Promise<{ error: Error | null }> => {
+    if (!servicesEnabled) {
+      return { error: portalServicesUnavailableError() };
+    }
+
     try {
       const supabase = await getSupabase();
       const { error } = await supabase.auth.signInWithPassword({
@@ -296,6 +317,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signOut = async () => {
+    if (!servicesEnabled) {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      return;
+    }
+
     try {
       const supabase = await getSupabase();
       await supabase.auth.signOut();

@@ -187,7 +187,7 @@ export default function SnapshotCalc() {
   useSEO({
     title: "Strategy Snapshot: Calculator",
     description:
-      "A read-only strategy snapshot from the Pegasus DreamScapes calculator suite.",
+      "A read-only strategy snapshot from the Pegasus Dreamscapes calculator suite.",
     noIndex: true,
   });
 
@@ -235,7 +235,7 @@ export default function SnapshotCalc() {
               Strategy Snapshot
             </p>
           </div>
-          <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-[1.05] mb-3">
+          <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal leading-[1.05] mb-3">
             {data.name}
           </h1>
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -351,13 +351,13 @@ export default function SnapshotCalc() {
               </Button>
             }
           />
-          <Link href="/calculators">
+          <Link href="/strategy-lab/classic">
             <Button className="gap-2" data-testid="button-snapshot-run-your-own">
               <Calculator className="w-4 h-4" />
               Run your own
             </Button>
           </Link>
-          <Link href="/sell">
+          <Link href="/submit?intent=snapshot">
             <Button variant="outline" className="gap-2" data-testid="button-snapshot-submit">
               Submit a property
               <ArrowRight className="w-4 h-4" />

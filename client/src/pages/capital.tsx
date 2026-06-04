@@ -1,95 +1,126 @@
 import { Link } from "wouter";
+import { ArrowRight, FileCheck2, Lock, MessageSquare, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
-import { ArrowRight, ShieldCheck, MessageSquare, Lock } from "lucide-react";
+import { ComplianceNote, ProcessRail, SectionIntro, SplitHero } from "@/components/site-visuals";
 
-// Empire Doctrine v1.0.1 — /capital is footer-only (NOT in primary nav).
-// Reg D 506(b)-safe language: capital relationships are private, by
-// invitation, individually discussed, never marketed. No "Invest Now",
-// no "Investor Returns", no "Passive Income", no "Guaranteed", no
-// "Principal Protected" outside of negative disclosure clauses.
+const capitalProcess = [
+  {
+    label: "Relationship",
+    title: "A conversation starts by introduction.",
+    body: "Pegasus does not advertise capital opportunities to the public. Conversations are private and individual.",
+    icon: MessageSquare,
+  },
+  {
+    label: "Review",
+    title: "The deal, role, risk, and documents are read first.",
+    body: "Any future structure depends on the actual project, the parties, suitability, counsel, and written terms.",
+    icon: FileCheck2,
+  },
+  {
+    label: "Documentation",
+    title: "Nothing moves on a handshake.",
+    body: "If a private relationship advances, the arrangement is documented under appropriate written agreement before capital moves.",
+    icon: ShieldCheck,
+  },
+];
+
+const boundaries = [
+  "No public investment product.",
+  "No public securities offering.",
+  "No guaranteed returns.",
+  "No principal protection promise.",
+  "No advertised deal access.",
+  "No capital conversation without documentation.",
+];
 
 export default function CapitalPage() {
   useSEO({
     title: "Capital Partnerships",
     description:
-      "Private capital relationships under written agreement. Conversations are individual, by introduction. Not a public solicitation.",
+      "Private capital relationships under written agreement. Conversations are individual and by introduction. Not a public solicitation.",
     image: "/og/capital.png",
   });
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="bg-[hsl(var(--charcoal))] text-cream pt-32 pb-20">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-            Capital Partnerships
-          </p>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-white leading-tight mb-6">
-            Capital is a relationship, not a product.
-          </h1>
-          <p className="font-serif text-xl text-white/85 italic leading-snug max-w-2xl mb-6">
-            We do not sell securities. We do not run a fund. We have private conversations with
-            individuals we already know, under written agreement, deal by deal.
-          </p>
-          <p className="text-base text-white/70 max-w-2xl leading-relaxed">
-            This page is informational only. Nothing here is an offer, recommendation, or
-            solicitation. There is no public investment product.
-          </p>
+      <SplitHero
+        eyebrow="Capital Partnerships"
+        title={
+          <>
+            Capital is private.
+            <span className="block pt-2 italic text-[#D4B483]">Structure comes first.</span>
+          </>
+        }
+        subtitle="Pegasus does not sell securities, run a public fund, or advertise capital opportunities."
+        body="Capital conversations are individual, relationship-based, and documented deal by deal when appropriate."
+        primaryCta={{ label: "Contact Apollo", href: "/contact" }}
+        secondaryCta={{ label: "Read Disclosures", href: "/disclosures" }}
+        visual="capital"
+        visualTitle="Private capital ledger"
+        visualCaption="Capital conversations stay private, reviewed, written, and never publicly marketed."
+        labels={[
+          { label: "Access", value: "Private" },
+          { label: "Terms", value: "Written" },
+          { label: "Public", value: "No offer" },
+        ]}
+      />
+
+      <section className="py-20 lg:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-12 lg:px-12">
+          <div className="lg:col-span-4">
+            <SectionIntro
+              eyebrow="Capital posture"
+              title="This page should lower risk, not create it."
+              body="The professional version is quiet and specific: Pegasus may have private capital relationships, but the website is not where opportunities are offered."
+            />
+          </div>
+          <div className="lg:col-span-8">
+            <ProcessRail items={capitalProcess} />
+          </div>
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12 space-y-12">
-          <Block
-            icon={<MessageSquare className="w-5 h-5" />}
-            title="Conversations, not pitches."
-            body="A capital conversation begins after a personal introduction. We discuss the deal, the structure, the timing, the risk, and the roles in detail before any document is drafted."
+      <section className="bg-card py-20 lg:py-28">
+        <div className="mx-auto max-w-7xl px-6 lg:px-12">
+          <SectionIntro
+            eyebrow="Public boundaries"
+            title="What this page does not do."
+            body="Capital pages can create avoidable risk when they sound promotional. Pegasus keeps the public posture narrow."
           />
-          <Block
-            icon={<ShieldCheck className="w-5 h-5" />}
-            title="Written agreement on every deal."
-            body="If both sides decide to move forward, the structure is documented in a written agreement reviewed by counsel before any capital moves. No handshake deals, no boilerplate forms."
-          />
-          <Block
-            icon={<Lock className="w-5 h-5" />}
-            title="Private, individual, and on the record."
-            body="Pegasus does not advertise capital opportunities. Every relationship is private and individual. Nothing on this site is an offer of guaranteed returns or principal protected investment products."
-          />
+          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {boundaries.map((item) => (
+              <div key={item} className="rounded-md border border-border bg-background p-5">
+                <Lock className="mb-4 h-5 w-5 text-primary" aria-hidden="true" />
+                <p className="font-serif text-xl font-semibold leading-tight">{item}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <ComplianceNote>
+              Nothing on this page is an offer to buy or sell any security, an offer of guaranteed returns, a recommendation, or a solicitation. Capital relationships, joint ventures, and project participations are discussed privately with appropriate parties under written documentation and applicable law.
+            </ComplianceNote>
+          </div>
         </div>
       </section>
 
-      <section className="py-20 bg-[hsl(var(--stone))] border-y border-border">
-        <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
-          <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-5">
-            Already in conversation with Apollo?
+      <section className="py-24">
+        <div className="mx-auto max-w-4xl px-6 text-center lg:px-12">
+          <p className="text-xs font-semibold uppercase text-primary">Already in conversation</p>
+          <h2 className="mt-5 font-serif text-4xl font-semibold leading-tight sm:text-5xl">
+            Keep the conversation direct.
           </h2>
-          <p className="text-base text-muted-foreground leading-relaxed mb-8">
-            Reach Apollo directly. There is no general inquiry form for capital. That is by design.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
+            There is no general capital form. That is intentional.
           </p>
           <Link href="/contact">
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm"
-              data-testid="button-capital-contact"
-            >
+            <Button className="mt-9 h-12 rounded-sm bg-primary px-8 text-xs font-semibold uppercase text-white hover:bg-primary/90" data-testid="button-capital-contact">
               Contact Apollo
-              <ArrowRight className="ml-3 w-4 h-4" />
+              <ArrowRight className="ml-3 h-4 w-4" aria-hidden="true" />
             </Button>
           </Link>
         </div>
       </section>
-    </div>
-  );
-}
-
-function Block({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
-  return (
-    <div className="grid grid-cols-12 gap-6 items-start">
-      <div className="col-span-2 sm:col-span-1 text-primary mt-1">{icon}</div>
-      <div className="col-span-10 sm:col-span-11">
-        <h3 className="font-serif text-2xl font-semibold text-foreground mb-3 tracking-tight">{title}</h3>
-        <p className="text-base text-muted-foreground leading-relaxed">{body}</p>
-      </div>
     </div>
   );
 }

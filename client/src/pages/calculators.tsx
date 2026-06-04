@@ -281,7 +281,7 @@ function HeroSection() {
           </p>
           <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
         </div>
-        <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] mb-6 leading-[0.98]" data-testid="text-calculators-hero">
+        <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-normal mb-6 leading-[0.98]" data-testid="text-calculators-hero">
           Run the numbers.<br />
           <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
             Before you write the offer.
@@ -420,7 +420,7 @@ function CTASection() {
           </p>
           <span className="h-px w-10 bg-primary/60" />
         </div>
-        <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
+        <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal leading-tight mb-6">
           The math is the start.
           <br />
           <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
@@ -431,13 +431,13 @@ function CTASection() {
           Numbers tell you whether to engage. Strategy tells you how. Bring a real situation and we'll route it to the path that fits.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/sell">
+          <Link href="/submit?intent=calculator">
             <Button size="lg" className="gap-2 min-h-[48px] px-7 bg-primary hover:bg-primary/90 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-cta-sell">
               <Building2 className="w-4 h-4" />
               Submit a property
             </Button>
           </Link>
-          <Link href="/invest">
+          <Link href="/capital">
             <Button size="lg" variant="outline" className="gap-2 min-h-[48px] px-7 border-primary/40 hover:border-primary hover:bg-primary/5 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-cta-invest">
               <Wallet className="w-4 h-4 text-primary" />
               Explore capital
@@ -782,7 +782,7 @@ function ARVCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.roi, undefined, results.meetsRule)} />
               </div>
-              <Link href="/sell">
+              <Link href="/submit?intent=calculator-arv">
                 <Button data-testid="button-arv-cta">
                   Submit Your Property
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -1116,9 +1116,9 @@ function ROICalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.cashOnCashReturn, results.monthlyCashFlow)} />
               </div>
-              <Link href="/invest">
+              <Link href="/capital">
                 <Button data-testid="button-roi-cta">
-                  Become an Investor
+                  Discuss Capital Fit
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -1540,9 +1540,9 @@ function BRRRRCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.cashOnCash, results.monthlyCashFlow)} />
               </div>
-              <Link href="/invest">
+              <Link href="/marketflow/access">
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-brrrr-cta">
-                  Join Investor Network
+                  Request Network Access
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -2000,9 +2000,9 @@ function CashFlowCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(0, results.monthlyCashFlow)} />
               </div>
-              <Link href="/invest">
+              <Link href="/marketflow/access">
                 <Button data-testid="button-cashflow-cta">
-                  Explore Opportunities
+                  Request Network Access
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>

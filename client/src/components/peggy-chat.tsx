@@ -299,8 +299,8 @@ export function PeggyChatBubble() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold text-sm">Peggy · Strategy Assistant</h3>
-              <p className="text-xs text-muted-foreground">Pegasus DreamScapes intake & routing</p>
+              <h3 className="font-semibold text-sm">Peggy | Strategy Assistant</h3>
+              <p className="text-xs text-muted-foreground">Pegasus Dreamscapes intake & routing</p>
             </div>
           </div>
           
@@ -389,7 +389,7 @@ export function PeggyChatBubble() {
               ref={inputRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Ask Peggy anything..."
+              placeholder="Tell Peggy what is going on..."
               disabled={chatMutation.isPending || !conversationId}
               className="flex-1"
               data-testid="input-peggy-message"

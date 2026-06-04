@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 120" role="img" aria-label="Pegasus DreamScapes">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 120" role="img" aria-label="Pegasus Dreamscapes">
   <defs>
     <style>
       .word { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
@@ -6,7 +6,7 @@
     </style>
   </defs>
   <g fill="#1A2332">
-    <text x="0" y="62" class="word" font-size="56">Pegasus DreamScapes</text>
+    <text x="0" y="62" class="word" font-size="56">Pegasus Dreamscapes</text>
   </g>
   <g fill="#C87A3A">
     <text x="2" y="100" class="small" font-size="14">THE DEAL ARCHITECT</text>

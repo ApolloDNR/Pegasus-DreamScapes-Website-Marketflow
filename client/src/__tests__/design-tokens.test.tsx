@@ -44,7 +44,7 @@ describe("Design token discipline (Empire Doctrine v1.0.1 §Brand System)", () =
     });
   }
 
-  describe("Brand casing — no uppercase transform on mixed-case 'Pegasus DreamScapes'", () => {
+  describe("Brand casing — no uppercase transform on mixed-case 'Pegasus Dreamscapes'", () => {
     const ALL_SOURCES = [
       ...PUBLIC_PAGES.map((n) => join(PAGES_DIR, n)),
       ...SHARED_COMPONENTS.map((n) => join(COMPONENTS_DIR, n)),
@@ -58,8 +58,8 @@ describe("Design token discipline (Empire Doctrine v1.0.1 §Brand System)", () =
         while ((m = elementRx.exec(src)) !== null) {
           const cls = m[2] || m[3] || m[4] || "";
           const body = m[5] || "";
-          if (/\buppercase\b/.test(cls) && /Pegasus DreamScapes/.test(body)) {
-            throw new Error(`Mixed-case 'Pegasus DreamScapes' rendered inside className with 'uppercase' in ${path}: ${m[0].slice(0, 160)}`);
+          if (/\buppercase\b/.test(cls) && /Pegasus Dreamscapes/.test(body)) {
+            throw new Error(`Mixed-case 'Pegasus Dreamscapes' rendered inside className with 'uppercase' in ${path}: ${m[0].slice(0, 160)}`);
           }
         }
       });

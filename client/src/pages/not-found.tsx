@@ -6,30 +6,20 @@ import { useSEO } from "@/hooks/use-seo";
 export default function NotFound() {
   useSEO({
     title: "Page Not Found",
-    description: "The path you're looking for doesn't exist on the Pegasus DreamScapes site. Return to the homepage or start a Strategy Review.",
+    description: "The path you're looking for doesn't exist on the Pegasus Dreamscapes site. Return to the homepage or start a Strategy Review.",
   });
 
   return (
     <div className="min-h-screen bg-navy text-cream relative overflow-hidden flex items-center">
-      {/* Ambient brass glow */}
-      <div aria-hidden="true" className="absolute top-1/3 left-1/4 w-[480px] h-[480px] bg-primary/15 rounded-full blur-3xl" />
-      <div aria-hidden="true" className="absolute bottom-1/4 right-1/4 w-[360px] h-[360px] bg-primary/10 rounded-full blur-3xl" />
-      {/* Subtle grid texture */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(246,239,228,1) 1px, transparent 1px), linear-gradient(90deg, rgba(246,239,228,1) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-        }}
-      />
+      <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(120deg,rgba(8,15,25,0.98)_0%,rgba(18,31,49,0.94)_52%,rgba(31,26,21,0.9)_100%)]" />
+      <div aria-hidden="true" className="absolute left-0 top-24 h-px w-1/2 bg-[linear-gradient(90deg,rgba(199,122,58,0.7),transparent)]" />
+      <div aria-hidden="true" className="absolute bottom-0 right-0 h-px w-2/3 bg-[linear-gradient(90deg,transparent,rgba(246,239,228,0.18),rgba(199,122,58,0.72))]" />
 
       <div className="relative max-w-3xl mx-auto px-6 py-24 lg:py-32 text-center w-full">
         {/* Brass numeral */}
         <div className="relative inline-block mb-10">
-          <span aria-hidden="true" className="absolute inset-0 -m-6 rounded-full bg-primary/20 blur-2xl" />
-          <p className="relative font-serif text-[120px] sm:text-[160px] lg:text-[200px] leading-none font-semibold tracking-[-0.04em] bg-gradient-to-br from-[#E8DBC5] via-[#D4B483] to-[#8E4F22] bg-clip-text text-transparent select-none">
+          <span aria-hidden="true" className="absolute inset-x-0 bottom-6 h-px bg-[linear-gradient(90deg,transparent,rgba(199,122,58,0.72),transparent)]" />
+          <p className="relative font-serif text-[120px] sm:text-[160px] lg:text-[200px] leading-none font-semibold tracking-normal bg-gradient-to-br from-[#E8DBC5] via-[#D4B483] to-[#8E4F22] bg-clip-text text-transparent select-none">
             404
           </p>
         </div>
@@ -45,7 +35,7 @@ export default function NotFound() {
 
         {/* Editorial headline */}
         <h1
-          className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-[1.05] mb-6 text-cream"
+          className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-normal leading-[1.05] mb-6 text-cream"
           data-testid="text-404-title"
         >
           The path ends here.
@@ -98,7 +88,7 @@ export default function NotFound() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-cream/20 hover:border-primary/60 bg-white/[0.03] hover:bg-white/[0.06] text-xs uppercase tracking-[0.15em] text-cream/80 hover:text-cream font-supporting font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-navy transition-all duration-200"
+                className="inline-flex items-center gap-1.5 rounded-sm border border-cream/20 bg-white/[0.03] px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-cream/80 transition-all duration-200 hover:border-primary/60 hover:bg-white/[0.06] hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
                 data-testid={`link-404-${link.href.replace(/\//g, "")}`}
               >
                 {link.label}

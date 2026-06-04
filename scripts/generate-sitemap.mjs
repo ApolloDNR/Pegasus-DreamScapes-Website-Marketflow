@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // scripts/generate-sitemap.mjs
 //
-// Wave 4 — build-time sitemap generator. Writes public/sitemap.xml
-// from the canonical v1.0.1 public route map. The server also exposes
+// Build-time sitemap generator. Writes public/sitemap.xml
+// from the current launch public route map. The server also exposes
 // /sitemap.xml dynamically (server/routes.ts); this script keeps the
 // static file in sync for crawlers that hit the file directly and for
 // any static-host deployments.
@@ -17,22 +17,27 @@ import path from "node:path";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const SITE = "https://pegasusdreamscapes.com";
 
-// Canonical v1.0.1 public route map. Keep in sync with
-// client/src/lib/nav.ts NAV_PRIMARY + NAV_MORE and server/routes.ts.
+// Current launch public route map. Keep in sync with
+// client/src/config/navigation.ts and server/routes.ts.
 const ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/strategy-lab", changefreq: "weekly", priority: "0.9" },
-  { path: "/projects", changefreq: "weekly", priority: "0.9" },
-  { path: "/projects/nelson-dr", changefreq: "monthly", priority: "0.8" },
-  { path: "/development", changefreq: "monthly", priority: "0.8" },
-  { path: "/marketflow", changefreq: "weekly", priority: "0.8" },
-  { path: "/about", changefreq: "monthly", priority: "0.8" },
   { path: "/submit", changefreq: "monthly", priority: "0.9" },
+  { path: "/deal-architecture", changefreq: "monthly", priority: "0.9" },
+  { path: "/strategy-lab", changefreq: "monthly", priority: "0.9" },
+  { path: "/projects", changefreq: "weekly", priority: "0.9" },
+  { path: "/projects/nelson-dr", changefreq: "monthly", priority: "0.7" },
+  { path: "/development", changefreq: "monthly", priority: "0.8" },
+  { path: "/work-with-apollo", changefreq: "monthly", priority: "0.8" },
+  { path: "/marketflow", changefreq: "monthly", priority: "0.8" },
+  { path: "/about", changefreq: "monthly", priority: "0.8" },
+  { path: "/ecosystem", changefreq: "monthly", priority: "0.7" },
+  { path: "/dreamscaper-standard", changefreq: "monthly", priority: "0.7" },
+  { path: "/peggy-ai", changefreq: "monthly", priority: "0.7" },
   { path: "/library", changefreq: "weekly", priority: "0.7" },
   { path: "/capital", changefreq: "monthly", priority: "0.6" },
   { path: "/vendor-network", changefreq: "monthly", priority: "0.6" },
-  { path: "/connect", changefreq: "monthly", priority: "0.6" },
   { path: "/contact", changefreq: "monthly", priority: "0.6" },
+  { path: "/connect", changefreq: "monthly", priority: "0.5" },
   { path: "/marketflow/access", changefreq: "monthly", priority: "0.5" },
   { path: "/disclosures", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },

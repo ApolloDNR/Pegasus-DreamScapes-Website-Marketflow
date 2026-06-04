@@ -107,7 +107,7 @@ export default function Sell() {
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Sell or Submit a Property — Pegasus DreamScapes</h1>
+      <h1 className="sr-only">Sell or Submit a Property — Pegasus Dreamscapes</h1>
       <HeroSection />
       <HowItWorksSection />
       <OutcomeRoutingSection />
@@ -129,7 +129,7 @@ function MarketFlowConnectionSection() {
               <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
               <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold font-supporting">Where it might land</p>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em]">
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal">
               Your property may end up in MarketFlow.
             </h2>
           </div>
@@ -156,11 +156,11 @@ function OperatorSection() {
       <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold font-supporting mb-5">Operated by</p>
         <p className="font-display text-2xl sm:text-3xl uppercase tracking-[0.16em] mb-3" data-testid="text-sell-operator">
-          Paolo &ldquo;Apollo&rdquo; Duran
+          Apollo Duran
         </p>
         <div className="brand-divider w-32 mx-auto mb-5" />
         <p className="text-sm text-muted-foreground italic font-serif">
-          Founder &amp; Principal · Pegasus DreamScapes Corp
+          Founder &amp; Principal · Pegasus Dreamscapes Corp
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mt-6 max-w-xl mx-auto">
           A real person reviews every submission. Direct line: <a href="tel:+19257448525" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-744-8525</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>
@@ -186,7 +186,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Sell or submit a property to Pegasus DreamScapes Corp."
+          alt="Sell or submit a property to Pegasus Dreamscapes Corp."
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -207,12 +207,12 @@ function HeroSection() {
               <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting" data-testid="text-sell-kicker">
                 {isDealJv
                   ? "Deal / JV Submission · Wholesaler Intake"
-                  : "Strategy Review · Pegasus DreamScapes"}
+                  : "Strategy Review · Pegasus Dreamscapes"}
               </p>
             </motion.div>
 
             <motion.h1
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
@@ -345,7 +345,7 @@ function HowItWorksSection() {
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">The Process</p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Three steps. No theatrics.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -398,7 +398,7 @@ function OutcomeRoutingSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">No Lead Dies</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             What happens after you submit.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -531,10 +531,10 @@ function LeadFormSection() {
         <div className="max-w-2xl mx-auto px-6 text-center">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-8" />
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold mb-4">Received</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-3 tracking-[-0.02em]" data-testid="text-form-success">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-3 tracking-normal" data-testid="text-form-success">
             Submission received.
           </h2>
-          <p className="font-serif text-2xl sm:text-3xl text-muted-foreground italic mb-8 tracking-[-0.01em]">
+          <p className="font-serif text-2xl sm:text-3xl text-muted-foreground italic mb-8 tracking-normal">
             Your Strategy Snapshot is being prepared.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
@@ -572,7 +572,7 @@ function LeadFormSection() {
               {isDealJvIntent ? "Submit a Deal or Partnership Opportunity" : "Submit a Property"}
             </p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-form-title">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-normal" data-testid="text-form-title">
             {isDealJvIntent ? "Tell us about the deal." : "Tell us what you have."}
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
@@ -873,7 +873,7 @@ function LeadFormSection() {
                       </FormControl>
                       <div className="space-y-1">
                         <FormLabel className="text-sm font-normal cursor-pointer">
-                          I consent to be contacted by Pegasus DreamScapes about this property.
+                          I consent to be contacted by Pegasus Dreamscapes about this property.
                         </FormLabel>
                         <FormMessage />
                       </div>
@@ -978,7 +978,7 @@ function FAQSection() {
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Common Questions</p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em]" data-testid="text-faq-title">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal" data-testid="text-faq-title">
             What sellers actually ask.
           </h2>
         </ScrollReveal>

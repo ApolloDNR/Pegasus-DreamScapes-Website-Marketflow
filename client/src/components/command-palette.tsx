@@ -12,9 +12,7 @@ import {
 import { 
   Home, 
   Building2, 
-  DollarSign, 
   Calculator, 
-  FileText, 
   Users, 
   MessageSquare,
   Sparkles,
@@ -23,14 +21,13 @@ import {
   Target,
   Award,
   Search,
-  Settings,
-  Bell,
   Mail,
   Shield,
   Zap,
   BarChart3,
   Heart,
-  BookOpen
+  BookOpen,
+  Bot
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { Badge } from "@/components/ui/badge";
@@ -70,39 +67,42 @@ export function CommandPalette() {
   }, [setLocation]);
 
   const navigationItems: CommandItem[] = [
-    { id: "home", label: "Home", description: "Return to homepage", icon: Home, href: "/", keywords: ["main", "start"] },
-    { id: "properties", label: "Properties for Buyers", description: "Browse renovated homes", icon: Home, href: "/buyers", keywords: ["buy", "house", "real estate"] },
-    { id: "wholesale", label: "Wholesale Deals", description: "Off-market investment opportunities", icon: Briefcase, href: "/wholesale", keywords: ["deals", "investment"] },
-    { id: "sell", label: "Sell Your Property", description: "Get a cash offer today", icon: DollarSign, href: "/sell", keywords: ["sell", "cash", "offer"] },
-    { id: "invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp, href: "/invest", keywords: ["partner", "capital"] },
-    { id: "projects", label: "Case Studies", description: "Real project examples", icon: Target, href: "/projects", keywords: ["portfolio", "examples"] },
-    { id: "about", label: "About Us", description: "Our story and mission", icon: Users, href: "/about", keywords: ["team", "company"] },
-    { id: "contact", label: "Contact", description: "Get in touch", icon: Mail, href: "/contact", keywords: ["email", "phone", "message"] },
+    { id: "home", label: "Home", description: "Pegasus Dreamscapes public front door", icon: Home, href: "/", keywords: ["main", "start"] },
+    { id: "deal-architecture", label: "Deal Architecture", description: "How Pegasus reads and structures complex property situations", icon: Target, href: "/deal-architecture", keywords: ["architecture", "structure", "property"] },
+    { id: "submit", label: "Submit a Property", description: "Start a disciplined Pegasus review", icon: Building2, href: "/submit", keywords: ["submit", "property", "intake", "review"] },
+    { id: "connect", label: "Connect", description: "Fast route for cards, QR codes, and direct introductions", icon: MessageSquare, href: "/connect", keywords: ["qr", "card", "contact"] },
+    { id: "development", label: "Development", description: "ADU, rehab, value-add, and build strategy", icon: Briefcase, href: "/development", keywords: ["adu", "rehab", "build"] },
+    { id: "work-with-apollo", label: "Work With Apollo", description: "Brokerage representation through the correct KW lane", icon: Users, href: "/work-with-apollo", keywords: ["apollo", "listing", "kw", "dre"] },
+    { id: "marketflow", label: "MarketFlow", description: "Private deal and operator network access", icon: Sparkles, href: "/marketflow", keywords: ["marketflow", "network", "deals"] },
+    { id: "peggy-ai", label: "Peggy AI", description: "Guided intake and routing support", icon: Bot, href: "/peggy-ai", keywords: ["peggy", "assistant", "chat"] },
+    { id: "capital", label: "Capital & Partnerships", description: "Private capital and relationship conversations", icon: TrendingUp, href: "/capital", keywords: ["partner", "capital"] },
+    { id: "contact", label: "Contact", description: "Reach Pegasus directly", icon: Mail, href: "/contact", keywords: ["email", "phone", "message"] },
   ];
 
   const toolItems: CommandItem[] = [
     { id: "strategy-lab", label: "Strategy Lab", description: "Run a property through the Pegasus lens", icon: Calculator, href: "/strategy-lab", keywords: ["math", "analyze", "calculator", "lane", "verdict"], badge: "New" },
-    { id: "resources", label: "Investment Guides", description: "Learn the fundamentals", icon: BookOpen, href: "/resources", keywords: ["learn", "education"] },
-    { id: "community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare, href: "/dealflow/community", keywords: ["forum", "chat", "social"] },
+    { id: "library", label: "Strategy Library", description: "Read Pegasus doctrine and field notes", icon: BookOpen, href: "/library", keywords: ["learn", "education", "strategy"] },
+    { id: "dreamscaper-standard", label: "Dreamscaper Standard", description: "Operating standards for Pegasus work", icon: Award, href: "/dreamscaper-standard", keywords: ["standard", "values", "doctrine"] },
+    { id: "disclosures", label: "Disclosures", description: "Compliance, brokerage, AI, and housing disclosures", icon: Shield, href: "/disclosures", keywords: ["legal", "compliance", "dre", "kw"] },
   ];
 
   const dealflowItems: CommandItem[] = isAuthenticated ? [
-    { id: "dealflow", label: "Dealflow Hub", description: "Your investment command center", icon: Sparkles, href: "/dealflow", keywords: ["dashboard", "main"], badge: "New" },
-    { id: "deals", label: "Discover Deals", description: "Swipe through opportunities", icon: Heart, href: "/dealflow/deals", keywords: ["match", "swipe"] },
-    { id: "community-feed", label: "Community Feed", description: "Social updates from your network", icon: MessageSquare, href: "/dealflow/community", keywords: ["posts", "social"] },
-    { id: "messages", label: "Messages", description: "Direct messages", icon: Mail, href: "/dealflow/messages", keywords: ["chat", "dm"] },
-    { id: "office", label: "My Office", description: "Saved deals and analytics", icon: BarChart3, href: "/dealflow/office", keywords: ["saved", "dashboard"] },
+    { id: "marketflow-hub", label: "MarketFlow Hub", description: "Private network command center", icon: Sparkles, href: "/marketflow", keywords: ["dashboard", "main"], badge: "Private" },
+    { id: "marketflow-deals", label: "Review Deals", description: "Role-gated opportunities and deal review", icon: Heart, href: "/marketflow/deals", keywords: ["deals", "review"] },
+    { id: "marketflow-community", label: "Network Feed", description: "Updates from the private network", icon: MessageSquare, href: "/marketflow/community", keywords: ["posts", "social"] },
+    { id: "marketflow-messages", label: "Messages", description: "Private network messages", icon: Mail, href: "/marketflow/messages", keywords: ["chat", "dm"] },
+    { id: "marketflow-dashboard", label: "My Dashboard", description: "Saved activity and role-specific tools", icon: BarChart3, href: "/marketflow/dashboard", keywords: ["saved", "dashboard"] },
   ] : [];
 
   const staffItems: CommandItem[] = isAdmin ? [
-    { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/dealflow/hq", keywords: ["admin", "staff"], badge: "Staff" },
+    { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/marketflow/admin", keywords: ["admin", "staff"], badge: "Staff" },
   ] : [];
 
   const quickActions: CommandItem[] = [
     { 
       id: "search", 
       label: "Search Everything", 
-      description: "Find deals, members, projects", 
+      description: "Find pages, tools, and Pegasus surfaces", 
       icon: Search, 
       action: () => {},
       keywords: ["find", "lookup"]
@@ -233,11 +233,11 @@ export function CommandPalette() {
       <div className="border-t border-border px-3 py-2 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-mono">↵</kbd>
+            <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-mono">Enter</kbd>
             to select
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-mono">↑↓</kbd>
+            <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-mono">Up/Down</kbd>
             to navigate
           </span>
           <span className="flex items-center gap-1">
@@ -273,9 +273,9 @@ export function CommandTrigger({ className }: { className?: string }) {
       data-testid="button-command-trigger"
     >
       <Search className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">Search...</span>
+      <span className="hidden sm:inline">Search</span>
       <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-background rounded text-[10px] font-mono border border-border/50">
-        <span className="text-xs">⌘</span>K
+        Ctrl K
       </kbd>
     </button>
   );

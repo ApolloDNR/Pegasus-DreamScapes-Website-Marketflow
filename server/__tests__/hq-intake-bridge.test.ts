@@ -86,6 +86,33 @@ describe("Pegasus HQ intake bridge", () => {
     expect(payloadAgain.idempotencyKey).toBe(payload.idempotencyKey);
   });
 
+  it("preserves /submit strategy-review intent in the HQ outreach reason", () => {
+    const payload = buildHqPayloadFromUnifiedLead({
+      leadType: "submit",
+      source: "submit_page",
+      firstName: "Apollo",
+      lastName: "Tester",
+      email: "apollo@example.com",
+      phone: "925-555-0100",
+      address: "123 Review Way, Pleasant Hill, CA",
+      leadData: {
+        intent: "strategy-review",
+        propertyType: "sfr",
+        condition: "moderate",
+        timeline: "exploratory",
+        situation: "The owner ran a Strategy Snapshot and wants a deeper written operator review.",
+        consent: true,
+      },
+    });
+
+    expect(payload.propertyAddress).toBe("123 Review Way, Pleasant Hill, CA");
+    expect(payload.outreachReason).toContain("Website submit intake from submit_page.");
+    expect(payload.outreachReason).toContain("Intent: strategy-review.");
+    expect(payload.outreachReason).toContain("deeper written operator review");
+    expect(payload.consentContact).toBe(true);
+    expect(payload.consentCcpaAcknowledged).toBe(true);
+  });
+
   it("maps legacy seller-leads payloads without writing website-only leads", () => {
     const payload = buildHqPayloadFromSellerLead({
       name: "Seller Lead",

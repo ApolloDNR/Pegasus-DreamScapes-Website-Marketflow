@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { portalServicesEnabled, portalServicesUnavailableError } from './runtime-config';
 
 let supabaseInstance: SupabaseClient | null = null;
 let initializationPromise: Promise<SupabaseClient> | null = null;
@@ -93,6 +94,10 @@ export interface SavedItem {
 let loggedNoConfig = false;
 
 async function initializeSupabase(): Promise<SupabaseClient> {
+  if (!portalServicesEnabled()) {
+    throw portalServicesUnavailableError();
+  }
+
   try {
     const response = await fetch('/api/config/supabase');
     if (!response.ok) {

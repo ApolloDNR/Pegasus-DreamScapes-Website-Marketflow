@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { portalServicesEnabled } from "@/lib/runtime-config";
 
 interface WebSocketMessage {
   type: string;
@@ -16,6 +17,7 @@ interface UseWebSocketOptions {
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
+  const servicesEnabled = portalServicesEnabled();
   const {
     onMessage,
     onConnect,
@@ -32,6 +34,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
+    if (!servicesEnabled) return;
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -76,7 +79,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     } catch (err) {
       console.error("Failed to connect to WebSocket:", err);
     }
-  }, [onMessage, onConnect, onDisconnect, onError, reconnectAttempts, reconnectInterval]);
+  }, [onMessage, onConnect, onDisconnect, onError, reconnectAttempts, reconnectInterval, servicesEnabled]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -88,18 +91,24 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, []);
 
   const sendMessage = useCallback((message: WebSocketMessage) => {
+    if (!servicesEnabled) return;
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({
         ...message,
         timestamp: Date.now(),
       }));
     }
-  }, []);
+  }, [servicesEnabled]);
 
   useEffect(() => {
+    if (!servicesEnabled) {
+      disconnect();
+      return;
+    }
+
     connect();
     return () => disconnect();
-  }, [connect, disconnect]);
+  }, [connect, disconnect, servicesEnabled]);
 
   return {
     isConnected,

@@ -29,8 +29,8 @@ export default function Resources() {
   useSEO({
     title: isEducation ? "Education" : "Resources",
     description: isEducation
-      ? "Strategy education for sellers, investors, and operators. Frameworks, calculators, and case-study walkthroughs from Pegasus DreamScapes Corp."
-      : "Articles, guides, and tools for navigating complex real estate. Strategy-first resources from Pegasus DreamScapes Corp.",
+      ? "Strategy education for sellers, investors, and operators. Frameworks, calculators, and case-study walkthroughs from Pegasus Dreamscapes Corp."
+      : "Articles, guides, and tools for navigating complex real estate. Strategy-first resources from Pegasus Dreamscapes Corp.",
     image: `https://pegasusdreamscapes.com/og/${isEducation ? "education" : "resources"}.svg`,
   });
   return (
@@ -59,7 +59,7 @@ function HeroSection() {
           </p>
           <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
         </div>
-        <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.02em] mb-6 leading-[0.98]" data-testid="text-resources-hero">
+        <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-normal mb-6 leading-[0.98]" data-testid="text-resources-hero">
           The strategy work,<br />
           <span className="italic font-medium bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
             written down.

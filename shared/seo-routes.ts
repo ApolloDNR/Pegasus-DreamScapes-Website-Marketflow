@@ -11,8 +11,8 @@ export interface SeoRoute {
   type?: "website" | "article";
 }
 
-const BRAND = "Pegasus DreamScapes";
-const tag = (page: string) => `${page} · ${BRAND}`;
+const BRAND = "Pegasus Dreamscapes";
+const tag = (page: string) => `${page} - ${BRAND}`;
 
 export const SITE_URL = "https://pegasusdreamscapes.com";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
@@ -27,7 +27,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/about": {
     title: tag("About"),
     description:
-      "Founded by Paolo Apollo Duran. Built on strategy. Governed by virtue. Executed with discipline.",
+      "Founded by Apollo Duran. Built on strategy. Governed by virtue. Executed with discipline.",
     image: `${SITE_URL}/og/about.png`,
   },
   "/strategy-lab": {
@@ -39,7 +39,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/projects": {
     title: tag("Projects"),
     description:
-      "Selected case studies from the Pegasus DreamScapes portfolio. Every property gets a path.",
+      "Selected case studies from the Pegasus Dreamscapes portfolio. Every property gets a path.",
     image: `${SITE_URL}/og/projects.png`,
   },
   "/projects/nelson-dr": {
@@ -57,13 +57,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/marketflow": {
     title: tag("MarketFlow"),
     description:
-      "MarketFlow is the private dealflow layer for Pegasus DreamScapes. Request beta access.",
+      "MarketFlow is the private dealflow layer for Pegasus Dreamscapes. Request beta access.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/marketflow/access": {
     title: tag("Request MarketFlow Beta Access"),
     description:
-      "Request beta access to MarketFlow, the private dealflow layer for Pegasus DreamScapes.",
+      "Request beta access to MarketFlow, the private dealflow layer for Pegasus Dreamscapes.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/submit": {
@@ -87,7 +87,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/contact": {
     title: tag("Contact"),
     description:
-      "apollo@pegasusdreamscapes.com · 925.744.8525 · Pleasant Hill, CA. 48-hour response.",
+      "apollo@pegasusdreamscapes.com - 925.744.8525 - Pleasant Hill, CA. 48-hour response.",
     image: `${SITE_URL}/og/default.png`,
   },
   "/library": {
@@ -99,7 +99,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/vendor-network": {
     title: tag("Vendor Network"),
     description:
-      "Qualified vendor partners for the Pegasus DreamScapes operating system. Apply to join.",
+      "Qualified vendor partners for the Pegasus Dreamscapes operating system. Apply to join.",
     image: `${SITE_URL}/og/default.png`,
   },
   "/disclosures": {
@@ -111,13 +111,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/privacy": {
     title: tag("Privacy"),
     description:
-      "Pegasus DreamScapes privacy notice. Draft pending qualified legal review.",
+      "Pegasus Dreamscapes privacy notice. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/default.png`,
   },
   "/terms": {
     title: tag("Terms"),
     description:
-      "Pegasus DreamScapes terms of use. Draft pending qualified legal review.",
+      "Pegasus Dreamscapes terms of use. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/default.png`,
   },
 };

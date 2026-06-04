@@ -61,7 +61,7 @@ export default function VendorNetwork() {
   useSEO({
     title: "Vendor Network",
     description:
-      "Apply to the Pegasus DreamScapes Corp. private vendor network. Vetted contractors, lenders, agents, and operators routed to active deal flow.",
+      "Apply to the Pegasus Dreamscapes Corp. private vendor network. Vetted contractors, lenders, agents, and operators routed to active deal flow.",
     image: "/og/default.png",
   });
 
@@ -87,7 +87,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Pegasus DreamScapes Vendor Network"
+          alt="Pegasus Dreamscapes Vendor Network"
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -110,7 +110,7 @@ function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
+            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
@@ -180,7 +180,7 @@ function CategoriesSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Trades We Work With</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Six lanes. Real standards.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -270,7 +270,7 @@ function PegasusStandardSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Pegasus Standard</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5 text-white">
             The bar we hold every vendor to.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
@@ -306,7 +306,7 @@ function HowToJoinSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Three steps. No pay-to-play.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -410,7 +410,7 @@ function VendorFormSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Apply to be considered.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">

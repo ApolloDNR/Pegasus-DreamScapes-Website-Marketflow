@@ -1,5 +1,5 @@
 /**
- * Feature Flags System for Pegasus DreamScapes
+ * Feature Flags System for Pegasus Dreamscapes
  * 
  * Controls feature availability across Production vs Development environments.
  * Features are disabled by default on Production and enabled on Development/Staging.

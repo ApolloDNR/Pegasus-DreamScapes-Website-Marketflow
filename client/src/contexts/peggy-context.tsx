@@ -50,10 +50,17 @@ function getPageFromPath(pathname: string): string {
   
   if (path === '/' || path === '/home') return 'home';
   if (path === '/about') return 'about';
-  if (path === '/development' || path === '/services') return 'services';
-  if (path === '/sell') return 'sell';
+  if (path === '/deal-architecture') return 'deal-architecture';
+  if (path === '/development' || path === '/services') return 'development';
+  if (path === '/work-with-apollo') return 'work-with-apollo';
+  if (path === '/connect') return 'connect';
+  if (path === '/peggy-ai') return 'peggy-ai';
+  if (path === '/ecosystem') return 'ecosystem';
+  if (path === '/dreamscaper-standard') return 'dreamscaper-standard';
+  if (path === '/submit' || path === '/sell') return 'submit';
   if (path === '/buy') return 'buy';
-  if (path === '/invest') return 'invest';
+  if (path === '/capital' || path === '/invest') return 'capital';
+  if (path === '/library' || path.startsWith('/library/') || path === '/resources' || path === '/education') return 'library';
   if (path === '/contact') return 'contact';
   
   if (path.includes('/calculator')) {

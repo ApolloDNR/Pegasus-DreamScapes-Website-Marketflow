@@ -1,7 +1,7 @@
 import React from "react";
 import fs from "node:fs";
 import path from "node:path";
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
@@ -323,11 +323,11 @@ describe("Tab order matches reading order (Task #143)", () => {
     const ids = focusableTestIds(container);
     expectOrder(ids, [
       "link-logo",
-      "link-nav-strategy-lab",
-      "link-nav-projects",
+      "link-nav-deal-architecture",
       "link-nav-development",
+      "link-nav-strategy-lab",
+      "link-nav-work-with-apollo",
       "link-nav-marketflow",
-      "link-nav-about",
       "button-nav-more",
       "button-nav-cta",
       "button-mobile-menu",
@@ -355,20 +355,24 @@ describe("Tab order matches reading order (Task #143)", () => {
     expectOrder(ids, [
       "link-footer-email",
       "link-footer-phone",
-      "link-footer-about",
-      "link-footer-more-strategy-library",
-      "link-footer-more-connect",
+      "link-footer-more-about-pegasus",
+      "link-footer-more-pegasus-ecosystem",
+      "link-footer-deal-architecture",
+      "link-footer-development",
+      "link-footer-more-projects",
       "link-footer-more-contact",
       "link-footer-strategy-lab",
-      "link-footer-extra-submit",
-      "link-footer-development",
-      "link-footer-projects",
+      "link-footer-more-peggy-ai",
+      "link-footer-more-strategy-library",
+      "link-footer-more-dreamscaper-standard",
       "link-footer-marketflow",
+      "link-footer-work-with-apollo",
+      "link-footer-more-capital-&-partnerships",
       "link-footer-more-vendor-network",
-      "link-footer-more-capital",
-      "link-footer-extra-privacy",
-      "link-footer-extra-terms",
+      "link-footer-more-login",
       "link-footer-more-disclosures",
+      "link-footer-more-privacy",
+      "link-footer-more-terms",
       "link-footer-marketflow-beta",
       "link-footer-signin",
     ]);
@@ -395,11 +399,11 @@ describe("Tab order matches reading order (Task #143)", () => {
     const orderedNavTestIds = focusableTestIds(container).filter((id) =>
       [
         "link-logo",
-        "link-nav-strategy-lab",
-        "link-nav-projects",
+        "link-nav-deal-architecture",
         "link-nav-development",
+        "link-nav-strategy-lab",
+        "link-nav-work-with-apollo",
         "link-nav-marketflow",
-        "link-nav-about",
         "button-nav-more",
         "button-nav-cta",
         "button-mobile-menu",

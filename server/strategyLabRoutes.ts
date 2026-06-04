@@ -3,7 +3,7 @@
  *
  * Endpoints:
  *  POST  /api/strategy-lab/touchpoint           anon ok — funnel telemetry
- *  GET   /api/strategy-lab/blueprint-tiers      public — CMS-configurable tiers
+ *  GET   /api/strategy-lab/blueprint-tiers      admin only — legacy Blueprint tier catalog
  *  POST  /api/strategy-lab/submit               escalated submit-to-Pegasus
  *  POST  /api/strategy-lab/blueprint-order      paid Blueprint order (Stripe or invoice)
  *  GET   /api/admin/strategy-lab                admin only — funnel + submissions + orders
@@ -168,8 +168,9 @@ export function registerStrategyLabRoutes(app: Express, ctx: AuthCtx) {
     }
   });
 
-  // ── Blueprint tier catalog (public read) ───────────────────────────────
-  app.get("/api/strategy-lab/blueprint-tiers", async (_req, res) => {
+  // Legacy Blueprint tier catalog. Kept for admin/back-office continuity,
+  // but not exposed on the public launch surface.
+  app.get("/api/strategy-lab/blueprint-tiers", isAuthenticated, requireAdmin, async (_req, res) => {
     try {
       const tiers = await loadBlueprintTiers();
       res.json({ tiers, stripeEnabled: !!process.env.STRIPE_SECRET_KEY });

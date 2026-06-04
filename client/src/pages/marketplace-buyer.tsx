@@ -132,7 +132,7 @@ function BuyerDashboard() {
           <p className="text-muted-foreground">
             {isInvestmentBuyer
               ? "Find investment properties for your portfolio"
-              : "Find your perfect home with Pegasus DreamScapes"}
+              : "Find your perfect home with Pegasus Dreamscapes"}
           </p>
         </div>
         <div className="flex items-center gap-2">

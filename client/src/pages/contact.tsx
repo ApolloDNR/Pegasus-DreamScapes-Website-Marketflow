@@ -53,7 +53,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen">
-      <h1 className="sr-only">Contact Pegasus DreamScapes</h1>
+      <h1 className="sr-only">Contact Pegasus Dreamscapes</h1>
       <HeroSection />
       <ContactRoutingSection />
       <ContactFormSection />
@@ -71,7 +71,7 @@ function HeroSection() {
         transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
-          alt="Contact Pegasus DreamScapes Corp."
+          alt="Contact Pegasus Dreamscapes Corp."
           className="absolute inset-0 w-full h-full object-cover"
           priority
         />
@@ -92,7 +92,7 @@ function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
+            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-normal mb-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
@@ -125,7 +125,7 @@ function ContactRoutingSection() {
       title: "Have a property?",
       desc: "Submit it through the structured intake. Reviewed and routed within 24 business hours.",
       cta: "Submit a Property",
-      href: "/sell",
+      href: "/submit?intent=property",
     },
     {
       icon: Briefcase,
@@ -133,7 +133,7 @@ function ContactRoutingSection() {
       title: "Partner inquiry?",
       desc: "Start a private conversation about deal-specific structures and active opportunities.",
       cta: "Partner Inquiry",
-      href: "/invest",
+      href: "/capital",
     },
     {
       icon: MessageSquare,
@@ -155,7 +155,7 @@ function ContactRoutingSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Choose Your Lane</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-normal mb-5">
             Three ways to reach us.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -249,7 +249,7 @@ function ContactFormSection() {
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Send a Message</p>
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-[-0.02em]" data-testid="text-contact-info-title">
+          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6 tracking-normal" data-testid="text-contact-info-title">
             Plain-text reaches us fastest.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
