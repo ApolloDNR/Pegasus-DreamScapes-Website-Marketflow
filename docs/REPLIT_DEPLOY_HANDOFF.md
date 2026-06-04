@@ -24,7 +24,7 @@ This handoff is for taking the already-merged launch website from GitHub `main` 
 5. Add the required production environment variables in Replit Secrets or Deployment environment settings.
 6. Run `npm run env:production` in the Replit shell or an equivalent secret-safe host check.
 7. Deploy the autoscale app.
-8. Check the Replit deployment URL before touching DNS:
+8. Check the Replit deployment URL before touching DNS by running `npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns`, then confirm:
    - `/api/health` returns JSON with `service: "pegasus-dreamscapes-website"`.
    - `/api/readiness` returns `200` with `status: "ready"`.
    - `/robots.txt` returns the public robots file.

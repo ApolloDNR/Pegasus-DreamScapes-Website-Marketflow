@@ -81,6 +81,7 @@ const requiredRootPublicFiles = [
 const requiredLaunchOpsFiles = [
   "docs/LAUNCH_CUTOVER.md",
   "docs/REPLIT_DEPLOY_HANDOFF.md",
+  "scripts/live-launch-smoke-core.mjs",
   "scripts/live-launch-smoke.mjs",
   "scripts/production-env-check.mjs",
 ];
@@ -176,6 +177,7 @@ const gitignore = await readProjectFile(".gitignore");
 const packageJson = await readProjectFile("package.json");
 const launchCutoverDoc = await readProjectFile("docs/LAUNCH_CUTOVER.md");
 const replitHandoffDoc = await readProjectFile("docs/REPLIT_DEPLOY_HANDOFF.md");
+const liveSmokeSource = await readProjectFile("scripts/live-launch-smoke.mjs");
 
 const sitemapRoutes = extractSitemapRoutes(sitemap);
 const clientSitemapRoutes = extractSitemapRoutes(clientSitemap);
@@ -222,8 +224,14 @@ requireCheck(gitignore.includes("screenshots/codex-preview/"), ".gitignore does 
 requireCheck(packageJson.includes('"smoke:live": "node scripts/live-launch-smoke.mjs"'), "package.json is missing the live launch smoke command");
 requireCheck(launchCutoverDoc.includes("c40f3f4"), "docs/LAUNCH_CUTOVER.md is missing the current launch commit baseline");
 requireCheck(replitHandoffDoc.includes("deployment target: `autoscale`"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing Replit autoscale deployment guidance");
+requireCheck(
+  replitHandoffDoc.includes("npm run smoke:live -- --base=<replit-deployment-url> --canonical=https://pegasusdreamscapes.com --skip-dns"),
+  "docs/REPLIT_DEPLOY_HANDOFF.md is missing pre-DNS Replit smoke guidance",
+);
 requireCheck(replitHandoffDoc.includes("Do Not Launch If"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the no-launch gate list");
 requireCheck(replitHandoffDoc.includes("ext-sq.squarespace.com"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the current Squarespace DNS cutover note");
+requireCheck(liveSmokeSource.includes("--skip-dns"), "scripts/live-launch-smoke.mjs is missing the pre-cutover DNS skip option");
+requireCheck(liveSmokeSource.includes("--canonical="), "scripts/live-launch-smoke.mjs is missing the canonical URL option");
 
 const filesToScan = [];
 for (const target of scanTargets) {
