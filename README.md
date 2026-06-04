@@ -22,6 +22,11 @@ The launch surface is the public face for cards, QR traffic, property intake, St
 - `npm run verify:launch` - launch audit, TypeScript, production build, and tests.
 - `npm run start` - production server from `dist/index.cjs` on Linux/host environments.
 
+## Runtime Health
+
+- `GET /api/health` is a liveness check. It returns `200` when the Node process is serving requests.
+- `GET /api/readiness` is a redacted launch wiring check. It returns `200` only when required production configuration is present and valid; otherwise it returns `503` with missing/invalid check names and no secret values.
+
 ## Required Production Environment
 
 See `.env.example` for the deployment-ready variable list. Before launch, run `npm run env:production` in the host environment or locally with the production `.env` present. The checker reports missing/invalid keys without printing secret values.
@@ -103,9 +108,11 @@ For each public route verify:
 7. Confirm `/robots.txt` allows the public site and disallows private/admin/API surfaces.
 8. Confirm `/sitemap.xml` lists the 22 launch routes with `https://pegasusdreamscapes.com` URLs.
 9. Confirm `/og/default.png`, favicon, Apple touch icon, and brand SVGs load.
-10. Submit one real production `/submit` smoke test and verify both HQ intake receipt and staff email delivery.
-11. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
-12. Complete qualified legal/compliance review before public QR/card distribution.
+10. Confirm `/api/health` returns `200`.
+11. Confirm `/api/readiness` returns `200` with no required failures.
+12. Submit one real production `/submit` smoke test and verify both HQ intake receipt and staff email delivery.
+13. Confirm Supabase Auth Site URL and redirect URLs for the production domain.
+14. Complete qualified legal/compliance review before public QR/card distribution.
 
 Production runtime expectations:
 

@@ -43,6 +43,9 @@ __scratch__/
 attached_assets/Pasted-*.txt
 attached_assets/Pasted-*.md
 
+# Local browser QA artifacts
+screenshots/codex-preview/
+
 # Logs
 *.log
 npm-debug.log*

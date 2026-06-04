@@ -165,6 +165,7 @@ const envExample = await readProjectFile(".env.example");
 const generatedRoutesSource = await readProjectFile("scripts/generate-sitemap.mjs");
 const serverRoutesSource = await readProjectFile("server/routes.ts");
 const buildScriptSource = await readProjectFile("script/build.ts");
+const gitignore = await readProjectFile(".gitignore");
 
 const sitemapRoutes = extractSitemapRoutes(sitemap);
 const clientSitemapRoutes = extractSitemapRoutes(clientSitemap);
@@ -200,6 +201,9 @@ requireCheck(
   buildScriptSource.includes('cp("public", "dist/public"'),
   "script/build.ts does not copy root public launch assets into dist/public",
 );
+requireCheck(serverRoutesSource.includes('app.get("/api/health"'), "server/routes.ts is missing /api/health");
+requireCheck(serverRoutesSource.includes('app.get("/api/readiness"'), "server/routes.ts is missing /api/readiness");
+requireCheck(gitignore.includes("screenshots/codex-preview/"), ".gitignore does not ignore local browser QA artifacts");
 
 const filesToScan = [];
 for (const target of scanTargets) {
