@@ -41,7 +41,7 @@ const NELSON_JSONLD = {
   "@type": "CreativeWork",
   name: "Nelson Dr Pleasant Hill case file",
   about: "Pegasus Dreamscapes value-add residential acquisition",
-  creator: { "@type": "Person", name: 'Paolo "Apollo" Duran' },
+  creator: { "@type": "Person", name: "Apollo Duran" },
   publisher: { "@type": "Organization", name: "Pegasus Dreamscapes Corp." },
   inLanguage: "en",
   workStatus: "incomplete",

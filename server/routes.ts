@@ -104,6 +104,27 @@ const ADMIN_EMAILS = [
   "admin@pegasusdreamscapes.com",
 ];
 
+const publicSiteUrl = (req: Request) => {
+  const configuredSiteUrl = process.env.SITE_URL?.trim().replace(/\/+$/, "");
+  if (configuredSiteUrl) {
+    return configuredSiteUrl;
+  }
+
+  const rawHost = (req.get("host") || "pegasusdreamscapes.com").toLowerCase();
+  const isLocalHost = rawHost.includes("localhost") || rawHost.includes("127.0.0.1");
+  const forwardedProto = (req.get("x-forwarded-proto") || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  const protocol = isLocalHost
+    ? req.protocol
+    : forwardedProto && forwardedProto !== "http"
+      ? forwardedProto
+      : "https";
+
+  return `${protocol}://${rawHost}`;
+};
+
 // Middleware to require staff roles for HQ access
 const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
   try {
@@ -199,7 +220,7 @@ export async function registerRoutes(
   // (pegasusdreamscapes.com) gets the full crawl policy.
   app.get('/robots.txt', (req, res) => {
     const rawHost = (req.get('host') || '').toLowerCase();
-    const host = `${req.protocol}://${rawHost}`;
+    const host = publicSiteUrl(req);
     const isPreviewHost =
       rawHost.includes('replit.dev') ||
       rawHost.includes('replit.app') ||
@@ -270,7 +291,7 @@ export async function registerRoutes(
     '/capital-raising',
   ];
   const gonePage = (path: string) =>
-    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus DreamScapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus DreamScapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/submit" style="color:#C87A3A">submit a property</a> directly.</p></body></html>`;
+    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus Dreamscapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus Dreamscapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/submit" style="color:#C87A3A">submit a property</a> directly.</p></body></html>`;
   for (const path of GONE_ROUTES) {
     app.get(path, (_req, res) => {
       res.status(410).type('html').send(gonePage(path));
@@ -279,11 +300,10 @@ export async function registerRoutes(
 
   // SEO: sitemap.xml — public routes + project case studies
   app.get('/sitemap.xml', async (req, res) => {
-    const host = `${req.protocol}://${req.get('host')}`;
+    const host = publicSiteUrl(req);
     const today = new Date().toISOString().split('T')[0];
-    // Empire Doctrine v1.0.1 — v1 public route set only. Strategy Lab,
-    // Calculators, and the legacy /resources, /education, /systems
-    // surfaces are intentionally excluded from the public sitemap.
+    // Current launch route set only. Legacy funnels and retired utility
+    // surfaces stay out of the public sitemap.
     const staticRoutes: { path: string; priority: string; changefreq: string }[] = [
       { path: '/', priority: '1.0', changefreq: 'weekly' },
       { path: '/submit', priority: '0.9', changefreq: 'monthly' },

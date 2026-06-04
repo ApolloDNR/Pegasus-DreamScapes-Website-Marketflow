@@ -15,63 +15,63 @@ const COPPER = "#C77A3A";
 const cards = [
   {
     slug: "default",
-    kicker: "Pegasus DreamScapes · The Deal Architect",
+    kicker: "Pegasus Dreamscapes - The Deal Architect",
     h1: "Complex property.",
     h2: "Structured opportunity.",
     sub: "A strategy-first real estate operating company. We review the situation, then design the path.",
   },
   {
     slug: "home",
-    kicker: "Pegasus DreamScapes · The Deal Architect",
+    kicker: "Pegasus Dreamscapes - The Deal Architect",
     h1: "Complex property.",
     h2: "Structured opportunity.",
     sub: "Bring us the property. We'll show you the path.",
   },
   {
     slug: "about",
-    kicker: "About · Pegasus DreamScapes",
+    kicker: "About - Pegasus Dreamscapes",
     h1: "Built on strategy.",
     h2: "Governed by virtue.",
-    sub: "Founded by Paolo \"Apollo\" Duran. DRE #02333658 · KW East Bay.",
+    sub: "Founded by Apollo Duran. DRE #02333658 - KW East Bay.",
   },
   {
     slug: "strategy-lab",
-    kicker: "Strategy Lab · Pegasus DreamScapes",
+    kicker: "Strategy Lab - Pegasus Dreamscapes",
     h1: "Run the numbers.",
     h2: "See the path.",
     sub: "Quick Read and Full Path underwriting for complex East Bay real estate.",
   },
   {
     slug: "projects",
-    kicker: "The Record · Pegasus DreamScapes",
+    kicker: "The Record - Pegasus Dreamscapes",
     h1: "Documented projects.",
     h2: "Honest economics.",
     sub: "Every project, every lesson. No fluff, no fabricated returns.",
   },
   {
     slug: "nelson-dr",
-    kicker: "Case Study · Pegasus DreamScapes",
+    kicker: "Case Study - Pegasus Dreamscapes",
     h1: "Nelson Dr.",
     h2: "Where the doctrine was forged.",
     sub: "A complex East Bay value-add. Permit-aware underwriting, disciplined renovation, retail exit.",
   },
   {
     slug: "marketflow",
-    kicker: "MarketFlow · Pegasus DreamScapes",
+    kicker: "MarketFlow - Pegasus Dreamscapes",
     h1: "Private dealflow.",
     h2: "For a vetted network.",
     sub: "Off-market opportunities, structured offers, disciplined execution. Request beta access.",
   },
   {
     slug: "capital",
-    kicker: "Capital · Pegasus DreamScapes",
+    kicker: "Capital - Pegasus Dreamscapes",
     h1: "Conversations,",
     h2: "not pitches.",
     sub: "Private, individual, and on the record. Written agreement on every deal.",
   },
   {
     slug: "submit",
-    kicker: "Submit a Property · Pegasus DreamScapes",
+    kicker: "Submit a Property - Pegasus Dreamscapes",
     h1: "Bring us the property.",
     h2: "We'll show you the path.",
     sub: "Every property gets a path. Not every property gets an offer. Most reviewed within 5 business days.",
@@ -109,8 +109,8 @@ function svgFor({ kicker, h1, h2, sub }) {
   <text x="80" y="392" font-family="Georgia, 'Times New Roman', serif" font-size="88" font-weight="500" font-style="italic" fill="${COPPER}">${escapeXml(h2)}</text>
   <text x="80" y="472" font-family="'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="400" fill="${CREAM}" opacity="0.88">${escapeXml(sub)}</text>
   <rect x="80" y="548" width="1040" height="3" fill="url(#copperline)"/>
-  <text x="80" y="592" font-family="Georgia, 'Times New Roman', serif" font-size="16" letter-spacing="5" fill="${COPPER}">DREAM IT · BUILD IT · LIVE IT</text>
-  <text x="1120" y="592" text-anchor="end" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" letter-spacing="3" fill="${CREAM}" opacity="0.6">PEGASUSDREAMSCAPES.COM</text>
+  <text x="80" y="592" font-family="Georgia, 'Times New Roman', serif" font-size="16" letter-spacing="5" fill="${COPPER}">DREAM IT - BUILD IT - LIVE IT</text>
+  <text x="1120" y="592" text-anchor="end" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" letter-spacing="3" fill="${CREAM}" opacity="0.6">pegasusdreamscapes.com</text>
 </svg>`;
 }
 

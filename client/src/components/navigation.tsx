@@ -331,11 +331,11 @@ export function Navigation() {
             : "bg-[hsl(var(--navy)/0.84)] backdrop-blur-md"
         }`}
       >
-        <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-6 lg:h-[80px] lg:px-10">
+        <div className="relative mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-5 px-5 sm:px-6 lg:h-[80px] lg:px-10">
           {/* Wordmark — semantic <a>, NOT an <h1> */}
           <Link
             href="/"
-            className="flex items-center gap-3 lg:gap-4 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm group"
+            className="flex min-w-0 max-w-[calc(100vw-6.5rem)] flex-1 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:max-w-none sm:flex-none sm:flex-shrink-0 lg:gap-4 group"
             aria-label="Pegasus Dreamscapes home"
             data-testid="link-logo"
           >
@@ -343,7 +343,7 @@ export function Navigation() {
               src={logoImage}
               alt=""
               aria-hidden="true"
-              className={`h-11 w-auto transition-transform duration-300 group-hover:scale-[1.03] lg:h-12 ${
+              className={`hidden h-11 w-auto transition-transform duration-300 group-hover:scale-[1.03] sm:block lg:h-12 ${
                 onLightSurface
                   ? "[filter:drop-shadow(0_2px_4px_rgba(13,27,45,0.18))]"
                   : "[filter:drop-shadow(0_3px_8px_rgba(0,0,0,0.45))]"
@@ -357,16 +357,16 @@ export function Navigation() {
               }`}
               aria-hidden="true"
             />
-            <span className="hidden sm:flex flex-col leading-tight">
+            <span className="flex min-w-0 flex-col leading-tight">
               <span
-                className={`font-display text-[14px] tracking-[0.16em] lg:text-[16px] ${
+                className={`truncate font-display text-[13px] tracking-[0.12em] sm:text-[14px] sm:tracking-[0.16em] lg:text-[16px] ${
                   onLightSurface ? "text-[hsl(var(--ink))]" : "text-white"
                 }`}
               >
                 Pegasus Dreamscapes
               </span>
               <span
-                className={`text-[9px] lg:text-[10px] tracking-[0.32em] uppercase font-supporting mt-1 ${
+                className={`mt-1 truncate font-supporting text-[8px] uppercase tracking-[0.24em] sm:text-[9px] sm:tracking-[0.32em] lg:text-[10px] ${
                   onLightSurface ? "text-[hsl(var(--bronze))]" : "text-[hsl(var(--bronze-soft))]"
                 }`}
               >
@@ -512,7 +512,7 @@ export function Navigation() {
             ) : (
               <Link
                 href={PRIMARY_CTA.href}
-                className="hidden sm:block"
+                className="hidden xl:block"
                 onClick={() => trackCtaClick("nav_desktop", PRIMARY_CTA.label, PRIMARY_CTA.href)}
               >
                 <Button
@@ -530,10 +530,10 @@ export function Navigation() {
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`xl:hidden p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
+                  className={`fixed right-5 top-4 z-[80] inline-flex h-10 w-10 items-center justify-center rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 sm:right-6 lg:top-5 xl:hidden ${
                     onLightSurface
-                      ? "text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
-                      : "text-white hover:bg-white/10"
+                      ? "border-[hsl(var(--rule))] text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
+                      : "border-white/15 bg-white/[0.03] text-white hover:border-[hsl(var(--bronze)/0.55)] hover:bg-white/10"
                   }`}
                   aria-label="Open navigation menu"
                   data-testid="button-mobile-menu"

@@ -87,7 +87,7 @@ export default function Terms() {
                 Pegasus Dreamscapes Corp. is a strategy-first real estate operating company in the East Bay. We acquire, joint-venture, refer, and list real property across acquisition, value-add, ADU, and creative-finance lanes. We do not operate a public investment marketplace.
               </p>
               <p>
-                Paolo "Apollo" Duran is a licensed California real estate agent (DRE #02333658) with Keller Williams East Bay. Each office is independently owned and operated.
+                Apollo Duran is a licensed California real estate agent (DRE #02333658) with Keller Williams East Bay. Each office is independently owned and operated.
               </p>
             </LegalBlock>
 

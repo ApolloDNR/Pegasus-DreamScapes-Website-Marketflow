@@ -41,7 +41,7 @@ const laneRules = [
   {
     label: "Keller Williams",
     title: "Licensed representation lane.",
-    body: "Licensed real estate services are provided by Paolo \"Apollo\" Duran through Keller Williams Realty East Bay.",
+    body: "Licensed real estate services are provided by Apollo Duran through Keller Williams Realty East Bay.",
     icon: Scale,
   },
   {
@@ -56,7 +56,7 @@ export default function WorkWithApolloPage() {
   useSEO({
     title: "Work With Apollo",
     description:
-      "Licensed real estate representation with Paolo Apollo Duran through Keller Williams Realty East Bay, separate from Pegasus Dreamscapes Corp.",
+      "Licensed real estate representation with Apollo Duran through Keller Williams Realty East Bay, separate from Pegasus Dreamscapes Corp.",
     image: "/og/default.png",
   });
 
@@ -120,7 +120,7 @@ export default function WorkWithApolloPage() {
             <ProcessRail items={laneRules} />
             <div className="mt-6">
               <ComplianceNote>
-                Paolo "Apollo" Duran, Realtor. DRE #02333658. Keller Williams Realty East Bay. Licensed real estate services are provided by Paolo "Apollo" Duran through Keller Williams Realty East Bay. Pegasus Dreamscapes Corp is a separate development, investment, and property strategy company. Nothing on this page guarantees a listing result, purchase result, investment result, valuation, or offer.
+                Apollo Duran, Realtor. DRE #02333658. Keller Williams Realty East Bay. Licensed real estate services are provided by Apollo Duran through Keller Williams Realty East Bay. Pegasus Dreamscapes Corp is a separate development, investment, and property strategy company. Nothing on this page guarantees a listing result, purchase result, investment result, valuation, or offer.
               </ComplianceNote>
             </div>
           </div>

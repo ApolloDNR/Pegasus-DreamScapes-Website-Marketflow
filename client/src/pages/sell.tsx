@@ -156,7 +156,7 @@ function OperatorSection() {
       <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold font-supporting mb-5">Operated by</p>
         <p className="font-display text-2xl sm:text-3xl uppercase tracking-[0.16em] mb-3" data-testid="text-sell-operator">
-          Paolo &ldquo;Apollo&rdquo; Duran
+          Apollo Duran
         </p>
         <div className="brand-divider w-32 mx-auto mb-5" />
         <p className="text-sm text-muted-foreground italic font-serif">

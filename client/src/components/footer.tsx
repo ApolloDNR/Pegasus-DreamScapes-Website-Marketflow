@@ -174,7 +174,7 @@ export function Footer() {
             </div>
           </div>
           <p className="text-xs uppercase tracking-[0.22em] text-cream/72 font-supporting font-medium" data-testid="text-footer-dre">
-            Founder | Paolo "Apollo" Duran | DRE #02333658 | Keller Williams Realty East Bay
+            Founder | Apollo Duran | DRE #02333658 | Keller Williams Realty East Bay
           </p>
           <div className="mt-3 flex items-center gap-3">
             <svg
@@ -209,7 +209,7 @@ export function Footer() {
                   &copy; {new Date().getFullYear()} Pegasus Dreamscapes Corp. A California Corporation. All rights reserved.
                 </p>
                 <p className="text-[11px] text-cream/58 mt-1.5 max-w-3xl leading-relaxed" data-testid="text-footer-disclosure">
-                  Nothing on this website is an offer or solicitation to buy or sell securities, investment products, partnership interests, or real property. Property analysis, Strategy Lab output, Strategy Snapshots, and written reviews are preliminary and informational only and are not appraisals, offers, ARV opinions, rehab budgets, lending decisions, legal advice, tax advice, or guaranteed results. Licensed real estate services are provided by Paolo "Apollo" Duran through Keller Williams Realty East Bay. Pegasus Dreamscapes Corp is separate from Keller Williams Realty East Bay. See our <Link href="/disclosures"><span className="underline hover:text-white transition-colors cursor-pointer">Disclosures</span></Link> page for full terms.
+                  Nothing on this website is an offer or solicitation to buy or sell securities, investment products, partnership interests, or real property. Property analysis, Strategy Lab output, Strategy Snapshots, and written reviews are preliminary and informational only and are not appraisals, offers, ARV opinions, rehab budgets, lending decisions, legal advice, tax advice, or guaranteed results. Licensed real estate services are provided by Apollo Duran through Keller Williams Realty East Bay. Pegasus Dreamscapes Corp is separate from Keller Williams Realty East Bay. See our <Link href="/disclosures"><span className="underline hover:text-white transition-colors cursor-pointer">Disclosures</span></Link> page for full terms.
                 </p>
               </div>
             </div>

@@ -1,13 +1,13 @@
 import { supabaseAdmin } from '../server/lib/supabase';
 
-// Sample data for Pegasus DreamScapes Marketplace
+// Sample data for Pegasus Dreamscapes Marketplace
 
 const sampleUsers = [
   {
     external_user_id: 'demo-admin-001',
     primary_role: 'admin',
     display_name: 'Marcus Chen',
-    company_name: 'Pegasus DreamScapes Corp',
+    company_name: 'Pegasus Dreamscapes Corp',
     location: 'Phoenix, AZ',
     bio: 'Platform administrator overseeing all marketplace operations.',
     is_pegasus_badged: true,
@@ -690,7 +690,7 @@ async function seedCapitalCommitments(projectIds: string[]) {
 
 async function runSeed() {
   console.log('='.repeat(60));
-  console.log('Pegasus DreamScapes - Supabase Sample Data Seeder');
+  console.log('Pegasus Dreamscapes - Supabase Sample Data Seeder');
   console.log('='.repeat(60));
   
   try {

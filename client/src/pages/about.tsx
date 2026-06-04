@@ -53,7 +53,7 @@ const ABOUT_JSONLD = {
     {
       "@type": "Person",
       "@id": "https://pegasusdreamscapes.com/#founder",
-      name: "Paolo \"Apollo\" Duran",
+      name: "Apollo Duran",
       jobTitle: "Founder & Principal",
       worksFor: { "@id": "https://pegasusdreamscapes.com/#organization" },
       identifier: "DRE #02333658",
@@ -66,7 +66,7 @@ export default function About() {
   useSEO({
     title: "About",
     description:
-      "Pegasus Dreamscapes Corp. is a strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Built on strategy. Governed by virtue. Executed with discipline.",
+      "Pegasus Dreamscapes Corp. is a strategy-first real estate operating company founded by Apollo Duran. Built on strategy. Governed by virtue. Executed with discipline.",
     image: "/og/about.png",
   });
 
@@ -147,7 +147,7 @@ function AboutHero() {
                 </p>
                 <dl className="divide-y divide-cream/15">
                   <ShapeRow label="Positioning" value="The Deal Architect" />
-                  <ShapeRow label="Founder" value="Paolo &quot;Apollo&quot; Duran" />
+                  <ShapeRow label="Founder" value="Apollo Duran" />
                   <ShapeRow label="Entity" value="Pegasus Dreamscapes Corp." />
                   <ShapeRow label="HQ" value="Pleasant Hill, California" />
                   <ShapeRow label="Stage" value="Private beta · Invite-only network" />
@@ -291,7 +291,7 @@ function FounderSection() {
                       height={960}
                       loading="lazy"
                       decoding="async"
-                      alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus Dreamscapes Corp."
+                      alt="Apollo Duran, Founder & Principal of Pegasus Dreamscapes Corp."
                       className="absolute inset-0 w-full h-full object-cover object-top"
                       data-testid="img-founder-apollo"
                       onError={(e) => {
@@ -309,7 +309,7 @@ function FounderSection() {
                     Founder &amp; Principal
                   </p>
                   <h3 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight mb-1">
-                    Paolo &quot;Apollo&quot; Duran
+                    Apollo Duran
                   </h3>
                   <p className="text-sm text-muted-foreground mb-5">
                     Pegasus Dreamscapes Corp.

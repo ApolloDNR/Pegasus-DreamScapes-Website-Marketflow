@@ -1,6 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { cp, rm, readFile } from "fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -33,10 +33,16 @@ const allowlist = [
 ];
 
 async function buildAll() {
+  console.log("generating sitemap...");
+  await import("../scripts/generate-sitemap.mjs");
+
   await rm("dist", { recursive: true, force: true });
 
   console.log("building client...");
   await viteBuild();
+
+  console.log("copying public launch assets...");
+  await cp("public", "dist/public", { recursive: true, force: true });
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));

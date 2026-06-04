@@ -96,7 +96,7 @@ function FounderSection() {
             <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
               <img
                 src={founderApolloPath}
-                alt="Paolo &quot;Apollo&quot; Duran, Founder & Principal of Pegasus Dreamscapes Corp."
+                alt="Apollo Duran, Founder & Principal of Pegasus Dreamscapes Corp."
                 className="absolute inset-0 w-full h-full object-cover object-top"
                 data-testid="img-founder-apollo"
               />
@@ -104,7 +104,7 @@ function FounderSection() {
               <div className="absolute -inset-1 rounded-lg ring-1 ring-primary/15 pointer-events-none" />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/95 via-navy/70 to-transparent px-5 py-4">
                 <p className="font-display text-cream text-base uppercase tracking-[0.18em] leading-tight">
-                  Paolo &ldquo;Apollo&rdquo; Duran
+                  Apollo Duran
                 </p>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting mt-1">Founder · Principal</p>
               </div>
@@ -119,7 +119,7 @@ function FounderSection() {
               You'll talk to a real person.
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Paolo &ldquo;Apollo&rdquo; Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
+              Pegasus Dreamscapes is operated by <span className="font-semibold text-foreground">Apollo Duran</span>, founder, project lead, and the person who personally reviews every partner inquiry. There is no SDR funnel, no relationship manager hand-off, and no anonymous "team" behind a contact form.
             </p>
             <p className="font-serif text-lg text-foreground/85 italic leading-snug mb-8 border-l-2 border-primary pl-5">
               "Capital partners aren't a pipeline metric. The relationship outlasts the deal. That's why we paper everything, name the downside, and only structure things we'd put our own capital into."

@@ -26,7 +26,7 @@ interface EmailResult {
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const DEFAULT_FROM_EMAIL = process.env.DEFAULT_FROM_EMAIL || "noreply@pegasusdreamscapes.com";
-const COMPANY_NAME = "Pegasus DreamScapes Corp";
+const COMPANY_NAME = "Pegasus Dreamscapes Corp";
 
 function isConfigured(): boolean {
   return Boolean(SENDGRID_API_KEY);
@@ -142,7 +142,7 @@ export async function sendSellerLeadNotification(lead: {
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timeline</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.timeline}</td></tr>
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
     </table>
-    <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
+    <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus Dreamscapes website.</p>
   `;
 
   return sendEmail({
@@ -204,7 +204,7 @@ export async function sendInvestorLeadNotification(lead: {
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Strategy</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.strategy}</td></tr>
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
     </table>
-    <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
+    <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus Dreamscapes website.</p>
   `;
 
   return sendEmail({
@@ -236,7 +236,7 @@ export async function sendBuyerLeadNotification(lead: {
       ${lead.locations ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Target Locations</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.locations.join(", ")}</td></tr>` : ''}
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
     </table>
-    <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
+    <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus Dreamscapes website.</p>
   `;
 
   return sendEmail({
@@ -304,18 +304,18 @@ export async function sendWelcomeEmail(user: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Pegasus DreamScapes</h1>
+        <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Pegasus Dreamscapes</h1>
         <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">Where Designed Profits Are Crafted</p>
       </div>
       
       <div style="padding: 40px 20px; background: #f8f8f6;">
         <h2 style="color: #1a1a1a; margin-top: 0;">Hello, ${user.name}!</h2>
         <p style="color: #555; line-height: 1.6;">
-          Thank you for joining Pegasus DreamScapes. Your account has been created successfully, and you're now ready to ${roleDescription}.
+          Thank you for joining Pegasus Dreamscapes. Your account has been created successfully, and you're now ready to ${roleDescription}.
         </p>
         
         <div style="margin: 30px 0;">
-          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketplace" 
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketplace"
              style="display: inline-block; padding: 15px 30px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
             Go to Your Dashboard
           </a>
@@ -327,12 +327,12 @@ export async function sendWelcomeEmail(user: {
         
         <p style="color: #555; margin-top: 30px;">
           Best regards,<br>
-          <strong>The Pegasus DreamScapes Team</strong>
+          <strong>The Pegasus Dreamscapes Team</strong>
         </p>
       </div>
       
       <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
-        <p style="margin: 0;">Pegasus DreamScapes Corp &copy; ${new Date().getFullYear()}</p>
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
         <p style="margin: 5px 0 0;">Transforming distressed homes into thriving communities</p>
       </div>
     </div>
@@ -340,7 +340,7 @@ export async function sendWelcomeEmail(user: {
 
   return sendEmail({
     to: user.email,
-    subject: `Welcome to Pegasus DreamScapes, ${user.name}!`,
+    subject: `Welcome to Pegasus Dreamscapes, ${user.name}!`,
     html,
   });
 }
@@ -367,7 +367,7 @@ export async function sendOfferNotification(offer: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 30px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus DreamScapes</h1>
+        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus Dreamscapes</h1>
         <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Deal Update Notification</p>
       </div>
       
@@ -390,7 +390,7 @@ export async function sendOfferNotification(offer: {
         ${offer.notes ? `<p style="color: #555; background: #f0f0f0; padding: 12px; border-radius: 4px; font-style: italic;">"${offer.notes}"</p>` : ''}
         
         <div style="margin: 25px 0; text-align: center;">
-          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow" 
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow"
              style="display: inline-block; padding: 14px 28px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
             View Deal in MarketFlow
           </a>
@@ -398,7 +398,7 @@ export async function sendOfferNotification(offer: {
       </div>
       
       <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
-        <p style="margin: 0;">Pegasus DreamScapes Corp &copy; ${new Date().getFullYear()}</p>
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
       </div>
     </div>
   `;
@@ -420,7 +420,7 @@ export async function sendMessageNotification(message: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 30px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus DreamScapes</h1>
+        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus Dreamscapes</h1>
         <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">New Message</p>
       </div>
       
@@ -437,7 +437,7 @@ export async function sendMessageNotification(message: {
         </div>
         
         <div style="margin: 25px 0; text-align: center;">
-          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow/messages" 
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow/messages"
              style="display: inline-block; padding: 14px 28px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
             Reply to Message
           </a>
@@ -445,7 +445,7 @@ export async function sendMessageNotification(message: {
       </div>
       
       <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
-        <p style="margin: 0;">Pegasus DreamScapes Corp &copy; ${new Date().getFullYear()}</p>
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
       </div>
     </div>
   `;
@@ -475,7 +475,7 @@ export async function sendDealUpdateNotification(update: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 30px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus DreamScapes</h1>
+        <h1 style="color: white; margin: 0; font-size: 24px;">Pegasus Dreamscapes</h1>
         <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Deal Update</p>
       </div>
       
@@ -490,7 +490,7 @@ export async function sendDealUpdateNotification(update: {
         ${update.message ? `<p style="color: #555; background: #f0f0f0; padding: 12px; border-radius: 4px;">${update.message}</p>` : ''}
         
         <div style="margin: 25px 0; text-align: center;">
-          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow" 
+          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketflow"
              style="display: inline-block; padding: 14px 28px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
             View Deal Details
           </a>
@@ -498,7 +498,7 @@ export async function sendDealUpdateNotification(update: {
       </div>
       
       <div style="padding: 20px; text-align: center; background: #1a1a1a; color: #888; font-size: 12px;">
-        <p style="margin: 0;">Pegasus DreamScapes Corp &copy; ${new Date().getFullYear()}</p>
+        <p style="margin: 0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
       </div>
     </div>
   `;
@@ -527,7 +527,7 @@ export async function sendSavedAnalysisPDFEmail(params: {
   const safeNote = (params.note ?? "").trim();
   const fromLine = params.senderName
     ? `${params.senderName}${params.senderEmail ? ` (${params.senderEmail})` : ""}`
-    : "a Pegasus DreamScapes user";
+    : "a Pegasus Dreamscapes user";
   const subjectFrom = params.senderName ? ` from ${params.senderName}` : "";
   const subject = `Strategy Analysis: ${params.analysisName}${subjectFrom}`;
 
@@ -551,7 +551,7 @@ export async function sendSavedAnalysisPDFEmail(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; background:#ffffff;">
       <div style="background:#0d1b2d;padding:28px 24px;text-align:center;">
-        <h1 style="color:#f6efe4;margin:0;font-size:22px;letter-spacing:0.04em;">Pegasus DreamScapes</h1>
+        <h1 style="color:#f6efe4;margin:0;font-size:22px;letter-spacing:0.04em;">Pegasus Dreamscapes</h1>
         <p style="color:#c77a3a;margin:6px 0 0;font-size:11px;letter-spacing:0.28em;text-transform:uppercase;">Strategy Analysis Attached</p>
       </div>
 
@@ -578,7 +578,7 @@ export async function sendSavedAnalysisPDFEmail(params: {
       </div>
 
       <div style="padding:18px;text-align:center;background:#0d1b2d;color:#a8b0bc;font-size:11px;">
-        <p style="margin:0;">Pegasus DreamScapes Corp &copy; ${new Date().getFullYear()}</p>
+        <p style="margin:0;">Pegasus Dreamscapes Corp &copy; ${new Date().getFullYear()}</p>
         <p style="margin:6px 0 0;">Where others see impossible, we see a path.</p>
       </div>
     </div>
