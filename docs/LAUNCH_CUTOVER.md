@@ -17,7 +17,7 @@ That means the public domain is still on Squarespace. It cannot prove `/api/heal
 
 - GitHub repo: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`
 - Production branch: `main`
-- Current verified main merge: `82d6715` (`Add launch health readiness checks`)
+- Current verified main merge: `c40f3f4` (`Add live launch cutover smoke`)
 - Replit deployment config: `.replit`
 - Build command: `npm run build`
 - Start command: `npm run start`

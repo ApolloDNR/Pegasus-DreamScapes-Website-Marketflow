@@ -80,6 +80,7 @@ const requiredRootPublicFiles = [
 
 const requiredLaunchOpsFiles = [
   "docs/LAUNCH_CUTOVER.md",
+  "docs/REPLIT_DEPLOY_HANDOFF.md",
   "scripts/live-launch-smoke.mjs",
   "scripts/production-env-check.mjs",
 ];
@@ -173,6 +174,8 @@ const serverRoutesSource = await readProjectFile("server/routes.ts");
 const buildScriptSource = await readProjectFile("script/build.ts");
 const gitignore = await readProjectFile(".gitignore");
 const packageJson = await readProjectFile("package.json");
+const launchCutoverDoc = await readProjectFile("docs/LAUNCH_CUTOVER.md");
+const replitHandoffDoc = await readProjectFile("docs/REPLIT_DEPLOY_HANDOFF.md");
 
 const sitemapRoutes = extractSitemapRoutes(sitemap);
 const clientSitemapRoutes = extractSitemapRoutes(clientSitemap);
@@ -217,6 +220,10 @@ requireCheck(serverRoutesSource.includes('app.get("/api/health"'), "server/route
 requireCheck(serverRoutesSource.includes('app.get("/api/readiness"'), "server/routes.ts is missing /api/readiness");
 requireCheck(gitignore.includes("screenshots/codex-preview/"), ".gitignore does not ignore local browser QA artifacts");
 requireCheck(packageJson.includes('"smoke:live": "node scripts/live-launch-smoke.mjs"'), "package.json is missing the live launch smoke command");
+requireCheck(launchCutoverDoc.includes("c40f3f4"), "docs/LAUNCH_CUTOVER.md is missing the current launch commit baseline");
+requireCheck(replitHandoffDoc.includes("deployment target: `autoscale`"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing Replit autoscale deployment guidance");
+requireCheck(replitHandoffDoc.includes("Do Not Launch If"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the no-launch gate list");
+requireCheck(replitHandoffDoc.includes("ext-sq.squarespace.com"), "docs/REPLIT_DEPLOY_HANDOFF.md is missing the current Squarespace DNS cutover note");
 
 const filesToScan = [];
 for (const target of scanTargets) {

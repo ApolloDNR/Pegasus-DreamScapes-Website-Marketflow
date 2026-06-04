@@ -1,0 +1,76 @@
+# Replit Deploy Handoff
+
+Last verified from this workspace: 2026-06-04.
+
+This handoff is for taking the already-merged launch website from GitHub `main` into the existing Replit production deployment. It does not contain secret values.
+
+## Source Baseline
+
+- GitHub repo: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`
+- Production branch: `main`
+- Minimum launch commit: `c40f3f4` (`Add live launch cutover smoke`)
+- Replit config file: `.replit`
+- Replit deployment target: `autoscale`
+- Build command: `npm run build`
+- Start command: `npm run start`
+- Runtime port: `5000`
+
+## Replit Deployment Steps
+
+1. Open the existing Replit project connected to this website repo.
+2. Sync or pull the latest GitHub `main` branch.
+3. Confirm the deployed source is at `c40f3f4` or newer.
+4. Confirm `.replit` still uses autoscale deployment with build `npm run build` and run `npm run start`.
+5. Add the required production environment variables in Replit Secrets or Deployment environment settings.
+6. Run `npm run env:production` in the Replit shell or an equivalent secret-safe host check.
+7. Deploy the autoscale app.
+8. Check the Replit deployment URL before touching DNS:
+   - `/api/health` returns JSON with `service: "pegasus-dreamscapes-website"`.
+   - `/api/readiness` returns `200` with `status: "ready"`.
+   - `/robots.txt` returns the public robots file.
+   - `/sitemap.xml` returns production URLs for the launch route set.
+9. Attach the production custom domains in Replit.
+10. Move DNS records at the domain registrar to the exact records Replit provides for the custom domain.
+11. Wait for DNS propagation.
+12. Run `npm run smoke:live`.
+13. Submit one real production `/submit` smoke and confirm both Pegasus HQ intake receipt and staff notification email delivery.
+14. Complete qualified legal/compliance review before public QR/card distribution.
+
+## Required Production Environment
+
+Hard launch variables:
+
+- `DATABASE_URL`
+- `SITE_URL=https://pegasusdreamscapes.com`
+- `PEGASUS_HQ_PUBLIC_INTAKE_URL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SENDGRID_API_KEY`
+- `DEFAULT_FROM_EMAIL`
+- `STAFF_NOTIFICATION_EMAIL`
+- `SESSION_SECRET`
+- `REPL_ID`
+
+Optional:
+
+- `ISSUER_URL`
+- `PORT`
+
+## DNS Cutover Notes
+
+The latest local DNS check showed Squarespace records still serving the public domain:
+
+- Apex A records: `198.185.159.144`, `198.185.159.145`, `198.49.23.144`, `198.49.23.145`
+- `www` CNAME: `ext-sq.squarespace.com`
+
+Replace those records with the exact DNS records shown by Replit custom domains. Do not guess or hard-code a Replit target without confirming it in Replit.
+
+## Do Not Launch If
+
+- The deployed source is older than `c40f3f4`.
+- `/api/readiness` returns `503` or lists missing required configuration.
+- `pegasusdreamscapes.com` still resolves to Squarespace.
+- `/submit` does not create the expected Pegasus HQ intake record.
+- Staff notification email is not delivered.
+- Legal/compliance review is not complete.
