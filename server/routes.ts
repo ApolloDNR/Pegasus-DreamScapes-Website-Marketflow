@@ -253,13 +253,15 @@ export async function registerRoutes(
   // (no clean canonical successor that preserves the original intent).
   // We answer with a small HTML page so a crawler / human gets the right
   // signal without falling through to the SPA shell.
+  // NOTE: /buyers and /ecosystem are NOT retired — the controlling Pegasus
+  // prototype (client/src/pegasus/) owns them as real public pages (Who We
+  // Serve → Buyers, What We Do → Pegasus Ecosystem) and its nav links to
+  // them, so they must resolve on direct HTTP hits too, not 410.
   const GONE_ROUTES = [
     '/education',
     '/calculators',
-    '/buyers',
     '/wholesale',
     '/systems',
-    '/ecosystem',
     '/dreamspace',
     '/capital-raising',
   ];

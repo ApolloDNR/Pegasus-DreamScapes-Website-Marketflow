@@ -502,7 +502,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   capital: {
     eyebrow: 'Who We Serve / Capital Partners',
     title: <>Put capital to work,<br />with eyes open</>,
-    image: 'pegasus-arch.jpg',
+    image: 'pegasus-arch.png',
     lead: 'We do not pool funds or promise returns. We bring you specific projects, underwritten to one standard, with the work, the timeline, and the risk laid out before you decide.',
     points: [
       { t: 'Project by project', d: 'You choose what to back. No blind pools, no commitments you did not pick.' },

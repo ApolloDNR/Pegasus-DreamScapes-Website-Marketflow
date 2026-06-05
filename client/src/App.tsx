@@ -166,7 +166,8 @@ const legacyRedirects: [string, string][] = [
   ["/calculators", "/strategy-lab/classic"],
   ["/education", "/library"],
   ["/wholesale", "/submit?intent=deal-jv"],
-  ["/buyers", "/marketflow"],
+  // /buyers is now a real Pegasus prototype page (Who We Serve → Buyers),
+  // owned by the public shell — no longer redirected/retired.
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],

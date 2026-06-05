@@ -88,6 +88,10 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     // valve) and /peggy (public Peggy surface) are canonical.
     "/ecosystem",
     "/peggy",
+    // Controlling Pegasus prototype owns /buyers as a real "Who We Serve →
+    // Buyers" audience page (client/src/pegasus/), so it is canonical, not
+    // retired.
+    "/buyers",
     // Website Structure v1 FINAL §1 / §4 — new primary-nav surfaces.
     "/deal-architecture",
     "/work-with-apollo",
@@ -102,7 +106,6 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/resources",
     "/invest",
     "/partner",
-    "/buyers",
     "/wholesale",
     "/systems",
     // Amendment 2 §C restored /ecosystem as a footer-only Audience-B

@@ -74,8 +74,8 @@ export default function ArticleDetail() {
       datePublished: article.publishedAt
         ? new Date(article.publishedAt as unknown as string).toISOString()
         : undefined,
-      dateModified: article.updatedAt
-        ? new Date(article.updatedAt as unknown as string).toISOString()
+      dateModified: (article.publishedAt ?? article.createdAt)
+        ? new Date((article.publishedAt ?? article.createdAt) as unknown as string).toISOString()
         : undefined,
       author: article.author
         ? { "@type": "Person", name: article.author }
