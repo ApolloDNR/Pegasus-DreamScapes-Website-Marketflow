@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark } from 'lucide-react';
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines } from './primitives';
+import markLight from '@/assets/brand/pegasus-mark-light.svg';
 import {
   CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_CHIPS, PEGGY_SLA,
 } from './data';
@@ -208,7 +209,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
         image={IMG('pegasus-casestudy.png')}
         lead="The marketplace layer: three lanes that move deals, match capital to projects, and place finished inventory, all to one standard." />
-      <MarketFlowBlock go={go} />
+      <MarketFlowBlock go={go} enter={{ label: 'Sign in to MarketFlow', href: '/login' }} />
       <section className="relative py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)] overflow-hidden">
         <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.12] float-slow" />
         <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -395,7 +396,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
     <>
       <PageHero eyebrow="The Firm"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">architecture.</span></>}
-        image={IMG('pegasus-apollo.png')}
+        image={IMG('founder/apollo-1200.jpg')} focus="top"
         lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay, built on strategy, governed by virtue, and executed with discipline." />
       <ApolloBlock go={go} showCta={false} />
       <DoctrineBlock dark />
@@ -445,7 +446,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
         <div className="grid grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
           <div className="col-span-2 md:col-span-4">
             <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
-              <img src={IMG('pegasus-logo-mark.png')} alt="Pegasus DreamScapes" className="w-12 h-12 object-contain" />
+              <img src={markLight} alt="Pegasus DreamScapes" className="w-11 h-11 object-contain" />
               <div className="flex flex-col leading-none text-left">
                 <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus DreamScapes</span>
                 <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Architecture</span>

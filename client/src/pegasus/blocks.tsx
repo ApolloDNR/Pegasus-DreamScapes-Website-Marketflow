@@ -30,11 +30,11 @@ export type StartAction = 'contact' | 'strategylab' | 'peggy';
 /* ----------------------------------------------------------------
    Page hero
 ---------------------------------------------------------------- */
-export function PageHero({ eyebrow, title, image, lead }:
-  { eyebrow: string; title: React.ReactNode; image: string; lead: string }) {
+export function PageHero({ eyebrow, title, image, lead, focus = 'center' }:
+  { eyebrow: string; title: React.ReactNode; image: string; lead: string; focus?: 'center' | 'top' }) {
   return (
     <section className="relative h-[68vh] min-h-[520px] max-h-[760px] w-full overflow-hidden">
-      <img src={image} alt="" aria-hidden="true" className="ken-burns absolute inset-0 w-full h-full object-cover" />
+      <img src={image} alt="" aria-hidden="true" className={`ken-burns absolute inset-0 w-full h-full object-cover ${focus === 'top' ? 'object-top' : 'object-center'}`} />
       <div className="absolute inset-0 hero-vignette pointer-events-none" />
       <div className="absolute inset-0 hero-scrim-bottom" />
       <div className="absolute inset-x-0 bottom-0">
@@ -359,7 +359,7 @@ export function ProductLadderBlock({ go, openPeggy }: { go: Nav; openPeggy: () =
 /* ----------------------------------------------------------------
    MarketFlow (3 lanes)
 ---------------------------------------------------------------- */
-export function MarketFlowBlock({ go, dark = false }: { go: Nav; dark?: boolean }) {
+export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: boolean; enter?: { label: string; href: string } }) {
   return (
     <section className={`relative py-24 lg:py-32 overflow-hidden ${dark ? 'bg-[var(--navy)] text-[var(--cream)]' : ''}`}>
       {dark && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
@@ -406,10 +406,17 @@ export function MarketFlowBlock({ go, dark = false }: { go: Nav; dark?: boolean 
           ))}
         </div>
         <div className="mt-12 text-center reveal">
-          <button type="button" onClick={() => go('marketflow')}
-            className={`${dark ? 'btn-solid-light' : 'btn-primary'} px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group`}>
-            Explore MarketFlow <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </button>
+          {enter ? (
+            <a href={enter.href}
+              className={`${dark ? 'btn-solid-light' : 'btn-primary'} px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group`}>
+              {enter.label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </a>
+          ) : (
+            <button type="button" onClick={() => go('marketflow')}
+              className={`${dark ? 'btn-solid-light' : 'btn-primary'} px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group`}>
+              Explore MarketFlow <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
         </div>
       </div>
     </section>
@@ -463,7 +470,7 @@ export function ApolloBlock({ go, showCta = true }: { go: Nav; showCta?: boolean
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-5 reveal">
           <div className="img-zoom peggy-shadow aspect-[4/5]">
-            <img src={IMG('pegasus-apollo.png')} alt={APOLLO.name} className="w-full h-full object-cover" />
+            <img src={IMG('founder/apollo-1200.jpg')} alt={APOLLO.name} className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="lg:col-span-7 reveal delay-100">

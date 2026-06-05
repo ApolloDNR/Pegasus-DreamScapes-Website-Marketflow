@@ -3,7 +3,9 @@ import { ChevronDown, Menu, X, ConciergeBell, ArrowRight } from 'lucide-react';
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
 import type { Route, Nav, Theme, NavGroup, NavLink } from './theme';
 import { NAV_GROUPS } from './data';
-import { IMG, ThemeToggle } from './primitives';
+import { ThemeToggle } from './primitives';
+import markDark from '@/assets/brand/pegasus-mark.svg';
+import markLight from '@/assets/brand/pegasus-mark-light.svg';
 
 function AccountControl({ go, route }: { go: Nav; route: Route }) {
   const { isAuthenticated, signOut } = useSupabaseAuth();
@@ -131,13 +133,14 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
   useEffect(() => { setMenuOpen(false); }, [route]);
   const overHero = !scrolled && !menuOpen;
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
+  const mark = overHero || theme === 'dark' ? markLight : markDark;
 
   return (
     <nav className="fixed top-0 inset-x-0 z-40">
       <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'bg-[var(--bg)]/95 backdrop-blur-md border-b border-[var(--line)]'}`} />
       <div className={`relative max-w-[1320px] mx-auto px-6 lg:px-12 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
         <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5">
-          <img src={IMG('pegasus-logo-mark.png')} alt="Pegasus DreamScapes" className="w-11 h-11 object-contain" />
+          <img src={mark} alt="Pegasus DreamScapes" className="w-10 h-10 object-contain" />
           <div className="hidden sm:flex flex-col leading-none text-left">
             <span className="font-serif-display text-[22px] tracking-[0.06em] leading-none">Pegasus DreamScapes</span>
             <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Architecture</span>
