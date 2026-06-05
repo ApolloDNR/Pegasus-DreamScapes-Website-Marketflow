@@ -405,7 +405,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
                   <div className="peggy-avatar !bg-[var(--cream)] !p-1"><BrandMark boxClassName="w-full h-full" /></div>
                   <div className="leading-none">
                     <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
-                    <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">The Pegasus guide</div>
+                    <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Pegasus intake concierge</div>
                   </div>
                 </div>
                 <p className="peggy-msg mb-6">
@@ -565,7 +565,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
           </FooterCol>
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
-          <span>© {new Date().getFullYear()} Pegasus DreamScapes. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.</span>
           <span>NAR · CAR · Equal Housing Opportunity</span>
         </div>
       </div>

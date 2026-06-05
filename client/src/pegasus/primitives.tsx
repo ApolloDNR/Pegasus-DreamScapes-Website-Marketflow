@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MoveHorizontal, Sun, Moon } from 'lucide-react';
 import type { Theme } from './theme';
-import markFull from '@/assets/brand/pegasus-mark-full.png';
+import markFull from '@/assets/brand/pegasus-mark-full.svg';
 
 export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
 

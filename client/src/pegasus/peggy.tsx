@@ -6,7 +6,7 @@ import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
 
 const GREETING =
-  "I’m Peggy, the Pegasus deal concierge. Tell me about a property, a deal, or what you’re weighing, in your own words. I’ll ask the right questions and point you to the lane that fits.";
+  "I’m Peggy, the Pegasus intake concierge. Tell me about a property, a deal, or what you’re weighing, in your own words. I’ll ask the right questions and point you to the lane that fits.";
 
 const FALLBACK =
   "I can’t reach my brain at the moment. You can still get a fast read from a person: start a Review and someone writes back within two business days, or open the Strategy Lab to model the numbers yourself.";
@@ -203,7 +203,7 @@ export function Peggy({
   return (
     <>
       <button ref={fabRef} type="button" onClick={() => setOpen(!open)}
-        aria-label={open ? 'Close PeggyAI' : 'Talk to PeggyAI, the Pegasus guide'}
+        aria-label={open ? 'Close PeggyAI' : 'Talk to PeggyAI, the Pegasus intake concierge'}
         aria-expanded={open} aria-controls={panelId}
         className={`peggy-fab ${open ? 'is-open' : ''}`}>
         {open ? <X className="w-5 h-5" strokeWidth={1.8} /> : <BrandMark boxClassName="w-8 h-8" onDark />}
@@ -211,7 +211,7 @@ export function Peggy({
       </button>
 
       <div id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
-        aria-label="PeggyAI, the Pegasus guide" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
+        aria-label="PeggyAI, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
         <div className="peggy-head">
           <div className="peggy-avatar !bg-[var(--cream)] !p-1"><BrandMark boxClassName="w-full h-full" /></div>
           <div className="leading-none">

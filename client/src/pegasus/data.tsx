@@ -36,7 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
 export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
   { value: '$180M+', label: 'In property reviewed', sub: 'Across the East Bay and beyond' },
   { value: '250+', label: 'Opportunities underwritten', sub: 'Each one read deal by deal' },
-  { value: '5-day', label: 'Strategy read', sub: 'From intake to a written path' },
+  { value: '2-day', label: 'Strategy read', sub: 'From intake to a written path' },
   { value: '1', label: 'Standard, every time', sub: 'The Dreamscaper Standard' },
 ];
 
