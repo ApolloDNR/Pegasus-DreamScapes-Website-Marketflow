@@ -411,19 +411,22 @@ export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs
 /* ================================================================
    AUDIENCE CATEGORIES (six lanes)
    ================================================================ */
-const sellerSplits: { heading: string; copy: string; paths: SplitPath[] } = {
+const sellerSplits: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean } = {
   heading: 'Two clear lanes',
   copy: 'Ready to list, or facing something complicated? Each lane has its own path. We will tell you which one fits before you commit to anything.',
+  founderPhoto: true,
+  peggyHint: true,
   paths: [
     { name: 'Traditional seller representation', desc: 'Clean and ready to list? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing. Standard listing agreement, full MLS exposure.', cta: 'List with Apollo', route: 'apollo' },
     { name: 'Distressed or complex property review', desc: 'Probate, foreclosure, divorce, a tired rental, an inherited home, an expired listing, or ADU upside? Send it for a property review. We evaluate your options, which may include a direct purchase, a reposition, or a listing, subject to underwriting.', cta: 'Start a Property Review', route: 'contact' },
-    { name: 'Not sure yet? Ask PeggyAI', desc: 'Talk it through in plain language. Peggy asks the right questions and points you to the lane that fits, then hands you to a person when it matters.', cta: 'Talk to PeggyAI', route: 'peggy' },
   ],
 };
 
-const buyerSplits: { heading: string; copy: string; paths: SplitPath[] } = {
+const buyerSplits: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean } = {
   heading: 'Three ways to buy',
   copy: 'A finished home, an investment, or first look at what is coming. Pick the lane that fits and we will point you to the right inventory or the right person.',
+  founderPhoto: true,
+  peggyHint: true,
   paths: [
     { name: 'Buyer representation', desc: 'Want Apollo in your corner as your agent? Representation through Keller Williams Realty East Bay, with offers backed by real underwriting so you know what a home is actually worth.', cta: 'Explore representation', route: 'apollo' },
     { name: 'Investor buyer guidance', desc: 'Open to buying into a deal, not just a finished house? We frame the numbers and route you to the right project or capital lane, subject to review and a written agreement.', cta: 'Talk through a deal', route: 'contact' },

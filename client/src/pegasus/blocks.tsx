@@ -659,14 +659,24 @@ export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string
 /* ----------------------------------------------------------------
    Split paths (e.g. three ways to sell)
 ---------------------------------------------------------------- */
-export function SplitPaths({ go, openPeggy, heading, copy, paths }:
-  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: { name: string; desc: string; cta: string; route: Route }[] }) {
+export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto = false, peggyHint = false }:
+  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: { name: string; desc: string; cta: string; route: Route }[]; founderPhoto?: boolean; peggyHint?: boolean }) {
   const run = (r: Route) => { if (r === 'peggy') openPeggy(); else go(r); };
+  const gridCols = paths.length === 2 ? 'lg:grid-cols-2 max-w-[920px] mx-auto' : 'lg:grid-cols-3';
   return (
     <section className="py-24 lg:py-28">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Your options" title={heading} copy={copy} />
-        <div className="grid lg:grid-cols-3 gap-6">
+        {founderPhoto && (
+          <div className="flex items-center gap-4 justify-center -mt-4 mb-12 reveal">
+            <img src={IMG('founder/apollo-1200.jpg')} alt="Paolo &quot;Apollo&quot; Duran"
+              className="w-14 h-14 rounded-full object-cover object-top shrink-0" loading="lazy" />
+            <p className="text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-md">
+              When representation is the lane, Apollo is your agent through Keller Williams Realty East Bay. DRE&nbsp;#02333658.
+            </p>
+          </div>
+        )}
+        <div className={`grid ${gridCols} gap-6`}>
           {paths.map((p, i) => (
             <div key={p.name} className="surface-card reveal flex flex-col h-full p-8" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="font-serif-display text-3xl text-[var(--accent)] mb-5 leading-none">{String(i + 1).padStart(2, '0')}</div>
@@ -679,6 +689,15 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths }:
             </div>
           ))}
         </div>
+        {peggyHint && (
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-2 text-center reveal">
+            <span className="text-[var(--muted)] text-[0.92rem]">Not sure which lane fits?</span>
+            <button type="button" onClick={openPeggy}
+              className="pg-label !text-[10px] text-[var(--accent)] inline-flex items-center gap-2 group hover:opacity-80 transition-opacity">
+              Talk it through with PeggyAI <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

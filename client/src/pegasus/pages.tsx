@@ -116,7 +116,7 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
           </div>
         </div>
       </section>
-      {cat.splits && <SplitPaths go={go} openPeggy={openPeggy} heading={cat.splits.heading} copy={cat.splits.copy} paths={cat.splits.paths} />}
+      {cat.splits && <SplitPaths go={go} openPeggy={openPeggy} heading={cat.splits.heading} copy={cat.splits.copy} paths={cat.splits.paths} founderPhoto={cat.splits.founderPhoto} peggyHint={cat.splits.peggyHint} />}
       <Qualifier forYou={cat.forYou} notFit={cat.notFit} />
       {cat.rich.includes('engine') && <EngineBlock go={go} />}
       {cat.rich.includes('ladder') && <ProductLadderBlock go={go} openPeggy={openPeggy} />}

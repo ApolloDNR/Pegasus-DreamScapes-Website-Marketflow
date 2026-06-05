@@ -77,7 +77,7 @@ export type Category = {
   quote: string;
   forYou: string[];
   notFit: string[];
-  splits?: { heading: string; copy: string; paths: SplitPath[] };
+  splits?: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean };
   secondary?: { label: string; route: Route };
   faq?: FaqItem[];
   form: FormCfg;
