@@ -243,6 +243,9 @@ export function MarketFlowPage({ go }: { go: Nav }) {
       <MarketFlowBlock go={go} enter={{ label: 'Sign in to MarketFlow', href: '/login' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+          <div className="flex justify-center mb-8 reveal">
+            <BrandMark boxClassName="w-16 h-16" />
+          </div>
           <SectionHead eyebrow="A look inside"
             title="What members see."
             copy="A preview of the MarketFlow experience. These are sample cards for illustration; live dealflow, profiles, and matches appear once your access is reviewed and approved." />

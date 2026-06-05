@@ -392,6 +392,9 @@ const SEL = {
   role: ['I own it (Seller)', 'I am buying it (Buyer / Investor)', 'I sourced it (Deal finder)'],
   goal: ['Sell for the most', 'Sell fast, as-is', 'Reposition & lift value', 'Hold & rent', 'Just exploring'],
   exit: ['Resale on the open market', 'Refinance & hold', 'Wholesale / assign', 'Not sure yet'],
+  fin: ['All cash', 'Conventional financing', 'Hard money / bridge', 'Subject-to existing loan', 'Seller financing'],
+  motiv: ['Just curious', 'Open to the right offer', 'Motivated', 'Time-sensitive / urgent'],
+  repairConf: ['Rough estimate', 'Contractor walk-through done', 'Detailed bid in hand', 'Unknown / sight unseen'],
 };
 
 function ConsoleSelect({ label, value, opts, onChange }:
@@ -411,7 +414,7 @@ function ConsoleSelect({ label, value, opts, onChange }:
 }
 
 export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }) {
-  const { setAcq, setRehab, setArv, hardCost, netProceeds, spread, margin, read } = model;
+  const { setAcq, setRehab, setArv, rehab, hardCost, netProceeds, spread, margin, read } = model;
   const [address, setAddress] = useState('');
   const [pType, setPType] = useState(SEL.type[0]);
   const [cond, setCond] = useState(SEL.cond[1]);
@@ -419,6 +422,9 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   const [role, setRole] = useState(SEL.role[1]);
   const [goal, setGoal] = useState(SEL.goal[2]);
   const [exit, setExit] = useState(SEL.exit[0]);
+  const [fin, setFin] = useState(SEL.fin[0]);
+  const [motiv, setMotiv] = useState(SEL.motiv[1]);
+  const [repairConf, setRepairConf] = useState(SEL.repairConf[0]);
 
   const autofill = () => {
     const s = SAMPLE_PROPERTIES[Math.floor(Math.random() * SAMPLE_PROPERTIES.length)];
@@ -427,12 +433,28 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   };
 
   // Mock Property Fit Score: blends the live margin read with the situation.
-  const marginScore = Math.max(0, Math.min(60, (margin / 25) * 60));
-  const condBonus = cond === 'Full gut' || cond === 'Distressed / unknown' ? 18 : cond === 'Heavy cosmetic' ? 14 : cond === 'Light cosmetic' ? 10 : 4;
-  const occBonus = occ === 'Probate / estate' || occ === 'Vacant' ? 14 : occ === 'Tenant-occupied' ? 9 : 5;
-  const goalBonus = goal === 'Reposition & lift value' ? 8 : goal === 'Sell fast, as-is' ? 6 : 4;
-  const fit = Math.round(Math.max(8, Math.min(98, marginScore + condBonus + occBonus + goalBonus)));
+  const marginScore = Math.max(0, Math.min(50, (margin / 25) * 50));
+  const condBonus = cond === 'Full gut' || cond === 'Distressed / unknown' ? 16 : cond === 'Heavy cosmetic' ? 12 : cond === 'Light cosmetic' ? 9 : 4;
+  const occBonus = occ === 'Probate / estate' || occ === 'Vacant' ? 12 : occ === 'Tenant-occupied' ? 8 : 4;
+  const goalBonus = goal === 'Reposition & lift value' ? 7 : goal === 'Sell fast, as-is' ? 5 : 3;
+  const motivBonus = motiv === 'Time-sensitive / urgent' ? 12 : motiv === 'Motivated' ? 8 : motiv === 'Open to the right offer' ? 4 : 1;
+  const fit = Math.round(Math.max(8, Math.min(98, marginScore + condBonus + occBonus + goalBonus + motivBonus)));
   const fitBand = fit >= 75 ? 'Strong fit' : fit >= 55 ? 'Worth a review' : fit >= 35 ? 'Possible, needs work' : 'Likely not a fit';
+
+  // Mock capital-needed: cash deals carry the full basis; leverage assumes ~20% in.
+  const capitalNeeded = fin === 'All cash' ? hardCost : Math.round(hardCost * 0.2 + rehab);
+  const exitDetail =
+    exit === 'Refinance & hold' ? 'Refinance and hold — plan for rent coverage and a stabilized debt position.'
+    : exit === 'Wholesale / assign' ? 'Wholesale / assign — your spread is set at contract; a written assignment governs it.'
+    : exit === 'Not sure yet' ? 'Exit undecided — we would model resale vs. hold before committing.'
+    : 'Resale on the open market — net proceeds shown after exit costs.';
+  const riskFlags: string[] = [
+    ...(margin < 8 ? ['Thin margin once carry and exit costs come out'] : []),
+    ...(repairConf === 'Unknown / sight unseen' || repairConf === 'Rough estimate' ? ['Repair budget is a rough estimate, not a verified scope'] : []),
+    ...(occ === 'Tenant-occupied' ? ['Tenant-occupied — possession and relocation may apply'] : []),
+    ...(occ === 'Probate / estate' ? ['Probate / estate — court timing and authority to sell to confirm'] : []),
+    ...(fin === 'Subject-to existing loan' ? ['Subject-to carries due-on-sale and disclosure exposure'] : []),
+  ];
 
   const lane: { label: string; route: Parameters<Nav>[0] } =
     role.startsWith('I own')
@@ -476,9 +498,12 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
               <ConsoleSelect label="Your role" value={role} opts={SEL.role} onChange={setRole} />
               <ConsoleSelect label="Your goal" value={goal} opts={SEL.goal} onChange={setGoal} />
               <ConsoleSelect label="Likely exit" value={exit} opts={SEL.exit} onChange={setExit} />
+              <ConsoleSelect label="Financing / position" value={fin} opts={SEL.fin} onChange={setFin} />
+              <ConsoleSelect label="Seller motivation" value={motiv} opts={SEL.motiv} onChange={setMotiv} />
+              <ConsoleSelect label="Repair budget confidence" value={repairConf} opts={SEL.repairConf} onChange={setRepairConf} />
             </div>
-            <div className="grid sm:grid-cols-3 gap-4 mt-8">
-              {costCards.map((c) => (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+              {[...costCards, { label: 'Est. capital needed in', value: usd0(capitalNeeded) }].map((c) => (
                 <div key={c.label} className="surface-card p-5">
                   <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">{c.label}</div>
                   <div className="font-serif-display text-2xl text-[var(--text)] leading-none">{c.value}</div>
@@ -506,9 +531,27 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                 <div className="h-2 rounded-full bg-[rgba(239,231,218,0.14)] overflow-hidden mb-7">
                   <div className="h-full rounded-full bg-[var(--accent-bright)] transition-[width] duration-700" style={{ width: `${fit}%` }} />
                 </div>
-                <p className="text-[var(--cream)]/70 text-[0.9rem] leading-relaxed mb-7">
+                <p className="text-[var(--cream)]/70 text-[0.9rem] leading-relaxed mb-6">
                   {read.note} A real read comes from a person; this score is a mock guide to point you to the right next step.
                 </p>
+                <div className="border-t border-[rgba(239,231,218,0.16)] pt-5 mb-6">
+                  <div className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--accent-bright)] mb-2">Exit path</div>
+                  <p className="text-[var(--cream)]/80 text-[0.85rem] leading-relaxed">{exitDetail}</p>
+                </div>
+                <div className="border-t border-[rgba(239,231,218,0.16)] pt-5 mb-7">
+                  <div className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--accent-bright)] mb-3">Risk flags</div>
+                  {riskFlags.length === 0 ? (
+                    <p className="text-[var(--cream)]/70 text-[0.85rem] leading-relaxed">No major flags on these inputs. Diligence still applies.</p>
+                  ) : (
+                    <ul className="space-y-2.5">
+                      {riskFlags.map((f) => (
+                        <li key={f} className="flex gap-2.5 text-[var(--cream)]/80 text-[0.83rem] leading-relaxed">
+                          <AlertCircle className="w-3.5 h-3.5 text-[var(--accent-bright)] mt-0.5 shrink-0" strokeWidth={1.8} /><span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <button type="button" onClick={() => go(lane.route)}
                   className="btn-primary w-full justify-center px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-2.5 group mb-3"
                   data-testid="button-console-lane">

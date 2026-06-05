@@ -421,6 +421,16 @@ const sellerSplits: { heading: string; copy: string; paths: SplitPath[] } = {
   ],
 };
 
+const buyerSplits: { heading: string; copy: string; paths: SplitPath[] } = {
+  heading: 'Three ways to buy',
+  copy: 'A finished home, an investment, or first look at what is coming. Pick the lane that fits and we will point you to the right inventory or the right person.',
+  paths: [
+    { name: 'Buyer representation', desc: 'Want Apollo in your corner as your agent? Representation through Keller Williams Realty East Bay, with offers backed by real underwriting so you know what a home is actually worth.', cta: 'Explore representation', route: 'apollo' },
+    { name: 'Investor buyer guidance', desc: 'Open to buying into a deal, not just a finished house? We frame the numbers and route you to the right project or capital lane, subject to review and a written agreement.', cta: 'Talk through a deal', route: 'contact' },
+    { name: 'Inventory & first look', desc: 'Want the finished product or off-market access? Request access to MarketFlow to see reviewed inventory before it reaches the open market.', cta: 'See MarketFlow inventory', route: 'marketflow' },
+  ],
+};
+
 export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   sellers: {
@@ -476,8 +486,9 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Buy into the deal', d: 'Prefer the investment side? Participate in projects on clear terms.' },
       { t: 'Underwritten in full', d: 'You see the same numbers we used to make the call.' },
     ],
+    splits: buyerSplits,
     rich: ['surfaces', 'faq'],
-    quote: 'A delivered product, not a project left open. That is the promise on every home we hand over.',
+    quote: 'A delivered product, not a project left open. That is the standard on every home we hand over.',
     forYou: [
       'You want a renovated home done to a real standard',
       'You want first look at off-market and repositioned inventory',
