@@ -24,6 +24,8 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { initAnalytics } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { motion, AnimatePresence } from "framer-motion";
+import { Landing as PegasusSite } from "@/pegasus/Landing";
+import { PEGASUS_URLS, isPegasusUrl } from "@/pegasus/routes";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -72,7 +74,6 @@ function AuthGatedPeggyDock() {
   if (isAuthenticated) return <PeggyDock />;
   return <PeggyPublicNote />;
 }
-import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
@@ -207,7 +208,12 @@ function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
     <Switch>
-      <Route path="/" component={Home} />
+      {/* Pegasus prototype public shell — owns these exact public URLs.
+       * The self-contained <PegasusSite> renders its own nav/footer/Peggy,
+       * so the global chrome is gated off for these paths in AppShell. */}
+      {PEGASUS_URLS.map((url) => (
+        <Route key={url} path={url} component={PegasusSite} />
+      ))}
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
@@ -349,6 +355,34 @@ function PageRouteTransition() {
   );
 }
 
+// The Pegasus prototype shell (PegasusSite) is fully self-contained: it
+// renders its own nav, footer, and PeggyAI dock scoped under `.pg-root`.
+// On those URLs we suppress the legacy global chrome so the page is not
+// double-framed; every other (functional) surface keeps the global chrome.
+function AppShell() {
+  const [location] = useLocation();
+  const pegasus = isPegasusUrl(location);
+  return (
+    <>
+      <ScrollToTop />
+      <AnalyticsBoot />
+      <AdminBar />
+      <AnonymousClaimWatcher />
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <a href="#main-content" className="skip-to-content">Skip to main content</a>
+        {!pegasus && <Navigation />}
+        <main id="main-content" className="flex-1" tabIndex={-1}>
+          <PageRouteTransition />
+        </main>
+        {!pegasus && <Footer />}
+      </div>
+      {!pegasus && <AuthGatedPeggyDock />}
+      <CookieConsent />
+      <Toaster />
+    </>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -361,21 +395,7 @@ function App() {
                   <DealActionProvider>
                     <PeggyProvider>
                       <NotificationProvider>
-                        <ScrollToTop />
-                        <AnalyticsBoot />
-                        <AdminBar />
-                        <AnonymousClaimWatcher />
-                        <div className="min-h-screen flex flex-col bg-background text-foreground">
-                          <a href="#main-content" className="skip-to-content">Skip to main content</a>
-                          <Navigation />
-                          <main id="main-content" className="flex-1" tabIndex={-1}>
-                            <PageRouteTransition />
-                          </main>
-                          <Footer />
-                        </div>
-                        <AuthGatedPeggyDock />
-                        <CookieConsent />
-                        <Toaster />
+                        <AppShell />
                       </NotificationProvider>
                     </PeggyProvider>
                   </DealActionProvider>

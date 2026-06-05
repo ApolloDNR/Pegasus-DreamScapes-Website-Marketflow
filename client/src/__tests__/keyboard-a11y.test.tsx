@@ -1,7 +1,7 @@
 import React from "react";
 import fs from "node:fs";
 import path from "node:path";
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
@@ -207,7 +207,14 @@ function expectOrder(actual: string[], expected: string[]) {
 
 function renderWithRouter(ui: React.ReactElement, routePath = "/") {
   const { hook } = memoryLocation({ path: routePath, static: true });
-  return render(<Router hook={hook}>{ui}</Router>);
+  // Footer (and other re-skinned components) now use react-query mutations
+  // (e.g. the footer email capture), so a QueryClientProvider is required.
+  const qc = makeQueryClient();
+  return render(
+    <QueryClientProvider client={qc}>
+      <Router hook={hook}>{ui}</Router>
+    </QueryClientProvider>,
+  );
 }
 
 beforeEach(() => {
@@ -323,11 +330,11 @@ describe("Tab order matches reading order (Task #143)", () => {
     const ids = focusableTestIds(container);
     expectOrder(ids, [
       "link-logo",
-      "link-nav-strategy-lab",
-      "link-nav-projects",
+      "link-nav-deal-architecture",
       "link-nav-development",
+      "link-nav-strategy-lab",
+      "link-nav-work-with-apollo",
       "link-nav-marketflow",
-      "link-nav-about",
       "button-nav-more",
       "button-nav-cta",
       "button-mobile-menu",
@@ -355,17 +362,21 @@ describe("Tab order matches reading order (Task #143)", () => {
     expectOrder(ids, [
       "link-footer-email",
       "link-footer-phone",
-      "link-footer-about",
-      "link-footer-more-strategy-library",
+      "heading-footer-company",
+      "link-footer-more-about",
       "link-footer-more-connect",
       "link-footer-more-contact",
+      "heading-footer-tools",
+      "link-footer-deal-architecture",
       "link-footer-strategy-lab",
-      "link-footer-extra-submit",
       "link-footer-development",
-      "link-footer-projects",
+      "link-footer-extra-submit",
+      "heading-footer-network",
       "link-footer-marketflow",
+      "link-footer-work-with-apollo",
       "link-footer-more-vendor-network",
       "link-footer-more-capital",
+      "heading-footer-legal",
       "link-footer-extra-privacy",
       "link-footer-extra-terms",
       "link-footer-more-disclosures",
@@ -378,7 +389,13 @@ describe("Tab order matches reading order (Task #143)", () => {
     const { container } = renderWithRouter(<ConnectPage />, "/connect");
     const connectLinks = Array.from(
       container.querySelectorAll<HTMLElement>("[data-testid^='link-connect-']"),
-    );
+    ).filter((el) => {
+      // The email/phone contact pills also match the link-connect- prefix but
+      // are not RouteGrid routing buttons; they rely on the global
+      // :focus-visible outline rather than an explicit focus-visible:ring.
+      const id = el.getAttribute("data-testid") || "";
+      return id !== "link-connect-email" && id !== "link-connect-phone";
+    });
     expect(connectLinks).toHaveLength(6);
     for (const link of connectLinks) {
       const cls = link.getAttribute("class") ?? "";
@@ -395,11 +412,11 @@ describe("Tab order matches reading order (Task #143)", () => {
     const orderedNavTestIds = focusableTestIds(container).filter((id) =>
       [
         "link-logo",
-        "link-nav-strategy-lab",
-        "link-nav-projects",
+        "link-nav-deal-architecture",
         "link-nav-development",
+        "link-nav-strategy-lab",
+        "link-nav-work-with-apollo",
         "link-nav-marketflow",
-        "link-nav-about",
         "button-nav-more",
         "button-nav-cta",
         "button-mobile-menu",

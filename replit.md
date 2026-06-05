@@ -2,35 +2,29 @@
 
 ## Controlling doctrine
 
-The **controlling structural doctrine** for the public website is:
+The **controlling design doctrine** for the public website is the saved React design prototype:
 
-- `docs/architecture/Pegasus_Website_Structure_v1_FINAL.md` — **Website Structure v1 FINAL** (Task #154). Locks the 6-item primary nav (Deal Architecture · Development · Strategy Lab · Work With Apollo · MarketFlow · More), the 9-section homepage, the four named products (Strategy Lab · Strategy Review · Strategy Snapshot · Deal Blueprint), the four Work-With-Apollo lanes, the locked DRE/KW disclosure, the renamed "Dreamscaper Standard", and the four-column footer (Company · Tools · Network · Legal) with the locked legal disclosure block.
+- `client/src/pegasus/` — the self-contained prototype (Landing.tsx, nav.tsx, peggy.tsx, forms.tsx, Saved.tsx, pages.tsx, data.tsx, theme.ts, routes.ts) plus its scoped design system `client/src/pegasus/_group.css` (loaded in `main.tsx`). This prototype **replaces the retired Empire Doctrine** as the source of truth for layout, typography, palette, copy, and motion.
 
-The **visual baseline** is unchanged from:
+The **visual baseline** comes from `_group.css`:
 
-- `attached_assets/Pasted--PEGASUS-DREAMSCAPES-EMPIRE-DOCTRINE-v1-0-2-Status-Lock_1779604340328.txt` — Empire Doctrine v1.0.2 Parts A–G (canonical brand tokens: Deep Navy `#0D1B2D` · Rich Copper `#C77A3A` · Warm Cream `#F6EFE4` · Charcoal `#1E2328`; Cinzel · Cormorant · Montserrat · Inter).
-- `attached_assets/Pasted--EMPIRE-DOCTRINE-v1-0-2-AMENDMENT-1-Status-Locked-Scope_1779634104279.txt` — Amendment 1 (Pegasus Buyboxes).
-- `attached_assets/Empire-Doctrine-v1.0.2-Amendment-2_1779817906000.md` — Amendment 2 (Peggy positioning · §D.4 phone gates · /ecosystem · status badges · "what we are not" · credentials policy).
+- **Palette (light)**: Warm Sand bg `#f6f2ec` · Ink text `#1b1712` · Terracotta accent `#b16631` (bright `#d4925b`) · Navy `#1f3757` · Cream `#efe7da`. Dark mode overrides defined in the same file under `.pg-root.dark`.
+- **Typography**: Cormorant Garamond (display/serif) · Space Grotesk (sans/body). Loaded via `client/index.html` Google Fonts.
+- The design system is scoped under `.pg-root` so it coexists with the existing shadcn token layer used by the functional surfaces.
 
-If anything below diverges from those files, the doctrine wins. This file is operational README only.
+The Empire Doctrine `.md` files in `attached_assets/` and the old `docs/architecture/*` blueprints are **retired historical reference only** — they no longer govern. If anything below diverges from the prototype, the prototype wins. This file is operational README only.
 
 ## Anti-drift lock
 
-Three automated tripwires defend the lock:
-
-- `client/src/__tests__/doctrine-anti-drift.test.ts` — fails the build if `--copper`, `--font-display`, `--font-serif`, `--font-supporting`, `--font-sans`, or `<meta name="theme-color">` diverge from v1.0.2 Part A.
-- `client/src/__tests__/public-voice.test.tsx` — asserts the locked phrases (hero doctrine lines · footer motto · "Dreamscaper Standard" · "Bring us the property. We'll help find the path." · Work-With-Apollo DRE/KW disclosure · footer legal disclosure block · "What we are not" on /about · Peggy positioning on /peggy). Forbids spaced em-dashes + forbidden marketing phrases (incl. "chatbot"; "20+ years" attributed to Pegasus-the-company).
-- `client/src/__tests__/nav-parity.test.tsx` — asserts `NAV_PRIMARY` lineup (Deal Architecture · Development · Strategy Lab · Work With Apollo · MarketFlow) + `/projects` not in primary + footer surfaces every primary + More.
+The three Empire-Doctrine tripwires (`doctrine-anti-drift.test.ts`, `public-voice.test.tsx`, `nav-parity.test.tsx`) have been **retired** along with the doctrine they enforced. The prototype under `client/src/pegasus/` is now the visual/voice source of truth; there is no automated brand lock against it.
 
 ## Brand essentials
 
 - **Casing**: Pegasus DreamScapes (capital P, capital D, capital S). Legal entity: Pegasus DreamScapes Corp.
 - **Tagline**: The Deal Architect.
-- **Motto**: "Dream it. Build it. Live it." (footer, locked)
-- **Belief line**: "Built on strategy. Governed by virtue. Executed with discipline." (about, locked)
 - **Founder**: Paolo "Apollo" Duran. DRE #02333658. Keller Williams Realty East Bay (each office independently owned and operated). NAR NRDS #159537628. CAR via CCAR #36424.
 - **Contact**: `apollo@pegasusdreamscapes.com` · 925-744-8525.
-- **Forbidden credential logos** (Amendment 2 §I): NAHB, BNI, BiggerPockets, ULI, NMHC, NAIOP, IRR, Inman, or any other not actually held.
+- **Voice/copy**: governed by the prototype's own copy in `client/src/pegasus/`. The legacy forbidden-credential-logo list (NAHB, BNI, BiggerPockets, ULI, NMHC, NAIOP, IRR, Inman) remains a sensible guard — do not display credentials not actually held.
 
 ## User preferences
 
@@ -47,19 +41,15 @@ Three automated tripwires defend the lock:
 
 **Retired routes** (`App.tsx#legacyRedirects`): `/sell`, `/submit-deal`, `/submit-property`, `/wholesale`, `/services`, `/resources`, `/buyers`, `/buy`, `/dreamspace`, `/partner`, `/capital-raising`, `/invest`, `/calculators`, `/education` — all redirect to the canonical surfaces. Calculator suite remains at `/strategy-lab/classic`.
 
-## Locked voice rules
+## Voice / copy
 
-**Required visible homepage phrases**: "Complex property. Structured opportunity." · "Every property gets a path. Not every property gets an offer." · "Built on strategy. Governed by virtue. Executed with discipline." · "Dream it. Build it. Live it." · "Bring us the property. We'll show you the path." · "Bring us the property. We'll help find the path." · "The Dreamscaper Standard." · "Most Strategy Snapshots are reviewed within 5 business days."
+Public copy is now governed by the prototype's own text in `client/src/pegasus/` — there are no externally-locked required phrases anymore.
 
-**Balanced Outcome Standard** (v1.0.2 Part B, used sparingly on /about): "A good deal makes sense for every serious party involved."
+**Still-prudent compliance guards** (real-estate/securities exposure — keep avoiding even though no test enforces them): "Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," and generic guru language. Peggy is an AI strategy assistant / concierge / intake analyst (avoid "chatbot"). Negative-disclosure use of these phrases stays acceptable on `/capital` and `/terms`.
 
-**Forbidden public phrases**: "Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," generic luxury/guru language, **"chatbot"** (Peggy is an AI strategy assistant / concierge / intake analyst), **"20+ years" attributed to Pegasus-the-company** (construction experience belongs to the team — Moises Duran).
+## Status badges (retired guidance)
 
-**Other rules**: No spaced em-dashes in public copy (preserved exclusions per `public-voice.test.tsx`: `return "—"` formatters, en-dash ranges like `90–100K`, page-title attributions, calculator validator messages). Negative-disclosure use of forbidden phrases is preserved on `/capital` and `/terms`.
-
-## Status badges (Amendment 2 §G)
-
-Every public mention of an ecosystem product (HQ, BuildForge, CapStack, MarketFlow, Peggy, Buyboxes) carries a status badge: **Live** (copper) · **Private beta — invite only** (navy) · **In private training** (warm cream) · **Internal, not a public surface yet** (charcoal) · **In development** (outline). Single highest-leverage anti-overclaim discipline in the doctrine.
+The old Amendment 2 §G status-badge requirement (Live · Private beta · In private training · etc. on every ecosystem-product mention) is **no longer a hard rule** — the prototype governs how products are presented. Keep the underlying discipline in mind (don't overclaim status of products that aren't live), but follow the prototype's presentation.
 
 ## Operational pointers
 
@@ -71,7 +61,7 @@ Every public mention of an ecosystem product (HQ, BuildForge, CapStack, MarketFl
 
 ## External dependencies
 
-- **UI**: Radix · Tailwind · CVA · Lucide · Google Fonts (Cinzel · Cormorant · Montserrat · Inter).
+- **UI**: Radix · Tailwind · CVA · Lucide · Google Fonts (Cormorant Garamond · Space Grotesk for the public prototype; the functional shadcn surfaces still use their existing font stack).
 - **Data/Forms**: React Hook Form · Zod · TanStack Query · drizzle-zod.
 - **DB**: Supabase · Drizzle · Neon serverless PostgreSQL.
 - **Auth**: passport · express-session · connect-pg-simple · Supabase Auth.
@@ -80,7 +70,7 @@ Every public mention of an ecosystem product (HQ, BuildForge, CapStack, MarketFl
 
 ## Authoritative blueprints
 
-- `docs/architecture/Pegasus_Website_Structure_v1_FINAL.md` — **controlling** for public website structure (Task #154).
-- Empire Doctrine v1.0.2 + Amendment 1 + Amendment 2 (attached_assets) — controlling for brand tokens, voice, status badges, /about, /peggy, Peggy phone gates.
-- `docs/architecture/website-experience-blueprint-v1.md` — v1.0 (legacy reference).
-- `docs/architecture/website-marketflow-blueprint-v1.3.1.md` — v1.3.1 (legacy, superseded).
+- `client/src/pegasus/` — **controlling** design prototype for the public website (layout, typography, palette, copy, motion).
+- `docs/architecture/Pegasus_Website_Structure_v1_FINAL.md` — retired structural reference (superseded by the prototype).
+- Empire Doctrine v1.0.2 + Amendment 1 + Amendment 2 (attached_assets) — retired brand reference (superseded by the prototype).
+- `docs/architecture/website-experience-blueprint-v1.md` / `website-marketflow-blueprint-v1.3.1.md` — legacy references.

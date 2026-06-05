@@ -17,7 +17,7 @@ function cellColor(v: number, max: number): string {
   if (ratio >= 0) {
     // copper at ratio=1 → cream at 0
     const alpha = 0.12 + ratio * 0.55;
-    return `hsl(27 56% 50% / ${alpha.toFixed(2)})`;
+    return `hsl(25 57% 44% / ${alpha.toFixed(2)})`;
   }
   // negative — warm red
   const alpha = 0.12 + Math.abs(ratio) * 0.55;

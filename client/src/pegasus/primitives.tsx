@@ -1,0 +1,143 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { MoveHorizontal, Sun, Moon } from 'lucide-react';
+import type { Theme } from './theme';
+
+export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
+
+export const usd0 = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+/* ----------------------------------------------------------------
+   Animated counter
+---------------------------------------------------------------- */
+export function AnimatedCounter({ end, prefix = '', suffix = '', decimals = 0, duration = 1800 }:
+  { end: number | string; prefix?: string; suffix?: string; decimals?: number; duration?: number; }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const done = useRef(false);
+
+  useEffect(() => {
+    if (typeof end === 'string') return;
+    let raf = 0;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !done.current) {
+        done.current = true;
+        let start: number | null = null;
+        const step = (t: number) => {
+          if (!start) start = t;
+          const p = Math.min((t - start) / duration, 1);
+          setCount((end as number) * (1 - Math.pow(1 - p, 3)));
+          if (p < 1) raf = requestAnimationFrame(step);
+          else setCount(end as number);
+        };
+        raf = requestAnimationFrame(step);
+      }
+    }, { threshold: 0.5 });
+    if (ref.current) obs.observe(ref.current);
+    return () => { obs.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [end, duration]);
+
+  if (typeof end === 'string') return <span ref={ref}>{end}</span>;
+  return <span ref={ref}>{prefix}{count.toFixed(decimals)}{suffix}</span>;
+}
+
+/* ----------------------------------------------------------------
+   East Bay hills contour motif
+---------------------------------------------------------------- */
+export function ContourLines({ className = '', flip = false }: { className?: string; flip?: boolean }) {
+  return (
+    <svg className={className} viewBox="0 0 1200 600" fill="none" preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true" style={flip ? { transform: 'scaleX(-1)' } : undefined}>
+      <g stroke="currentColor" strokeWidth="1" fill="none">
+        <path d="M-50 460 C 200 380, 380 420, 600 360 S 1000 280, 1260 340" />
+        <path d="M-50 500 C 220 430, 400 470, 620 410 S 1010 330, 1260 390" />
+        <path d="M-50 540 C 240 480, 420 520, 640 460 S 1020 380, 1260 440" />
+        <path d="M-50 420 C 180 330, 360 370, 580 300 S 990 220, 1260 290" />
+        <path d="M-50 380 C 160 290, 340 320, 560 250 S 980 170, 1260 240" />
+      </g>
+    </svg>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Section heading
+---------------------------------------------------------------- */
+export function SectionHead({ eyebrow, title, copy, dark = false, center = false }:
+  { eyebrow: string; title: React.ReactNode; copy?: string; dark?: boolean; center?: boolean }) {
+  if (center) {
+    return (
+      <div className="text-center max-w-3xl mx-auto mb-14 lg:mb-16 reveal">
+        <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{eyebrow}</div>
+        <h2 className="font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-[-0.01em] mx-auto [text-wrap:balance]"
+          style={{ color: dark ? 'var(--cream)' : 'var(--text)' }}>{title}</h2>
+        {copy && <p className={`max-w-xl mx-auto leading-relaxed mt-6 ${dark ? 'text-[rgba(239,231,218,0.7)]' : 'text-[var(--muted)]'}`}>{copy}</p>}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-14 lg:mb-16 reveal">
+      <div>
+        <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{eyebrow}</div>
+        <h2 className="font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-[-0.01em] max-w-2xl [text-wrap:balance]"
+          style={{ color: dark ? 'var(--cream)' : 'var(--text)' }}>{title}</h2>
+      </div>
+      {copy && <p className={`max-w-sm leading-relaxed ${dark ? 'text-[rgba(239,231,218,0.7)]' : 'text-[var(--muted)]'}`}>{copy}</p>}
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Theme toggle
+---------------------------------------------------------------- */
+export function ThemeToggle({ theme, onToggle, light }: { theme: Theme; onToggle: () => void; light: boolean }) {
+  return (
+    <button type="button" onClick={onToggle}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      className={`theme-toggle ${light ? 'text-[var(--cream)]' : 'text-[var(--text)]'}`}>
+      {theme === 'dark' ? <Sun className="w-4 h-4" strokeWidth={1.6} /> : <Moon className="w-4 h-4" strokeWidth={1.6} />}
+    </button>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Before / after slider
+---------------------------------------------------------------- */
+export function BeforeAfter() {
+  const [pos, setPos] = useState(52);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const setFromX = (clientX: number) => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos(Math.max(2, Math.min(98, ((clientX - r.left) / r.width) * 100)));
+  };
+  return (
+    <div ref={wrapRef} className="ba-wrap aspect-[4/3]" role="slider"
+      aria-label="Compare the property as acquired versus delivered"
+      aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pos)}
+      aria-valuetext={`${Math.round(pos)}% as-acquired, ${100 - Math.round(pos)}% delivered`} tabIndex={0}
+      onPointerDown={(e) => { dragging.current = true; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); setFromX(e.clientX); }}
+      onPointerMove={(e) => { if (dragging.current) setFromX(e.clientX); }}
+      onPointerUp={() => { dragging.current = false; }}
+      onPointerCancel={() => { dragging.current = false; }}
+      aria-describedby="ba-instructions"
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); setPos((p) => Math.max(2, p - 4)); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); setPos((p) => Math.min(98, p + 4)); }
+        if (e.key === 'Home') { e.preventDefault(); setPos(2); }
+        if (e.key === 'End') { e.preventDefault(); setPos(98); }
+      }}>
+      <span id="ba-instructions" className="sr-only">Use the left and right arrow keys, or drag the handle, to wipe between the before and after photographs. Press Home or End to jump to either end.</span>
+      <img src={IMG('pegasus-after.png')} alt="The same property after a disciplined value-add renovation" />
+      <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+        <img src={IMG('pegasus-before.png')} alt="The property as acquired, tired and dated" />
+      </div>
+      <span className="ba-tag left-4">As acquired</span>
+      <span className="ba-tag right-4" style={{ background: 'rgba(177,102,49,0.82)' }}>Delivered</span>
+      <div className="ba-handle" style={{ left: `${pos}%` }}>
+        <div className="ba-knob"><MoveHorizontal className="w-5 h-5" /></div>
+      </div>
+    </div>
+  );
+}

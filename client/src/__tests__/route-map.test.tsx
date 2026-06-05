@@ -49,6 +49,16 @@ function extractStringList(src: string, anchor: string): string[] {
 describe("Route map (Website Brief v1.0 §1)", () => {
   const appSrc = read("client/src/App.tsx");
   const serverSrc = read("server/routes.ts");
+  // Public pages now render the saved prototype, mounted in App.tsx via
+  // PEGASUS_URLS.map(...) rather than literal <Route path="..."> tags.
+  // Those canonical URLs live in client/src/pegasus/routes.ts (ROUTE_TO_URL),
+  // so a route counts as "registered" if it appears either as a literal
+  // App.tsx Route OR as a Pegasus URL in that map.
+  const pegasusRoutesSrc = read("client/src/pegasus/routes.ts");
+  const isRegistered = (route: string): boolean =>
+    appSrc.includes(`path="${route}"`) ||
+    pegasusRoutesSrc.includes(`'${route}'`) ||
+    pegasusRoutesSrc.includes(`"${route}"`);
 
   const clientRedirects = extractTuples(appSrc, "const legacyRedirects");
   const serverRedirects = extractTuples(serverSrc, "const LEGACY_REDIRECTS");
@@ -106,8 +116,10 @@ describe("Route map (Website Brief v1.0 §1)", () => {
 
   it("registers every canonical public route in App.tsx", () => {
     for (const route of CANONICAL_ROUTES) {
-      const literal = `path="${route}"`;
-      expect(appSrc.includes(literal), `App.tsx missing Route path="${route}"`).toBe(true);
+      expect(
+        isRegistered(route),
+        `Canonical route ${route} is neither a literal App.tsx Route nor a Pegasus URL`,
+      ).toBe(true);
     }
   });
 

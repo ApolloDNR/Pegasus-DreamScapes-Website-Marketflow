@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import "./pegasus/_group.css";
 
 const host = window.location.hostname.toLowerCase();
 const isPreviewHost =

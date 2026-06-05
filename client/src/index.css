@@ -19,8 +19,8 @@
   --opaque-button-border-intensity: -6;
   --elevate-1: rgba(0,0,0, .02);
   --elevate-2: rgba(0,0,0, .05);
-  --background: 37 50% 95%;
-  --foreground: 214 55% 11%;
+  --background: 36 36% 95%;
+  --foreground: 33 22% 11%;
   --border: 35 22% 86%;
   --card: 0 0% 100%;
   --card-foreground: 214 55% 11%;
@@ -32,34 +32,34 @@
   --warm-glow: 27 56% 55%;
   --stone: 37 38% 95%;
   --stone-foreground: 214 55% 11%;
-  --navy: 214 55% 11%;
+  --navy: 214 47% 23%;
   --navy-foreground: 37 50% 95%;
-  --copper: 27 56% 50%;
+  --copper: 25 57% 44%;
   --copper-foreground: 0 0% 100%;
-  --cream: 37 50% 93%;
+  --cream: 37 40% 90%;
   --cream-foreground: 214 55% 11%;
   --charcoal: 210 14% 14%;
   --charcoal-foreground: 37 50% 93%;
   --sidebar: 37 38% 95%;
   --sidebar-foreground: 214 55% 14%;
   --sidebar-border: 35 20% 88%;
-  --sidebar-primary: 27 56% 48%;
+  --sidebar-primary: 25 57% 44%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 38 30% 92%;
   --sidebar-accent-foreground: 214 55% 14%;
-  --sidebar-ring: 27 56% 48%;
+  --sidebar-ring: 25 57% 44%;
   --popover: 0 0% 100%;
   --popover-foreground: 214 55% 11%;
   --popover-border: 35 18% 88%;
-  --primary: 27 56% 48%;
+  --primary: 25 57% 44%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 214 55% 11%;
+  --secondary: 214 47% 23%;
   --secondary-foreground: 37 50% 95%;
   --muted: 38 28% 93%;
   /* Bumped from 213 22% 38% → 213 30% 28% so body/muted text clears WCAG AA
      against cream (--background 37 50% 95%) and white card surfaces. */
   --muted-foreground: 213 30% 28%;
-  --accent: 27 56% 48%;
+  --accent: 25 57% 44%;
   --accent-foreground: 0 0% 100%;
   /* Wave 3 — brand-tuned error color. Deeper, slightly warmer red that
      sits beside copper without clashing and clears WCAG AA on cream. */
@@ -68,16 +68,18 @@
   --form-error: var(--destructive);
   --form-error-foreground: var(--destructive-foreground);
   --input: 38 22% 90%;
-  --ring: 27 56% 48%;
-  --chart-1: 27 56% 50%;
+  --ring: 25 57% 44%;
+  --chart-1: 25 57% 44%;
   --chart-2: 213 53% 25%;
   --chart-3: 38 38% 60%;
   --chart-4: 213 45% 18%;
   --chart-5: 26 50% 38%;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  /* Prototype typography (client/src/pegasus/_group.css):
+     Cormorant Garamond = display/serif · Space Grotesk = sans/body/supporting. */
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
-  --font-supporting: 'Montserrat', 'Inter', sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-supporting: 'Space Grotesk', system-ui, sans-serif;
   --font-mono: Menlo, monospace;
   --radius: .375rem;
   --shadow-2xs: 0 1px 2px 0 hsl(214 55% 11% / 0.04);
@@ -118,25 +120,25 @@
   /* ── Workbench Instrument · brand-token aliases (literal hex so the
         graduated mockup renders identically inside the live app). Used by
         client/src/components/strategy-lab/instrument-workbench.tsx. ───── */
-  --pd-navy: #0D1B2D;
-  --pd-copper: #C77A3A;
-  --pd-copper-soft: #D4B483;
-  --pd-copper-light: #E8DBC5;
-  --pd-cream: #F6EFE4;
-  --pd-charcoal: #1E2328;
-  --pd-rule: #E2D6BF;
-  --pd-muted: #6B6256;
-  --pd-font-display: "Cinzel", serif;
+  --pd-navy: #1f3757;
+  --pd-copper: #b16631;
+  --pd-copper-soft: #c8814c;
+  --pd-copper-light: #e7decd;
+  --pd-cream: #efe7da;
+  --pd-charcoal: #1b1712;
+  --pd-rule: #e2d6bf;
+  --pd-muted: #4a4236;
+  --pd-font-display: "Cormorant Garamond", serif;
   --pd-font-serif: "Cormorant Garamond", serif;
-  --pd-font-supporting: "Montserrat", sans-serif;
-  --pd-font-sans: "Inter", system-ui, sans-serif;
+  --pd-font-supporting: "Space Grotesk", system-ui, sans-serif;
+  --pd-font-sans: "Space Grotesk", system-ui, sans-serif;
 }
 
 /* DARK MODE — Deep Navy bg with Warm Cream type, Rich Copper accents */
 .dark {
   --ink: 37 38% 92%;
   --paper: 214 55% 9%;
-  --bronze: 27 60% 56%;
+  --bronze: 27 56% 60%;
   --bronze-soft: 26 50% 38%;
   --rule: 213 30% 20%;
   /* Bumped from 38 20% 65% → 38 25% 78% for AA contrast on navy --paper. */
@@ -146,17 +148,17 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 214 55% 9%;
-  --foreground: 37 38% 92%;
-  --border: 214 30% 20%;
+  --background: 213 54% 11%;
+  --foreground: 37 39% 91%;
+  --border: 214 30% 22%;
   --card: 214 40% 13%;
   --card-foreground: 37 38% 92%;
   --card-border: 214 30% 22%;
   --tan: 27 45% 70%;
   --tan-foreground: 214 55% 11%;
-  --navy: 214 55% 11%;
+  --navy: 214 47% 23%;
   --navy-foreground: 37 38% 92%;
-  --copper: 27 60% 56%;
+  --copper: 27 56% 60%;
   --copper-foreground: 214 55% 11%;
   --cream: 37 38% 92%;
   --cream-foreground: 214 55% 11%;
@@ -164,27 +166,27 @@
   --charcoal-foreground: 37 50% 93%;
   --champagne: 213 30% 18%;
   --champagne-foreground: 37 38% 92%;
-  --warm-glow: 27 60% 56%;
+  --warm-glow: 27 56% 60%;
   --stone: 213 30% 16%;
   --stone-foreground: 37 38% 92%;
   --sidebar: 213 40% 12%;
   --sidebar-foreground: 37 38% 92%;
   --sidebar-border: 213 30% 20%;
-  --sidebar-primary: 27 60% 56%;
+  --sidebar-primary: 27 56% 60%;
   --sidebar-primary-foreground: 214 55% 11%;
   --sidebar-accent: 213 28% 20%;
   --sidebar-accent-foreground: 38 38% 88%;
-  --sidebar-ring: 27 60% 56%;
+  --sidebar-ring: 27 56% 60%;
   --popover: 213 40% 13%;
   --popover-foreground: 37 38% 92%;
   --popover-border: 213 30% 22%;
-  --primary: 27 60% 56%;
+  --primary: 27 56% 60%;
   --primary-foreground: 214 55% 11%;
   --secondary: 213 38% 28%;
   --secondary-foreground: 37 38% 92%;
   --muted: 213 28% 18%;
   --muted-foreground: 38 25% 78%;
-  --accent: 27 60% 56%;
+  --accent: 27 56% 60%;
   --accent-foreground: 214 55% 11%;
   /* Wave 3 — brand-tuned error color (dark mode variant). */
   --destructive: 5 72% 52%;
@@ -192,7 +194,7 @@
   --form-error: var(--destructive);
   --form-error-foreground: var(--destructive-foreground);
   --input: 213 28% 22%;
-  --ring: 27 60% 56%;
+  --ring: 27 56% 60%;
   --chart-1: 26 65% 58%;
   --chart-2: 213 50% 50%;
   --chart-3: 38 45% 55%;
@@ -639,7 +641,7 @@ html {
 
 /* Signature golden headline gradient — used on hero accent words */
 .text-headline-gold {
-  background: linear-gradient(135deg, #E8DBC5 0%, #D4B483 50%, #C77A3A 100%);
+  background: linear-gradient(135deg, #e7decd 0%, #c8814c 50%, #b16631 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

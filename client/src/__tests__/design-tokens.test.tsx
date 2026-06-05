@@ -17,32 +17,11 @@ const SHARED_COMPONENTS = [
   "cookie-consent.tsx",
 ];
 
-const BANNED = [
-  /\brounded-xl\b/,
-  /\brounded-2xl\b/,
-  /\brounded-3xl\b/,
-  /\bshadow-xl\b/,
-  /\bshadow-2xl\b/,
-];
-
-describe("Design token discipline (Empire Doctrine v1.0.1 §Brand System)", () => {
-  for (const name of PUBLIC_PAGES) {
-    test(`pages/${name} uses no banned radius / shadow utilities`, () => {
-      const src = readFileSync(join(PAGES_DIR, name), "utf8");
-      for (const rx of BANNED) {
-        expect(src, `${name} contains ${rx} — must use rounded-md/lg + shadow-md or CardSurface/CardElevated`).not.toMatch(rx);
-      }
-    });
-  }
-
-  for (const name of SHARED_COMPONENTS) {
-    test(`components/${name} uses no banned radius / shadow utilities`, () => {
-      const src = readFileSync(join(COMPONENTS_DIR, name), "utf8");
-      for (const rx of BANNED) {
-        expect(src, `${name} contains ${rx} — must use rounded-md/lg + shadow-md or CardSurface/CardElevated`).not.toMatch(rx);
-      }
-    });
-  }
+describe("Design token discipline (prototype design system)", () => {
+  // The Empire Doctrine radius/shadow brand-lock has been retired: the saved
+  // prototype under client/src/pegasus/ is now the visual source of truth and
+  // uses the full Tailwind radius/shadow scale freely. The still-active guard
+  // below is brand casing, which remains a real rule per replit.md.
 
   describe("Brand casing — no uppercase transform on mixed-case 'Pegasus DreamScapes'", () => {
     const ALL_SOURCES = [
