@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLaunchReadiness } from "../launch-readiness";
+import { getLaunchLiveness, getLaunchReadiness } from "../launch-readiness";
 
 const readyEnv = {
   NODE_ENV: "production",
@@ -23,6 +23,24 @@ describe("launch readiness", () => {
     expect(readiness.status).toBe("ready");
     expect(readiness.summary.requiredFailures).toBe(0);
     expect(readiness.checks.every((check) => check.status === "pass")).toBe(true);
+  });
+
+  it("exposes only safe build metadata on health and readiness", () => {
+    const env = {
+      ...readyEnv,
+      APP_BUILD_COMMIT: "036c606abcdef1234567890abcdef12345678",
+    };
+    const liveness = getLaunchLiveness(env);
+    const readiness = getLaunchReadiness(env);
+
+    expect(liveness.build).toEqual({
+      commit: "036c606abcdef1234567890abcdef12345678",
+      shortCommit: "036c606",
+      source: "APP_BUILD_COMMIT",
+    });
+    expect(readiness.build).toEqual(liveness.build);
+    expect(JSON.stringify(liveness)).not.toContain("postgresql://user:pass");
+    expect(JSON.stringify(readiness)).not.toContain("service-role-key");
   });
 
   it("fails without leaking configured secret values", () => {

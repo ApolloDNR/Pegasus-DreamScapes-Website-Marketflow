@@ -19,6 +19,7 @@ const REQUIRED_SITEMAP_ROUTES = [
 export async function runLaunchSmoke({
   baseUrl = DEFAULT_BASE_URL,
   canonicalUrl = baseUrl,
+  expectedCommit = "",
   skipDns = false,
   fetchImpl = globalThis.fetch,
   resolve4 = dns.resolve4,
@@ -26,9 +27,12 @@ export async function runLaunchSmoke({
 } = {}) {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   const normalizedCanonicalUrl = normalizeBaseUrl(canonicalUrl);
+  const rawExpectedCommit = typeof expectedCommit === "string" ? expectedCommit.trim() : "";
+  const normalizedExpectedCommit = normalizeExpectedCommit(rawExpectedCommit);
   const base = new URL(normalizedBaseUrl);
   const dnsHosts = base.hostname.startsWith("www.") ? [base.hostname] : [base.hostname, `www.${base.hostname}`];
   const results = [];
+  let healthBody;
 
   async function check(name, run) {
     try {
@@ -66,6 +70,7 @@ export async function runLaunchSmoke({
 
   await check("/api/health is the Pegasus Express server", async () => {
     const body = await requestJson("/api/health", 200, normalizedBaseUrl, fetchImpl);
+    healthBody = body;
     assert(body.service === "pegasus-dreamscapes-website", "Health response does not identify the Pegasus website service.");
     assert(body.status === "ok", `Health status is ${body.status || "missing"}.`);
   });
@@ -76,6 +81,19 @@ export async function runLaunchSmoke({
     assert(body.status === "ready", `Readiness status is ${body.status || "missing"}.`);
     assert(body.summary?.requiredFailures === 0, `Readiness has ${body.summary?.requiredFailures ?? "unknown"} required failures.`);
   });
+
+  if (normalizedExpectedCommit) {
+    await check("Deployed build matches expected commit", async () => {
+      assert(healthBody, "Health response was not available for build comparison.");
+      assertBuildCommit(healthBody.build, normalizedExpectedCommit);
+    });
+  }
+
+  if (rawExpectedCommit && !normalizedExpectedCommit) {
+    await check("Expected build commit is valid", async () => {
+      assert(false, "Expected commit must be a 7 to 40 character hexadecimal Git SHA.");
+    });
+  }
 
   await check("/robots.txt exposes production crawl policy", async () => {
     const res = await request("/robots.txt", normalizedBaseUrl, fetchImpl);
@@ -99,6 +117,7 @@ export async function runLaunchSmoke({
   return {
     baseUrl: normalizedBaseUrl,
     canonicalUrl: normalizedCanonicalUrl,
+    expectedCommit: normalizedExpectedCommit || null,
     results,
     failures,
   };
@@ -146,6 +165,22 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function assertBuildCommit(build, expectedCommit) {
+  const commit = normalizeExpectedCommit(build?.commit || "");
+  const shortCommit = normalizeExpectedCommit(build?.shortCommit || "");
+  const observed = commit || shortCommit;
+
+  assert(observed, "Health response is missing build.commit metadata.");
+  assert(
+    commitMatches(observed, expectedCommit),
+    `Expected deployed commit ${expectedCommit}, received ${observed}.`,
+  );
+}
+
+function commitMatches(observedCommit, expectedCommit) {
+  return observedCommit === expectedCommit || observedCommit.startsWith(expectedCommit) || expectedCommit.startsWith(observedCommit);
+}
+
 function formatUnexpectedResponse(res, expectedStatus) {
   const bodySummary = summarizeBody(res.body);
   const suffix = bodySummary ? ` ${bodySummary}` : "";
@@ -166,6 +201,11 @@ function normalizeBaseUrl(value) {
   url.search = "";
   url.hash = "";
   return url.toString().replace(/\/$/, "");
+}
+
+function normalizeExpectedCommit(value) {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  return /^[0-9a-f]{7,40}$/.test(normalized) ? normalized : "";
 }
 
 function formatDns(records) {
