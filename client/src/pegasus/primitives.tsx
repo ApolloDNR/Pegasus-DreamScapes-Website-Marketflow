@@ -13,7 +13,7 @@ export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`
 export function BrandMark({ boxClassName = 'w-11 h-11', onDark = false, className = '' }:
   { boxClassName?: string; onDark?: boolean; className?: string }) {
   return (
-    <span className={`inline-flex items-center justify-center shrink-0 ${onDark ? 'rounded-[8px] bg-[var(--cream)] p-1' : ''} ${boxClassName} ${className}`}>
+    <span className={`inline-flex items-center justify-center shrink-0 ${onDark ? 'rounded-[10px] bg-[var(--cream)] p-1.5 shadow-sm ring-1 ring-black/5' : ''} ${boxClassName} ${className}`}>
       <img src={markFull} alt="Pegasus DreamScapes" className="w-full h-full object-contain" />
     </span>
   );

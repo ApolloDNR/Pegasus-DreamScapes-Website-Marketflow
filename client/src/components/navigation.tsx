@@ -39,7 +39,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import logoImage from "@/assets/brand/pegasus-mark-full.png";
+import logoImage from "@/assets/brand/pegasus-mark-full.svg";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { trackCtaClick } from "@/lib/analytics";
 import { CommandPalette } from "./command-palette";

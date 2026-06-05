@@ -15,7 +15,7 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import logoImage from "@/assets/brand/pegasus-mark-full.png";
+import logoImage from "@/assets/brand/pegasus-mark-full.svg";
 import founderApolloPath from "@assets/image_1778735694150.png";
 
 // Empire Doctrine v1.0.1 + Phase 2 polish — Apollo's personal QR landing.
