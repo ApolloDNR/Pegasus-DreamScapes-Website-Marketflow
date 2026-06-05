@@ -685,6 +685,78 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths }:
 }
 
 /* ----------------------------------------------------------------
+   Deal Finders extras — source protection, Buy Box, JV/disposition
+---------------------------------------------------------------- */
+const BUYBOX = [
+  { label: 'Geography', value: 'East Bay focus — Contra Costa & Alameda counties' },
+  { label: 'Asset type', value: 'SFR, 2–4 unit, small multifamily, ADU-able lots' },
+  { label: 'Price band', value: '~$400K to $1.5M all-in (flexible on the right deal)' },
+  { label: 'Condition', value: 'Cosmetic to full gut — distress is welcome' },
+  { label: 'The math', value: 'Room for a real margin after carry and exit, subject to underwriting' },
+  { label: 'Title & terms', value: 'Clean path to a signed contract or assignable position' },
+];
+
+const PROTECTION = [
+  { icon: Shield, t: 'Submit once, in writing', d: 'Every deal you bring is logged with a timestamp and your source attribution. Your submission is documented before anything moves.' },
+  { icon: Handshake, t: 'Written terms first', d: 'Your assignment fee or JV split is agreed in a written agreement before your deal is shared with any buyer.' },
+  { icon: Check, t: 'We protect your position', d: 'We do not shop your deal around the county or go around you to your seller. Bring it once and deal with one buyer who closes.' },
+];
+
+const JV_PATHS = [
+  { name: 'Direct buy', desc: 'We purchase as principal on agreed terms when the deal fits the Buy Box. Fast, certain, and clean.', cta: 'Send the deal', route: 'contact' as Route },
+  { name: 'Assignment', desc: 'Hold an assignable contract? Assign it to us for a spread agreed in writing up front. What we agree is what you get at close.', cta: 'Submit for review', route: 'contact' as Route },
+  { name: 'JV / disposition', desc: 'Bigger or more complex? We can partner on the project or place it through MarketFlow on documented JV terms, subject to review.', cta: 'Start a JV review', route: 'contact' as Route },
+];
+
+export function DealFindersExtras({ go }: { go: Nav }) {
+  return (
+    <>
+      <section className="py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)] relative overflow-hidden">
+        <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />
+        <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
+          <SectionHead dark eyebrow="Your deal, protected"
+            title={<>Bring it once.<br />Keep your position.</>}
+            copy="Sourcing is real work. We treat your deal, and your relationship with the seller, with the respect they deserve. No commitment that every deal is purchased; only an honest, documented process." />
+          <div className="grid md:grid-cols-3 gap-6">
+            {PROTECTION.map((p, i) => (
+              <div key={p.t} className="reveal rounded-[3px] border border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)] p-8" style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="door-icon !mb-6"><p.icon className="w-5 h-5" strokeWidth={1.6} /></div>
+                <h3 className="font-serif-display text-2xl text-[var(--cream)] mb-3 leading-tight">{p.t}</h3>
+                <p className="text-[var(--cream)]/70 text-[0.92rem] leading-relaxed">{p.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 lg:py-28">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+          <SectionHead eyebrow="The Pegasus Buy Box"
+            title="What we are buying right now."
+            copy="A guide, not a guarantee. If your deal lines up with most of this, send it. If it does not, send it anyway and we will tell you straight. Every deal is reviewed and subject to underwriting." />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {BUYBOX.map((b, i) => (
+              <div key={b.label} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
+                <div className="pg-label !text-[9px] text-[var(--accent)] mb-3">{b.label}</div>
+                <p className="text-[var(--text-2)] text-[0.95rem] leading-relaxed">{b.value}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-7 text-[0.82rem] leading-relaxed text-[var(--muted)] max-w-2xl">
+            The Buy Box is mock criteria for orientation and may change at any time. It is not an offer to purchase. Every submission is reviewed by a person and any purchase is subject to underwriting and a written agreement.
+          </p>
+        </div>
+      </section>
+
+      <SplitPaths go={go} openPeggy={() => go('contact')}
+        heading="Three ways to work the deal"
+        copy="Direct buy, assignment, or a JV. We pick the structure that fits the deal and put the terms in writing before anything moves."
+        paths={JV_PATHS} />
+    </>
+  );
+}
+
+/* ----------------------------------------------------------------
    Secondary link strip — never a dead end
 ---------------------------------------------------------------- */
 export function NextStep({ go, label, route }: { go: Nav; label: string; route: Parameters<Nav>[0] }) {

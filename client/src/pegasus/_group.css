@@ -624,7 +624,7 @@ select.pg-field option { color: #1b1712; }
   right: 24px;
   bottom: 92px;
   z-index: 55;
-  width: min(360px, calc(100vw - 32px));
+  width: min(408px, calc(100vw - 32px));
   background: var(--navy-deep);
   border: 1px solid rgba(239, 231, 218, 0.14);
   border-radius: 18px;

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useId, useState, useCallback } from 'react';
-import { X, ConciergeBell, Send, ArrowRight, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
+import { X, Send, ArrowRight, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import type { ChatTurn, PeggyHandoff } from './theme';
-import { PEGGY_CHIPS, PEGGY_SLA } from './data';
+import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA } from './data';
+import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
 
 const GREETING =
@@ -84,6 +85,7 @@ export function Peggy({
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [errored, setErrored] = useState(false);
+  const [pickedRole, setPickedRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -204,17 +206,17 @@ export function Peggy({
         aria-label={open ? 'Close PeggyAI' : 'Talk to PeggyAI, the Pegasus guide'}
         aria-expanded={open} aria-controls={panelId}
         className={`peggy-fab ${open ? 'is-open' : ''}`}>
-        {open ? <X className="w-5 h-5" strokeWidth={1.8} /> : <ConciergeBell className="w-5 h-5" strokeWidth={1.7} />}
+        {open ? <X className="w-5 h-5" strokeWidth={1.8} /> : <BrandMark boxClassName="w-8 h-8" onDark />}
         {!open && <span className="peggy-fab-label">Talk to PeggyAI</span>}
       </button>
 
       <div id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
         aria-label="PeggyAI, the Pegasus guide" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
         <div className="peggy-head">
-          <div className="peggy-avatar"><ConciergeBell className="w-4 h-4" strokeWidth={1.8} /></div>
+          <div className="peggy-avatar !bg-[var(--cream)] !p-1"><BrandMark boxClassName="w-full h-full" /></div>
           <div className="leading-none">
             <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
-            <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">The Pegasus guide</div>
+            <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Pegasus intake concierge</div>
           </div>
           {conversationStarted && <SaveChatButton turns={transcriptTurns(messages)} />}
           <button type="button" onClick={close} aria-label="Close" className="ml-3 text-[var(--cream)]/60 hover:text-[var(--cream)] transition-colors">
@@ -250,15 +252,34 @@ export function Peggy({
             </button>
           )}
 
-          {!conversationStarted && (
+          {!conversationStarted && !pickedRole && (
             <>
-              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these</div>
+              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">First, who am I helping?</div>
               <div className="flex flex-col gap-2">
-                {PEGGY_CHIPS.map((c) => (
+                {PEGGY_ROLES.map((r) => (
+                  <button key={r.role} type="button" onClick={() => setPickedRole(r.role)} className="peggy-chip text-left">{r.label}</button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {!conversationStarted && pickedRole && (
+            <>
+              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these, or just type</div>
+              <div className="flex flex-col gap-2">
+                {(PEGGY_ROLES.find((r) => r.role === pickedRole)?.chips ?? []).map((c) => (
                   <button key={c} type="button" onClick={() => send(c)} className="peggy-chip text-left">{c}</button>
                 ))}
               </div>
             </>
+          )}
+
+          {conversationStarted && !streaming && !errored && (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {PEGGY_FOLLOWUPS.map((c) => (
+                <button key={c} type="button" onClick={() => send(c)} className="peggy-chip !py-1.5 !px-3 text-left">{c}</button>
+              ))}
+            </div>
           )}
 
           {errored && (

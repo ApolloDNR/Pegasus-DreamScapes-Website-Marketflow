@@ -3,7 +3,7 @@ import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, Ale
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
-import { usd0, SectionHead, ContourLines } from './primitives';
+import { usd0, SectionHead, ContourLines, BrandMark } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 
 function SaveStrategyButton({ snapshot, title }: { snapshot: StrategyPreview; title: string }) {
@@ -65,6 +65,21 @@ export const STRATEGYLAB_FORM: FormCfg = {
   third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Acquisition price, scope of work, and what you are weighing. The more context, the better.',
+};
+
+export const APOLLO_FORM: FormCfg = {
+  role: 'List my property (Seller representation)',
+  roleOptions: [
+    'List my property (Seller representation)',
+    'Buy a home (Buyer representation)',
+  ],
+  intent: 'representation',
+  heading: <>Work with <span className="italic text-[var(--accent)]">Apollo.</span></>,
+  lead: 'Tell us whether you are looking to sell or buy. Apollo represents clients as a licensed agent through Keller Williams Realty East Bay, and will follow up to discuss representation. Submitting this is not a listing or buyer agreement.',
+  submit: 'Request representation',
+  third: { label: 'Property address or target area', placeholder: 'Street, city, or neighborhood' },
+  messageLabel: 'What you are looking to do',
+  messagePlaceholder: 'Selling a home, buying in a certain area, timeline, and anything else we should know.',
 };
 
 export const INVESTMENTS_FORM: FormCfg = {
@@ -184,7 +199,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           <label htmlFor={`${uid}-role`} className="pg-field-label block mb-2">I am a…</label>
           <div className="relative">
             <select id={`${uid}-role`} className="pg-field pr-8" value={form.role} onChange={onField('role')}>
-              {ROLE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+              {(cfg.roleOptions ?? ROLE_OPTIONS).map((o) => <option key={o}>{o}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 absolute right-1 top-3.5 text-[var(--muted)] pointer-events-none" />
           </div>
@@ -360,6 +375,159 @@ function WaterfallRow({ label, value, sign, strong = false }:
   );
 }
 
+/* ----------------------------------------------------------------
+   Strategy Lab · Property console (qualitative inputs + Fit Score)
+   Front-end only. Mock autofill seeds the shared underwriting model.
+---------------------------------------------------------------- */
+const SAMPLE_PROPERTIES = [
+  { addr: '1428 Walnut Blvd, Concord, CA', acq: 575000, rehab: 85000, arv: 815000, type: 'Single-family', cond: 'Light cosmetic', occ: 'Vacant' },
+  { addr: '92 Estate Way, Walnut Creek, CA', acq: 910000, rehab: 180000, arv: 1340000, type: 'Single-family', cond: 'Full gut', occ: 'Probate / estate' },
+  { addr: '305 Foothill Ave, Antioch, CA', acq: 430000, rehab: 60000, arv: 615000, type: '2–4 units', cond: 'Heavy cosmetic', occ: 'Tenant-occupied' },
+];
+
+const SEL = {
+  type: ['Single-family', '2–4 units', 'Small multifamily (5+)', 'Condo / Townhome', 'Land / ADU lot'],
+  cond: ['Move-in ready', 'Light cosmetic', 'Heavy cosmetic', 'Full gut', 'Distressed / unknown'],
+  occ: ['Owner-occupied', 'Tenant-occupied', 'Vacant', 'Probate / estate'],
+  role: ['I own it (Seller)', 'I am buying it (Buyer / Investor)', 'I sourced it (Deal finder)'],
+  goal: ['Sell for the most', 'Sell fast, as-is', 'Reposition & lift value', 'Hold & rent', 'Just exploring'],
+  exit: ['Resale on the open market', 'Refinance & hold', 'Wholesale / assign', 'Not sure yet'],
+};
+
+function ConsoleSelect({ label, value, opts, onChange }:
+  { label: string; value: string; opts: string[]; onChange: (v: string) => void }) {
+  const uid = useId();
+  return (
+    <div>
+      <label htmlFor={uid} className="pg-field-label block mb-2">{label}</label>
+      <div className="relative">
+        <select id={uid} className="pg-field pr-8" value={value} onChange={(e) => onChange(e.target.value)}>
+          {opts.map((o) => <option key={o}>{o}</option>)}
+        </select>
+        <ChevronDown className="w-4 h-4 absolute right-1 top-3.5 text-[var(--muted)] pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
+export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }) {
+  const { setAcq, setRehab, setArv, hardCost, netProceeds, spread, margin, read } = model;
+  const [address, setAddress] = useState('');
+  const [pType, setPType] = useState(SEL.type[0]);
+  const [cond, setCond] = useState(SEL.cond[1]);
+  const [occ, setOcc] = useState(SEL.occ[2]);
+  const [role, setRole] = useState(SEL.role[1]);
+  const [goal, setGoal] = useState(SEL.goal[2]);
+  const [exit, setExit] = useState(SEL.exit[0]);
+
+  const autofill = () => {
+    const s = SAMPLE_PROPERTIES[Math.floor(Math.random() * SAMPLE_PROPERTIES.length)];
+    setAddress(s.addr); setAcq(s.acq); setRehab(s.rehab); setArv(s.arv);
+    setPType(s.type); setCond(s.cond); setOcc(s.occ);
+  };
+
+  // Mock Property Fit Score: blends the live margin read with the situation.
+  const marginScore = Math.max(0, Math.min(60, (margin / 25) * 60));
+  const condBonus = cond === 'Full gut' || cond === 'Distressed / unknown' ? 18 : cond === 'Heavy cosmetic' ? 14 : cond === 'Light cosmetic' ? 10 : 4;
+  const occBonus = occ === 'Probate / estate' || occ === 'Vacant' ? 14 : occ === 'Tenant-occupied' ? 9 : 5;
+  const goalBonus = goal === 'Reposition & lift value' ? 8 : goal === 'Sell fast, as-is' ? 6 : 4;
+  const fit = Math.round(Math.max(8, Math.min(98, marginScore + condBonus + occBonus + goalBonus)));
+  const fitBand = fit >= 75 ? 'Strong fit' : fit >= 55 ? 'Worth a review' : fit >= 35 ? 'Possible, needs work' : 'Likely not a fit';
+
+  const lane: { label: string; route: Parameters<Nav>[0] } =
+    role.startsWith('I own')
+      ? (cond === 'Full gut' || cond === 'Distressed / unknown' || occ === 'Probate / estate'
+        ? { label: 'Send for a property review', route: 'sellers' }
+        : { label: 'Explore seller representation', route: 'apollo' })
+      : role.startsWith('I sourced')
+      ? { label: 'Submit the deal to Deal Finders', route: 'dealfinders' }
+      : { label: 'Explore the Buyers lane', route: 'buyers' };
+
+  const costCards = [
+    { label: 'Estimated all-in basis', value: usd0(hardCost) },
+    { label: 'Projected net at sale', value: usd0(netProceeds) },
+    { label: 'Projected net position', value: usd0(spread) },
+  ];
+
+  return (
+    <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-b border-[var(--line)]">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead eyebrow="Strategy Lab · Property console"
+          title={<>Start with the property,<br />get a read on the fit.</>}
+          copy="Tell us about the property and what you want to do. We will frame a mock Property Fit Score and point you to the lane that fits. This is directional orientation only, not an offer or an underwrite." />
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+          <div className="lg:col-span-7 reveal">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-7">
+              <div className="flex-1">
+                <label htmlFor="console-addr" className="pg-field-label block mb-2">Property address</label>
+                <input id="console-addr" type="text" className="pg-field" value={address}
+                  onChange={(e) => setAddress(e.target.value)} placeholder="Street, city, state"
+                  data-testid="input-console-address" />
+              </div>
+              <button type="button" onClick={autofill}
+                className="btn-line px-6 py-3.5 pg-label !text-[10px] whitespace-nowrap" data-testid="button-console-autofill">
+                Use a sample property
+              </button>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <ConsoleSelect label="Property type" value={pType} opts={SEL.type} onChange={setPType} />
+              <ConsoleSelect label="Condition" value={cond} opts={SEL.cond} onChange={setCond} />
+              <ConsoleSelect label="Occupancy" value={occ} opts={SEL.occ} onChange={setOcc} />
+              <ConsoleSelect label="Your role" value={role} opts={SEL.role} onChange={setRole} />
+              <ConsoleSelect label="Your goal" value={goal} opts={SEL.goal} onChange={setGoal} />
+              <ConsoleSelect label="Likely exit" value={exit} opts={SEL.exit} onChange={setExit} />
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4 mt-8">
+              {costCards.map((c) => (
+                <div key={c.label} className="surface-card p-5">
+                  <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">{c.label}</div>
+                  <div className="font-serif-display text-2xl text-[var(--text)] leading-none">{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-[0.78rem] text-[var(--muted)]">
+              Figures are seeded from the underwriting workshop below and from mock sample data. Adjust the sliders to refine them. Nothing here is an offer or a valuation.
+            </p>
+          </div>
+
+          <div className="lg:col-span-5 reveal delay-100 lg:sticky lg:top-28">
+            <div className="rounded-[3px] bg-[var(--navy)] text-[var(--cream)] p-8 lg:p-10 peggy-shadow overflow-hidden relative">
+              <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.1]" />
+              <div className="relative">
+                <div className="flex items-center gap-2.5 mb-7">
+                  <BrandMark boxClassName="w-7 h-7" onDark />
+                  <div className="pg-label !text-[9px] text-[var(--accent-bright)]">Property Fit Score</div>
+                </div>
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span className="font-serif-display text-[4.5rem] leading-none text-[var(--accent-bright)]">{fit}</span>
+                  <span className="font-serif-display text-2xl text-[var(--cream)]/50">/100</span>
+                </div>
+                <div className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)] mb-5">{fitBand}</div>
+                <div className="h-2 rounded-full bg-[rgba(239,231,218,0.14)] overflow-hidden mb-7">
+                  <div className="h-full rounded-full bg-[var(--accent-bright)] transition-[width] duration-700" style={{ width: `${fit}%` }} />
+                </div>
+                <p className="text-[var(--cream)]/70 text-[0.9rem] leading-relaxed mb-7">
+                  {read.note} A real read comes from a person; this score is a mock guide to point you to the right next step.
+                </p>
+                <button type="button" onClick={() => go(lane.route)}
+                  className="btn-primary w-full justify-center px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-2.5 group mb-3"
+                  data-testid="button-console-lane">
+                  {lane.label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.8} />
+                </button>
+                <button type="button" onClick={() => go('contact')}
+                  className="btn-line-light w-full justify-center px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-2.5"
+                  data-testid="button-console-review">
+                  Ask for a human review
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyModel }) {
   const {
     acq, setAcq, rehab, setRehab, arv, setArv, holdMonths, setHoldMonths, carryRate, setCarryRate, exitRate, setExitRate,
@@ -391,7 +559,10 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
             <div className="rounded-[3px] bg-[var(--navy)] text-[var(--cream)] p-9 lg:p-11 peggy-shadow overflow-hidden relative">
               <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1]" />
               <div className="relative">
-                <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6">Instant Strategy Preview</div>
+                <div className="flex items-center gap-2.5 mb-6">
+                  <BrandMark boxClassName="w-7 h-7" onDark />
+                  <div className="pg-label !text-[9px] text-[var(--accent-bright)]">Instant Strategy Preview</div>
+                </div>
                 <WaterfallRow label="Acquisition basis" value={usd0(acq)} />
                 <WaterfallRow label="Value-add budget" value={usd0(rehab)} sign="+" />
                 <WaterfallRow label={`Carry · ${holdMonths} mo`} value={usd0(carry)} sign="+" />

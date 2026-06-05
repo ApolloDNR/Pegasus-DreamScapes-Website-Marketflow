@@ -1,8 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MoveHorizontal, Sun, Moon } from 'lucide-react';
 import type { Theme } from './theme';
+import markFull from '@/assets/brand/pegasus-mark-full.png';
 
 export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
+
+/* ----------------------------------------------------------------
+   Brand mark — the full Pegasus-over-house lockup (primary logo).
+   On dark surfaces it sits on a warm cream tile so the navy wings
+   and roofline stay legible; on light surfaces it shows bare.
+---------------------------------------------------------------- */
+export function BrandMark({ boxClassName = 'w-11 h-11', onDark = false, className = '' }:
+  { boxClassName?: string; onDark?: boolean; className?: string }) {
+  return (
+    <span className={`inline-flex items-center justify-center shrink-0 ${onDark ? 'rounded-[8px] bg-[var(--cream)] p-1' : ''} ${boxClassName} ${className}`}>
+      <img src={markFull} alt="Pegasus DreamScapes" className="w-full h-full object-contain" />
+    </span>
+  );
+}
 
 export const usd0 = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });

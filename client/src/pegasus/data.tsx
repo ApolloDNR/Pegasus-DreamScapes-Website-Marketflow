@@ -360,18 +360,64 @@ export const PEGGY_CHIPS: string[] = [
   'What does the draw schedule look like on a full renovation?',
 ];
 
+/* Role-aware starter chips. Peggy opens by asking who she is helping, then
+   shows prompts tuned to that role. Mock routing only — no real AI. */
+export const PEGGY_ROLES: { role: string; label: string; chips: string[] }[] = [
+  {
+    role: 'seller', label: 'I own a property',
+    chips: [
+      'My property is clean and ready. How do I list with Apollo?',
+      'I inherited a house and I am not sure what to do with it',
+      'I have a tired rental and a tenant. What are my options?',
+    ],
+  },
+  {
+    role: 'buyer', label: 'I want to buy',
+    chips: [
+      'I want buyer representation for a home purchase',
+      'I am an investor looking for the next value-add',
+      'What is in the Pegasus inventory pipeline right now?',
+    ],
+  },
+  {
+    role: 'dealfinder', label: 'I find deals',
+    chips: [
+      'I have an off-market deal. Where would Pegasus come in?',
+      'How do JV terms and assignment economics work here?',
+      'Does my deal fit the Pegasus Buy Box?',
+    ],
+  },
+  {
+    role: 'capital', label: 'I have capital',
+    chips: [
+      'I want to deploy capital into a value-add project',
+      'How are capital conversations structured here?',
+      'What does a typical project timeline look like?',
+    ],
+  },
+];
+
+/* Follow-up chips that persist through the conversation, shown after each
+   Peggy reply so the visitor can keep moving without typing. */
+export const PEGGY_FOLLOWUPS: string[] = [
+  'Which lane fits my situation?',
+  'What does this cost?',
+  'Model the numbers in Strategy Lab',
+  'I would rather talk to a person',
+];
+
 export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs a person, we respond within two business days.';
 
 /* ================================================================
    AUDIENCE CATEGORIES (six lanes)
    ================================================================ */
 const sellerSplits: { heading: string; copy: string; paths: SplitPath[] } = {
-  heading: 'Three ways to sell',
-  copy: 'Not every owner wants the same thing. Pick the path that fits your situation.',
+  heading: 'Two clear lanes',
+  copy: 'Ready to list, or facing something complicated? Each lane has its own path. We will tell you which one fits before you commit to anything.',
   paths: [
-    { name: 'Sell fast, as-is', desc: 'A clean, certain sale with no repairs and no showings. Best when speed and certainty beat top dollar.', cta: 'Start a Review', route: 'contact' },
-    { name: 'Sell for the repositioned price', desc: 'We renovate, you share in the lift, and the home sells for what it could truly be worth.', cta: 'Talk to PeggyAI', route: 'peggy' },
-    { name: 'Just tell me what it is worth', desc: 'Run it through the Strategy Lab for an instant, private read before you decide anything.', cta: 'Open Strategy Lab', route: 'strategylab' },
+    { name: 'Traditional seller representation', desc: 'Clean and ready to list? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing. Standard listing agreement, full MLS exposure.', cta: 'List with Apollo', route: 'apollo' },
+    { name: 'Distressed or complex property review', desc: 'Probate, foreclosure, divorce, a tired rental, an inherited home, an expired listing, or ADU upside? Send it for a property review. We evaluate your options, which may include a direct purchase, a reposition, or a listing, subject to underwriting.', cta: 'Start a Property Review', route: 'contact' },
+    { name: 'Not sure yet? Ask PeggyAI', desc: 'Talk it through in plain language. Peggy asks the right questions and points you to the lane that fits, then hands you to a person when it matters.', cta: 'Talk to PeggyAI', route: 'peggy' },
   ],
 };
 
@@ -439,7 +485,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     ],
     notFit: [
       'You are looking exclusively for a fixer to renovate entirely yourself',
-      'You need financing or representation we are not positioned to provide',
+      'You want to be rushed into a decision before the numbers are clear',
     ],
     secondary: { label: 'See the work in MarketFlow', route: 'marketflow' },
     faq: [
@@ -470,7 +516,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'A buyer who closes', d: 'No tire-kicking. If we say yes, we perform.' },
       { t: 'Repeat pipeline', d: 'Bring good deals consistently and become a preferred source in MarketFlow.' },
     ],
-    rich: ['surfaces', 'faq'],
+    rich: ['surfaces', 'buybox', 'faq'],
     quote: 'Bring us a deal that pencils and you will get the fastest, most honest answer in the market.',
     forYou: [
       'You source off-market or distressed opportunities',

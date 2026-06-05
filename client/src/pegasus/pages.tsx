@@ -1,8 +1,7 @@
 import React from 'react';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark } from 'lucide-react';
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
-import { IMG, SectionHead, ContourLines } from './primitives';
-import markLight from '@/assets/brand/pegasus-mark-light.svg';
+import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_CHIPS, PEGGY_SLA,
 } from './data';
@@ -10,25 +9,55 @@ import {
   PageHero, Hero, HomeIntro, LaneCardsBlock, ThreePillarsBlock, PillarSection,
   EngineBlock, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
-  SplitPaths, NextStep, CTABand,
+  SplitPaths, NextStep, CTABand, DealFindersExtras,
 } from './blocks';
 import {
-  LeadSection, StrategyCalculator, useStrategyModel, CONTACT_FORM, DEVELOPMENT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM,
+  LeadSection, StrategyCalculator, StrategyConsole, useStrategyModel, CONTACT_FORM, DEVELOPMENT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
 } from './forms';
 
 const INVESTMENTS = PILLARS3[0];
 const DEVELOPMENT = PILLARS3[1];
 
 const MARKETFLOW_FORM: FormCfg = {
-  role: 'Capital partner',
+  role: 'Deal finder / Wholesaler',
+  roleOptions: [
+    'Deal finder / Wholesaler',
+    'Buyer / Investor',
+    'Capital partner',
+    'Agent / Vendor',
+    'Other',
+  ],
   intent: 'marketflow-access',
   heading: <>Request <span className="italic text-[var(--accent-bright)]">access.</span></>,
-  lead: 'MarketFlow is invite only. Tell us how you operate or where your capital sits, and a real person will review your fit for the network.',
+  lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and a real person will review your fit for the network.',
   submit: 'Request access',
   third: { label: 'Firm, fund, or trade', placeholder: 'Where you operate (optional)' },
   messageLabel: 'How you participate',
-  messagePlaceholder: 'Deal finder, capital partner, operator, or buyer. Share your typical check size or build capacity, and the deal types you focus on.',
+  messagePlaceholder: 'Share your typical check size or build capacity, and the deal types you focus on.',
 };
+
+const MARKETFLOW_PREVIEW = [
+  { tag: 'Sample deal card', title: 'Value-add SFR · East Bay', lines: ['All-in vs. delivered value', 'Scope & projected timeline', 'Status: reviewed · under contract'] },
+  { tag: 'Operator profile', title: 'Licensed GC · 12 projects', lines: ['Trade verified · references checked', 'On-time delivery record', 'Active in Contra Costa'] },
+  { tag: 'Buyer interest', title: 'Capital partner mandate', lines: ['Check size & risk band', 'Asset types they back', 'Matched to projects, not pools'] },
+  { tag: 'Trust layer', title: 'Verification badges', lines: ['Identity & license reviewed', 'Source attribution logged', 'Written terms before introductions'] },
+];
+
+const APOLLO_REP = {
+  seller: {
+    label: 'Seller representation',
+    desc: 'List with an investor’s read on price, prep, and timing. Standard listing agreement and full MLS exposure, with the Pegasus standard behind it.',
+    points: ['Pricing backed by real underwriting, not a guess', 'Prep and staging guidance that earns its cost', 'A strategy for timing, not just a sign in the yard'],
+  },
+  buyer: {
+    label: 'Buyer representation',
+    desc: 'Make offers backed by real numbers, and see opportunities through the Pegasus network before they reach the open market.',
+    points: ['Offers grounded in what a property is actually worth', 'First look at off-market and repositioned homes', 'A plain read when the right move is to wait or walk'],
+  },
+};
+
+const APOLLO_DISCLOSURE =
+  'Paolo “Apollo” Duran · Licensed California real estate salesperson · DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus DreamScapes is not a licensed brokerage; agency representation is provided through Keller Williams Realty East Bay. This page is not a listing or buyer-representation agreement.';
 
 /* ================================================================
    HOME
@@ -91,6 +120,7 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
       <Qualifier forYou={cat.forYou} notFit={cat.notFit} />
       {cat.rich.includes('engine') && <EngineBlock go={go} />}
       {cat.rich.includes('ladder') && <ProductLadderBlock go={go} openPeggy={openPeggy} />}
+      {cat.rich.includes('buybox') && <DealFindersExtras go={go} />}
       {cat.rich.includes('surfaces') && <EcosystemBlock go={go} openPeggy={openPeggy} />}
       {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." />}
       {cat.secondary && <NextStep go={go} label={cat.secondary.label} route={cat.secondary.route} />}
@@ -187,6 +217,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
         title={<>Model it. Read it. <span className="italic text-[var(--accent-bright)]">Get it in writing.</span></>}
         image={IMG('pegasus-living.png')}
         lead="The Strategy Lab is where a situation becomes a plan: a self-serve calculator, an Instant Strategy Preview, a human review, and the full Deal Blueprint." />
+      <StrategyConsole go={go} model={model} />
       <StrategyCalculator go={go} model={model} />
       <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Strategy Snapshot" tone="navy" strategy={model.snapshot} />
@@ -210,6 +241,31 @@ export function MarketFlowPage({ go }: { go: Nav }) {
         image={IMG('pegasus-casestudy.png')}
         lead="The marketplace layer: three lanes that move deals, match capital to projects, and place finished inventory, all to one standard." />
       <MarketFlowBlock go={go} enter={{ label: 'Sign in to MarketFlow', href: '/login' }} />
+      <section className="py-24 lg:py-28">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+          <SectionHead eyebrow="A look inside"
+            title="What members see."
+            copy="A preview of the MarketFlow experience. These are sample cards for illustration; live dealflow, profiles, and matches appear once your access is reviewed and approved." />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {MARKETFLOW_PREVIEW.map((c, i) => (
+              <div key={c.title} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
+                <div className="pg-label !text-[8px] text-[var(--accent)] mb-3">{c.tag}</div>
+                <h3 className="font-serif-display text-xl text-[var(--text)] mb-4 leading-tight">{c.title}</h3>
+                <ul className="space-y-2.5">
+                  {c.lines.map((l) => (
+                    <li key={l} className="flex gap-2.5 text-[var(--muted)] text-[0.85rem] leading-relaxed">
+                      <Check className="w-3.5 h-3.5 text-[var(--accent)] mt-0.5 shrink-0" strokeWidth={2} /><span>{l}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="mt-7 text-[0.8rem] text-[var(--muted)] max-w-2xl">
+            Preview content is illustrative and not an offer, a listing, or a solicitation. Access is private and reviewed by a person; participation is subject to a written agreement.
+          </p>
+        </div>
+      </section>
       <section className="relative py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)] overflow-hidden">
         <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.12] float-slow" />
         <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -229,7 +285,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
           </div>
         </div>
       </section>
-      <LeadSection cfg={MARKETFLOW_FORM} eyebrow="Request access" tone="page" />
+      <LeadSection cfg={MARKETFLOW_FORM} eyebrow="Request access" tone="page" showRole />
     </>
   );
 }
@@ -237,12 +293,21 @@ export function MarketFlowPage({ go }: { go: Nav }) {
 /* ================================================================
    WORK WITH APOLLO
    ================================================================ */
-const APOLLO_LANES = [
-  { name: 'List with intent', desc: 'Sell with an investor’s read on price, prep, and timing, not a guess dressed up as a strategy.' },
-  { name: 'Buy with an edge', desc: 'Make offers backed by real underwriting, so you know what a property is actually worth.' },
-  { name: 'Off-market access', desc: 'See opportunities through the Pegasus network before they ever reach the open market.' },
-  { name: 'Strategy first', desc: 'When the right move is to wait, renovate, or walk away, you will hear it plainly.' },
-];
+function RepLane({ rep }: { rep: { label: string; desc: string; points: string[] } }) {
+  return (
+    <div className="surface-card reveal p-8 lg:p-9">
+      <div className="pg-label !text-[9px] text-[var(--accent)] mb-4">{rep.label}</div>
+      <p className="text-[var(--text-2)] leading-relaxed mb-6">{rep.desc}</p>
+      <ul className="space-y-3.5">
+        {rep.points.map((p) => (
+          <li key={p} className="flex gap-3 text-[var(--muted)] text-[0.92rem] leading-relaxed">
+            <Check className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" strokeWidth={2} /><span>{p}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function WorkWithApolloPage({ go }: { go: Nav }) {
   return (
@@ -250,26 +315,29 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       <PageHero eyebrow="What we do · Representation"
         title={<>Work with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
         image={IMG('pegasus-exterior-light.png')}
-        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams East Bay, backed by the full Pegasus standard." />
+        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay, backed by the full Pegasus standard." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead eyebrow="Representation lanes" title="How Apollo can represent you."
-            copy="Four ways to work together when agency representation is the right path." />
-          <div className="grid sm:grid-cols-2 gap-5">
-            {APOLLO_LANES.map((l, i) => (
-              <div key={l.name} className="surface-card reveal flex gap-6 p-7" style={{ animationDelay: `${i * 70}ms` }}>
-                <div className="font-serif-display text-3xl text-[var(--accent)] leading-none pt-1">{String(i + 1).padStart(2, '0')}</div>
-                <div>
-                  <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{l.name}</h3>
-                  <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{l.desc}</p>
-                </div>
-              </div>
-            ))}
+          <SectionHead eyebrow="Representation lanes" title="Sell or buy, represented."
+            copy="Two clear lanes when agency representation is the right path. Pick the one that fits and Apollo follows up to discuss it." />
+          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center mb-12">
+            <div className="reveal relative">
+              <div className="absolute -inset-3 border border-[var(--line)] rounded-[4px] -z-10 translate-x-3 translate-y-3" />
+              <img src={IMG('founder/apollo-1200.jpg')} alt="Paolo &quot;Apollo&quot; Duran" className="w-full rounded-[3px] object-cover aspect-[4/5]" loading="lazy" />
+            </div>
+            <div className="grid gap-5">
+              <RepLane rep={APOLLO_REP.seller} />
+              <RepLane rep={APOLLO_REP.buyer} />
+            </div>
+          </div>
+          <div className="reveal rounded-[3px] border border-[var(--line)] bg-[var(--bg)] p-5 lg:p-6 flex gap-4 items-start">
+            <BrandMark boxClassName="w-10 h-10 shrink-0" />
+            <p className="text-[0.8rem] leading-relaxed text-[var(--muted)]">{APOLLO_DISCLOSURE}</p>
           </div>
         </div>
       </section>
-      <LeadSection cfg={CATEGORIES.buyers.form} eyebrow="Work with Apollo" tone="navy" />
+      <LeadSection cfg={APOLLO_FORM} eyebrow="Work with Apollo" tone="navy" showRole />
     </>
   );
 }
@@ -331,7 +399,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
               <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.1]" />
               <div className="relative">
                 <div className="flex items-center gap-3 mb-7">
-                  <div className="peggy-avatar"><ConciergeBell className="w-4 h-4" strokeWidth={1.8} /></div>
+                  <div className="peggy-avatar !bg-[var(--cream)] !p-1"><BrandMark boxClassName="w-full h-full" /></div>
                   <div className="leading-none">
                     <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
                     <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">The Pegasus guide</div>
@@ -446,7 +514,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
         <div className="grid grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
           <div className="col-span-2 md:col-span-4">
             <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
-              <img src={markLight} alt="Pegasus DreamScapes" className="w-11 h-11 object-contain" />
+              <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
                 <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus DreamScapes</span>
                 <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Architecture</span>

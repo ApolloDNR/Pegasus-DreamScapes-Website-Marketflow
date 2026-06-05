@@ -49,7 +49,7 @@ export type Pillar = {
   cta: string;
 };
 
-export type Rich = 'path' | 'ladder' | 'surfaces' | 'engine' | 'faq';
+export type Rich = 'path' | 'ladder' | 'surfaces' | 'engine' | 'faq' | 'buybox';
 
 export type FormCfg = {
   role: string;
@@ -60,6 +60,7 @@ export type FormCfg = {
   third: { label: string; placeholder: string } | null;
   messageLabel: string;
   messagePlaceholder: string;
+  roleOptions?: string[];
 };
 
 export type SplitPath = { name: string; desc: string; cta: string; route: Route };
