@@ -276,7 +276,7 @@ export function EngineBlock({ go }: { go: Nav }) {
             <ChevronDown className="w-6 h-6 animate-pulse" />
           </div>
         </div>
-        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(177,102,49,0.1)] p-9 lg:p-11">
+        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(199,122,53,0.1)] p-9 lg:p-11">
           <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-4">{ENGINE_OUTPUT.label}</div>
           <p className="font-serif-display text-3xl md:text-4xl text-[var(--cream)] leading-snug mb-5">{ENGINE_OUTPUT.desc}</p>
           <button type="button" onClick={() => go('dealarchitecture')}

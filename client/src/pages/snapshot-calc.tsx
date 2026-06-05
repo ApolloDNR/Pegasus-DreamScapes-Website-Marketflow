@@ -15,7 +15,7 @@ import { formatCurrency, extractProjection, type ProjectionSpec } from "@/compon
 import { SendAnalysisPdfDialog } from "@/components/send-analysis-pdf-dialog";
 import type { SavedAnalysis } from "@shared/schema";
 
-const LINE_COLORS = ["#b16631", "#1f3757", "#3b82f6", "#22c55e"];
+const LINE_COLORS = ["#c77a35", "#1f3757", "#3b82f6", "#22c55e"];
 
 function formatProjValue(v: number, format?: string): string {
   if (format === "percent") return `${v.toFixed(1)}%`;

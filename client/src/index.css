@@ -121,7 +121,7 @@
         graduated mockup renders identically inside the live app). Used by
         client/src/components/strategy-lab/instrument-workbench.tsx. ───── */
   --pd-navy: #1f3757;
-  --pd-copper: #b16631;
+  --pd-copper: #c77a35;
   --pd-copper-soft: #c8814c;
   --pd-copper-light: #e7decd;
   --pd-cream: #efe7da;
@@ -641,7 +641,7 @@ html {
 
 /* Signature golden headline gradient — used on hero accent words */
 .text-headline-gold {
-  background: linear-gradient(135deg, #e7decd 0%, #c8814c 50%, #b16631 100%);
+  background: linear-gradient(135deg, #e7decd 0%, #c8814c 50%, #c77a35 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
