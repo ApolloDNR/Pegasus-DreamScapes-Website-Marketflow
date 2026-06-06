@@ -249,6 +249,38 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
 }
 
 /* ----------------------------------------------------------------
+   Process steps — reusable numbered icon ribbon with a connecting spine
+   (used by Development "How we build" and Strategy Lab "How the Lab works")
+---------------------------------------------------------------- */
+export type ProcessStep = { n: string; icon: LucideIcon; t: string; d: string };
+
+export function ProcessSteps({ eyebrow, title, copy, steps, tone = 'page' }:
+  { eyebrow: string; title: React.ReactNode; copy?: string; steps: ProcessStep[]; tone?: 'page' | 'alt' }) {
+  const cols = steps.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4';
+  const inset = steps.length === 3 ? 'left-[16.66%] right-[16.66%]' : 'left-[12.5%] right-[12.5%]';
+  return (
+    <section className={`py-24 lg:py-28 ${tone === 'alt' ? 'bg-[var(--bg-2)] border-y border-[var(--line)]' : ''}`}>
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead eyebrow={eyebrow} title={title} copy={copy} />
+        <div className={`relative grid ${cols} gap-x-6 gap-y-12 mt-4`}>
+          <div aria-hidden="true" className={`hidden lg:block absolute top-[26px] ${inset} h-px bg-gradient-to-r from-[var(--accent)]/25 via-[var(--accent)]/45 to-[var(--accent)]/25`} />
+          {steps.map((s, i) => (
+            <div key={s.n} className="group relative z-10 reveal text-center" style={{ animationDelay: `${i * 90}ms` }}>
+              <div className="mx-auto w-[52px] h-[52px] rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] flex items-center justify-center mb-6 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:shadow-[0_14px_30px_-12px_rgba(177,102,49,0.5)]">
+                <s.icon aria-hidden="true" className="w-5 h-5 text-[var(--accent)] transition-colors duration-500 group-hover:text-white" strokeWidth={1.6} />
+              </div>
+              <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">Step {s.n}</div>
+              <h3 className="font-serif-display text-xl text-[var(--text)] mb-2.5 leading-tight">{s.t}</h3>
+              <p className="text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-[15rem] mx-auto">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------------
    Deal Architecture engine (infographic)
 ---------------------------------------------------------------- */
 export function EngineBlock({ go }: { go: Nav }) {

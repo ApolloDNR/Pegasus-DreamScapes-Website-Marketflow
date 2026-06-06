@@ -6,7 +6,7 @@ import {
   CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_CHIPS, PEGGY_SLA, DEV_TEAM,
 } from './data';
 import {
-  PageHero, Hero, HomeIntro, LaneCardsBlock, ThreePillarsBlock, PillarSection,
+  PageHero, Hero, HomeIntro, LaneCardsBlock, ThreePillarsBlock, PillarSection, ProcessSteps,
   EngineBlock, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
   SplitPaths, NextStep, CTABand, DealFindersExtras,
@@ -102,22 +102,20 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
               <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
               <p className="font-serif-display italic text-2xl text-[var(--muted)] leading-snug">{cat.quote}</p>
             </div>
-            <div className="lg:col-span-8 relative">
-              <div aria-hidden="true" className="absolute left-[23px] top-6 bottom-6 w-px bg-gradient-to-b from-[var(--accent)]/35 via-[var(--accent)]/25 to-transparent" />
-              <div className="space-y-5">
-                {cat.points.map((p, i) => (
-                  <div key={i} className="group relative reveal flex gap-4 sm:gap-6 items-start" style={{ animationDelay: `${i * 90}ms` }}>
-                    <div className="relative z-10 shrink-0 w-12 h-12 rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] flex items-center justify-center transition-all duration-500 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:shadow-[0_12px_26px_-12px_rgba(177,102,49,0.5)]">
-                      <span className="font-serif-display text-lg text-[var(--accent)] leading-none transition-colors duration-500 group-hover:text-white">{String(i + 1).padStart(2, '0')}</span>
-                    </div>
-                    <div className="surface-card flex-1 p-5 sm:p-7">
-                      <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{p.t}</h3>
-                      <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
-                    </div>
+            <ol className="lg:col-span-8 relative">
+              <div aria-hidden="true" className="absolute left-[23px] sm:left-[27px] top-3 bottom-3 w-px bg-gradient-to-b from-[var(--accent)]/40 via-[var(--line)] to-transparent" />
+              {cat.points.map((p, i) => (
+                <li key={i} className="group reveal relative flex gap-5 sm:gap-7 pb-5 last:pb-0" style={{ animationDelay: `${i * 90}ms` }}>
+                  <span className="relative z-10 shrink-0 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] font-serif-display text-lg sm:text-xl text-[var(--accent)] leading-none transition-all duration-500 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:text-white group-hover:shadow-[0_12px_26px_-12px_rgba(177,102,49,0.5)]">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="surface-card flex-1 p-6 sm:p-7">
+                    <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{p.t}</h3>
+                    <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
                   </div>
-                ))}
-              </div>
-            </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
@@ -204,27 +202,18 @@ const BUILD_PROCESS = [
 
 function BuildProcessBlock() {
   return (
-    <section className="py-24 lg:py-28">
-      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="How we build" title="Scope to finished product."
-          copy="The same disciplined path on every job: planned before it starts, built to one standard, and delivered complete." />
-        <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 mt-4">
-          <div aria-hidden="true" className="hidden lg:block absolute top-[26px] left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-[var(--accent)]/25 via-[var(--accent)]/45 to-[var(--accent)]/25" />
-          {BUILD_PROCESS.map((s, i) => (
-            <div key={s.n} className="group relative z-10 reveal text-center" style={{ animationDelay: `${i * 90}ms` }}>
-              <div className="mx-auto w-[52px] h-[52px] rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] flex items-center justify-center mb-6 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:shadow-[0_14px_30px_-12px_rgba(177,102,49,0.5)]">
-                <s.icon aria-hidden="true" className="w-5 h-5 text-[var(--accent)] transition-colors duration-500 group-hover:text-white" strokeWidth={1.6} />
-              </div>
-              <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">Step {s.n}</div>
-              <h3 className="font-serif-display text-xl text-[var(--text)] mb-2.5 leading-tight">{s.t}</h3>
-              <p className="text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-[15rem] mx-auto">{s.d}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <ProcessSteps eyebrow="How we build" title="Scope to finished product."
+      copy="The same disciplined path on every job: planned before it starts, built to one standard, and delivered complete."
+      steps={BUILD_PROCESS} />
   );
 }
+
+const LAB_STEPS = [
+  { n: '01', icon: Compass, t: 'Start with the property', d: 'Describe the property and your goal. The console frames a Property Fit Score and points you to the right lane.' },
+  { n: '02', icon: Calculator, t: 'Underwrite the numbers', d: 'Set basis, scope, and exit. The Instant Strategy Preview models carry and selling costs into a live margin.' },
+  { n: '03', icon: Ruler, t: 'Get a written read', d: 'Send the situation for a human Strategy Snapshot: a short, candid read, usually within two business days.' },
+  { n: '04', icon: Landmark, t: 'Commission the Blueprint', d: 'When a deal earns it, the paid Deal Blueprint documents scope, capital, construction, exit, and risk.' },
+];
 
 export function DevelopmentPage({ go }: { go: Nav }) {
   return (
@@ -268,6 +257,9 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
         title={<>Model it. Read it. <span className="italic text-[var(--accent-bright)]">Get it in writing.</span></>}
         image={IMG('pegasus-living.png')}
         lead="The Strategy Lab is where a situation becomes a plan: a self-serve calculator, an Instant Strategy Preview, a human review, and the full Deal Blueprint." />
+      <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
+        copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
+        steps={LAB_STEPS} />
       <StrategyConsole go={go} model={model} />
       <StrategyCalculator go={go} model={model} />
       <ProductLadderBlock go={go} openPeggy={openPeggy} />
