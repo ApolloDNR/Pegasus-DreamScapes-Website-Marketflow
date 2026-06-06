@@ -510,7 +510,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
     <>
       <PageHero eyebrow="The Firm"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">architecture.</span></>}
-        image={IMG('founder/apollo-1200.jpg')} focus="top"
+        image={IMG('pegasus-hero-light.png')}
         lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay, built on strategy, governed by virtue, and executed with discipline." />
       <ApolloBlock go={go} showCta={false} />
       <DoctrineBlock dark />
