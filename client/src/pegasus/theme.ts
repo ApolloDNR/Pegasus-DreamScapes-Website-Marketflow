@@ -49,7 +49,7 @@ export type Pillar = {
   cta: string;
 };
 
-export type Rich = 'path' | 'ladder' | 'surfaces' | 'engine' | 'faq' | 'buybox';
+export type Rich = 'path' | 'ladder' | 'surfaces' | 'engine' | 'faq' | 'buybox' | 'proof' | 'marketflow' | 'stats' | 'process';
 
 export type FormCfg = {
   role: string;

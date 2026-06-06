@@ -126,6 +126,10 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
       {cat.rich.includes('ladder') && <ProductLadderBlock go={go} openPeggy={openPeggy} />}
       {cat.rich.includes('buybox') && <DealFindersExtras go={go} />}
       {cat.rich.includes('surfaces') && <EcosystemBlock go={go} openPeggy={openPeggy} />}
+      {cat.rich.includes('proof') && <NelsonProof go={go} />}
+      {cat.rich.includes('marketflow') && <MarketFlowBlock go={go} />}
+      {cat.rich.includes('stats') && <ProofStats />}
+      {cat.rich.includes('process') && <BuildProcessBlock />}
       {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." allHref={cat.faqAnchor ? `/faq#${cat.faqAnchor}` : '/faq'} />}
       {cat.secondary && <NextStep go={go} label={cat.secondary.label} route={cat.secondary.route} />}
       <LeadSection cfg={cat.form} eyebrow={cat.eyebrow} tone="navy" />
@@ -142,7 +146,7 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
       <PageHero eyebrow="What we do · The engine"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">Architecture.</span></>}
         image={IMG('pegasus-aerial.png')}
-        lead="The core of the firm. One disciplined review, then the route forward: the lane that genuinely fits the deal and the person in front of it." />
+        lead="Where every Pegasus relationship starts. One disciplined review, then the route forward: the lane that genuinely fits the deal and the person in front of it." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-5 reveal">
@@ -221,14 +225,14 @@ export function DevelopmentPage({ go }: { go: Nav }) {
     <>
       <PageHero eyebrow="Pillar 02 · Development"
         title={<>We build the <span className="italic text-[var(--accent-bright)]">finished product.</span></>}
-        image={IMG('pegasus-craft-blueprint.png')}
-        lead="Our development team — former GCs, project managers, and trades with decades of combined experience — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, to a standard." />
+        image={IMG('nelson/nelson-kitchen-1280.jpg')}
+        lead="Our development team — former GCs, project managers, and trades who have run real jobsites — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, to a standard." />
       <PillarSection p={DEVELOPMENT} go={go} flip />
       <BuildProcessBlock />
       <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="The development team" title="A bench, not a single hire."
-            copy="Construction is run by a team, not one person we hope sticks around. Decades of combined experience, scaled to the project." />
+            copy="Construction is run by a team, not one person we hope sticks around: former GCs, project managers, and crews who have run real jobsites, scaled to the project." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {DEV_TEAM.map((c, i) => (
               <div key={c.t} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
@@ -275,7 +279,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
    ================================================================ */
 const MARKETFLOW_ACCESS = [
   { num: '01', title: 'Apply', desc: 'Tell us how you operate and where your capital or capacity sits. One short request, no obligation.' },
-  { num: '02', title: 'We review fit', desc: 'A person reviews every request against the standard of the network. Alignment comes before volume, always.' },
+  { num: '02', title: 'We review fit', desc: 'A real person reviews every request for fit. We would rather add fewer partners and actually service them.' },
   { num: '03', title: 'You are introduced', desc: 'Approved members are onboarded to reviewed dealflow and the operators behind it, as opportunities match.' },
 ];
 

@@ -290,7 +290,7 @@ export function EngineBlock({ go }: { go: Nav }) {
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead dark eyebrow="The engine" center
           title={<>The Deal Architecture Engine</>}
-          copy="Eight inputs go in. One clear recommendation comes out. Every situation runs the same disciplined read." />
+          copy="Eight inputs go in. One clear recommendation comes out: buy, list, reposition, partner, or pass." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {ENGINE_INPUTS.map((inp, i) => (
             <div key={inp.label} className="engine-node reveal" style={{ animationDelay: `${i * 60}ms` }}>
@@ -708,13 +708,9 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto =
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Your options" title={heading} copy={copy} />
         {founderPhoto && (
-          <div className="flex items-center gap-4 justify-center -mt-4 mb-12 reveal">
-            <img src={IMG('founder/apollo-1200.jpg')} alt="Paolo &quot;Apollo&quot; Duran"
-              className="w-14 h-14 rounded-full object-cover object-top shrink-0" loading="lazy" />
-            <p className="text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-md">
-              When representation is the lane, Apollo is your agent through Keller Williams Realty East Bay. DRE&nbsp;#02333658.
-            </p>
-          </div>
+          <p className="-mt-4 mb-12 text-center text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-md mx-auto reveal">
+            When representation is the lane, Apollo is your agent through Keller Williams Realty East Bay. DRE&nbsp;#02333658.
+          </p>
         )}
         <div className={`grid ${gridCols} gap-6`}>
           {paths.map((p, i) => (

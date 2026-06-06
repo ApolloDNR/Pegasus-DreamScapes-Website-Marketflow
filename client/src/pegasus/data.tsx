@@ -37,7 +37,7 @@ export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
   { value: '$180M+', label: 'In property reviewed', sub: 'Across the East Bay and beyond' },
   { value: '250+', label: 'Opportunities underwritten', sub: 'Each one read deal by deal' },
   { value: '2-day', label: 'Strategy read', sub: 'From intake to a written path' },
-  { value: '1', label: 'Standard, every time', sub: 'The Dreamscaper Standard' },
+  { value: 'East Bay', label: 'Where we focus', sub: 'Contra Costa & Alameda County' },
 ];
 
 /* ================================================================
@@ -95,12 +95,12 @@ export const PILLARS3: Pillar[] = [
     title: <>We acquire and<br />reposition real assets</>,
     lead: 'Our acquisitions team are deal architects: we source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal toward a win-win. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
     points: [
-      'Sourcing, negotiation, and deal structure under one roof',
+      'Sourcing, negotiation, and deal structure handled by one team',
       'Underwriting on real numbers, not hope',
       'Capital partners on clearly defined terms',
     ],
-    img: 'pegasus-aerial.png',
-    imgAlt: 'Aerial view of an East Bay property acquired and repositioned by Pegasus',
+    img: 'pegasus-before.png',
+    imgAlt: 'A dated, overlooked East Bay property before Pegasus acquired and repositioned it',
     route: 'investments',
     cta: 'Explore Investments',
   },
@@ -108,7 +108,7 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 02',
     tag: 'Development',
     title: <>We build the<br />finished product</>,
-    lead: 'Our development team brings decades of combined experience: former general contractors, project managers, and trades who have run real jobsites. They scope every renovation and ground-up build to a real budget and draw schedule, work hand in hand with a deep bench of GCs and subcontractors, and deliver on time, to a standard.',
+    lead: 'Our development team came up in the trades: former general contractors, project managers, and crews who have run real jobsites. They scope every renovation and ground-up build to a real budget and draw schedule, work hand in hand with a deep bench of GCs and subcontractors, and deliver on time, to a standard.',
     points: [
       'Renovation and ground-up development',
       'Led by our development team, built with a vetted bench of GCs and subs',
@@ -245,7 +245,7 @@ export const MARKETFLOW: {
     name: 'Inventory & Exits',
     tag: 'Where finished product lands',
     desc: 'Repositioned and newly built homes come to market, and to buyers and agents who want a delivered product, not a project.',
-    points: ['Renovated and ground-up inventory', 'First look for the network', 'A standard you can see and stand on'],
+    points: ['Renovated and ground-up inventory', 'First look for the network', 'Delivered move-in ready, not left mid-project'],
     icon: 'home',
     forWho: 'Buyers, referral partners',
   },
@@ -285,7 +285,7 @@ export const DOCTRINE: { t: string; d: string }[] = [
    DEVELOPMENT TEAM (capability band)
    ================================================================ */
 export const DEV_TEAM: { t: string; d: string }[] = [
-  { t: 'Decades, combined', d: 'Former general contractors, project managers, and trades who have actually run jobsites, not a single hire we depend on.' },
+  { t: 'A team, not one hire', d: 'Former general contractors, project managers, and trades who have actually run jobsites, not a single person we depend on.' },
   { t: 'A deep bench', d: 'We work hand in hand with a vetted network of GCs and subcontractors, scaled to the project instead of limited to one crew.' },
   { t: 'Scoped before we build', d: 'Every project starts with a real budget and a draw schedule, so the plan is honest before the first hammer swings.' },
   { t: 'Built to one standard', d: 'A single definition of done, applied to every renovation and ground-up build, and delivered on a real timeline.' },
@@ -522,7 +522,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Condition is our problem', d: 'When selling as-is is the right lane, we can handle the work, the cleanout, and the prep instead of you.' },
       { t: 'A close that holds', d: 'Defined terms and a timeline that does not move on you at the last minute. Any offer is subject to review and a written agreement.' },
     ],
-    rich: ['surfaces', 'faq'],
+    rich: ['proof', 'faq'],
     quote: 'Before we talk price, we read your situation. The plan comes from what you actually need.',
     forYou: [
       'You own a clean, ready property and want an investor-minded agent to list it',
@@ -566,7 +566,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Offer strategy and portfolio positioning', d: 'Structure offers that win without overpaying, and think past the closing to how the asset fits a long-term portfolio.' },
     ],
     splits: buyerSplits,
-    rich: ['surfaces', 'faq'],
+    rich: ['marketflow', 'faq'],
     quote: 'A delivered product, not a project left open. That is the standard on every home we hand over.',
     forYou: [
       'You want an investor-minded agent representing you on the buy side',
@@ -607,7 +607,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Source protection', d: 'We protect source attribution through documented submission records and written JV or compensation terms before distribution.' },
       { t: 'Buy box preview', d: 'Value-add SFR, East Bay ADU, estates and probate, and small multifamily. See the full buy box before you bring a deal.' },
     ],
-    rich: ['surfaces', 'buybox', 'faq'],
+    rich: ['buybox', 'faq'],
     quote: 'Bring us a deal that pencils and you will get the fastest, most honest answer in the market.',
     forYou: [
       'You source off-market or distressed opportunities',
@@ -649,7 +649,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Underwriting you can read', d: 'The same numbers we used: all-in, after-repair value, and the spread.' },
       { t: 'Risk in plain sight', d: 'We tell you what can go wrong and what protects the downside.' },
     ],
-    rich: ['surfaces', 'faq'],
+    rich: ['stats', 'faq'],
     quote: 'Capital deserves the truth: real numbers, defined terms, and no promise we cannot keep.',
     forYou: [
       'You want to deploy capital into specific, vetted real estate projects',
@@ -683,7 +683,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   operators: {
     eyebrow: 'Who We Serve / Operators & Vendors',
     title: <>Plug into a pipeline<br />that respects the work</>,
-    image: 'pegasus-craft-blueprint.png',
+    image: 'pegasus-process.png',
     lead: 'GCs, subcontractors, agents, title, lenders, and inspectors: the people who actually deliver. Work with an operator that scopes clearly, pays on terms, and brings repeat volume.',
     points: [
       { t: 'Clear scope', d: 'You bid against a real plan, not a moving target.' },
@@ -691,7 +691,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Repeat volume', d: 'A pipeline of projects, not a one-off favor.' },
       { t: 'A standard to hit', d: 'You know exactly what "done" looks like before you start.' },
     ],
-    rich: ['surfaces', 'faq'],
+    rich: ['process', 'faq'],
     quote: 'Our development team came up through the trades, so we know what good work costs, and we respect it.',
     forYou: [
       'You are a GC, sub, agent, lender, title, or inspection partner',
@@ -732,7 +732,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Looked after', d: 'Referral arrangements are clear and agreed up front.' },
       { t: 'A real answer for them', d: 'Even a "this is not a deal" is a service you can hand them.' },
     ],
-    rich: ['surfaces', 'faq'],
+    rich: ['faq'],
     quote: 'A referral is a piece of your reputation. We treat it like one.',
     forYou: [
       'You are an agent, attorney, advisor, or trusted professional',

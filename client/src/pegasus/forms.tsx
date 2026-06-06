@@ -4,7 +4,7 @@ import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, Ale
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
-import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
+import { usd0, SectionHead, ContourLines, BrandMark } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 
 function SaveStrategyButton({ snapshot, title }: { snapshot: StrategyPreview; title: string }) {
@@ -158,9 +158,8 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   if (submitted) {
     return (
       <div className="py-16 text-center">
-        <div className="relative w-20 h-20 mx-auto mb-7">
-          <img src={IMG('founder/apollo-1200.jpg')} alt="Paolo &quot;Apollo&quot; Duran"
-            className="w-20 h-20 rounded-full object-cover object-top" loading="lazy" />
+        <div className="relative w-20 h-20 mx-auto mb-7 flex items-center justify-center rounded-full bg-[var(--cream)] ring-1 ring-[var(--line)]">
+          <BrandMark boxClassName="w-11 h-11" />
           <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center ring-2 ring-[var(--bg)]"><Check className="w-4 h-4" /></span>
         </div>
         <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">Received. Thank you.</h3>
