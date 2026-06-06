@@ -402,7 +402,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
               <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.1]" />
               <div className="relative">
                 <div className="flex items-center gap-3 mb-7">
-                  <div className="peggy-avatar !bg-[var(--cream)] !p-1"><BrandMark boxClassName="w-full h-full" /></div>
+                  <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
                   <div className="leading-none">
                     <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
                     <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Pegasus intake concierge</div>

@@ -595,9 +595,9 @@ select.pg-field option { color: #1b1712; }
   height: 56px;
   padding: 0 22px 0 18px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fbf7f0;
-  border: 0;
+  background: var(--navy);
+  color: var(--cream);
+  border: 1px solid rgba(239, 231, 218, 0.12);
   box-shadow: 0 14px 34px -10px rgba(213,127,46, 0.7);
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, padding 0.4s ease;
@@ -657,12 +657,10 @@ select.pg-field option { color: #1b1712; }
 .peggy-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fbf7f0;
+  background: transparent;
   flex-shrink: 0;
 }
 .peggy-msg {

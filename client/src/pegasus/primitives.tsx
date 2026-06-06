@@ -2,19 +2,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import { MoveHorizontal, Sun, Moon } from 'lucide-react';
 import type { Theme } from './theme';
 import markFull from '@/assets/brand/pegasus-mark-full.svg';
+import markOnDark from '@/assets/brand/pegasus-mark-ondark.svg';
 
 export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
 
 /* ----------------------------------------------------------------
-   Brand mark — the full Pegasus-over-house lockup (primary logo).
-   On dark surfaces it sits on a warm cream tile so the navy wings
-   and roofline stay legible; on light surfaces it shows bare.
+   Brand mark — the winged Pegasus-over-house lockup (primary logo).
+   No background tile/chip. On light surfaces the wings + roofline are
+   navy; on dark surfaces (onDark) a light variant keeps them legible
+   while the horse stays orange. Clean recolored vector.
 ---------------------------------------------------------------- */
 export function BrandMark({ boxClassName = 'w-11 h-11', onDark = false, className = '' }:
   { boxClassName?: string; onDark?: boolean; className?: string }) {
   return (
-    <span className={`inline-flex items-center justify-center shrink-0 ${onDark ? 'rounded-[10px] bg-[var(--cream)] p-1.5 shadow-sm ring-1 ring-black/5' : ''} ${boxClassName} ${className}`}>
-      <img src={markFull} alt="Pegasus DreamScapes" className="w-full h-full object-contain" />
+    <span className={`inline-flex items-center justify-center shrink-0 ${boxClassName} ${className}`}>
+      <img src={onDark ? markOnDark : markFull} alt="Pegasus DreamScapes" className="w-full h-full object-contain" />
     </span>
   );
 }

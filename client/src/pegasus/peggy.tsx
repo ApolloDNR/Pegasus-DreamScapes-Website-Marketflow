@@ -213,7 +213,7 @@ export function Peggy({
       <div id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
         aria-label="PeggyAI, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
         <div className="peggy-head">
-          <div className="peggy-avatar !bg-[var(--cream)] !p-1"><BrandMark boxClassName="w-full h-full" /></div>
+          <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
           <div className="leading-none">
             <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
             <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Pegasus intake concierge</div>
