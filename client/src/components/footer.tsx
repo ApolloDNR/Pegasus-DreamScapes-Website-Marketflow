@@ -7,7 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import logoImage from "@/assets/brand/pegasus-mark-full.svg";
+import logoImage from "@/assets/brand/pegasus-emblem.png";
 import wordmarkImage from "@/assets/brand/pegasus-wordmark.svg";
 import { ThemeToggle } from "./theme-toggle";
 import {

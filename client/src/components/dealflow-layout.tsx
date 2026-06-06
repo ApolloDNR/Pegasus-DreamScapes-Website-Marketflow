@@ -55,7 +55,7 @@ import {
   PanelLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImage from "@/assets/brand/pegasus-mark-full.svg";
+import logoImage from "@/assets/brand/pegasus-emblem.png";
 
 interface DealflowLayoutProps {
   children: React.ReactNode;
