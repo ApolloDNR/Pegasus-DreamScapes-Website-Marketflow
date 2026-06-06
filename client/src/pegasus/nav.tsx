@@ -136,6 +136,17 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
   { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean; openPeggy: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(NAV_GROUPS[0]?.label ?? null);
+  const toggleLock = useRef(0);
+  const toggleMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const now = Date.now();
+    // Guard against mobile ghost-clicks / synthesized duplicate taps that
+    // would otherwise toggle the menu open then immediately closed.
+    if (now - toggleLock.current < 320) return;
+    toggleLock.current = now;
+    setMenuOpen((o) => !o);
+  };
   useEffect(() => { setMenuOpen(false); }, [route]);
   useEffect(() => {
     if (menuOpen) {
@@ -185,7 +196,8 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
             Start a Review
           </button>
           <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
-            aria-controls="mobile-menu" onClick={() => setMenuOpen((o) => !o)} className="lg:hidden relative z-10">
+            aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }}
+            className="lg:hidden relative z-10 -mr-1 p-1">
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
