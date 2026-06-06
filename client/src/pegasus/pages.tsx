@@ -443,7 +443,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
               { icon: Landmark, title: 'Hands to a person', desc: 'Knows its limits. When a deal needs a licensed read, it sets up the handoff and the transcript travels with it.' },
             ].map((c, i) => (
               <div key={c.title} className={`bg-[var(--bg)] p-8 lg:p-9 reveal`} style={{ transitionDelay: `${i * 70}ms` }}>
-                <div className="w-11 h-11 rounded-[3px] bg-[rgba(199,122,53,0.1)] flex items-center justify-center mb-6">
+                <div className="w-11 h-11 rounded-[3px] bg-[rgba(213,127,46,0.1)] flex items-center justify-center mb-6">
                   <c.icon className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.7} />
                 </div>
                 <div className="font-serif-display text-xl text-[var(--text)] mb-3">{c.title}</div>

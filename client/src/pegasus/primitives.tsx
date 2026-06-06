@@ -149,7 +149,7 @@ export function BeforeAfter() {
         <img src={IMG('pegasus-before.png')} alt="The property as acquired, tired and dated" />
       </div>
       <span className="ba-tag left-4">As acquired</span>
-      <span className="ba-tag right-4" style={{ background: 'rgba(199,122,53,0.82)' }}>Delivered</span>
+      <span className="ba-tag right-4" style={{ background: 'rgba(213,127,46,0.82)' }}>Delivered</span>
       <div className="ba-handle" style={{ left: `${pos}%` }}>
         <div className="ba-knob"><MoveHorizontal className="w-5 h-5" /></div>
       </div>

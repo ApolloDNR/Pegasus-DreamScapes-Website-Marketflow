@@ -23,7 +23,7 @@ export function SavedPage({ go }: { go: Nav }) {
 
   return (
     <section className="relative py-24 lg:py-28">
-      <div aria-hidden="true" className="section-numeral absolute -top-6 right-4 lg:right-12 text-[var(--line-soft)]">SAVED</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">SAVED</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="max-w-[760px] mb-16">
           <div className="pg-label !text-[9px] text-[var(--accent)] mb-4">Your workspace</div>

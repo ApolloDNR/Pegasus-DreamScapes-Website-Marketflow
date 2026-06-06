@@ -161,7 +161,7 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
 export function ThreePillarsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute -top-6 right-4 lg:right-12 text-[var(--line-soft)]">FIRM</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">FIRM</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="What we do" title="Three engines, one company."
           copy="Investments find and reposition the asset. Development builds it. Systems make it repeatable." />
@@ -215,7 +215,7 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
 
   return (
     <section className={sectionCls}>
-      {numeral && <div aria-hidden="true" className={`section-numeral absolute -top-6 ${flip ? 'left-4 lg:left-12' : 'right-4 lg:right-12'} ${dark ? 'text-white/[0.04]' : 'text-[var(--line-soft)]'}`}>{numeral}</div>}
+      {numeral && <div aria-hidden="true" className={`section-numeral absolute top-0 ${flip ? 'left-4 lg:left-12' : 'right-4 lg:right-12'} ${dark ? 'text-white/[0.04]' : 'text-[var(--line-soft)]'}`}>{numeral}</div>}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className={`lg:col-span-6 reveal ${flip ? 'lg:order-2' : ''}`}>
@@ -276,7 +276,7 @@ export function EngineBlock({ go }: { go: Nav }) {
             <ChevronDown className="w-6 h-6 animate-pulse" />
           </div>
         </div>
-        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(199,122,53,0.1)] p-9 lg:p-11">
+        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(213,127,46,0.1)] p-9 lg:p-11">
           <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-4">{ENGINE_OUTPUT.label}</div>
           <p className="font-serif-display text-3xl md:text-4xl text-[var(--cream)] leading-snug mb-5">{ENGINE_OUTPUT.desc}</p>
           <button type="button" onClick={() => go('dealarchitecture')}
@@ -296,7 +296,7 @@ export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }
   const run = (a: StartAction) => { if (a === 'peggy') openPeggy(); else go(a); };
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute -top-6 left-4 lg:left-12 text-[var(--line-soft)]">START</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 left-4 lg:left-12 text-[var(--line-soft)]">START</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Getting started" title="Choose how to start."
           copy="Three ways in, no wrong door. Talk to a person, run the numbers yourself, or just ask in plain language." />
@@ -525,7 +525,7 @@ export function ProofStats() {
 export function NelsonProof({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute -top-6 left-4 lg:left-12 text-[var(--line-soft)]">PROOF</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 left-4 lg:left-12 text-[var(--line-soft)]">PROOF</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-6 reveal">

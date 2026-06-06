@@ -586,7 +586,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
 
   return (
     <section className="relative py-24 lg:py-28 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute -top-6 right-4 lg:right-12 text-[var(--line-soft)]">LAB</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LAB</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Strategy Lab · Underwriting workshop"
           title={<>Underwrite the deal,<br />before you make the offer.</>}
