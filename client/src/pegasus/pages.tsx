@@ -3,7 +3,7 @@ import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Lan
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
-  CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_CHIPS, PEGGY_SLA,
+  CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_CHIPS, PEGGY_SLA, DEV_TEAM,
 } from './data';
 import {
   PageHero, Hero, HomeIntro, LaneCardsBlock, ThreePillarsBlock, PillarSection,
@@ -38,7 +38,7 @@ const MARKETFLOW_FORM: FormCfg = {
 
 const MARKETFLOW_PREVIEW = [
   { tag: 'Sample deal card', title: 'Value-add SFR · East Bay', lines: ['All-in vs. delivered value', 'Scope & projected timeline', 'Status: reviewed · under contract'] },
-  { tag: 'Operator profile', title: 'Licensed GC · 12 projects', lines: ['Trade verified · references checked', 'On-time delivery record', 'Active in Contra Costa'] },
+  { tag: 'Operator profile', title: 'Licensed GC · verified operator', lines: ['Trade verified · references checked', 'On-time delivery record', 'Active in Contra Costa'] },
   { tag: 'Buyer interest', title: 'Capital partner mandate', lines: ['Check size & risk band', 'Asset types they back', 'Matched to projects, not pools'] },
   { tag: 'Trust layer', title: 'Verification badges', lines: ['Identity & license reviewed', 'Source attribution logged', 'Written terms before introductions'] },
 ];
@@ -196,8 +196,22 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Pillar 02 · Development"
         title={<>We build the <span className="italic text-[var(--accent-bright)]">finished product.</span></>}
         image={IMG('pegasus-craft-blueprint.png')}
-        lead="With a licensed general contractor on the team, renovation and ground-up work is GC-led, scoped to a real budget and draw schedule, and delivered on time, to a standard." />
+        lead="Our development team — former GCs, project managers, and trades with decades of combined experience — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, to a standard." />
       <PillarSection p={DEVELOPMENT} go={go} flip />
+      <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+          <SectionHead eyebrow="The development team" title="A bench, not a single hire."
+            copy="Construction is run by a team, not one person we hope sticks around. Decades of combined experience, scaled to the project." />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {DEV_TEAM.map((c, i) => (
+              <div key={c.t} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
+                <h3 className="font-serif-display text-xl text-[var(--text)] mb-3 leading-tight">{c.t}</h3>
+                <p className="text-[var(--muted)] text-[0.85rem] leading-relaxed">{c.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       <NelsonProof go={go} />
       <DoctrineBlock />
       <NextStep go={go} label="Work with us as an operator or vendor" route="operators" />

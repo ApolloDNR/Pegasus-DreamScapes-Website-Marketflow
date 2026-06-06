@@ -93,9 +93,9 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 01',
     tag: 'Investments',
     title: <>We acquire and<br />reposition real assets</>,
-    lead: 'Distressed, dated, off-market, and overlooked property. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
+    lead: 'Our acquisitions team are deal architects: we source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal toward a win-win. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
     points: [
-      'Off-market and value-add acquisitions',
+      'Sourcing, negotiation, and deal structure under one roof',
       'Underwriting on real numbers, not hope',
       'Capital partners on clearly defined terms',
     ],
@@ -108,10 +108,10 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 02',
     tag: 'Development',
     title: <>We build the<br />finished product</>,
-    lead: 'With a licensed general contractor on the team, renovation and ground-up work is GC-led, scoped to a real budget and draw schedule, and delivered on time, to a standard.',
+    lead: 'Our development team brings decades of combined experience: former general contractors, project managers, and trades who have run real jobsites. They scope every renovation and ground-up build to a real budget and draw schedule, work hand in hand with a deep bench of GCs and subcontractors, and deliver on time, to a standard.',
     points: [
       'Renovation and ground-up development',
-      'GC of record on every build',
+      'Led by our development team, built with a vetted bench of GCs and subs',
       'A delivered product, not a project left open',
     ],
     img: 'pegasus-craft-blueprint.png',
@@ -268,7 +268,7 @@ export const ECOSYSTEM: {
   { key: 'lab', name: 'Strategy Lab', role: 'The underwriting tool', desc: 'Self-serve modeling that returns an Instant Strategy Preview on any deal.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
   { key: 'marketflow', name: 'MarketFlow', role: 'The marketplace', desc: 'Three lanes that move deals, match capital, and place finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
   { key: 'capstack', name: 'CapStack', role: 'The capital layer', desc: 'How funding is structured and matched to projects, on defined terms.', icon: 'layers', status: 'Building', route: 'capital' },
-  { key: 'buildforge', name: 'BuildForge', role: 'The construction arm', desc: 'GC-led oversight that turns scope, budget, and draw schedule into delivered product.', icon: 'hammer', status: 'Operating', route: 'development' },
+  { key: 'buildforge', name: 'BuildForge', role: 'The construction arm', desc: 'Our development team turning scope, budget, and draw schedule into delivered product.', icon: 'hammer', status: 'Operating', route: 'development' },
 ];
 
 /* ================================================================
@@ -278,7 +278,17 @@ export const DOCTRINE: { t: string; d: string }[] = [
   { t: 'Read the situation, not just the spreadsheet', d: 'Behind every property is a person with a deadline, a constraint, or a decision. We solve for both.' },
   { t: 'Underwrite on real numbers', d: 'All-in cost, after-repair value, and the spread. If it does not pencil, we say so.' },
   { t: 'Write the exit before we enter', d: 'Sell, hold, refinance, or trade. The plan is decided before capital moves, not after.' },
-  { t: 'Deliver a finished product', d: 'A GC-led build means the work gets done to a standard, on a real schedule, not left half-open.' },
+  { t: 'Deliver a finished product', d: 'Our development team takes the work to a standard, on a real schedule, not left half-open.' },
+];
+
+/* ================================================================
+   DEVELOPMENT TEAM (capability band)
+   ================================================================ */
+export const DEV_TEAM: { t: string; d: string }[] = [
+  { t: 'Decades, combined', d: 'Former general contractors, project managers, and trades who have actually run jobsites, not a single hire we depend on.' },
+  { t: 'A deep bench', d: 'We work hand in hand with a vetted network of GCs and subcontractors, scaled to the project instead of limited to one crew.' },
+  { t: 'Scoped before we build', d: 'Every project starts with a real budget and a draw schedule, so the plan is honest before the first hammer swings.' },
+  { t: 'Built to one standard', d: 'A single definition of done, applied to every renovation and ground-up build, and delivered on a real timeline.' },
 ];
 
 /* ================================================================
@@ -287,7 +297,7 @@ export const DOCTRINE: { t: string; d: string }[] = [
 export const FAQ_HOME: FaqItem[] = [
   {
     q: 'What does Pegasus actually do?',
-    a: 'Three things that feed each other: we invest in and reposition real property, we build and renovate it with a licensed general contractor on the team, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that turn each deal into a repeatable process.',
+    a: 'Three things that feed each other: we invest in and reposition real property, our development team builds and renovates it to a standard, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that turn each deal into a repeatable process.',
   },
   {
     q: 'I just have one property. Is that too small?',
@@ -315,10 +325,10 @@ export const APOLLO = {
   legal: 'Paolo Duran',
   role: 'Founder & Deal Architect',
   license: 'Keller Williams East Bay · DRE #02333658',
-  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; a licensed general contractor on the team builds the result. One discipline runs the whole arc, from the first read to the final walkthrough.',
+  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; our development team builds the result. One standard runs the whole arc, from the first read to the final walkthrough.',
   points: [
     { t: 'The architect', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
-    { t: 'The build team', d: 'A licensed general contractor of record turns the plan into a delivered product.' },
+    { t: 'The development team', d: 'Former GCs, project managers, and trades turn the plan into a delivered product.' },
     { t: 'The standard', d: 'Every deal runs through the same discipline, from first call to final walkthrough.' },
   ],
 };
@@ -331,7 +341,7 @@ export const NELSON = {
   blurb: 'A tired single-family home, acquired off-market, repositioned to standard, and delivered.',
   rows: [
     { k: 'Acquired', v: '≈ $600K', note: 'Off-market, below comparable value' },
-    { k: 'Renovation', v: '≈ $90K to $100K', note: 'GC-led oversight' },
+    { k: 'Renovation', v: '≈ $90K to $100K', note: 'Managed by our development team' },
     { k: 'Delivered', v: '≈ $840K', note: 'Repositioned to the standard' },
   ],
 };
@@ -612,7 +622,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'A standard to hit', d: 'You know exactly what "done" looks like before you start.' },
     ],
     rich: ['surfaces', 'faq'],
-    quote: 'Led by a licensed GC, so we know what good work costs, and we respect it.',
+    quote: 'Our development team came up through the trades, so we know what good work costs, and we respect it.',
     forYou: [
       'You are a GC, sub, agent, lender, title, or inspection partner',
       'You deliver quality and want consistent, well-scoped work',
@@ -625,7 +635,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'See how we build', route: 'development' },
     faq: [
       { q: 'How do you scope work?', a: 'Every project comes with a real plan and budget. You bid against a defined scope, not a vague wish list.' },
-      { q: 'How do payments work?', a: 'On a defined draw schedule agreed before work starts, and honored. Construction is GC-led, so we understand cash flow on a jobsite.' },
+      { q: 'How do payments work?', a: 'On a defined draw schedule agreed before work starts, and honored. Our development team has run jobsites, so we understand cash flow.' },
     ],
     form: {
       role: 'Operator',

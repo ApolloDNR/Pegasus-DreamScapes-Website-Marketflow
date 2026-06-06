@@ -114,7 +114,7 @@ export function HomeIntro() {
         </div>
         <div className="lg:col-span-8 reveal delay-100">
           <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-[-0.01em]">
-            Most real estate is a transaction shop that lists it, flips it, and moves on. We built the opposite: we <span className="text-[var(--accent)]">invest</span> in property others overlook, <span className="text-[var(--accent)]">develop</span> it with a licensed general contractor on the team, and run the <span className="text-[var(--accent)]">systems</span> that turn each deal into a repeatable process.
+            Most real estate is a transaction shop that lists it, flips it, and moves on. We built the opposite: we <span className="text-[var(--accent)]">invest</span> in property others overlook, <span className="text-[var(--accent)]">develop</span> it through our own development team, and run the <span className="text-[var(--accent)]">systems</span> that turn each deal into a repeatable process.
           </p>
         </div>
       </div>
@@ -486,7 +486,7 @@ export function ApolloBlock({ go, showCta = true }: { go: Nav; showCta?: boolean
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pg-label !text-[10px] text-[var(--muted)] mb-9">
-            <span>Licensed REALTOR</span><span>{APOLLO.license}</span><span>NAR · CAR</span><span>GC license in progress</span>
+            <span>Licensed REALTOR</span><span>{APOLLO.license}</span><span>NAR · CAR</span><span>Backed by an in-house development team</span>
           </div>
           {showCta && (
             <button type="button" onClick={() => go('apollo')} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
