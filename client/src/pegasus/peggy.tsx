@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useId, useState, useCallback } from 'react';
 import { X, Send, ArrowRight, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
-import type { ChatTurn, PeggyHandoff } from './theme';
-import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA } from './data';
+import type { ChatTurn, PeggyHandoff, Nav } from './theme';
+import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE } from './data';
 import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
 
@@ -68,11 +68,15 @@ export function Peggy({
   setOpen,
   toStrategyLab,
   onHandoffToReview,
+  go,
+  toSubmit,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
   toStrategyLab: () => void;
   onHandoffToReview: (h: PeggyHandoff) => void;
+  go: Nav;
+  toSubmit: (intent?: string) => void;
 }) {
   const panelId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
@@ -216,7 +220,7 @@ export function Peggy({
           <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
           <div className="leading-none">
             <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
-            <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Pegasus intake concierge</div>
+            <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Guided Intake Concierge</div>
           </div>
           {conversationStarted && <SaveChatButton turns={transcriptTurns(messages)} />}
           <button type="button" onClick={close} aria-label="Close" className="ml-3 text-[var(--cream)]/60 hover:text-[var(--cream)] transition-colors">
@@ -276,7 +280,7 @@ export function Peggy({
 
           {conversationStarted && !streaming && !errored && (
             <div className="flex flex-wrap gap-2 mt-1">
-              {PEGGY_FOLLOWUPS.map((c) => (
+              {(PEGGY_ROLES.find((r) => r.role === pickedRole)?.followups ?? PEGGY_FOLLOWUPS).map((c) => (
                 <button key={c} type="button" onClick={() => send(c)} className="peggy-chip !py-1.5 !px-3 text-left">{c}</button>
               ))}
             </div>
@@ -301,7 +305,23 @@ export function Peggy({
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}
           </button>
         </form>
-        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/35 px-5 pb-4 text-center">
+        <div className="px-5 pt-1 pb-2">
+          <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/40 mb-2">Or go straight to</div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" data-testid="peggy-route-strategylab" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { toStrategyLab(); setOpen(false); }}>Strategy Lab</button>
+            <button type="button" data-testid="peggy-route-submit" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { toSubmit(); setOpen(false); }}>Submit a Property</button>
+            <button type="button" data-testid="peggy-route-apollo" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { go('apollo'); setOpen(false); }}>Work With Apollo</button>
+            <button type="button" data-testid="peggy-route-marketflow" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
+          </div>
+        </div>
+        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/45 px-5 pt-1 text-center" data-testid="peggy-compliance">
+          {PEGGY_COMPLIANCE}
+        </div>
+        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/35 px-5 pb-4 pt-2 text-center">
           {PEGGY_SLA}
         </div>
       </div>

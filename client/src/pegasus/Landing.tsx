@@ -32,6 +32,10 @@ export function Landing() {
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []);
   const openPeggy = useCallback(() => setPeggyOpen(true), []);
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
+  const toSubmit = useCallback((intent?: string) => {
+    setLocation(intent ? `/submit?intent=${intent}` : '/submit');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [setLocation]);
   const onHandoffToReview = useCallback((h: PeggyHandoff) => {
     setPeggyHandoff(h);
     go('contact');
@@ -111,7 +115,7 @@ export function Landing() {
 
       <Footer go={go} openPeggy={openPeggy} />
 
-      <Peggy open={peggyOpen} setOpen={setPeggyOpen} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} />
+      <Peggy open={peggyOpen} setOpen={setPeggyOpen} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} />
     </div>
   );
 }

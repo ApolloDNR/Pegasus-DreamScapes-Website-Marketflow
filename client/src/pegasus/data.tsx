@@ -373,44 +373,103 @@ export const PEGGY_CHIPS: string[] = [
 ];
 
 /* Role-aware starter chips. Peggy opens by asking who she is helping, then
-   shows prompts tuned to that role. Mock routing only — no real AI. */
-export const PEGGY_ROLES: { role: string; label: string; chips: string[] }[] = [
+   shows prompts tuned to that role, plus follow-up chips that persist through
+   the conversation for that path. Mock routing only — no real AI. */
+export const PEGGY_ROLES: { role: string; label: string; chips: string[]; followups: string[] }[] = [
   {
-    role: 'seller', label: 'I own a property',
+    role: 'seller', label: 'I want to sell a property',
     chips: [
       'My property is clean and ready. How do I list with Apollo?',
       'I inherited a house and I am not sure what to do with it',
       'I have a tired rental and a tenant. What are my options?',
     ],
+    followups: [
+      'Tell me about the property',
+      'How fast can you close?',
+      'What is my situation worth?',
+    ],
   },
   {
-    role: 'buyer', label: 'I want to buy',
+    role: 'buyer', label: 'I want to buy with a strategy',
     chips: [
       'I want buyer representation for a home purchase',
       'I am an investor looking for the next value-add',
       'What is in the Pegasus inventory pipeline right now?',
     ],
+    followups: [
+      'What should I be looking for?',
+      'Model the numbers in Strategy Lab',
+      'How does buyer representation work?',
+    ],
   },
   {
-    role: 'dealfinder', label: 'I find deals',
+    role: 'dealfinder', label: 'I have a deal to submit',
     chips: [
       'I have an off-market deal. Where would Pegasus come in?',
       'How do JV terms and assignment economics work here?',
       'Does my deal fit the Pegasus Buy Box?',
     ],
+    followups: [
+      'How do I submit the deal?',
+      'What terms can I expect?',
+      'Run the spread in Strategy Lab',
+    ],
   },
   {
-    role: 'capital', label: 'I have capital',
+    role: 'explore', label: "I want to understand my property's options",
+    chips: [
+      'What could I do with a property I already own?',
+      'Should I sell, rent, or reposition this property?',
+      'Could this lot or house support an ADU?',
+    ],
+    followups: [
+      'Walk me through the options',
+      'Model the numbers in Strategy Lab',
+      'I would rather talk to a person',
+    ],
+  },
+  {
+    role: 'capital', label: "I'm a capital partner",
     chips: [
       'I want to deploy capital into a value-add project',
       'How are capital conversations structured here?',
       'What does a typical project timeline look like?',
     ],
+    followups: [
+      'How are deals structured?',
+      'What is the typical timeline?',
+      'I would rather talk to a person',
+    ],
+  },
+  {
+    role: 'agent', label: "I'm an agent or vendor",
+    chips: [
+      'I am an agent with a client who needs to sell as-is, fast',
+      'How does a referral relationship work with Pegasus?',
+      'I am a vendor and want to join the network',
+    ],
+    followups: [
+      'How do referrals work?',
+      'How do I join the vendor network?',
+      'I would rather talk to a person',
+    ],
+  },
+  {
+    role: 'unsure', label: "I'm not sure where to start",
+    chips: [
+      'I have a situation and I am not sure what it is yet',
+      'Help me figure out which lane fits me',
+      'Just tell me how Pegasus works',
+    ],
+    followups: [
+      'Which lane fits my situation?',
+      'What does this cost?',
+      'I would rather talk to a person',
+    ],
   },
 ];
 
-/* Follow-up chips that persist through the conversation, shown after each
-   Peggy reply so the visitor can keep moving without typing. */
+/* Generic follow-up chips, used as a fallback when no role path is selected. */
 export const PEGGY_FOLLOWUPS: string[] = [
   'Which lane fits my situation?',
   'What does this cost?',
@@ -419,6 +478,10 @@ export const PEGGY_FOLLOWUPS: string[] = [
 ];
 
 export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs a person, we respond within two business days.';
+
+/* Compliance note shown in the panel footer. Peggy is intake only — she never
+   approves, prices, or advises. Publishing the guardrail is the credibility move. */
+export const PEGGY_COMPLIANCE = 'Peggy is an AI intake assistant. She does not approve deals, make offers, or provide legal, tax, lending, or investment advice.';
 
 /* ================================================================
    AUDIENCE CATEGORIES (six lanes)

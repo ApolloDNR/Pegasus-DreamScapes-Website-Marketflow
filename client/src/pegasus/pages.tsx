@@ -13,7 +13,7 @@ import {
   SplitPaths, NextStep, CTABand, DealFindersExtras,
 } from './blocks';
 import {
-  LeadSection, StrategyCalculator, StrategyConsole, useStrategyModel, CONTACT_FORM, DEVELOPMENT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
+  LeadSection, StrategyCalculator, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, DEVELOPMENT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
 } from './forms';
 
 const INVESTMENTS = PILLARS3[0];
@@ -263,6 +263,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
         steps={LAB_STEPS} />
       <StrategyConsole go={go} model={model} />
       <StrategyCalculator go={go} model={model} />
+      <StrategyTierStrip />
       <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Strategy Snapshot" tone="navy" strategy={model.snapshot} />
     </>

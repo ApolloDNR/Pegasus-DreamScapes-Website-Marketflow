@@ -1,4 +1,5 @@
 import React, { useId, useRef, useState } from 'react';
+import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -384,13 +385,13 @@ function WaterfallRow({ label, value, sign, strong = false }:
    Front-end only. Mock autofill seeds the shared underwriting model.
 ---------------------------------------------------------------- */
 const SAMPLE_PROPERTIES = [
-  { addr: '1428 Walnut Blvd, Concord, CA', acq: 575000, rehab: 85000, arv: 815000, type: 'Single-family', cond: 'Light cosmetic', occ: 'Vacant' },
-  { addr: '92 Estate Way, Walnut Creek, CA', acq: 910000, rehab: 180000, arv: 1340000, type: 'Single-family', cond: 'Full gut', occ: 'Probate / estate' },
-  { addr: '305 Foothill Ave, Antioch, CA', acq: 430000, rehab: 60000, arv: 615000, type: '2–4 units', cond: 'Heavy cosmetic', occ: 'Tenant-occupied' },
+  { addr: '1428 Walnut Blvd, Concord, CA', zip: '94521', acq: 575000, rehab: 85000, arv: 815000, type: 'Single-family (SFR)', cond: 'Light cosmetic', occ: 'Vacant', beds: 3, baths: 2, sqft: 1620, rent: 3200 },
+  { addr: '92 Estate Way, Walnut Creek, CA', zip: '94598', acq: 910000, rehab: 180000, arv: 1340000, type: 'Single-family (SFR)', cond: 'Full gut', occ: 'Probate / estate', beds: 4, baths: 3, sqft: 2480, rent: 4800 },
+  { addr: '305 Foothill Ave, Antioch, CA', zip: '94509', acq: 430000, rehab: 60000, arv: 615000, type: 'Triplex / Fourplex', cond: 'Heavy cosmetic', occ: 'Tenant-occupied', beds: 6, baths: 4, sqft: 2900, rent: 5400 },
 ];
 
 const SEL = {
-  type: ['Single-family', '2–4 units', 'Small multifamily (5+)', 'Condo / Townhome', 'Land / ADU lot'],
+  type: ['Single-family (SFR)', 'Condo / Townhome / TIC', 'Duplex', 'Triplex / Fourplex', 'Small multifamily (5+)', 'Commercial / Mixed-use', 'Land / Lot', 'ADU / JADU'],
   cond: ['Move-in ready', 'Light cosmetic', 'Heavy cosmetic', 'Full gut', 'Distressed / unknown'],
   occ: ['Owner-occupied', 'Tenant-occupied', 'Vacant', 'Probate / estate'],
   role: ['I own it (Seller)', 'I am buying it (Buyer / Investor)', 'I sourced it (Deal finder)'],
@@ -399,6 +400,7 @@ const SEL = {
   fin: ['All cash', 'Conventional financing', 'Hard money / bridge', 'Subject-to existing loan', 'Seller financing'],
   motiv: ['Just curious', 'Open to the right offer', 'Motivated', 'Time-sensitive / urgent'],
   repairConf: ['Rough estimate', 'Contractor walk-through done', 'Detailed bid in hand', 'Unknown / sight unseen'],
+  timeline: ['Flexible / no rush', 'Within 3 months', 'Within 30 days', 'ASAP / urgent'],
 };
 
 function ConsoleSelect({ label, value, opts, onChange }:
@@ -417,6 +419,18 @@ function ConsoleSelect({ label, value, opts, onChange }:
   );
 }
 
+function ConsoleInput({ label, value, onChange, placeholder, type = 'text', testid }:
+  { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: 'text' | 'number'; testid?: string }) {
+  const uid = useId();
+  return (
+    <div>
+      <label htmlFor={uid} className="pg-field-label block mb-2">{label}</label>
+      <input id={uid} type={type} inputMode={type === 'number' ? 'decimal' : undefined} className="pg-field"
+        value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} data-testid={testid} />
+    </div>
+  );
+}
+
 export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }) {
   const { setAcq, setRehab, setArv, rehab, hardCost, netProceeds, spread, margin, read } = model;
   const [address, setAddress] = useState('');
@@ -429,11 +443,18 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   const [fin, setFin] = useState(SEL.fin[0]);
   const [motiv, setMotiv] = useState(SEL.motiv[1]);
   const [repairConf, setRepairConf] = useState(SEL.repairConf[0]);
+  const [zip, setZip] = useState('');
+  const [beds, setBeds] = useState('');
+  const [baths, setBaths] = useState('');
+  const [sqft, setSqft] = useState('');
+  const [timeline, setTimeline] = useState(SEL.timeline[0]);
+  const [rent, setRent] = useState('');
 
   const autofill = () => {
     const s = SAMPLE_PROPERTIES[Math.floor(Math.random() * SAMPLE_PROPERTIES.length)];
     setAddress(s.addr); setAcq(s.acq); setRehab(s.rehab); setArv(s.arv);
     setPType(s.type); setCond(s.cond); setOcc(s.occ);
+    setZip(s.zip); setBeds(String(s.beds)); setBaths(String(s.baths)); setSqft(String(s.sqft)); setRent(String(s.rent));
   };
 
   // Mock Property Fit Score: blends the live margin read with the situation.
@@ -444,6 +465,19 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   const motivBonus = motiv === 'Time-sensitive / urgent' ? 12 : motiv === 'Motivated' ? 8 : motiv === 'Open to the right offer' ? 4 : 1;
   const fit = Math.round(Math.max(8, Math.min(98, marginScore + condBonus + occBonus + goalBonus + motivBonus)));
   const fitBand = fit >= 75 ? 'Strong fit' : fit >= 55 ? 'Worth a review' : fit >= 35 ? 'Possible, needs work' : 'Likely not a fit';
+
+  // Confidence reflects how complete the inputs are, not how good the deal is.
+  // The more the visitor tells us, the more we trust the preview.
+  const inputsFilled = [
+    address.trim() !== '',
+    zip.trim() !== '',
+    beds.trim() !== '',
+    baths.trim() !== '',
+    sqft.trim() !== '',
+    rent.trim() !== '',
+    repairConf === 'Contractor walk-through done' || repairConf === 'Detailed bid in hand',
+  ].filter(Boolean).length;
+  const confidence = inputsFilled >= 6 ? 'High' : inputsFilled >= 3 ? 'Medium' : 'Low';
 
   // Mock capital-needed: cash deals carry the full basis; leverage assumes ~20% in.
   const capitalNeeded = fin === 'All cash' ? hardCost : Math.round(hardCost * 0.2 + rehab);
@@ -506,6 +540,19 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
               <ConsoleSelect label="Seller motivation" value={motiv} opts={SEL.motiv} onChange={setMotiv} />
               <ConsoleSelect label="Repair budget confidence" value={repairConf} opts={SEL.repairConf} onChange={setRepairConf} />
             </div>
+
+            <div className="mt-8">
+              <div className="pg-label !text-[9px] !tracking-[0.18em] text-[var(--accent)] mb-4">Property details · optional, sharpens the read</div>
+              <div className="grid sm:grid-cols-2 gap-5">
+                <ConsoleInput label="ZIP / neighborhood" value={zip} onChange={setZip} placeholder="94521 or area" testid="input-console-zip" />
+                <ConsoleSelect label="Timeline" value={timeline} opts={SEL.timeline} onChange={setTimeline} />
+                <ConsoleInput label="Beds" value={beds} onChange={setBeds} placeholder="3" type="number" testid="input-console-beds" />
+                <ConsoleInput label="Baths" value={baths} onChange={setBaths} placeholder="2" type="number" testid="input-console-baths" />
+                <ConsoleInput label="Living area (sq ft)" value={sqft} onChange={setSqft} placeholder="1,600" type="number" testid="input-console-sqft" />
+                <ConsoleInput label="Expected monthly rent" value={rent} onChange={setRent} placeholder="3,200" type="number" testid="input-console-rent" />
+              </div>
+            </div>
+
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
               {[...costCards, { label: 'Est. capital needed in', value: usd0(capitalNeeded) }].map((c) => (
                 <div key={c.label} className="surface-card p-5">
@@ -531,7 +578,14 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                   <span className="font-serif-display text-[4.5rem] leading-none text-[var(--accent-bright)]">{fit}</span>
                   <span className="font-serif-display text-2xl text-[var(--cream)]/50">/100</span>
                 </div>
-                <div className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)] mb-5">{fitBand}</div>
+                <div className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)] mb-3">{fitBand}</div>
+                <div className="flex items-center gap-2.5 mb-5" data-testid="text-console-confidence">
+                  <span className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/55">Input confidence</span>
+                  <span className={`pg-label !text-[8px] !tracking-[0.16em] px-2 py-0.5 rounded-full border ${
+                    confidence === 'High' ? 'text-[var(--accent-bright)] border-[var(--accent-bright)]/50'
+                    : confidence === 'Medium' ? 'text-[var(--cream)] border-[var(--cream)]/35'
+                    : 'text-[var(--cream)]/60 border-[var(--cream)]/20'}`}>{confidence}</span>
+                </div>
                 <div className="h-2 rounded-full bg-[rgba(239,231,218,0.14)] overflow-hidden mb-7">
                   <div className="h-full rounded-full bg-[var(--accent-bright)] transition-[width] duration-700" style={{ width: `${fit}%` }} />
                 </div>
@@ -584,6 +638,23 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
   const meter = Math.max(0, Math.min(100, (margin / 25) * 100));
   const meterColor = read.tier === 'strong' ? 'var(--accent-bright)' : read.tier === 'under' ? '#d97a5e' : 'var(--accent)';
 
+  // Every preview is framed against the same set of Pegasus lanes; the margin
+  // read highlights the one the numbers point to. Front-end only.
+  const LANES = [
+    'Retail Listing', 'As-Is Acquisition Review', 'Value-Add Rehab', 'ADU / Development Screen',
+    'Partner / JV Review', 'Investor-Buyer Acquisition', 'MarketFlow Disposition', 'Paid Deal Blueprint',
+  ];
+  const suggestedLane =
+    margin >= 15 ? 'Value-Add Rehab'
+    : margin >= 8 ? 'As-Is Acquisition Review'
+    : margin >= 0 ? 'Retail Listing'
+    : 'Paid Deal Blueprint';
+  const ASSUMPTIONS = [
+    { label: 'ARV', value: arv, set: setArv, step: 5000 },
+    { label: 'Repair budget', value: rehab, set: setRehab, step: 2500 },
+    { label: 'Hold (mo)', value: holdMonths, set: setHoldMonths, step: 1 },
+  ] as const;
+
   return (
     <section className="relative py-24 lg:py-28 overflow-hidden">
       <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LAB</div>
@@ -608,7 +679,10 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
               <div className="relative">
                 <div className="flex items-center gap-2.5 mb-6">
                   <BrandMark boxClassName="w-7 h-7" onDark />
-                  <div className="pg-label !text-[9px] text-[var(--accent-bright)]">Instant Strategy Preview</div>
+                  <div>
+                    <div className="pg-label !text-[9px] text-[var(--accent-bright)]">Instant Strategy Preview</div>
+                    <div className="pg-label !text-[7px] !tracking-[0.18em] text-[var(--cream)]/45 mt-1">Preliminary · Automated · Subject to Human Review</div>
+                  </div>
                 </div>
                 <WaterfallRow label="Acquisition basis" value={usd0(acq)} />
                 <WaterfallRow label="Value-add budget" value={usd0(rehab)} sign="+" />
@@ -645,6 +719,40 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                     <span className="font-serif-display text-[1.05rem] text-[var(--cream)]/85 leading-none">{usd0(Math.max(0, seventy))}</span>
                   </div>
                 </div>
+                <div className="border-t border-[rgba(239,231,218,0.16)] pt-6 mb-6">
+                  <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent-bright)] mb-3">Adjust assumptions</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {ASSUMPTIONS.map((a) => (
+                      <div key={a.label} className="rounded-[3px] bg-[rgba(239,231,218,0.06)] border border-[rgba(239,231,218,0.14)] px-3 py-2.5">
+                        <label className="pg-label !text-[7px] !tracking-[0.12em] text-[var(--cream)]/55 block mb-1">{a.label}</label>
+                        <input type="number" inputMode="decimal" value={a.value} step={a.step}
+                          onChange={(e) => { const n = Number(e.target.value); if (!Number.isNaN(n)) a.set(Math.max(0, n)); }}
+                          aria-label={`${a.label} assumption`}
+                          data-testid={`input-assumption-${a.label.toLowerCase().replace(/[^a-z]+/g, '-')}`}
+                          className="w-full bg-transparent font-serif-display text-[1.1rem] text-[var(--cream)] leading-none focus:outline-none focus:text-[var(--accent-bright)]" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-[rgba(239,231,218,0.16)] pt-6 mb-6">
+                  <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent-bright)] mb-3">Lanes considered</div>
+                  <div className="flex flex-wrap gap-2" data-testid="list-output-lanes">
+                    {LANES.map((l) => {
+                      const active = l === suggestedLane;
+                      return (
+                        <span key={l} data-testid={`lane-${l.toLowerCase().replace(/[^a-z]+/g, '-')}`}
+                          className={`pg-label !text-[8px] !tracking-[0.1em] px-3 py-1.5 rounded-full border ${
+                            active
+                              ? 'bg-[var(--accent-bright)] text-[var(--navy)] border-[var(--accent-bright)]'
+                              : 'text-[var(--cream)]/60 border-[rgba(239,231,218,0.2)]'}`}>
+                          {l}{active && ' ·'}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="border-t border-[rgba(239,231,218,0.16)] pt-6">
                   <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--cream)]/55 mb-2">Suggested lane · {read.lane}</div>
                   <div className="font-serif-display text-2xl text-[var(--cream)] mb-2">{read.label}</div>
@@ -662,9 +770,75 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
             </div>
           </div>
         </div>
-        <p className="mt-10 text-[0.82rem] leading-relaxed text-[var(--muted)] max-w-2xl">
-          A directional estimate for orientation only. Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. This is not an offer or an underwrite. Every real read is done by a person.
-        </p>
+        <div className="mt-10 max-w-2xl rounded-[3px] border border-[var(--line)] bg-[var(--bg-2)] p-6" data-testid="text-strategy-disclaimer">
+          <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-3">Disclaimer</div>
+          <p className="text-[0.85rem] leading-relaxed text-[var(--text-2)]">
+            Strategy Lab outputs are preliminary and automated. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to human review, market conditions, property condition, title, occupancy, and written agreements.
+          </p>
+          <p className="mt-3 text-[0.78rem] leading-relaxed text-[var(--muted)]">
+            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Every real read is done by a person.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Strategy Lab · Tier strip — the three levels of depth, clearly
+   priced and routed. Front-end only; routes to the canonical /submit.
+---------------------------------------------------------------- */
+export function StrategyTierStrip() {
+  const [, setLocation] = useLocation();
+  const goSubmit = (intent?: string) => {
+    setLocation(intent ? `/submit?intent=${intent}` : '/submit');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+  const tiers = [
+    {
+      key: 'preview', name: 'Instant Strategy Preview', price: 'Free · Automated',
+      desc: 'Run the numbers above for a directional read on margin, lane, and risk flags — instantly, no contact needed.',
+      cta: 'You are using it above', action: null as null | (() => void), emphasis: false,
+    },
+    {
+      key: 'snapshot', name: 'Strategy Snapshot', price: 'Human-Reviewed',
+      desc: 'Send the situation and a person returns a short, candid written read — usually within two business days.',
+      cta: 'Request a Snapshot', action: () => goSubmit(), emphasis: true,
+    },
+    {
+      key: 'blueprint', name: 'Deal Blueprint', price: 'Paid Engagement',
+      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Engaged and scoped with you.',
+      cta: 'Start a Deal Blueprint', action: () => goSubmit('blueprint'), emphasis: false,
+    },
+  ];
+  return (
+    <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-b border-[var(--line)]">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead eyebrow="Strategy Lab · Levels of depth"
+          title={<>Go as far as the deal deserves.</>}
+          copy="Three tiers, increasing depth. Start free and self-serve, escalate to a human-written read, and engage the full Blueprint when the deal is worth a plan." />
+        <div className="grid md:grid-cols-3 gap-5" data-testid="strategy-tier-strip">
+          {tiers.map((t) => (
+            <div key={t.key}
+              data-testid={`tier-${t.key}`}
+              className={`surface-card p-7 flex flex-col ${t.emphasis ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30' : ''}`}>
+              <div className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--accent)] mb-2">{t.price}</div>
+              <h3 className="font-serif-display text-2xl text-[var(--text)] mb-3 leading-tight">{t.name}</h3>
+              <p className="text-[var(--muted)] text-[0.88rem] leading-relaxed mb-6 flex-1">{t.desc}</p>
+              {t.action ? (
+                <button type="button" onClick={t.action}
+                  data-testid={`button-tier-${t.key}`}
+                  className={`${t.emphasis ? 'btn-primary' : 'btn-line'} w-full justify-center px-6 py-3.5 pg-label !text-[10px] inline-flex items-center gap-2.5 group`}>
+                  {t.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.8} />
+                </button>
+              ) : (
+                <div className="w-full text-center px-6 py-3.5 pg-label !text-[10px] text-[var(--muted)] border border-dashed border-[var(--line)] rounded-[3px]">
+                  {t.cta}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
