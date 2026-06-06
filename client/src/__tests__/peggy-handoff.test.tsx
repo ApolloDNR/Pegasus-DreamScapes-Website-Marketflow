@@ -1,0 +1,197 @@
+/**
+ * Peggy — handoff directive parsing + next-step action buttons (Task #179).
+ *
+ * PeggyAI embeds an inline [[HANDOFF]]{...}[[/HANDOFF]] directive in the
+ * assistant stream to decide which next-step CTA to surface. `splitHandoff`
+ * parses that directive and strips it from the visible prose; the component
+ * then renders either "Open Strategy Lab" or "Start my Review" once streaming
+ * finishes. This guards the path from a Peggy chat into a captured lead.
+ */
+import React from "react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import {
+  render,
+  screen,
+  cleanup,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
+import { Peggy, splitHandoff } from "@/pegasus/peggy";
+
+describe("splitHandoff", () => {
+  it("extracts a strategylab action and strips the directive from the prose", () => {
+    const raw =
+      'Let me point you to the lab. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]';
+    const { text, action } = splitHandoff(raw);
+    expect(action).toEqual({ action: "strategylab" });
+    expect(text).toBe("Let me point you to the lab.");
+    expect(text).not.toContain("HANDOFF");
+  });
+
+  it("extracts a review action with its fields and strips the directive", () => {
+    const raw =
+      'I will get a person on this. [[HANDOFF]]{"action":"review","role":"seller","area":"East Bay","situation":"probate"}[[/HANDOFF]] trailing';
+    const { text, action } = splitHandoff(raw);
+    expect(action).toEqual({
+      action: "review",
+      role: "seller",
+      area: "East Bay",
+      situation: "probate",
+    });
+    expect(text).toBe("I will get a person on this.");
+    expect(text).not.toContain("HANDOFF");
+  });
+
+  it("returns no action for plain prose with no directive", () => {
+    const { text, action } = splitHandoff("Just a normal answer.");
+    expect(action).toBeNull();
+    expect(text).toBe("Just a normal answer.");
+  });
+
+  it("ignores an unknown action type but still strips the directive", () => {
+    const { text, action } = splitHandoff(
+      'Hmm. [[HANDOFF]]{"action":"explode"}[[/HANDOFF]]',
+    );
+    expect(action).toBeNull();
+    expect(text).toBe("Hmm.");
+  });
+
+  it("returns no action for malformed JSON inside the directive", () => {
+    const { text, action } = splitHandoff(
+      "oops [[HANDOFF]]{not json}[[/HANDOFF]]",
+    );
+    expect(action).toBeNull();
+    expect(text).toBe("oops");
+  });
+
+  it("hides a still-streaming partial directive from the visible text", () => {
+    const raw = 'Here is my read. [[HANDOFF]]{"action":"rev';
+    const { text, action } = splitHandoff(raw);
+    // The closing marker has not arrived yet, so no action is parsed and the
+    // half-written directive must never flash on screen.
+    expect(action).toBeNull();
+    expect(text).toBe("Here is my read.");
+    expect(text).not.toContain("HANDOFF");
+  });
+});
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
+function renderPeggy() {
+  const setOpen = vi.fn();
+  const toStrategyLab = vi.fn();
+  const onHandoffToReview = vi.fn();
+  const go = vi.fn();
+  const toSubmit = vi.fn();
+  render(
+    <Peggy
+      open={true}
+      setOpen={setOpen}
+      toStrategyLab={toStrategyLab}
+      onHandoffToReview={onHandoffToReview}
+      go={go}
+      toSubmit={toSubmit}
+    />,
+  );
+  return { setOpen, toStrategyLab, onHandoffToReview, go, toSubmit };
+}
+
+async function sendMessage(text: string) {
+  fireEvent.change(screen.getByLabelText("Ask PeggyAI"), {
+    target: { value: text },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  // Streaming begins: the input is disabled until the reply resolves.
+  await waitFor(() =>
+    expect(screen.getByLabelText("Ask PeggyAI")).toBeDisabled(),
+  );
+}
+
+describe("Peggy — handoff action buttons", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("renders the Strategy Lab CTA only after streaming, then routes to the lab", async () => {
+    const chat = deferred<Response>();
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      if (String(url).includes("/conversations")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ id: 1 }),
+        } as unknown as Response);
+      }
+      return chat.promise;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { toStrategyLab, setOpen } = renderPeggy();
+    await sendMessage("model these numbers for me");
+
+    // While the reply is still streaming, no handoff CTA is shown.
+    expect(
+      screen.queryByRole("button", { name: /Open Strategy Lab/ }),
+    ).toBeNull();
+
+    chat.resolve({
+      ok: true,
+      json: async () => ({
+        response:
+          'Run the numbers yourself. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]',
+      }),
+    } as unknown as Response);
+
+    const cta = await screen.findByRole("button", {
+      name: /Open Strategy Lab/,
+    });
+    fireEvent.click(cta);
+    expect(toStrategyLab).toHaveBeenCalledTimes(1);
+    expect(setOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("renders the Review CTA only after streaming, then opens the review handoff", async () => {
+    const chat = deferred<Response>();
+    const fetchMock = vi.fn((url: RequestInfo | URL) => {
+      if (String(url).includes("/conversations")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ id: 7 }),
+        } as unknown as Response);
+      }
+      return chat.promise;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { onHandoffToReview, setOpen } = renderPeggy();
+    await sendMessage("I have a probate property in the East Bay");
+
+    expect(screen.queryByRole("button", { name: /Start my Review/ })).toBeNull();
+
+    chat.resolve({
+      ok: true,
+      json: async () => ({
+        response:
+          'A person should look at this. [[HANDOFF]]{"action":"review","role":"seller","area":"East Bay","situation":"probate"}[[/HANDOFF]]',
+      }),
+    } as unknown as Response);
+
+    const cta = await screen.findByRole("button", { name: /Start my Review/ });
+    fireEvent.click(cta);
+    expect(onHandoffToReview).toHaveBeenCalledTimes(1);
+    expect(onHandoffToReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: "seller",
+        third: "East Bay",
+        message: "probate",
+      }),
+    );
+    expect(setOpen).toHaveBeenCalledWith(false);
+  });
+});

@@ -45,7 +45,7 @@ function SaveChatButton({ turns }: { turns: ChatTurn[] }) {
 }
 
 /** Splits a (possibly partial) assistant message into visible prose and a parsed handoff. */
-function splitHandoff(raw: string): { text: string; action: HandoffAction | null } {
+export function splitHandoff(raw: string): { text: string; action: HandoffAction | null } {
   // While streaming, hide everything from the opening marker onward so the raw
   // directive never flashes on screen.
   const openIdx = raw.indexOf('[[HANDOFF]]');
