@@ -50,8 +50,7 @@ const HOME_JSONLD = {
       telephone: "+1-925-744-8525",
       address: {
         "@type": "PostalAddress",
-        streetAddress: "Pleasant Hill",
-        addressLocality: "Pleasant Hill",
+        addressLocality: "East Bay",
         addressRegion: "CA",
         addressCountry: "US",
       },
@@ -391,7 +390,7 @@ function TrustStripSection() {
           <span className="mx-3 text-[hsl(var(--copper))]/60">/</span>
           CAR
           <span className="mx-3 text-[hsl(var(--copper))]/60">/</span>
-          Pleasant Hill, CA
+          East Bay, CA
         </p>
       </div>
     </section>
@@ -499,8 +498,9 @@ function WhatBringsYouHereSection() {
 // Real Nelson Dr exterior photo (full color) with a navy gradient
 // at the base for architect's project plate legibility (Year · Type
 // · Location). Real numbers preserved (Acquired ~$600K · Reno
-// ~$90–100K · Sold ~$840K). The full /projects/nelson-dr case study
-// body is still gated on founder-confirmed copy (§J.2).
+// $100K · Sold ~$840K). Location: Richmond / El Sobrante Area, CA.
+// The full /projects/nelson-dr case study body is still gated on
+// founder-confirmed copy (§J.2).
 // ─────────────────────────────────────────────────────────────────────
 function NelsonProofSection() {
   return (
@@ -534,7 +534,7 @@ function NelsonProofSection() {
                   src="/images/nelson/nelson-exterior-1280.jpg"
                   srcSet="/images/nelson/nelson-exterior-768.jpg 768w, /images/nelson/nelson-exterior-1280.jpg 1280w"
                   sizes="(min-width: 768px) 58vw, 100vw"
-                  alt="Nelson Dr · Pleasant Hill · Pegasus DreamScapes case study"
+                  alt="Nelson Dr · Richmond / El Sobrante Area · Pegasus DreamScapes case study"
                   width={1280}
                   height={960}
                   loading="lazy"
@@ -558,7 +558,7 @@ function NelsonProofSection() {
                     </div>
                     <div>
                       <div className="text-cream/40 mb-1">Location</div>
-                      <div>Pleasant Hill</div>
+                      <div>Richmond / El Sobrante</div>
                     </div>
                   </div>
                 </div>
@@ -568,13 +568,13 @@ function NelsonProofSection() {
 
           <div className="md:col-span-5 space-y-7">
             <p className="font-serif italic text-xl text-cream/85 leading-relaxed">
-              A 3BR/2BA Pleasant Hill single-family acquired off-market. Heavy cosmetic and structural scope. Strategy reviewed at intake, pivoted mid-project as the comp picture shifted, exited cleanly through a disciplined value-add path.
+              A 3BR/2BA Richmond / El Sobrante single-family acquired off-market. Heavy cosmetic and structural scope. Strategy reviewed at intake, pivoted mid-project as the comp picture shifted, exited cleanly through a disciplined value-add path.
             </p>
 
             <div className="grid grid-cols-3 gap-3" data-testid="nelson-pills">
               {[
                 { kicker: "Acquired", value: "~$600K" },
-                { kicker: "Renovation", value: "~$90–100K" },
+                { kicker: "Renovation", value: "$100K" },
                 { kicker: "Sold", value: "~$840K" },
               ].map((pill) => (
                 <div
@@ -999,7 +999,7 @@ function DreamscaperStandardSection() {
 // FINAL CTA — Amendment 2 §E.8.
 // Three doors (Submit · Strategy Lab · Work With Apollo). The
 // credential strip below carries the locked DRE / KW / NAR / CAR /
-// Pleasant Hill disclosure per launch gate §J.6.
+// East Bay business-location disclosure per launch gate §J.6.
 // Required phrase: "Bring us the property. We'll help find the path."
 // preserved verbatim.
 // ─────────────────────────────────────────────────────────────────────
@@ -1072,7 +1072,7 @@ function FinalCTASection() {
               <span className="mx-2 text-[hsl(var(--copper))]/60">/</span>
               CAR
               <span className="mx-2 text-[hsl(var(--copper))]/60">/</span>
-              Pleasant Hill, CA
+              East Bay, CA
             </p>
             <p className="text-[10px] uppercase tracking-[0.24em] text-cream/40 font-supporting mt-3">
               Each Keller Williams office is independently owned and operated.

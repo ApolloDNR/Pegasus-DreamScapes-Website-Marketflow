@@ -273,7 +273,7 @@ export default function SubmitPage() {
                   <FormItem>
                     <FormLabel>Property address</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="123 Example Dr, Pleasant Hill, CA" data-testid="input-submit-address" />
+                      <Input {...field} placeholder="123 Example Dr, Richmond, CA" data-testid="input-submit-address" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

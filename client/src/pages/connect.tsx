@@ -182,7 +182,7 @@ function GreetingHero() {
               </a>
               <span className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-sm border border-cream/15 text-sm text-cream/70">
                 <MapPin className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                <span>Pleasant Hill, CA</span>
+                <span>East Bay, CA</span>
               </span>
             </div>
           </motion.div>

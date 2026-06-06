@@ -43,7 +43,7 @@ const ABOUT_JSONLD = {
       telephone: "+1-925-744-8525",
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Pleasant Hill",
+        addressLocality: "East Bay",
         addressRegion: "CA",
         addressCountry: "US",
       },
@@ -181,7 +181,7 @@ function AboutHero() {
                   <ShapeRow label="Positioning" value="The Deal Architect" />
                   <ShapeRow label="Founder" value={'Paolo "Apollo" Duran'} />
                   <ShapeRow label="Entity" value="Pegasus DreamScapes Corp." />
-                  <ShapeRow label="HQ" value="Pleasant Hill, California" />
+                  <ShapeRow label="HQ" value="East Bay, California" />
                   <ShapeRow label="Stage" value="Private beta · Invite-only network" />
                 </dl>
               </div>

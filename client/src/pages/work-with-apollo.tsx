@@ -34,39 +34,52 @@ const LANES = [
   {
     icon: HomeIcon,
     title: "List With Apollo",
+    kind: "Seller representation",
     desc: "Full-service representation through Keller Williams East Bay. Pricing, prep, marketing, negotiation, and close, driven by the same strategy-first lens applied to every Pegasus property.",
     deliverables: ["Pre-listing strategy read", "Pricing + prep plan", "Marketing + showings", "Negotiation + close"],
     cta: "Start a Listing Conversation",
-    href: "/submit?intent=list",
+    href: "/submit?intent=sell",
     testId: "wwa-card-list",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Home Value / Listing Strategy Review",
+    kind: "Seller representation",
+    desc: "A pre-listing strategy session: pricing read, prep priorities, comp picture, and the right path forward. Honest read, no pressure, no obligation to list.",
+    deliverables: ["Pricing range read", "Prep priority list", "Comp picture", "Recommended path forward"],
+    cta: "Request a Strategy Review",
+    href: "/submit?intent=sell",
+    testId: "wwa-card-listing-strategy",
   },
   {
     icon: Key,
     title: "Buy With Apollo",
+    kind: "Buyer representation",
     desc: "Buyer representation for owner-occupants. Search, tour, write, negotiate, and close with an agent who underwrites every property structurally before submitting an offer.",
     deliverables: ["Search + tour plan", "Structural read per home", "Offer + negotiation", "Inspection + close"],
     cta: "Start a Buyer Conversation",
-    href: "/submit?intent=buy",
+    href: "/submit?intent=explore",
     testId: "wwa-card-buy",
   },
   {
     icon: Briefcase,
     title: "Investor Buyer Representation",
+    kind: "Buyer representation",
     desc: "Operator and investor-side buyer rep for value-add, BRRRR, ADU upside, and small-multifamily acquisitions. Every offer is run through the Pegasus underwriting lens first.",
     deliverables: ["Buybox-aligned sourcing", "Pegasus underwriting lens", "Comp + scope review", "Offer + close coordination"],
     cta: "Request Investor Rep",
-    href: "/submit?intent=buyer-rep",
+    href: "/submit?intent=explore",
     testId: "wwa-card-buyer-rep",
   },
-  {
-    icon: ClipboardCheck,
-    title: "Home Value / Listing Strategy Review",
-    desc: "A pre-listing strategy session: pricing read, prep priorities, comp picture, and the right path forward. Honest read, no pressure, no obligation to list.",
-    deliverables: ["Pricing range read", "Prep priority list", "Comp picture", "Recommended path forward"],
-    cta: "Request a Strategy Review",
-    href: "/submit?intent=listing-strategy",
-    testId: "wwa-card-listing-strategy",
-  },
+];
+
+// Quick-routing selector shown above the lanes. Each option deep-links to
+// the canonical /submit intake with a valid ?intent= prefill.
+const SELECTOR = [
+  { label: "I want to sell", href: "/submit?intent=sell", testId: "wwa-selector-sell" },
+  { label: "I want to buy", href: "/submit?intent=explore", testId: "wwa-selector-buy" },
+  { label: "I have a complex situation", href: "/submit?intent=property", testId: "wwa-selector-situation" },
+  { label: "I have a deal to submit", href: "/submit?intent=deal-jv", testId: "wwa-selector-deal" },
 ];
 
 // Website Structure v1 FINAL §4 — locked DRE/KW disclosure, verbatim.
@@ -148,7 +161,7 @@ export default function WorkWithApollo() {
                 The Pegasus structural lens stays on. Every property is read first, then matched to the right representation lane.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/submit?intent=list">
+                <Link href="/submit?intent=sell">
                   <Button
                     size="lg"
                     className="px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white"
@@ -208,6 +221,32 @@ export default function WorkWithApollo() {
           </div>
         </div>
         <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
+      </section>
+
+      {/* QUICK SELECTOR — route to the right intake intent */}
+      <section
+        className="py-10 lg:py-12 bg-card border-b border-border/40"
+        data-testid="section-wwa-selector"
+      >
+        <div className="max-w-5xl mx-auto px-6 lg:px-12">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-4 text-center">
+            What brings you here?
+          </p>
+          <div className="flex flex-wrap justify-center gap-3" data-testid="wwa-selector">
+            {SELECTOR.map((s) => (
+              <Link key={s.testId} href={s.href}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full px-6 py-5 text-sm font-medium border-border/70 hover:border-[hsl(var(--copper)/0.5)] hover:text-[hsl(var(--copper))]"
+                  data-testid={s.testId}
+                >
+                  {s.label}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* MEET APOLLO — anchored bio with quote and credentials */}
@@ -349,8 +388,20 @@ export default function WorkWithApollo() {
                 className="group flex flex-col p-7 rounded-lg border border-border/60 bg-card hover:border-[hsl(var(--copper)/0.45)] hover:-translate-y-0.5 hover:shadow-[0_14px_36px_-18px_rgba(13,27,45,0.3)] transition-all duration-200"
                 data-testid={lane.testId}
               >
-                <div className="w-11 h-11 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 group-hover:bg-[hsl(var(--copper)/0.15)] group-hover:border-[hsl(var(--copper)/0.35)] transition-colors">
-                  <lane.icon className="w-5 h-5 text-primary group-hover:text-[hsl(var(--copper))] transition-colors" aria-hidden="true" />
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-11 h-11 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-[hsl(var(--copper)/0.15)] group-hover:border-[hsl(var(--copper)/0.35)] transition-colors">
+                    <lane.icon className="w-5 h-5 text-primary group-hover:text-[hsl(var(--copper))] transition-colors" aria-hidden="true" />
+                  </div>
+                  <span
+                    className={`text-[10px] uppercase tracking-[0.18em] font-supporting font-semibold px-2.5 py-1 rounded-full border ${
+                      lane.kind === "Buyer representation"
+                        ? "text-navy border-navy/25 bg-navy/5"
+                        : "text-[hsl(var(--copper))] border-[hsl(var(--copper)/0.3)] bg-[hsl(var(--copper)/0.06)]"
+                    }`}
+                    data-testid={`badge-${lane.testId}-kind`}
+                  >
+                    {lane.kind}
+                  </span>
                 </div>
                 <h3 className="font-serif text-2xl font-semibold tracking-tight mb-3 leading-tight">
                   {lane.title}
@@ -389,6 +440,28 @@ export default function WorkWithApollo() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* CREDENTIALS + EQUAL HOUSING — visible near the representation lanes */}
+          <div
+            className="mt-10 p-6 rounded-lg border border-border/60 bg-card"
+            data-testid="wwa-lanes-credentials"
+          >
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2 text-foreground/80">
+                <Shield className="w-4 h-4 text-[hsl(var(--copper))]" aria-hidden="true" />
+                Licensed representation
+              </span>
+              <span className="hidden sm:inline text-border">·</span>
+              <span>Paolo "Apollo" Duran · DRE #02333658</span>
+              <span className="hidden sm:inline text-border">·</span>
+              <span>Keller Williams Realty East Bay</span>
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
+              Equal Housing Opportunity. All representation services are offered without regard to
+              race, color, religion, sex, disability, familial status, or national origin. Each
+              Keller Williams office is independently owned and operated.
+            </p>
           </div>
         </div>
       </section>

@@ -146,7 +146,7 @@ export default function Privacy() {
 
             <LegalBlock id="contact" idx={8} icon={SECTIONS[8].icon} kicker={SECTIONS[8].kicker} title={SECTIONS[8].title}>
               <p>
-                Privacy questions go to the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-primary hover:underline" data-testid="link-privacy-email">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-primary hover:underline" data-testid="link-privacy-phone">925-744-8525</a>. Pleasant Hill, California.
+                Privacy questions go to the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-primary hover:underline" data-testid="link-privacy-email">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-primary hover:underline" data-testid="link-privacy-phone">925-744-8525</a>. East Bay, California.
               </p>
             </LegalBlock>
           </div>

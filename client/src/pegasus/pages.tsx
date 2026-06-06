@@ -603,7 +603,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
           <FooterCol title="Contact">
             <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline">apollo@pegasusdreamscapes.com</a></li>
             <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
-            <li>Pleasant Hill · East Bay · CA</li>
+            <li>East Bay · CA</li>
             <li className="!tracking-[0.16em]">DRE #02333658 · KW East Bay</li>
           </FooterCol>
         </div>

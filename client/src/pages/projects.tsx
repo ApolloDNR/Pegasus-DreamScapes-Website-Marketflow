@@ -250,10 +250,10 @@ function ProjectsGrid() {
                     </div>
                   </div>
                   <div className="p-7">
-                    <h3 className="font-serif text-2xl font-semibold tracking-tight mb-1.5">Nelson Dr · Pleasant Hill</h3>
+                    <h3 className="font-serif text-2xl font-semibold tracking-tight mb-1.5">Nelson Dr · Richmond / El Sobrante Area</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                       <MapPin className="w-3.5 h-3.5" />
-                      <span>Pleasant Hill, CA</span>
+                      <span>Richmond / El Sobrante Area, CA</span>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">A complex East Bay residential acquisition routed through a value-add execution path. Case study publishing when final economics are signed off.</p>
                     <div className="flex items-center justify-between pt-4 border-t border-border/40">

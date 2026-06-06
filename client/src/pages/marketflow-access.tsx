@@ -56,7 +56,7 @@ function WhatYouGet() {
 const accessSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  role: z.enum(["operator", "buyer", "capital", "broker", "other"]),
+  role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"]),
   introducedBy: z.string().min(2, "Tell us who introduced you"),
   notes: z.string().optional().default(""),
 });
@@ -159,9 +159,18 @@ export default function MarketflowAccessPage() {
         <h1 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-4">
           Request beta access.
         </h1>
-        <p className="text-base text-muted-foreground leading-relaxed mb-8">
-          Access is by introduction. Tell us who connected you and what role you would fill in the
-          network.
+        <p className="text-base text-muted-foreground leading-relaxed mb-6">
+          Access is by introduction. Operators, deal finders and wholesalers, cash buyers, capital
+          partners, and brokers all have a lane. Tell us who connected you and what role you would
+          fill in the network.
+        </p>
+        <p
+          className="text-xs text-muted-foreground leading-relaxed mb-8 p-4 rounded-md border border-border/50 bg-muted/20"
+          data-testid="marketflow-private-access-note"
+        >
+          MarketFlow is a private, invitation-only network. It is not a public marketplace, not a
+          securities or investment platform, and access is not a guarantee that any deal will be
+          placed, purchased, or compensated. Membership is reviewed case by case.
         </p>
 
         <WhatYouGet />
@@ -208,6 +217,7 @@ export default function MarketflowAccessPage() {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="operator">Operator / builder</SelectItem>
+                      <SelectItem value="wholesaler">Deal finder / wholesaler</SelectItem>
                       <SelectItem value="buyer">Cash buyer</SelectItem>
                       <SelectItem value="capital">Capital partner</SelectItem>
                       <SelectItem value="broker">Broker / agent</SelectItem>

@@ -260,7 +260,7 @@ export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', han
           <div className={`space-y-5 pg-label !text-[11px] !tracking-[0.16em] ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
             <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline flex items-center gap-3"><Mail className={`w-4 h-4 ${ic}`} /> apollo@pegasusdreamscapes.com</a>
             <a href="tel:9257448525" className="link-underline flex items-center gap-3"><Phone className={`w-4 h-4 ${ic}`} /> 925-744-8525</a>
-            <div className="flex items-center gap-3"><MapPin className={`w-4 h-4 ${ic}`} /> Pleasant Hill · East Bay · California</div>
+            <div className="flex items-center gap-3"><MapPin className={`w-4 h-4 ${ic}`} /> East Bay · California</div>
           </div>
           <p className={`mt-7 text-[0.82rem] !tracking-normal normal-case ${navy ? 'text-[var(--cream)]/55' : 'text-[var(--muted)]'}`}>
             A person reads every submission. We respond within two business days.

@@ -42,7 +42,7 @@ const CASE_STUDY_NARRATIVE: Record<string, StoryBlock[]> = {
     {
       kicker: "Result",
       heading: "Renovated, sold, documented.",
-      body: "The home was fully renovated, brought to retail-ready condition, and sold. Public-safe economics: acquisition near $600k, renovation investment in the $90–100k range, sale near $840k. Project economics: documented internally for partner conversations.",
+      body: "The home was fully renovated, brought to retail-ready condition, and sold in September 2025. Public-safe economics: acquisition near $600k, renovation investment of $100k, sale near $840k. Project economics: documented internally for partner conversations.",
     },
     {
       kicker: "Lesson",

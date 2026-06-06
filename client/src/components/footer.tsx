@@ -203,7 +203,7 @@ export function Footer() {
               </a>
               <div className="flex items-center gap-3 text-sm text-muted-foreground" data-testid="text-footer-location">
                 <MapPin className="w-4 h-4 text-primary/70 flex-shrink-0" />
-                Pleasant Hill, California
+                East Bay, California
               </div>
               <p className="text-xs text-muted-foreground/85 pt-2 leading-relaxed" data-testid="text-footer-response">
                 We respond to every serious submission within 48 hours, Monday through Friday.
@@ -325,7 +325,7 @@ export function Footer() {
             Founder · Paolo &ldquo;Apollo&rdquo; Duran · DRE #02333658 · Keller Williams East Bay
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground/85 font-supporting" data-testid="text-footer-credentials">
-            NAR member NRDS #159537628 · CAR via CCAR #36424 · Pleasant Hill, California
+            NAR member NRDS #159537628 · CAR via CCAR #36424 · East Bay, California
           </p>
           <div className="mt-3 flex items-center gap-3">
             <svg

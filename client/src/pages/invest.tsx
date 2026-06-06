@@ -483,7 +483,7 @@ function ProjectSnapshotSection() {
             <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
               {[
                 { label: "Acquisition", value: "~$600k" },
-                { label: "Renovation Investment", value: "~$90–100k" },
+                { label: "Renovation Investment", value: "$100k" },
                 { label: "Sale Price", value: "~$840k", accent: true },
               ].map((stat, i) => (
                 <div key={i} className="p-7 lg:p-8 text-center" data-testid={`snapshot-stat-${i}`}>

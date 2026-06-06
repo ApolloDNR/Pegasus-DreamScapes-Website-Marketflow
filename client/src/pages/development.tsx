@@ -708,7 +708,7 @@ function ProjectsCaseStudiesSection() {
     {
       slug: "nelson-dr",
       title: "Nelson Dr — Cosmetic-plus Reposition",
-      kicker: "Case study · Pleasant Hill",
+      kicker: "Case study · Richmond / El Sobrante Area",
       desc: "Inherited single-family. Deferred maintenance, dated systems, clean title. Routed to a cosmetic-plus reposition with a contained scope and a defensible exit.",
     },
     {

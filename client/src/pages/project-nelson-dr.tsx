@@ -19,21 +19,20 @@ import {
 
 // Nelson Dr — launch-ready proof-of-work case study.
 //
-// Economics are published as APPROXIMATE project-level ranges only
-// (acquisition ~$600K, scope ~$90–100K, finished exit ~$840K). No net
-// profit / ROI figures are surfaced — full cost basis is not published.
-// Property photos are intentional, labeled "pending" placeholders until
-// real project photos are supplied. No AI-generated property imagery.
+// Economics: acquisition ~$600K, improvement budget $100K, finished
+// exit ~$840K, settled September 2025. No net profit / ROI figures are
+// surfaced — full cost basis is not published. Property photos are
+// intentional, labeled "pending" placeholders until real project photos
+// are supplied. No AI-generated property imagery.
 //
-// Location label is held at "East Bay, CA" pending founder confirmation
-// of the exact city (records have shown both Pleasant Hill and Richmond)
-// and whether the full street address may be published.
+// Location: Richmond / El Sobrante Area, CA. Founder-confirmed public
+// address: 4369 Nelson Drive, Richmond, CA 94803.
 
 const METRICS = [
   { label: "Approx. Acquisition", value: "Around $600K" },
-  { label: "Improvement Scope", value: "Approx. $90K–$100K" },
+  { label: "Improvement Budget", value: "$100K" },
   { label: "Finished Exit", value: "Around $840K" },
-  { label: "Primary Lane", value: "Value-Add Rehab / Retail Exit" },
+  { label: "Settled", value: "September 2025" },
 ];
 
 const LENS = [
@@ -118,7 +117,7 @@ export default function NelsonDrPage() {
   useSEO({
     title: "Nelson Dr — Value-Add Execution Case Study",
     description:
-      "How Pegasus DreamScapes read an East Bay property, defined the improvement path, controlled scope and budget, and prepared it for a stronger finished-market exit.",
+      "How Pegasus DreamScapes read a Richmond / El Sobrante Area property, defined the improvement path, controlled scope and budget, and prepared it for a stronger finished-market exit.",
     image: "/og/nelson-dr.png",
   });
 
@@ -163,7 +162,7 @@ export default function NelsonDrPage() {
           </p>
 
           <div className="flex flex-wrap gap-2 mb-10">
-            {["East Bay, CA", "Value-Add / Rehab", "Retail Exit"].map((chip) => (
+            {["Richmond / El Sobrante Area, CA", "Value-Add / Rehab", "Retail Exit"].map((chip) => (
               <span
                 key={chip}
                 className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/75 font-supporting"
@@ -368,8 +367,8 @@ export default function NelsonDrPage() {
               The result was a clean value-add execution path: acquire at the right
               basis, improve the property with a controlled scope, and position the
               finished product for a stronger exit. On a project level, the asset was
-              acquired around $600K, improved with a scope of roughly $90K–$100K, and
-              prepared for a finished exit around $840K.
+              acquired around $600K, improved with a $100K budget, and exited around
+              $840K, settling in September 2025.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Nelson Dr is not presented as a promise that every property can produce
@@ -455,6 +454,10 @@ export default function NelsonDrPage() {
           <section className="border-t border-border pt-8">
             <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
               Case Study Disclaimer
+            </p>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3" data-testid="text-nelson-address">
+              Property: 4369 Nelson Drive, Richmond, CA 94803 (Richmond / El Sobrante
+              Area). Settled September 2025.
             </p>
             <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3">
               This case study is provided for informational and illustrative purposes
