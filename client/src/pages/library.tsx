@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { ArrowRight, BookOpen } from "lucide-react";
+import { ContourLines } from "@/pegasus/primitives";
 import type { Article } from "@shared/schema";
 import { trackEvent } from "@/lib/analytics";
 import { SkeletonLine } from "@/components/skeleton-primitives";
@@ -54,8 +55,9 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="bg-[hsl(var(--charcoal))] text-cream pt-32 pb-20">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12">
+      <section className="relative overflow-hidden bg-[hsl(var(--charcoal))] text-cream pt-32 pb-20">
+        <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-primary opacity-[0.12] pointer-events-none" />
+        <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
           <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
             Strategy Library
           </p>
@@ -125,13 +127,19 @@ export default function LibraryPage() {
             </div>
           ) : (
             <ul className="divide-y divide-border">
-              {published.map((article) => (
+              {published.map((article, idx) => (
                 <li key={article.id} className="py-6">
                   <Link
                     href={`/library/${article.slug}`}
                     className="group flex items-start gap-5"
                     data-testid={`link-library-${article.slug}`}
                   >
+                    <span
+                      aria-hidden="true"
+                      className="font-serif text-lg text-primary/40 tabular-nums mt-1 w-7 shrink-0 group-hover:text-primary transition-colors"
+                    >
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
                     <BookOpen className="w-6 h-6 text-primary mt-1 shrink-0" />
                     <div className="flex-1">
                       <h2 className="font-serif text-2xl font-semibold text-foreground group-hover:text-primary transition-colors">
