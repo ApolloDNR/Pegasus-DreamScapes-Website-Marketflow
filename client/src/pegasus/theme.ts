@@ -34,7 +34,7 @@ export type PeggyHandoff = {
   transcript: ChatTurn[];
 };
 
-export type NavLink = { label: string; route: Route };
+export type NavLink = { label: string; route: Route; desc?: string };
 export type NavGroup = { label: string; items: NavLink[] };
 
 export type Pillar = {

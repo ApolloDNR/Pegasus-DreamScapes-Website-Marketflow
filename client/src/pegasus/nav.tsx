@@ -29,14 +29,19 @@ function AccountControl({ go, route }: { go: Nav; route: Route }) {
 
 function MobileAccount({ go, close }: { go: Nav; close: () => void }) {
   const { isAuthenticated, signOut } = useSupabaseAuth();
-  const cls = 'py-2.5 text-left border-b border-[var(--line)] font-serif-display text-[1.55rem] leading-tight text-[var(--text)]';
   return (
     <>
-      <button type="button" onClick={() => { close(); go('saved'); }} className={cls}>Saved</button>
+      <div className="nav-m-acc">
+        <button type="button" onClick={() => { close(); go('saved'); }} className="nav-m-acc-trigger w-full">Saved</button>
+      </div>
       {isAuthenticated ? (
-        <button type="button" onClick={() => { close(); signOut(); }} className={cls}>Sign out</button>
+        <div className="nav-m-acc">
+          <button type="button" onClick={() => { close(); signOut(); }} className="nav-m-acc-trigger w-full">Sign out</button>
+        </div>
       ) : (
-        <a href="/login" onClick={() => close()} className={cls}>Sign in</a>
+        <div className="nav-m-acc">
+          <a href="/login" onClick={() => close()} className="nav-m-acc-trigger w-full">Sign in</a>
+        </div>
       )}
     </>
   );
@@ -111,13 +116,15 @@ function NavDropdown({ group, route, go }: { group: NavGroup; route: Route; go: 
         <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
       </button>
       <div id={menuId} className={`nav-dropdown ${open ? 'is-open' : ''}`} role="menu" aria-labelledby={triggerId} aria-hidden={!open}>
+        <div className="nav-dropdown-head">{group.label}</div>
         {group.items.map((i, idx) => (
           <button key={i.route} ref={(el) => { itemRefs.current[idx] = el; }} type="button" role="menuitem"
             tabIndex={open ? 0 : -1}
             onClick={() => choose(i.route)}
             onKeyDown={(e) => onItemKey(e, idx)}
             className={`nav-dropdown-item ${route === i.route ? 'is-active' : ''}`}>
-            {i.label}
+            <span className="nav-dd-title">{i.label}</span>
+            {i.desc && <span className="nav-dd-desc">{i.desc}</span>}
           </button>
         ))}
       </div>
@@ -128,7 +135,17 @@ function NavDropdown({ group, route, go }: { group: NavGroup; route: Route; go: 
 export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
   { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean; openPeggy: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(NAV_GROUPS[0]?.label ?? null);
   useEffect(() => { setMenuOpen(false); }, [route]);
+  useEffect(() => {
+    if (menuOpen) {
+      setOpenGroup(NAV_GROUPS[0]?.label ?? null);
+      document.body.classList.add('pg-menu-open');
+    } else {
+      document.body.classList.remove('pg-menu-open');
+    }
+    return () => document.body.classList.remove('pg-menu-open');
+  }, [menuOpen]);
   const overHero = !scrolled && !menuOpen;
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
 
@@ -175,36 +192,53 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
       </div>
 
       <div id="mobile-menu" aria-hidden={!menuOpen} {...(!menuOpen ? { inert: '' } : {})}
-        className={`lg:hidden overflow-hidden bg-[var(--bg-2)] transition-[max-height,opacity] duration-500 ease-out ${menuOpen ? 'max-h-[920px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="px-6 py-6 flex flex-col gap-5 text-[var(--text)] max-h-[calc(100vh-74px)] overflow-y-auto">
-          {NAV_GROUPS.map((g) => (
-            <div key={g.label}>
-              <div className="nav-m-group-label mb-1.5">{g.label}</div>
-              <div className="flex flex-col">
-                {g.items.map((i) => (
-                  <button key={i.route} type="button" onClick={() => go(i.route)}
-                    className={`py-2.5 text-left border-b border-[var(--line)] font-serif-display text-[1.55rem] leading-tight ${route === i.route ? 'text-[var(--accent)]' : 'text-[var(--text)]'}`}>
-                    {i.label}
-                  </button>
-                ))}
+        className={`lg:hidden overflow-hidden bg-[var(--bg-2)] border-b border-[var(--line)] transition-[max-height,opacity] duration-500 ease-out ${menuOpen ? 'max-h-[100svh] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="px-6 pt-1 pb-8 flex flex-col text-[var(--text)] max-h-[calc(100svh-74px)] overflow-y-auto overscroll-contain">
+          {NAV_GROUPS.map((g, gi) => {
+            const isOpen = openGroup === g.label;
+            const panelId = `mnav-panel-${gi}`;
+            return (
+              <div key={g.label} className="nav-m-acc">
+                <button type="button" aria-expanded={isOpen} aria-controls={panelId}
+                  onClick={() => setOpenGroup((cur) => (cur === g.label ? null : g.label))}
+                  className="nav-m-acc-trigger w-full">
+                  {g.label}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
+                </button>
+                <div id={panelId} aria-hidden={!isOpen} {...(!isOpen ? { inert: '' } : {})}
+                  className={`nav-m-acc-panel ${isOpen ? 'is-open' : ''}`}>
+                  <div className="flex flex-col gap-0.5 pb-4">
+                    {g.items.map((i) => (
+                      <button key={i.route} type="button" tabIndex={isOpen ? 0 : -1}
+                        onClick={() => { setMenuOpen(false); go(i.route); }}
+                        className={`nav-m-acc-item ${route === i.route ? 'is-active' : ''}`}>
+                        {i.label}
+                        {i.desc && <span className="nav-m-acc-desc">{i.desc}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
+            );
+          })}
+          {NAV_SINGLE.map((l) => (
+            <div key={l.route} className="nav-m-acc">
+              <button type="button" onClick={() => { setMenuOpen(false); go(l.route); }} className="nav-m-acc-trigger w-full">
+                {l.label}
+              </button>
             </div>
           ))}
-          {NAV_SINGLE.map((l) => (
-            <button key={l.route} type="button" onClick={() => go(l.route)}
-              className={`py-2.5 text-left border-b border-[var(--line)] font-serif-display text-[1.55rem] leading-tight ${route === l.route ? 'text-[var(--accent)]' : 'text-[var(--text)]'}`}>
-              {l.label}
-            </button>
-          ))}
           <MobileAccount go={go} close={() => setMenuOpen(false)} />
-          <button type="button" onClick={() => { setMenuOpen(false); openPeggy(); }}
-            className="btn-line px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] mt-1 text-center inline-flex items-center justify-center gap-2.5">
-            <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
-          </button>
-          <button type="button" onClick={() => go('contact')}
-            className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
-            Start a Review <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </button>
+          <div className="flex flex-col gap-3 mt-7">
+            <button type="button" onClick={() => { setMenuOpen(false); openPeggy(); }}
+              className="btn-line px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5">
+              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
+            </button>
+            <button type="button" onClick={() => { setMenuOpen(false); go('contact'); }}
+              className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
+              Start a Review <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </div>
       </div>
     </nav>
