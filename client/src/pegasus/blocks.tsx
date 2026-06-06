@@ -462,8 +462,8 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
   return (
     <section className="relative py-24 lg:py-28 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="The Pegasus Ecosystem" title="One standard, six surfaces."
-          copy="The whole of real estate under one roof. From the first read to the final close, every surface inherits the same discipline." />
+        <SectionHead eyebrow="The Pegasus Ecosystem" title="One discipline, end to end."
+          copy="Six parts of one company — the firm, the guide, the tools, the marketplace, the capital, and the build team. Every one runs a deal through the same underwriting, from the first read to the final close." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ECOSYSTEM.map((s, i) => {
             const clickable = !!s.route;

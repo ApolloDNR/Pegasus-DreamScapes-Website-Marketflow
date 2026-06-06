@@ -263,7 +263,7 @@ export const ECOSYSTEM: {
   status: string;
   route?: Route;
 }[] = [
-  { key: 'hq', name: 'Pegasus HQ', role: 'The architecture firm', desc: 'Where deals are read, underwritten, and turned into a plan. The standard everything else inherits.', icon: 'compass', status: 'Operating', route: 'contact' },
+  { key: 'hq', name: 'Pegasus HQ', role: 'The architecture firm', desc: 'Where deals are read, underwritten, and turned into a plan. The underwriting standard every other part follows.', icon: 'compass', status: 'Operating', route: 'contact' },
   { key: 'peggy', name: 'PeggyAI', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Operating', route: 'peggy' },
   { key: 'lab', name: 'Strategy Lab', role: 'The underwriting tool', desc: 'Self-serve modeling that returns an Instant Strategy Preview on any deal.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
   { key: 'marketflow', name: 'MarketFlow', role: 'The marketplace', desc: 'Three lanes that move deals, match capital, and place finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
@@ -325,11 +325,11 @@ export const APOLLO = {
   legal: 'Paolo Duran',
   role: 'Founder & Deal Architect',
   license: 'Keller Williams East Bay · DRE #02333658',
-  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; our development team builds the result. One standard runs the whole arc, from the first read to the final walkthrough.',
+  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; our development team builds the result. The same underwriting runs the whole arc, from the first read to the final walkthrough.',
   points: [
     { t: 'The architect', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
     { t: 'The development team', d: 'Former GCs, project managers, and trades turn the plan into a delivered product.' },
-    { t: 'The standard', d: 'Every deal runs through the same discipline, from first call to final walkthrough.' },
+    { t: 'The discipline', d: 'Every deal runs the same underwriting and the same build standard, from first call to final walkthrough.' },
   ],
 };
 

@@ -343,7 +343,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
    ================================================================ */
 function RepLane({ rep }: { rep: { label: string; desc: string; points: string[] } }) {
   return (
-    <div className="surface-card reveal p-6 sm:p-8 lg:p-9">
+    <div className="surface-card reveal h-full p-6 sm:p-8 lg:p-9">
       <div className="pg-label !text-[9px] text-[var(--accent)] mb-4">{rep.label}</div>
       <p className="text-[var(--text-2)] leading-relaxed mb-6">{rep.desc}</p>
       <ul className="space-y-3.5">
@@ -458,15 +458,9 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="Representation lanes" title="Sell or buy, represented."
             copy="Two clear lanes when agency representation is the right path. Pick the one that fits and Apollo follows up to discuss it." />
-          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center mb-12">
-            <div className="reveal relative">
-              <div className="absolute -inset-3 border border-[var(--line)] rounded-[4px] -z-10 translate-x-3 translate-y-3" />
-              <img src={IMG('founder/apollo-1200.jpg')} alt="Paolo &quot;Apollo&quot; Duran" className="w-full rounded-[3px] object-cover aspect-[4/5]" loading="lazy" />
-            </div>
-            <div className="grid gap-5">
-              <RepLane rep={APOLLO_REP.seller} />
-              <RepLane rep={APOLLO_REP.buyer} />
-            </div>
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 mb-12 items-stretch">
+            <RepLane rep={APOLLO_REP.seller} />
+            <RepLane rep={APOLLO_REP.buyer} />
           </div>
           <div className="reveal rounded-[3px] border border-[var(--line)] bg-[var(--bg)] p-5 lg:p-6 flex gap-4 items-start">
             <BrandMark boxClassName="w-10 h-10 shrink-0" />
@@ -494,9 +488,9 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
   return (
     <>
       <PageHero eyebrow="Systems · The Ecosystem"
-        title={<>One company, <span className="italic text-[var(--accent-bright)]">one standard.</span></>}
+        title={<>One company, <span className="italic text-[var(--accent-bright)]">one discipline.</span></>}
         image={IMG('pegasus-architecture.png')}
-        lead="The Pegasus Ecosystem is the whole of real estate under one roof: the firm, the guide, the tools, the marketplace, the capital layer, and the build arm." />
+        lead="Six parts of one company — the firm, the guide, the tools, the marketplace, the capital layer, and the build arm — all running a deal through the same underwriting." />
       <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ThreePillarsBlock go={go} />
       <MarketFlowBlock go={go} dark />
