@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark } from 'lucide-react';
+import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark, ClipboardList, Layers, Hammer, BadgeCheck } from 'lucide-react';
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
@@ -143,7 +143,7 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-5 reveal">
             <div className="img-zoom peggy-shadow aspect-[4/5]">
-              <img src={IMG('pegasus-process.png')} alt="The Pegasus deal review process" className="w-full h-full object-cover" />
+              <img src={IMG('pegasus-architecture.png')} alt="A precise architectural scale model on a studio table" className="w-full h-full object-cover" />
             </div>
           </div>
           <div className="lg:col-span-7 reveal delay-100">
@@ -190,6 +190,37 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
 /* ================================================================
    DEVELOPMENT
    ================================================================ */
+const BUILD_PROCESS = [
+  { n: '01', icon: ClipboardList, t: 'Scope & budget', d: 'Every project opens with a real budget and a draw schedule, agreed before the first hammer swings.' },
+  { n: '02', icon: Layers, t: 'The right bench', d: 'Vetted GCs and subcontractors are matched to the job and scaled to the project, never limited to one crew.' },
+  { n: '03', icon: Hammer, t: 'Build to standard', d: 'One definition of done, applied the same way to every renovation and ground-up build.' },
+  { n: '04', icon: BadgeCheck, t: 'Deliver, finished', d: 'Walked and handed over complete, on a real timeline, not left half-open.' },
+];
+
+function BuildProcessBlock() {
+  return (
+    <section className="py-24 lg:py-28">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead eyebrow="How we build" title="Scope to finished product."
+          copy="The same disciplined path on every job: planned before it starts, built to one standard, and delivered complete." />
+        <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 mt-4">
+          <div aria-hidden="true" className="hidden lg:block absolute top-[26px] left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-[var(--accent)]/25 via-[var(--accent)]/45 to-[var(--accent)]/25" />
+          {BUILD_PROCESS.map((s, i) => (
+            <div key={s.n} className="group relative z-10 reveal text-center" style={{ animationDelay: `${i * 90}ms` }}>
+              <div className="mx-auto w-[52px] h-[52px] rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] flex items-center justify-center mb-6 transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:shadow-[0_14px_30px_-12px_rgba(177,102,49,0.5)]">
+                <s.icon aria-hidden="true" className="w-5 h-5 text-[var(--accent)] transition-colors duration-500 group-hover:text-white" strokeWidth={1.6} />
+              </div>
+              <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">Step {s.n}</div>
+              <h3 className="font-serif-display text-xl text-[var(--text)] mb-2.5 leading-tight">{s.t}</h3>
+              <p className="text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-[15rem] mx-auto">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function DevelopmentPage({ go }: { go: Nav }) {
   return (
     <>
@@ -198,6 +229,7 @@ export function DevelopmentPage({ go }: { go: Nav }) {
         image={IMG('pegasus-craft-blueprint.png')}
         lead="Our development team — former GCs, project managers, and trades with decades of combined experience — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, to a standard." />
       <PillarSection p={DEVELOPMENT} go={go} flip />
+      <BuildProcessBlock />
       <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="The development team" title="A bench, not a single hire."
@@ -367,7 +399,7 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
     <>
       <PageHero eyebrow="Systems · The Ecosystem"
         title={<>One company, <span className="italic text-[var(--accent-bright)]">one standard.</span></>}
-        image={IMG('pegasus-process.png')}
+        image={IMG('pegasus-architecture.png')}
         lead="The Pegasus Ecosystem is the whole of real estate under one roof: the firm, the guide, the tools, the marketplace, the capital layer, and the build arm." />
       <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ThreePillarsBlock go={go} />
