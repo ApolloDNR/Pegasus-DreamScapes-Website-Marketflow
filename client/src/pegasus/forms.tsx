@@ -385,18 +385,18 @@ function WaterfallRow({ label, value, sign, strong = false }:
    Front-end only. Mock autofill seeds the shared underwriting model.
 ---------------------------------------------------------------- */
 const SAMPLE_PROPERTIES = [
-  { addr: '1428 Walnut Blvd, Concord, CA', zip: '94521', acq: 575000, rehab: 85000, arv: 815000, type: 'Single-family (SFR)', cond: 'Light cosmetic', occ: 'Vacant', beds: 3, baths: 2, sqft: 1620, rent: 3200 },
-  { addr: '92 Estate Way, Walnut Creek, CA', zip: '94598', acq: 910000, rehab: 180000, arv: 1340000, type: 'Single-family (SFR)', cond: 'Full gut', occ: 'Probate / estate', beds: 4, baths: 3, sqft: 2480, rent: 4800 },
-  { addr: '305 Foothill Ave, Antioch, CA', zip: '94509', acq: 430000, rehab: 60000, arv: 615000, type: 'Triplex / Fourplex', cond: 'Heavy cosmetic', occ: 'Tenant-occupied', beds: 6, baths: 4, sqft: 2900, rent: 5400 },
+  { addr: '1428 Walnut Blvd, Concord, CA', zip: '94521', acq: 575000, rehab: 85000, arv: 815000, type: 'Single-family (SFR)', cond: 'Good', occ: 'Vacant', beds: 3, baths: 2, sqft: 1620, rent: 3200 },
+  { addr: '92 Estate Way, Walnut Creek, CA', zip: '94598', acq: 910000, rehab: 180000, arv: 1340000, type: 'Single-family (SFR)', cond: 'Poor', occ: 'Probate / estate', beds: 4, baths: 3, sqft: 2480, rent: 4800 },
+  { addr: '305 Foothill Ave, Antioch, CA', zip: '94509', acq: 430000, rehab: 60000, arv: 615000, type: 'Triplex / Fourplex', cond: 'Fair', occ: 'Tenant-occupied', beds: 6, baths: 4, sqft: 2900, rent: 5400 },
 ];
 
 const SEL = {
   type: ['Single-family (SFR)', 'Condo / Townhome / TIC', 'Duplex', 'Triplex / Fourplex', 'Small multifamily (5+)', 'Commercial / Mixed-use', 'Land / Lot', 'ADU / JADU'],
-  cond: ['Move-in ready', 'Light cosmetic', 'Heavy cosmetic', 'Full gut', 'Distressed / unknown'],
+  cond: ['Excellent', 'Good', 'Fair', 'Poor', 'Distressed'],
   occ: ['Owner-occupied', 'Tenant-occupied', 'Vacant', 'Probate / estate'],
-  role: ['I own it (Seller)', 'I am buying it (Buyer / Investor)', 'I sourced it (Deal finder)'],
-  goal: ['Sell for the most', 'Sell fast, as-is', 'Reposition & lift value', 'Hold & rent', 'Just exploring'],
-  exit: ['Resale on the open market', 'Refinance & hold', 'Wholesale / assign', 'Not sure yet'],
+  role: ['Owner / Seller', 'Buyer / Investor', 'Deal Finder / Wholesaler', 'Capital Partner', 'Agent / Referral'],
+  goal: ['Sell fast', 'Maximize value', 'Buy / acquire', 'Understand options', 'Find JV / capital partner'],
+  exit: ['Retail Listing', 'Value-Add Rehab → Retail', 'ADU Addition', 'Hold / Rent', 'As-Is Acquisition', 'JV / Partner', 'MarketFlow Disposition'],
   fin: ['All cash', 'Conventional financing', 'Hard money / bridge', 'Subject-to existing loan', 'Seller financing'],
   motiv: ['Just curious', 'Open to the right offer', 'Motivated', 'Time-sensitive / urgent'],
   repairConf: ['Rough estimate', 'Contractor walk-through done', 'Detailed bid in hand', 'Unknown / sight unseen'],
@@ -459,9 +459,9 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
 
   // Mock Property Fit Score: blends the live margin read with the situation.
   const marginScore = Math.max(0, Math.min(50, (margin / 25) * 50));
-  const condBonus = cond === 'Full gut' || cond === 'Distressed / unknown' ? 16 : cond === 'Heavy cosmetic' ? 12 : cond === 'Light cosmetic' ? 9 : 4;
+  const condBonus = cond === 'Distressed' || cond === 'Poor' ? 16 : cond === 'Fair' ? 12 : cond === 'Good' ? 9 : 4;
   const occBonus = occ === 'Probate / estate' || occ === 'Vacant' ? 12 : occ === 'Tenant-occupied' ? 8 : 4;
-  const goalBonus = goal === 'Reposition & lift value' ? 7 : goal === 'Sell fast, as-is' ? 5 : 3;
+  const goalBonus = goal === 'Maximize value' ? 7 : goal === 'Sell fast' ? 5 : 3;
   const motivBonus = motiv === 'Time-sensitive / urgent' ? 12 : motiv === 'Motivated' ? 8 : motiv === 'Open to the right offer' ? 4 : 1;
   const fit = Math.round(Math.max(8, Math.min(98, marginScore + condBonus + occBonus + goalBonus + motivBonus)));
   const fitBand = fit >= 75 ? 'Strong fit' : fit >= 55 ? 'Worth a review' : fit >= 35 ? 'Possible, needs work' : 'Likely not a fit';
@@ -482,10 +482,13 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   // Mock capital-needed: cash deals carry the full basis; leverage assumes ~20% in.
   const capitalNeeded = fin === 'All cash' ? hardCost : Math.round(hardCost * 0.2 + rehab);
   const exitDetail =
-    exit === 'Refinance & hold' ? 'Refinance and hold — plan for rent coverage and a stabilized debt position.'
-    : exit === 'Wholesale / assign' ? 'Wholesale / assign — your spread is set at contract; a written assignment governs it.'
-    : exit === 'Not sure yet' ? 'Exit undecided — we would model resale vs. hold before committing.'
-    : 'Resale on the open market — net proceeds shown after exit costs.';
+    exit === 'Value-Add Rehab → Retail' ? 'Value-add rehab to retail — basis plus scope, then sold on the open market after the lift.'
+    : exit === 'ADU Addition' ? 'ADU addition — added unit value and rent; plan for permits, timeline, and feasibility.'
+    : exit === 'Hold / Rent' ? 'Hold and rent — plan for rent coverage and a stabilized debt position.'
+    : exit === 'As-Is Acquisition' ? 'As-is acquisition — bought at a basis that works without a full renovation.'
+    : exit === 'JV / Partner' ? 'JV / partner — structured with a partner; a written agreement governs the split.'
+    : exit === 'MarketFlow Disposition' ? 'MarketFlow disposition — placed through the MarketFlow network to a vetted buyer.'
+    : 'Retail listing on the open market — net proceeds shown after exit costs.';
   const riskFlags: string[] = [
     ...(margin < 8 ? ['Thin margin once carry and exit costs come out'] : []),
     ...(repairConf === 'Unknown / sight unseen' || repairConf === 'Rough estimate' ? ['Repair budget is a rough estimate, not a verified scope'] : []),
@@ -495,12 +498,16 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   ];
 
   const lane: { label: string; route: Parameters<Nav>[0] } =
-    role.startsWith('I own')
-      ? (cond === 'Full gut' || cond === 'Distressed / unknown' || occ === 'Probate / estate'
+    role === 'Owner / Seller'
+      ? (cond === 'Distressed' || cond === 'Poor' || occ === 'Probate / estate'
         ? { label: 'Send for a property review', route: 'sellers' }
         : { label: 'Explore seller representation', route: 'apollo' })
-      : role.startsWith('I sourced')
+      : role === 'Deal Finder / Wholesaler'
       ? { label: 'Submit the deal to Deal Finders', route: 'dealfinders' }
+      : role === 'Capital Partner'
+      ? { label: 'Explore the Capital lane', route: 'capital' }
+      : role === 'Agent / Referral'
+      ? { label: 'Explore partnering with Apollo', route: 'apollo' }
       : { label: 'Explore the Buyers lane', route: 'buyers' };
 
   const costCards = [
