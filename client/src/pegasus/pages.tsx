@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark, ClipboardList, Layers, Hammer, BadgeCheck } from 'lucide-react';
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
@@ -355,6 +356,95 @@ function RepLane({ rep }: { rep: { label: string; desc: string; points: string[]
   );
 }
 
+// Step 7 — visible sell/buy/situation/deal selector shown before the inline
+// representation lead form. "Sell"/"Buy" scroll to the form (Apollo's two
+// roleOptions); "complex situation"/"deal" route to the canonical /submit
+// intake with a valid ?intent= so nothing falls back to a default.
+const APOLLO_SELECTOR = [
+  {
+    key: 'sell',
+    label: 'I want to sell',
+    blurb: 'List with Apollo through Keller Williams Realty East Bay, priced and prepped with the Pegasus standard behind it. Pick “Seller representation” in the form below.',
+    cta: 'Continue below',
+    mode: 'form' as const,
+  },
+  {
+    key: 'buy',
+    label: 'I want to buy',
+    blurb: 'Buyer representation with an investor’s read on every property, for owner-occupants and investors alike. Pick “Buyer representation” in the form below.',
+    cta: 'Continue below',
+    mode: 'form' as const,
+  },
+  {
+    key: 'situation',
+    label: 'I have a complex situation',
+    blurb: 'Distressed, inherited, occupied, stalled, or up against a deadline? Send it for a property review and Apollo will lay out the real options, with no guaranteed offer until the numbers and the agreement are real.',
+    cta: 'Request a Property Review',
+    mode: 'link' as const,
+    href: '/submit?intent=property',
+  },
+  {
+    key: 'deal',
+    label: 'I have a deal to submit',
+    blurb: 'Bring a deal and get a straight answer. If it fits, Apollo may buy, partner, or route it, with written JV or compensation terms before anything moves.',
+    cta: 'Submit a Deal',
+    mode: 'link' as const,
+    href: '/submit?intent=deal-jv',
+  },
+];
+
+function ApolloSelector() {
+  const [key, setKey] = React.useState('sell');
+  const [, setLocation] = useLocation();
+  const active = APOLLO_SELECTOR.find((s) => s.key === key) ?? APOLLO_SELECTOR[0];
+  const onCta = () => {
+    if (active.mode === 'form') {
+      document.getElementById('apollo-lead')?.scrollIntoView({ behavior: 'smooth' });
+    } else if (active.href) {
+      setLocation(active.href);
+    }
+  };
+  return (
+    <section className="py-14 lg:py-16 border-b border-[var(--line)]" data-testid="section-apollo-selector">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12 text-center">
+        <div className="pg-label text-[var(--accent)] mb-6">What brings you here?</div>
+        <div className="flex flex-wrap justify-center gap-3 mb-8" role="group" aria-label="What brings you here?" data-testid="apollo-selector">
+          {APOLLO_SELECTOR.map((s) => {
+            const isActive = s.key === key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setKey(s.key)}
+                data-testid={`apollo-selector-${s.key}`}
+                className={`rounded-full px-6 py-3 pg-label !text-[10px] !tracking-[0.16em] border transition-colors ${
+                  isActive
+                    ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/[0.08]'
+                    : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]'
+                }`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="max-w-2xl mx-auto text-[var(--text-2)] leading-relaxed mb-8" data-testid="text-apollo-selector-blurb">
+          {active.blurb}
+        </p>
+        <button
+          type="button"
+          onClick={onCta}
+          data-testid="button-apollo-selector-cta"
+          className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group"
+        >
+          {active.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function WorkWithApolloPage({ go }: { go: Nav }) {
   return (
     <>
@@ -379,11 +469,19 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
           </div>
           <div className="reveal rounded-[3px] border border-[var(--line)] bg-[var(--bg)] p-5 lg:p-6 flex gap-4 items-start">
             <BrandMark boxClassName="w-10 h-10 shrink-0" />
-            <p className="text-[0.8rem] leading-relaxed text-[var(--muted)]">{APOLLO_DISCLOSURE}</p>
+            <div>
+              <p className="text-[0.8rem] leading-relaxed text-[var(--muted)]">{APOLLO_DISCLOSURE}</p>
+              <p className="mt-3 text-[0.8rem] leading-relaxed text-[var(--muted)]">
+                Equal Housing Opportunity. Representation is offered without regard to race, color, religion, sex, disability, familial status, or national origin.
+              </p>
+            </div>
           </div>
         </div>
       </section>
-      <LeadSection cfg={APOLLO_FORM} eyebrow="Work with Apollo" tone="navy" showRole />
+      <ApolloSelector />
+      <div id="apollo-lead" className="scroll-mt-24">
+        <LeadSection cfg={APOLLO_FORM} eyebrow="Work with Apollo" tone="navy" showRole />
+      </div>
     </>
   );
 }

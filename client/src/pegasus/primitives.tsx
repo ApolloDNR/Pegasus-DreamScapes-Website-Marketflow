@@ -1,17 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MoveHorizontal, Sun, Moon } from 'lucide-react';
 import type { Theme } from './theme';
-import markLight from '@/assets/brand/pegasus-mark-light.png';
-import markDark from '@/assets/brand/pegasus-mark-dark.png';
+import markLight from '@/assets/brand/pegasus-mark-full.svg';
+import markDark from '@/assets/brand/pegasus-mark-ondark.svg';
 
 export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
 
 /* ----------------------------------------------------------------
-   Brand mark — the founder's real winged-Pegasus-over-house artwork.
-   No background tile/chip. Two cuts of the same logo:
-   - light surfaces: navy wings + dark roofline + orange horse.
-   - dark surfaces (onDark): steel wings + silver roofline + orange
-     horse, so the lockup stays legible without any tile.
+   Brand mark — the full winged-Pegasus-over-house lockup, the same
+   vector asset used by the non-prototype nav/footer so the logo is
+   consistent across every public header. No background tile/chip.
+   Two cuts of the same lockup:
+   - light surfaces: pegasus-mark-full.svg.
+   - dark surfaces (onDark): pegasus-mark-ondark.svg, recolored so the
+     lockup stays legible without any tile.
 ---------------------------------------------------------------- */
 export function BrandMark({ boxClassName = 'w-11 h-11', onDark = false, className = '' }:
   { boxClassName?: string; onDark?: boolean; className?: string }) {
