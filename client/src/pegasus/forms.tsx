@@ -249,12 +249,12 @@ export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', han
   const navy = tone === 'navy';
   const ic = navy ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]';
   return (
-    <section className={`relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-32 lg:pt-40 pb-24 lg:pb-28'}`}>
+    <section className={`relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-28 lg:pt-40 pb-24 lg:pb-28'}`}>
       {navy && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
         <div className="lg:col-span-5 reveal">
           <div className={`pg-label mb-5 ${ic}`}>{eyebrow}</div>
-          <h2 className="font-serif-display font-light text-5xl md:text-6xl leading-[1.0] tracking-[-0.01em] mb-7"
+          <h2 className="font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-[-0.01em] mb-7"
             style={{ color: navy ? 'var(--cream)' : 'var(--text)' }}>{cfg.heading}</h2>
           <p className={`leading-relaxed mb-10 max-w-md ${navy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>{cfg.lead}</p>
           <div className={`space-y-5 pg-label !text-[11px] !tracking-[0.16em] ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
@@ -267,7 +267,7 @@ export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', han
           </p>
         </div>
         <div className="lg:col-span-7 reveal delay-100">
-          <div className="lead-card p-8 lg:p-11">
+          <div className="lead-card p-6 sm:p-8 lg:p-11">
             <LeadForm cfg={cfg} showRole={showRole} onNavy={navy} handoff={handoff} strategy={strategy} />
           </div>
         </div>

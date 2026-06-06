@@ -40,7 +40,7 @@ export function PageHero({ eyebrow, title, image, lead, focus = 'center' }:
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
           <div className="pg-label !tracking-[0.34em] text-[var(--accent-bright)] text-on-photo mb-6 reveal">{eyebrow}</div>
-          <h1 className="font-serif-display font-light leading-[0.98] tracking-[-0.01em] text-[clamp(2.8rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] reveal delay-100">{title}</h1>
+          <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[-0.01em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] reveal delay-100">{title}</h1>
           <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 reveal delay-200">{lead}</p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
           <div className="pg-label !tracking-[0.34em] text-[var(--accent-bright)] text-on-photo mb-7 reveal">Investments · Development · Systems · East Bay</div>
-          <h1 className="font-serif-display font-light leading-[0.96] tracking-[-0.01em] text-[clamp(2.7rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] reveal delay-100">
+          <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-[-0.01em] text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] reveal delay-100">
             We do not just find deals. <span className="italic text-[var(--accent-bright)]">We architect them.</span>
           </h1>
           <div className="draw-x h-px bg-[var(--accent-bright)]/60 max-w-[220px] mt-9 mb-9" aria-hidden="true" />
@@ -176,7 +176,7 @@ export function ThreePillarsBlock({ go }: { go: Nav }) {
                   <div className="font-serif-display text-3xl text-[var(--cream)]">{p.tag}</div>
                 </div>
               </div>
-              <div className="p-8 flex flex-col flex-1">
+              <div className="p-6 sm:p-8 flex flex-col flex-1">
                 <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed mb-6">{p.lead}</p>
                 <ul className="space-y-3 mb-8">
                   {p.points.map((pt) => (
@@ -276,7 +276,7 @@ export function EngineBlock({ go }: { go: Nav }) {
             <ChevronDown className="w-6 h-6 animate-pulse" />
           </div>
         </div>
-        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(213,127,46,0.1)] p-9 lg:p-11">
+        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(213,127,46,0.1)] p-7 sm:p-9 lg:p-11">
           <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-4">{ENGINE_OUTPUT.label}</div>
           <p className="font-serif-display text-3xl md:text-4xl text-[var(--cream)] leading-snug mb-5">{ENGINE_OUTPUT.desc}</p>
           <button type="button" onClick={() => go('dealarchitecture')}
@@ -386,7 +386,7 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
         </div>
         <div className="grid lg:grid-cols-3 gap-6">
           {MARKETFLOW.map((m, i) => (
-            <div key={m.key} className={`reveal flex flex-col h-full p-8 lg:p-9 rounded-[3px] border ${dark ? 'border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)]' : 'surface-card'}`} style={{ animationDelay: `${i * 90}ms` }}>
+            <div key={m.key} className={`reveal flex flex-col h-full p-6 sm:p-8 lg:p-9 rounded-[3px] border ${dark ? 'border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)]' : 'surface-card'}`} style={{ animationDelay: `${i * 90}ms` }}>
               <div className="flex items-center justify-between mb-7">
                 <div className="door-icon !mb-0"><Ico name={m.icon} className="w-5 h-5" /></div>
                 <span className={`font-serif-display text-2xl leading-none ${dark ? 'text-[var(--cream)]/25' : 'text-[var(--line)]'}`}>0{i + 1}</span>
@@ -511,7 +511,7 @@ export function ProofStats() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
           {STATS.map((s, i) => (
             <div key={i} className={`reveal ${i > 0 ? 'lg:border-l lg:border-[var(--line)] lg:pl-8' : ''}`} style={{ animationDelay: `${i * 100}ms` }}>
-              <div className="font-serif-display text-5xl md:text-6xl leading-none mb-4 text-[var(--text)]">{s.value}</div>
+              <div className="font-serif-display text-4xl sm:text-5xl md:text-6xl leading-none mb-4 text-[var(--text)]">{s.value}</div>
               <div className="pg-label !text-[10px] !tracking-[0.18em] text-[var(--text-2)] mb-1.5">{s.label}</div>
               <div className="text-[var(--muted)] text-[0.82rem] leading-relaxed">{s.sub}</div>
             </div>

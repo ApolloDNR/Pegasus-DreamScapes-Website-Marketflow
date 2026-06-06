@@ -104,8 +104,8 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
             </div>
             <div className="lg:col-span-8 grid sm:grid-cols-1 gap-5">
               {cat.points.map((p, i) => (
-                <div key={i} className="surface-card reveal flex gap-6 p-7" style={{ animationDelay: `${i * 90}ms` }}>
-                  <div className="font-serif-display text-3xl text-[var(--accent)] leading-none pt-1">{String(i + 1).padStart(2, '0')}</div>
+                <div key={i} className="surface-card reveal flex gap-4 sm:gap-6 p-6 sm:p-7" style={{ animationDelay: `${i * 90}ms` }}>
+                  <div className="font-serif-display text-2xl sm:text-3xl text-[var(--accent)] leading-none pt-1">{String(i + 1).padStart(2, '0')}</div>
                   <div>
                     <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{p.t}</h3>
                     <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
@@ -289,7 +289,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
           <SectionHead dark eyebrow="How access works"
             title={<>Earned, not opened<br />to everyone.</>}
             copy="Membership is reviewed by a person. We protect the standard of the network over its size." />
-          <div className="grid lg:grid-cols-3 gap-12 lg:gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12 lg:gap-8">
             {MARKETFLOW_ACCESS.map((s, i) => (
               <div key={i} className="reveal" style={{ animationDelay: `${i * 110}ms` }}>
                 <div className="path-node relative z-10 w-[54px] h-[54px] rounded-full border border-[var(--accent-2)] bg-[var(--navy)] flex items-center justify-center mb-7">
@@ -312,7 +312,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
    ================================================================ */
 function RepLane({ rep }: { rep: { label: string; desc: string; points: string[] } }) {
   return (
-    <div className="surface-card reveal p-8 lg:p-9">
+    <div className="surface-card reveal p-6 sm:p-8 lg:p-9">
       <div className="pg-label !text-[9px] text-[var(--accent)] mb-4">{rep.label}</div>
       <p className="text-[var(--text-2)] leading-relaxed mb-6">{rep.desc}</p>
       <ul className="space-y-3.5">

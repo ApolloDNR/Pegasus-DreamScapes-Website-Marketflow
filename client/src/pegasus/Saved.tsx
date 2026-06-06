@@ -27,7 +27,7 @@ export function SavedPage({ go }: { go: Nav }) {
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="max-w-[760px] mb-16">
           <div className="pg-label !text-[9px] text-[var(--accent)] mb-4">Your workspace</div>
-          <h1 className="font-serif-display text-[2.8rem] lg:text-[3.6rem] leading-[1.04] mb-5">
+          <h1 className="font-serif-display text-[2.3rem] sm:text-[2.8rem] lg:text-[3.6rem] leading-[1.06] sm:leading-[1.04] mb-5">
             Your saved work.
           </h1>
           <p className="text-[var(--text)]/70 text-lg leading-relaxed">
@@ -69,18 +69,18 @@ export function SavedPage({ go }: { go: Nav }) {
                       <Trash2 className="w-4 h-4" strokeWidth={1.7} />
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 border-t border-[var(--line)] pt-4">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 border-t border-[var(--line)] pt-4">
                     <div>
                       <div className="pg-label !text-[7px] !tracking-[0.12em] text-[var(--text)]/45 mb-1.5">All-in</div>
-                      <div className="font-serif-display text-xl leading-none">{usd0(s.model.allIn)}</div>
+                      <div className="font-serif-display text-base sm:text-xl leading-none">{usd0(s.model.allIn)}</div>
                     </div>
                     <div>
                       <div className="pg-label !text-[7px] !tracking-[0.12em] text-[var(--text)]/45 mb-1.5">Net profit</div>
-                      <div className="font-serif-display text-xl leading-none text-[var(--accent)]">{usd0(s.model.spread)}</div>
+                      <div className="font-serif-display text-base sm:text-xl leading-none text-[var(--accent)]">{usd0(s.model.spread)}</div>
                     </div>
                     <div>
                       <div className="pg-label !text-[7px] !tracking-[0.12em] text-[var(--text)]/45 mb-1.5">Net margin</div>
-                      <div className="font-serif-display text-xl leading-none text-[var(--accent)]">{s.model.margin.toFixed(1)}%</div>
+                      <div className="font-serif-display text-base sm:text-xl leading-none text-[var(--accent)]">{s.model.margin.toFixed(1)}%</div>
                     </div>
                   </div>
                   <button type="button" onClick={() => go('strategylab')}
