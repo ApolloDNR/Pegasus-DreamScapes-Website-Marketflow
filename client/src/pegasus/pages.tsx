@@ -125,7 +125,7 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
       {cat.rich.includes('ladder') && <ProductLadderBlock go={go} openPeggy={openPeggy} />}
       {cat.rich.includes('buybox') && <DealFindersExtras go={go} />}
       {cat.rich.includes('surfaces') && <EcosystemBlock go={go} openPeggy={openPeggy} />}
-      {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." />}
+      {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." allHref={cat.faqAnchor ? `/faq#${cat.faqAnchor}` : '/faq'} />}
       {cat.secondary && <NextStep go={go} label={cat.secondary.label} route={cat.secondary.route} />}
       <LeadSection cfg={cat.form} eyebrow={cat.eyebrow} tone="navy" />
     </>

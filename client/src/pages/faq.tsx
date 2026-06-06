@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { ContourLines } from "@/pegasus/primitives";
@@ -110,6 +111,20 @@ export default function FAQ() {
     image: "/og/default.png",
   });
 
+  useEffect(() => {
+    const id = window.location.hash.replace(/^#/, "");
+    if (!id) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const scrollToTarget = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      }
+    };
+    const raf = requestAnimationFrame(scrollToTarget);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <section className="relative overflow-hidden bg-[hsl(var(--charcoal))] text-cream">
@@ -135,7 +150,8 @@ export default function FAQ() {
           return (
             <ScrollReveal key={section.eyebrow}>
               <div
-                className="relative"
+                id={slugify(section.eyebrow)}
+                className="relative scroll-mt-28 lg:scroll-mt-32"
                 data-testid={`faq-section-${slugify(section.eyebrow)}`}
               >
                 <span

@@ -80,5 +80,6 @@ export type Category = {
   splits?: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean };
   secondary?: { label: string; route: Route };
   faq?: FaqItem[];
+  faqAnchor?: string;
   form: FormCfg;
 };

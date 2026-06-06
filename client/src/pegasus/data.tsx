@@ -470,6 +470,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     ],
     splits: sellerSplits,
     secondary: { label: 'See how a property becomes a plan', route: 'dealarchitecture' },
+    faqAnchor: 'submitting-a-property',
     faq: [
       { q: 'Will you actually buy it, or just list it?', a: 'Both are on the table. We can buy directly, or, if it serves you better, reposition and sell it for more. The Review tells you which path wins for you.' },
       { q: 'What condition does it need to be in?', a: 'Any. Distressed, dated, occupied, or mid-project. Condition is our job, not your problem.' },
@@ -512,6 +513,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You want to be rushed into a decision before the numbers are clear',
     ],
     secondary: { label: 'See the work in MarketFlow', route: 'marketflow' },
+    faqAnchor: 'working-with-pegasus',
     faq: [
       { q: 'How do I see what is available?', a: 'Start a Review or talk to PeggyAI and tell us what you are looking for. Network buyers get first look before inventory reaches the open market.' },
       { q: 'What does "buy into the deal" mean?', a: 'On select projects you can participate as a capital partner rather than an end buyer, funding the project on defined terms. We will route you to the Capital Partners lane if that fits.' },
@@ -552,6 +554,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You cannot deliver a signed contract or a clear path to one',
     ],
     secondary: { label: 'See where deals flow', route: 'marketflow' },
+    faqAnchor: 'submitting-a-property',
     faq: [
       { q: 'How fast will I hear back?', a: 'Send the address and the numbers and you will get a real read quickly: yes, no, or "here is the number that works."' },
       { q: 'How do payouts work?', a: 'We agree on your assignment fee or spread before anything moves. What we agree is what you get at close.' },
@@ -592,6 +595,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You want a hands-off pooled fund product',
     ],
     secondary: { label: 'See the capital layer', route: 'ecosystem' },
+    faqAnchor: 'marketflow-network',
     faq: [
       { q: 'Do you guarantee a return?', a: 'No. Real estate carries risk and we will never tell you otherwise. We show you the underwriting and the terms; the decision and the risk are yours.' },
       { q: 'How is my capital secured?', a: 'It varies by project and is always stated in writing before you commit: structure, security, and timeline laid out plainly.' },
@@ -633,6 +637,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You are looking for a single one-off job rather than an ongoing relationship',
     ],
     secondary: { label: 'See how we build', route: 'development' },
+    faqAnchor: 'marketflow-network',
     faq: [
       { q: 'How do you scope work?', a: 'Every project comes with a real plan and budget. You bid against a defined scope, not a vague wish list.' },
       { q: 'How do payments work?', a: 'On a defined draw schedule agreed before work starts, and honored. Our development team has run jobsites, so we understand cash flow.' },
@@ -673,6 +678,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You are looking to sell lead lists rather than refer real people',
     ],
     secondary: { label: 'Understand our standard', route: 'about' },
+    faqAnchor: 'working-with-pegasus',
     faq: [
       { q: 'How are referrals compensated?', a: 'Clearly and up front. We agree on the arrangement before anything happens, and we keep you informed.' },
       { q: 'What happens to my contact?', a: 'They get the same honest Review anyone does. You keep the relationship; we just solve the property piece.' },

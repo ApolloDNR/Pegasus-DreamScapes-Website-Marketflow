@@ -615,8 +615,8 @@ export function DoctrineBlock({ dark = false }: { dark?: boolean }) {
 /* ----------------------------------------------------------------
    FAQ (accessible accordion)
 ---------------------------------------------------------------- */
-export function FAQBlock({ items, eyebrow = 'Questions', title = 'Plainly answered.', copy }:
-  { items: FaqItem[]; eyebrow?: string; title?: React.ReactNode; copy?: string }) {
+export function FAQBlock({ items, eyebrow = 'Questions', title = 'Plainly answered.', copy, allHref = '/faq', allLabel = 'See all questions' }:
+  { items: FaqItem[]; eyebrow?: string; title?: React.ReactNode; copy?: string; allHref?: string; allLabel?: string }) {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <section className="py-24 lg:py-28">
@@ -643,6 +643,14 @@ export function FAQBlock({ items, eyebrow = 'Questions', title = 'Plainly answer
             );
           })}
         </div>
+        {allHref && (
+          <div className="mt-12 text-center reveal">
+            <a href={allHref} data-testid="link-faq-see-all"
+              className="btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group">
+              {allLabel} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
