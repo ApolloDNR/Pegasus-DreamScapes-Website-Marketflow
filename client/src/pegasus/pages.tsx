@@ -102,16 +102,21 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
               <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
               <p className="font-serif-display italic text-2xl text-[var(--muted)] leading-snug">{cat.quote}</p>
             </div>
-            <div className="lg:col-span-8 grid sm:grid-cols-1 gap-5">
-              {cat.points.map((p, i) => (
-                <div key={i} className="surface-card reveal flex gap-4 sm:gap-6 p-6 sm:p-7" style={{ animationDelay: `${i * 90}ms` }}>
-                  <div className="font-serif-display text-2xl sm:text-3xl text-[var(--accent)] leading-none pt-1">{String(i + 1).padStart(2, '0')}</div>
-                  <div>
-                    <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{p.t}</h3>
-                    <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
+            <div className="lg:col-span-8 relative">
+              <div aria-hidden="true" className="absolute left-[23px] top-6 bottom-6 w-px bg-gradient-to-b from-[var(--accent)]/35 via-[var(--accent)]/25 to-transparent" />
+              <div className="space-y-5">
+                {cat.points.map((p, i) => (
+                  <div key={i} className="group relative reveal flex gap-4 sm:gap-6 items-start" style={{ animationDelay: `${i * 90}ms` }}>
+                    <div className="relative z-10 shrink-0 w-12 h-12 rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] flex items-center justify-center transition-all duration-500 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:shadow-[0_12px_26px_-12px_rgba(177,102,49,0.5)]">
+                      <span className="font-serif-display text-lg text-[var(--accent)] leading-none transition-colors duration-500 group-hover:text-white">{String(i + 1).padStart(2, '0')}</span>
+                    </div>
+                    <div className="surface-card flex-1 p-5 sm:p-7">
+                      <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{p.t}</h3>
+                      <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
