@@ -1,4 +1,5 @@
 import { useSEO } from "@/hooks/use-seo";
+import { ContourLines } from "@/pegasus/primitives";
 import { Mail, Shield, Database, Cookie, UserCheck, Scale, FileText } from "lucide-react";
 
 const SECTIONS = [
@@ -23,11 +24,8 @@ export default function Privacy() {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 bg-navy text-cream overflow-hidden">
-        <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-champagne/10 rounded-full blur-3xl" />
-        </div>
+      <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 bg-[hsl(var(--charcoal))] text-cream overflow-hidden">
+        <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-primary opacity-[0.12] pointer-events-none" />
         <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
@@ -186,24 +184,33 @@ function LegalBlock({
       data-testid={`section-privacy-${id}`}
       className={
         alternate
-          ? "rounded-lg border border-border bg-card/60 p-6 lg:p-7 scroll-mt-32"
-          : "scroll-mt-32"
+          ? "relative overflow-hidden rounded-lg border border-border bg-card/60 p-6 lg:p-7 scroll-mt-32"
+          : "relative overflow-hidden scroll-mt-32"
       }
     >
-      <div className="flex items-center gap-3 mb-3">
-        <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute top-0 right-0 font-serif text-6xl sm:text-7xl leading-none text-primary/[0.07]"
+      >
+        {String(idx + 1).padStart(2, "0")}
+      </span>
+
+      <div className="relative flex items-center gap-4 mb-4">
+        <span className="inline-flex items-center justify-center w-11 h-11 shrink-0 rounded-full border border-primary/40 bg-primary/5 text-primary">
+          <Icon className="w-5 h-5" aria-hidden="true" />
+        </span>
         <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
           {kicker}
         </p>
       </div>
-      <h2 className="font-serif text-2xl sm:text-[26px] font-semibold tracking-tight mb-4 leading-tight">
+      <h2 className="relative font-serif text-2xl sm:text-[26px] font-semibold tracking-tight mb-4 leading-tight">
         {title}
       </h2>
       <div
         className={
           alternate
-            ? "space-y-4 text-base text-muted-foreground leading-relaxed"
-            : "space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-5"
+            ? "relative space-y-4 text-base text-muted-foreground leading-relaxed"
+            : "relative space-y-4 text-base text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-5"
         }
       >
         {children}
