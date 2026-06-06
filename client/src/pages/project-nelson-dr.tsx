@@ -1,46 +1,124 @@
 import { Link } from "wouter";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
-import { useEffect } from "react";
-import { Construction, ArrowLeft } from "lucide-react";
 import { CardSurface } from "@/components/ui/card-primitives";
+import { ScrollReveal } from "@/components/animations";
+import { ContourLines } from "@/pegasus/primitives";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ImageIcon,
+  Compass,
+  Ruler,
+  Wallet,
+  Hammer,
+  DoorOpen,
+  ShieldCheck,
+} from "lucide-react";
 
-// Empire Doctrine v1.0.1 / Addendum §6 — Nelson Dr is held behind a
-// "case study coming" placeholder until real photos + founder-confirmed
-// economics are signed off. The page skeleton uses the eight section H2s
-// from Brief §9.1 so structure ships; bodies are intentionally empty.
+// Nelson Dr — launch-ready proof-of-work case study.
 //
-// Public-safe economics: acquisition ~$600K, scope ~$90–100K, projected
-// stabilized value ~$840K. No profit / ROI / net figures are surfaced
-// publicly per Addendum §6.
+// Economics are published as APPROXIMATE project-level ranges only
+// (acquisition ~$600K, scope ~$90–100K, finished exit ~$840K). No net
+// profit / ROI figures are surfaced — full cost basis is not published.
+// Property photos are intentional, labeled "pending" placeholders until
+// real project photos are supplied. No AI-generated property imagery.
+//
+// Location label is held at "East Bay, CA" pending founder confirmation
+// of the exact city (records have shown both Pleasant Hill and Richmond)
+// and whether the full street address may be published.
 
-// Website Brief v1.0 §9.1 — seven canonical case-study H2s.
-const SECTIONS = [
-  "Situation",
-  "Strategy",
-  "Structure",
-  "Scope",
-  "Execution",
-  "Result",
-  "Lesson",
+const METRICS = [
+  { label: "Approx. Acquisition", value: "Around $600K" },
+  { label: "Improvement Scope", value: "Approx. $90K–$100K" },
+  { label: "Finished Exit", value: "Around $840K" },
+  { label: "Primary Lane", value: "Value-Add Rehab / Retail Exit" },
+];
+
+const LENS = [
+  {
+    icon: Compass,
+    title: "Condition",
+    body: "What needed to change for the home to compete in its finished market.",
+  },
+  {
+    icon: Ruler,
+    title: "Scope",
+    body: "Which improvements created the most visible and functional value.",
+  },
+  {
+    icon: Wallet,
+    title: "Budget",
+    body: "Where capital could be deployed with discipline, and where it could not drift.",
+  },
+  {
+    icon: Hammer,
+    title: "Execution",
+    body: "What had to happen first, sequenced so the project stayed on path.",
+  },
+  {
+    icon: DoorOpen,
+    title: "Exit",
+    body: "How the finished product needed to present to win buyer confidence.",
+  },
+];
+
+const PIPELINE = ["Basis", "Scope", "Budget", "Execution", "Exit"];
+
+const TIMELINE = [
+  { phase: "Acquire", note: "Secure the asset at the right basis." },
+  { phase: "Scope", note: "Define the disciplined improvement plan." },
+  { phase: "Improve", note: "Execute the controlled value-add scope." },
+  { phase: "Prepare", note: "Stage and position for the finished market." },
+  { phase: "Exit", note: "List and close the finished retail sale." },
+];
+
+const CONTROLLED = [
+  "Budget discipline",
+  "Scope discipline",
+  "Execution sequence",
+  "Market positioning",
+  "Exit readiness",
 ];
 
 const NELSON_JSONLD = {
   "@context": "https://schema.org",
   "@type": "CreativeWork",
-  name: "Nelson Dr · Pleasant Hill case study",
-  about: "Pegasus DreamScapes value-add residential acquisition",
-  creator: { "@type": "Person", name: "Paolo \"Apollo\" Duran" },
+  name: "Nelson Dr — Value-Add Execution Case Study",
+  about: "Pegasus DreamScapes value-add residential acquisition and retail exit",
+  creator: { "@type": "Person", name: 'Paolo "Apollo" Duran' },
   publisher: { "@type": "Organization", name: "Pegasus DreamScapes Corp." },
   inLanguage: "en",
-  workStatus: "placeholder",
 };
+
+function PhotoPending({
+  label,
+  className = "",
+  testId,
+}: {
+  label: string;
+  className?: string;
+  testId?: string;
+}) {
+  return (
+    <div
+      className={`relative flex flex-col items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-center ${className}`}
+      data-testid={testId}
+    >
+      <ImageIcon className="w-7 h-7 text-muted-foreground/50 mb-3" strokeWidth={1.4} />
+      <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold">
+        {label}
+      </p>
+    </div>
+  );
+}
 
 export default function NelsonDrPage() {
   useSEO({
-    title: "Nelson Dr Case Study",
+    title: "Nelson Dr — Value-Add Execution Case Study",
     description:
-      "Pegasus DreamScapes' first documented case study from the East Bay. Real photos and final economics pending.",
+      "How Pegasus DreamScapes read an East Bay property, defined the improvement path, controlled scope and budget, and prepared it for a stronger finished-market exit.",
     image: "/og/nelson-dr.png",
   });
 
@@ -60,65 +138,353 @@ export default function NelsonDrPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20">
-      <div className="max-w-3xl mx-auto px-6 lg:px-12">
-        <Link
-          href="/projects"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
-          data-testid="link-nelson-back"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Projects
-        </Link>
-
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
-          Case Study · Nelson Dr
-        </p>
-        <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-foreground leading-tight mb-6">
-          Nelson Dr · Pleasant Hill
-        </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed mb-2">
-          A complex East Bay residential acquisition routed through a value-add execution path.
-        </p>
-        <p className="text-base text-muted-foreground/85 leading-relaxed mb-12">
-          Acquisition near $600K. Scope $90–100K. Projected stabilized value near $840K.
-        </p>
-
-        <CardSurface className="p-8 sm:p-10 text-center mb-12">
-          <Construction className="w-10 h-10 text-primary mx-auto mb-5" />
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-3">
-            Case study coming
-          </p>
-          <h2 className="font-serif text-2xl text-foreground mb-3">
-            Real photos and final economics pending founder approval.
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            We do not publish a case study before the record is clean. The structural sections are
-            queued below; each gets its body when Apollo signs off.
-          </p>
-        </CardSurface>
-
-        <div className="space-y-8 opacity-75">
-          {SECTIONS.map((title) => (
-            <section key={title}>
-              <h2 className="font-serif text-2xl font-semibold text-foreground border-b border-border pb-2 mb-3">
-                {title}
-              </h2>
-              <p className="text-sm text-muted-foreground italic">Coming soon.</p>
-            </section>
-          ))}
-        </div>
-
-        <div className="mt-16 text-center">
-          <Link href="/submit">
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm"
-              data-testid="button-nelson-submit"
-            >
-              Submit a Property
-            </Button>
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-[hsl(var(--charcoal))] text-cream">
+        <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-primary opacity-[0.12] pointer-events-none" />
+        <div className="relative max-w-4xl mx-auto px-6 lg:px-12 pt-28 pb-16">
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-primary transition-colors mb-8"
+            data-testid="link-nelson-back"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Projects
           </Link>
+
+          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
+            Case Study · Value-Add Execution
+          </p>
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-white leading-tight mb-6">
+            Nelson Dr
+          </h1>
+          <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-8">
+            A value-add project shaped by strategy, scope control, and disciplined
+            execution — from an overlooked property to a finished retail exit.
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-10">
+            {["East Bay, CA", "Value-Add / Rehab", "Retail Exit"].map((chip) => (
+              <span
+                key={chip}
+                className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/75 font-supporting"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/submit">
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-7 h-12 rounded-sm w-full sm:w-auto"
+                data-testid="button-nelson-review"
+              >
+                Start a Property Review <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+            <Link href="/peggy">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white text-[12px] uppercase tracking-[0.18em] font-semibold px-7 h-12 rounded-sm w-full sm:w-auto"
+                data-testid="button-nelson-peggy"
+              >
+                Talk to PeggyAI
+              </Button>
+            </Link>
+          </div>
         </div>
+      </section>
+
+      {/* Key numbers strip */}
+      <section className="border-b border-border bg-muted/30">
+        <div className="max-w-5xl mx-auto px-6 lg:px-12 py-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border rounded-md overflow-hidden">
+            {METRICS.map((m) => (
+              <div
+                key={m.label}
+                className="bg-background p-5 sm:p-6"
+                data-testid={`metric-${m.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`}
+              >
+                <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground/80 font-supporting font-semibold mb-2">
+                  {m.label}
+                </p>
+                <p className="font-serif text-xl sm:text-2xl text-foreground leading-tight">
+                  {m.value}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground/75 mt-4 max-w-3xl leading-relaxed">
+            Figures are approximate project-level figures and should be confirmed
+            against final closing and project records. Past project outcomes are not
+            guarantees of future results.
+          </p>
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-6 lg:px-12 py-16 lg:py-20 space-y-20">
+        {/* Photos */}
+        <ScrollReveal>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
+              The Property
+            </p>
+            <PhotoPending
+              label="Finished exterior — photo pending"
+              className="h-64 sm:h-80 mb-4"
+              testId="photo-nelson-hero"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <PhotoPending
+                label="Before photo pending"
+                className="h-48"
+                testId="photo-nelson-before"
+              />
+              <PhotoPending
+                label="After photo pending"
+                className="h-48"
+                testId="photo-nelson-after"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground/70 mt-4">
+              Real project photography is being prepared. Pegasus does not publish
+              AI-generated or stand-in property images on a case study.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        {/* The Situation */}
+        <ScrollReveal>
+          <section>
+            <h2 className="font-serif text-3xl font-semibold text-foreground mb-4">
+              The Situation
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Nelson Dr was the type of property Pegasus is built to read: not simply
+              "good" or "bad," but unfinished in its potential. The opportunity was not
+              just the house — it was the spread between current condition, improvement
+              scope, buyer expectations, and exit strategy.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              The opportunity required more than a listing mindset. It needed a clear
+              understanding of condition, capital exposure, and the finished exit. The
+              value was not unlocked by one move. It came from sequencing the right
+              moves in the right order.
+            </p>
+          </section>
+        </ScrollReveal>
+
+        {/* The Pegasus Read */}
+        <ScrollReveal>
+          <section>
+            <h2 className="font-serif text-3xl font-semibold text-foreground mb-3">
+              The Pegasus Read
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-8 max-w-2xl">
+              Pegasus approached Nelson Dr through one disciplined question:{" "}
+              <span className="text-foreground font-medium">
+                what path creates the strongest realistic outcome for this property?
+              </span>{" "}
+              The answer was not to overbuild or chase every possible upgrade — it was
+              to focus the scope around visible value, buyer confidence, and exit
+              readiness.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {LENS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <CardSurface key={item.title} className="p-5">
+                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-primary/40 bg-primary/5 text-primary mb-4">
+                      <Icon className="w-5 h-5" strokeWidth={1.6} />
+                    </span>
+                    <h3 className="font-serif text-lg text-foreground mb-1.5">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.body}
+                    </p>
+                  </CardSurface>
+                );
+              })}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* Deal Architecture diagram */}
+        <ScrollReveal>
+          <section>
+            <h2 className="font-serif text-3xl font-semibold text-foreground mb-6">
+              The Deal Architecture
+            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
+              {PIPELINE.map((step, i) => (
+                <div key={step} className="flex items-center gap-2 flex-1">
+                  <div className="flex-1 rounded-md border border-border bg-muted/40 px-4 py-5 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 font-supporting mb-1">
+                      Step {i + 1}
+                    </p>
+                    <p className="font-serif text-lg text-foreground">{step}</p>
+                  </div>
+                  {i < PIPELINE.length - 1 && (
+                    <ArrowRight className="w-4 h-4 text-primary shrink-0 mx-auto rotate-90 sm:rotate-0" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* Timeline */}
+        <ScrollReveal>
+          <section>
+            <h2 className="font-serif text-3xl font-semibold text-foreground mb-6">
+              The Execution Path
+            </h2>
+            <ol className="relative border-l border-border ml-2 space-y-6">
+              {TIMELINE.map((t, i) => (
+                <li key={t.phase} className="ml-6">
+                  <span className="absolute -left-[9px] flex items-center justify-center w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
+                    {i + 1}
+                  </span>
+                  <h3 className="font-serif text-lg text-foreground leading-none mb-1">
+                    {t.phase}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{t.note}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </ScrollReveal>
+
+        {/* Outcome */}
+        <ScrollReveal>
+          <section>
+            <h2 className="font-serif text-3xl font-semibold text-foreground mb-4">
+              The Outcome
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              The result was a clean value-add execution path: acquire at the right
+              basis, improve the property with a controlled scope, and position the
+              finished product for a stronger exit. On a project level, the asset was
+              acquired around $600K, improved with a scope of roughly $90K–$100K, and
+              prepared for a finished exit around $840K.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Nelson Dr is not presented as a promise that every property can produce
+              the same result. It is proof of process: Pegasus reads the asset, studies
+              the path, and executes with discipline.
+            </p>
+          </section>
+        </ScrollReveal>
+
+        {/* What Pegasus controlled */}
+        <ScrollReveal>
+          <section>
+            <h2 className="font-serif text-3xl font-semibold text-foreground mb-6">
+              What Pegasus Controlled
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {CONTROLLED.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-3 rounded-md border border-border bg-muted/30 px-4 py-3"
+                >
+                  <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-sm text-foreground">{item}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* What this proves */}
+        <ScrollReveal>
+          <CardSurface className="p-8 sm:p-10 bg-muted/30">
+            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground mb-4">
+              What This Demonstrates
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Some properties are not obvious wins at first glance. Some need the right
+              scope, the right capital plan, or the right exit. Some need someone to
+              architect the deal before the market sees the finished version. That is
+              where Pegasus DreamScapes operates — in the architecture of the path, not
+              just the purchase.
+            </p>
+          </CardSurface>
+        </ScrollReveal>
+
+        {/* CTA band */}
+        <ScrollReveal>
+          <section className="text-center py-4">
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-foreground mb-3">
+              Have a property with hidden value?
+            </h2>
+            <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto mb-8">
+              Whether the property is distressed, dated, inherited, underused, or simply
+              unclear in its next move, Pegasus can review the situation and help
+              identify the path.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/submit">
+                <Button
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm w-full sm:w-auto"
+                  data-testid="button-nelson-submit"
+                >
+                  Start a Property Review <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+              <Link href="/peggy">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm w-full sm:w-auto"
+                  data-testid="button-nelson-peggy-footer"
+                >
+                  Talk to PeggyAI
+                </Button>
+              </Link>
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* Disclaimer */}
+        <ScrollReveal>
+          <section className="border-t border-border pt-8">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+              Case Study Disclaimer
+            </p>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3">
+              This case study is provided for informational and illustrative purposes
+              only. Project figures are approximate unless otherwise stated and may
+              exclude certain transaction costs, financing costs, holding costs,
+              commissions, taxes, insurance, legal fees, accounting treatment, and other
+              project-specific expenses.
+            </p>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3">
+              Past project outcomes are not guarantees of future results. Every property,
+              market, seller situation, capital structure, construction scope, timeline,
+              and exit path is different. Pegasus DreamScapes reviews opportunities on a
+              case-by-case basis, and any acquisition, partnership, listing, referral,
+              JV, or disposition path is subject to underwriting, diligence, written
+              agreement, and applicable law.
+            </p>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3">
+              Pegasus DreamScapes does not provide legal, tax, accounting, lending,
+              insurance, appraisal, engineering, architectural, or securities advice.
+              Visitors should consult the appropriate licensed professionals before
+              making decisions.
+            </p>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed">
+              Licensed real estate representation, when applicable, is provided by Paolo
+              "Apollo" Duran, California real estate salesperson, DRE #02333658, through
+              Keller Williams Realty East Bay. Pegasus DreamScapes is not currently
+              presented as its own real estate brokerage.
+            </p>
+          </section>
+        </ScrollReveal>
       </div>
     </div>
   );
