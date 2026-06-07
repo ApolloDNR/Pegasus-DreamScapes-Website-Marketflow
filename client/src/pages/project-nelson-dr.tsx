@@ -8,7 +8,6 @@ import { ContourLines } from "@/pegasus/primitives";
 import {
   ArrowLeft,
   ArrowRight,
-  ImageIcon,
   Compass,
   Ruler,
   Wallet,
@@ -21,9 +20,10 @@ import {
 //
 // Economics: acquisition ~$600K, improvement budget $100K, finished
 // exit ~$840K, settled September 2025. No net profit / ROI figures are
-// surfaced — full cost basis is not published. Property photos are
-// intentional, labeled "pending" placeholders until real project photos
-// are supplied. No AI-generated property imagery.
+// surfaced — full cost basis is not published. Property photos are real
+// project photography: finished/delivered "after" shots plus
+// documentation-quality "before" images from the as-acquired listing
+// record. No AI-generated or stand-in property imagery.
 //
 // Location: Richmond / El Sobrante Area, CA. Founder-confirmed public
 // address: 4369 Nelson Drive, Richmond, CA 94803.
@@ -91,27 +91,75 @@ const NELSON_JSONLD = {
   inLanguage: "en",
 };
 
-function PhotoPending({
-  label,
+function Shot({
+  src,
+  alt,
+  tag,
   className = "",
   testId,
+  eager = false,
 }: {
-  label: string;
+  src: string;
+  alt: string;
+  tag?: string;
   className?: string;
   testId?: string;
+  eager?: boolean;
 }) {
   return (
-    <div
-      className={`relative flex flex-col items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-center ${className}`}
+    <figure
+      className={`relative overflow-hidden rounded-md bg-muted ${className}`}
       data-testid={testId}
     >
-      <ImageIcon className="w-7 h-7 text-muted-foreground/50 mb-3" strokeWidth={1.4} />
-      <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold">
-        {label}
-      </p>
-    </div>
+      <img
+        src={src}
+        alt={alt}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        className="w-full h-full object-cover"
+      />
+      {tag && (
+        <figcaption className="absolute bottom-2 left-2 inline-flex items-center rounded-sm bg-black/55 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/90 font-supporting font-semibold backdrop-blur-sm">
+          {tag}
+        </figcaption>
+      )}
+    </figure>
   );
 }
+
+// Finished, delivered-condition interiors (real project photography).
+const FINISHED_INTERIORS = [
+  {
+    src: "/images/nelson/nelson-kitchen-1280.jpg",
+    alt: "Nelson Dr — renovated kitchen in finished, delivered condition",
+    tag: "Kitchen",
+  },
+  {
+    src: "/images/nelson/nelson-primary-bath-1280.jpg",
+    alt: "Nelson Dr — renovated primary bathroom in finished, delivered condition",
+    tag: "Primary bath",
+  },
+  {
+    src: "/images/nelson/nelson-bedroom-1280.jpg",
+    alt: "Nelson Dr — refreshed bedroom in finished, delivered condition",
+    tag: "Bedroom",
+  },
+  {
+    src: "/images/nelson/nelson-bath-detail-1280.jpg",
+    alt: "Nelson Dr — bathroom detail in finished, delivered condition",
+    tag: "Bath detail",
+  },
+  {
+    src: "/images/nelson/nelson-hallway-1280.jpg",
+    alt: "Nelson Dr — interior hallway in finished, delivered condition",
+    tag: "Hallway",
+  },
+  {
+    src: "/images/nelson/nelson-patio-1280.jpg",
+    alt: "Nelson Dr — exterior patio in finished, delivered condition",
+    tag: "Patio",
+  },
+];
 
 export default function NelsonDrPage() {
   useSEO({
@@ -230,27 +278,60 @@ export default function NelsonDrPage() {
             <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
               The Property
             </p>
-            <PhotoPending
-              label="Finished exterior — photo pending"
-              className="h-64 sm:h-80 mb-4"
+
+            {/* Hero — finished exterior, delivered condition */}
+            <Shot
+              src="/images/nelson/nelson-hero-1280.jpg"
+              alt="Nelson Dr · 4369 Nelson Drive, Richmond — finished exterior in delivered condition"
+              tag="Delivered · Exterior"
+              className="aspect-[16/9] mb-4"
               testId="photo-nelson-hero"
+              eager
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <PhotoPending
-                label="Before photo pending"
-                className="h-48"
+
+            {/* Honest before / after exterior comparison */}
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+              Before &amp; After — Exterior
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+              <Shot
+                src="/images/nelson/nelson-before-exterior-front-1280.jpg"
+                alt="Nelson Dr — front exterior in as-acquired condition before renovation"
+                tag="As acquired"
+                className="aspect-[4/3]"
                 testId="photo-nelson-before"
               />
-              <PhotoPending
-                label="After photo pending"
-                className="h-48"
+              <Shot
+                src="/images/nelson/nelson-exterior-1280.jpg"
+                alt="Nelson Dr — front exterior in finished, delivered condition"
+                tag="Delivered"
+                className="aspect-[4/3]"
                 testId="photo-nelson-after"
               />
             </div>
-            <p className="text-xs text-muted-foreground/70 mt-4">
-              Real project photography is being prepared. Pegasus does not publish
-              AI-generated or stand-in property images on a case study.
+            <p className="text-xs text-muted-foreground/60 mb-12">
+              Before images are documentation-quality photos from the property's
+              as-acquired listing record. After images show the finished, delivered
+              condition. Pegasus does not publish AI-generated or stand-in property
+              images.
             </p>
+
+            {/* Finished interior gallery */}
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+              Inside the Finished Home
+            </p>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {FINISHED_INTERIORS.map((shot) => (
+                <Shot
+                  key={shot.src}
+                  src={shot.src}
+                  alt={shot.alt}
+                  tag={shot.tag}
+                  className="aspect-[4/3]"
+                  testId={`photo-nelson-${shot.tag.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                />
+              ))}
+            </div>
           </div>
         </ScrollReveal>
 

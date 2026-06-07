@@ -148,9 +148,9 @@ export function BeforeAfter() {
         if (e.key === 'End') { e.preventDefault(); setPos(98); }
       }}>
       <span id="ba-instructions" className="sr-only">Use the left and right arrow keys, or drag the handle, to wipe between the before and after photographs. Press Home or End to jump to either end.</span>
-      <img src={IMG('pegasus-after.png')} alt="The same property after a disciplined value-add renovation" />
+      <img src={IMG('nelson/nelson-exterior-1280.jpg')} alt="Nelson Dr in Richmond after a disciplined value-add renovation — finished exterior" />
       <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-        <img src={IMG('pegasus-before.png')} alt="The property as acquired, tired and dated" />
+        <img src={IMG('nelson/nelson-before-exterior-front-1280.jpg')} alt="Nelson Dr as acquired — tired, dated exterior before renovation" />
       </div>
       <span className="ba-tag left-4">As acquired</span>
       <span className="ba-tag right-4" style={{ background: 'rgba(213,127,46,0.82)' }}>Delivered</span>
