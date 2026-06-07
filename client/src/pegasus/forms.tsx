@@ -581,10 +581,10 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                   <div className="pg-label !text-[9px] text-[var(--accent-bright)]">Property Fit Score</div>
                 </div>
                 <div className="flex items-baseline gap-3 mb-2">
-                  <span className="font-serif-display text-[4.5rem] leading-none text-[var(--accent-bright)]">{fit}</span>
+                  <span className="font-serif-display text-[4.5rem] leading-none text-[var(--accent-bright)]" data-testid="text-console-fit-score">{fit}</span>
                   <span className="font-serif-display text-2xl text-[var(--cream)]/50">/100</span>
                 </div>
-                <div className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)] mb-3">{fitBand}</div>
+                <div className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)] mb-3" data-testid="text-console-fit-band">{fitBand}</div>
                 <div className="flex items-center gap-2.5 mb-5" data-testid="text-console-confidence">
                   <span className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/55">Input confidence</span>
                   <span className={`pg-label !text-[8px] !tracking-[0.16em] px-2 py-0.5 rounded-full border ${
