@@ -76,6 +76,8 @@ export type Category = {
   points: { t: string; d: string }[];
   rich: Rich[];
   quote: string;
+  layout?: 'timeline' | 'grid' | 'ledger';
+  pointsLabel?: string;
   forYou: string[];
   notFit: string[];
   splits?: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean };

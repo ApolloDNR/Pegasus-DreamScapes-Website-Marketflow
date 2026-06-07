@@ -515,6 +515,8 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Sellers & Owners',
     title: <>Sell on your terms,<br />not the market's</>,
     image: 'pegasus-exterior-light.png',
+    layout: 'timeline',
+    pointsLabel: 'What you get',
     lead: 'Two clear lanes. If your property is clean and ready, Apollo represents you through Keller Williams Realty East Bay. If it is distressed, inherited, occupied, or up against a deadline, send it for a property review and we will lay out the real options, with no guaranteed offer until the numbers and the agreement are real.',
     points: [
       { t: 'List With Apollo', d: 'Clean and ready to market? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing.' },
@@ -558,6 +560,8 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Buyers',
     title: <>Buy the finished<br />product, or the deal</>,
     image: 'pegasus-interior-light.png',
+    layout: 'grid',
+    pointsLabel: 'How you buy',
     lead: 'Buy with an investor-minded agent in your corner. When agency representation is the right lane, Apollo represents buyers through Keller Williams Realty East Bay, bringing buy-box discipline, diligence, and offer strategy to every purchase, whether it is a finished home or your next value-add.',
     points: [
       { t: 'Investor-minded representation', d: 'Apollo can represent you as your buyer’s agent through Keller Williams Realty East Bay when agency is the right lane, with offers backed by real underwriting.' },
@@ -600,6 +604,8 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Deal Finders & Wholesalers',
     title: <>Bring a deal,<br />get a straight answer</>,
     image: 'pegasus-prop1.png',
+    layout: 'ledger',
+    pointsLabel: 'A straight read',
     lead: 'Bring a deal and get a straight answer. If it fits our buy box, Pegasus may buy it directly or partner on it. If it does not fit us directly, we may route it through our JV network or MarketFlow, but only after written terms. Not every deal is a fit, and we will tell you honestly.',
     points: [
       { t: 'A fast, honest read', d: 'Send the deal. We tell you quickly whether it works, at what number, and which path it fits.' },
@@ -642,6 +648,8 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Capital Partners',
     title: <>Put capital to work,<br />with eyes open</>,
     image: 'pegasus-arch.png',
+    layout: 'grid',
+    pointsLabel: 'Eyes open',
     lead: 'We do not pool funds or promise returns. We bring you specific projects, underwritten to one standard, with the work, the timeline, and the risk laid out before you decide.',
     points: [
       { t: 'Project by project', d: 'You choose what to back. No blind pools, no commitments you did not pick.' },
@@ -684,6 +692,8 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Operators & Vendors',
     title: <>Plug into a pipeline<br />that respects the work</>,
     image: 'pegasus-process.png',
+    layout: 'ledger',
+    pointsLabel: 'How we work',
     lead: 'GCs, subcontractors, agents, title, lenders, and inspectors: the people who actually deliver. Work with an operator that scopes clearly, pays on terms, and brings repeat volume.',
     points: [
       { t: 'Clear scope', d: 'You bid against a real plan, not a moving target.' },
@@ -725,11 +735,13 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Referral Partners',
     title: <>Send someone you trust<br />into good hands</>,
     image: 'pegasus-interior-v2.png',
-    lead: 'Agents, attorneys, advisors, and anyone who runs into property situations they cannot fully solve. Refer the person, keep the relationship, and get looked after for it.',
+    layout: 'timeline',
+    pointsLabel: 'How it works',
+    lead: 'Agents, attorneys, advisors, and anyone who runs into property situations outside their lane. Refer the person, keep the relationship, and work from a referral fee or JV split agreed in writing before we engage your contact.',
     points: [
       { t: 'They are treated right', d: 'Your name stays clean because we read the situation straight.' },
       { t: 'You stay in the loop', d: 'You keep the relationship; we solve the property problem.' },
-      { t: 'Looked after', d: 'Referral arrangements are clear and agreed up front.' },
+      { t: 'Terms in writing first', d: 'The referral fee or JV split is documented and agreed before we engage your contact. What we agree is what you receive.' },
       { t: 'A real answer for them', d: 'Even a "this is not a deal" is a service you can hand them.' },
     ],
     rich: ['faq'],
@@ -746,7 +758,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'Understand our standard', route: 'about' },
     faqAnchor: 'working-with-pegasus',
     faq: [
-      { q: 'How are referrals compensated?', a: 'Clearly and up front. We agree on the arrangement before anything happens, and we keep you informed.' },
+      { q: 'How are referrals compensated?', a: 'In writing, before anything happens. We document the referral fee or JV split and agree it before we engage your contact, then keep you informed.' },
       { q: 'What happens to my contact?', a: 'They get the same honest Review anyone does. You keep the relationship; we just solve the property piece.' },
     ],
     form: {

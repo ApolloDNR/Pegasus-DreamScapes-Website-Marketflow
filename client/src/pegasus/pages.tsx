@@ -91,24 +91,76 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
 /* ================================================================
    AUDIENCE CATEGORY PAGE
    ================================================================ */
-export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; openPeggy: () => void }) {
-  return (
-    <>
-      <PageHero eyebrow={cat.eyebrow} title={cat.title} image={IMG(cat.image)} lead={cat.lead} />
+function WhatYouGet({ cat }: { cat: Category }) {
+  const label = cat.pointsLabel ?? 'What you get';
+  const layout = cat.layout ?? 'timeline';
+  const num = (i: number) => String(i + 1).padStart(2, '0');
+
+  if (layout === 'grid') {
+    return (
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
-            <div className="lg:col-span-4 reveal">
-              <div className="pg-label text-[var(--accent)]">What you get</div>
-              <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
-              <p className="font-serif-display italic text-2xl text-[var(--muted)] leading-snug">{cat.quote}</p>
-            </div>
-            <ol className="lg:col-span-8 relative">
-              <div aria-hidden="true" className="absolute left-[23px] sm:left-[27px] top-3 bottom-3 w-px bg-gradient-to-b from-[var(--accent)]/40 via-[var(--line)] to-transparent" />
+          <div className="max-w-2xl mx-auto text-center mb-14 reveal">
+            <div className="pg-label text-[var(--accent)] mb-5">{label}</div>
+            <p className="font-serif-display italic text-2xl md:text-[1.9rem] text-[var(--text)] leading-snug">{cat.quote}</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-6">
+            {cat.points.map((p, i) => (
+              <div key={i} className="surface-card reveal flex gap-6 p-8" style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="font-serif-display text-4xl text-[var(--accent)] leading-none shrink-0">{num(i)}</div>
+                <div>
+                  <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2 leading-tight">{p.t}</h3>
+                  <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (layout === 'ledger') {
+    return (
+      <section className="py-24 lg:py-28">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          <div className="lg:col-span-5 reveal lg:sticky lg:top-28">
+            <div className="pg-label text-[var(--accent)]">{label}</div>
+            <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
+            <p className="font-serif-display text-3xl md:text-[2.6rem] text-[var(--text)] leading-[1.15] tracking-[-0.01em]">{cat.quote}</p>
+          </div>
+          <div className="lg:col-span-7">
+            {cat.points.map((p, i) => (
+              <div key={i} className="reveal flex gap-6 sm:gap-8 py-7 border-t border-[var(--line)] first:border-t-0 first:pt-0" style={{ animationDelay: `${i * 90}ms` }}>
+                <div className="font-serif-display text-2xl text-[var(--accent)] leading-none shrink-0 pt-1 w-8">{num(i)}</div>
+                <div>
+                  <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2 leading-tight">{p.t}</h3>
+                  <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed">{p.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-24 lg:py-28">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          <div className="lg:col-span-4 reveal">
+            <div className="pg-label text-[var(--accent)]">{label}</div>
+            <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
+            <p className="font-serif-display italic text-2xl text-[var(--muted)] leading-snug">{cat.quote}</p>
+          </div>
+          <div className="lg:col-span-8 relative">
+            <div aria-hidden="true" className="absolute left-[23px] sm:left-[27px] top-3 bottom-3 w-px bg-gradient-to-b from-[var(--accent)]/40 via-[var(--line)] to-transparent" />
+            <ol>
               {cat.points.map((p, i) => (
                 <li key={i} className="group reveal relative flex gap-5 sm:gap-7 pb-5 last:pb-0" style={{ animationDelay: `${i * 90}ms` }}>
                   <span className="relative z-10 shrink-0 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-[var(--accent)]/40 bg-[var(--bg)] font-serif-display text-lg sm:text-xl text-[var(--accent)] leading-none transition-all duration-500 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)] group-hover:text-white group-hover:shadow-[0_12px_26px_-12px_rgba(177,102,49,0.5)]">
-                    {String(i + 1).padStart(2, '0')}
+                    {num(i)}
                   </span>
                   <div className="surface-card flex-1 p-6 sm:p-7">
                     <h3 className="font-serif-display text-2xl text-[var(--text)] mb-2">{p.t}</h3>
@@ -119,7 +171,16 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
             </ol>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
+
+export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; openPeggy: () => void }) {
+  return (
+    <>
+      <PageHero eyebrow={cat.eyebrow} title={cat.title} image={IMG(cat.image)} lead={cat.lead} />
+      <WhatYouGet cat={cat} />
       {cat.splits && <SplitPaths go={go} openPeggy={openPeggy} heading={cat.splits.heading} copy={cat.splits.copy} paths={cat.splits.paths} founderPhoto={cat.splits.founderPhoto} peggyHint={cat.splits.peggyHint} />}
       <Qualifier forYou={cat.forYou} notFit={cat.notFit} />
       {cat.rich.includes('engine') && <EngineBlock go={go} />}
@@ -184,7 +245,7 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
     <>
       <PageHero eyebrow="Pillar 01 · Investments"
         title={<>We acquire what <span className="italic text-[var(--accent-bright)]">others overlook.</span></>}
-        image={IMG('pegasus-aerial.png')}
+        image={IMG('pegasus-after.png')}
         lead="Distressed, dated, off-market, and overlooked property. We buy it right, reposition it with discipline, and exit on a plan written before we close." />
       <PillarSection p={INVESTMENTS} go={go} />
       <NelsonProof go={go} />
@@ -493,7 +554,7 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
     <>
       <PageHero eyebrow="Systems · The Ecosystem"
         title={<>One company, <span className="italic text-[var(--accent-bright)]">one discipline.</span></>}
-        image={IMG('pegasus-architecture.png')}
+        image={IMG('pegasus-closing.png')}
         lead="Six parts of one company — the firm, the guide, the tools, the marketplace, the capital layer, and the build arm — all running a deal through the same underwriting." />
       <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ThreePillarsBlock go={go} />
@@ -608,13 +669,13 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
       <PageHero eyebrow="The Firm"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">architecture.</span></>}
         image={IMG('pegasus-hero-light.png')}
-        lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay, built on strategy, governed by virtue, and executed with discipline." />
+        lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay. One firm that reads the situation, underwrites the numbers, builds the work, and sees a deal through, instead of handing you off." />
       <ApolloBlock go={go} showCta={false} />
       <DoctrineBlock dark />
       <ProofStats />
       <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." />
       <CTABand go={go} openPeggy={openPeggy}
-        title="Built on strategy. Governed by virtue."
+        title="Start with one honest read."
         text="If you have a property, a question, or capital to deploy, start a conversation. The right path, or no path." />
     </>
   );
