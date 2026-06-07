@@ -18,7 +18,8 @@ export type Route =
   | 'about'
   | 'contact'
   | 'peggy'
-  | 'saved';
+  | 'saved'
+  | 'submit';
 
 export type AudienceKey = 'sellers' | 'buyers' | 'dealfinders' | 'capital' | 'operators' | 'referral';
 

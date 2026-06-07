@@ -20,6 +20,7 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   contact: '/contact',
   peggy: '/peggy',
   saved: '/saved',
+  submit: '/submit',
 };
 
 export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).reduce(

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
-import { IMG, SectionHead, ContourLines, BeforeAfter } from './primitives';
+import { IMG, SectionHead, ContourLines } from './primitives';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON,
@@ -63,7 +63,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-0 hero-scrim-bottom" />
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
-          <div className="pg-label !tracking-[0.34em] text-[var(--accent-bright)] text-on-photo mb-7 reveal">Investments · Development · Systems · East Bay</div>
+          <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/85 text-on-photo mb-7 reveal">Investments · Development · Systems · East Bay</div>
           <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-[-0.01em] text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] reveal delay-100">
             We do not just find deals. <span className="italic text-[var(--accent-bright)]">We architect them.</span>
           </h1>
@@ -78,8 +78,8 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-              <button type="button" onClick={() => go('contact')} className="btn-solid-light px-8 py-4 pg-label !text-[10px] !tracking-[0.18em] inline-flex items-center gap-3 group">
-                Start a Property Review <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              <button type="button" onClick={() => go('submit')} className="btn-solid-light px-8 py-4 pg-label !text-[10px] !tracking-[0.18em] inline-flex items-center gap-3 group">
+                Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </button>
               <button type="button" onClick={openPeggy} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
                 Ask PeggyAI
@@ -565,7 +565,7 @@ export function NelsonProof({ go }: { go: Nav }) {
             <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">
               A tired house, a structured turn.
             </h2>
-            <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb} Drag the handle to see the transformation.</p>
+            <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb}</p>
             <div className="grid grid-cols-3 gap-6 mb-10">
               {NELSON.rows.map((r, i) => (
                 <div key={r.k} className="reveal" style={{ animationDelay: `${i * 90}ms` }}>
@@ -580,7 +580,18 @@ export function NelsonProof({ go }: { go: Nav }) {
             </button>
           </div>
           <div className="lg:col-span-6 reveal delay-100">
-            <div className="peggy-shadow"><BeforeAfter /></div>
+            <div className="peggy-shadow relative aspect-[4/3] overflow-hidden rounded-sm">
+              <img
+                src={IMG('nelson/nelson-hero-1280.jpg')}
+                alt="4369 Nelson Drive, Richmond — finished exterior, delivered condition"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+              <span className="absolute bottom-3 right-3 inline-flex items-center rounded-sm bg-black/55 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white/90 font-supporting font-semibold backdrop-blur-sm">
+                Delivered · 2025
+              </span>
+            </div>
           </div>
         </div>
       </div>

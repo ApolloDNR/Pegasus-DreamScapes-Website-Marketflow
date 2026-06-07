@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MoveHorizontal, Sun, Moon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import type { Theme } from './theme';
 import brandEmblem from '@/assets/brand/pegasus-emblem.png';
 
@@ -118,45 +118,3 @@ export function ThemeToggle({ theme, onToggle, light }: { theme: Theme; onToggle
   );
 }
 
-/* ----------------------------------------------------------------
-   Before / after slider
----------------------------------------------------------------- */
-export function BeforeAfter() {
-  const [pos, setPos] = useState(52);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
-  const setFromX = (clientX: number) => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setPos(Math.max(2, Math.min(98, ((clientX - r.left) / r.width) * 100)));
-  };
-  return (
-    <div ref={wrapRef} className="ba-wrap aspect-[4/3]" role="slider"
-      aria-label="Compare the property as acquired versus delivered"
-      aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pos)}
-      aria-valuetext={`${Math.round(pos)}% as-acquired, ${100 - Math.round(pos)}% delivered`} tabIndex={0}
-      onPointerDown={(e) => { dragging.current = true; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); setFromX(e.clientX); }}
-      onPointerMove={(e) => { if (dragging.current) setFromX(e.clientX); }}
-      onPointerUp={() => { dragging.current = false; }}
-      onPointerCancel={() => { dragging.current = false; }}
-      aria-describedby="ba-instructions"
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft') { e.preventDefault(); setPos((p) => Math.max(2, p - 4)); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); setPos((p) => Math.min(98, p + 4)); }
-        if (e.key === 'Home') { e.preventDefault(); setPos(2); }
-        if (e.key === 'End') { e.preventDefault(); setPos(98); }
-      }}>
-      <span id="ba-instructions" className="sr-only">Use the left and right arrow keys, or drag the handle, to wipe between the before and after photographs. Press Home or End to jump to either end.</span>
-      <img src={IMG('nelson/nelson-exterior-1280.jpg')} alt="Nelson Dr in Richmond after a disciplined value-add renovation — finished exterior" />
-      <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-        <img src={IMG('nelson/nelson-before-exterior-front-1280.jpg')} alt="Nelson Dr as acquired — tired, dated exterior before renovation" />
-      </div>
-      <span className="ba-tag left-4">As acquired</span>
-      <span className="ba-tag right-4" style={{ background: 'rgba(213,127,46,0.82)' }}>Delivered</span>
-      <div className="ba-handle" style={{ left: `${pos}%` }}>
-        <div className="ba-knob"><MoveHorizontal className="w-5 h-5" /></div>
-      </div>
-    </div>
-  );
-}

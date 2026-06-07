@@ -191,9 +191,9 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
 
         <div className="flex items-center gap-3 lg:gap-4">
           <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
-          <button type="button" onClick={() => go('contact')}
+          <button type="button" onClick={() => go('submit')}
             className={`hidden sm:inline-flex ${overHero ? 'btn-solid-light' : 'btn-primary'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
-            Start a Review
+            Submit a Property
           </button>
           <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
             aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }}
@@ -206,6 +206,16 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
       <div id="mobile-menu" aria-hidden={!menuOpen} {...(!menuOpen ? { inert: '' } : {})}
         className={`lg:hidden overflow-hidden bg-[var(--bg-2)] border-b border-[var(--line)] transition-[max-height,opacity] duration-500 ease-out ${menuOpen ? 'max-h-[100svh] opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="px-6 pt-1 pb-8 flex flex-col text-[var(--text)] max-h-[calc(100svh-74px)] overflow-y-auto overscroll-contain">
+          <div className="flex flex-col gap-3 pt-3 pb-6 mb-2 border-b border-[var(--line)]">
+            <button type="button" onClick={() => { setMenuOpen(false); go('submit'); }}
+              className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
+              Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button type="button" onClick={() => { setMenuOpen(false); openPeggy(); }}
+              className="btn-line px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5">
+              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
+            </button>
+          </div>
           {NAV_GROUPS.map((g, gi) => {
             const isOpen = openGroup === g.label;
             const panelId = `mnav-panel-${gi}`;
@@ -241,16 +251,6 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
             </div>
           ))}
           <MobileAccount go={go} close={() => setMenuOpen(false)} />
-          <div className="flex flex-col gap-3 mt-7">
-            <button type="button" onClick={() => { setMenuOpen(false); openPeggy(); }}
-              className="btn-line px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5">
-              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
-            </button>
-            <button type="button" onClick={() => { setMenuOpen(false); go('contact'); }}
-              className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
-              Start a Review <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
         </div>
       </div>
     </nav>

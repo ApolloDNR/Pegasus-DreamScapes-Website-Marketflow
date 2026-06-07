@@ -161,6 +161,52 @@ const FINISHED_INTERIORS = [
   },
 ];
 
+// As-acquired documentation from the original listing record. These record the
+// property's starting condition and are NOT angle-matched to the finished
+// photography above — they are intentionally not shown as before/after pairs.
+const AS_ACQUIRED = [
+  {
+    src: "/images/nelson/nelson-before-exterior-front-1280.jpg",
+    alt: "Nelson Dr — front exterior as acquired, from the original listing record",
+    tag: "Exterior",
+  },
+  {
+    src: "/images/nelson/nelson-before-side-exterior-1280.jpg",
+    alt: "Nelson Dr — side exterior as acquired, from the original listing record",
+    tag: "Side",
+  },
+  {
+    src: "/images/nelson/nelson-before-kitchen-1280.jpg",
+    alt: "Nelson Dr — kitchen as acquired, from the original listing record",
+    tag: "Kitchen",
+  },
+  {
+    src: "/images/nelson/nelson-before-living-01-1280.jpg",
+    alt: "Nelson Dr — living area as acquired, from the original listing record",
+    tag: "Living",
+  },
+  {
+    src: "/images/nelson/nelson-before-bath-01-1280.jpg",
+    alt: "Nelson Dr — bathroom as acquired, from the original listing record",
+    tag: "Bath",
+  },
+  {
+    src: "/images/nelson/nelson-before-bedroom-01-1280.jpg",
+    alt: "Nelson Dr — bedroom as acquired, from the original listing record",
+    tag: "Bedroom",
+  },
+  {
+    src: "/images/nelson/nelson-before-yard-01-1280.jpg",
+    alt: "Nelson Dr — yard as acquired, from the original listing record",
+    tag: "Yard",
+  },
+  {
+    src: "/images/nelson/nelson-before-driveway-1280.jpg",
+    alt: "Nelson Dr — driveway as acquired, from the original listing record",
+    tag: "Driveway",
+  },
+];
+
 export default function NelsonDrPage() {
   useSEO({
     title: "Nelson Dr — Value-Add Execution Case Study",
@@ -289,38 +335,11 @@ export default function NelsonDrPage() {
               eager
             />
 
-            {/* Honest before / after exterior comparison */}
-            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
-              Before &amp; After — Exterior
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
-              <Shot
-                src="/images/nelson/nelson-before-exterior-front-1280.jpg"
-                alt="Nelson Dr — front exterior in as-acquired condition before renovation"
-                tag="As acquired"
-                className="aspect-[4/3]"
-                testId="photo-nelson-before"
-              />
-              <Shot
-                src="/images/nelson/nelson-exterior-1280.jpg"
-                alt="Nelson Dr — front exterior in finished, delivered condition"
-                tag="Delivered"
-                className="aspect-[4/3]"
-                testId="photo-nelson-after"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground/60 mb-12">
-              Before images are documentation-quality photos from the property's
-              as-acquired listing record. After images show the finished, delivered
-              condition. Pegasus does not publish AI-generated or stand-in property
-              images.
-            </p>
-
             {/* Finished interior gallery */}
-            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3 mt-12">
               Inside the Finished Home
             </p>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-16">
               {FINISHED_INTERIORS.map((shot) => (
                 <Shot
                   key={shot.src}
@@ -332,6 +351,30 @@ export default function NelsonDrPage() {
                 />
               ))}
             </div>
+
+            {/* As-acquired documentation — original listing record, not angle-matched */}
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+              As-Acquired Documentation
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {AS_ACQUIRED.map((shot) => (
+                <Shot
+                  key={shot.src}
+                  src={shot.src}
+                  alt={shot.alt}
+                  tag={shot.tag}
+                  className="aspect-[4/3]"
+                  testId={`photo-nelson-acquired-${shot.tag.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground/60 mt-3">
+              These are documentation-quality photos from the property's as-acquired
+              listing record, shown to record its starting condition. They are not
+              angle-matched to the finished photography above and are not presented as
+              direct before/after comparisons. Pegasus does not publish AI-generated or
+              stand-in property images.
+            </p>
           </div>
         </ScrollReveal>
 

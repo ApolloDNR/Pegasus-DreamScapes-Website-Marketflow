@@ -357,7 +357,7 @@ export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: 
   { key: 'dealfinders', title: 'Deal Finders & Wholesalers', desc: 'Bring a deal, get a straight answer and a clear path.', icon: 'search' },
   { key: 'capital', title: 'Capital Partners', desc: 'Participate project by project, on defined terms with risk laid out plainly.', icon: 'layers' },
   { key: 'operators', title: 'Operators & Vendors', desc: 'GCs, subs, agents, and title. Plug into a pipeline that respects the work.', icon: 'hammer' },
-  { key: 'referral', title: 'Referral Partners', desc: 'Send someone you trust into good hands, and get looked after for it.', icon: 'handshake' },
+  { key: 'referral', title: 'Referral Partners', desc: 'Send a name. We handle the relationship with care and document any referral arrangement in writing.', icon: 'handshake' },
 ];
 
 /* ================================================================
