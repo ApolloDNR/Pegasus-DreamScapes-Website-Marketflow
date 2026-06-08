@@ -218,3 +218,77 @@ export function seoNameFor(pathname: string): string | undefined {
   if (title === BRAND) return undefined;
   return title.replace(` · ${BRAND}`, "");
 }
+
+// ---- Sitemap support ----
+// The public sitemap and robots policy are generated from the keys of
+// SEO_ROUTES (the single source of truth for crawlable public routes).
+// Anything matching an admin / internal-dashboard / auth / legacy shape is
+// filtered out so it can never leak into the sitemap, even if such a path is
+// ever added to SEO_ROUTES.
+const SITEMAP_EXCLUDE_RE: RegExp[] = [
+  /^\/api(\/|$)/,
+  /^\/admin(\/|$)/,
+  /^\/hq(\/|$)/,
+  /^\/dashboard(\/|$)/,
+  /^\/login(\/|$)/,
+  /^\/signup(\/|$)/,
+  /^\/offer-studio(\/|$)/,
+  /^\/profile\//,
+  /^\/snapshot(\/|$)/,
+  /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
+];
+
+// Public directories the robots policy disallows. Crawlers should never index
+// the API, admin/internal tooling, auth, or the MarketFlow operator surfaces.
+export const ROBOTS_DISALLOW: string[] = [
+  "/api/",
+  "/hq",
+  "/admin",
+  "/dashboard",
+  "/login",
+  "/signup",
+  "/offer-studio",
+  "/profile/",
+  "/snapshot/",
+  "/marketflow/admin",
+  "/marketflow/dashboard",
+  "/marketflow/messages",
+  "/marketflow/submit",
+  "/marketflow/negotiate",
+];
+
+export function isCrawlablePublicPath(pathname: string): boolean {
+  return !SITEMAP_EXCLUDE_RE.some((re) => re.test(pathname));
+}
+
+// Default per-route crawl hints; routes not listed fall back to SITEMAP_DEFAULT.
+const SITEMAP_HINTS: Record<string, { priority: string; changefreq: string }> = {
+  "/": { priority: "1.0", changefreq: "weekly" },
+  "/submit": { priority: "0.9", changefreq: "monthly" },
+  "/strategy-lab": { priority: "0.9", changefreq: "monthly" },
+  "/projects": { priority: "0.9", changefreq: "weekly" },
+  "/deal-architecture": { priority: "0.8", changefreq: "monthly" },
+  "/development": { priority: "0.8", changefreq: "monthly" },
+  "/investments": { priority: "0.8", changefreq: "monthly" },
+  "/marketflow": { priority: "0.8", changefreq: "monthly" },
+  "/work-with-apollo": { priority: "0.8", changefreq: "monthly" },
+  "/about": { priority: "0.8", changefreq: "monthly" },
+  "/library": { priority: "0.7", changefreq: "weekly" },
+  "/projects/nelson-dr": { priority: "0.7", changefreq: "monthly" },
+};
+const SITEMAP_DEFAULT = { priority: "0.6", changefreq: "monthly" };
+
+export interface SitemapEntry {
+  path: string;
+  priority: string;
+  changefreq: string;
+}
+
+// All static crawlable public routes, derived from SEO_ROUTES. Dynamic
+// entries (e.g. project case studies from the database) are appended by the
+// server route handler.
+export function sitemapEntries(): SitemapEntry[] {
+  return Object.keys(SEO_ROUTES)
+    .filter(isCrawlablePublicPath)
+    .map((path) => ({ path, ...(SITEMAP_HINTS[path] ?? SITEMAP_DEFAULT) }));
+}

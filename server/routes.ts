@@ -90,6 +90,7 @@ import {
 import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { sitemapEntries, isCrawlablePublicPath, ROBOTS_DISALLOW } from "../shared/seo-routes";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -211,16 +212,7 @@ export async function registerRoutes(
       [
         'User-agent: *',
         'Allow: /',
-        'Disallow: /api/',
-        'Disallow: /hq',
-        'Disallow: /admin',
-        'Disallow: /dashboard',
-        'Disallow: /login',
-        'Disallow: /signup',
-        'Disallow: /marketflow/admin',
-        'Disallow: /marketflow/dashboard',
-        'Disallow: /offer-studio',
-        'Disallow: /profile/',
+        ...ROBOTS_DISALLOW.map((p) => `Disallow: ${p}`),
         '',
         `Sitemap: ${host}/sitemap.xml`,
         '',
@@ -273,47 +265,33 @@ export async function registerRoutes(
     });
   }
 
-  // SEO: sitemap.xml — public routes + project case studies
+  // SEO: sitemap.xml — generated from the canonical public route list in
+  // shared/seo-routes.ts (the same source the per-route metadata uses), plus
+  // any project case studies stored in the database. Admin, MarketFlow
+  // operator surfaces, auth, and legacy-redirect paths are filtered out by
+  // isCrawlablePublicPath so they never leak into the sitemap.
   app.get('/sitemap.xml', async (req, res) => {
     const host = `${req.protocol}://${req.get('host')}`;
     const today = new Date().toISOString().split('T')[0];
-    // Empire Doctrine v1.0.1 — v1 public route set only. Strategy Lab,
-    // Calculators, and the legacy /resources, /education, /systems
-    // surfaces are intentionally excluded from the public sitemap.
-    const staticRoutes: { path: string; priority: string; changefreq: string }[] = [
-      { path: '/', priority: '1.0', changefreq: 'weekly' },
-      { path: '/submit', priority: '0.9', changefreq: 'monthly' },
-      { path: '/strategy-lab', priority: '0.9', changefreq: 'monthly' },
-      { path: '/projects', priority: '0.9', changefreq: 'weekly' },
-      { path: '/projects/nelson-dr', priority: '0.7', changefreq: 'monthly' },
-      { path: '/development', priority: '0.9', changefreq: 'monthly' },
-      { path: '/marketflow', priority: '0.8', changefreq: 'monthly' },
-      { path: '/about', priority: '0.8', changefreq: 'monthly' },
-      { path: '/library', priority: '0.7', changefreq: 'weekly' },
-      { path: '/capital', priority: '0.6', changefreq: 'monthly' },
-      { path: '/vendor-network', priority: '0.6', changefreq: 'monthly' },
-      { path: '/contact', priority: '0.7', changefreq: 'monthly' },
-      { path: '/connect', priority: '0.5', changefreq: 'monthly' },
-      { path: '/marketflow/access', priority: '0.5', changefreq: 'monthly' },
-      { path: '/disclosures', priority: '0.3', changefreq: 'yearly' },
-      { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
-      { path: '/terms', priority: '0.3', changefreq: 'yearly' },
-    ];
 
-    let projectUrls = '';
+    const entries = sitemapEntries();
+    const seen = new Set(entries.map((e) => e.path));
+
+    // Append dynamic project case studies, skipping any path already present
+    // as a static SEO_ROUTES entry (e.g. /projects/nelson-dr).
     try {
       const projects = await storage.getProjects();
-      projectUrls = projects
-        .map(
-          (p) =>
-            `  <url><loc>${host}/projects/${p.slug}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`,
-        )
-        .join('\n');
+      for (const p of projects) {
+        const path = `/projects/${p.slug}`;
+        if (seen.has(path) || !isCrawlablePublicPath(path)) continue;
+        seen.add(path);
+        entries.push({ path, priority: '0.7', changefreq: 'monthly' });
+      }
     } catch (err) {
-      projectUrls = '';
+      // A storage hiccup must never break the sitemap — ship the static set.
     }
 
-    const urls = staticRoutes
+    const urls = entries
       .map(
         (r) =>
           `  <url><loc>${host}${r.path}</loc><lastmod>${today}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
@@ -322,7 +300,7 @@ export async function registerRoutes(
 
     res
       .type('application/xml')
-      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}${projectUrls ? '\n' + projectUrls : ''}\n</urlset>\n`);
+      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   });
 
   // Register object storage routes for file uploads
