@@ -581,7 +581,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
               The fastest way to find your lane.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-md">
-              Not sure where you fit? Start here. Peggy takes a deal or a situation in your own words and points you to the right next step: a review, the Strategy Lab, or the right audience lane.
+              Not sure where you fit? Start here. Peggy takes a deal or a situation in your own words and points you to the right next step: a review, the Strategy Lab, or the right audience lane. She is in active training, so today she is live for intake and orientation while we keep widening what she can do — and she hands you to a person the moment a deal needs a licensed read.
             </p>
             <ul className="space-y-4 mb-10">
               {['Open any time, no form to fill first', 'Plain language in, clear direction out', 'Hands you to a person when it matters'].map((t) => (
@@ -602,7 +602,12 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
                   <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
                   <div className="leading-none">
                     <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
-                    <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Pegasus intake concierge</div>
+                    <div className="flex items-center gap-2.5 mt-2">
+                      <span className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)]">Pegasus intake concierge</span>
+                      <span className="inline-flex items-center gap-1.5 pg-label !text-[7px] !tracking-[0.16em] px-2 py-0.5 rounded-full border border-[var(--accent-bright)]/40 text-[var(--accent-bright)]" data-testid="badge-peggy-status">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" /> Early access · in training
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <p className="peggy-msg mb-6">

@@ -734,7 +734,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   referral: {
     eyebrow: 'Who We Serve / Referral Partners',
     title: <>A professional referral,<br />handled with respect</>,
-    image: 'pegasus-interior-v2.png',
+    image: 'nelson/nelson-exterior-1280.jpg',
     layout: 'timeline',
     pointsLabel: 'How it works',
     lead: 'For agents, attorneys, advisors, contractors, and trusted professionals who know a property owner, buyer, seller, operator, or deal source that may need a better path. Referral, JV, or compensation terms are documented in writing before meaningful work begins.',

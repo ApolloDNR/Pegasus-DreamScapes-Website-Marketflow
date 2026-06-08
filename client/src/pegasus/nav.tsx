@@ -222,6 +222,16 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
               </button>
             </div>
           ))}
+          <div className="pt-6 mt-2">
+            <button type="button" onClick={() => { setMenuOpen(false); go('submit'); }}
+              className="btn-primary w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
+              Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <a href="tel:9257448525"
+              className="mt-4 block text-center pg-label !text-[9px] !tracking-[0.18em] text-[var(--muted)]">
+              Or call 925-744-8525
+            </a>
+          </div>
         </div>
       </div>
     </nav>
