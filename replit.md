@@ -14,6 +14,49 @@ The **visual baseline** comes from `_group.css`:
 
 The Empire Doctrine `.md` files in `attached_assets/` and the old `docs/architecture/*` blueprints are **retired historical reference only** — they no longer govern. If anything below diverges from the prototype, the prototype wins. This file is operational README only.
 
+## Website Director Standard
+
+The bar for every public page: it should read like a senior studio built it for Pegasus specifically — not like a template with the words swapped. Before shipping any change to a public surface, run it against this standard. A loadable copy lives at `.local/skills/website-director/SKILL.md`; this section is the source of truth.
+
+**1. Every page has one job.** Name the single audience and the single next action before touching layout. If a page is trying to serve everyone, it serves no one. Per-page intent map (real wouter routes):
+
+| Route | Who it's for | One job | Primary CTA (label) |
+| --- | --- | --- | --- |
+| `/` | First-time visitor | Pick their lane | lane card → audience page |
+| `/sellers` | Owner with a complex/stuck property | Start a property review | "Start a property review" |
+| `/buyers` | Strategic buyer | See how buyers work with us | "See how buyers work with us" |
+| `/dealfinders` | Wholesaler / deal finder | Bring a deal, get a straight answer | "Submit a deal" / "Send the deal" |
+| `/capital` | Capital partner | Back specific projects (not blind pools) | "Explore capital partnership" |
+| `/operators` | GC / sub / agent / title | Join the vetted build bench | "Join the build bench" |
+| `/referral` | Referral partner | Send a name, fee in writing | "Refer a contact" |
+| `/deal-architecture` | Considering working with us | Understand the method | "Start a review" |
+| `/development` | Owner/partner on a build | See the build standard | "Explore Development" |
+| `/strategy-lab` | DIY underwriter | Run the numbers | "Open the Lab" → `/strategy-lab/classic` |
+| `/marketflow` | Network participant | Request access by role | inline request-access form |
+| `/work-with-apollo` | High-intent lead | Direct strategy with the founder | inline lead form / PeggyAI |
+| `/peggy` | Anyone with a question | Guided intake with PeggyAI | PeggyAI (early access · in training) |
+| `/projects/nelson-dr` | Proof-seeker | See real before/after + numbers | "Start a review" |
+
+*Routing reality:* the column above is the CTA **label**, not always the destination. Destinations are a deliberate mix — the global header CTA "Submit a Property" → `/submit`, but many audience-page CTAs route to `/contact` or an embedded lead form (`LeadSection`/`forms.tsx`), and MarketFlow uses an inline request-access form. Verify the actual `route`/handler in `data.tsx`/the page before asserting where a CTA goes.
+
+**2. CTAs are specific, never generic.** Use the verb + outcome the page earns ("Start a property review", "Run a preview", "Refer a contact"). Banned: "Learn more", "Click here", "Get started", "Submit". Global primary CTA is **Submit a Property → `/submit`**; secondary is **Talk to PeggyAI**. Every CTA must route to a real surface (`/submit`, `/contact`, an inline lead form, or a real page) — no dead ends.
+
+**3. Voice: concrete and true.** Replace filler with specifics. Banned filler (audit list): "One standard, every time", "the same disciplined read", "under one roof", "Decades of combined experience", "Governed by virtue", "world-class", "seamless", "cutting-edge". Never invent numbers, timelines, or credentials. Compliance guards stay (see Voice/copy below): avoid "Invest Now", "Guaranteed Returns", "Passive Income", overclaiming product status. Peggy is an AI strategy assistant / concierge — never "chatbot".
+
+**4. Imagery is owned, not stock-feeling.** The founder portrait (`founder/apollo-1200.jpg`) is rendered by `ApolloBlock` (its `portrait` prop) and currently appears on `/work-with-apollo` and `/about` only — keep it to surfaces where a human relationship is the point; do not spray it across category pages. (The `splits.founderPhoto` flag on `/sellers` and `/buyers` renders a short text disclosure about representation + DRE #, **not** the portrait.) Each page gets its own hero image; no building image on more than ~2 pages. Before/after sliders only with real, same-space photos (Nelson Dr is the bar).
+
+**5. Kill the template feel.** The six "Who We Serve" pages must not read as one layout with swapped words — vary section order, emphasis, and visuals per audience via the `cat` config. Repeated blocks (ecosystem grid, FAQ) appear only where they earn their place, not as padding on every page.
+
+**6. Accessibility floor (non-negotiable).** Full keyboard operability; visible bronze focus ring on every interactive element (inherit the global outline — never add `outline-none`/`focus-visible:outline-none` without a replacement ring); correct `aria-*` on menus/dropdowns; `inert` on hidden panels. The suite `client/src/__tests__/keyboard-a11y.test.tsx` must stay green.
+
+**7. Launch checklist (run before calling a page done).**
+- [ ] Page states its one audience + one action; primary CTA is specific and routes to a real surface.
+- [ ] No banned filler phrases; no invented facts; compliance guards respected.
+- [ ] Hero image is unique to the page; founder portrait only on `/work-with-apollo` and `/about`.
+- [ ] Not a clone of a sibling page (section order/emphasis differs).
+- [ ] `npx tsc --noEmit` clean; a11y suite passes; keyboard + focus-ring spot check.
+- [ ] PeggyAI shown with honest status ("Early access · in training") wherever surfaced.
+
 ## Anti-drift lock
 
 The three Empire-Doctrine tripwires (`doctrine-anti-drift.test.ts`, `public-voice.test.tsx`, `nav-parity.test.tsx`) have been **retired** along with the doctrine they enforced. The prototype under `client/src/pegasus/` is now the visual/voice source of truth; there is no automated brand lock against it.
