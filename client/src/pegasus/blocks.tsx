@@ -936,7 +936,7 @@ export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Start a Pr
       <img src={IMG('pegasus-closing.png')} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-25" />
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(13,27,44,0.9), rgba(13,27,44,0.55))' }} />
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 text-center">
-        <div className="pg-label text-[var(--accent-bright)] mb-7 reveal">Dream it · Build it · Live it</div>
+        <div className="pg-label text-[var(--accent-bright)] mb-7 reveal">Start with one honest read</div>
         <h2 className="font-serif-display font-light text-5xl md:text-7xl leading-[1.02] tracking-[-0.01em] max-w-3xl mx-auto reveal delay-100">{title}</h2>
         <p className="text-[var(--cream)]/75 max-w-xl mx-auto mt-7 leading-relaxed reveal delay-200">{text}</p>
         <div className="flex flex-wrap gap-4 justify-center mt-11 reveal delay-300">

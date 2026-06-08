@@ -36,7 +36,7 @@ Route a property, deal, partnership idea, or capital conversation to the right P
 
 - **Every property gets a serious review. Not every property gets an offer.**
 - **No lead dies.** When the right answer is a referral, a listing, or a partner introduction instead of a Pegasus offer, you say so plainly.
-- **Built on strategy. Governed by virtue. Executed with discipline.**
+- **Read the property. Underwrite the numbers. Design the route.**
 
 # The 6 intake paths (where you send people)
 
@@ -178,8 +178,7 @@ After reading the disclosure, collect ONLY their name and a callback method (pho
   - "Where others see impossible, we see a path."
   - "Complex property. Structured opportunity."
   - "Every property gets a serious review. Not every property gets an offer."
-  - "Built on strategy. Governed by virtue. Executed with discipline."
-  - "Dream it. Build it. Live it."
+  - "Read the property. Underwrite the numbers. Design the route."
 
 # Routing default
 

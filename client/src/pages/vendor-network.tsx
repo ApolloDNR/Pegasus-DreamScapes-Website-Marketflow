@@ -274,7 +274,7 @@ function PegasusStandardSection() {
             The bar we hold every vendor to.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
-            Built on strategy. Governed by virtue. Executed with discipline. Vendors who fit the Dreamscaper Standard get routed to real work, repeatedly.
+            Scope it right, price it straight, finish what you start. Vendors who hold that bar get routed to real work, repeatedly.
           </p>
         </ScrollReveal>
 

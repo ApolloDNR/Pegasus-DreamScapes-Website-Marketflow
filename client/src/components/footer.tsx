@@ -176,7 +176,7 @@ export function Footer() {
             <div>
               <p className="font-display text-xl text-foreground tracking-[0.18em] uppercase">The Deal Architect</p>
               <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium font-supporting">
-                Dream it. Build it. Live it.
+                Read the property. Underwrite the numbers. Design the route.
               </p>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
