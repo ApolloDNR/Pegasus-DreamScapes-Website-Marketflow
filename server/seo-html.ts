@@ -5,6 +5,7 @@
 // without executing client JS.
 
 import { seoFor, SITE_URL } from "../shared/seo-routes";
+import { jsonLdScript } from "../shared/structured-data";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -32,7 +33,19 @@ export function injectSeo(html: string, pathname: string): string {
     /<link rel="canonical"[^>]*>/i,
     `<link rel="canonical" href="${esc(url)}" />`,
   );
+  out = injectJsonLd(out, pathname);
   return out;
+}
+
+function injectJsonLd(html: string, pathname: string): string {
+  const script = jsonLdScript(pathname);
+  // Replace the baseline JSON-LD block from index.html with the route-aware
+  // graph. The `s` flag makes `.` span the multi-line script body.
+  const re = /<script type="application\/ld\+json">[\s\S]*?<\/script>/i;
+  if (re.test(html)) {
+    return html.replace(re, script);
+  }
+  return html.replace(/<\/head>/i, `  ${script}\n  </head>`);
 }
 
 function replaceMeta(html: string, attr: string, value: string): string {

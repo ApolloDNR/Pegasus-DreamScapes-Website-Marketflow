@@ -1,9 +1,8 @@
-import fs from "node:fs";
-import path from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { CATEGORIES } from "@/pegasus/data";
 import { FAQBlock } from "@/pegasus/blocks";
+import { FAQ_SECTIONS } from "@shared/faq-data";
 
 // FAQ teaser deep-link contract (Task #172).
 //
@@ -22,19 +21,9 @@ const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 function faqSectionIds(): Set<string> {
-  const src = fs.readFileSync(
-    path.join(process.cwd(), "client/src/pages/faq.tsx"),
-    "utf-8",
-  );
-  // The SECTIONS array drives the page: each entry has `eyebrow: "..."` and
-  // the rendered section id is slugify(eyebrow).
-  const ids = new Set<string>();
-  const re = /eyebrow:\s*["']([^"']+)["']/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(src)) !== null) {
-    ids.add(slugify(m[1]));
-  }
-  return ids;
+  // FAQ_SECTIONS (shared/faq-data.ts) is the single source of truth driving the
+  // /faq page: each section's rendered id is slugify(eyebrow).
+  return new Set(FAQ_SECTIONS.map((s) => slugify(s.eyebrow)));
 }
 
 const categoryAnchors = Object.entries(CATEGORIES)
