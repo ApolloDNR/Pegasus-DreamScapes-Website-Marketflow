@@ -680,7 +680,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
             <CalcField label="Exit cost rate" hint="Commissions and closing at sale" value={exitRate} min={0} max={12} step={0.5} onChange={setExitRate} format="pct" />
           </div>
           <div className="lg:col-span-6 reveal delay-100 lg:sticky lg:top-28">
-            <div className="rounded-[3px] bg-[var(--navy)] text-[var(--cream)] p-9 lg:p-11 peggy-shadow overflow-hidden relative">
+            <div className="rounded-[3px] bg-[var(--navy)] text-[var(--cream)] p-6 sm:p-9 lg:p-11 peggy-shadow overflow-hidden relative">
               <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1]" />
               <div className="relative">
                 <div className="flex items-center gap-2.5 mb-6">
@@ -699,18 +699,18 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                   <span className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/65">Net proceeds at sale</span>
                   <span className="font-serif-display text-[1.15rem] text-[var(--cream)]/90">{usd0(netProceeds)}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-4 mt-7 mb-7">
-                  <div>
-                    <div className="pg-label !text-[8px] !tracking-[0.14em] text-[var(--cream)]/55 mb-2">Net profit</div>
-                    <div className="font-serif-display text-[2.4rem] leading-none text-[var(--accent-bright)]">{usd0(spread)}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-5 mt-7 mb-7">
+                  <div className="flex items-baseline justify-between sm:block">
+                    <div className="pg-label !text-[8px] !tracking-[0.14em] text-[var(--cream)]/55 sm:mb-2">Net profit</div>
+                    <div className="font-serif-display text-[2rem] sm:text-[2.4rem] leading-none text-[var(--accent-bright)]">{usd0(spread)}</div>
                   </div>
-                  <div>
-                    <div className="pg-label !text-[8px] !tracking-[0.14em] text-[var(--cream)]/55 mb-2">Net margin</div>
-                    <div className="font-serif-display text-[2.4rem] leading-none text-[var(--accent-bright)]">{margin.toFixed(1)}%</div>
+                  <div className="flex items-baseline justify-between sm:block">
+                    <div className="pg-label !text-[8px] !tracking-[0.14em] text-[var(--cream)]/55 sm:mb-2">Net margin</div>
+                    <div className="font-serif-display text-[2rem] sm:text-[2.4rem] leading-none text-[var(--accent-bright)]">{margin.toFixed(1)}%</div>
                   </div>
-                  <div>
-                    <div className="pg-label !text-[8px] !tracking-[0.14em] text-[var(--cream)]/55 mb-2">Cash on cost</div>
-                    <div className="font-serif-display text-[2.4rem] leading-none text-[var(--accent-bright)]">{cashOnCost.toFixed(1)}%</div>
+                  <div className="flex items-baseline justify-between sm:block">
+                    <div className="pg-label !text-[8px] !tracking-[0.14em] text-[var(--cream)]/55 sm:mb-2">Cash on cost</div>
+                    <div className="font-serif-display text-[2rem] sm:text-[2.4rem] leading-none text-[var(--accent-bright)]">{cashOnCost.toFixed(1)}%</div>
                   </div>
                 </div>
                 <div className="mb-6">
@@ -735,7 +735,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                           onChange={(e) => { const n = Number(e.target.value); if (!Number.isNaN(n)) a.set(Math.max(0, n)); }}
                           aria-label={`${a.label} assumption`}
                           data-testid={`input-assumption-${a.label.toLowerCase().replace(/[^a-z]+/g, '-')}`}
-                          className="w-full bg-transparent font-serif-display text-[1.1rem] text-[var(--cream)] leading-none focus:outline-none focus:text-[var(--accent-bright)]" />
+                          className="w-full bg-transparent font-serif-display text-[0.95rem] sm:text-[1.1rem] text-[var(--cream)] leading-none focus:outline-none focus:text-[var(--accent-bright)]" />
                       </div>
                     ))}
                   </div>

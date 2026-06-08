@@ -577,10 +577,10 @@ export function NelsonProof({ go }: { go: Nav }) {
               A tired house, a structured turn.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb}</p>
-            <div className="grid grid-cols-3 gap-6 mb-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-8 mb-10">
               {NELSON.rows.map((r, i) => (
                 <div key={r.k} className="reveal" style={{ animationDelay: `${i * 90}ms` }}>
-                  <div className="font-serif-display text-3xl text-[var(--text)]">{r.v}</div>
+                  <div className="font-serif-display text-2xl sm:text-3xl text-[var(--text)] leading-none">{r.v}</div>
                   <div className="pg-label !text-[9px] text-[var(--muted)] mt-1">{r.k}</div>
                   <div className="text-[var(--muted)] text-[0.72rem] mt-1.5 leading-snug">{r.note}</div>
                 </div>
