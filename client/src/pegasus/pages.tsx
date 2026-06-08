@@ -207,7 +207,7 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
       <PageHero eyebrow="What we do · The engine"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">Architecture.</span></>}
         image={IMG('pegasus-aerial.png')}
-        lead="Where every Pegasus relationship starts. One disciplined review, then the route forward: the lane that genuinely fits the deal and the person in front of it." />
+        lead="Where every Pegasus relationship starts. We read the property and the numbers once, properly, then show you the route forward: the lane that genuinely fits the deal and the person in front of it." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-5 reveal">
@@ -669,7 +669,6 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
       <ApolloBlock go={go} showCta={false} />
       <DoctrineBlock dark />
       <ProofStats />
-      <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." />
       <CTABand go={go} openPeggy={openPeggy}
         title="Start with one honest read."
         text="If you have a property, a question, or capital to deploy, start a conversation. The right path, or no path." />
