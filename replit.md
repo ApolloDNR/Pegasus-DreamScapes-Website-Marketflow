@@ -117,6 +117,9 @@ Four families: Cinzel · Cormorant Garamond · Montserrat · Inter.
 - **`/connect` tap targets**: Six routing buttons upgraded to `min-h-[56px]`, with visible `active:` pressed state (scale + tinted background + copper border) and `focus-visible:` ring for keyboard parity. The "Request Beta Access" button in `/marketplace` now routes to `/marketflow/access` (was `/signup`).
 - **Brand-tuned error color**: `--destructive` retuned to a deeper, warmer red (`5 70% 38%` / dark `5 72% 52%`) and aliased through a `--form-error` token. `FormLabel`/`FormMessage` (`client/src/components/ui/form.tsx`) consume `text-[hsl(var(--form-error))]`, and `FormMessage` now sets `role="alert"` when an error is present.
 
+### Website → Pegasus HQ Integration Contract
+The website-side lead routing/status pipeline is prototype/outbox-only until the Website → Pegasus HQ contract is approved. Pegasus HQ is the system of record for canonical Submissions, Opportunities, lane assignment, War Rooms, RACI, money, and audit history. See `docs/architecture/website-to-hq-integration-contract.md` for the Phase 1 contract spec. Do not treat website-side `outcome_lane`, `status`, `responded_at`, or `within_sla` fields as canonical after HQ integration goes live.
+
 ## External Dependencies
 
 - **UI**: Radix · Tailwind · class-variance-authority · Lucide · Google Fonts (Playfair Display, Inter).
