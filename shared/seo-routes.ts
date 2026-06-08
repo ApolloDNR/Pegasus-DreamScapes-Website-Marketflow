@@ -34,19 +34,19 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Sellers & Owners"),
     description:
       "Have a complex, stuck, inherited, or distressed property? Start a property review and get a clear, written path forward from a real person.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/sellers.png`,
   },
   "/buyers": {
     title: tag("Buyers"),
     description:
       "Buy with a strategy: finished, repositioned homes and off-market opportunities, each underwritten before you commit. See how buyers work with us.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/buyers.png`,
   },
   "/dealfinders": {
     title: tag("Deal Finders & Wholesalers"),
     description:
       "Bring an off-market deal and get a straight answer fast: our basis, where we come in, and terms in writing. Submit a deal to Pegasus.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/dealfinders.png`,
   },
   "/capital": {
     title: tag("Capital Partners"),
@@ -58,13 +58,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Operators & Vendors"),
     description:
       "GCs, subcontractors, agents, and title: join the vetted Pegasus build bench and work with a team that scopes the job and respects the trade.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/operators.png`,
   },
   "/referral": {
     title: tag("Referral Partners"),
     description:
       "Send us a name and we handle the relationship, with any referral fee documented in writing. Refer a contact to Pegasus DreamScapes.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/referral.png`,
   },
 
   // ---- What We Do ----
@@ -72,19 +72,19 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Deal Architecture"),
     description:
       "How a property becomes a plan: we read the situation and the numbers once, then design the route that fits the deal. Submit a deal to start.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/deal-architecture.png`,
   },
   "/investments": {
     title: tag("Investments"),
     description:
       "We acquire distressed, dated, and off-market property, reposition it with discipline, and exit on a plan written before we close.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/investments.png`,
   },
   "/development": {
     title: tag("Development"),
     description:
       "Our development team scopes every renovation and ground-up build to a real budget and draw schedule, and delivers finished, on time.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/development.png`,
   },
   "/strategy-lab": {
     title: tag("Strategy Lab"),
@@ -108,19 +108,19 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Work With Apollo"),
     description:
       "Work directly with founder Apollo Duran on selling, buying, or a complex situation. Representation through Keller Williams East Bay, DRE #02333658.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/work-with-apollo.png`,
   },
   "/ecosystem": {
     title: tag("The Pegasus Ecosystem"),
     description:
       "The full Pegasus operating system: HQ, PeggyAI, Strategy Lab, MarketFlow, CapStack, and BuildForge, one underwriting standard across every part.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/ecosystem.png`,
   },
   "/peggy": {
     title: tag("PeggyAI"),
     description:
       "Describe your deal in plain language and PeggyAI helps frame the options and route you to the right lane. Early access, in training.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/peggy.png`,
   },
 
   // ---- Company / proof / contact ----
@@ -147,13 +147,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Connect"),
     description:
       "Apollo's direct routing: property, build, sell, capital, vendor, or just a conversation. Reach Pegasus DreamScapes in the East Bay.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/connect.png`,
   },
   "/contact": {
     title: tag("Contact"),
     description:
       "Tell us about the property or the situation and get a clear, written read from a real person. Reach Pegasus DreamScapes in the East Bay.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/contact.png`,
   },
   "/submit": {
     title: tag("Submit a Property"),
@@ -167,37 +167,37 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Strategy Library"),
     description:
       "Field notes on complex property, structured opportunity, and the strategy-first operating model. Structured reads, no gurus, no hype.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/library.png`,
   },
   "/faq": {
     title: tag("FAQ"),
     description:
       "Answers on submitting a property, working with Pegasus DreamScapes, the Strategy Lab, and the MarketFlow network. The honest version.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/faq.png`,
   },
   "/vendor-network": {
     title: tag("Vendor Network"),
     description:
       "Apply to the private Pegasus DreamScapes vendor network: vetted contractors, lenders, agents, and operators routed to active deal flow.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/vendor-network.png`,
   },
   "/disclosures": {
     title: tag("Disclosures"),
     description:
       "Disclosures for Pegasus DreamScapes Corp. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/disclosures.png`,
   },
   "/privacy": {
     title: tag("Privacy"),
     description:
       "Privacy notice for Pegasus DreamScapes Corp: what we collect, how we use it, and how to reach us. Draft pending qualified legal review.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/privacy.png`,
   },
   "/terms": {
     title: tag("Terms"),
     description:
       "Terms of use for the Pegasus DreamScapes website, Strategy Review intake, and MarketFlow access. Draft pending qualified legal review.",
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og/terms.png`,
   },
 };
 
