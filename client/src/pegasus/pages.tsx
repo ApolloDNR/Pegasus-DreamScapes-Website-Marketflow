@@ -677,6 +677,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
       <DoctrineBlock dark />
       <ProofStats />
       <CTABand go={go} openPeggy={openPeggy}
+        primaryLabel="Start with one honest read"
         title="Start with one honest read."
         text="If you have a property, a question, or capital to deploy, start a conversation. The right path, or no path." />
     </>

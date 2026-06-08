@@ -852,8 +852,8 @@ export function NextStep({ go, label, route }: { go: Nav; label: string; route: 
 /* ----------------------------------------------------------------
    Final CTA band (three doors)
 ---------------------------------------------------------------- */
-export function CTABand({ go, openPeggy, title, text }:
-  { go: Nav; openPeggy: () => void; title: string; text: string }) {
+export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Start a Property Review', primaryAction = 'contact' }:
+  { go: Nav; openPeggy: () => void; title: string; text: string; primaryLabel?: string; primaryAction?: Parameters<Nav>[0] }) {
   return (
     <section className="relative py-28 lg:py-36 overflow-hidden bg-[var(--navy)] text-[var(--cream)]">
       <img src={IMG('pegasus-closing.png')} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-25" />
@@ -863,8 +863,8 @@ export function CTABand({ go, openPeggy, title, text }:
         <h2 className="font-serif-display font-light text-5xl md:text-7xl leading-[1.02] tracking-[-0.01em] max-w-3xl mx-auto reveal delay-100">{title}</h2>
         <p className="text-[var(--cream)]/75 max-w-xl mx-auto mt-7 leading-relaxed reveal delay-200">{text}</p>
         <div className="flex flex-wrap gap-4 justify-center mt-11 reveal delay-300">
-          <button type="button" onClick={() => go('contact')} className="btn-solid-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-            Start a Property Review <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          <button type="button" onClick={() => go(primaryAction)} className="btn-solid-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            {primaryLabel} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </button>
           <button type="button" onClick={openPeggy} className="btn-line-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
