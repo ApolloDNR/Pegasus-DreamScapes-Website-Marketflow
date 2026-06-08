@@ -63,14 +63,20 @@ const LENS = [
   },
 ];
 
-const PIPELINE = ["Basis", "Scope", "Budget", "Execution", "Exit"];
+const PIPELINE = [
+  "Acquire · ~$600K",
+  "Define Scope",
+  "$100K Budget",
+  "Execute",
+  "Exit · ~$840K",
+];
 
 const TIMELINE = [
-  { phase: "Acquire", note: "Secure the asset at the right basis." },
-  { phase: "Scope", note: "Define the disciplined improvement plan." },
-  { phase: "Improve", note: "Execute the controlled value-add scope." },
-  { phase: "Prepare", note: "Stage and position for the finished market." },
-  { phase: "Exit", note: "List and close the finished retail sale." },
+  { phase: "Acquire", note: "Secured off-market at approximately $600K — below comparable value for the condition and area." },
+  { phase: "Define Scope", note: "Set a $100K improvement budget focused on kitchen, bathrooms, flooring, and finish quality — improvements that create visible value without overbuilding." },
+  { phase: "Execute", note: "Ran the improvements in sequence on the defined budget, managed by the Pegasus development team." },
+  { phase: "Prepare", note: "Staged and positioned the finished product for the retail market." },
+  { phase: "Exit", note: "Listed, accepted, and settled at approximately $840K — September 2025." },
 ];
 
 const CONTROLLED = [

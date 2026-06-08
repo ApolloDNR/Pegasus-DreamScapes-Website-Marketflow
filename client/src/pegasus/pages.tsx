@@ -274,10 +274,10 @@ function BuildProcessBlock() {
 }
 
 const LAB_STEPS = [
-  { n: '01', icon: Compass, t: 'Start with the property', d: 'Describe the property and your goal. The console frames a Property Fit Score and points you to the right lane.' },
-  { n: '02', icon: Calculator, t: 'Underwrite the numbers', d: 'Set basis, scope, and exit. The Instant Strategy Preview models carry and selling costs into a live margin.' },
-  { n: '03', icon: Ruler, t: 'Get a written read', d: 'Send the situation for a human Strategy Snapshot: a short, candid read, usually within two business days.' },
-  { n: '04', icon: Landmark, t: 'Commission the Blueprint', d: 'When a deal earns it, the paid Deal Blueprint documents scope, capital, construction, exit, and risk.' },
+  { n: '01', icon: Compass, t: 'Enter the property context', d: 'Location, property type, condition, occupancy, your role, and your goal. The console returns a Property Fit Score and flags the right lane before you touch a number.' },
+  { n: '02', icon: Calculator, t: 'Underwrite the spread', d: 'Set acquisition basis, rehab scope, hold costs, and exit strategy. The Instant Strategy Preview models carry costs, selling costs, and live margin in real time.' },
+  { n: '03', icon: Ruler, t: 'Get a written Strategy Snapshot', d: 'Hand the situation to a person. A short, candid written read of the path and the risk — not a form letter, usually back within two business days.' },
+  { n: '04', icon: Landmark, t: 'Commission the Deal Blueprint', d: 'For deals that earn a full plan: the paid Deal Blueprint documents scope, capital stack, construction, exit, and risk in a single deliverable.' },
 ];
 
 export function DevelopmentPage({ go }: { go: Nav }) {
