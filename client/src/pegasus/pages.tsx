@@ -74,7 +74,7 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
       <EngineBlock go={go} />
       <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <MarketFlowBlock go={go} />
-      <ApolloBlock go={go} />
+      <ApolloBlock go={go} portrait={false} />
       <PillarSection p={DEVELOPMENT} go={go} flip dark numeral="DEV" />
       <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ProofStats />
@@ -248,7 +248,6 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
         image={IMG('pegasus-after.png')}
         lead="Distressed, dated, off-market, and overlooked property. We buy it right, reposition it with discipline, and exit on a plan written before we close." />
       <PillarSection p={INVESTMENTS} go={go} />
-      <NelsonProof go={go} />
       <Qualifier forYou={CATEGORIES.capital.forYou} notFit={CATEGORIES.capital.notFit} />
       <NextStep go={go} label="Partner on a deal as a capital partner" route="capital" />
       <LeadSection cfg={INVESTMENTS_FORM} eyebrow="Explore an investment" tone="navy" />
@@ -269,7 +268,7 @@ const BUILD_PROCESS = [
 function BuildProcessBlock() {
   return (
     <ProcessSteps eyebrow="How we build" title="Scope to finished product."
-      copy="The same disciplined path on every job: planned before it starts, built to one standard, and delivered complete."
+      copy="Every job runs the same way: scoped before it starts, built to a written definition of done, and handed over complete."
       steps={BUILD_PROCESS} />
   );
 }
@@ -304,8 +303,6 @@ export function DevelopmentPage({ go }: { go: Nav }) {
           </div>
         </div>
       </section>
-      <NelsonProof go={go} />
-      <DoctrineBlock />
       <NextStep go={go} label="Work with us as an operator or vendor" route="operators" />
       <LeadSection cfg={DEVELOPMENT_FORM} eyebrow="Start a build conversation" tone="navy" />
     </>
@@ -349,7 +346,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
     <>
       <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
         image={IMG('pegasus-casestudy.png')}
-        lead="The marketplace layer: three lanes that move deals, match capital to projects, and place finished inventory, all to one standard." />
+        lead="The marketplace layer: three lanes that move deals, match capital to projects, and place finished inventory, each one verified end to end." />
       <MarketFlowBlock go={go} enter={{ label: 'Sign in to MarketFlow', href: '/login' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -516,7 +513,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
     <>
       <PageHero eyebrow="What we do · Representation"
         title={<>Work with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
-        image={IMG('pegasus-exterior-light.png')}
+        image={IMG('pegasus-craft-blueprint.png')}
         lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay, backed by the full Pegasus standard." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
@@ -553,16 +550,15 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
   return (
     <>
       <PageHero eyebrow="Systems · The Ecosystem"
-        title={<>One company, <span className="italic text-[var(--accent-bright)]">one discipline.</span></>}
+        title={<>One company. <span className="italic text-[var(--accent-bright)]">Every part feeds the next.</span></>}
         image={IMG('pegasus-closing.png')}
         lead="Six parts of one company — the firm, the guide, the tools, the marketplace, the capital layer, and the build arm — all running a deal through the same underwriting." />
       <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ThreePillarsBlock go={go} />
       <MarketFlowBlock go={go} dark />
-      <DoctrineBlock />
       <CTABand go={go} openPeggy={openPeggy}
         title="Plug into the whole machine."
-        text="Wherever you enter, as a seller, a finder, a partner, or a buyer, you inherit the same standard." />
+        text="Whether you enter as a seller, a finder, a partner, or a buyer, the underwriting behind the deal is the same." />
     </>
   );
 }
@@ -668,7 +664,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
     <>
       <PageHero eyebrow="The Firm"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">architecture.</span></>}
-        image={IMG('pegasus-hero-light.png')}
+        image={IMG('hero/luxury-home-1280.jpg')}
         lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay. One firm that reads the situation, underwrites the numbers, builds the work, and sees a deal through, instead of handing you off." />
       <ApolloBlock go={go} showCta={false} />
       <DoctrineBlock dark />
@@ -725,7 +721,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
               </div>
             </button>
             <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug mb-7">
-              Built on strategy. Governed by virtue. Executed with discipline.
+              We read the situation, underwrite the numbers, and design the route forward.
             </p>
             <button type="button" onClick={openPeggy}
               className="peggy-footer-cta inline-flex items-center gap-2.5 pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]">

@@ -1,54 +1,19 @@
 import React, { useEffect, useRef, useState, useId } from 'react';
 import { ChevronDown, Menu, X, ConciergeBell, ArrowRight } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
 import type { Route, Nav, Theme, NavGroup, NavLink } from './theme';
 import { NAV_GROUPS } from './data';
 import { ThemeToggle, BrandMark } from './primitives';
 
-function AccountControl({ go, route }: { go: Nav; route: Route }) {
-  const { isAuthenticated, signOut } = useSupabaseAuth();
-  return (
-    <>
-      <button type="button" onClick={() => go('saved')}
-        className={`link-underline transition-colors hover:opacity-100 ${route === 'saved' ? 'text-[var(--accent-bright)]' : 'opacity-80'}`}>
-        Saved
-      </button>
-      {isAuthenticated ? (
-        <button type="button" onClick={() => signOut()}
-          className="link-underline transition-colors hover:opacity-100 opacity-80">
-          Sign out
-        </button>
-      ) : (
-        <a href="/login" className="link-underline transition-colors hover:opacity-100 opacity-80">
-          Sign in
-        </a>
-      )}
-    </>
-  );
-}
-
-function MobileAccount({ go, close }: { go: Nav; close: () => void }) {
-  const { isAuthenticated, signOut } = useSupabaseAuth();
-  return (
-    <>
-      <div className="nav-m-acc">
-        <button type="button" onClick={() => { close(); go('saved'); }} className="nav-m-acc-trigger w-full">Saved</button>
-      </div>
-      {isAuthenticated ? (
-        <div className="nav-m-acc">
-          <button type="button" onClick={() => { close(); signOut(); }} className="nav-m-acc-trigger w-full">Sign out</button>
-        </div>
-      ) : (
-        <div className="nav-m-acc">
-          <a href="/login" onClick={() => close()} className="nav-m-acc-trigger w-full">Sign in</a>
-        </div>
-      )}
-    </>
-  );
-}
-
 const NAV_SINGLE: NavLink[] = [
   { label: 'About', route: 'about' },
+];
+
+/* High-intent destinations surfaced directly on mobile so they are never
+   buried two levels deep inside a dropdown. */
+const MOBILE_QUICK: NavLink[] = [
+  { label: 'Strategy Lab', route: 'strategylab' },
+  { label: 'MarketFlow', route: 'marketflow' },
+  { label: 'Work With Apollo', route: 'apollo' },
 ];
 
 function NavDropdown({ group, route, go }: { group: NavGroup; route: Route; go: Nav }) {
@@ -186,7 +151,6 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
             className={`link-underline inline-flex items-center gap-1.5 transition-colors hover:opacity-100 ${route === 'peggy' ? 'text-[var(--accent-bright)]' : 'opacity-80'}`}>
             <ConciergeBell className="w-3 h-3" strokeWidth={1.8} /> Talk to PeggyAI
           </button>
-          <AccountControl go={go} route={route} />
         </div>
 
         <div className="flex items-center gap-3 lg:gap-4">
@@ -215,6 +179,14 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
               className="btn-line px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5">
               <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
             </button>
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              {MOBILE_QUICK.map((l) => (
+                <button key={l.route} type="button" onClick={() => { setMenuOpen(false); go(l.route); }}
+                  className={`nav-m-quick ${route === l.route ? 'is-active' : ''}`}>
+                  {l.label}
+                </button>
+              ))}
+            </div>
           </div>
           {NAV_GROUPS.map((g, gi) => {
             const isOpen = openGroup === g.label;
@@ -250,7 +222,6 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
               </button>
             </div>
           ))}
-          <MobileAccount go={go} close={() => setMenuOpen(false)} />
         </div>
       </div>
     </nav>

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
-import { IMG, SectionHead, ContourLines } from './primitives';
+import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON,
@@ -40,8 +40,8 @@ export function PageHero({ eyebrow, title, image, lead, focus = 'center' }:
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
           <div className="pg-label !tracking-[0.34em] text-[var(--accent-bright)] text-on-photo mb-6 reveal">{eyebrow}</div>
-          <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[-0.01em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] reveal delay-100">{title}</h1>
-          <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 reveal delay-200">{lead}</p>
+          <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[-0.01em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] text-on-photo reveal delay-100">{title}</h1>
+          <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 text-on-photo reveal delay-200">{lead}</p>
         </div>
       </div>
     </section>
@@ -64,7 +64,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
           <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/85 text-on-photo mb-7 reveal">Investments · Development · Systems · East Bay</div>
-          <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-[-0.01em] text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] reveal delay-100">
+          <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-[-0.01em] text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] text-on-photo reveal delay-100">
             We do not just find deals. <span className="italic text-[var(--accent-bright)]">We architect them.</span>
           </h1>
           <div className="draw-x h-px bg-[var(--accent-bright)]/60 max-w-[220px] mt-9 mb-9" aria-hidden="true" />
@@ -74,7 +74,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
                 A real estate investment, development, and systems company. We read the situation, underwrite the numbers, and design the route forward.
               </p>
               <div className="pg-label !text-[9px] !tracking-[0.26em] text-[var(--cream)]/55 mt-6">
-                Built on strategy · Governed by virtue · Executed with discipline
+                East Bay · Off-market &amp; value-add · Apollo Duran, DRE #02333658
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
@@ -129,8 +129,8 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)] overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Who we serve" title="Choose your lane."
-          copy="Six front doors, one standard behind all of them. Start where you are. Every lane leads to a clear next step." />
+        <SectionHead eyebrow="Where do you fit?" title="Start where you are."
+          copy="Tell us which one sounds like you. Each path goes straight to the right next step — no decoding required." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {LANE_CARDS.map((c, i) => (
             <button key={c.key} type="button" onClick={() => go(c.key)}
@@ -142,10 +142,10 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
                   {String(i + 1).padStart(2, '0')}
                 </span>
               </div>
-              <div className="font-serif-display text-2xl text-[var(--text)] mb-3 leading-tight">{c.title}</div>
+              <div className="font-serif-display text-2xl text-[var(--text)] mb-3 leading-tight">&ldquo;{c.title}&rdquo;</div>
               <p className="text-[var(--muted)] text-[0.92rem] leading-relaxed mb-7">{c.desc}</p>
               <div className="mt-auto pt-5 border-t border-[var(--line-soft)] pg-label !text-[9px] !tracking-[0.2em] text-[var(--text)] flex items-center gap-2 group-hover:text-[var(--accent)] transition-colors">
-                Enter <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                {c.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
           ))}
@@ -398,7 +398,7 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead dark={dark} eyebrow="MarketFlow · The marketplace"
           title="Where deals, capital, and product move."
-          copy="Three lanes, one network. Deals flow in, capital matches up, and finished product lands with buyers, all to one standard." />
+          copy="Three lanes, one network. Deals flow in, capital matches up, and finished product lands with buyers, each one verified end to end." />
         <div className="reveal mb-12 lg:mb-14" aria-hidden="true">
           <div className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap">
             {['Deals flow in', 'Capital matches up', 'Product lands'].map((s, i) => (
@@ -496,14 +496,25 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
 /* ----------------------------------------------------------------
    Apollo block
 ---------------------------------------------------------------- */
-export function ApolloBlock({ go, showCta = true }: { go: Nav; showCta?: boolean }) {
+export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; showCta?: boolean; portrait?: boolean }) {
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-5 reveal">
-          <div className="img-zoom peggy-shadow aspect-[4/5]">
-            <img src={IMG('founder/apollo-1200.jpg')} alt={APOLLO.name} className="w-full h-full object-cover" />
-          </div>
+          {portrait ? (
+            <div className="img-zoom peggy-shadow aspect-[4/5]">
+              <img src={IMG('founder/apollo-1200.jpg')} alt={APOLLO.name} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="peggy-shadow aspect-[4/5] relative overflow-hidden bg-[var(--navy)] flex flex-col items-center justify-center text-center px-8">
+              <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.14] float-slow" />
+              <BrandMark boxClassName="w-24 h-24" onDark className="relative mb-7" />
+              <div className="relative font-serif-display text-3xl text-[var(--cream)] leading-tight mb-2">{APOLLO.name}</div>
+              <div className="relative pg-label !text-[10px] text-[var(--accent-bright)]">{APOLLO.role}</div>
+              <div className="relative pg-rule mt-6 mb-5 w-12 !bg-[rgba(239,231,218,0.3)]" />
+              <p className="relative text-[rgba(239,231,218,0.7)] text-[0.85rem] leading-relaxed max-w-[15rem]">{APOLLO.license}</p>
+            </div>
+          )}
         </div>
         <div className="lg:col-span-7 reveal delay-100">
           <div className="pg-label text-[var(--accent)] mb-5">Work with Apollo</div>

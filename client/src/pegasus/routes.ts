@@ -31,8 +31,11 @@ export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).
   {} as Record<string, Route>,
 );
 
-// Every URL the prototype public shell owns.
-export const PEGASUS_URLS: string[] = Object.values(ROUTE_TO_URL);
+// Every URL the prototype public shell owns. `/submit` is deliberately
+// excluded: the prototype shell has no submit surface, so `/submit` must fall
+// through to the canonical app-level SubmitPage instead of rendering a blank
+// Pegasus shell. `go('submit')` still resolves to `/submit` via ROUTE_TO_URL.
+export const PEGASUS_URLS: string[] = Object.values(ROUTE_TO_URL).filter((u) => u !== '/submit');
 
 export function urlFor(route: Route): string {
   return ROUTE_TO_URL[route] ?? '/';

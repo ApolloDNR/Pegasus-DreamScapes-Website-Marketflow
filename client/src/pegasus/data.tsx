@@ -127,7 +127,7 @@ export const PILLARS3: Pillar[] = [
     points: [
       'Tools that underwrite and route deals',
       'A marketplace that moves deals and capital',
-      'One standard applied at every step',
+      'The same underwriting at every step',
     ],
     img: 'pegasus-architecture.png',
     imgAlt: 'A precise architectural scale model of a modern home on a studio table',
@@ -226,7 +226,7 @@ export const MARKETFLOW: {
     key: 'exchange',
     name: 'Deal Exchange',
     tag: 'Where deals move',
-    desc: 'Off-market opportunities flow in from finders and owners, get underwritten to one standard, and route to the right buyer or lane.',
+    desc: 'Off-market opportunities flow in from finders and owners, get underwritten deal by deal, and route to the right buyer or lane.',
     points: ['Vetted, underwritten opportunities', 'Clear terms for finders and sellers', 'No spray-and-pray blasts'],
     icon: 'route',
     forWho: 'Deal finders, sellers, buyers',
@@ -288,7 +288,7 @@ export const DEV_TEAM: { t: string; d: string }[] = [
   { t: 'A team, not one hire', d: 'Former general contractors, project managers, and trades who have actually run jobsites, not a single person we depend on.' },
   { t: 'A deep bench', d: 'We work hand in hand with a vetted network of GCs and subcontractors, scaled to the project instead of limited to one crew.' },
   { t: 'Scoped before we build', d: 'Every project starts with a real budget and a draw schedule, so the plan is honest before the first hammer swings.' },
-  { t: 'Built to one standard', d: 'A single definition of done, applied to every renovation and ground-up build, and delivered on a real timeline.' },
+  { t: 'One definition of done', d: 'A single, written standard of completion, applied to every renovation and ground-up build, and delivered on a real timeline.' },
 ];
 
 /* ================================================================
@@ -351,13 +351,13 @@ export const NELSON = {
 /* ================================================================
    HOMEPAGE LANE CARDS (Choose Your Lane)
    ================================================================ */
-export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: string }[] = [
-  { key: 'sellers', title: 'Sellers & Owners', desc: 'Sell on your terms: fast, off-market, or for the best repositioned price.', icon: 'home' },
-  { key: 'buyers', title: 'Buyers', desc: 'Buy a delivered product or buy into a deal, underwritten to one standard.', icon: 'key' },
-  { key: 'dealfinders', title: 'Deal Finders & Wholesalers', desc: 'Bring a deal, get a straight answer and a clear path.', icon: 'search' },
-  { key: 'capital', title: 'Capital Partners', desc: 'Participate project by project, on defined terms with risk laid out plainly.', icon: 'layers' },
-  { key: 'operators', title: 'Operators & Vendors', desc: 'GCs, subs, agents, and title. Plug into a pipeline that respects the work.', icon: 'hammer' },
-  { key: 'referral', title: 'Referral Partners', desc: 'Send a name. We handle the relationship with care and document any referral arrangement in writing.', icon: 'handshake' },
+export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: string; cta: string }[] = [
+  { key: 'sellers', title: 'I need to sell or fix a property', desc: 'List with Apollo, sell off-market, or untangle a complex or stuck situation.', icon: 'home', cta: 'Start a property review' },
+  { key: 'buyers', title: 'I want to buy with a strategy', desc: 'Buy a finished product or buy into a deal, underwritten before you commit.', icon: 'key', cta: 'See how buyers work with us' },
+  { key: 'dealfinders', title: 'I found a deal', desc: 'Bring it to us. You get a straight answer and a clear path, fast.', icon: 'search', cta: 'Submit a deal' },
+  { key: 'capital', title: 'I want to deploy capital', desc: 'Back specific projects on defined terms, with the risk laid out plainly.', icon: 'layers', cta: 'Explore capital partnership' },
+  { key: 'operators', title: 'I build or service projects', desc: 'GCs, subs, agents, and title. Join a bench that respects the work.', icon: 'hammer', cta: 'Join the build bench' },
+  { key: 'referral', title: 'I want to refer someone', desc: 'Send a name. We handle the relationship and document any referral fee in writing.', icon: 'handshake', cta: 'Refer a contact' },
 ];
 
 /* ================================================================
@@ -650,7 +650,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     image: 'pegasus-arch.png',
     layout: 'grid',
     pointsLabel: 'Eyes open',
-    lead: 'We do not pool funds or promise returns. We bring you specific projects, underwritten to one standard, with the work, the timeline, and the risk laid out before you decide.',
+    lead: 'We do not pool funds or promise returns. We bring you specific projects, underwritten deal by deal, with the work, the timeline, and the risk laid out before you decide.',
     points: [
       { t: 'Project by project', d: 'You choose what to back. No blind pools, no commitments you did not pick.' },
       { t: 'Defined terms', d: 'Structure, security, and timeline stated plainly in writing.' },
