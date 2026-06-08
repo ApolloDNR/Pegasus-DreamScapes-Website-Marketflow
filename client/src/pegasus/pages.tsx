@@ -289,7 +289,7 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Pillar 02 · Development"
         title={<>We build the <span className="italic text-[var(--accent-bright)]">finished product.</span></>}
         image={IMG('nelson/nelson-kitchen-1280.jpg')}
-        lead="Our development team — former GCs, project managers, and trades who have run real jobsites — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, to a standard." />
+        lead="Our development team — former GCs, project managers, and trades who have run real jobsites — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, finished, not left half-open." />
       <PillarSection p={DEVELOPMENT} go={go} flip />
       <BuildProcessBlock />
       <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">

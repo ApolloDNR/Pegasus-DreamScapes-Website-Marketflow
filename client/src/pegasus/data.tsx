@@ -21,7 +21,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Deal Architecture', route: 'dealarchitecture', desc: 'How we turn a property into a plan' },
       { label: 'Investments', route: 'investments', desc: 'Acquisitions, value-add, and structure' },
-      { label: 'Development', route: 'development', desc: 'Ground-up and renovation, built to a standard' },
+      { label: 'Development', route: 'development', desc: 'Ground-up and renovation, scoped and delivered' },
       { label: 'Strategy Lab', route: 'strategylab', desc: 'Run the numbers before you commit' },
       { label: 'MarketFlow', route: 'marketflow', desc: 'The deal network, verified end to end' },
       { label: 'Work With Apollo', route: 'apollo', desc: 'Direct strategy with the founder' },
@@ -33,6 +33,8 @@ export const NAV_GROUPS: NavGroup[] = [
 /* ================================================================
    CREDIBILITY STATS
    ================================================================ */
+// [CONFIRM: $180M+ reviewed, 250+ underwritten, and the 2-day strategy read are
+// claimed figures — verify each with Apollo before launch or soften to a range.]
 export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
   { value: '$180M+', label: 'In property reviewed', sub: 'Across the East Bay and beyond' },
   { value: '250+', label: 'Opportunities underwritten', sub: 'Each one read deal by deal' },
@@ -66,9 +68,9 @@ export const DOORS3: {
   {
     key: 'lab',
     kicker: 'Run the numbers yourself',
-    title: 'Enter the Strategy Lab',
+    title: 'Open the Strategy Lab',
     desc: 'Model a deal in minutes. See the all-in, the spread, and the recommended lane before you ever talk to anyone.',
-    best: 'Best when you want to explore privately and move at your own pace.',
+    best: 'Best when you want to run the numbers privately and move at your own pace.',
     cta: 'Open Strategy Lab',
     action: 'strategylab',
     icon: 'calculator',
@@ -102,13 +104,13 @@ export const PILLARS3: Pillar[] = [
     img: 'pegasus-before.png',
     imgAlt: 'A dated, overlooked East Bay property before Pegasus acquired and repositioned it',
     route: 'investments',
-    cta: 'Explore Investments',
+    cta: 'See how we invest',
   },
   {
     eyebrow: 'Pillar 02',
     tag: 'Development',
     title: <>We build the<br />finished product</>,
-    lead: 'Our development team came up in the trades: former general contractors, project managers, and crews who have run real jobsites. They scope every renovation and ground-up build to a real budget and draw schedule, work hand in hand with a deep bench of GCs and subcontractors, and deliver on time, to a standard.',
+    lead: 'Our development team came up in the trades: former general contractors, project managers, and crews who have run real jobsites. They scope every renovation and ground-up build to a real budget and draw schedule, work hand in hand with a deep bench of GCs and subcontractors, and deliver on time with the punch list closed.',
     points: [
       'Renovation and ground-up development',
       'Led by our development team, built with a vetted bench of GCs and subs',
@@ -117,7 +119,7 @@ export const PILLARS3: Pillar[] = [
     img: 'pegasus-craft-blueprint.png',
     imgAlt: 'Blueprints and renovation craftsmanship on a Pegasus development build',
     route: 'development',
-    cta: 'Explore Development',
+    cta: 'See how we build',
   },
   {
     eyebrow: 'Pillar 03',
@@ -132,7 +134,7 @@ export const PILLARS3: Pillar[] = [
     img: 'pegasus-architecture.png',
     imgAlt: 'A precise architectural scale model of a modern home on a studio table',
     route: 'ecosystem',
-    cta: 'Explore the Ecosystem',
+    cta: 'See the whole system',
   },
 ];
 
@@ -195,9 +197,9 @@ export const PRODUCTS: {
     step: '04',
     name: 'Strategy Snapshot',
     kind: 'Written read',
-    desc: 'A short, human-written assessment of the path: what it is, what it could be, and how we would approach it.',
-    cta: 'Talk to PeggyAI',
-    action: 'peggy',
+    desc: 'The written follow-up to a Review: a short, human assessment of the path — what the property is, what it could become, and how we would approach it.',
+    cta: 'Request a Snapshot',
+    action: 'contact',
   },
   {
     step: '05',
@@ -278,7 +280,7 @@ export const DOCTRINE: { t: string; d: string }[] = [
   { t: 'Read the situation, not just the spreadsheet', d: 'Behind every property is a person with a deadline, a constraint, or a decision. We solve for both.' },
   { t: 'Underwrite on real numbers', d: 'All-in cost, after-repair value, and the spread. If it does not pencil, we say so.' },
   { t: 'Write the exit before we enter', d: 'Sell, hold, refinance, or trade. The plan is decided before capital moves, not after.' },
-  { t: 'Deliver a finished product', d: 'Our development team takes the work to a standard, on a real schedule, not left half-open.' },
+  { t: 'Deliver a finished product', d: 'Our development team finishes the work to one definition of done, on a real schedule, not left half-open.' },
 ];
 
 /* ================================================================
@@ -297,7 +299,7 @@ export const DEV_TEAM: { t: string; d: string }[] = [
 export const FAQ_HOME: FaqItem[] = [
   {
     q: 'What does Pegasus actually do?',
-    a: 'Three things that feed each other: we invest in and reposition real property, our development team builds and renovates it to a standard, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that turn each deal into a repeatable process.',
+    a: 'Three things that feed each other: we invest in and reposition real property, our development team builds and renovates it to a finished, move-in-ready result, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that turn each deal into a repeatable process.',
   },
   {
     q: 'I just have one property. Is that too small?',
@@ -313,7 +315,7 @@ export const FAQ_HOME: FaqItem[] = [
   },
   {
     q: 'Where do you operate?',
-    a: 'We are rooted in the East Bay, California, through Keller Williams East Bay (DRE #02333658), and we look at opportunities that fit the standard wherever they make sense.',
+    a: 'We are rooted in the East Bay, California, through Keller Williams East Bay (DRE #02333658), and we look at opportunities that fit our buy box wherever they make sense.',
   },
 ];
 
@@ -336,14 +338,17 @@ export const APOLLO = {
 /* ================================================================
    NELSON DRIVE CASE STUDY
    ================================================================ */
+// [CONFIRM: every Nelson Drive figure below — ≈$600K acquired, $100K renovation,
+// ≈$840K delivered, settled September 2025 — must be Apollo-confirmed against the
+// real deal record before this case study goes public.]
 export const NELSON = {
   name: 'Nelson Drive',
   location: 'Richmond / El Sobrante Area, CA',
-  blurb: 'A tired single-family home, acquired off-market, repositioned to standard, and delivered.',
+  blurb: 'A tired single-family home, acquired off-market, fully repositioned, and delivered move-in ready.',
   rows: [
     { k: 'Acquired', v: '≈ $600K', note: 'Off-market, below comparable value' },
     { k: 'Renovation', v: '$100K', note: 'Managed by our development team' },
-    { k: 'Delivered', v: '≈ $840K', note: 'Repositioned to the standard' },
+    { k: 'Delivered', v: '≈ $840K', note: 'Renovated and delivered move-in ready' },
     { k: 'Settled', v: 'September 2025', note: 'Closed and delivered' },
   ],
 };
@@ -355,7 +360,7 @@ export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: 
   { key: 'sellers', title: 'I need to sell or fix a property', desc: 'List with Apollo, sell off-market, or untangle a complex or stuck situation.', icon: 'home', cta: 'Start a property review' },
   { key: 'buyers', title: 'I want to buy with a strategy', desc: 'Buy a finished product or buy into a deal, underwritten before you commit.', icon: 'key', cta: 'See how buyers work with us' },
   { key: 'dealfinders', title: 'I found a deal', desc: 'Bring it to us. You get a straight answer and a clear path, fast.', icon: 'search', cta: 'Submit a deal' },
-  { key: 'capital', title: 'I want to deploy capital', desc: 'Back specific projects on defined terms, with the risk laid out plainly.', icon: 'layers', cta: 'Explore capital partnership' },
+  { key: 'capital', title: 'I want to deploy capital', desc: 'Back specific projects on defined terms, with the risk laid out plainly.', icon: 'layers', cta: 'See how capital partners work' },
   { key: 'operators', title: 'I build or service projects', desc: 'GCs, subs, agents, and title. Join a bench that respects the work.', icon: 'hammer', cta: 'Join the build bench' },
   { key: 'referral', title: 'I want to refer someone', desc: 'Send a name. We handle the relationship and document any referral fee in writing.', icon: 'handshake', cta: 'Refer a contact' },
 ];
@@ -503,7 +508,7 @@ const buyerSplits: { heading: string; copy: string; paths: SplitPath[]; founderP
   founderPhoto: true,
   peggyHint: true,
   paths: [
-    { name: 'Buyer representation', desc: 'Want Apollo in your corner as your agent? Representation through Keller Williams Realty East Bay, with offers backed by real underwriting so you know what a home is actually worth.', cta: 'Explore representation', route: 'apollo' },
+    { name: 'Buyer representation', desc: 'Want Apollo in your corner as your agent? Representation through Keller Williams Realty East Bay, with offers backed by real underwriting so you know what a home is actually worth.', cta: 'See how representation works', route: 'apollo' },
     { name: 'Investor buyer guidance', desc: 'Open to buying into a deal, not just a finished house? We frame the numbers and route you to the right project or capital lane, subject to review and a written agreement.', cta: 'Talk through a deal', route: 'contact' },
     { name: 'Inventory & first look', desc: 'Want the finished product or off-market access? Request access to MarketFlow to see reviewed inventory before it reaches the open market.', cta: 'See MarketFlow inventory', route: 'marketflow' },
   ],
@@ -571,7 +576,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     ],
     splits: buyerSplits,
     rich: ['marketflow', 'faq'],
-    quote: 'A delivered product, not a project left open. That is the standard on every home we hand over.',
+    quote: 'A delivered product, not a project left open — that is what a buyer gets from us.',
     forYou: [
       'You want an investor-minded agent representing you on the buy side',
       'You want buy-box discipline, diligence, and a real read on value before you offer',
@@ -614,7 +619,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Buy box preview', d: 'Value-add SFR, East Bay ADU, estates and probate, and small multifamily. See the full buy box before you bring a deal.' },
     ],
     rich: ['buybox', 'faq'],
-    quote: 'Bring us a deal that pencils and you will get the fastest, most honest answer in the market.',
+    quote: 'Bring us a deal that pencils and you get a straight answer fast: yes, no, or the number that works.',
     forYou: [
       'You source off-market or distressed opportunities',
       'You want a buyer or partner who reviews honestly and moves on written terms',

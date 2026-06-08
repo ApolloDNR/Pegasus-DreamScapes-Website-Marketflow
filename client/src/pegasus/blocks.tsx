@@ -85,7 +85,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
                 Ask PeggyAI
               </button>
               <button type="button" onClick={() => go('strategylab')} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
-                Enter the Strategy Lab
+                Open the Strategy Lab
               </button>
             </div>
           </div>
@@ -446,7 +446,7 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
           ) : (
             <button type="button" onClick={() => go('marketflow')}
               className={`${dark ? 'btn-solid-light' : 'btn-primary'} px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group`}>
-              Explore MarketFlow <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              See how MarketFlow works <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           )}
         </div>
@@ -481,7 +481,7 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
                 <p className="text-[var(--muted)] text-[0.9rem] leading-relaxed mb-6">{s.desc}</p>
                 {clickable && (
                   <div className="mt-auto pg-label !text-[9px] !tracking-[0.18em] text-[var(--text)] flex items-center gap-2 group-hover:text-[var(--accent)] transition-colors">
-                    Explore <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    See how it fits <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 )}
               </button>
@@ -869,7 +869,7 @@ export function CTABand({ go, openPeggy, title, text }:
           <button type="button" onClick={openPeggy} className="btn-line-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
           </button>
-          <button type="button" onClick={() => go('strategylab')} className="btn-line-light px-9 py-4 pg-label !text-[10px]">Enter the Strategy Lab</button>
+          <button type="button" onClick={() => go('strategylab')} className="btn-line-light px-9 py-4 pg-label !text-[10px]">Open the Strategy Lab</button>
         </div>
       </div>
     </section>
