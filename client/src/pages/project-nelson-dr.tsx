@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -133,6 +133,97 @@ function Shot({
   );
 }
 
+// Draggable before/after comparison slider. The "delivered" image is the base
+// layer; the "as-acquired" image sits on top, clipped to the left of the
+// divider. A native range input drives the divider so the control is fully
+// keyboard, touch, and pointer accessible (and inherits the global focus ring).
+function BeforeAfter({
+  before,
+  after,
+  beforeAlt,
+  afterAlt,
+  label,
+  testId,
+}: {
+  before: string;
+  after: string;
+  beforeAlt: string;
+  afterAlt: string;
+  label: string;
+  testId?: string;
+}) {
+  const [pos, setPos] = useState(50);
+  return (
+    <figure className="relative" data-testid={testId}>
+      <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted select-none">
+        {/* Delivered (after) — base layer */}
+        <img
+          src={after}
+          alt={afterAlt}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* As-acquired (before) — clipped to the left of the divider */}
+        <div
+          className="absolute inset-0"
+          style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
+        >
+          <img
+            src={before}
+            alt={beforeAlt}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
+
+        {/* Corner labels */}
+        <span className="pointer-events-none absolute top-3 left-3 inline-flex items-center rounded-sm bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/90 font-supporting font-semibold backdrop-blur-sm">
+          As Acquired
+        </span>
+        <span className="pointer-events-none absolute top-3 right-3 inline-flex items-center rounded-sm bg-primary/90 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white font-supporting font-semibold backdrop-blur-sm">
+          Delivered
+        </span>
+
+        {/* Divider + handle */}
+        <div
+          className="pointer-events-none absolute inset-y-0 w-px bg-white/90 shadow-[0_0_0_1px_rgba(0,0,0,0.15)]"
+          style={{ left: `${pos}%` }}
+        >
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-0.5 w-10 h-10 rounded-full bg-white text-primary shadow-lg ring-1 ring-black/10">
+            <ArrowLeft className="w-3 h-3" strokeWidth={2.2} />
+            <ArrowRight className="w-3 h-3" strokeWidth={2.2} />
+          </span>
+        </div>
+
+        {/* Accessible control — drives the divider. opacity-0 hides the native
+            track/thumb, so a sibling overlay paints the real focus ring on
+            keyboard focus (the input still also keeps the global outline). */}
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={pos}
+          onChange={(e) => setPos(Number(e.target.value))}
+          aria-label={`${label}: drag to compare the as-acquired and delivered condition`}
+          className="peer absolute inset-0 z-20 w-full h-full cursor-ew-resize opacity-0"
+          data-testid={testId ? `${testId}-range` : undefined}
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-30 rounded-md ring-inset ring-[hsl(var(--bronze))] peer-focus-visible:ring-2"
+        />
+      </div>
+      <figcaption className="mt-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80 font-supporting font-semibold">
+        {label}
+      </figcaption>
+    </figure>
+  );
+}
+
 // Finished, delivered-condition interiors (real project photography).
 const FINISHED_INTERIORS = [
   {
@@ -167,9 +258,45 @@ const FINISHED_INTERIORS = [
   },
 ];
 
+// Same-space before/after pairs for the comparison sliders. Each pairs an
+// as-acquired listing photo with finished project photography of the SAME
+// room/space. Camera angles may differ slightly between the listing record
+// and the finished shoot — this is disclosed in the section caption, and no
+// AI-generated or stand-in imagery is used.
+const TRANSFORMATIONS = [
+  {
+    label: "Exterior",
+    before: "/images/nelson/nelson-before-exterior-front-1280.jpg",
+    after: "/images/nelson/nelson-hero-1280.jpg",
+    beforeAlt: "Nelson Dr — front exterior as acquired, from the original listing record",
+    afterAlt: "Nelson Dr — front exterior in finished, delivered condition",
+  },
+  {
+    label: "Kitchen",
+    before: "/images/nelson/nelson-before-kitchen-1280.jpg",
+    after: "/images/nelson/nelson-kitchen-1280.jpg",
+    beforeAlt: "Nelson Dr — kitchen as acquired, from the original listing record",
+    afterAlt: "Nelson Dr — renovated kitchen in finished, delivered condition",
+  },
+  {
+    label: "Primary bath",
+    before: "/images/nelson/nelson-before-bath-01-1280.jpg",
+    after: "/images/nelson/nelson-primary-bath-1280.jpg",
+    beforeAlt: "Nelson Dr — bathroom as acquired, from the original listing record",
+    afterAlt: "Nelson Dr — renovated primary bathroom in finished, delivered condition",
+  },
+  {
+    label: "Bedroom",
+    before: "/images/nelson/nelson-before-bedroom-01-1280.jpg",
+    after: "/images/nelson/nelson-bedroom-1280.jpg",
+    beforeAlt: "Nelson Dr — bedroom as acquired, from the original listing record",
+    afterAlt: "Nelson Dr — refreshed bedroom in finished, delivered condition",
+  },
+];
+
 // As-acquired documentation from the original listing record. These record the
-// property's starting condition and are NOT angle-matched to the finished
-// photography above — they are intentionally not shown as before/after pairs.
+// property's starting condition; the comparison sliders above pair a subset of
+// these with finished photography of the same spaces.
 const AS_ACQUIRED = [
   {
     src: "/images/nelson/nelson-before-exterior-front-1280.jpg",
@@ -341,6 +468,31 @@ export default function NelsonDrPage() {
               eager
             />
 
+            {/* Before & After comparison sliders */}
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3 mt-12">
+              Before &amp; After — Drag to Compare
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {TRANSFORMATIONS.map((t) => (
+                <BeforeAfter
+                  key={t.label}
+                  before={t.before}
+                  after={t.after}
+                  beforeAlt={t.beforeAlt}
+                  afterAlt={t.afterAlt}
+                  label={t.label}
+                  testId={`slider-nelson-${t.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground/60 mt-3">
+              Each slider pairs an as-acquired photo from the original listing record
+              with finished project photography of the same space. Camera angles may
+              differ slightly between the listing record and the finished shoot. All
+              images are real project photography — Pegasus does not publish
+              AI-generated or stand-in property images.
+            </p>
+
             {/* Finished interior gallery */}
             <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3 mt-12">
               Inside the Finished Home
@@ -376,10 +528,8 @@ export default function NelsonDrPage() {
             </div>
             <p className="text-xs text-muted-foreground/60 mt-3">
               These are documentation-quality photos from the property's as-acquired
-              listing record, shown to record its starting condition. They are not
-              angle-matched to the finished photography above and are not presented as
-              direct before/after comparisons. Pegasus does not publish AI-generated or
-              stand-in property images.
+              listing record, shown to record its full starting condition. Pegasus does
+              not publish AI-generated or stand-in property images.
             </p>
           </div>
         </ScrollReveal>
