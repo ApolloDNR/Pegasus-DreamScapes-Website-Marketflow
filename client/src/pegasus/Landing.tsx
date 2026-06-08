@@ -12,10 +12,17 @@ import {
 } from './pages';
 import { SavedPage } from './Saved';
 import { routeForUrl, urlFor } from './routes';
+import { useSEO } from '@/hooks/use-seo';
+import { seoFor, seoNameFor } from '@shared/seo-routes';
 
 export function Landing() {
   const [location, setLocation] = useLocation();
   const route: Route = routeForUrl(location);
+  // Per-route SEO from the canonical shared map (single source of truth shared
+  // with the server-side crawler injection). useSEO re-applies the brand, so we
+  // pass the bare page name.
+  const seo = seoFor(location);
+  useSEO({ title: seoNameFor(location), description: seo.description, image: seo.image, type: seo.type });
   const [theme, setTheme] = useState<Theme>('light');
   const [scrolled, setScrolled] = useState(false);
   const [peggyOpen, setPeggyOpen] = useState(false);

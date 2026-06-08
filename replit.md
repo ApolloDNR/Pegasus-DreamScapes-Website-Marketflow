@@ -168,6 +168,15 @@ Interior-page CTAs are **context-specific**, never a blanket "Submit a Property"
 
 Real photography only for proof surfaces (case studies, Apollo, Nelson Dr) — **never** AI-generated or stand-in property images where a real outcome is implied. Each section earns a distinct image; do not reuse the same hero across multiple sections. Decorative/atmospheric prototype imagery is fine for marketing heroes, but anything presented as a *result* must be real and disclosed.
 
+### SEO + page metadata rule
+
+Every public route must ship a unique, crawler-visible `<title>`, `<meta name="description">`, and Open Graph tags — never a blank SPA shell. The single source of truth is `shared/seo-routes.ts` (`SEO_ROUTES` + `seoFor()`), consumed by **both** the server-side injector (`server/seo-html.ts`, render-time so crawlers see correct tags without running JS) and the Pegasus prototype client shell (`client/src/pegasus/Landing.tsx` via the shared `useSEO` hook + `seoNameFor()`). Standalone functional pages keep their own `useSEO({...})` call.
+
+- **Title format**: `Page Name · Pegasus DreamScapes` (built by `tag()`; home is the bare brand). Keep page names short so the full title stays under ~60 chars.
+- **Description**: concrete and grounded in the page's real one-job from the intent map — **≤155 chars**, no invented numbers/claims, no banned filler or compliance-risk phrases.
+- **OG minimum**: `og:title`, `og:description`, `og:type`, `og:url`, plus `og:image` (route-specific where one exists in `/og/`, else `/og/default.png`). Twitter card + canonical are also emitted by both layers.
+- When you add a new public route, add its entry to `shared/seo-routes.ts` — do not hardcode metadata in two places.
+
 ### Forbidden filler phrases
 
 Cut empty connective tissue that says nothing: "In today's market," "We pride ourselves on," "second to none," "world-class," "one-stop shop," "take it to the next level," "unlock your potential," "seamless solutions," "trusted partner" (as a self-claim), "we're not just a … we're a …", and stacked double-qualifiers ("we may potentially be able to possibly"). Also keep clear of the standing compliance-risk list (see "Voice / copy"): "Invest Now," "Guaranteed Returns," "Passive Income," guru language, etc.
@@ -182,3 +191,4 @@ Before declaring any public-site change done:
 5. Every interior CTA matches the routing table (no stray generic "Submit a Property" in page bodies).
 6. No forbidden filler or compliance-risk phrases introduced.
 7. Proof imagery is real and disclosed; no section reuses another's hero.
+8. SEO: new/changed public route has a unique entry in `shared/seo-routes.ts`; `curl` the route and confirm a unique `<title>`, `<meta name="description">` (≤155 chars), and `og:*` tags are injected (not the home fallback).
