@@ -737,7 +737,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     image: 'nelson/nelson-exterior-1280.jpg',
     layout: 'timeline',
     pointsLabel: 'How it works',
-    lead: 'For agents, attorneys, advisors, contractors, and trusted professionals who know a property owner, buyer, seller, operator, or deal source that may need a better path. Referral, JV, or compensation terms are documented in writing before meaningful work begins.',
+    lead: 'For agents, attorneys, advisors, and contractors who know an owner, buyer, seller, or deal source that needs a better path. The terms — referral fee, JV split, or compensation — are documented in writing before we engage anyone you send.',
     points: [
       { t: 'Written terms before engagement', d: 'Where permitted by applicable licensing rules, the referral fee or JV split is agreed and documented before we make contact with anyone you send. What we agree is what you receive at close.' },
       { t: 'Your relationship stays intact', d: 'You keep the professional relationship. We solve the property or deal problem and hand it back to you cleanly.' },

@@ -117,3 +117,68 @@ The old Amendment 2 §G status-badge requirement (Live · Private beta · In pri
 - `docs/architecture/Pegasus_Website_Structure_v1_FINAL.md` — retired structural reference (superseded by the prototype).
 - Empire Doctrine v1.0.2 + Amendment 1 + Amendment 2 (attached_assets) — retired brand reference (superseded by the prototype).
 - `docs/architecture/website-experience-blueprint-v1.md` / `website-marketflow-blueprint-v1.3.1.md` — legacy references.
+
+## Website Director Standard
+
+The permanent quality bar for the public website. The prototype (`client/src/pegasus/`) is the source of truth for *look*; this standard is the source of truth for *whether a page is doing its job*. A condensed, loadable copy lives at `.local/skills/website-director/SKILL.md` — read that skill before any public-site copy/layout/CTA work.
+
+### Per-page intent map
+
+Every public page has ONE primary job. If a page does not move the visitor toward its job, it is drifting.
+
+| Surface | Primary job | Visitor leaves knowing / doing |
+| --- | --- | --- |
+| Home (`/`) | Orient + route | What Pegasus is (deal architecture firm) and which lane fits them |
+| Deal Architecture (`/deal-architecture`) | Prove the method | How a deal gets read/underwritten → **Submit a Deal** |
+| Development (`/development`) | Prove the build arm | That Pegasus executes scope → start a build conversation |
+| Strategy Lab (`/strategy-lab`) | Demonstrate a real tool | They can model a deal themselves → **Open the Lab** |
+| Work with Apollo (`/work-with-apollo`) | Representation lanes | Sell/buy/complex-situation/deal → pick a lane |
+| MarketFlow (`/marketflow`) | Gate the platform | What it is → **Request access** |
+| Capital (`/capital`) | Frame partnership (compliance-careful) | How capital partners engage → start a conversation |
+| Peggy (`/peggy`) | The front door / intake | They can describe a deal now → **Open PeggyAI** (honest early-access) |
+| About (`/about`) | Trust + standard | Who Apollo is and the firm's discipline |
+| Nelson Dr (`/projects/nelson-dr`) | Proof of work | Real before→after, numbers up front, process arc |
+| Submit (`/submit`) | Canonical intake | Convert — keep it frictionless |
+
+### Mobile-first rule
+
+Design and verify the **375px** view first, then scale up. On mobile: the primary CTA and the phone number (925-744-8525) must be reachable without hunting; the menu must open and close cleanly with an obvious affordance; nothing high-intent buried two taps deep. Tap targets ≥ 44px.
+
+### Hero contrast rule
+
+Hero text (eyebrow + headline + lead) must stay legible over the **brightest** region of its background image — not just the average. Required: a bottom-anchored scrim (`.hero-scrim-bottom`) deep enough to cover where the headline actually sits, plus `.text-on-photo` shadow. Eyebrow opacity over photos ≥ 85%. If a headline rides high over bright sky, raise scrim coverage rather than trusting text-shadow alone.
+
+### CTA routing table
+
+Interior-page CTAs are **context-specific**, never a blanket "Submit a Property" on every surface. The global nav button stays "Submit a Property" (broad, correct there); page bodies speak to their own job.
+
+| Context | Primary CTA label | Routes to |
+| --- | --- | --- |
+| Global nav | Submit a Property | `/submit` |
+| Deal Architecture | Submit a Deal | `/submit` (deal intent) |
+| Strategy Lab | Open the Lab | the on-page console |
+| Development | Start a build conversation | dev intake / contact |
+| Work with Apollo | Continue below / Request a Property Review / Submit a Deal | form anchor or `/submit?intent=` |
+| MarketFlow | Request access | `/marketflow/access` |
+| Peggy | Open PeggyAI | Peggy widget |
+| Nelson Dr | Read the full breakdown / Start a Property Review | case study / `/submit` |
+| About / generic close | Start with one honest read | `/contact` |
+
+### Imagery rule
+
+Real photography only for proof surfaces (case studies, Apollo, Nelson Dr) — **never** AI-generated or stand-in property images where a real outcome is implied. Each section earns a distinct image; do not reuse the same hero across multiple sections. Decorative/atmospheric prototype imagery is fine for marketing heroes, but anything presented as a *result* must be real and disclosed.
+
+### Forbidden filler phrases
+
+Cut empty connective tissue that says nothing: "In today's market," "We pride ourselves on," "second to none," "world-class," "one-stop shop," "take it to the next level," "unlock your potential," "seamless solutions," "trusted partner" (as a self-claim), "we're not just a … we're a …", and stacked double-qualifiers ("we may potentially be able to possibly"). Also keep clear of the standing compliance-risk list (see "Voice / copy"): "Invest Now," "Guaranteed Returns," "Passive Income," guru language, etc.
+
+### Launch QA checklist
+
+Before declaring any public-site change done:
+1. `npx tsc --noEmit` clean.
+2. a11y suite green: `timeout 110 npx vitest run client/src/__tests__/keyboard-a11y.test.tsx --reporter=basic` (73/73).
+3. Screenshot **desktop + 375px** of every changed surface; confirm hero text legible over the brightest part of the image.
+4. Mobile menu opens/closes; primary CTA + phone reachable.
+5. Every interior CTA matches the routing table (no stray generic "Submit a Property" in page bodies).
+6. No forbidden filler or compliance-risk phrases introduced.
+7. Proof imagery is real and disclosed; no section reuses another's hero.

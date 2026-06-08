@@ -384,8 +384,9 @@ export default function NelsonDrPage() {
             Nelson Dr
           </h1>
           <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-8">
-            A value-add project shaped by strategy, scope control, and disciplined
-            execution — from an overlooked property to a finished retail exit.
+            Acquired around $600K, improved on a disciplined $100K budget, and
+            exited around $840K in September 2025 — one value-add project, read and
+            executed from acquisition through scope, build, and retail exit.
           </p>
 
           <div className="flex flex-wrap gap-2 mb-10">

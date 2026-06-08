@@ -76,7 +76,6 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
       <MarketFlowBlock go={go} />
       <ApolloBlock go={go} portrait={false} />
       <PillarSection p={DEVELOPMENT} go={go} flip dark numeral="DEV" />
-      <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ProofStats />
       <NelsonProof go={go} />
       <DoctrineBlock />
@@ -226,6 +225,10 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
             <p className="text-[var(--muted)] leading-relaxed max-w-xl">
               Sometimes that route is a fast sale. Sometimes a value-add reposition, a ground-up build, or a capital partnership. Sometimes the honest answer is that there is no deal, and we will tell you that too.
             </p>
+            <button type="button" onClick={() => go('submit')} data-testid="button-deal-architecture-submit"
+              className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+              Submit a Deal <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
           </div>
         </div>
       </section>
@@ -319,14 +322,13 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
       <PageHero eyebrow="Systems · Strategy Lab"
         title={<>Model it. Read it. <span className="italic text-[var(--accent-bright)]">Get it in writing.</span></>}
         image={IMG('pegasus-living.png')}
-        lead="The Strategy Lab is where a situation becomes a plan: a self-serve calculator, an Instant Strategy Preview, a human review, and the full Deal Blueprint." />
+        lead="A real underwriting tool, free to start. Enter a property and the Lab scores the fit, models the spread with carry and exit costs in real time, and hands you a written read when you want one. Built for investors, agents, and owners sizing up a deal." />
       <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
         copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
         steps={LAB_STEPS} />
       <StrategyConsole go={go} model={model} />
       <StrategyCalculator go={go} model={model} />
       <StrategyTierStrip />
-      <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Strategy Snapshot" tone="navy" strategy={model.snapshot} />
     </>
   );
@@ -569,10 +571,10 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
 export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   return (
     <>
-      <PageHero eyebrow="Systems · The front door"
+      <PageHero eyebrow="Systems · The front door · Early access"
         title={<>Meet <span className="italic text-[var(--accent-bright)]">PeggyAI.</span></>}
         image={IMG('pegasus-interior-v2.png')}
-        lead="Describe a deal in plain language. Peggy asks the right questions, frames the options, and routes you to the lane that fits, day or night." />
+        lead="Describe a deal or a situation in plain language. Peggy asks the right questions, frames the options, and points you to the lane that fits — then hands you to a person the moment a deal needs a licensed read. In active training: live now for intake and orientation." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-5 reveal">

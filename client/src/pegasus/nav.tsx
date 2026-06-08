@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useId } from 'react';
-import { ChevronDown, Menu, X, ConciergeBell, ArrowRight } from 'lucide-react';
+import { ChevronDown, Menu, X, ConciergeBell, ArrowRight, Phone } from 'lucide-react';
 import type { Route, Nav, Theme, NavGroup, NavLink } from './theme';
 import { NAV_GROUPS } from './data';
 import { ThemeToggle, BrandMark } from './primitives';
@@ -228,8 +228,8 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
               Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
             <a href="tel:9257448525"
-              className="mt-4 block text-center pg-label !text-[9px] !tracking-[0.18em] text-[var(--muted)]">
-              Or call 925-744-8525
+              className="btn-line mt-3 w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.18em] text-center inline-flex items-center justify-center gap-2.5">
+              <Phone className="w-3.5 h-3.5" strokeWidth={1.7} /> Call 925-744-8525
             </a>
           </div>
         </div>
