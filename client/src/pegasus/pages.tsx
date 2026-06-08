@@ -4,11 +4,11 @@ import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Lan
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
-  CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_CHIPS, PEGGY_SLA, DEV_TEAM,
+  CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_ROLES, PEGGY_SLA, DEV_TEAM,
 } from './data';
 import {
   PageHero, Hero, HomeIntro, LaneCardsBlock, ThreePillarsBlock, PillarSection, ProcessSteps,
-  EngineBlock, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
+  EngineBlock, DealReadStepper, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
   SplitPaths, NextStep, CTABand, DealFindersExtras,
 } from './blocks';
@@ -232,7 +232,7 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
           </div>
         </div>
       </section>
-      <EngineBlock go={go} />
+      <DealReadStepper go={go} />
       <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <DoorsBlock go={go} openPeggy={openPeggy} />
       <LeadSection cfg={CONTACT_FORM} eyebrow="Start a review" tone="navy" />
@@ -315,6 +315,42 @@ export function DevelopmentPage({ go }: { go: Nav }) {
 /* ================================================================
    STRATEGY LAB
    ================================================================ */
+const LAB_OUTPUTS = [
+  { label: 'All-in basis', hint: 'Acquisition, rehab, carry, and selling costs, totaled.' },
+  { label: 'Projected spread & margin', hint: 'What is left once every cost comes out of the exit.' },
+  { label: 'Property Fit Score & lane', hint: 'A directional read on fit and the next step that fits.' },
+];
+
+function LabPreview() {
+  return (
+    <section className="py-20 lg:py-24">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <div className="lg:col-span-4 reveal">
+            <div className="pg-label text-[var(--accent)] mb-5">What you’ll model</div>
+            <h2 className="font-serif-display text-4xl md:text-[2.6rem] leading-[1.08] tracking-[-0.01em] text-[var(--text)] mb-5">
+              Put one property in.<br />Read three things out.
+            </h2>
+            <p className="text-[var(--muted)] leading-relaxed max-w-md">
+              Enter the property and the numbers in the console below and these fill in live. Directional orientation only, not an offer or an underwrite.
+            </p>
+          </div>
+          <div className="lg:col-span-8 grid sm:grid-cols-3 gap-5">
+            {LAB_OUTPUTS.map((o, i) => (
+              <div key={o.label} className="surface-card reveal p-7 flex flex-col" style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-4">Output {String(i + 1).padStart(2, '0')}</div>
+                <div aria-hidden="true" className="font-serif-display text-[2.5rem] leading-none text-[var(--line)] mb-4">—</div>
+                <div className="font-serif-display text-xl text-[var(--text)] mb-2 leading-tight">{o.label}</div>
+                <p className="text-[var(--muted)] text-[0.85rem] leading-relaxed">{o.hint}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const model = useStrategyModel();
   return (
@@ -322,10 +358,11 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
       <PageHero eyebrow="Systems · Strategy Lab"
         title={<>Model it. Read it. <span className="italic text-[var(--accent-bright)]">Get it in writing.</span></>}
         image={IMG('pegasus-living.png')}
-        lead="A real underwriting tool, free to start. Enter a property and the Lab scores the fit, models the spread with carry and exit costs in real time, and hands you a written read when you want one. Built for investors, agents, and owners sizing up a deal." />
+        lead="A real underwriting console, free to start. Enter a property and the Lab scores the fit, models the spread with carry and exit costs in real time, and hands you a written read when you want one. Built for investors, agents, and owners sizing up a deal." />
       <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
         copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
         steps={LAB_STEPS} />
+      <LabPreview />
       <StrategyConsole go={go} model={model} />
       <StrategyCalculator go={go} model={model} />
       <StrategyTierStrip />
@@ -348,13 +385,10 @@ export function MarketFlowPage({ go }: { go: Nav }) {
     <>
       <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
         image={IMG('pegasus-casestudy.png')}
-        lead="The marketplace layer: three lanes that move deals, match capital to projects, and place finished inventory, each one verified end to end." />
-      <MarketFlowBlock go={go} enter={{ label: 'Sign in to MarketFlow', href: '/login' }} />
+        lead="A private, vetted network — not an open marketplace. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and a real person reviews every fit." />
+      <MarketFlowBlock go={go} enter={{ label: 'Request access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <div className="flex justify-center mb-8 reveal">
-            <BrandMark boxClassName="w-16 h-16" />
-          </div>
           <SectionHead eyebrow="A look inside"
             title="What members see."
             copy="A preview of the MarketFlow experience. These are sample cards for illustration; live dealflow, profiles, and matches appear once your access is reviewed and approved." />
@@ -397,7 +431,9 @@ export function MarketFlowPage({ go }: { go: Nav }) {
           </div>
         </div>
       </section>
-      <LeadSection cfg={MARKETFLOW_FORM} eyebrow="Request access" tone="page" showRole />
+      <div id="marketflow-request" className="scroll-mt-24">
+        <LeadSection cfg={MARKETFLOW_FORM} eyebrow="Request access" tone="page" showRole />
+      </div>
     </>
   );
 }
@@ -568,7 +604,12 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
 /* ================================================================
    PEGGY (first-class page)
    ================================================================ */
-export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
+const PEGGY_PAGE_ROLE_KEYS = ['seller', 'dealfinder', 'capital', 'unsure'];
+const PEGGY_PAGE_ROLES = PEGGY_PAGE_ROLE_KEYS
+  .map((k) => PEGGY_ROLES.find((r) => r.role === k))
+  .filter((r): r is (typeof PEGGY_ROLES)[number] => Boolean(r));
+
+export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: string) => void }) {
   return (
     <>
       <PageHero eyebrow="Systems · The front door · Early access"
@@ -592,7 +633,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
                 </li>
               ))}
             </ul>
-            <button type="button" onClick={openPeggy} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            <button type="button" onClick={() => openPeggy()} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
               <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Open PeggyAI
             </button>
           </div>
@@ -615,10 +656,13 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
                 <p className="peggy-msg mb-6">
                   I&rsquo;m Peggy. Tell me about a property, a deal, or what you&rsquo;re exploring, and I&rsquo;ll point you to the right path.
                 </p>
-                <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mb-3">People often start with</div>
+                <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mb-3">Pick where you fit and Peggy starts there</div>
                 <div className="flex flex-col gap-2.5 mb-8">
-                  {PEGGY_CHIPS.map((c) => (
-                    <button key={c} type="button" onClick={openPeggy} className="peggy-chip text-left">{c}</button>
+                  {PEGGY_PAGE_ROLES.map((r) => (
+                    <button key={r.role} type="button" onClick={() => openPeggy(r.role)} data-testid={`button-peggy-role-${r.role}`} className="peggy-chip text-left inline-flex items-center justify-between gap-3 group">
+                      <span>{r.label}</span>
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:translate-x-0.5 group-hover:opacity-100 transition" />
+                    </button>
                   ))}
                 </div>
                 <form className="peggy-input !relative !rounded-[3px]" onSubmit={(e) => { e.preventDefault(); openPeggy(); }}>

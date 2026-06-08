@@ -26,6 +26,7 @@ export function Landing() {
   const [theme, setTheme] = useState<Theme>('light');
   const [scrolled, setScrolled] = useState(false);
   const [peggyOpen, setPeggyOpen] = useState(false);
+  const [peggyRole, setPeggyRole] = useState<string | null>(null);
   const [peggyHandoff, setPeggyHandoff] = useState<PeggyHandoff | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,14 @@ export function Landing() {
   }, [setLocation]);
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []);
-  const openPeggy = useCallback(() => setPeggyOpen(true), []);
+  const openPeggy = useCallback((role?: string) => {
+    if (role) setPeggyRole(role);
+    setPeggyOpen(true);
+  }, []);
+  const setPeggyPanel = useCallback((v: boolean) => {
+    setPeggyOpen(v);
+    if (!v) setPeggyRole(null);
+  }, []);
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
   const toSubmit = useCallback((intent?: string) => {
     setLocation(intent ? `/submit?intent=${intent}` : '/submit');
@@ -122,7 +130,7 @@ export function Landing() {
 
       <Footer go={go} openPeggy={openPeggy} />
 
-      <Peggy open={peggyOpen} setOpen={setPeggyOpen} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} />
+      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} />
     </div>
   );
 }

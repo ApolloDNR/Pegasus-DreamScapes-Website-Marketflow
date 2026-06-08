@@ -70,6 +70,7 @@ export function Peggy({
   onHandoffToReview,
   go,
   toSubmit,
+  initialRole = null,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -77,6 +78,7 @@ export function Peggy({
   onHandoffToReview: (h: PeggyHandoff) => void;
   go: Nav;
   toSubmit: (intent?: string) => void;
+  initialRole?: string | null;
 }) {
   const panelId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
@@ -90,6 +92,12 @@ export function Peggy({
   const [streaming, setStreaming] = useState(false);
   const [errored, setErrored] = useState(false);
   const [pickedRole, setPickedRole] = useState<string | null>(null);
+
+  // When the panel is opened from a page chip with a role already chosen,
+  // skip the "who am I helping?" step and jump straight to that role's prompts.
+  useEffect(() => {
+    if (open && initialRole) setPickedRole(initialRole);
+  }, [open, initialRole]);
 
   useEffect(() => {
     if (!open) return;

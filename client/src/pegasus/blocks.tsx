@@ -134,7 +134,7 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {LANE_CARDS.map((c, i) => (
             <button key={c.key} type="button" onClick={() => go(c.key)}
-              className="door-card surface-card group reveal flex flex-col h-full text-left p-8"
+              className="door-card surface-card group reveal flex flex-col h-full text-left p-8 transition-transform active:scale-[0.99] focus-visible:-translate-y-[5px]"
               style={{ animationDelay: `${i * 70}ms` }}>
               <div className="flex items-start justify-between mb-7">
                 <div className="door-icon"><Ico name={c.icon} className="w-5 h-5" /></div>
@@ -314,6 +314,83 @@ export function EngineBlock({ go }: { go: Nav }) {
           <button type="button" onClick={() => go('dealarchitecture')}
             className="btn-solid-light px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             See how the engine works <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Deal-read stepper — the eight engine reads, taken in order
+   (horizontal rail on desktop, vertical spine on mobile)
+---------------------------------------------------------------- */
+export function DealReadStepper({ go }: { go: Nav }) {
+  const last = ENGINE_INPUTS.length - 1;
+  return (
+    <section className="relative py-24 lg:py-32 overflow-hidden bg-[var(--navy)] text-[var(--cream)]">
+      <ContourLines className="absolute inset-x-0 top-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.08] float-slow" />
+      <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead dark center eyebrow="The engine · step by step"
+          title={<>How we read a deal.</>}
+          copy="Eight reads, taken in order. Each one informs the next, and together they resolve to a single recommendation." />
+
+        {/* Desktop: horizontal stepper, scrolls if the viewport is narrow */}
+        <ol className="hidden lg:flex overflow-x-auto pb-4 -mx-2 px-2"
+          aria-label="The eight reads of the Deal Architecture engine">
+          {ENGINE_INPUTS.map((inp, i) => (
+            <li key={inp.label} className="reveal relative shrink-0 w-[200px] px-3 text-center"
+              style={{ animationDelay: `${i * 70}ms` }}>
+              {i < last && (
+                <span aria-hidden="true"
+                  className="absolute top-[25px] h-px bg-gradient-to-r from-[var(--accent-bright)]/45 to-[var(--accent-bright)]/15"
+                  style={{ left: 'calc(50% + 30px)', right: 'calc(-50% + 30px)' }} />
+              )}
+              <div className="relative z-10 mx-auto mb-5 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <div className="flex items-center justify-center gap-2.5 mb-2.5">
+                <span className="text-[var(--accent-bright)]"><Ico name={inp.icon} className="w-4 h-4" /></span>
+                <span className="font-serif-display text-xl text-[var(--cream)] leading-none">{inp.label}</span>
+              </div>
+              <p className="text-[rgba(239,231,218,0.6)] text-[0.84rem] leading-relaxed">{inp.desc}</p>
+            </li>
+          ))}
+        </ol>
+
+        {/* Mobile: vertical stepper with a connecting spine */}
+        <ol className="lg:hidden relative">
+          <span aria-hidden="true" className="absolute left-[25px] top-4 bottom-4 w-px bg-gradient-to-b from-[var(--accent-bright)]/45 via-[var(--accent-bright)]/20 to-transparent" />
+          {ENGINE_INPUTS.map((inp, i) => (
+            <li key={inp.label} className="reveal relative flex gap-5 pb-8 last:pb-0"
+              style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="relative z-10 shrink-0 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <div className="pt-1.5">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <span className="text-[var(--accent-bright)]"><Ico name={inp.icon} className="w-4 h-4" /></span>
+                  <span className="font-serif-display text-xl text-[var(--cream)] leading-none">{inp.label}</span>
+                </div>
+                <p className="text-[rgba(239,231,218,0.6)] text-[0.88rem] leading-relaxed">{inp.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        {/* resolves to one recommended lane */}
+        <div className="flex justify-center my-10" aria-hidden="true">
+          <div className="flex flex-col items-center text-[var(--accent-bright)]">
+            <span className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mb-2">resolves to</span>
+            <ChevronDown className="w-6 h-6 animate-pulse" />
+          </div>
+        </div>
+        <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(213,127,46,0.1)] p-7 sm:p-9 lg:p-11">
+          <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-4">{ENGINE_OUTPUT.label}</div>
+          <p className="font-serif-display text-3xl md:text-4xl text-[var(--cream)] leading-snug mb-5">{ENGINE_OUTPUT.desc}</p>
+          <button type="button" onClick={() => go('submit')} data-testid="button-stepper-submit"
+            className="btn-solid-light px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            Submit a Deal <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>

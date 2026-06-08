@@ -357,12 +357,12 @@ export const NELSON = {
    HOMEPAGE LANE CARDS (Choose Your Lane)
    ================================================================ */
 export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: string; cta: string }[] = [
-  { key: 'sellers', title: 'I need to sell or fix a property', desc: 'List with Apollo, sell off-market, or untangle a complex or stuck situation.', icon: 'home', cta: 'Start a property review' },
-  { key: 'buyers', title: 'I want to buy with a strategy', desc: 'Buy a finished product or buy into a deal, underwritten before you commit.', icon: 'key', cta: 'See how buyers work with us' },
-  { key: 'dealfinders', title: 'I found a deal', desc: 'Bring it to us. You get a straight answer and a clear path, fast.', icon: 'search', cta: 'Submit a deal' },
-  { key: 'capital', title: 'I want to deploy capital', desc: 'Back specific projects on defined terms, with the risk laid out plainly.', icon: 'layers', cta: 'See how capital partners work' },
-  { key: 'operators', title: 'I build or service projects', desc: 'GCs, subs, agents, and title. Join a bench that respects the work.', icon: 'hammer', cta: 'Join the build bench' },
-  { key: 'referral', title: 'I want to refer someone', desc: 'Send a name. We handle the relationship and document any referral fee in writing.', icon: 'handshake', cta: 'Refer a contact' },
+  { key: 'sellers', title: 'I need to sell a complex or stuck property', desc: 'Distressed, inherited, occupied, or stalled — get a plain read and a real route, or a clean listing with Apollo.', icon: 'home', cta: 'Start a property review' },
+  { key: 'buyers', title: 'I want to buy with an investor’s read', desc: 'Buy a finished home or buy into a deal, underwritten on real numbers before you commit.', icon: 'key', cta: 'See how buyers work with us' },
+  { key: 'dealfinders', title: 'I have a deal to move', desc: 'Bring it once. Get a straight answer, written terms, and one buyer who actually closes.', icon: 'search', cta: 'Submit a deal' },
+  { key: 'capital', title: 'I want to back specific deals', desc: 'Fund named projects on defined terms, with the risk and the downside laid out plainly. No blind pools.', icon: 'layers', cta: 'See how capital partners work' },
+  { key: 'operators', title: 'I build or service the work', desc: 'GCs, subs, agents, and title — join a vetted bench scaled to the project, where the trade is respected.', icon: 'hammer', cta: 'Join the build bench' },
+  { key: 'referral', title: 'I want to refer someone', desc: 'Send one name. We handle the relationship and put any referral fee in writing before anything moves.', icon: 'handshake', cta: 'Refer a contact' },
 ];
 
 /* ================================================================
