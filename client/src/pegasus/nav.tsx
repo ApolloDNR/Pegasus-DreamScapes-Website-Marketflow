@@ -126,6 +126,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
 
   return (
+    <>
     <nav className="fixed top-0 inset-x-0 z-40">
       <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'bg-[var(--bg)]/95 backdrop-blur-md border-b border-[var(--line)]'}`} />
       <div className={`relative max-w-[1320px] mx-auto px-6 lg:px-12 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
@@ -166,10 +167,12 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
           </button>
         </div>
       </div>
+    </nav>
 
       <div id="mobile-menu" aria-hidden={!menuOpen} {...(!menuOpen ? { inert: '' } : {})}
-        className={`lg:hidden overflow-hidden bg-[var(--bg-2)] border-b border-[var(--line)] transition-[max-height,opacity] duration-500 ease-out ${menuOpen ? 'max-h-[100svh] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="px-6 pt-1 pb-8 flex flex-col text-[var(--text)] max-h-[calc(100svh-74px)] overflow-y-auto overscroll-contain">
+        style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
+        className={`lg:hidden fixed inset-0 z-30 bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3 pt-3 pb-6 mb-2 border-b border-[var(--line)]">
             <button type="button" onClick={() => { setMenuOpen(false); go('submit'); }}
               className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
@@ -234,6 +237,6 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 }
