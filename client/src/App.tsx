@@ -205,7 +205,7 @@ export const legacyRedirects: [string, string][] = [
   ["/marketplace/properties", "/marketflow/properties"],
 ];
 
-function Router() {
+export function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
     <Switch>
