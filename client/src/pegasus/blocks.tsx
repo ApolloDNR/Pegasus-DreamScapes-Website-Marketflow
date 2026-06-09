@@ -343,8 +343,8 @@ export function DealReadStepper({ go }: { go: Nav }) {
               style={{ animationDelay: `${i * 70}ms` }}>
               {i < last && (
                 <span aria-hidden="true"
-                  className="absolute top-[25px] h-px bg-gradient-to-r from-[var(--accent-bright)]/45 to-[var(--accent-bright)]/15"
-                  style={{ left: 'calc(50% + 30px)', right: 'calc(-50% + 30px)' }} />
+                  className="step-connector absolute top-[25px] h-px bg-gradient-to-r from-[var(--accent-bright)]/45 to-[var(--accent-bright)]/15"
+                  style={{ left: 'calc(50% + 30px)', right: 'calc(-50% + 30px)', animationDelay: `${i * 70 + 220}ms` }} />
               )}
               <div className="relative z-10 mx-auto mb-5 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">
                 {String(i + 1).padStart(2, '0')}
@@ -360,7 +360,7 @@ export function DealReadStepper({ go }: { go: Nav }) {
 
         {/* Mobile: vertical stepper with a connecting spine */}
         <ol className="lg:hidden relative">
-          <span aria-hidden="true" className="absolute left-[25px] top-4 bottom-4 w-px bg-gradient-to-b from-[var(--accent-bright)]/45 via-[var(--accent-bright)]/20 to-transparent" />
+          <span aria-hidden="true" className="draw-on-view step-spine absolute left-[25px] top-4 bottom-4 w-px bg-gradient-to-b from-[var(--accent-bright)]/45 via-[var(--accent-bright)]/20 to-transparent" />
           {ENGINE_INPUTS.map((inp, i) => (
             <li key={inp.label} className="reveal relative flex gap-5 pb-8 last:pb-0"
               style={{ animationDelay: `${i * 60}ms` }}>

@@ -676,6 +676,26 @@ select.pg-field option { color: #1b1712; }
   animation: draw-x 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* ---- Deal-read stepper: connectors progress as steps reveal ---- */
+@keyframes draw-y {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.step-connector {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.reveal.animate-fade-in-up .step-connector {
+  animation: draw-x 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.step-spine {
+  transform: scaleY(0);
+  transform-origin: top;
+}
+.step-spine.is-drawn {
+  animation: draw-y 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ---- Peggy — the Pegasus concierge ---- */
 .peggy-footer-cta {
   border: 1px solid rgba(239, 231, 218, 0.28);
@@ -916,11 +936,15 @@ select.pg-field option { color: #1b1712; }
   .draw-on-view,
   .draw-on-view.is-drawn,
   .page-in,
-  .animate-fade-in-up {
+  .animate-fade-in-up,
+  .reveal.animate-fade-in-up .step-connector,
+  .step-spine.is-drawn {
     animation: none !important;
   }
   .opacity-0 { opacity: 1 !important; }
   .draw-on-view { transform: none !important; }
+  .step-connector { transform: none !important; }
+  .step-spine { transform: none !important; }
   .hero-parallax { transform: none !important; }
   .peggy-panel { transition: opacity 0.2s ease !important; transform: none !important; }
 }
