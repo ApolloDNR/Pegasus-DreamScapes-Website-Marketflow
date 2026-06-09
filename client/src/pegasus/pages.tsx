@@ -316,9 +316,10 @@ export function DevelopmentPage({ go }: { go: Nav }) {
    STRATEGY LAB
    ================================================================ */
 const LAB_OUTPUTS = [
-  { label: 'All-in basis', hint: 'Acquisition, rehab, carry, and selling costs, totaled.' },
-  { label: 'Projected spread & margin', hint: 'What is left once every cost comes out of the exit.' },
-  { label: 'Property Fit Score & lane', hint: 'A directional read on fit and the next step that fits.' },
+  { label: 'All-in basis', hint: 'Calculated after your acquisition, repair, carry, and exit assumptions are entered.' },
+  { label: 'Spread logic', hint: 'The Lab compares your estimated basis against projected delivered value, then flags whether the spread looks strong, thin, or incomplete.' },
+  { label: 'Lane fit', hint: 'Possible lanes include Retail Listing, Value-Add Rehab, ADU / Development Screen, Partner / JV Review, MarketFlow Disposition, or Deal Blueprint.' },
+  { label: 'Recommended next step', hint: 'Request a human Strategy Snapshot when the numbers, condition, title, occupancy, and timeline need a real review.' },
 ];
 
 function LabPreview() {
@@ -329,17 +330,16 @@ function LabPreview() {
           <div className="lg:col-span-4 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">What you’ll model</div>
             <h2 className="font-serif-display text-4xl md:text-[2.6rem] leading-[1.08] tracking-[-0.01em] text-[var(--text)] mb-5">
-              Put one property in.<br />Read three things out.
+              Put one property in.<br />Read four things out.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed max-w-md">
-              Enter the property and the numbers in the console below and these fill in live. Directional orientation only, not an offer or an underwrite.
+              This is the framework the Lab works through. Enter the property and the numbers in the console below and it generates your read after your input. Directional orientation only, not an offer or an underwrite.
             </p>
           </div>
-          <div className="lg:col-span-8 grid sm:grid-cols-3 gap-5">
+          <div className="lg:col-span-8 grid sm:grid-cols-2 gap-5">
             {LAB_OUTPUTS.map((o, i) => (
               <div key={o.label} className="surface-card reveal p-7 flex flex-col" style={{ animationDelay: `${i * 80}ms` }}>
                 <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-4">Output {String(i + 1).padStart(2, '0')}</div>
-                <div aria-hidden="true" className="font-serif-display text-[2.5rem] leading-none text-[var(--line)] mb-4">—</div>
                 <div className="font-serif-display text-xl text-[var(--text)] mb-2 leading-tight">{o.label}</div>
                 <p className="text-[var(--muted)] text-[0.85rem] leading-relaxed">{o.hint}</p>
               </div>
