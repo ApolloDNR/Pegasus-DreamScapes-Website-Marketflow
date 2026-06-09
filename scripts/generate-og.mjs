@@ -31,7 +31,7 @@ const cards = [
     slug: "about",
     kicker: "About · Pegasus DreamScapes",
     h1: "Built on strategy.",
-    h2: "Governed by virtue.",
+    h2: "Backed by discipline.",
     sub: "Founded by Paolo \"Apollo\" Duran. DRE #02333658 · KW East Bay.",
   },
   {
