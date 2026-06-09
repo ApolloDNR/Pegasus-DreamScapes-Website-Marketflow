@@ -165,7 +165,7 @@ function PillarSection() {
               <span className="font-semibold text-foreground">Investments</span> bring the capital that funds the build. <span className="font-semibold text-foreground">Systems</span> bring the discipline that runs the build. The <span className="font-semibold text-foreground">Dreamscaper Standard</span> governs both so a project is read honestly, scoped tightly, and delivered as promised.
             </p>
             <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
-              Built on strategy. Governed by virtue. Executed with discipline.
+              Capital and Systems exist to serve the build — nothing else.
             </p>
           </ScrollReveal>
 

@@ -191,7 +191,7 @@ function HeroSection() {
   const heroLine1 = getValue("home.hero.line1", "Complex property.");
   const heroLine2 = getValue("home.hero.line2", "Structured opportunity.");
   const heroCtaPrimary = getValue("home.hero.cta_primary", "Submit a Property");
-  const heroPhilosophical = "Built on strategy. Governed by virtue. Executed with discipline.";
+  const heroPhilosophical = "Read honestly. Scoped tightly. Delivered as promised.";
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
@@ -875,7 +875,7 @@ function OperatorSection() {
             num="05"
             eyebrow="The Operator"
             title="Meet Apollo."
-            deck="Built on strategy. Governed by virtue. Executed with discipline."
+            deck="Read honestly. Scoped tightly. Delivered as promised."
           />
         </ScrollReveal>
 

@@ -66,7 +66,7 @@ export default function About() {
   useSEO({
     title: "About",
     description:
-      "Pegasus DreamScapes Corp. is a strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Built on strategy. Governed by virtue. Executed with discipline.",
+      "Strategy-first real estate operating company founded by Paolo \"Apollo\" Duran. Every property gets a serious review. Not every property gets an offer.",
     image: "/og/about.png",
   });
 
@@ -164,7 +164,7 @@ function AboutHero() {
               className="font-serif text-base sm:text-lg text-cream/85 italic tracking-wide leading-snug"
               data-testid="text-about-philosophical"
             >
-              Built on strategy. Governed by virtue. Executed with discipline.
+              Read honestly. Scoped tightly. Delivered as promised.
             </p>
           </ScrollReveal>
 
