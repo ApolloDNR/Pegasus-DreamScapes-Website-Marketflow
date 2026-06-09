@@ -147,7 +147,7 @@ const Peggy = lazy(() => import("@/pages/peggy"));
 const WorkWithApollo = lazy(() => import("@/pages/work-with-apollo"));
 const DealArchitecture = lazy(() => import("@/pages/deal-architecture"));
 
-const legacyRedirects: [string, string][] = [
+export const legacyRedirects: [string, string][] = [
   // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
   // old funnel routes (/sell, /submit-deal, /submit-property, /wholesale)
   // all collapse into /submit with their intent preserved via query.
