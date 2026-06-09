@@ -20,6 +20,7 @@ import {
   PeggyPage,
 } from "@/pegasus/pages";
 import { CTABand } from "@/pegasus/blocks";
+import { StrategyTierStrip } from "@/pegasus/forms";
 import { CATEGORIES } from "@/pegasus/data";
 import { ROUTE_TO_URL } from "@/pegasus/routes";
 import type { Route } from "@/pegasus/theme";
@@ -265,4 +266,149 @@ describe("CTABand primaryAction always resolves to a real route (Task #201)", ()
       ).toBeTruthy();
     });
   }
+});
+
+// Programmatic CTA net (Task #210).
+//
+// The dead-end net above (Task #201) only sees CTAs wired through `go(route)`
+// (captured by the go spy) or a rendered `<a href>`. But several CTAs navigate
+// *programmatically* via wouter's `setLocation(path)` instead — so they never
+// touch the go spy and render no anchor, and were previously unchecked:
+//
+//   - WorkWithApolloPage's "What brings you here?" ApolloSelector
+//     (setLocation('/submit?intent=property') / '/submit?intent=deal-jv')
+//   - StrategyTierStrip's tier buttons
+//     (setLocation('/submit') / '/submit?intent=blueprint')
+//
+// A future edit could point one of these at a route that doesn't exist, or pass
+// an `?intent=` value the canonical /submit intake doesn't recognize, and the
+// only signal would be a 404 / silently-ignored prefill at runtime. This suite
+// renders those surfaces, drives each programmatic CTA, captures the real
+// wouter navigation, and asserts the destination path is a known app route and
+// any intent is one /submit actually accepts.
+
+// The exact set of `?intent=` values the canonical /submit intake recognizes.
+// Mirrors the zod enum + allow-list in client/src/pages/submit.tsx; a drift
+// there (renamed/removed intent) without updating a CTA fails here.
+const VALID_INTENTS = new Set<string>([
+  "sell",
+  "property",
+  "adu",
+  "deal-jv",
+  "explore",
+  "blueprint",
+]);
+
+// Real app routes a programmatic CTA may legitimately land on: the same set the
+// anchor net uses (Pegasus route map + standalone functional pages like /faq).
+const KNOWN_NAV_PATHS = KNOWN_PATHS;
+
+// jsdom has no scrollIntoView; the form-mode selector CTAs call it. Stub it so
+// clicks don't throw (we only assert on the navigations, not the scroll).
+if (!HTMLElement.prototype.scrollIntoView) {
+  HTMLElement.prototype.scrollIntoView = () => {};
+}
+
+// Render inside a *real* (non-static) in-memory router that records its history,
+// so a `setLocation(path)` actually updates the location and we can read it.
+function renderWithHistory(ui: React.ReactElement, routePath = "/") {
+  const mem = memoryLocation({ path: routePath, record: true });
+  const qc = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0, staleTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+  const utils = render(
+    <QueryClientProvider client={qc}>
+      <Router hook={mem.hook}>{ui}</Router>
+    </QueryClientProvider>,
+  );
+  return { ...utils, history: mem.history as string[] };
+}
+
+// Assert a captured navigation target points at a real route + valid intent.
+function expectValidNavTarget(target: string, ctx: string) {
+  const path = target.split(/[?#]/)[0];
+  expect(
+    KNOWN_NAV_PATHS.has(path),
+    `${ctx} navigates to unknown path: ${target}`,
+  ).toBe(true);
+  const query = target.includes("?") ? target.split("?")[1] : "";
+  const intent = new URLSearchParams(query).get("intent");
+  if (intent !== null) {
+    expect(
+      VALID_INTENTS.has(intent),
+      `${ctx} uses an ?intent= value /submit does not recognize: ${intent}`,
+    ).toBe(true);
+  }
+}
+
+describe("Programmatic setLocation CTAs resolve to a real route + valid intent (Task #210)", () => {
+  it("ApolloSelector link CTAs navigate to /submit with a recognized intent", () => {
+    const { container, history } = renderWithHistory(
+      <WorkWithApolloPage go={noop as unknown as (r: Route) => void} />,
+      "/work-with-apollo",
+    );
+
+    const tabs = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '[data-testid^="apollo-selector-"]',
+      ),
+    );
+    expect(tabs.length, "ApolloSelector rendered no option tabs").toBeGreaterThan(0);
+
+    const navTargets: string[] = [];
+    for (const tab of tabs) {
+      fireEvent.click(tab);
+      const cta = container.querySelector<HTMLButtonElement>(
+        '[data-testid="button-apollo-selector-cta"]',
+      );
+      expect(cta, "ApolloSelector CTA button not found").toBeTruthy();
+      const before = history.length;
+      fireEvent.click(cta!);
+      // A link-mode option pushes a navigation; a form-mode option only scrolls.
+      if (history.length > before) navTargets.push(history[history.length - 1]);
+    }
+
+    // Non-vacuous: the two link-mode options must have produced real navigations.
+    expect(navTargets).toContain("/submit?intent=property");
+    expect(navTargets).toContain("/submit?intent=deal-jv");
+
+    for (const target of navTargets) {
+      expectValidNavTarget(target, "ApolloSelector");
+    }
+  });
+
+  it("StrategyTierStrip tier CTAs navigate to /submit with a recognized intent", () => {
+    const { container, history } = renderWithHistory(
+      <StrategyTierStrip />,
+      "/strategy-lab",
+    );
+
+    const tierButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '[data-testid^="button-tier-"]',
+      ),
+    );
+    expect(
+      tierButtons.length,
+      "StrategyTierStrip rendered no actionable tier buttons",
+    ).toBeGreaterThan(0);
+
+    const navTargets: string[] = [];
+    for (const btn of tierButtons) {
+      const before = history.length;
+      fireEvent.click(btn);
+      if (history.length > before) navTargets.push(history[history.length - 1]);
+    }
+
+    // Non-vacuous: the snapshot + blueprint tiers route to canonical /submit.
+    expect(navTargets).toContain("/submit");
+    expect(navTargets).toContain("/submit?intent=blueprint");
+
+    for (const target of navTargets) {
+      expectValidNavTarget(target, "StrategyTierStrip");
+    }
+  });
 });
