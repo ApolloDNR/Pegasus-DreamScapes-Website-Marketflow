@@ -403,7 +403,7 @@ export function Navigation() {
                   onLightSurface ? "text-[hsl(var(--bronze))]" : "text-[hsl(var(--bronze-soft))]"
                 }`}
               >
-                The Deal Architect
+                Deal Strategy
               </span>
             </span>
           </Link>

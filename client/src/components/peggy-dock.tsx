@@ -629,7 +629,7 @@ export function PeggyDock() {
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold leading-none mb-1.5">
-                      The Deal Architect
+                      Pegasus DreamScapes
                     </p>
                     <h3 className="font-serif text-base font-semibold leading-none tracking-tight">
                       Peggy <span className="text-muted-foreground font-normal">·</span> Strategy Assistant
@@ -698,7 +698,7 @@ export function PeggyDock() {
                       </div>
                     </div>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
-                      The Deal Architect
+                      Pegasus DreamScapes
                     </p>
                     <h3 className="font-serif text-[26px] font-semibold tracking-tight leading-tight mb-3">
                       Hi, I'm <span className="italic bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Peggy</span>.

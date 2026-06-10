@@ -30,10 +30,10 @@ export const NAV_MORE_GROUP_LABELS: Record<NavMoreGroup, string> = {
 // Lab · Work With Apollo · MarketFlow. /projects is no longer in primary
 // nav; it is reachable from /development and from the More dropdown.
 export const NAV_PRIMARY: NavPrimaryItem[] = [
-  { href: "/deal-architecture", label: "Deal Architecture", matchPrefix: "/deal-architecture" },
+  { href: "/deal-architecture", label: "Deal Strategy", matchPrefix: "/deal-architecture" },
   { href: "/development", label: "Development", matchPrefix: "/development" },
   { href: "/strategy-lab", label: "Strategy Lab", matchPrefix: "/strategy-lab" },
-  { href: "/work-with-apollo", label: "Work With Apollo", matchPrefix: "/work-with-apollo" },
+  { href: "/work-with-apollo", label: "Represent With Apollo", matchPrefix: "/work-with-apollo" },
   { href: "/marketflow", label: "MarketFlow", matchPrefix: "/marketflow" },
 ];
 

@@ -174,7 +174,7 @@ export function Footer() {
               />
             </Link>
             <div>
-              <p className="font-display text-xl text-foreground tracking-[0.18em] uppercase">The Deal Architect</p>
+              <p className="font-display text-xl text-foreground tracking-[0.18em] uppercase">Pegasus DreamScapes</p>
               <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium font-supporting">
                 Read the property. Underwrite the numbers. Design the route.
               </p>
