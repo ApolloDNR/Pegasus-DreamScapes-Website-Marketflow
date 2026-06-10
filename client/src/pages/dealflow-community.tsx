@@ -473,6 +473,12 @@ export default function DealflowCommunity() {
   return (
     <MarketplaceLayout>
       <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-serif font-bold mb-2">MarketFlow Community</h1>
+          <p className="text-muted-foreground">
+            Share deals, ask questions, and connect with investors, Dreamscapers, and partners
+          </p>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Feed Column */}
           <div className="lg:col-span-2 space-y-4">
