@@ -19,12 +19,12 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'What We Do',
     items: [
-      { label: 'Deal Architecture', route: 'dealarchitecture', desc: 'How we turn a property into a plan' },
+      { label: 'Deal Strategy', route: 'dealarchitecture', desc: 'How we turn a property into a plan' },
       { label: 'Investments', route: 'investments', desc: 'Acquisitions, value-add, and structure' },
       { label: 'Development', route: 'development', desc: 'Ground-up and renovation, scoped and delivered' },
       { label: 'Strategy Lab', route: 'strategylab', desc: 'Run the numbers before you commit' },
       { label: 'MarketFlow', route: 'marketflow', desc: 'The deal network, verified end to end' },
-      { label: 'Work With Apollo', route: 'apollo', desc: 'Direct strategy with the founder' },
+      { label: 'Represent With Apollo', route: 'apollo', desc: 'Licensed representation through Keller Williams East Bay' },
       { label: 'Pegasus Ecosystem', route: 'ecosystem', desc: 'The full Pegasus operating system' },
     ],
   },
@@ -95,7 +95,7 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 01',
     tag: 'Investments',
     title: <>We acquire and<br />reposition real assets</>,
-    lead: 'Our acquisitions team are deal architects: we source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal toward a win-win. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
+    lead: 'Our acquisitions team are deal strategists: we source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal toward a win-win. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
     points: [
       'Sourcing, negotiation, and deal structure handled by one team',
       'Underwriting on real numbers, not hope',
@@ -132,7 +132,7 @@ export const PILLARS3: Pillar[] = [
       'The same underwriting at every step',
     ],
     img: 'pegasus-architecture.png',
-    imgAlt: 'A precise architectural scale model of a modern home on a studio table',
+    imgAlt: 'A precise scale model of a modern home on a studio table',
     route: 'ecosystem',
     cta: 'See the whole system',
   },
@@ -205,7 +205,7 @@ export const PRODUCTS: {
     step: '05',
     name: 'Deal Blueprint',
     kind: 'Paid deliverable',
-    desc: 'The full architecture, documented end to end: scope, capital stack, construction plan, exit, and risk.',
+    desc: 'The full deal strategy, documented end to end: scope, capital stack, construction plan, exit, and risk.',
     cta: 'Start a Review',
     action: 'contact',
     paid: true,
@@ -265,12 +265,12 @@ export const ECOSYSTEM: {
   status: string;
   route?: Route;
 }[] = [
-  { key: 'hq', name: 'Pegasus HQ', role: 'The architecture firm', desc: 'Where deals are read, underwritten, and turned into a plan. The underwriting standard every other part follows.', icon: 'compass', status: 'Operating', route: 'contact' },
+  { key: 'hq', name: 'Pegasus HQ', role: 'The strategy firm', desc: 'Where deals are read, underwritten, and turned into a plan. The underwriting standard every other part follows.', icon: 'compass', status: 'Operating', route: 'contact' },
   { key: 'peggy', name: 'PeggyAI', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Operating', route: 'peggy' },
   { key: 'lab', name: 'Strategy Lab', role: 'The underwriting tool', desc: 'Self-serve modeling that returns an Instant Strategy Preview on any deal.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
   { key: 'marketflow', name: 'MarketFlow', role: 'The marketplace', desc: 'Three lanes that move deals, match capital, and place finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
   { key: 'capstack', name: 'CapStack', role: 'The capital layer', desc: 'How funding is structured and matched to projects, on defined terms.', icon: 'layers', status: 'Building', route: 'capital' },
-  { key: 'buildforge', name: 'BuildForge', role: 'The construction arm', desc: 'Our development team turning scope, budget, and draw schedule into delivered product.', icon: 'hammer', status: 'Operating', route: 'development' },
+  { key: 'buildforge', name: 'BuildForge', role: 'The build layer', desc: 'Licensed contractors, engaged under project-specific agreements, turning scope, budget, and draw schedule into delivered product.', icon: 'hammer', status: 'Operating', route: 'development' },
 ];
 
 /* ================================================================
@@ -325,11 +325,11 @@ export const FAQ_HOME: FaqItem[] = [
 export const APOLLO = {
   name: 'Apollo Duran',
   legal: 'Paolo Duran',
-  role: 'Founder & Deal Architect',
+  role: 'Founder & Deal Strategist',
   license: 'Keller Williams East Bay · DRE #02333658',
   lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; our development team builds the result. The same underwriting runs the whole arc, from the first read to the final walkthrough.',
   points: [
-    { t: 'The architect', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
+    { t: 'The strategist', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
     { t: 'The development team', d: 'Former GCs, project managers, and trades turn the plan into a delivered product.' },
     { t: 'The discipline', d: 'Every deal runs the same underwriting and the same build standard, from first call to final walkthrough.' },
   ],

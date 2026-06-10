@@ -3,7 +3,7 @@
  *
  * The PeggyAI concierge surfaces an "Or go straight to" strip of route
  * shortcuts that are always present (regardless of conversation state):
- * Strategy Lab / Submit a Property / Work With Apollo / MarketFlow.
+ * Strategy Lab / Submit a Property / Represent With Apollo / MarketFlow.
  * Each shortcut must fire its handler and close the panel.
  */
 import React from "react";
@@ -42,7 +42,7 @@ describe("Peggy — persistent route shortcuts", () => {
       "Submit a Property",
     );
     expect(screen.getByTestId("peggy-route-apollo")).toHaveTextContent(
-      "Work With Apollo",
+      "Represent With Apollo",
     );
     expect(screen.getByTestId("peggy-route-marketflow")).toHaveTextContent(
       "MarketFlow",
@@ -63,7 +63,7 @@ describe("Peggy — persistent route shortcuts", () => {
     expect(setOpen).toHaveBeenCalledWith(false);
   });
 
-  it("Work With Apollo shortcut navigates to the apollo lane and closes the panel", () => {
+  it("Represent With Apollo shortcut navigates to the apollo lane and closes the panel", () => {
     const { go, setOpen } = renderPeggy();
     fireEvent.click(screen.getByTestId("peggy-route-apollo"));
     expect(go).toHaveBeenCalledWith("apollo");

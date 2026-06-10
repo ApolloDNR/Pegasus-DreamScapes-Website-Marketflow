@@ -53,7 +53,7 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, subtitle?: string): v
     .fontSize(9)
     .fillColor(BRAND_COLORS.accent)
     .font("Helvetica")
-    .text("THE DEAL ARCHITECT", 50, 58, { characterSpacing: 3 });
+    .text("DEAL STRATEGY", 50, 58, { characterSpacing: 3 });
 
   doc
     .fontSize(8)
@@ -1088,7 +1088,7 @@ function snapshotCoverPage(doc: PDFKit.PDFDocument, a: PropertyAnalysisLike): vo
   doc.fontSize(11).fillColor(BRAND_COLORS.accent).font(bf("display"))
     .text("PEGASUS DREAMSCAPES CORP", 50, 50, { characterSpacing: 3 });
   doc.fontSize(8).fillColor("#F6EFE4").font(bf("sansBold"))
-    .text("THE DEAL ARCHITECT", 50, 70, { characterSpacing: 2.5 });
+    .text("DEAL STRATEGY", 50, 70, { characterSpacing: 2.5 });
 
   // Title block (mid-page editorial)
   const titleY = 200;
@@ -1369,7 +1369,7 @@ export async function generateStrategySnapshotPDF(
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).strokeColor(BRAND_COLORS.accent).lineWidth(1).stroke();
     y += 14;
     doc.fontSize(10).fillColor(BRAND_COLORS.primary).font(bf("sansBold"))
-      .text("Pegasus DreamScapes Corp · The Deal Architect", 50, y);
+      .text("Pegasus DreamScapes Corp · Deal Strategy & Real Estate Execution", 50, y);
     y += 14;
     doc.fontSize(9).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
       .text("apollo@pegasusdreamscapes.com  ·  925-744-8525  ·  pegasusdreamscapes.com", 50, y);

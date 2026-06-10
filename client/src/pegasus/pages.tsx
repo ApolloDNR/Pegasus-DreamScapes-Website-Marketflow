@@ -81,7 +81,7 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
       <DoctrineBlock />
       <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." />
       <CTABand go={go} openPeggy={openPeggy}
-        title="Send us the situation. We will architect the path."
+        title="Send us the situation. We'll map the path forward."
         text="Complex, distressed, inherited, or simply complicated: every property gets a plain-language read. No pressure, no obligation." />
     </>
   );
@@ -204,14 +204,14 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
   return (
     <>
       <PageHero eyebrow="What we do · The engine"
-        title={<>Deal <span className="italic text-[var(--accent-bright)]">Architecture.</span></>}
+        title={<>Deal <span className="italic text-[var(--accent-bright)]">Strategy.</span></>}
         image={IMG('pegasus-aerial.png')}
         lead="Where every Pegasus relationship starts. We read the property and the numbers once, properly, then show you the route forward: the lane that genuinely fits the deal and the person in front of it." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-5 reveal">
             <div className="img-zoom peggy-shadow aspect-[4/5]">
-              <img src={IMG('pegasus-architecture.png')} alt="A precise architectural scale model on a studio table" className="w-full h-full object-cover" />
+              <img src={IMG('pegasus-architecture.png')} alt="A precise scale model on a studio table" className="w-full h-full object-cover" />
             </div>
           </div>
           <div className="lg:col-span-7 reveal delay-100">
@@ -550,9 +550,9 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
   return (
     <>
       <PageHero eyebrow="What we do · Representation"
-        title={<>Work with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
+        title={<>Represent with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
         image={IMG('pegasus-craft-blueprint.png')}
-        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay, backed by the full Pegasus standard." />
+        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay (DRE #02333658), backed by the full Pegasus standard. Pegasus DreamScapes is not a brokerage." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -575,7 +575,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       </section>
       <ApolloSelector />
       <div id="apollo-lead" className="scroll-mt-24">
-        <LeadSection cfg={APOLLO_FORM} eyebrow="Work with Apollo" tone="navy" showRole />
+        <LeadSection cfg={APOLLO_FORM} eyebrow="Represent with Apollo" tone="navy" showRole />
       </div>
     </>
   );
@@ -714,7 +714,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
   return (
     <>
       <PageHero eyebrow="The Firm"
-        title={<>Deal <span className="italic text-[var(--accent-bright)]">architecture.</span></>}
+        title={<>Deal <span className="italic text-[var(--accent-bright)]">strategy.</span></>}
         image={IMG('hero/luxury-home-1280.jpg')}
         lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay. One firm that reads the situation, underwrites the numbers, builds the work, and sees a deal through, instead of handing you off." />
       <ApolloBlock go={go} showCta={false} />
@@ -768,7 +768,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
               <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
                 <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus DreamScapes</span>
-                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Architecture</span>
+                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
               </div>
             </button>
             <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug mb-7">
@@ -781,7 +781,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
           </div>
 
           <FooterCol title="What we do">
-            <FooterLink label="Deal Architecture" onClick={() => go('dealarchitecture')} />
+            <FooterLink label="Deal Strategy" onClick={() => go('dealarchitecture')} />
             <FooterLink label="Investments" onClick={() => go('investments')} />
             <FooterLink label="Development" onClick={() => go('development')} />
             <FooterLink label="Strategy Lab" onClick={() => go('strategylab')} />
@@ -800,7 +800,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
 
           <FooterCol title="Company">
             <FooterLink label="About the Firm" onClick={() => go('about')} />
-            <FooterLink label="Work with Apollo" onClick={() => go('apollo')} />
+            <FooterLink label="Represent with Apollo" onClick={() => go('apollo')} />
             <FooterLink label="Talk to PeggyAI" onClick={() => go('peggy')} />
             <FooterLink label="Start a Review" onClick={() => go('contact')} />
           </FooterCol>

@@ -25,7 +25,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/": {
     title: BRAND,
     description:
-      "Strategy-first real estate in the East Bay. We read the property and the numbers once, then architect the path: sell, reposition, build, or partner.",
+      "Strategy-first real estate in the East Bay. We read the property and the numbers once, then map the path: sell, reposition, build, or partner.",
     image: `${SITE_URL}/og/home.png`,
   },
 
@@ -69,7 +69,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
 
   // ---- What We Do ----
   "/deal-architecture": {
-    title: tag("Deal Architecture"),
+    title: tag("Deal Strategy"),
     description:
       "How a property becomes a plan: we read the situation and the numbers once, then design the route that fits the deal. Submit a deal to start.",
     image: `${SITE_URL}/og/deal-architecture.png`,
@@ -105,7 +105,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/work-with-apollo": {
-    title: tag("Work With Apollo"),
+    title: tag("Represent With Apollo"),
     description:
       "Work directly with founder Apollo Duran on selling, buying, or a complex situation. Representation through Keller Williams East Bay, DRE #02333658.",
     image: `${SITE_URL}/og/work-with-apollo.png`,

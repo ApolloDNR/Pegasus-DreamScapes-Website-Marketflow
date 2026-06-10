@@ -321,7 +321,7 @@ export function Peggy({
             <button type="button" data-testid="peggy-route-submit" className="peggy-chip !py-1.5 !px-3"
               onClick={() => { toSubmit(); setOpen(false); }}>Submit a Property</button>
             <button type="button" data-testid="peggy-route-apollo" className="peggy-chip !py-1.5 !px-3"
-              onClick={() => { go('apollo'); setOpen(false); }}>Work With Apollo</button>
+              onClick={() => { go('apollo'); setOpen(false); }}>Represent With Apollo</button>
             <button type="button" data-testid="peggy-route-marketflow" className="peggy-chip !py-1.5 !px-3"
               onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
           </div>

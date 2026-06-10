@@ -63,9 +63,9 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-0 hero-scrim-bottom" />
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
-          <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/95 text-on-photo mb-7 reveal">Investments · Development · Systems · East Bay</div>
+          <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/95 text-on-photo mb-7 reveal">Deal Strategy &amp; Real Estate Execution · East Bay</div>
           <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-[-0.01em] text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] text-on-photo reveal delay-100">
-            We do not just find deals. <span className="italic text-[var(--accent-bright)]">We architect them.</span>
+            Complex property. <span className="italic text-[var(--accent-bright)]">Structured upside.</span>
           </h1>
           <div className="draw-x h-px bg-[var(--accent-bright)]/60 max-w-[220px] mt-9 mb-9" aria-hidden="true" />
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 reveal delay-200">
@@ -289,7 +289,7 @@ export function EngineBlock({ go }: { go: Nav }) {
       <ContourLines className="absolute inset-x-0 top-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead dark eyebrow="The engine" center
-          title={<>The Deal Architecture Engine</>}
+          title={<>The Deal Strategy Engine</>}
           copy="Eight inputs go in. One clear recommendation comes out: buy, list, reposition, partner, or pass." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {ENGINE_INPUTS.map((inp, i) => (
@@ -337,7 +337,7 @@ export function DealReadStepper({ go }: { go: Nav }) {
 
         {/* Desktop: horizontal stepper, scrolls if the viewport is narrow */}
         <ol className="hidden lg:flex overflow-x-auto pb-4 -mx-2 px-2"
-          aria-label="The eight reads of the Deal Architecture engine">
+          aria-label="The eight reads of the Deal Strategy engine">
           {ENGINE_INPUTS.map((inp, i) => (
             <li key={inp.label} className="reveal relative shrink-0 w-[200px] px-3 text-center"
               style={{ animationDelay: `${i * 70}ms` }}>
@@ -594,7 +594,7 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
           )}
         </div>
         <div className="lg:col-span-7 reveal delay-100">
-          <div className="pg-label text-[var(--accent)] mb-5">Work with Apollo</div>
+          <div className="pg-label text-[var(--accent)] mb-5">Represent with Apollo</div>
           <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">{APOLLO.name}</h2>
           <p className="text-[var(--muted)] leading-relaxed mb-9 max-w-xl">{APOLLO.lead}</p>
           <div className="grid sm:grid-cols-3 gap-5 mb-10">
@@ -606,11 +606,11 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pg-label !text-[10px] text-[var(--muted)] mb-9">
-            <span>Licensed REALTOR</span><span>{APOLLO.license}</span><span>NAR · CAR</span><span>Backed by an in-house development team</span>
+            <span>Licensed REALTOR</span><span>{APOLLO.license}</span><span>NAR · CAR</span><span>Backed by licensed contractors under project agreements</span>
           </div>
           {showCta && (
             <button type="button" onClick={() => go('apollo')} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-              Work with Apollo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              Represent with Apollo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           )}
         </div>

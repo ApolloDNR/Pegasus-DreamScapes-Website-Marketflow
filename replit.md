@@ -64,7 +64,7 @@ The three Empire-Doctrine tripwires (`doctrine-anti-drift.test.ts`, `public-voic
 ## Brand essentials
 
 - **Casing**: Pegasus DreamScapes (capital P, capital D, capital S). Legal entity: Pegasus DreamScapes Corp.
-- **Tagline**: The Deal Architect.
+- **Tagline**: Deal Strategy & Real Estate Execution.
 - **Founder**: Paolo "Apollo" Duran. DRE #02333658. Keller Williams Realty East Bay (each office independently owned and operated). NAR NRDS #159537628. CAR via CCAR #36424.
 - **Contact**: `apollo@pegasusdreamscapes.com` · 925-744-8525.
 - **Voice/copy**: governed by the prototype's own copy in `client/src/pegasus/`. The legacy forbidden-credential-logo list (NAHB, BNI, BiggerPockets, ULI, NMHC, NAIOP, IRR, Inman) remains a sensible guard — do not display credentials not actually held.

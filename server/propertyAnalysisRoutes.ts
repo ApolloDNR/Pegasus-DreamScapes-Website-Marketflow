@@ -396,7 +396,7 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
   <rect width="1200" height="630" fill="#0D1B2D"/>
   <rect width="1200" height="6" fill="#C77A3A"/>
   <text x="60" y="80" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#C77A3A" letter-spacing="3">PEGASUS DREAMSCAPES CORP</text>
-  <text x="60" y="106" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#F6EFE4" letter-spacing="2.5">THE DEAL ARCHITECT</text>
+  <text x="60" y="106" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#F6EFE4" letter-spacing="2.5">DEAL STRATEGY</text>
   <line x1="60" y1="170" x2="200" y2="170" stroke="#C77A3A" stroke-width="2"/>
   <text x="60" y="200" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#C77A3A" letter-spacing="3">PROPERTY STRATEGY SNAPSHOT</text>
   <text x="60" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="700" fill="#F6EFE4">${esc(addr).slice(0, 42)}</text>

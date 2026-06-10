@@ -13,7 +13,7 @@ const NAV_SINGLE: NavLink[] = [
 const MOBILE_QUICK: NavLink[] = [
   { label: 'Strategy Lab', route: 'strategylab' },
   { label: 'MarketFlow', route: 'marketflow' },
-  { label: 'Work With Apollo', route: 'apollo' },
+  { label: 'Represent With Apollo', route: 'apollo' },
 ];
 
 function NavDropdown({ group, route, go }: { group: NavGroup; route: Route; go: Nav }) {
@@ -134,7 +134,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
           <BrandMark boxClassName="w-12 h-12" onDark={overHero || theme === 'dark'} />
           <div className="hidden sm:flex flex-col leading-none text-left">
             <span className="font-serif-display text-[22px] tracking-[0.06em] leading-none">Pegasus DreamScapes</span>
-            <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Architecture</span>
+            <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
           </div>
         </button>
 
