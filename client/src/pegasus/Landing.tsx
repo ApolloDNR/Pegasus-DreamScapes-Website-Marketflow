@@ -13,6 +13,7 @@ import {
 import { SavedPage } from './Saved';
 import { routeForUrl, urlFor } from './routes';
 import { useSEO } from '@/hooks/use-seo';
+import { useTheme } from '@/components/theme-provider';
 import { seoFor, seoNameFor } from '@shared/seo-routes';
 
 export function Landing() {
@@ -23,7 +24,11 @@ export function Landing() {
   // pass the bare page name.
   const seo = seoFor(location);
   useSEO({ title: seoNameFor(location), description: seo.description, image: seo.image, type: seo.type });
-  const [theme, setTheme] = useState<Theme>('light');
+  // Theme is driven by the app-wide ThemeProvider so the chrome stays in sync
+  // when navigating between the prototype shell and the standalone-shell pages
+  // (which also consume the same provider). No local theme state.
+  const { resolvedTheme, setTheme } = useTheme();
+  const theme: Theme = resolvedTheme === 'dark' ? 'dark' : 'light';
   const [scrolled, setScrolled] = useState(false);
   const [peggyOpen, setPeggyOpen] = useState(false);
   const [peggyRole, setPeggyRole] = useState<string | null>(null);
@@ -37,7 +42,7 @@ export function Landing() {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [setLocation]);
 
-  const toggleTheme = useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []);
+  const toggleTheme = useCallback(() => setTheme(theme === 'dark' ? 'light' : 'dark'), [setTheme, theme]);
   const openPeggy = useCallback((role?: string) => {
     if (role) setPeggyRole(role);
     setPeggyOpen(true);

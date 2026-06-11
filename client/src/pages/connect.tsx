@@ -15,7 +15,6 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import logoImage from "@/assets/brand/pegasus-emblem.png";
 import founderApolloPath from "@assets/image_1778735694150.png";
 
 // Empire Doctrine v1.0.1 + Phase 2 polish — Apollo's personal QR landing.
@@ -72,33 +71,13 @@ const ROUTES = [
   },
 ];
 
-function BrandStrip() {
-  return (
-    <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
-      <div className="max-w-5xl mx-auto px-6 lg:px-12 py-5 flex items-center gap-4">
-        <img src={logoImage} alt="Pegasus DreamScapes" className="h-12 w-auto" />
-        <div className="border-l border-border/50 pl-4">
-          <p className="font-display text-sm tracking-[0.2em] text-foreground">Pegasus DreamScapes</p>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mt-0.5">
-            Deal Strategy &amp; Real Estate Execution
-          </p>
-        </div>
-        <div className="ml-auto hidden sm:flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-muted-foreground/80 font-supporting font-semibold">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" aria-hidden="true" />
-          Live · East Bay
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function GreetingHero() {
   return (
     <section className="relative bg-[hsl(var(--charcoal))] text-cream overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/3 w-[60rem] h-[40rem] bg-gradient-radial from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
       </div>
-      <div className="relative max-w-5xl mx-auto px-6 lg:px-12 pt-16 lg:pt-20 pb-16 lg:pb-20">
+      <div className="relative max-w-5xl mx-auto px-6 lg:px-12 pt-28 lg:pt-32 pb-16 lg:pb-20">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Founder photo */}
           <motion.div
@@ -325,7 +304,6 @@ export default function ConnectPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <BrandStrip />
       <GreetingHero />
       <RouteGrid />
       <PeggyPresenceCard />

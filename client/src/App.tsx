@@ -25,7 +25,8 @@ import { initAnalytics } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { Landing as PegasusSite } from "@/pegasus/Landing";
-import { PEGASUS_URLS, isPegasusUrl } from "@/pegasus/routes";
+import { PEGASUS_URLS, isPegasusUrl, isStandaloneChromeUrl, isSolidNavUrl } from "@/pegasus/routes";
+import { PegasusStandaloneShell } from "@/pegasus/standalone-shell";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -362,7 +363,17 @@ function PageRouteTransition() {
 // double-framed; every other (functional) surface keeps the global chrome.
 function AppShell() {
   const [location] = useLocation();
+  // Three chrome modes:
+  //  - pegasus:    the prototype shell (<PegasusSite>) renders its own
+  //                nav/footer/Peggy, so no global chrome at all.
+  //  - standalone: a non-prototype public page that should still wear the
+  //                pegasus NavBar/Footer chrome (via PegasusStandaloneShell)
+  //                so the public site is visually seamless.
+  //  - legacy:     everything else (admin, auth, marketflow internals) keeps
+  //                the legacy global Navigation/Footer/Peggy dock.
   const pegasus = isPegasusUrl(location);
+  const standalone = !pegasus && isStandaloneChromeUrl(location);
+  const legacy = !pegasus && !standalone;
   return (
     <>
       <ScrollToTop />
@@ -371,13 +382,21 @@ function AppShell() {
       <AnonymousClaimWatcher />
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <a href="#main-content" className="skip-to-content">Skip to main content</a>
-        {!pegasus && <Navigation />}
-        <main id="main-content" className="flex-1" tabIndex={-1}>
-          <PageRouteTransition />
-        </main>
-        {!pegasus && <Footer />}
+        {legacy && <Navigation />}
+        {standalone ? (
+          <PegasusStandaloneShell solidNav={isSolidNavUrl(location)}>
+            <main id="main-content" className="flex-1" tabIndex={-1}>
+              <PageRouteTransition />
+            </main>
+          </PegasusStandaloneShell>
+        ) : (
+          <main id="main-content" className="flex-1" tabIndex={-1}>
+            <PageRouteTransition />
+          </main>
+        )}
+        {legacy && <Footer />}
       </div>
-      {!pegasus && <AuthGatedPeggyDock />}
+      {legacy && <AuthGatedPeggyDock />}
       <CookieConsent />
       <Toaster />
     </>

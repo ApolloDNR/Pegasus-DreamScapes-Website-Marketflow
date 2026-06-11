@@ -22,7 +22,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <section className="max-w-[820px] mx-auto px-6 lg:px-10 py-16 lg:py-24">
+      <section className="max-w-[820px] mx-auto px-6 lg:px-10 pt-24 pb-16 lg:pt-28 lg:pb-24">
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
           Pegasus Deal Blueprint
         </div>
