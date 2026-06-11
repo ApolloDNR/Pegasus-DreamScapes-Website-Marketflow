@@ -45,7 +45,7 @@ const HOME_JSONLD = {
       logo: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
       image: "https://pegasusdreamscapes.com/og/home.png",
       description: "Strategy-first real estate operating company serving the East Bay. Complex property, structured opportunity. Every property gets a path.",
-      slogan: "The Deal Architect",
+      slogan: "Deal Strategy & Real Estate Execution",
       email: "apollo@pegasusdreamscapes.com",
       telephone: "+1-925-744-8525",
       address: {
@@ -702,7 +702,7 @@ function StrategyLabTeaserSection() {
 function WhatWeDoSection() {
   const cards = [
     {
-      eyebrow: "Deal Architecture",
+      eyebrow: "Deal Strategy",
       title: "Ten lanes, one disciplined read.",
       desc: "Every property routes through the same review. The lane that fits the situation wins.",
       href: "/deal-architecture",

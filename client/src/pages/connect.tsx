@@ -80,7 +80,7 @@ function BrandStrip() {
         <div className="border-l border-border/50 pl-4">
           <p className="font-display text-sm tracking-[0.2em] text-foreground">Pegasus DreamScapes</p>
           <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mt-0.5">
-            The Deal Architect
+            Deal Strategy &amp; Real Estate Execution
           </p>
         </div>
         <div className="ml-auto hidden sm:flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-muted-foreground/80 font-supporting font-semibold">

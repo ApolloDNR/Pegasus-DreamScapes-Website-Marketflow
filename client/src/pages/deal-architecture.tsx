@@ -164,7 +164,7 @@ function useUtcClock(): string {
 
 export default function DealArchitecture() {
   useSEO({
-    title: "Deal Architecture",
+    title: "Deal Strategy",
     description:
       "Every complex property has a path. Direct acquisition, creative finance, JV, listing, buyer rep, BRRRR, ADU upside, value-add, or a routed referral. Pegasus reviews the situation and matches it to the lane that fits.",
     image: "/og/default.png",
@@ -226,7 +226,7 @@ export default function DealArchitecture() {
           <ScrollReveal>
             <div className="inline-flex items-center gap-3 border border-[#C77A3A]/30 bg-[#C77A3A]/5 px-4 py-1.5 rounded-full text-[#C77A3A] font-['Montserrat'] text-[10px] uppercase tracking-[0.2em] font-bold">
               <Radio size={12} />
-              The Deal Architect
+              Deal Strategy &amp; Real Estate Execution
             </div>
           </ScrollReveal>
 

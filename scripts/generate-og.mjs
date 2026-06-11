@@ -15,14 +15,14 @@ const COPPER = "#C77A3A";
 const cards = [
   {
     slug: "default",
-    kicker: "Pegasus DreamScapes · The Deal Architect",
+    kicker: "Pegasus DreamScapes · Deal Strategy & Real Estate Execution",
     h1: "Complex property.",
     h2: "Structured opportunity.",
     sub: "A strategy-first real estate operating company. We review the situation, then design the path.",
   },
   {
     slug: "home",
-    kicker: "Pegasus DreamScapes · The Deal Architect",
+    kicker: "Pegasus DreamScapes · Deal Strategy & Real Estate Execution",
     h1: "Complex property.",
     h2: "Structured opportunity.",
     sub: "Bring us the property. We'll show you the path.",
@@ -113,7 +113,7 @@ const cards = [
   },
   {
     slug: "deal-architecture",
-    kicker: "Deal Architecture · Pegasus DreamScapes",
+    kicker: "Deal Strategy · Pegasus DreamScapes",
     h1: "Property to plan.",
     h2: "Read once.",
     sub: "We read the situation and the numbers once, then design the route that fits the deal.",

@@ -592,11 +592,11 @@ export default function NelsonDrPage() {
           </section>
         </ScrollReveal>
 
-        {/* Deal Architecture diagram */}
+        {/* Deal Strategy diagram */}
         <ScrollReveal>
           <section>
             <h2 className="font-serif text-3xl font-semibold text-foreground mb-6">
-              The Deal Architecture
+              The Deal Strategy
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
               {PIPELINE.map((step, i) => (

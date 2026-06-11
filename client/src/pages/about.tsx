@@ -38,7 +38,7 @@ const ABOUT_JSONLD = {
       alternateName: "Pegasus DreamScapes",
       url: "https://pegasusdreamscapes.com",
       logo: "https://pegasusdreamscapes.com/brand/pegasus-mark.svg",
-      slogan: "The Deal Architect",
+      slogan: "Deal Strategy & Real Estate Execution",
       email: "apollo@pegasusdreamscapes.com",
       telephone: "+1-925-744-8525",
       address: {
@@ -178,7 +178,7 @@ function AboutHero() {
                   The shape of the company
                 </p>
                 <dl className="divide-y divide-cream/15">
-                  <ShapeRow label="Positioning" value="The Deal Architect" />
+                  <ShapeRow label="Positioning" value="Deal Strategy & Real Estate Execution" />
                   <ShapeRow label="Founder" value={'Paolo "Apollo" Duran'} />
                   <ShapeRow label="Entity" value="Pegasus DreamScapes Corp." />
                   <ShapeRow label="HQ" value="East Bay, California" />
