@@ -349,7 +349,7 @@ export default function SnapshotStatus() {
                 href="/deal-blueprint"
                 icon={FileText}
                 title="Get the Deal Blueprint"
-                desc="Commission a paid Pegasus Deal Blueprint, a deeper, structured analysis."
+                desc="Commission a Pegasus Deal Blueprint by review, a deeper, structured analysis."
                 testId="next-step-blueprint"
               />
               <NextStepCard

@@ -648,13 +648,13 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
   // read highlights the one the numbers point to. Front-end only.
   const LANES = [
     'Retail Listing', 'As-Is Acquisition Review', 'Value-Add Rehab', 'ADU / Development Screen',
-    'Partner / JV Review', 'Investor-Buyer Acquisition', 'MarketFlow Disposition', 'Paid Deal Blueprint',
+    'Partner / JV Review', 'Investor-Buyer Acquisition', 'MarketFlow Disposition', 'Deal Blueprint',
   ];
   const suggestedLane =
     margin >= 15 ? 'Value-Add Rehab'
     : margin >= 8 ? 'As-Is Acquisition Review'
     : margin >= 0 ? 'Retail Listing'
-    : 'Paid Deal Blueprint';
+    : 'Deal Blueprint';
   const ASSUMPTIONS = [
     { label: 'ARV', value: arv, set: setArv, step: 5000 },
     { label: 'Repair budget', value: rehab, set: setRehab, step: 2500 },
@@ -812,8 +812,8 @@ export function StrategyTierStrip() {
       cta: 'Request a Snapshot', action: () => goSubmit(), emphasis: true,
     },
     {
-      key: 'blueprint', name: 'Deal Blueprint', price: 'Paid Engagement',
-      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Engaged and scoped with you.',
+      key: 'blueprint', name: 'Deal Blueprint', price: 'By Review',
+      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Commissioned by engagement after a Strategy Review, not bought off the shelf.',
       cta: 'Start a Deal Blueprint', action: () => goSubmit('blueprint'), emphasis: false,
     },
   ];

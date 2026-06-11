@@ -80,7 +80,7 @@ The three Empire-Doctrine tripwires (`doctrine-anti-drift.test.ts`, `public-voic
 
 **More dropdown** (NAV_MORE, grouped): Learn (`/library`, `/faq`) · Network (`/vendor-network`, `/capital`) · Company (`/about`, `/projects`, `/connect`, `/contact`, `/peggy`) · Ecosystem (`/ecosystem`, footer-only) · Legal (`/disclosures`).
 
-**Other public surfaces**: `/submit` (canonical lead intake; `?intent=` prefill; honeypot `hp_company` + 3s anti-spam; `leadType: "submit"`) · `/projects/nelson-dr` (gated on real photos + founder-confirmed numbers) · `/marketflow/access` (request-access form) · `/marketflow/<role>` (role dashboards) · `/privacy` · `/terms` (both with "Draft · Pending Legal Review" banner).
+**Other public surfaces**: `/submit` (canonical lead intake; `?intent=` prefill; honeypot `hp_company` + 3s anti-spam; `leadType: "submit"`) · `/projects/nelson-dr` (gated on real photos + founder-confirmed numbers) · `/marketflow/access` (request-access form) · `/marketflow/<role>` (role dashboards) · `/privacy` · `/terms` (plain-language legal pages; the interim "Draft · Pending Legal Review" banner was removed for launch per Apollo-approved Task #230).
 
 **Retired routes** (`App.tsx#legacyRedirects`): `/sell`, `/submit-deal`, `/submit-property`, `/wholesale`, `/services`, `/resources`, `/buyers`, `/buy`, `/dreamspace`, `/partner`, `/capital-raising`, `/invest`, `/calculators`, `/education` — all redirect to the canonical surfaces. Calculator suite remains at `/strategy-lab/classic`.
 

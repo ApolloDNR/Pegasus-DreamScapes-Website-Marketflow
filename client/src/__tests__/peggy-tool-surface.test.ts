@@ -30,11 +30,15 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("/api/pdf/strategy-snapshot/by-id/:id");
   });
 
-  it("enumerates the three Deal Blueprint tiers with locked default prices", () => {
+  it("presents the Deal Blueprint as a by-review engagement, not a fixed-price product", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("/deal-blueprint");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("$497");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("$897");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("$1,497");
+    const lower = PEGGY_SYSTEM_PROMPT.toLowerCase();
+    expect(lower).toContain("by review");
+    expect(lower).toContain("do not quote a fixed price");
+    // The retired fixed public prices must never reappear in the prompt.
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("$497");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("$897");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("$1,497");
   });
 
   it("names Strategy Library, Vendor Network, MarketFlow, Sell, Invest, Contact routes", () => {

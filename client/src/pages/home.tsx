@@ -617,7 +617,7 @@ function StrategyLabTeaserSection() {
     { icon: Calculator, name: "Strategy Lab", tier: "Self-serve", desc: "Public calculator surface. Your preliminary read in minutes." },
     { icon: Compass, name: "Strategy Review", tier: "Conversation", desc: "Human-reviewed conversation off the Submit form." },
     { icon: FileText, name: "Strategy Snapshot", tier: "Written", desc: "Preliminary written read. Most Strategy Snapshots are reviewed within 5 business days." },
-    { icon: ClipboardCheck, name: "Deal Blueprint", tier: "Paid Document", desc: "Paid, full underwriting and path document." },
+    { icon: ClipboardCheck, name: "Deal Blueprint", tier: "By Review", desc: "By-review, full underwriting and path document." },
   ];
   return (
     <section
@@ -726,7 +726,7 @@ function WhatWeDoSection() {
     {
       eyebrow: "Strategy Lab",
       title: "Tools, conversations, written reads.",
-      desc: "Self-serve calculators, Strategy Review, Strategy Snapshot, and the paid Deal Blueprint. The product ladder.",
+      desc: "Self-serve calculators, Strategy Review, Strategy Snapshot, and the by-review Deal Blueprint. The product ladder.",
       href: "/strategy-lab",
       cta: "Open Strategy Lab",
       icon: ClipboardCheck,

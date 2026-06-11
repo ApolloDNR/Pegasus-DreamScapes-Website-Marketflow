@@ -22,7 +22,7 @@ import {
 // Empire Doctrine v1.0.2 + Phase 2 Copy Proposal — Surface 3.
 // Pegasus Deal Blueprint is tier 03 of the Strategy Lab funnel.
 // Free Quick Read (tier 01) and Full Path Analyzer (tier 02) live on
-// /strategy-lab. This page describes the paid, human-prepared memo
+// /strategy-lab. This page describes the by-review, human-prepared memo
 // that closes the loop when the free tiers aren't enough. Intake
 // routes through /submit?intent=blueprint which posts with
 // leadType: "blueprint_request" for separate triage.

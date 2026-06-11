@@ -17,7 +17,7 @@ export default function Terms() {
   useSEO({
     title: "Terms of Service",
     description:
-      "Terms of service for Pegasus DreamScapes Corp.: the public website, Strategy Review intake, and MarketFlow access. Draft pending legal review.",
+      "Terms of service for Pegasus DreamScapes Corp.: the public website, Strategy Review intake, and MarketFlow access.",
     image: "/og/default.png",
   });
 
@@ -44,9 +44,6 @@ export default function Terms() {
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
             By using the Pegasus DreamScapes website, you agree to the terms on this page. They cover what the site is, what it isn't, and how we work together.
           </p>
-          <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10">
-            <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">Draft · Pending Legal Review</span>
-          </div>
         </div>
       </section>
 
@@ -145,7 +142,7 @@ export default function Terms() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-border text-sm text-muted-foreground">
-            <p>Last updated: May 2026. These Terms are a draft pending qualified legal review.</p>
+            <p>Last updated: May 2026.</p>
           </div>
         </div>
       </section>

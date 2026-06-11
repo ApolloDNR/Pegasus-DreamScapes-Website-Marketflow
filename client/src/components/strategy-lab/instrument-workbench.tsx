@@ -1690,68 +1690,46 @@ function RightVerdict({
         </div>
       </div>
 
-      {/* Blueprint tiers list (preserved) */}
-      {blueprintTiers.length > 0 && (
+      {/* Deal Blueprint — by-review engagement (not a self-serve paid product).
+          Routes to /deal-blueprint, which explains the scoped-per-property
+          process. The priced order path in strategy-lab.tsx is left dormant. */}
+      <div
+        className="rounded-sm p-4"
+        style={{
+          border: `1px solid ${COPPER}`,
+          backgroundColor: "rgba(199,122,58,0.04)",
+        }}
+        data-testid="card-blueprint-upsell"
+      >
         <div
-          className="rounded-sm p-4"
-          style={{
-            border: `1px solid ${COPPER}`,
-            backgroundColor: "rgba(199,122,58,0.04)",
-          }}
-          data-testid="card-blueprint-upsell"
+          className="text-[10px] tracking-[0.22em] uppercase font-semibold mb-2"
+          style={{ fontFamily: FONT_SUP, color: NAVY }}
         >
-          <div
-            className="text-[10px] tracking-[0.22em] uppercase font-semibold mb-2"
-            style={{ fontFamily: FONT_SUP, color: NAVY }}
-          >
-            Pegasus Deal Blueprint
-          </div>
-          <p
-            className="text-xs leading-relaxed mb-3"
-            style={{ fontFamily: FONT_SERIF, color: NAVY }}
-          >
-            Want a written underwriting and structure memo for this property,
-            prepared by the Pegasus team? Pick a tier. We confirm scope and
-            start work.
-          </p>
-          <div className="space-y-2">
-            {blueprintTiers.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => onOpenBlueprintTier(t.key)}
-                className="w-full text-left border px-3 py-2.5 hover-elevate"
-                style={{ borderColor: RULE, backgroundColor: CREAM }}
-                data-testid={`btn-blueprint-tier-${t.key}`}
-              >
-                <div className="flex items-baseline justify-between gap-2 mb-1">
-                  <div
-                    className="text-xs font-semibold tracking-wide"
-                    style={{ fontFamily: FONT_SUP, color: NAVY }}
-                  >
-                    {t.title}
-                  </div>
-                  <div
-                    className="text-sm tabular-nums font-semibold"
-                    style={{ color: COPPER }}
-                  >
-                    ${(t.priceCents / 100).toLocaleString()}
-                  </div>
-                </div>
-                <div className="text-[11px]" style={{ color: MUTED }}>
-                  Turnaround: {t.turnaroundDays}
-                </div>
-                <p
-                  className="text-[11px] leading-snug mt-1"
-                  style={{ color: MUTED, fontFamily: FONT_SERIF }}
-                >
-                  {t.description}
-                </p>
-              </button>
-            ))}
-          </div>
+          Pegasus Deal Blueprint
         </div>
-      )}
+        <p
+          className="text-xs leading-relaxed mb-3"
+          style={{ fontFamily: FONT_SERIF, color: NAVY }}
+        >
+          Want a written underwriting and structure memo for this property,
+          prepared by the Pegasus team? It's a by-review engagement — scoped
+          and quoted per property after a Strategy Review, not bought off the
+          shelf.
+        </p>
+        <a
+          href="/deal-blueprint"
+          className="w-full inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-semibold tracking-wide uppercase hover-elevate"
+          style={{
+            borderColor: COPPER,
+            backgroundColor: CREAM,
+            color: NAVY,
+            fontFamily: FONT_SUP,
+          }}
+          data-testid="link-blueprint-by-review"
+        >
+          See how the Blueprint works
+        </a>
+      </div>
     </aside>
   );
 }

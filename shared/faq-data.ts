@@ -57,7 +57,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "What's the difference between a Strategy Snapshot and a Deal Blueprint?",
-        a: "Two depths of the same Strategy Lab tool. The Strategy Snapshot is preliminary and informational: a free preliminary read with no account required (lane fit, verdict, headline math), or a fuller saved snapshot with a Pegasus account (scenarios, risk register, sensitivity, sharable). The Deal Blueprint is a paid, human-prepared memo for a specific property: underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. Most submissions don't need a Blueprint. We tell you which fits before you commit.",
+        a: "Two depths of the same Strategy Lab tool. The Strategy Snapshot is preliminary and informational: a free preliminary read with no account required (lane fit, verdict, headline math), or a fuller saved snapshot with a Pegasus account (scenarios, risk register, sensitivity, sharable). The Deal Blueprint is a human-prepared memo for a specific property, commissioned by engagement after a review: underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. Most submissions don't need a Blueprint. We tell you which fits before you commit.",
       },
     ],
   },

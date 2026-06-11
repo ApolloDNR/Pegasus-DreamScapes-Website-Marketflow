@@ -1331,6 +1331,10 @@ export default function StrategyLabPage() {
     stripeEnabled: boolean;
   }>({
     queryKey: ["/api/strategy-lab/blueprint-tiers"],
+    // Dormant: the Deal Blueprint is now a by-review engagement (the Lab
+    // upsell routes to /deal-blueprint), so we no longer fetch or display
+    // fixed public prices. The endpoint + order path are kept reversible.
+    enabled: false,
   });
   const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
@@ -1637,7 +1641,7 @@ export default function StrategyLabPage() {
               </div>
               <div className="text-sm font-semibold text-foreground mb-0.5">Human-prepared memo</div>
               <div className="text-xs text-muted-foreground leading-snug">
-                Paid tier. Underwriting + structure + outreach scripts, written by the Pegasus team.
+                By review. Underwriting + structure + outreach scripts, written by the Pegasus team — scoped per property.
               </div>
             </div>
           </div>

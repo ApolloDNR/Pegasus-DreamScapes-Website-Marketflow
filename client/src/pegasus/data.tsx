@@ -204,11 +204,10 @@ export const PRODUCTS: {
   {
     step: '05',
     name: 'Deal Blueprint',
-    kind: 'Paid deliverable',
-    desc: 'The full deal strategy, documented end to end: scope, capital stack, construction plan, exit, and risk.',
+    kind: 'By-review engagement',
+    desc: 'For deals that earn a full plan after a Strategy Review: scope, capital stack, construction approach, exit, and risk — commissioned by engagement, not purchased off the shelf.',
     cta: 'Start a Review',
     action: 'contact',
-    paid: true,
   },
 ];
 

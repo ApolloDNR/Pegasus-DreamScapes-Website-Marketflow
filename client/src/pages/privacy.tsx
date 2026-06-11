@@ -18,7 +18,7 @@ export default function Privacy() {
   useSEO({
     title: "Privacy Policy",
     description:
-      "Privacy policy for Pegasus DreamScapes Corp. What we collect, how we use it, and how to reach us. Draft pending legal review.",
+      "Privacy policy for Pegasus DreamScapes Corp. What we collect, how we use it, and how to reach us.",
     image: "/og/default.png",
   });
 
@@ -45,9 +45,6 @@ export default function Privacy() {
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
             Pegasus DreamScapes Corp. respects your privacy. This page explains what we collect when you use the site, why we collect it, and how to reach us if you want it changed or removed.
           </p>
-          <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10">
-            <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">Draft · Pending Legal Review</span>
-          </div>
         </div>
       </section>
 
@@ -152,7 +149,7 @@ export default function Privacy() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-border text-sm text-muted-foreground">
-            <p>Last updated: May 2026. This policy is a draft pending qualified legal review.</p>
+            <p>Last updated: May 2026.</p>
           </div>
         </div>
       </section>

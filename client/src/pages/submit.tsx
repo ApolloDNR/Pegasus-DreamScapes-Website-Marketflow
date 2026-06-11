@@ -61,7 +61,7 @@ const INTENT_LABELS: Record<SubmitFormValues["intent"], string> = {
   adu: "ADU or value-add scope",
   "deal-jv": "Wholesale deal or JV opportunity",
   explore: "Exploring options",
-  blueprint: "Request a Deal Blueprint (paid)",
+  blueprint: "Request a Deal Blueprint (by review)",
 };
 
 function useInitialIntent(): SubmitFormValues["intent"] {
