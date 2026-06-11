@@ -249,6 +249,7 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
       <PageHero eyebrow="Pillar 01 · Investments"
         title={<>We acquire what <span className="italic text-[var(--accent-bright)]">others overlook.</span></>}
         image={IMG('pegasus-after.png')}
+        scrimTop
         lead="Distressed, dated, off-market, and overlooked property. We buy it right, reposition it with discipline, and exit on a plan written before we close." />
       <PillarSection p={INVESTMENTS} go={go} />
       <Qualifier forYou={CATEGORIES.capital.forYou} notFit={CATEGORIES.capital.notFit} />
@@ -358,6 +359,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
       <PageHero eyebrow="Systems · Strategy Lab"
         title={<>Model it. Read it. <span className="italic text-[var(--accent-bright)]">Get it in writing.</span></>}
         image={IMG('pegasus-living.png')}
+        scrimTop
         lead="A real underwriting console, free to start. Enter a property and the Lab scores the fit, models the spread with carry and exit costs in real time, and hands you a written read when you want one. Built for investors, agents, and owners sizing up a deal." />
       <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
         copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
@@ -385,6 +387,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
     <>
       <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
         image={IMG('pegasus-casestudy.png')}
+        scrimTop
         lead="A private, vetted network — not an open marketplace. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and a real person reviews every fit." />
       <MarketFlowBlock go={go} enter={{ label: 'Request access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">

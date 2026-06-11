@@ -565,6 +565,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Buyers',
     title: <>Buy the finished<br />product, or the deal</>,
     image: 'pegasus-interior-light.png',
+    heroScrimTop: true,
     layout: 'grid',
     pointsLabel: 'How you buy',
     lead: 'Buy with an investor-minded agent in your corner. When agency representation is the right lane, Apollo represents buyers through Keller Williams Realty East Bay, bringing buy-box discipline, diligence, and offer strategy to every purchase, whether it is a finished home or your next value-add.',
