@@ -33,16 +33,14 @@ export type StartAction = 'contact' | 'strategylab' | 'peggy';
 export function PageHero({ eyebrow, title, image, lead, focus = 'center' }:
   { eyebrow: string; title: React.ReactNode; image: string; lead: string; focus?: 'center' | 'top' }) {
   return (
-    <section className="relative h-[68vh] min-h-[520px] max-h-[760px] w-full overflow-hidden">
+    <section className="relative flex flex-col justify-end min-h-[clamp(520px,68vh,760px)] w-full overflow-hidden">
       <img src={image} alt="" aria-hidden="true" className={`ken-burns absolute inset-0 w-full h-full object-cover ${focus === 'top' ? 'object-top' : 'object-center'}`} />
       <div className="absolute inset-0 hero-vignette pointer-events-none" />
       <div className="absolute inset-0 hero-scrim-bottom" />
-      <div className="absolute inset-x-0 bottom-0">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
-          <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/90 text-on-photo mb-6 reveal">{eyebrow}</div>
-          <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[-0.01em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] text-on-photo reveal delay-100">{title}</h1>
-          <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 text-on-photo reveal delay-200">{lead}</p>
-        </div>
+      <div className="relative w-full max-w-[1320px] mx-auto px-6 lg:px-12 pt-32 lg:pt-36 pb-16 lg:pb-20 text-[var(--cream)]">
+        <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/90 text-on-photo mb-6 reveal">{eyebrow}</div>
+        <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[-0.01em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] text-on-photo reveal delay-100">{title}</h1>
+        <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 text-on-photo reveal delay-200">{lead}</p>
       </div>
     </section>
   );
