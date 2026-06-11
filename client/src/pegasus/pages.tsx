@@ -206,6 +206,7 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
       <PageHero eyebrow="What we do · The engine"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">Strategy.</span></>}
         image={IMG('pegasus-aerial.png')}
+        scrimTop
         lead="Where every Pegasus relationship starts. We read the property and the numbers once, properly, then show you the route forward: the lane that genuinely fits the deal and the person in front of it." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
@@ -265,7 +266,7 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
 const BUILD_PROCESS = [
   { n: '01', icon: ClipboardList, t: 'Scope & budget', d: 'Every project opens with a real budget and a draw schedule, agreed before the first hammer swings.' },
   { n: '02', icon: Layers, t: 'The right bench', d: 'Vetted GCs and subcontractors are matched to the job and scaled to the project, never limited to one crew.' },
-  { n: '03', icon: Hammer, t: 'Build to standard', d: 'One definition of done, applied the same way to every renovation and ground-up build.' },
+  { n: '03', icon: Hammer, t: 'Build to standard', d: 'A written finish spec and punch list every job is held to, from a cosmetic refresh to a ground-up build.' },
   { n: '04', icon: BadgeCheck, t: 'Deliver, finished', d: 'Walked and handed over complete, on a real timeline, not left half-open.' },
 ];
 

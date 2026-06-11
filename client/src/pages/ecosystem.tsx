@@ -6,10 +6,9 @@ import { CardSurface } from "@/components/ui/card-primitives";
 import { StatusBadge, type StatusBadgeKind } from "@/components/status-badge";
 import { ArrowRight, Building2, Network, Hammer, Briefcase, Sparkles } from "lucide-react";
 
-// Empire Doctrine Amendment 2 §C / §G — /ecosystem is the footer-only
-// Audience-B release valve. Single page with four product cards, each
-// carrying a status badge from the locked vocabulary. No CTA except
-// "Request to learn more" → /connect.
+// /ecosystem is the footer-only Audience-B release valve: a single page with
+// four product cards, each carrying an honest status badge. Closes with one
+// CTA — "Send a note" → /connect.
 const PRODUCTS: Array<{
   name: string;
   icon: typeof Building2;
@@ -85,7 +84,7 @@ export default function Ecosystem() {
               </span>
             </h1>
             <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
-              Pegasus DreamScapes is a strategy-first real estate operating company. The ecosystem below is the operating layer that runs the company. Each surface carries its real status: live, private beta, in training, internal, or in development. Nothing here overclaims.
+              Pegasus DreamScapes is a strategy-first real estate operating company. The ecosystem below is the operating layer that runs the company. Each surface carries its real status: live, private beta, in training, internal, or in development.
             </p>
           </ScrollReveal>
         </div>
@@ -151,7 +150,7 @@ export default function Ecosystem() {
               The door for ecosystem participants
             </p>
             <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-7 leading-tight">
-              Want to learn more?
+              Start the conversation.
             </h2>
             <p className="text-base text-cream/80 leading-relaxed max-w-xl mx-auto mb-9">
               The ecosystem is invite-led. If something here speaks to what you're building or how you'd want to participate, send a note and we'll start the conversation.
@@ -162,7 +161,7 @@ export default function Ecosystem() {
                 className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white"
                 data-testid="button-ecosystem-connect"
               >
-                Request to learn more
+                Send a note
                 <ArrowRight className="ml-3 w-4 h-4" />
               </Button>
             </Link>

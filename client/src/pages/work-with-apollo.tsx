@@ -326,7 +326,7 @@ export default function WorkWithApollo() {
               </p>
             </div>
             <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-5">
-              Four steps. Same standard, every time.
+              Four steps, from first read to close.
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
               No urgency tactics, no pushed offers. The path is the path.

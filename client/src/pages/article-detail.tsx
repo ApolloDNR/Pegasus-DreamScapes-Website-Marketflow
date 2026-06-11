@@ -293,9 +293,9 @@ export default function ArticleDetail() {
               <CardContent className="p-6 sm:p-8">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Ready to Get Started?</h3>
+                    <h3 className="text-xl font-semibold mb-2">Run the numbers on a real deal.</h3>
                     <p className="text-muted-foreground">
-                      Put this knowledge into action with our deal calculators or reach out to discuss opportunities.
+                      Take what you just read into the Strategy Lab, or reach out to talk through a specific property.
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

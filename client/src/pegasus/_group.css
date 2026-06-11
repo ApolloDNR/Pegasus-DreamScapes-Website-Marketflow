@@ -535,7 +535,7 @@ body.pg-menu-open { overflow: hidden; }
 
 /* Soft scrims for nav + hero legibility */
 .hero-scrim-top {
-  background: linear-gradient(to bottom, rgba(13, 27, 44, 0.62) 0%, rgba(13, 27, 44, 0) 100%);
+  background: linear-gradient(to bottom, rgba(13, 27, 44, 0.74) 0%, rgba(13, 27, 44, 0.34) 38%, rgba(13, 27, 44, 0) 100%);
 }
 .hero-scrim-bottom {
   background: linear-gradient(to top, rgba(13, 27, 44, 0.96) 0%, rgba(13, 27, 44, 0.62) 42%, rgba(13, 27, 44, 0.26) 70%, rgba(13, 27, 44, 0.08) 88%, rgba(13, 27, 44, 0) 100%);
