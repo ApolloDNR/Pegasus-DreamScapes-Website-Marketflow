@@ -235,10 +235,10 @@ export default function DealArchitecture() {
               className="text-5xl sm:text-6xl md:text-7xl font-['Cinzel'] leading-[1.1] text-transparent bg-clip-text bg-gradient-to-b from-[#F6EFE4] to-[#F6EFE4]/60 pb-2 mt-6"
               data-testid="text-deal-architecture-headline"
             >
-              Every property gets a path.
+              Deal Strategy
               <br />
               <span className="italic font-['Cormorant_Garamond'] text-[#F6EFE4]/80">
-                Not every property gets an offer.
+                Every property gets a path. Not every property gets an offer.
               </span>
             </h1>
           </ScrollReveal>
