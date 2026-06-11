@@ -750,6 +750,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'You stay informed', d: 'We keep you in the loop through the process, not just at the end.' },
     ],
     rich: ['faq'],
+    heroScrimTop: true,
     quote: 'A referral is a piece of your professional reputation. We treat it that way.',
     forYou: [
       'You are an agent, attorney, advisor, contractor, or trusted professional',

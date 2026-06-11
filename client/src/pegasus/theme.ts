@@ -84,5 +84,6 @@ export type Category = {
   secondary?: { label: string; route: Route };
   faq?: FaqItem[];
   faqAnchor?: string;
+  heroScrimTop?: boolean;
   form: FormCfg;
 };

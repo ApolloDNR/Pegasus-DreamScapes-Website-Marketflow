@@ -30,12 +30,13 @@ export type StartAction = 'contact' | 'strategylab' | 'peggy';
 /* ----------------------------------------------------------------
    Page hero
 ---------------------------------------------------------------- */
-export function PageHero({ eyebrow, title, image, lead, focus = 'center' }:
-  { eyebrow: string; title: React.ReactNode; image: string; lead: string; focus?: 'center' | 'top' }) {
+export function PageHero({ eyebrow, title, image, lead, focus = 'center', scrimTop = false }:
+  { eyebrow: string; title: React.ReactNode; image: string; lead: string; focus?: 'center' | 'top'; scrimTop?: boolean }) {
   return (
     <section className="relative flex flex-col justify-end min-h-[clamp(520px,68vh,760px)] w-full overflow-hidden">
       <img src={image} alt="" aria-hidden="true" className={`ken-burns absolute inset-0 w-full h-full object-cover ${focus === 'top' ? 'object-top' : 'object-center'}`} />
       <div className="absolute inset-0 hero-vignette pointer-events-none" />
+      {scrimTop && <div className="absolute inset-x-0 top-0 h-1/2 hero-scrim-top pointer-events-none" />}
       <div className="absolute inset-0 hero-scrim-bottom" />
       <div className="relative w-full max-w-[1320px] mx-auto px-6 lg:px-12 pt-32 lg:pt-36 pb-16 lg:pb-20 text-[var(--cream)]">
         <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/90 text-on-photo mb-6 reveal">{eyebrow}</div>
