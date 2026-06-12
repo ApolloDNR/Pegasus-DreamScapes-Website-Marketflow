@@ -25,7 +25,7 @@ import { initAnalytics } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { Landing as PegasusSite } from "@/pegasus/Landing";
-import { PEGASUS_URLS, isPegasusUrl, isStandaloneChromeUrl, isSolidNavUrl } from "@/pegasus/routes";
+import { PEGASUS_URLS, isPegasusUrl, isStandaloneChromeUrl, isSolidNavUrl, isNotFoundUrl } from "@/pegasus/routes";
 import { PegasusStandaloneShell } from "@/pegasus/standalone-shell";
 
 function ScrollToTop() {
@@ -372,7 +372,11 @@ function AppShell() {
   //  - legacy:     everything else (admin, auth, marketflow internals) keeps
   //                the legacy global Navigation/Footer/Peggy dock.
   const pegasus = isPegasusUrl(location);
-  const standalone = !pegasus && isStandaloneChromeUrl(location);
+  // The catch-all NotFound (404) is a public surface, so it wears the unified
+  // premium chrome (via PegasusStandaloneShell) like the rest of the public
+  // site — never the legacy global Navigation/Footer.
+  const standalone =
+    !pegasus && (isStandaloneChromeUrl(location) || isNotFoundUrl(location));
   const legacy = !pegasus && !standalone;
   return (
     <>

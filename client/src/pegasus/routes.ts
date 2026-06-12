@@ -107,3 +107,38 @@ export function isSolidNavUrl(path: string): boolean {
   if (STANDALONE_SOLID_NAV.includes(p)) return true;
   return STANDALONE_SOLID_PREFIX.some((prefix) => p.startsWith(prefix));
 }
+
+// Top-level URL segments that resolve to a real route in <Router> (App.tsx) —
+// pegasus pages, standalone pages, functional/auth surfaces, and legacy
+// redirects. Any path whose first segment is NOT in this set falls through to
+// the catch-all NotFound (404) page. We use that to give the public 404 the
+// unified premium chrome (dark navy hero → transparent nav) instead of the
+// legacy global Navigation/Footer. Keep this in sync with the route table in
+// App.tsx when adding/removing a top-level public route.
+const KNOWN_TOP_SEGMENTS: Set<string> = new Set([
+  // Pegasus prototype-owned public pages
+  'sellers', 'buyers', 'dealfinders', 'capital', 'operators', 'referral',
+  'deal-architecture', 'investments', 'development', 'strategy-lab',
+  'marketflow', 'work-with-apollo', 'ecosystem', 'about', 'contact', 'peggy',
+  'saved',
+  // Standalone-chrome + functional public surfaces
+  'submit', 'connect', 'projects', 'library', 'strategy-library',
+  'vendor-network', 'faq', 'privacy', 'terms', 'disclosures', 'deal-blueprint',
+  // Auth / app-internal surfaces (keep legacy chrome on their own 404s)
+  'login', 'signup', 'admin', 'snapshot', 'dashboard', 'dealflow',
+  'offer-studio', 'profile',
+  // Legacy redirect entry points (App.tsx legacyRedirects)
+  'sell', 'submit-deal', 'submit-property', 'services', 'resources', 'buy',
+  'partner', 'invest', 'calculators', 'education', 'wholesale', 'hq', 'portal',
+  'community', 'marketplace',
+]);
+
+// True when a path does not match any known top-level route and will therefore
+// render the catch-all NotFound (404) page. The home path ('/') is always a
+// real route, never a 404.
+export function isNotFoundUrl(path: string): boolean {
+  const p = cleanPath(path);
+  if (p === '/' || p === '') return false;
+  const seg = p.split('/').filter(Boolean)[0] ?? '';
+  return !KNOWN_TOP_SEGMENTS.has(seg);
+}
