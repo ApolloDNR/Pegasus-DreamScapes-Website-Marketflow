@@ -59,7 +59,9 @@ The bar for every public page: it should read like a senior studio built it for 
 
 ## Anti-drift lock
 
-The three Empire-Doctrine tripwires (`doctrine-anti-drift.test.ts`, `public-voice.test.tsx`, `nav-parity.test.tsx`) have been **retired** along with the doctrine they enforced. The prototype under `client/src/pegasus/` is now the visual/voice source of truth; there is no automated brand lock against it.
+The three Empire-Doctrine tripwires (`doctrine-anti-drift.test.ts`, `public-voice.test.tsx`, `nav-parity.test.tsx`) have been **retired** along with the doctrine they enforced. The prototype under `client/src/pegasus/` is now the visual/voice source of truth; there is no automated *positive* brand lock against it (no required-wording check).
+
+There **is** a single automated **negative** copy guard: `client/src/__tests__/public-copy-banned-phrases.test.ts` scans the Pegasus prototype copy sources (`client/src/pegasus/*.tsx`, `*.ts`, comments stripped) and fails if any banned filler / AI-tell / compliance-risk phrase appears, reporting the exact phrase + file:line. The banned-phrase list lives in one place — `client/src/__tests__/banned-phrases.ts` — and is meant to be extended whenever AI-sounding filler slips in (see the header in that file for how). This is NOT a return to the retired positive brand-lock; it only asserts certain phrases must NOT appear. Seed lists came from the "Forbidden filler phrases" + "Voice / copy" compliance sections below.
 
 ## Brand essentials
 
