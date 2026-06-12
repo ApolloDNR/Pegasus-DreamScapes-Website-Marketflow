@@ -218,7 +218,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Condition", "Good");
     setSelect("Occupancy", "Vacant");
 
-    expect(laneButton().textContent).toContain("Explore seller representation");
+    expect(laneButton().textContent).toContain("See seller representation");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("apollo");
   });
@@ -240,7 +240,7 @@ describe("StrategyConsole — lane routing", () => {
 
     setSelect("Your role", "Capital Partner");
 
-    expect(laneButton().textContent).toContain("Explore the Capital lane");
+    expect(laneButton().textContent).toContain("See the Capital lane");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("capital");
   });
@@ -251,7 +251,7 @@ describe("StrategyConsole — lane routing", () => {
 
     setSelect("Your role", "Agent / Referral");
 
-    expect(laneButton().textContent).toContain("Explore partnering with Apollo");
+    expect(laneButton().textContent).toContain("Partner with Apollo");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("apollo");
   });
@@ -263,7 +263,7 @@ describe("StrategyConsole — lane routing", () => {
     // Buyer / Investor is the default role.
     setSelect("Your role", "Buyer / Investor");
 
-    expect(laneButton().textContent).toContain("Explore the Buyers lane");
+    expect(laneButton().textContent).toContain("See the Buyers lane");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("buyers");
   });

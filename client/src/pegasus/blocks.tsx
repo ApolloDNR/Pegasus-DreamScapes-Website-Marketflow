@@ -163,7 +163,7 @@ export function ThreePillarsBlock({ go }: { go: Nav }) {
       <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">FIRM</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="What we do" title="Acquisition, development, and the tools behind them."
-          copy="Investments find and reposition the asset. Development builds it. Systems carry the same read into the next deal." />
+          copy="Investments find and reposition the asset. Development builds it. Systems carry that underwriting into the next deal." />
         <div className="grid lg:grid-cols-3 gap-6">
           {PILLARS3.map((p, i) => (
             <div key={p.eyebrow} className="surface-card reveal flex flex-col overflow-hidden" style={{ animationDelay: `${i * 90}ms` }}>
@@ -436,8 +436,8 @@ export function ProductLadderBlock({ go, openPeggy }: { go: Nav; openPeggy: () =
   return (
     <section className="relative py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)] overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="The product ladder" title="How far you go is up to you."
-          copy="Five steps, increasing depth and commitment. Each one stands on its own, so go as far as the deal deserves." />
+        <SectionHead eyebrow="The product ladder" title="From a quick model to a full plan."
+          copy="Five steps, from a free model you run yourself to a full written plan. Each one stands on its own, so you go only as far as the deal needs." />
         <div className="border-t border-[var(--line)]">
           {PRODUCTS.map((p, i) => (
             <div key={p.name} className="ladder-rung reveal grid md:grid-cols-12 gap-4 md:gap-8 items-center py-7 border-b border-[var(--line)]" style={{ animationDelay: `${i * 80}ms` }}>

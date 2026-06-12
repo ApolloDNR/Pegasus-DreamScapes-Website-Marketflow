@@ -95,7 +95,7 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 01',
     tag: 'Investments',
     title: <>We acquire and<br />reposition real assets</>,
-    lead: 'Our acquisitions team are deal strategists: we source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal toward a win-win. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
+    lead: 'We are deal strategists first. We source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal so it works for both sides. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
     points: [
       'Sourcing, negotiation, and deal structure handled by one team',
       'Underwriting on real numbers, not hope',
@@ -129,7 +129,7 @@ export const PILLARS3: Pillar[] = [
     points: [
       'Tools that underwrite and route deals',
       'A marketplace that moves deals and capital',
-      'The same underwriting at every step',
+      'Consistent underwriting from first read to exit',
     ],
     img: 'pegasus-architecture.png',
     imgAlt: 'A precise scale model of a modern home on a studio table',
@@ -173,7 +173,7 @@ export const PRODUCTS: {
     step: '01',
     name: 'Strategy Lab',
     kind: 'Self-serve tool',
-    desc: 'Model any deal yourself. Plug in the numbers and see how it pencils.',
+    desc: 'A free underwriting console you run yourself. Enter the property and the numbers and it returns a read in real time.',
     cta: 'Open the Lab',
     action: 'strategylab',
   },
@@ -326,10 +326,10 @@ export const APOLLO = {
   legal: 'Paolo Duran',
   role: 'Founder & Deal Strategist',
   license: 'Keller Williams East Bay · DRE #02333658',
-  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; the build team — former GCs, project managers, and trades — delivers the result. The same underwriting runs the whole arc, from the first read to the final walkthrough.',
+  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He is a licensed real estate salesperson through Keller Williams Realty East Bay (DRE #02333658) and the strategist on every deal: he reads the situation, underwrites the numbers, and writes the plan. The build work is handled by licensed contractors brought on per project, not an in-house crew. The same underwriting runs from the first call to the final walkthrough.',
   points: [
     { t: 'The strategist', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
-    { t: 'The development team', d: 'Former GCs, project managers, and trades turn the plan into a delivered product.' },
+    { t: 'The build team', d: 'Licensed general contractors and trades, brought on per project, turn the plan into a finished home.' },
     { t: 'The discipline', d: 'Every deal runs the same underwriting and the same build standard, from first call to final walkthrough.' },
   ],
 };
@@ -343,7 +343,7 @@ export const APOLLO = {
 export const NELSON = {
   name: 'Nelson Drive',
   location: 'Richmond / El Sobrante Area, CA',
-  blurb: 'A tired single-family home, acquired off-market, fully repositioned, and delivered move-in ready.',
+  blurb: 'A dated single-family home, acquired off-market, fully renovated, and delivered move-in ready.',
   rows: [
     { k: 'Acquired', v: '≈ $600K', note: 'Off-market, below comparable value' },
     { k: 'Renovation', v: '$100K', note: 'Managed by the build team' },
@@ -527,7 +527,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'List With Apollo', d: 'Clean and ready to market? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing.' },
       { t: 'Structure a complex situation', d: 'Distressed, inherited, occupied, or stalled? Send it for a review. We may evaluate it as an acquisition, a reposition, a JV, a stabilization plan, a listing, or a referral, subject to underwriting.' },
       { t: 'We handle the work', d: 'When selling as-is is the right lane, we can handle the cleanout, the prep, and the repairs so you do not have to.' },
-      { t: 'A close that holds', d: 'Defined terms and a timeline that does not move on you at the last minute. Any offer is subject to review and a written agreement.' },
+      { t: 'Clear terms, a real timeline', d: 'Defined terms and a closing timeline that does not move on you at the last minute. Any offer is subject to review and a written agreement.' },
     ],
     rich: ['proof', 'faq'],
     quote: 'The plan comes from what you actually need, not a formula and not a pitch.',

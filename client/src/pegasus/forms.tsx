@@ -500,14 +500,14 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
     role === 'Owner / Seller'
       ? (cond === 'Distressed' || cond === 'Poor' || occ === 'Probate / estate'
         ? { label: 'Send for a property review', route: 'sellers' }
-        : { label: 'Explore seller representation', route: 'apollo' })
+        : { label: 'See seller representation', route: 'apollo' })
       : role === 'Deal Finder / Wholesaler'
       ? { label: 'Submit the deal to Deal Finders', route: 'dealfinders' }
       : role === 'Capital Partner'
-      ? { label: 'Explore the Capital lane', route: 'capital' }
+      ? { label: 'See the Capital lane', route: 'capital' }
       : role === 'Agent / Referral'
-      ? { label: 'Explore partnering with Apollo', route: 'apollo' }
-      : { label: 'Explore the Buyers lane', route: 'buyers' };
+      ? { label: 'Partner with Apollo', route: 'apollo' }
+      : { label: 'See the Buyers lane', route: 'buyers' };
 
   const costCards = [
     { label: 'Estimated all-in basis', value: usd0(hardCost) },
