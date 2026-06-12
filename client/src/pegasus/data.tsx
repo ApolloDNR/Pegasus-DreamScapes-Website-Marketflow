@@ -110,10 +110,10 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 02',
     tag: 'Development',
     title: <>We build the<br />finished product</>,
-    lead: 'Our development team came up in the trades: former general contractors, project managers, and crews who have run real jobsites. They scope every renovation and ground-up build to a real budget and draw schedule, work hand in hand with a deep bench of GCs and subcontractors, and deliver on time with the punch list closed.',
+    lead: 'The people Apollo builds with came up in the trades: former general contractors, project managers, and crews who have run real jobsites. Every renovation and ground-up build is scoped to a real budget and draw schedule, executed hand in hand with a vetted bench of GCs and subcontractors, and delivered on time with the punch list closed.',
     points: [
       'Renovation and ground-up development',
-      'Led by our development team, built with a vetted bench of GCs and subs',
+      'Led by experienced GCs and project managers, built with a vetted bench of subs',
       'A delivered product, not a project left open',
     ],
     img: 'pegasus-craft-blueprint.png',
@@ -124,8 +124,8 @@ export const PILLARS3: Pillar[] = [
   {
     eyebrow: 'Pillar 03',
     tag: 'Systems',
-    title: <>We turn it into<br />a repeatable system</>,
-    lead: 'Strategy Lab, PeggyAI, and MarketFlow turn one good deal into a process anyone in the network can plug into: sellers, finders, capital, and operators alike.',
+    title: <>The tools that carry<br />the read forward</>,
+    lead: 'Strategy Lab models the numbers before you commit. PeggyAI reads the deal and routes it. MarketFlow connects sellers, finders, capital partners, and operators to the same reviewed inventory.',
     points: [
       'Tools that underwrite and route deals',
       'A marketplace that moves deals and capital',
@@ -279,7 +279,7 @@ export const DOCTRINE: { t: string; d: string }[] = [
   { t: 'Read the situation, not just the spreadsheet', d: 'Behind every property is a person with a deadline, a constraint, or a decision. We solve for both.' },
   { t: 'Underwrite on real numbers', d: 'All-in cost, after-repair value, and the spread. If it does not pencil, we say so.' },
   { t: 'Write the exit before we enter', d: 'Sell, hold, refinance, or trade. The plan is decided before capital moves, not after.' },
-  { t: 'Deliver a finished product', d: 'Our development team finishes the work to one definition of done, on a real schedule, not left half-open.' },
+  { t: 'Deliver a finished product', d: 'The build team finishes the work to one definition of done, on a real schedule, not left half-open.' },
 ];
 
 /* ================================================================
@@ -298,7 +298,7 @@ export const DEV_TEAM: { t: string; d: string }[] = [
 export const FAQ_HOME: FaqItem[] = [
   {
     q: 'What does Pegasus actually do?',
-    a: 'Three things that feed each other: we invest in and reposition real property, our development team builds and renovates it to a finished, move-in-ready result, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that turn each deal into a repeatable process.',
+    a: 'Three things that feed each other: we invest in and reposition real property, Apollo and the build team renovate it to a finished, move-in-ready result, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that run every deal through the same underwriting.',
   },
   {
     q: 'I just have one property. Is that too small?',
@@ -326,7 +326,7 @@ export const APOLLO = {
   legal: 'Paolo Duran',
   role: 'Founder & Deal Strategist',
   license: 'Keller Williams East Bay · DRE #02333658',
-  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; our development team builds the result. The same underwriting runs the whole arc, from the first read to the final walkthrough.',
+  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He reads the deal and underwrites the numbers; the build team — former GCs, project managers, and trades — delivers the result. The same underwriting runs the whole arc, from the first read to the final walkthrough.',
   points: [
     { t: 'The strategist', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
     { t: 'The development team', d: 'Former GCs, project managers, and trades turn the plan into a delivered product.' },
@@ -346,7 +346,7 @@ export const NELSON = {
   blurb: 'A tired single-family home, acquired off-market, fully repositioned, and delivered move-in ready.',
   rows: [
     { k: 'Acquired', v: '≈ $600K', note: 'Off-market, below comparable value' },
-    { k: 'Renovation', v: '$100K', note: 'Managed by our development team' },
+    { k: 'Renovation', v: '$100K', note: 'Managed by the build team' },
     { k: 'Delivered', v: '≈ $840K', note: 'Renovated and delivered move-in ready' },
     { k: 'Settled', v: 'September 2025', note: 'Closed and delivered' },
   ],
@@ -491,8 +491,8 @@ export const PEGGY_COMPLIANCE = 'Peggy is an AI intake assistant. She does not a
    AUDIENCE CATEGORIES (six lanes)
    ================================================================ */
 const sellerSplits: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean } = {
-  heading: 'Two clear lanes',
-  copy: 'Ready to list, or facing something complicated? Each lane has its own path. We will tell you which one fits before you commit to anything.',
+  heading: 'List it, or send it for review',
+  copy: 'Ready to list, or facing something complicated? Each path is different. We will tell you which one fits before you commit to anything.',
   founderPhoto: true,
   peggyHint: true,
   paths: [
@@ -522,15 +522,15 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     heroScrimTop: true,
     layout: 'timeline',
     pointsLabel: 'What you get',
-    lead: 'Two clear lanes. If your property is clean and ready, Apollo represents you through Keller Williams Realty East Bay. If it is distressed, inherited, occupied, or up against a deadline, send it for a property review and we will lay out the real options, with no guaranteed offer until the numbers and the agreement are real.',
+    lead: 'If your property is clean and ready, Apollo represents you through Keller Williams Realty East Bay. If it is distressed, inherited, occupied, or up against a deadline, send it for a property review and we will lay out the real options, with no guaranteed offer until the numbers and the agreement are real.',
     points: [
       { t: 'List With Apollo', d: 'Clean and ready to market? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing.' },
       { t: 'Structure a complex situation', d: 'Distressed, inherited, occupied, or stalled? Send it for a review. We may evaluate it as an acquisition, a reposition, a JV, a stabilization plan, a listing, or a referral, subject to underwriting.' },
-      { t: 'Condition is our problem', d: 'When selling as-is is the right lane, we can handle the work, the cleanout, and the prep instead of you.' },
+      { t: 'We handle the work', d: 'When selling as-is is the right lane, we can handle the cleanout, the prep, and the repairs so you do not have to.' },
       { t: 'A close that holds', d: 'Defined terms and a timeline that does not move on you at the last minute. Any offer is subject to review and a written agreement.' },
     ],
     rich: ['proof', 'faq'],
-    quote: 'Before we talk price, we read your situation. The plan comes from what you actually need.',
+    quote: 'The plan comes from what you actually need, not a formula and not a pitch.',
     forYou: [
       'You own a clean, ready property and want an investor-minded agent to list it',
       'You own something distressed, inherited, occupied, or stalled and want a straight read on your options',
@@ -709,7 +709,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'A standard to hit', d: 'You know exactly what "done" looks like before you start.' },
     ],
     rich: ['process', 'faq'],
-    quote: 'Our development team came up through the trades, so we know what good work costs, and we respect it.',
+    quote: 'The people Apollo builds with came up through the trades, so we know what good work costs, and we respect it.',
     forYou: [
       'You are a GC, sub, agent, lender, title, or inspection partner',
       'You deliver quality and want consistent, well-scoped work',
@@ -723,7 +723,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     faqAnchor: 'marketflow-network',
     faq: [
       { q: 'How do you scope work?', a: 'Every project comes with a real plan and budget. You bid against a defined scope, not a vague wish list.' },
-      { q: 'How do payments work?', a: 'On a defined draw schedule agreed before work starts, and honored. Our development team has run jobsites, so we understand cash flow.' },
+      { q: 'How do payments work?', a: 'On a defined draw schedule agreed before work starts, and honored. The build team has run jobsites, so we understand cash flow.' },
     ],
     form: {
       role: 'Operator',

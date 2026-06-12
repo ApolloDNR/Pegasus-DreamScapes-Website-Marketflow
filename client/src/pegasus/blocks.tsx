@@ -70,7 +70,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 reveal delay-200">
             <div className="max-w-xl">
               <p className="font-serif-display italic text-2xl md:text-3xl text-[var(--cream)]/90 leading-snug">
-                A real estate investment, development, and systems company. We read the situation, underwrite the numbers, and design the route forward.
+                A real estate investment, development, and systems company. We read the situation, underwrite the numbers, and tell you what the deal actually is.
               </p>
               <div className="pg-label !text-[9px] !tracking-[0.26em] text-[var(--cream)]/55 mt-6">
                 East Bay · Off-market &amp; value-add · Apollo Duran, DRE #02333658
@@ -108,12 +108,12 @@ export function HomeIntro() {
           <div className="pg-label text-[var(--accent)]">What Pegasus is</div>
           <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
           <p className="font-serif-display italic text-xl text-[var(--muted)] leading-snug">
-            One company, three engines, each one feeding the next.
+            We invest in property, develop it with a real build team, and run the tools that make the next deal run the same way.
           </p>
         </div>
         <div className="lg:col-span-8 reveal delay-100">
           <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-[-0.01em]">
-            Most real estate is a transaction shop that lists it, flips it, and moves on. We built the opposite: we <span className="text-[var(--accent)]">invest</span> in property others overlook, <span className="text-[var(--accent)]">develop</span> it through our own development team, and run the <span className="text-[var(--accent)]">systems</span> that turn each deal into a repeatable process.
+            We <span className="text-[var(--accent)]">invest</span> in property others pass on, <span className="text-[var(--accent)]">develop</span> it with Apollo and a vetted team of former GCs, project managers, and trades who have run real jobsites, and run the <span className="text-[var(--accent)]">systems</span> that carry one underwriting from the first call to the closing table.
           </p>
         </div>
       </div>
@@ -162,8 +162,8 @@ export function ThreePillarsBlock({ go }: { go: Nav }) {
     <section className="relative py-24 lg:py-32 overflow-hidden">
       <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">FIRM</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="What we do" title="Three engines, one company."
-          copy="Investments find and reposition the asset. Development builds it. Systems make it repeatable." />
+        <SectionHead eyebrow="What we do" title="Acquisition, development, and the tools behind them."
+          copy="Investments find and reposition the asset. Development builds it. Systems carry the same read into the next deal." />
         <div className="grid lg:grid-cols-3 gap-6">
           {PILLARS3.map((p, i) => (
             <div key={p.eyebrow} className="surface-card reveal flex flex-col overflow-hidden" style={{ animationDelay: `${i * 90}ms` }}>
@@ -539,7 +539,7 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
     <section className="relative py-24 lg:py-28 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="The Pegasus Ecosystem" title="Six parts. One deal flow."
-          copy="The firm, the guide, the tools, the marketplace, the capital, and the build team — six parts of one company that hand a deal off to each other instead of to a stranger. The read that starts a deal is the read that closes it." />
+          copy="The same firm reads the deal, builds it, funds it, and brings it to market — so nothing gets handed off to a stranger or lost in translation. The read that starts a deal is the read that closes it." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ECOSYSTEM.map((s, i) => {
             const clickable = !!s.route;
@@ -650,7 +650,7 @@ export function NelsonProof({ go }: { go: Nav }) {
           <div className="lg:col-span-6 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">The work · {NELSON.name}</div>
             <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">
-              A tired house, a structured turn.
+              Off-market acquisition. Full reposition. Delivered move-in ready.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-8 mb-10">

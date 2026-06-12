@@ -291,7 +291,7 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Pillar 02 · Development"
         title={<>We build the <span className="italic text-[var(--accent-bright)]">finished product.</span></>}
         image={IMG('nelson/nelson-kitchen-1280.jpg')}
-        lead="Our development team — former GCs, project managers, and trades who have run real jobsites — scopes every renovation and ground-up build to a real budget and draw schedule, and delivers on time, finished, not left half-open." />
+        lead="Apollo works with former GCs, project managers, and trades who have run real jobsites — they scope every renovation and ground-up build to a real budget and draw schedule, and deliver on time, finished, not left half-open." />
       <PillarSection p={DEVELOPMENT} go={go} flip />
       <BuildProcessBlock />
       <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
@@ -561,7 +561,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="Representation lanes" title="Sell or buy, represented."
-            copy="Two clear lanes when agency representation is the right path. Pick the one that fits and Apollo follows up to discuss it." />
+            copy="Seller representation or buyer representation — Apollo represents sellers and buyers through Keller Williams Realty East Bay, with an investor's read on every transaction." />
           <div className="grid md:grid-cols-2 gap-6 lg:gap-8 mb-12 items-stretch">
             <RepLane rep={APOLLO_REP.seller} />
             <RepLane rep={APOLLO_REP.buyer} />
@@ -594,7 +594,7 @@ export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => voi
       <PageHero eyebrow="Systems · The Ecosystem"
         title={<>One company. <span className="italic text-[var(--accent-bright)]">Every part feeds the next.</span></>}
         image={IMG('pegasus-closing.png')}
-        lead="Six parts of one company — the firm, the guide, the tools, the marketplace, the capital layer, and the build arm — all running a deal through the same underwriting." />
+        lead="When the people who read the deal also build it, fund it, and bring it to market, nothing gets lost between steps. Every part runs on the same underwriting." />
       <EcosystemBlock go={go} openPeggy={openPeggy} />
       <ThreePillarsBlock go={go} />
       <MarketFlowBlock go={go} dark />
@@ -776,7 +776,7 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
               </div>
             </button>
             <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug mb-7">
-              We read the situation, underwrite the numbers, and design the route forward.
+              We read the situation, underwrite the numbers, and tell you what the deal actually is.
             </p>
             <button type="button" onClick={openPeggy}
               className="peggy-footer-cta inline-flex items-center gap-2.5 pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]">
