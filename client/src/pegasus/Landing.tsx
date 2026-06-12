@@ -8,7 +8,7 @@ import { Peggy } from './peggy';
 import {
   HomePage, CategoryPage, DealArchitecturePage, InvestmentsPage, DevelopmentPage,
   StrategyLabPage, MarketFlowPage, WorkWithApolloPage, EcosystemPage, PeggyPage,
-  AboutPage, ContactPage, Footer,
+  AboutPage, ContactPage, CapitalPage, Footer,
 } from './pages';
 import { SavedPage } from './Saved';
 import { routeForUrl, urlFor } from './routes';
@@ -110,14 +110,14 @@ export function Landing() {
       data-theme={theme === 'dark' ? 'dark' : undefined}>
       <div ref={progressRef} className="scroll-progress" />
 
-      <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} openPeggy={openPeggy} />
+      <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} />
 
       <main key={route} className="page-in">
         {route === 'home' && <HomePage go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />}
         {route === 'sellers' && <CategoryPage cat={CATEGORIES.sellers} go={go} openPeggy={openPeggy} />}
         {route === 'buyers' && <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={openPeggy} />}
         {route === 'dealfinders' && <CategoryPage cat={CATEGORIES.dealfinders} go={go} openPeggy={openPeggy} />}
-        {route === 'capital' && <CategoryPage cat={CATEGORIES.capital} go={go} openPeggy={openPeggy} />}
+        {route === 'capital' && <CapitalPage go={go} />}
         {route === 'operators' && <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={openPeggy} />}
         {route === 'referral' && <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={openPeggy} />}
         {route === 'dealarchitecture' && <DealArchitecturePage go={go} openPeggy={openPeggy} />}
@@ -133,7 +133,7 @@ export function Landing() {
         {route === 'saved' && <SavedPage go={go} />}
       </main>
 
-      <Footer go={go} openPeggy={openPeggy} />
+      <Footer go={go} />
 
       <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} />
     </div>

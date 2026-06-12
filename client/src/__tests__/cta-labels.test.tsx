@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   HomePage,
   CategoryPage,
+  CapitalPage,
   DealArchitecturePage,
   InvestmentsPage,
   DevelopmentPage,
@@ -118,7 +119,7 @@ const PAGES: PageSpec[] = [
   { name: "Sellers", route: "/sellers", element: <CategoryPage cat={CATEGORIES.sellers} go={noop} openPeggy={noop} /> },
   { name: "Buyers", route: "/buyers", element: <CategoryPage cat={CATEGORIES.buyers} go={noop} openPeggy={noop} /> },
   { name: "Deal finders", route: "/dealfinders", element: <CategoryPage cat={CATEGORIES.dealfinders} go={noop} openPeggy={noop} /> },
-  { name: "Capital", route: "/capital", element: <CategoryPage cat={CATEGORIES.capital} go={noop} openPeggy={noop} /> },
+  { name: "Capital", route: "/capital", element: <CapitalPage go={noop} /> },
   { name: "Operators", route: "/operators", element: <CategoryPage cat={CATEGORIES.operators} go={noop} openPeggy={noop} /> },
   { name: "Referral", route: "/referral", element: <CategoryPage cat={CATEGORIES.referral} go={noop} openPeggy={noop} /> },
   { name: "Deal Architecture", route: "/deal-architecture", element: <DealArchitecturePage go={noop} openPeggy={noop} /> },

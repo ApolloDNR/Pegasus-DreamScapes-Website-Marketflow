@@ -83,9 +83,6 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               <button type="button" onClick={openPeggy} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
                 Talk to PeggyAI
               </button>
-              <button type="button" onClick={() => go('strategylab')} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
-                Open Strategy Lab
-              </button>
             </div>
           </div>
         </div>
@@ -662,8 +659,8 @@ export function NelsonProof({ go }: { go: Nav }) {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => go('dealarchitecture')} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-              See how we work <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            <button type="button" onClick={() => go('submit')} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+              Start a property review <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
           <div className="lg:col-span-6 reveal delay-100">
@@ -945,7 +942,6 @@ export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Request a 
           <button type="button" onClick={openPeggy} className="btn-line-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
           </button>
-          <button type="button" onClick={() => go('strategylab')} className="btn-line-light px-9 py-4 pg-label !text-[10px]">Open Strategy Lab</button>
         </div>
       </div>
     </section>

@@ -12,6 +12,7 @@ import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Landing } from "@/pegasus/Landing";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ROUTE_TO_URL } from "@/pegasus/routes";
 
 // Peggy quick-action net (Task #214).
@@ -91,9 +92,11 @@ function renderLanding(routePath = "/") {
   });
   const utils = render(
     <QueryClientProvider client={qc}>
-      <Router hook={mem.hook}>
-        <Landing />
-      </Router>
+      <ThemeProvider>
+        <Router hook={mem.hook}>
+          <Landing />
+        </Router>
+      </ThemeProvider>
     </QueryClientProvider>,
   );
   return { ...utils, history: mem.history as string[] };

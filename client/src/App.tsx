@@ -86,7 +86,6 @@ const Invest = lazy(() => import("@/pages/invest"));
 const Projects = lazy(() => import("@/pages/projects"));
 const ProjectDetail = lazy(() => import("@/pages/project-detail"));
 const Calculators = lazy(() => import("@/pages/calculators"));
-const StrategyLab = lazy(() => import("@/pages/strategy-lab"));
 const StrategyLabLibrary = lazy(() => import("@/pages/strategy-lab-library"));
 const StrategyLabSubmitted = lazy(() => import("@/pages/strategy-lab-submitted"));
 const StrategyLabBlueprintConfirmed = lazy(() => import("@/pages/strategy-lab-blueprint-confirmed"));
@@ -97,7 +96,6 @@ const AdminHqOutbox = lazy(() => import("@/pages/admin-hq-outbox"));
 const AdminPeggyConversations = lazy(() => import("@/pages/admin-peggy-conversations"));
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
-const Library = lazy(() => import("@/pages/library"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
 const SubmitPage = lazy(() => import("@/pages/submit"));
 const CapitalPage = lazy(() => import("@/pages/capital"));
@@ -110,7 +108,6 @@ const DealflowProject = lazy(() => import("@/pages/dealflow-project"));
 const DealflowCommunity = lazy(() => import("@/pages/dealflow-community"));
 const DealflowMessages = lazy(() => import("@/pages/dealflow-messages"));
 const UserProfile = lazy(() => import("@/pages/user-profile"));
-const Marketplace = lazy(() => import("@/pages/marketplace"));
 const MarketplaceWholesaler = lazy(() => import("@/pages/marketplace-wholesaler"));
 const MarketplaceDreamscaper = lazy(() => import("@/pages/marketplace-dreamscaper"));
 const MarketplaceInvestor = lazy(() => import("@/pages/marketplace-investor"));
@@ -140,13 +137,9 @@ const SnapshotCalc = lazy(() => import("@/pages/snapshot-calc"));
 const SnapshotCalcGate = lazy(() => import("@/pages/snapshot-calc-gate"));
 const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
 const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
-const FAQ = lazy(() => import("@/pages/faq"));
 const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
 const Ecosystem = lazy(() => import("@/pages/ecosystem"));
-const Peggy = lazy(() => import("@/pages/peggy"));
-const WorkWithApollo = lazy(() => import("@/pages/work-with-apollo"));
-const DealArchitecture = lazy(() => import("@/pages/deal-architecture"));
 
 export const legacyRedirects: [string, string][] = [
   // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
@@ -167,8 +160,15 @@ export const legacyRedirects: [string, string][] = [
   ["/calculators", "/strategy-lab/classic"],
   ["/education", "/library"],
   ["/wholesale", "/submit?intent=deal-jv"],
-  // /buyers is now a real Pegasus prototype page (Who We Serve → Buyers),
-  // owned by the public shell — no longer redirected/retired.
+  // Website Doctrine v3.0 (Lean Launch Cut) — the audience lanes are out of the
+  // launch cut and collapse into the canonical /submit intake. They stay
+  // registered via ROUTE_TO_URL / REDIRECTED_URLS so they can return later.
+  // Mirrors the server-side V3_DEMOTION_REDIRECTS.
+  ["/sellers", "/submit"],
+  ["/buyers", "/submit"],
+  ["/dealfinders", "/submit"],
+  ["/operators", "/submit"],
+  ["/referral", "/submit"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],
@@ -227,7 +227,9 @@ export function Router() {
       <Route path="/projects" component={Projects} />
       <Route path="/projects/nelson-dr" component={NelsonDrPage} />
       <Route path="/projects/:slug" component={ProjectDetail} />
-      <Route path="/strategy-lab" component={StrategyLab} />
+      {/* v3.0 Lean Launch Cut — /strategy-lab is out of the launch and
+       * redirects home. The /strategy-lab/* tool subroutes below stay live. */}
+      <Route path="/strategy-lab">{() => <Redirect to="/" />}</Route>
       <Route path="/strategy-lab/library" component={StrategyLabLibrary} />
       <Route path="/strategy-lab/submitted" component={StrategyLabSubmitted} />
       <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
@@ -237,22 +239,28 @@ export function Router() {
       <Route path="/admin/hq-outbox" component={AdminHqOutbox} />
       <Route path="/admin/peggy/conversations" component={AdminPeggyConversations} />
       <Route path="/strategy-lab/classic" component={Calculators} />
-      {/* /library is canonical; /resources 301s to /library via legacyRedirects.
-       * /library/:slug keeps the existing article shell working. */}
-      <Route path="/library" component={Library} />
+      {/* v3.0 Lean Launch Cut — /library is demoted out of the launch and
+       * redirects home. /resources & /education still redirect to /library,
+       * which then 302s here to / (an intentional redirect chain). The
+       * /library/:slug article shell is kept and is NOT redirected. */}
+      <Route path="/library">{() => <Redirect to="/" />}</Route>
       <Route path="/library/:slug" component={ArticleDetail} />
       <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
-      <Route path="/faq" component={FAQ} />
+      {/* v3.0 Lean Launch Cut — /faq is out of the launch and redirects home. */}
+      <Route path="/faq">{() => <Redirect to="/" />}</Route>
       {/* Empire Doctrine Amendment 2 §C — /ecosystem is the footer-only
-       * Audience-B release valve. /peggy is the public Peggy surface. */}
+       * Audience-B release valve (kept reachable, unlinked). v3.0 Lean Launch
+       * Cut demotes /peggy: the public Peggy page is out of the launch and
+       * redirects home (the Peggy concierge widget stays in the shell). */}
       <Route path="/ecosystem" component={Ecosystem} />
-      <Route path="/peggy" component={Peggy} />
-      {/* Website Structure v1 FINAL §1 / §4 — Work With Apollo (licensed
-       * representation) and Deal Architecture (outcome-lane map) are
-       * primary-nav surfaces. */}
-      <Route path="/work-with-apollo" component={WorkWithApollo} />
-      <Route path="/deal-architecture" component={DealArchitecture} />
+      <Route path="/peggy">{() => <Redirect to="/" />}</Route>
+      {/* v3.0 Lean Launch Cut — Work With Apollo and Deal Architecture are out
+       * of the launch cut. Work With Apollo (licensed representation) redirects
+       * to /connect; Deal Architecture redirects home. Both stay registered via
+       * ROUTE_TO_URL so they can return later. */}
+      <Route path="/work-with-apollo">{() => <Redirect to="/connect" />}</Route>
+      <Route path="/deal-architecture">{() => <Redirect to="/" />}</Route>
       <Route path="/contact" component={Contact} />
       {/* Empire Doctrine v1.0.1 / Amendment 2: /systems, /education,
        * /calculators, /buyers, /wholesale, /capital-raising, /dreamspace
@@ -286,8 +294,10 @@ export function Router() {
         <Route key={from} path={from}>{() => <Redirect to={to} />}</Route>
       ))}
       
-      {/* MarketFlow Routes with Supabase Auth */}
-      <Route path="/marketflow" component={Marketplace} />
+      {/* MarketFlow Routes with Supabase Auth. v3.0 Lean Launch Cut — the
+       * public /marketflow landing is out of the launch and redirects home;
+       * /marketflow/access and the operator surfaces below stay live. */}
+      <Route path="/marketflow">{() => <Redirect to="/" />}</Route>
       <Route path="/marketflow/access" component={MarketflowAccess} />
       {/* Website Structure v1 FINAL §7 — Pegasus Buyboxes moved off the
        * MarketFlow landing into a dedicated public surface. */}

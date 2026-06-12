@@ -100,6 +100,7 @@ export const COMPLIANCE_RISK: BannedPhrase[] = [
   { phrase: "passive income", reason: "compliance-risk (securities)" },
   { phrase: "principal protected", reason: "compliance-risk (securities)" },
   { phrase: "we buy houses fast", reason: "compliance-risk (guru language)" },
+  { phrase: "fiduciary", reason: "compliance-risk overclaim — Pegasus is a real estate investment company, not a brokerage; do not imply a statutory fiduciary duty to the public" },
 ];
 
 // Brand guard: Peggy is an AI strategy assistant / concierge — never a "chatbot".

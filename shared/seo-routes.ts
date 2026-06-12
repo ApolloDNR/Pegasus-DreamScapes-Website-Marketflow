@@ -29,51 +29,14 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/home.png`,
   },
 
-  // ---- Who We Serve (audience lanes) ----
-  "/sellers": {
-    title: tag("Sellers & Owners"),
-    description:
-      "Have a complex, stuck, inherited, or distressed property? Start a property review and get a clear, written path forward from a real person.",
-    image: `${SITE_URL}/og/sellers.png`,
-  },
-  "/buyers": {
-    title: tag("Buyers"),
-    description:
-      "Buy with a strategy: finished, repositioned homes and off-market opportunities, each underwritten before you commit. See how buyers work with us.",
-    image: `${SITE_URL}/og/buyers.png`,
-  },
-  "/dealfinders": {
-    title: tag("Deal Finders & Wholesalers"),
-    description:
-      "Bring an off-market deal and get a straight answer fast: our basis, where we come in, and terms in writing. Submit a deal to Pegasus.",
-    image: `${SITE_URL}/og/dealfinders.png`,
-  },
+  // ---- Capital partners ----
   "/capital": {
     title: tag("Capital Partners"),
     description:
       "Back specific real estate projects on defined terms, not blind pools. See how capital partners engage with us, with the risk laid out plainly.",
     image: `${SITE_URL}/og/capital.png`,
   },
-  "/operators": {
-    title: tag("Operators & Vendors"),
-    description:
-      "GCs, subcontractors, agents, and title: join the vetted Pegasus build bench and work with a team that scopes the job and respects the trade.",
-    image: `${SITE_URL}/og/operators.png`,
-  },
-  "/referral": {
-    title: tag("Referral Partners"),
-    description:
-      "Send us a name and we handle the relationship, with any referral fee documented in writing. Refer a contact to Pegasus DreamScapes.",
-    image: `${SITE_URL}/og/referral.png`,
-  },
-
   // ---- What We Do ----
-  "/deal-architecture": {
-    title: tag("Deal Strategy"),
-    description:
-      "How a property becomes a plan: we read the situation and the numbers once, then design the route that fits the deal. Submit a deal to start.",
-    image: `${SITE_URL}/og/deal-architecture.png`,
-  },
   "/investments": {
     title: tag("Investments"),
     description:
@@ -85,12 +48,6 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "Our development team scopes every renovation and ground-up build to a real budget and draw schedule, and delivers finished, on time.",
     image: `${SITE_URL}/og/development.png`,
-  },
-  "/strategy-lab": {
-    title: tag("Strategy Lab"),
-    description:
-      "A real underwriting tool, free to start. Model a deal, score the fit, see the spread with carry and exit costs, then get a written read.",
-    image: `${SITE_URL}/og/strategy-lab.png`,
   },
   "/marketflow": {
     title: tag("MarketFlow"),
@@ -104,23 +61,11 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Request access to MarketFlow, the private deal network for Pegasus DreamScapes. Membership is reviewed by a person, not opened to everyone.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
-  "/work-with-apollo": {
-    title: tag("Represent With Apollo"),
-    description:
-      "Work directly with founder Apollo Duran on selling, buying, or a complex situation. Representation through Keller Williams East Bay, DRE #02333658.",
-    image: `${SITE_URL}/og/work-with-apollo.png`,
-  },
   "/ecosystem": {
     title: tag("The Pegasus Ecosystem"),
     description:
       "The full Pegasus operating system: HQ, PeggyAI, Strategy Lab, MarketFlow, CapStack, and BuildForge, one underwriting standard across every part.",
     image: `${SITE_URL}/og/ecosystem.png`,
-  },
-  "/peggy": {
-    title: tag("PeggyAI"),
-    description:
-      "Describe your deal in plain language and PeggyAI helps frame the options and route you to the right lane. Early access, in training.",
-    image: `${SITE_URL}/og/peggy.png`,
   },
 
   // ---- Company / proof / contact ----
@@ -168,12 +113,6 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "Field notes on complex property, structured opportunity, and the strategy-first operating model. Structured reads, no gurus, no hype.",
     image: `${SITE_URL}/og/library.png`,
-  },
-  "/faq": {
-    title: tag("FAQ"),
-    description:
-      "Answers on submitting a property, working with Pegasus DreamScapes, the Strategy Lab, and the MarketFlow network. The honest version.",
-    image: `${SITE_URL}/og/faq.png`,
   },
   "/vendor-network": {
     title: tag("Vendor Network"),
@@ -236,6 +175,12 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
+  // Doctrine v3.0 lean cut: these bare routes 302-redirect to a kept surface,
+  // so they must not be advertised in the sitemap. Their SEO_ROUTES entries are
+  // retained only so seoFor()'s prefix fallbacks keep serving live subpaths
+  // (e.g. /marketflow/access, /marketflow/<role>). Exact-match, bare path only.
+  /^\/marketflow$/,
+  /^\/library$/,
 ];
 
 // Public directories the robots policy disallows. Crawlers should never index
@@ -265,15 +210,10 @@ export function isCrawlablePublicPath(pathname: string): boolean {
 const SITEMAP_HINTS: Record<string, { priority: string; changefreq: string }> = {
   "/": { priority: "1.0", changefreq: "weekly" },
   "/submit": { priority: "0.9", changefreq: "monthly" },
-  "/strategy-lab": { priority: "0.9", changefreq: "monthly" },
   "/projects": { priority: "0.9", changefreq: "weekly" },
-  "/deal-architecture": { priority: "0.8", changefreq: "monthly" },
   "/development": { priority: "0.8", changefreq: "monthly" },
   "/investments": { priority: "0.8", changefreq: "monthly" },
-  "/marketflow": { priority: "0.8", changefreq: "monthly" },
-  "/work-with-apollo": { priority: "0.8", changefreq: "monthly" },
   "/about": { priority: "0.8", changefreq: "monthly" },
-  "/library": { priority: "0.7", changefreq: "weekly" },
   "/projects/nelson-dr": { priority: "0.7", changefreq: "monthly" },
 };
 const SITEMAP_DEFAULT = { priority: "0.6", changefreq: "monthly" };

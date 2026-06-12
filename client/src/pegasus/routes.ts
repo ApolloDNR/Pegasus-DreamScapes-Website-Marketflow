@@ -21,6 +21,7 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   peggy: '/peggy',
   saved: '/saved',
   submit: '/submit',
+  connect: '/connect',
 };
 
 export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).reduce(
@@ -31,11 +32,35 @@ export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).
   {} as Record<string, Route>,
 );
 
-// Every URL the prototype public shell owns. `/submit` is deliberately
-// excluded: the prototype shell has no submit surface, so `/submit` must fall
-// through to the canonical app-level SubmitPage instead of rendering a blank
-// Pegasus shell. `go('submit')` still resolves to `/submit` via ROUTE_TO_URL.
-export const PEGASUS_URLS: string[] = Object.values(ROUTE_TO_URL).filter((u) => u !== '/submit');
+// Website Doctrine v3.0 (Lean Launch Cut) — URLs demoted out of the prototype
+// shell for the lean launch. They stay in ROUTE_TO_URL / the Route union (so
+// `go(...)` targets and route-map registration are unchanged and the pages can
+// return later), but App.tsx redirects them instead of rendering the shell:
+// the audience lanes collapse into /submit, the rest into / (or /connect for
+// Work With Apollo). Keeping them out of PEGASUS_URLS lets those App.tsx
+// redirects win over the prototype shell.
+export const REDIRECTED_URLS: string[] = [
+  '/sellers',
+  '/buyers',
+  '/dealfinders',
+  '/operators',
+  '/referral',
+  '/strategy-lab',
+  '/marketflow',
+  '/peggy',
+  '/deal-architecture',
+  '/work-with-apollo',
+];
+
+// Every URL the prototype public shell owns. `/submit` and `/connect` are
+// deliberately excluded: they render canonical app-level pages (SubmitPage /
+// ConnectPage), not the prototype shell, so they must fall through instead of
+// painting a blank Pegasus shell. `go('submit')` / `go('connect')` still
+// resolve via ROUTE_TO_URL. REDIRECTED_URLS are excluded so App.tsx's
+// redirects take effect (see above).
+export const PEGASUS_URLS: string[] = Object.values(ROUTE_TO_URL).filter(
+  (u) => u !== '/submit' && u !== '/connect' && !REDIRECTED_URLS.includes(u),
+);
 
 export function urlFor(route: Route): string {
   return ROUTE_TO_URL[route] ?? '/';
@@ -59,8 +84,6 @@ const STANDALONE_DARK_HERO: string[] = [
   '/submit',
   '/connect',
   '/projects',
-  '/library',
-  '/faq',
   '/vendor-network',
   '/privacy',
   '/terms',

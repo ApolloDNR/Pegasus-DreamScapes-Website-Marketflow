@@ -77,13 +77,16 @@ function scanText(source: string, fileName: string): Offense[] {
   return offenses;
 }
 
-function scanFile(fileName: string): Offense[] {
-  const fullPath = join(PEGASUS_DIR, fileName);
-  return scanText(readFileSync(fullPath, "utf8"), fileName);
+// Scan a repo-relative source file. The display name carried into each Offense
+// is the repo-relative path so failures point at the exact file — the pegasus
+// prototype copy AND the canonical /submit intake page are both guarded.
+function scanRepoFile(relPath: string): Offense[] {
+  const fullPath = join(process.cwd(), relPath);
+  return scanText(readFileSync(fullPath, "utf8"), relPath);
 }
 
 function formatOffense(o: Offense): string {
-  return `  • "${o.phrase}" (${o.reason})\n    at client/src/pegasus/${o.file}:${o.line}\n    > ${o.snippet}`;
+  return `  • "${o.phrase}" (${o.reason})\n    at ${o.file}:${o.line}\n    > ${o.snippet}`;
 }
 
 describe("Public copy contains no banned filler / AI-tell phrases (Task #247)", () => {
@@ -124,7 +127,7 @@ describe("Public copy contains no banned filler / AI-tell phrases (Task #247)", 
 
   for (const file of files) {
     it(`${file} ships no banned phrases`, () => {
-      const offenses = scanFile(file);
+      const offenses = scanRepoFile(join("client/src/pegasus", file));
       expect(
         offenses,
         offenses.length
@@ -135,4 +138,19 @@ describe("Public copy contains no banned filler / AI-tell phrases (Task #247)", 
       ).toEqual([]);
     });
   }
+
+  // The canonical /submit intake page is public-facing copy too (Task #250) —
+  // guard it with the same banned-phrase list even though it lives outside the
+  // pegasus prototype directory.
+  it("client/src/pages/submit.tsx ships no banned phrases", () => {
+    const offenses = scanRepoFile("client/src/pages/submit.tsx");
+    expect(
+      offenses,
+      offenses.length
+        ? `Banned public-copy phrase(s) found — rewrite or, if intentional, ` +
+            `update client/src/__tests__/banned-phrases.ts:\n` +
+            offenses.map(formatOffense).join("\n")
+        : "",
+    ).toEqual([]);
+  });
 });

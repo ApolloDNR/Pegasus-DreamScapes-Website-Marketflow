@@ -240,15 +240,41 @@ export async function registerRoutes(
     app.get(from, (_req, res) => res.redirect(301, to));
   }
 
+  // ─── Website Doctrine v3.0 (Lean Launch Cut) demotions ────────────────
+  // These public pages are out of the lean launch cut but are expected to
+  // return, so we 302 (temporary) rather than 301 them: the audience lanes
+  // collapse into the canonical /submit intake, Work With Apollo into /connect,
+  // and the rest to the home page. Exact-match only, so subpaths that stay live
+  // (e.g. /marketflow/access, /library/:slug, /strategy-lab/classic) are not
+  // caught. Kept separate from the permanent 301 LEGACY_REDIRECTS above.
+  const V3_DEMOTION_REDIRECTS: Array<[string, string]> = [
+    ['/sellers', '/submit'],
+    ['/buyers', '/submit'],
+    ['/dealfinders', '/submit'],
+    ['/operators', '/submit'],
+    ['/referral', '/submit'],
+    ['/work-with-apollo', '/connect'],
+    ['/strategy-lab', '/'],
+    ['/marketflow', '/'],
+    ['/peggy', '/'],
+    ['/deal-architecture', '/'],
+    ['/library', '/'],
+    ['/faq', '/'],
+  ];
+  for (const [from, to] of V3_DEMOTION_REDIRECTS) {
+    app.get(from, (_req, res) => res.redirect(302, to));
+  }
+
   // Retired-from-public routes: return 410 Gone for direct HTTP requests.
   // Brief §1: these routes are gone from the v1 public surface entirely
   // (no clean canonical successor that preserves the original intent).
   // We answer with a small HTML page so a crawler / human gets the right
   // signal without falling through to the SPA shell.
-  // NOTE: /buyers and /ecosystem are NOT retired — the controlling Pegasus
-  // prototype (client/src/pegasus/) owns them as real public pages (Who We
-  // Serve → Buyers, What We Do → Pegasus Ecosystem) and its nav links to
-  // them, so they must resolve on direct HTTP hits too, not 410.
+  // NOTE: /ecosystem is NOT retired — the controlling Pegasus prototype
+  // (client/src/pegasus/) still owns it as a real public page, so it must
+  // resolve on direct HTTP hits, not 410. /buyers is demoted (not retired):
+  // it 302-redirects to /submit via V3_DEMOTION_REDIRECTS above, so it must
+  // not be 410'd here either.
   const GONE_ROUTES = [
     '/education',
     '/calculators',

@@ -240,8 +240,6 @@ export default function SubmitPage() {
             <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">Licensed</span>
             <span className="text-white/30 text-xs">·</span>
             <span className="text-xs text-white/60">DRE #02333658 · Keller Williams East Bay</span>
-            <span className="text-white/30 text-xs">·</span>
-            <span className="text-xs text-white/60">Fiduciary standard on every review</span>
           </div>
         </div>
       </section>

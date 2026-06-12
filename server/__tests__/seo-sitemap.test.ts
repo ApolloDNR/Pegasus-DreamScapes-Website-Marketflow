@@ -38,9 +38,20 @@ describe("sitemap generation from seo-routes", () => {
 
 describe("isCrawlablePublicPath", () => {
   it("allows public surfaces", () => {
-    for (const p of ["/", "/about", "/submit", "/marketflow", "/marketflow/access"]) {
+    for (const p of ["/", "/about", "/submit", "/marketflow/access"]) {
       expect(isCrawlablePublicPath(p)).toBe(true);
     }
+  });
+
+  it("excludes v3-demoted bare routes from the sitemap (they 302-redirect)", () => {
+    const sitemapPaths = new Set(sitemapEntries().map((e) => e.path));
+    for (const p of ["/marketflow", "/library"]) {
+      expect(isCrawlablePublicPath(p)).toBe(false);
+      expect(sitemapPaths.has(p)).toBe(false);
+    }
+    // live subpaths must still be crawlable and advertised
+    expect(isCrawlablePublicPath("/marketflow/access")).toBe(true);
+    expect(sitemapPaths.has("/marketflow/access")).toBe(true);
   });
 
   it("blocks admin, auth, api, and operator surfaces", () => {

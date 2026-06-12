@@ -4,20 +4,19 @@ import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Lan
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
-  CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_ROLES, PEGGY_SLA, DEV_TEAM,
+  CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_ROLES, PEGGY_SLA,
 } from './data';
 import {
-  PageHero, Hero, HomeIntro, LaneCardsBlock, ThreePillarsBlock, PillarSection, ProcessSteps,
+  PageHero, Hero, HomeIntro, ThreePillarsBlock, PillarSection, ProcessSteps,
   EngineBlock, DealReadStepper, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
   SplitPaths, NextStep, CTABand, DealFindersExtras,
 } from './blocks';
 import {
-  LeadSection, StrategyCalculator, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, DEVELOPMENT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
+  LeadSection, StrategyCalculator, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
 } from './forms';
 
 const INVESTMENTS = PILLARS3[0];
-const DEVELOPMENT = PILLARS3[1];
 
 const MARKETFLOW_FORM: FormCfg = {
   role: 'Deal finder / Wholesaler',
@@ -69,18 +68,11 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
     <>
       <Hero go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />
       <HomeIntro />
-      <LaneCardsBlock go={go} />
-      <ThreePillarsBlock go={go} />
-      <EngineBlock go={go} />
-      <ProductLadderBlock go={go} openPeggy={openPeggy} />
-      <MarketFlowBlock go={go} />
-      <ApolloBlock go={go} portrait={false} />
-      <PillarSection p={DEVELOPMENT} go={go} flip dark numeral="DEV" />
       <ProofStats />
       <NelsonProof go={go} />
       <DoctrineBlock />
-      <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." />
-      <CTABand go={go} openPeggy={openPeggy}
+      <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="" />
+      <CTABand go={go} openPeggy={openPeggy} primaryAction="submit" primaryLabel="Submit a Property"
         title="Send us the situation. We'll map the path forward."
         text="Complex, distressed, inherited, or simply complicated: every property gets a plain-language read. No pressure, no obligation." />
     </>
@@ -291,25 +283,51 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Pillar 02 · Development"
         title={<>We build the <span className="italic text-[var(--accent-bright)]">finished product.</span></>}
         image={IMG('nelson/nelson-kitchen-1280.jpg')}
-        lead="Apollo works with former GCs, project managers, and trades who have run real jobsites — they scope every renovation and ground-up build to a real budget and draw schedule, and deliver on time, finished, not left half-open." />
-      <PillarSection p={DEVELOPMENT} go={go} flip />
-      <BuildProcessBlock />
-      <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead eyebrow="The development team" title="A bench, not a single hire."
-            copy="Construction is run by a team, not one person we hope sticks around: former GCs, project managers, and crews who have run real jobsites, scaled to the project." />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {DEV_TEAM.map((c, i) => (
-              <div key={c.t} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
-                <h3 className="font-serif-display text-xl text-[var(--text)] mb-3 leading-tight">{c.t}</h3>
-                <p className="text-[var(--muted)] text-[0.85rem] leading-relaxed">{c.d}</p>
-              </div>
-            ))}
+        lead="Renovation and ground-up development, scoped to a real budget and draw schedule, built to a written finish spec, and delivered finished." />
+      <section className="py-24 lg:py-28">
+        <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
+          <p className="text-[var(--muted)] leading-relaxed text-lg">
+            Apollo works with former GCs, project managers, and trades who have run real jobsites. The full development standard is being rewritten — in the meantime, start a direct conversation about a build.
+          </p>
+          <button type="button" onClick={() => go('connect')} data-testid="button-development-connect"
+            className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            Start a build conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* ================================================================
+   CAPITAL (compliance-careful stub)
+   ================================================================ */
+export function CapitalPage({ go }: { go: Nav }) {
+  return (
+    <>
+      <PageHero eyebrow="Capital partners"
+        title={<>Back specific <span className="italic text-[var(--accent-bright)]">projects.</span></>}
+        image={IMG('pegasus-closing.png')}
+        lead="Pegasus works with a small number of capital partners on individual real estate projects, reviewed one deal at a time." />
+      <section className="py-24 lg:py-28">
+        <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
+          <p className="text-[var(--muted)] leading-relaxed text-lg mb-6">
+            Capital partnerships are arranged privately, on a project-by-project basis, through direct conversation — never a blind pool. The full capital framework is being finalized.
+          </p>
+          <p className="text-[var(--text-2)] text-[0.95rem] leading-relaxed mb-9" data-testid="text-capital-securities">
+            No securities are offered through this website.
+          </p>
+          <button type="button" onClick={() => go('connect')} data-testid="button-capital-connect"
+            className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            Start a conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+          <div className="mt-6">
+            <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--muted)]">
+              apollo@pegasusdreamscapes.com
+            </a>
           </div>
         </div>
       </section>
-      <NextStep go={go} label="Work with us as an operator or vendor" route="operators" />
-      <LeadSection cfg={DEVELOPMENT_FORM} eyebrow="Start a build conversation" tone="navy" />
     </>
   );
 }
@@ -762,12 +780,13 @@ function FooterLink({ label, onClick, tag }: { label: string; onClick: () => voi
   );
 }
 
-export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
+export function Footer({ go }: { go: Nav }) {
+  const [, setLocation] = useLocation();
   return (
     <footer className="bg-[var(--navy)] text-[var(--cream)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-20">
         <div className="grid grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
-          <div className="col-span-2 md:col-span-4">
+          <div className="col-span-2 md:col-span-6">
             <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
               <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
@@ -775,50 +794,36 @@ export function Footer({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
                 <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
               </div>
             </button>
-            <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug mb-7">
+            <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug">
               We read the situation, underwrite the numbers, and tell you what the deal actually is.
             </p>
-            <button type="button" onClick={openPeggy}
-              className="peggy-footer-cta inline-flex items-center gap-2.5 pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]">
-              <ConciergeBell className="w-3.5 h-3.5 text-[var(--accent-bright)]" strokeWidth={1.6} /> Talk to PeggyAI
-            </button>
           </div>
 
-          <FooterCol title="What we do">
-            <FooterLink label="Deal Strategy" onClick={() => go('dealarchitecture')} />
-            <FooterLink label="Investments" onClick={() => go('investments')} />
-            <FooterLink label="Development" onClick={() => go('development')} />
-            <FooterLink label="Strategy Lab" onClick={() => go('strategylab')} />
-            <FooterLink label="MarketFlow" onClick={() => go('marketflow')} />
-            <FooterLink label="Pegasus Ecosystem" onClick={() => go('ecosystem')} />
-          </FooterCol>
-
-          <FooterCol title="Who we serve">
-            <FooterLink label="Sellers & Owners" onClick={() => go('sellers')} />
-            <FooterLink label="Buyers" onClick={() => go('buyers')} />
-            <FooterLink label="Deal Finders" onClick={() => go('dealfinders')} />
-            <FooterLink label="Capital Partners" onClick={() => go('capital')} />
-            <FooterLink label="Operators & Vendors" onClick={() => go('operators')} />
-            <FooterLink label="Referral Partners" onClick={() => go('referral')} />
-          </FooterCol>
-
-          <FooterCol title="Company">
-            <FooterLink label="About the Firm" onClick={() => go('about')} />
-            <FooterLink label="Represent with Apollo" onClick={() => go('apollo')} />
-            <FooterLink label="Talk to PeggyAI" onClick={() => go('peggy')} />
-            <FooterLink label="Start a Review" onClick={() => go('contact')} />
+          <FooterCol title="Start here">
+            <FooterLink label="Submit a Property" onClick={() => go('submit')} />
+            <FooterLink label="Connect" onClick={() => go('connect')} />
           </FooterCol>
 
           <FooterCol title="Contact">
             <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline">apollo@pegasusdreamscapes.com</a></li>
             <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
             <li>East Bay · CA</li>
-            <li className="!tracking-[0.16em]">DRE #02333658 · KW East Bay</li>
+          </FooterCol>
+
+          <FooterCol title="Legal">
+            <FooterLink label="Privacy" onClick={() => setLocation('/privacy')} />
+            <FooterLink label="Terms" onClick={() => setLocation('/terms')} />
+            <FooterLink label="Disclosures" onClick={() => setLocation('/disclosures')} />
           </FooterCol>
         </div>
-        <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
-          <span>© {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.</span>
-          <span>NAR · CAR · Equal Housing Opportunity</span>
+        <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
+          <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
+            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658 · Pegasus DreamScapes Corp. is a real estate investment company and is not a brokerage.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
+            <span>© {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.</span>
+            <span>NAR · CAR · Equal Housing Opportunity</span>
+          </div>
         </div>
       </div>
     </footer>

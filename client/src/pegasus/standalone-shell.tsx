@@ -54,10 +54,6 @@ export function PegasusStandaloneShell({
     () => setTheme(theme === 'dark' ? 'light' : 'dark'),
     [setTheme, theme],
   );
-  const openPeggy = useCallback((role?: string) => {
-    if (role) setPeggyRole(role);
-    setPeggyOpen(true);
-  }, []);
   const setPeggyPanel = useCallback((v: boolean) => {
     setPeggyOpen(v);
     if (!v) setPeggyRole(null);
@@ -98,14 +94,13 @@ export function PegasusStandaloneShell({
           theme={theme}
           toggleTheme={toggleTheme}
           scrolled={solidNav || scrolled}
-          openPeggy={openPeggy}
         />
       </div>
 
       {children}
 
       <div className="pg-root" data-theme={dataTheme}>
-        <Footer go={go} openPeggy={openPeggy} />
+        <Footer go={go} />
         <Peggy
           open={peggyOpen}
           setOpen={setPeggyPanel}
