@@ -81,10 +81,10 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
                 Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </button>
               <button type="button" onClick={openPeggy} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
-                Ask PeggyAI
+                Talk to PeggyAI
               </button>
               <button type="button" onClick={() => go('strategylab')} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
-                Open the Strategy Lab
+                Open Strategy Lab
               </button>
             </div>
           </div>
@@ -928,7 +928,7 @@ export function NextStep({ go, label, route }: { go: Nav; label: string; route: 
 /* ----------------------------------------------------------------
    Final CTA band (three doors)
 ---------------------------------------------------------------- */
-export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Start a Property Review', primaryAction = 'contact' }:
+export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Request a Property Review', primaryAction = 'contact' }:
   { go: Nav; openPeggy: () => void; title: string; text: string; primaryLabel?: string; primaryAction?: Parameters<Nav>[0] }) {
   return (
     <section className="relative py-28 lg:py-36 overflow-hidden bg-[var(--navy)] text-[var(--cream)]">
@@ -945,7 +945,7 @@ export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Start a Pr
           <button type="button" onClick={openPeggy} className="btn-line-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
           </button>
-          <button type="button" onClick={() => go('strategylab')} className="btn-line-light px-9 py-4 pg-label !text-[10px]">Open the Strategy Lab</button>
+          <button type="button" onClick={() => go('strategylab')} className="btn-line-light px-9 py-4 pg-label !text-[10px]">Open Strategy Lab</button>
         </div>
       </div>
     </section>

@@ -31,7 +31,7 @@ The bar for every public page: it should read like a senior studio built it for 
 | `/referral` | Referral partner | Send a name, fee in writing | "Refer a contact" |
 | `/deal-architecture` | Considering working with us | Understand the method | "Start a review" |
 | `/development` | Owner/partner on a build | See the build standard | "Explore Development" |
-| `/strategy-lab` | DIY underwriter | Run the numbers | "Open the Lab" → `/strategy-lab/classic` |
+| `/strategy-lab` | DIY underwriter | Run the numbers | "Open Strategy Lab" → `/strategy-lab/classic` |
 | `/marketflow` | Network participant | Request access by role | inline request-access form |
 | `/work-with-apollo` | High-intent lead | Direct strategy with the founder | inline lead form / PeggyAI |
 | `/peggy` | Anyone with a question | Guided intake with PeggyAI | PeggyAI (early access · in training) |
@@ -131,9 +131,9 @@ Every public page has ONE primary job. If a page does not move the visitor towar
 | Home (`/`) | Orient + route | What Pegasus is (deal architecture firm) and which lane fits them |
 | Deal Architecture (`/deal-architecture`) | Prove the method | How a deal gets read/underwritten → **Submit a Deal** |
 | Development (`/development`) | Prove the build arm | That Pegasus executes scope → start a build conversation |
-| Strategy Lab (`/strategy-lab`) | Demonstrate a real tool | They can model a deal themselves → **Open the Lab** |
+| Strategy Lab (`/strategy-lab`) | Demonstrate a real tool | They can model a deal themselves → **Open Strategy Lab** |
 | Work with Apollo (`/work-with-apollo`) | Representation lanes | Sell/buy/complex-situation/deal → pick a lane |
-| MarketFlow (`/marketflow`) | Gate the platform | What it is → **Request access** |
+| MarketFlow (`/marketflow`) | Gate the platform | What it is → **Request MarketFlow Access** |
 | Capital (`/capital`) | Frame partnership (compliance-careful) | How capital partners engage → start a conversation |
 | Peggy (`/peggy`) | The front door / intake | They can describe a deal now → **Open PeggyAI** (honest early-access) |
 | About (`/about`) | Trust + standard | Who Apollo is and the firm's discipline |
@@ -156,12 +156,12 @@ Interior-page CTAs are **context-specific**, never a blanket "Submit a Property"
 | --- | --- | --- |
 | Global nav | Submit a Property | `/submit` |
 | Deal Architecture | Submit a Deal | `/submit` (deal intent) |
-| Strategy Lab | Open the Lab | the on-page console |
+| Strategy Lab | Open Strategy Lab | the on-page console |
 | Development | Start a build conversation | dev intake / contact |
 | Work with Apollo | Continue below / Request a Property Review / Submit a Deal | form anchor or `/submit?intent=` |
-| MarketFlow | Request access | `/marketflow/access` |
+| MarketFlow | Request MarketFlow Access | `/marketflow/access` |
 | Peggy | Open PeggyAI | Peggy widget |
-| Nelson Dr | Read the full breakdown / Start a Property Review | case study / `/submit` |
+| Nelson Dr | Read the full breakdown / Request a Property Review | case study / `/submit` |
 | About / generic close | Start with one honest read | `/contact` |
 
 ### Imagery rule

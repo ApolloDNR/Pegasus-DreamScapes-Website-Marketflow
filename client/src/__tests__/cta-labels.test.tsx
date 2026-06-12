@@ -161,18 +161,18 @@ describe("CTABand per-page primaryLabel override is wired (Task #195)", () => {
     const labels = ctaLabels(container);
     expect(labels.some((l) => l === "Start with one honest read")).toBe(true);
     // The generic-but-not-banned default must not leak through when overridden.
-    expect(labels.some((l) => l === "Start a Property Review")).toBe(false);
+    expect(labels.some((l) => l === "Request a Property Review")).toBe(false);
   });
 
   it("About page surfaces its overridden CTA, not the CTABand default", () => {
     const { container } = renderPage(<AboutPage go={noop} openPeggy={noop} />, "/about");
     const labels = ctaLabels(container);
-    // Locks the override in: a regression back to the default 'Start a
+    // Locks the override in: a regression back to the default 'Request a
     // Property Review' (which the banned-label net would NOT catch) fails here.
     expect(
       labels.some((l) => l === "Start with one honest read"),
       "About page must keep its bespoke CTABand primaryLabel",
     ).toBe(true);
-    expect(labels.some((l) => l === "Start a Property Review")).toBe(false);
+    expect(labels.some((l) => l === "Request a Property Review")).toBe(false);
   });
 });

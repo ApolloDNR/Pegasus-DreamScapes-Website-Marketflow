@@ -211,7 +211,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     actionLabel: string,
   ): Promise<HTMLButtonElement> {
     const input = panel.querySelector<HTMLInputElement>(
-      'input[aria-label="Ask PeggyAI"]',
+      'input[aria-label="Talk to PeggyAI"]',
     );
     expect(input, "Peggy input not found").toBeTruthy();
     fireEvent.change(input!, { target: { value: "I have a property to weigh" } });
@@ -279,7 +279,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     const panel = openPeggy(container);
 
     const input = panel.querySelector<HTMLInputElement>(
-      'input[aria-label="Ask PeggyAI"]',
+      'input[aria-label="Talk to PeggyAI"]',
     );
     fireEvent.change(input!, { target: { value: "help" } });
     fireEvent.click(panel.querySelector<HTMLButtonElement>('button[aria-label="Send"]')!);

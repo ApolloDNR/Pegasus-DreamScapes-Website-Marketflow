@@ -31,7 +31,7 @@ const MARKETFLOW_FORM: FormCfg = {
   intent: 'marketflow-access',
   heading: <>Request <span className="italic text-[var(--accent-bright)]">access.</span></>,
   lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and a real person will review your fit for the network.',
-  submit: 'Request access',
+  submit: 'Request MarketFlow Access',
   third: { label: 'Firm, fund, or trade', placeholder: 'Where you operate (optional)' },
   messageLabel: 'How you participate',
   messagePlaceholder: 'Share your typical check size or build capacity, and the deal types you focus on.',
@@ -390,7 +390,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
         image={IMG('pegasus-casestudy.png')}
         scrimTop
         lead="A private, vetted network — not an open marketplace. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and a real person reviews every fit." />
-      <MarketFlowBlock go={go} enter={{ label: 'Request access', href: '#marketflow-request' }} />
+      <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="A look inside"

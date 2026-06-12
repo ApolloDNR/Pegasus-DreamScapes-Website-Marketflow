@@ -103,13 +103,13 @@ function renderPeggy() {
 }
 
 async function sendMessage(text: string) {
-  fireEvent.change(screen.getByLabelText("Ask PeggyAI"), {
+  fireEvent.change(screen.getByLabelText("Talk to PeggyAI"), {
     target: { value: text },
   });
   fireEvent.click(screen.getByRole("button", { name: "Send" }));
   // Streaming begins: the input is disabled until the reply resolves.
   await waitFor(() =>
-    expect(screen.getByLabelText("Ask PeggyAI")).toBeDisabled(),
+    expect(screen.getByLabelText("Talk to PeggyAI")).toBeDisabled(),
   );
 }
 

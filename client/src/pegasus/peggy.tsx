@@ -307,7 +307,7 @@ export function Peggy({
         </div>
 
         <form className="peggy-input" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
-          <input ref={inputRef} type="text" aria-label="Ask PeggyAI" placeholder="Describe your deal..."
+          <input ref={inputRef} type="text" aria-label="Talk to PeggyAI" placeholder="Describe your deal..."
             value={draft} onChange={(e) => setDraft(e.target.value)} disabled={streaming} />
           <button type="submit" aria-label="Send" disabled={streaming || !draft.trim()}>
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}

@@ -58,10 +58,10 @@ export const DOORS3: {
   {
     key: 'review',
     kicker: 'Talk to a person',
-    title: 'Start a Property Review',
+    title: 'Request a Property Review',
     desc: 'Tell us about the property or the situation. A person reads it and comes back with a clear, written path forward.',
     best: 'Best when you have a specific property, a deadline, or a decision to make.',
-    cta: 'Start a Review',
+    cta: 'Request a Property Review',
     action: 'contact',
     icon: 'compass',
   },
@@ -174,7 +174,7 @@ export const PRODUCTS: {
     name: 'Strategy Lab',
     kind: 'Self-serve tool',
     desc: 'A free underwriting console you run yourself. Enter the property and the numbers and it returns a read in real time.',
-    cta: 'Open the Lab',
+    cta: 'Open Strategy Lab',
     action: 'strategylab',
   },
   {
@@ -302,7 +302,7 @@ export const FAQ_HOME: FaqItem[] = [
   },
   {
     q: 'I just have one property. Is that too small?',
-    a: 'No. A single property is exactly where most of our work starts. Start a Property Review or run it through the Strategy Lab and you will get a clear read on what it is and what it could become.',
+    a: 'No. A single property is exactly where most of our work starts. Request a Property Review or run it through the Strategy Lab and you will get a clear read on what it is and what it could become.',
   },
   {
     q: 'Do you guarantee returns to capital partners?',
@@ -496,8 +496,8 @@ const sellerSplits: { heading: string; copy: string; paths: SplitPath[]; founder
   founderPhoto: true,
   peggyHint: true,
   paths: [
-    { name: 'Traditional seller representation', desc: 'Clean and ready to list? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing. Standard listing agreement, full MLS exposure.', cta: 'List with Apollo', route: 'apollo' },
-    { name: 'Distressed or complex property review', desc: 'Probate, foreclosure, divorce, a tired rental, an inherited home, an expired listing, or ADU upside? Send it for a property review. We evaluate your options, which may include a direct purchase, a reposition, or a listing, subject to underwriting.', cta: 'Start a Property Review', route: 'contact' },
+    { name: 'Traditional seller representation', desc: 'Clean and ready to list? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing. Standard listing agreement, full MLS exposure.', cta: 'List With Apollo', route: 'apollo' },
+    { name: 'Distressed or complex property review', desc: 'Probate, foreclosure, divorce, a tired rental, an inherited home, an expired listing, or ADU upside? Send it for a property review. We evaluate your options, which may include a direct purchase, a reposition, or a listing, subject to underwriting.', cta: 'Request a Property Review', route: 'contact' },
   ],
 };
 

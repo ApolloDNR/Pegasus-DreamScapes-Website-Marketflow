@@ -234,7 +234,7 @@ describe("CTABand primaryAction always resolves to a real route (Task #201)", ()
     );
     const primary = Array.from(
       container.querySelectorAll<HTMLButtonElement>("button"),
-    ).find((b) => (b.textContent || "").trim().startsWith("Start a Property Review"));
+    ).find((b) => (b.textContent || "").trim().startsWith("Request a Property Review"));
     expect(primary, "CTABand did not render its default primary CTA").toBeTruthy();
     fireEvent.click(primary!);
     expect(calls).toEqual(["contact"]);
