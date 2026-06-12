@@ -265,7 +265,7 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
    ================================================================ */
 const BUILD_PROCESS = [
   { n: '01', icon: ClipboardList, t: 'Scope & budget', d: 'Every project opens with a real budget and a draw schedule, agreed before the first hammer swings.' },
-  { n: '02', icon: Layers, t: 'The right bench', d: 'Vetted GCs and subcontractors are matched to the job and scaled to the project, never limited to one crew.' },
+  { n: '02', icon: Layers, t: 'The right bench', d: 'Licensed GCs and subcontractors are matched to the job and scaled to the project, never limited to one crew.' },
   { n: '03', icon: Hammer, t: 'Build to standard', d: 'A written finish spec and punch list every job is held to, from a cosmetic refresh to a ground-up build.' },
   { n: '04', icon: BadgeCheck, t: 'Deliver, finished', d: 'Walked and handed over complete, on a real timeline, not left half-open.' },
 ];
@@ -273,7 +273,7 @@ const BUILD_PROCESS = [
 function BuildProcessBlock() {
   return (
     <ProcessSteps eyebrow="How we build" title="Scope to finished product."
-      copy="Every job runs the same way: scoped before it starts, built to a written definition of done, and handed over complete."
+      copy="Every job is scoped before it starts, built to a written finish spec, and walked before we hand it over."
       steps={BUILD_PROCESS} />
   );
 }

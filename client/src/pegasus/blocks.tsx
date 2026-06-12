@@ -108,12 +108,12 @@ export function HomeIntro() {
           <div className="pg-label text-[var(--accent)]">What Pegasus is</div>
           <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
           <p className="font-serif-display italic text-xl text-[var(--muted)] leading-snug">
-            We invest in property, develop it with a real build team, and run the tools that make the next deal run the same way.
+            An East Bay investment and development firm. We take on the property and the numbers other buyers walk away from.
           </p>
         </div>
         <div className="lg:col-span-8 reveal delay-100">
           <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-[-0.01em]">
-            We <span className="text-[var(--accent)]">invest</span> in property others pass on, <span className="text-[var(--accent)]">develop</span> it with Apollo and a vetted team of former GCs, project managers, and trades who have run real jobsites, and run the <span className="text-[var(--accent)]">systems</span> that carry one underwriting from the first call to the closing table.
+            We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. We <span className="text-[var(--accent)]">develop</span> it with Apollo and licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> — underwriting, intake, and the marketplace — that hold every deal to the same read.
           </p>
         </div>
       </div>
@@ -128,8 +128,8 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)] overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Where do you fit?" title="Start where you are."
-          copy="Tell us which one sounds like you. Each path goes straight to the right next step — no decoding required." />
+        <SectionHead eyebrow="Where do you fit?" title="Pick your situation."
+          copy="Choose the one that matches where you are. Each goes straight to the right next step." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {LANE_CARDS.map((c, i) => (
             <button key={c.key} type="button" onClick={() => go(c.key)}

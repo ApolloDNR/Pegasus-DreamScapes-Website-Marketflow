@@ -12,7 +12,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Buyers', route: 'buyers', desc: 'Off-market and structured opportunities' },
       { label: 'Deal Finders & Wholesalers', route: 'dealfinders', desc: 'Bring a deal, get a straight answer' },
       { label: 'Capital Partners', route: 'capital', desc: 'Back specific projects, not blind pools' },
-      { label: 'Operators & Vendors', route: 'operators', desc: 'Join the vetted build bench' },
+      { label: 'Operators & Vendors', route: 'operators', desc: 'GCs, subs, and trades for our projects' },
       { label: 'Referral Partners', route: 'referral', desc: 'Send a name, share in the outcome' },
     ],
   },
@@ -95,7 +95,7 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 01',
     tag: 'Investments',
     title: <>We acquire and<br />reposition real assets</>,
-    lead: 'We are deal strategists first. We source distressed, dated, off-market, and overlooked property, then negotiate and structure each deal so it works for both sides. We buy it right, reposition it with discipline, and exit on a plan written before we close.',
+    lead: 'We find distressed, dated, off-market, and overlooked property, underwrite it on real numbers, and buy at a basis that holds. Then we reposition it and sell or hold on a plan set before we close.',
     points: [
       'Sourcing, negotiation, and deal structure handled by one team',
       'Underwriting on real numbers, not hope',
@@ -110,10 +110,10 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 02',
     tag: 'Development',
     title: <>We build the<br />finished product</>,
-    lead: 'The people Apollo builds with came up in the trades: former general contractors, project managers, and crews who have run real jobsites. Every renovation and ground-up build is scoped to a real budget and draw schedule, executed hand in hand with a vetted bench of GCs and subcontractors, and delivered on time with the punch list closed.',
+    lead: 'The people Apollo builds with came up in the trades: former general contractors, project managers, and crews who have run real jobsites. Every renovation and ground-up build is scoped to a real budget and draw schedule, executed alongside licensed GCs and subcontractors, and finished on schedule with the punch list closed.',
     points: [
       'Renovation and ground-up development',
-      'Led by experienced GCs and project managers, built with a vetted bench of subs',
+      'Led by experienced GCs and project managers, built with licensed subcontractors',
       'A delivered product, not a project left open',
     ],
     img: 'pegasus-craft-blueprint.png',
@@ -279,7 +279,7 @@ export const DOCTRINE: { t: string; d: string }[] = [
   { t: 'Read the situation, not just the spreadsheet', d: 'Behind every property is a person with a deadline, a constraint, or a decision. We solve for both.' },
   { t: 'Underwrite on real numbers', d: 'All-in cost, after-repair value, and the spread. If it does not pencil, we say so.' },
   { t: 'Write the exit before we enter', d: 'Sell, hold, refinance, or trade. The plan is decided before capital moves, not after.' },
-  { t: 'Deliver a finished product', d: 'The build team finishes the work to one definition of done, on a real schedule, not left half-open.' },
+  { t: 'Deliver a finished product', d: 'The build team finishes the work to one written finish standard, on a real schedule, not left half-open.' },
 ];
 
 /* ================================================================
@@ -287,9 +287,9 @@ export const DOCTRINE: { t: string; d: string }[] = [
    ================================================================ */
 export const DEV_TEAM: { t: string; d: string }[] = [
   { t: 'A team, not one hire', d: 'Former general contractors, project managers, and trades who have actually run jobsites, not a single person we depend on.' },
-  { t: 'A deep bench', d: 'We work hand in hand with a vetted network of GCs and subcontractors, scaled to the project instead of limited to one crew.' },
+  { t: 'A deep bench', d: 'We work with a deep network of GCs and subcontractors, scaled to the project instead of limited to one crew.' },
   { t: 'Scoped before we build', d: 'Every project starts with a real budget and a draw schedule, so the plan is honest before the first hammer swings.' },
-  { t: 'One definition of done', d: 'A single, written standard of completion, applied to every renovation and ground-up build, and delivered on a real timeline.' },
+  { t: 'One finish standard', d: 'A single, written standard of completion, applied to every renovation and ground-up build, and delivered on a real timeline.' },
 ];
 
 /* ================================================================
@@ -360,7 +360,7 @@ export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: 
   { key: 'buyers', title: 'I want to buy with an investor’s read', desc: 'Buy a finished home or buy into a deal, underwritten on real numbers before you commit.', icon: 'key', cta: 'See how buyers work with us' },
   { key: 'dealfinders', title: 'I have a deal to move', desc: 'Bring it once. Get a straight answer, written terms, and one buyer who actually closes.', icon: 'search', cta: 'Submit a deal' },
   { key: 'capital', title: 'I want to back specific deals', desc: 'Fund named projects on defined terms, with the risk and the downside laid out plainly. No blind pools.', icon: 'layers', cta: 'See how capital partners work' },
-  { key: 'operators', title: 'I build or service the work', desc: 'GCs, subs, agents, and title — join a vetted bench scaled to the project, where the trade is respected.', icon: 'hammer', cta: 'Join the build bench' },
+  { key: 'operators', title: 'I build or service the work', desc: 'GCs, subs, agents, and title — join our bench and get matched to projects that fit your work.', icon: 'hammer', cta: 'Join the build bench' },
   { key: 'referral', title: 'I want to refer someone', desc: 'Send one name. We handle the relationship and put any referral fee in writing before anything moves.', icon: 'handshake', cta: 'Refer a contact' },
 ];
 
@@ -545,7 +545,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     faqAnchor: 'submitting-a-property',
     faq: [
       { q: 'Will you actually buy it, or just list it?', a: 'Both are on the table. We can buy directly, or, if it serves you better, reposition and sell it for more. The Review tells you which path wins for you.' },
-      { q: 'What condition does it need to be in?', a: 'Any. Distressed, dated, occupied, or mid-project. Condition is our job, not your problem.' },
+      { q: 'What condition does it need to be in?', a: 'Any. Distressed, dated, occupied, or mid-project. Condition changes which path makes sense — a listing, an as-is purchase, or a reposition — but it never rules you out.' },
       { q: 'How fast can you close?', a: 'When speed is the priority, we structure for a fast, certain close. We will give you a real timeline up front, not a moving target.' },
     ],
     form: {
@@ -748,7 +748,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     points: [
       { t: 'Written terms before engagement', d: 'Where permitted by applicable licensing rules, the referral fee or JV split is agreed and documented before we make contact with anyone you send. What we agree is what you receive at close.' },
       { t: 'Your relationship stays intact', d: 'You keep the professional relationship. We solve the property or deal problem and hand it back to you cleanly.' },
-      { t: 'Honest read, every time', d: 'Your contact gets a straight read on their situation — including a clear "no" when that is the honest answer. Your reputation is safe.' },
+      { t: 'An honest read', d: 'Your contact gets a straight read on their situation — including a clear "no" when that is the honest answer. Your reputation is safe.' },
       { t: 'You stay informed', d: 'We keep you in the loop through the process, not just at the end.' },
     ],
     rich: ['faq'],
