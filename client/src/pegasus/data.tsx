@@ -38,7 +38,7 @@ export const NAV_GROUPS: NavGroup[] = [
 export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
   { value: 'Deal by deal', label: 'How every property is read', sub: 'Underwritten on real numbers, not hope' },
   { value: '250+', label: 'Opportunities underwritten', sub: 'Each one read deal by deal' },
-  { value: 'within 48h', label: 'First strategy read', sub: 'From intake to a written path' },
+  { value: '48 hours', label: 'First strategy read', sub: 'From intake to a written path' },
   { value: 'East Bay', label: 'Where we focus', sub: 'Contra Costa & Alameda County' },
 ];
 
@@ -314,7 +314,7 @@ export const FAQ_HOME: FaqItem[] = [
   },
   {
     q: 'Where do you operate?',
-    a: 'We are rooted in the East Bay, California, through Keller Williams East Bay (DRE #02333658), and we look at opportunities that fit our buy box wherever they make sense.',
+    a: 'We are rooted in the East Bay, California, through Keller Williams East Bay, and we look at opportunities that fit our buy box wherever they make sense.',
   },
 ];
 

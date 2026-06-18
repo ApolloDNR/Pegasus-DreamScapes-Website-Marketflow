@@ -40,7 +40,7 @@ export const CONTACT_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'property-review',
   heading: <>Start a <span className="italic text-[var(--accent)]">Property Review.</span></>,
-  lead: 'Inherited, distressed, or simply complicated? Send it over. We read every submission and return a clear, written path forward, usually within 48 hours.',
+  lead: 'Inherited, distressed, or simply complicated? Send it over. We read every submission and return a clear, written path forward within 48 hours.',
   submit: 'Request My Review',
   third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
   messageLabel: 'The situation',
@@ -62,7 +62,7 @@ export const STRATEGYLAB_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'strategy-snapshot',
   heading: <>Get a <span className="italic text-[var(--accent-bright)]">Property Read.</span></>,
-  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for a human-written Property Read: a short, candid read returned, in most cases, within 48 hours.',
+  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for a human-written Property Read: a short, candid read returned within 48 hours.',
   submit: 'Request a Property Read',
   third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
   messageLabel: 'The situation',
@@ -164,7 +164,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center ring-2 ring-[var(--bg)]"><Check className="w-4 h-4" /></span>
         </div>
         <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">Received. Thank you.</h3>
-        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">Our team reads your submission and returns a plain-language path forward. Most reads come back within 48 hours.</p>
+        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">Our team reads your submission and returns a plain-language path forward. We respond within 48 hours.</p>
       </div>
     );
   }
@@ -776,7 +776,7 @@ export function StrategyTierStrip() {
     },
     {
       key: 'snapshot', name: 'Property Read', price: 'Free · Human-Reviewed',
-      desc: 'Send the situation and Acquisitions returns a short, candid written read — usually within 48 hours.',
+      desc: 'Send the situation and Acquisitions returns a short, candid written read — within 48 hours.',
       cta: 'Request a Property Read', action: () => goSubmit(), emphasis: true,
     },
     {

@@ -281,7 +281,7 @@ function ProjectsGrid() {
             </h3>
             <p className="text-base text-muted-foreground mb-8 leading-relaxed">
               {statusFilter === "all" && strategyFilter === "all"
-                ? "Pegasus is in build mode. The first case studies are being documented now. In the meantime, the door is open for a Strategy Review on your situation."
+                ? "The first case studies are being documented now and publish once their final economics are signed off. In the meantime, the door is open for a Strategy Review on your situation."
                 : "Clear the filters to see the full set, or start a Strategy Review and we will route your situation to the right lane."}
             </p>
             <div className="flex justify-center">

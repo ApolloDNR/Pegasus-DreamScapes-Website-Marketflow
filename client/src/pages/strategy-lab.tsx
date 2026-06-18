@@ -2435,7 +2435,7 @@ export default function StrategyLabPage() {
             </div>
             <DialogTitle className="font-serif text-2xl">Send this snapshot in for review.</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Apollo's team reviews every submission within two business days. If we miss the window, your request is escalated for priority review. This is not an offer. Every property gets a serious read.
+              The team reviews every submission within 48 hours. If we miss the window, your request is escalated for priority review. This is not an offer. Every property gets a serious read.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
