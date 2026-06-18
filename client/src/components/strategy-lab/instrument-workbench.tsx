@@ -208,7 +208,7 @@ export function InstrumentWorkbench(props: InstrumentWorkbenchProps) {
           showSolver={showSolver}
           setShowSolver={setShowSolver}
         />
-        <RightVerdict
+        <RightReadPanel
           tone={tone}
           snapshot={props.snapshot}
           topLane={props.topLane}
@@ -1206,9 +1206,9 @@ function FlipCard({ finding, flip }: { finding: string; flip: string }) {
   );
 }
 
-/* ────────────── RIGHT VERDICT ────────────── */
+/* ────────────── RIGHT READ PANEL ────────────── */
 
-function RightVerdict({
+function RightReadPanel({
   tone: _tone,
   snapshot,
   topLane,

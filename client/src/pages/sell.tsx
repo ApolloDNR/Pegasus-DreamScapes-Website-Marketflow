@@ -289,7 +289,7 @@ function HeroSection() {
                 </p>
                 <div className="space-y-6">
                   {[
-                    { num: "24h", label: "Routed within 24 business hours" },
+                    { num: "48h", label: "Routed within 48 hours" },
                     { num: "8", label: "Outcome lanes. Never one-size-fits-all" },
                     { num: "0", label: "Pressure. Honest answers, every time" },
                   ].map((item, i) => (
@@ -921,7 +921,7 @@ function FAQSection() {
   const faqs = [
     {
       question: "What actually happens after I submit?",
-      answer: "Within 24 business hours, your property is reviewed against eight possible outcomes: direct acquisition, wholesale, JV, listing through our KW partnership, referral, and others. Whichever lane fits best is the one we recommend. We reach out with a real answer, not a templated lowball.",
+      answer: "Within 48 hours, your property is reviewed against eight possible outcomes: direct acquisition, wholesale, JV, listing through our KW partnership, referral, and others. Whichever lane fits best is the one we recommend. We reach out with a real answer, not a templated lowball.",
     },
     {
       question: "Will Pegasus always be the buyer?",

@@ -278,7 +278,7 @@ function BuildProcessBlock() {
 const LAB_STEPS = [
   { n: '01', icon: Compass, t: 'Describe the property', d: 'Location, property type, condition, occupancy, your role, and your goal. The console returns a Property Fit Score and flags the right lane before you touch a number.' },
   { n: '02', icon: Calculator, t: 'Underwrite the spread', d: 'Set acquisition basis, rehab scope, hold costs, and exit strategy. The Instant Strategy Preview models carry costs, selling costs, and live margin in real time.' },
-  { n: '03', icon: Ruler, t: 'Get a written Property Read', d: 'Hand the situation to the team. A short, candid written read of the path and the risk — not a form letter, usually back within 48 hours.' },
+  { n: '03', icon: Ruler, t: 'Get a written Property Read', d: 'Hand the situation to the team. A short, candid written read of the path and the risk — not a form letter, back within 48 hours.' },
   { n: '04', icon: Landmark, t: 'Commission the Deal Blueprint', d: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in a single documented engagement.' },
 ];
 
@@ -292,7 +292,7 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <section className="py-24 lg:py-28">
         <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
           <p className="text-[var(--muted)] leading-relaxed text-lg">
-            Apollo works with former GCs, project managers, and trades who have run real jobsites. The full development standard is being rewritten — in the meantime, start a direct conversation about a build.
+            Pegasus works with former GCs, project managers, and trades who have run real jobsites. We take on a small number of builds at a time and scope each one before committing — the budget, the draw schedule, and the finish spec in writing first. Bring a property or a site and we'll walk the scope with you.
           </p>
           <button type="button" onClick={() => go('connect')} data-testid="button-development-connect"
             className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
@@ -317,7 +317,7 @@ export function CapitalPage({ go }: { go: Nav }) {
       <section className="py-24 lg:py-28">
         <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
           <p className="text-[var(--muted)] leading-relaxed text-lg mb-6">
-            Capital partnerships are arranged privately, on a project-by-project basis, through direct conversation — never a blind pool. The full capital framework is being finalized.
+            Capital partnerships are arranged privately, one project at a time, through direct conversation — never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, start a conversation.
           </p>
           <p className="text-[var(--text-2)] text-[0.95rem] leading-relaxed mb-9" data-testid="text-capital-securities">
             No securities are offered through this website.

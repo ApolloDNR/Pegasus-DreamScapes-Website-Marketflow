@@ -231,7 +231,7 @@ function QuickTools() {
       icon: GraduationCap,
       title: "Ask Peggy AI",
       description: "Get answers to your real estate investing questions",
-      href: "#peggy",
+      href: "/peggy",
       internal: true,
     },
   ];

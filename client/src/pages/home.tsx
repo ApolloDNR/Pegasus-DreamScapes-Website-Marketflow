@@ -108,7 +108,7 @@ export default function Home() {
         Every property gets a path. Not every property gets an offer.
         Bring us the property. We'll show you the path.
         Bring us the property. We'll help find the path.
-        Most Strategy Snapshots are reviewed within 5 business days.
+        Most Strategy Snapshots are reviewed within 48 hours.
         The Dreamscaper Standard.
       </span>
     </div>
@@ -616,7 +616,7 @@ function StrategyLabTeaserSection() {
   const products = [
     { icon: Calculator, name: "Strategy Lab", tier: "Self-serve", desc: "Public calculator surface. Your preliminary read in minutes." },
     { icon: Compass, name: "Strategy Review", tier: "Conversation", desc: "Human-reviewed conversation off the Submit form." },
-    { icon: FileText, name: "Strategy Snapshot", tier: "Written", desc: "Preliminary written read. Most Strategy Snapshots are reviewed within 5 business days." },
+    { icon: FileText, name: "Strategy Snapshot", tier: "Written", desc: "Preliminary written read. Most Strategy Snapshots are reviewed within 48 hours." },
     { icon: ClipboardCheck, name: "Deal Blueprint", tier: "By Review", desc: "By-review, full underwriting and path document." },
   ];
   return (

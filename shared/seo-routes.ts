@@ -105,6 +105,12 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Request access to MarketFlow, the private deal network for Pegasus DreamScapes. Membership is reviewed by a person, not opened to everyone.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
+  "/marketflow/buyboxes": {
+    title: tag("Pegasus Buyboxes"),
+    description:
+      "Four named Pegasus Buyboxes with target geographies, deal types, and underwriting bands. Request a notification when a fit shows up.",
+    image: `${SITE_URL}/og/marketflow.png`,
+  },
   "/ecosystem": {
     title: tag("The Pegasus Ecosystem"),
     description:
@@ -161,6 +167,12 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "Submit a property or a deal to Pegasus DreamScapes. Every serious submission gets a real read and a clear path forward. No pressure.",
     image: `${SITE_URL}/og/submit.png`,
+  },
+  "/deal-blueprint": {
+    title: tag("Deal Blueprint"),
+    description:
+      "Request a Pegasus Deal Blueprint — a deeper, by-review underwrite of one property: the path, the spread, and the risk, written out in full.",
+    image: DEFAULT_OG_IMAGE,
   },
 
   // ---- Learn / network / legal ----
@@ -231,6 +243,11 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
+  // Buyboxes are soft-launched (config publicReady: false). The page stays
+  // reachable and indexable (it is not noindex) and carries its own unique
+  // crawler-visible metadata for direct visits / social shares — we simply
+  // don't advertise it in the sitemap until the buyboxes are public-ready.
+  /^\/marketflow\/buyboxes$/,
   // Website Spec v4: /library remains demoted (302 → home), so it must not be
   // advertised in the sitemap. Its SEO_ROUTES entry is retained only so
   // seoFor()'s prefix fallback keeps serving live subpaths (e.g. /library/:slug).

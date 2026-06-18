@@ -179,6 +179,14 @@ export default function SnapshotStatus() {
     noIndex: true,
   });
 
+  // No live HQ status contract is wired yet (getSnapshotStatusByToken does not
+  // exist). In production we therefore never show fixture data to a real
+  // visitor — we render an honest neutral state instead. The fixture-driven
+  // flow below stays available in dev/preview for building and testing.
+  if (import.meta.env.PROD) {
+    return <NeutralStatusView token={params.token} />;
+  }
+
   // TODO(HQ): replace with real loading state from getSnapshotStatusByToken().
   const isLoading = false;
   if (isLoading) {
@@ -393,6 +401,89 @@ export default function SnapshotStatus() {
         )}
 
         {/* Footer */}
+        <div className="mt-16 pt-8 border-t border-border/40 text-center">
+          <p className="text-xs text-muted-foreground mb-3">
+            Questions? Direct line:{" "}
+            <a
+              href="tel:+19257448525"
+              className="text-foreground hover:text-primary"
+            >
+              925-744-8525
+            </a>{" "}
+            ·{" "}
+            <a
+              href="mailto:apollo@pegasusdreamscapes.com"
+              className="text-foreground hover:text-primary"
+            >
+              apollo@pegasusdreamscapes.com
+            </a>
+          </p>
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs tracking-[0.15em]"
+              data-testid="button-snapshot-home"
+            >
+              Back to Pegasus DreamScapes
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NeutralStatusView({ token }: { token?: string }) {
+  return (
+    <div className="min-h-screen bg-background pt-24 pb-32">
+      <div className="max-w-3xl mx-auto px-6 lg:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-10"
+        >
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
+            <p className="text-xs uppercase tracking-[0.3em] text-primary font-semibold">
+              Strategy Snapshot · Submission tracking
+            </p>
+          </div>
+          <h1
+            className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-3"
+            data-testid="text-snapshot-title"
+          >
+            We've got your submission.
+          </h1>
+          {token ? (
+            <p
+              className="text-sm text-muted-foreground"
+              data-testid="text-snapshot-meta"
+            >
+              Reference{" "}
+              <span className="font-mono text-foreground">
+                {token.slice(0, 8)}
+              </span>
+            </p>
+          ) : null}
+        </motion.div>
+
+        <div
+          className="bg-card border border-border/50 rounded-md p-8 lg:p-10 shadow-sm space-y-4"
+          data-testid="panel-status-neutral"
+        >
+          <p className="text-base text-foreground leading-relaxed">
+            Live status tracking isn't open at this link yet. Acquisitions
+            reviews every property directly — not an automation — and reaches out
+            with your Property Read within 48 hours.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            You'll get an email the moment there's an update. Want to reach us
+            sooner? Use the direct line below.
+          </p>
+        </div>
+
         <div className="mt-16 pt-8 border-t border-border/40 text-center">
           <p className="text-xs text-muted-foreground mb-3">
             Questions? Direct line:{" "}
