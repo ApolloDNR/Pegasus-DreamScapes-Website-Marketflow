@@ -2,9 +2,9 @@
  * Strategy Lab — Tier strip render + routing guard (Task #176).
  *
  * Locks in the premium "Levels of depth" upgrade:
- *   1. All three tiers (Instant Strategy Preview / Strategy Snapshot /
+ *   1. All three tiers (Instant Strategy Preview / Property Read /
  *      Deal Blueprint) render.
- *   2. The "Strategy Snapshot" CTA routes to /submit.
+ *   2. The "Property Read" CTA routes to /submit.
  *   3. The "Deal Blueprint" CTA routes to /submit?intent=blueprint.
  *   4. The free "Instant Strategy Preview" tier has no CTA button.
  */
@@ -43,7 +43,7 @@ describe("StrategyTierStrip — three-tier pricing strip", () => {
     expect(screen.getByTestId("tier-blueprint")).toBeInTheDocument();
 
     expect(screen.getByText("Instant Strategy Preview")).toBeInTheDocument();
-    expect(screen.getByText("Strategy Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Property Read")).toBeInTheDocument();
     expect(screen.getByText("Deal Blueprint")).toBeInTheDocument();
   });
 
@@ -52,7 +52,7 @@ describe("StrategyTierStrip — three-tier pricing strip", () => {
     expect(screen.queryByTestId("button-tier-preview")).toBeNull();
   });
 
-  it("the Strategy Snapshot CTA routes to /submit", () => {
+  it("the Property Read CTA routes to /submit", () => {
     const history = renderStrip();
     fireEvent.click(screen.getByTestId("button-tier-snapshot"));
     expect(history[history.length - 1]).toBe("/submit");

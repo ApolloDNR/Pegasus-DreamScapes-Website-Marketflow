@@ -9,7 +9,7 @@ const GREETING =
   "I’m Peggy, the Pegasus intake concierge. Tell me about a property, a deal, or what you’re weighing, in your own words. I’ll ask the right questions and point you to the lane that fits.";
 
 const FALLBACK =
-  "I can’t reach my brain at the moment. You can still get a fast read from a person: start a Review and someone writes back within two business days, or open the Strategy Lab to model the numbers yourself.";
+  "I can’t reach my brain at the moment. You can still get a fast read from a person: start a Review and someone writes back within 48 hours, or open the Strategy Lab to model the numbers yourself.";
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 

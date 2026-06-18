@@ -6,7 +6,7 @@ import { CATEGORIES } from './data';
 import { NavBar } from './nav';
 import { Peggy } from './peggy';
 import {
-  HomePage, CategoryPage, DealArchitecturePage, InvestmentsPage, DevelopmentPage,
+  HomePage, CategoryPage, DealStrategyPage, InvestmentsPage, DevelopmentPage,
   StrategyLabPage, MarketFlowPage, WorkWithApolloPage, EcosystemPage, PeggyPage,
   AboutPage, ContactPage, CapitalPage, Footer,
 } from './pages';
@@ -120,7 +120,7 @@ export function Landing() {
         {route === 'capital' && <CapitalPage go={go} />}
         {route === 'operators' && <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={openPeggy} />}
         {route === 'referral' && <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={openPeggy} />}
-        {route === 'dealarchitecture' && <DealArchitecturePage go={go} openPeggy={openPeggy} />}
+        {route === 'dealstrategy' && <DealStrategyPage go={go} openPeggy={openPeggy} />}
         {route === 'investments' && <InvestmentsPage go={go} openPeggy={openPeggy} />}
         {route === 'development' && <DevelopmentPage go={go} />}
         {route === 'strategylab' && <StrategyLabPage go={go} openPeggy={openPeggy} />}

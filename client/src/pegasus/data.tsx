@@ -9,23 +9,21 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Who We Serve',
     items: [
       { label: 'Sellers & Owners', route: 'sellers', desc: 'Complex or stuck property, read for a path' },
-      { label: 'Buyers', route: 'buyers', desc: 'Off-market and structured opportunities' },
+      { label: 'Investor & Operator Buyers', route: 'buyers', desc: 'Overlooked and structured opportunities' },
       { label: 'Deal Finders & Wholesalers', route: 'dealfinders', desc: 'Bring a deal, get a straight answer' },
       { label: 'Capital Partners', route: 'capital', desc: 'Back specific projects, not blind pools' },
-      { label: 'Operators & Vendors', route: 'operators', desc: 'GCs, subs, and trades for our projects' },
+      { label: 'Vendors & Trades', route: 'operators', desc: 'GCs, subs, and trades for our projects' },
       { label: 'Referral Partners', route: 'referral', desc: 'Send a name, share in the outcome' },
     ],
   },
   {
     label: 'What We Do',
     items: [
-      { label: 'Deal Strategy', route: 'dealarchitecture', desc: 'How we turn a property into a plan' },
+      { label: 'Deal Strategy', route: 'dealstrategy', desc: 'How we turn a property into a plan' },
       { label: 'Investments', route: 'investments', desc: 'Acquisitions, value-add, and structure' },
       { label: 'Development', route: 'development', desc: 'Ground-up and renovation, scoped and delivered' },
       { label: 'Strategy Lab', route: 'strategylab', desc: 'Run the numbers before you commit' },
       { label: 'MarketFlow', route: 'marketflow', desc: 'The deal network, verified end to end' },
-      { label: 'Represent With Apollo', route: 'apollo', desc: 'Licensed representation through Keller Williams East Bay' },
-      { label: 'Pegasus Ecosystem', route: 'ecosystem', desc: 'The full Pegasus operating system' },
     ],
   },
 ];
@@ -33,12 +31,14 @@ export const NAV_GROUPS: NavGroup[] = [
 /* ================================================================
    CREDIBILITY STATS
    ================================================================ */
-// [CONFIRM: $180M+ reviewed, 250+ underwritten, and the 2-day strategy read are
-// claimed figures — verify each with Apollo before launch or soften to a range.]
+// [CONFIRM: the "250+ underwritten" figure is a claimed number — verify with
+// Apollo before launch or soften to a range. The first stat is intentionally
+// qualitative (no invented dollar figure); the read promise is "within 48
+// hours" per the locked spec.]
 export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
-  { value: '$180M+', label: 'In property reviewed', sub: 'Across the East Bay and beyond' },
+  { value: 'Deal by deal', label: 'How every property is read', sub: 'Underwritten on real numbers, not hope' },
   { value: '250+', label: 'Opportunities underwritten', sub: 'Each one read deal by deal' },
-  { value: '2-day', label: 'Strategy read', sub: 'From intake to a written path' },
+  { value: 'within 48h', label: 'First strategy read', sub: 'From intake to a written path' },
   { value: 'East Bay', label: 'Where we focus', sub: 'Contra Costa & Alameda County' },
 ];
 
@@ -57,9 +57,9 @@ export const DOORS3: {
 }[] = [
   {
     key: 'review',
-    kicker: 'Talk to a person',
+    kicker: 'Start with a written read',
     title: 'Request a Property Review',
-    desc: 'Tell us about the property or the situation. A person reads it and comes back with a clear, written path forward.',
+    desc: 'Tell us about the property or the situation. We read it and come back with a clear, written path forward.',
     best: 'Best when you have a specific property, a deadline, or a decision to make.',
     cta: 'Request a Property Review',
     action: 'contact',
@@ -95,7 +95,7 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 01',
     tag: 'Investments',
     title: <>We acquire and<br />reposition real assets</>,
-    lead: 'We find distressed, dated, off-market, and overlooked property, underwrite it on real numbers, and buy at a basis that holds. Then we reposition it and sell or hold on a plan set before we close.',
+    lead: 'We find distressed, dated, and overlooked property, underwrite it on real numbers, and buy at a basis that holds. Then we reposition it and sell or hold on a plan set before we close.',
     points: [
       'Sourcing, negotiation, and deal structure handled by one team',
       'Underwriting on real numbers, not hope',
@@ -139,7 +139,7 @@ export const PILLARS3: Pillar[] = [
 ];
 
 /* ================================================================
-   DEAL ARCHITECTURE ENGINE
+   DEAL STRATEGY ENGINE
    ================================================================ */
 export const ENGINE_INPUTS: { label: string; desc: string; icon: string }[] = [
   { label: 'Situation', desc: 'Probate, divorce, distress, tired rental, or a clean sale.', icon: 'compass' },
@@ -158,6 +158,22 @@ export const ENGINE_OUTPUT = {
 };
 
 /* ================================================================
+   HOW A DEAL MOVES — departments + two supporting pillars.
+   Shows structure, not headcount.
+   ================================================================ */
+export const DEPARTMENTS: { stage: string; name: string; desc: string; icon: string }[] = [
+  { stage: '01', name: 'Acquisitions', desc: 'Reads every submitted property on real numbers and returns a written path within 48 hours.', icon: 'search' },
+  { stage: '02', name: 'Development', desc: 'Scopes the renovation or ground-up build to a real budget and draw schedule, delivered with licensed contractors.', icon: 'hammer' },
+  { stage: '03', name: 'Dispositions', desc: 'Lists, sells, or places the finished asset on the plan set before we close.', icon: 'handshake' },
+  { stage: '04', name: 'Asset Management', desc: 'Operates and holds what we keep, and carries the underwriting forward into the next deal.', icon: 'key' },
+];
+
+export const DEPT_PILLARS: { name: string; desc: string; icon: string }[] = [
+  { name: 'Capital & Investor Relations', desc: 'Matches capital partners to specific projects on defined terms — never a blind pool.', icon: 'layers' },
+  { name: 'Finance & Legal', desc: 'Keeps the numbers, contracts, and disclosures straight from first read through exit.', icon: 'shield' },
+];
+
+/* ================================================================
    PRODUCT LADDER (naming is load-bearing)
    ================================================================ */
 export const PRODUCTS: {
@@ -172,41 +188,25 @@ export const PRODUCTS: {
   {
     step: '01',
     name: 'Strategy Lab',
-    kind: 'Self-serve tool',
-    desc: 'A free underwriting console you run yourself. Enter the property and the numbers and it returns a read in real time.',
+    kind: 'Free · Self-serve',
+    desc: 'A free underwriting console you run yourself. Enter the property and the numbers and it returns strategy-tier ranges, the lanes that could fit, and the risks to weigh — instantly.',
     cta: 'Open Strategy Lab',
     action: 'strategylab',
   },
   {
     step: '02',
-    name: 'Instant Strategy Preview',
-    kind: 'Automated output',
-    desc: 'The Lab returns an instant read: all-in, spread, margin, and a suggested lane. Directional, not an underwrite.',
-    cta: 'Run a Preview',
-    action: 'strategylab',
+    name: 'Property Read',
+    kind: 'Free · Written',
+    desc: 'Submit a property and Acquisitions returns a short, candid written read of the path and the risk — usually within 48 hours.',
+    cta: 'Request a Property Read',
+    action: 'contact',
   },
   {
     step: '03',
-    name: 'Strategy Review',
-    kind: 'Human intake',
-    desc: 'Hand the deal to a person. We ask the questions the form cannot and read the situation, not just the numbers.',
-    cta: 'Request a Review',
-    action: 'contact',
-  },
-  {
-    step: '04',
-    name: 'Strategy Snapshot',
-    kind: 'Written read',
-    desc: 'The written follow-up to a Review: a short, human assessment of the path — what the property is, what it could become, and how we would approach it.',
-    cta: 'Request a Snapshot',
-    action: 'contact',
-  },
-  {
-    step: '05',
     name: 'Deal Blueprint',
-    kind: 'By-review engagement',
-    desc: 'For deals that earn a full plan after a Strategy Review: scope, capital stack, construction approach, exit, and risk — commissioned by engagement, not purchased off the shelf.',
-    cta: 'Start a Review',
+    kind: 'By request',
+    desc: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in one documented engagement. By request — not sold yet.',
+    cta: 'Start a Deal Blueprint',
     action: 'contact',
   },
 ];
@@ -227,7 +227,7 @@ export const MARKETFLOW: {
     key: 'exchange',
     name: 'Deal Exchange',
     tag: 'Where deals move',
-    desc: 'Off-market opportunities flow in from finders and owners, get underwritten deal by deal, and route to the right buyer or lane.',
+    desc: 'Opportunities flow in from finders and owners, get underwritten deal by deal, and route to the right buyer or lane.',
     points: ['Vetted, underwritten opportunities', 'Clear terms for finders and sellers', 'No spray-and-pray blasts'],
     icon: 'route',
     forWho: 'Deal finders, sellers, buyers',
@@ -310,7 +310,7 @@ export const FAQ_HOME: FaqItem[] = [
   },
   {
     q: 'What is the difference between the Strategy Lab and a Strategy Review?',
-    a: 'The Strategy Lab is a self-serve tool that returns an Instant Strategy Preview: directional, automated numbers. A Strategy Review is a person reading your specific deal and writing back a path forward.',
+    a: 'The Strategy Lab is a self-serve tool that returns an Instant Strategy Preview: directional, automated numbers. A Strategy Review is our team reading your specific deal and writing back a path forward.',
   },
   {
     q: 'Where do you operate?',
@@ -343,9 +343,9 @@ export const APOLLO = {
 export const NELSON = {
   name: 'Nelson Drive',
   location: 'Richmond / El Sobrante Area, CA',
-  blurb: 'A dated single-family home, acquired off-market, fully renovated, and delivered move-in ready.',
+  blurb: 'A dated single-family home, acquired, fully renovated, and delivered move-in ready.',
   rows: [
-    { k: 'Acquired', v: '≈ $600K', note: 'Off-market, below comparable value' },
+    { k: 'Acquired', v: '≈ $600K', note: 'Acquired for full renovation' },
     { k: 'Renovation', v: '$100K', note: 'Managed by the build team' },
     { k: 'Delivered', v: '≈ $840K', note: 'Renovated and delivered move-in ready' },
     { k: 'Settled', v: 'September 2025', note: 'Closed and delivered' },
@@ -369,7 +369,7 @@ export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: 
    ================================================================ */
 export const PEGGY_CHIPS: string[] = [
   'I inherited a house and I am not sure what to do with it',
-  'I have an off-market deal. What is your basis and where would you come in?',
+  'I have a deal. What is your basis and where would you come in?',
   'I want to deploy capital into a value-add project',
   'Model the spread on a flip with carry and exit costs',
   'I am an agent with a client who needs to sell as-is, fast',
@@ -390,7 +390,7 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
     followups: [
       'Tell me about the property',
       'How fast can you close?',
-      'What is my situation worth?',
+      'What are my options here?',
     ],
   },
   {
@@ -409,7 +409,7 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
   {
     role: 'dealfinder', label: 'I have a deal to submit',
     chips: [
-      'I have an off-market deal. Where would Pegasus come in?',
+      'I have a deal. Where would Pegasus come in?',
       'How do JV terms and assignment economics work here?',
       'Does my deal fit the Pegasus Buy Box?',
     ],
@@ -481,7 +481,7 @@ export const PEGGY_FOLLOWUPS: string[] = [
   'I would rather talk to a person',
 ];
 
-export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs a person, we respond within two business days.';
+export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs the team, we respond within 48 hours.';
 
 /* Compliance note shown in the panel footer. Peggy is intake only — she never
    approves, prices, or advises. Publishing the guardrail is the credibility move. */
@@ -509,7 +509,7 @@ const buyerSplits: { heading: string; copy: string; paths: SplitPath[]; founderP
   paths: [
     { name: 'Buyer representation', desc: 'Want Apollo in your corner as your agent? Representation through Keller Williams Realty East Bay, with offers backed by real underwriting so you know what a home is actually worth.', cta: 'See how representation works', route: 'apollo' },
     { name: 'Investor buyer guidance', desc: 'Open to buying into a deal, not just a finished house? We frame the numbers and route you to the right project or capital lane, subject to review and a written agreement.', cta: 'Talk through a deal', route: 'contact' },
-    { name: 'Inventory & first look', desc: 'Want the finished product or off-market access? Request access to MarketFlow to see reviewed inventory before it reaches the open market.', cta: 'See MarketFlow inventory', route: 'marketflow' },
+    { name: 'Inventory & first look', desc: 'Want the finished product or early access? Request access to MarketFlow to see reviewed inventory before it reaches the open market.', cta: 'See MarketFlow inventory', route: 'marketflow' },
   ],
 };
 
@@ -541,7 +541,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You are not open to either a listing or a structured review',
     ],
     splits: sellerSplits,
-    secondary: { label: 'See how a property becomes a plan', route: 'dealarchitecture' },
+    secondary: { label: 'See how a property becomes a plan', route: 'dealstrategy' },
     faqAnchor: 'submitting-a-property',
     faq: [
       { q: 'Will you actually buy it, or just list it?', a: 'Both are on the table. We can buy directly, or, if it serves you better, reposition and sell it for more. The Review tells you which path wins for you.' },
@@ -552,7 +552,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       role: 'Seller',
       intent: 'seller',
       heading: <>Tell us about the property</>,
-      lead: 'Share what you are working with. A person reads it and comes back with a clear path, usually within two business days.',
+      lead: 'Share what you are working with. We read it and come back with a clear path, usually within 48 hours.',
       submit: 'Request My Review',
       third: { label: 'Property address or city', placeholder: '1234 Nelson Dr, East Bay' },
       messageLabel: 'What is the situation?',
@@ -623,7 +623,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     rich: ['buybox', 'faq'],
     quote: 'Bring us a deal that pencils and you get a straight answer fast: yes, no, or the number that works.',
     forYou: [
-      'You source off-market or distressed opportunities',
+      'You source overlooked or distressed opportunities',
       'You want a buyer or partner who reviews honestly and moves on written terms',
       'You value clarity on the path over a vague maybe',
     ],

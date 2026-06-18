@@ -108,12 +108,37 @@ export const BRAND_GUARDS: BannedPhrase[] = [
   { phrase: "chatbot", reason: 'Peggy is an "AI strategy assistant / concierge", never a "chatbot"' },
 ];
 
+// v4 re-skin (Website Spec LOCKED) bans. Three groups:
+//   1. Real-estate compliance — "off-market" implies pre-/below-market access and
+//      "below comparable value" implies a valuation/BPO; neither is permitted.
+//   2. Voice — speak as the company / its departments, not as a single named
+//      person ("a real person", "talk to Apollo", "Apollo personally"). Founder
+//      name + DRE# live in the footer disclosure only. "Deal Architecture" was
+//      renamed to "Deal Strategy" — we ban the brand PHRASE, not the bare word,
+//      so the 'pegasus-architecture.png' asset reference does not false-positive.
+//   3. Stat / timing claims — no unverified "$180M+" figure; the read promise is
+//      "within 48 hours", never "2-day" / "2 days".
+export const RESKIN_V4: BannedPhrase[] = [
+  { phrase: "off-market", reason: "v4 re-skin: implies pre-/below-market access — use 'overlooked' / 'early access'" },
+  { phrase: "below comparable value", reason: "v4 re-skin: implies a valuation/BPO claim — not permitted" },
+  { phrase: "a real person", reason: "v4 re-skin: company/department voice — not 'a real person'" },
+  { phrase: "real person", reason: "v4 re-skin: company/department voice — not 'real person'" },
+  { phrase: "apollo personally", reason: "v4 re-skin: founder personification — use company/department voice" },
+  { phrase: "talk to apollo", reason: "v4 re-skin: founder personification — route to Submit / the team" },
+  { phrase: "deal architecture", reason: "v4 re-skin: renamed to 'Deal Strategy'" },
+  { phrase: "$180m", reason: "v4 re-skin: unverified dollar claim — use defensible figures" },
+  { phrase: "180m+", reason: "v4 re-skin: unverified dollar claim — use defensible figures" },
+  { phrase: "2-day", reason: "v4 re-skin: read promise is 'within 48 hours', not '2-day'" },
+  { phrase: "2 days", reason: "v4 re-skin: read promise is 'within 48 hours', not '2 days'" },
+];
+
 export const BANNED_PHRASES: BannedPhrase[] = [
   ...FILLER_PHRASES,
   ...WEBSITE_DIRECTOR_FILLER,
   ...AI_TELLS,
   ...COMPLIANCE_RISK,
   ...BRAND_GUARDS,
+  ...RESKIN_V4,
 ];
 
 /** Normalize text so matching ignores case, curly quotes, and extra spacing. */

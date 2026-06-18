@@ -85,7 +85,7 @@ export default function SubmitPage() {
   useSEO({
     title: "Submit a Property",
     description:
-      "Submit a property to Pegasus DreamScapes. Every property gets a path. Apollo reviews every serious submission. No pressure.",
+      "Submit a property to Pegasus DreamScapes. Every property gets a path. Our team reviews every serious submission. No pressure.",
     image: "/og/submit.png",
   });
 
@@ -234,7 +234,7 @@ export default function SubmitPage() {
             Bring us the situation.
           </h1>
           <p className="font-serif text-xl text-white/85 italic leading-snug max-w-2xl">
-            Apollo reviews every serious submission himself. You will get a real answer.
+            Our team reviews every serious submission. You will get a real answer.
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-white/10" data-testid="submit-trust-row">
             <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">Licensed</span>

@@ -8,7 +8,7 @@ export type Route =
   | 'capital'
   | 'operators'
   | 'referral'
-  | 'dealarchitecture'
+  | 'dealstrategy'
   | 'investments'
   | 'development'
   | 'strategylab'

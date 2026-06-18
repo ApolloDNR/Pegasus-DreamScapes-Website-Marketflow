@@ -160,15 +160,11 @@ export const legacyRedirects: [string, string][] = [
   ["/calculators", "/strategy-lab/classic"],
   ["/education", "/library"],
   ["/wholesale", "/submit?intent=deal-jv"],
-  // Website Doctrine v3.0 (Lean Launch Cut) — the audience lanes are out of the
-  // launch cut and collapse into the canonical /submit intake. They stay
-  // registered via ROUTE_TO_URL / REDIRECTED_URLS so they can return later.
-  // Mirrors the server-side V3_DEMOTION_REDIRECTS.
-  ["/sellers", "/submit"],
-  ["/buyers", "/submit"],
-  ["/dealfinders", "/submit"],
-  ["/operators", "/submit"],
-  ["/referral", "/submit"],
+  // Website Spec v4 (Re-skin) — the audience lanes are restored to the public
+  // prototype shell (PEGASUS_URLS), so they are no longer redirected. The only
+  // lane-level redirect kept here is the permanent rename of the Deal Strategy
+  // surface, which 301s its old URL forward.
+  ["/deal-architecture", "/deal-strategy"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],
@@ -227,9 +223,9 @@ export function Router() {
       <Route path="/projects" component={Projects} />
       <Route path="/projects/nelson-dr" component={NelsonDrPage} />
       <Route path="/projects/:slug" component={ProjectDetail} />
-      {/* v3.0 Lean Launch Cut — /strategy-lab is out of the launch and
-       * redirects home. The /strategy-lab/* tool subroutes below stay live. */}
-      <Route path="/strategy-lab">{() => <Redirect to="/" />}</Route>
+      {/* Website Spec v4 — /strategy-lab is a live prototype shell page again
+       * (mounted via PEGASUS_URLS above). The /strategy-lab/* tool subroutes
+       * below stay live as their own standalone surfaces. */}
       <Route path="/strategy-lab/library" component={StrategyLabLibrary} />
       <Route path="/strategy-lab/submitted" component={StrategyLabSubmitted} />
       <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
@@ -249,18 +245,13 @@ export function Router() {
       <Route path="/vendor-network" component={VendorNetwork} />
       {/* v3.0 Lean Launch Cut — /faq is out of the launch and redirects home. */}
       <Route path="/faq">{() => <Redirect to="/" />}</Route>
-      {/* Empire Doctrine Amendment 2 §C — /ecosystem is the footer-only
-       * Audience-B release valve (kept reachable, unlinked). v3.0 Lean Launch
-       * Cut demotes /peggy: the public Peggy page is out of the launch and
-       * redirects home (the Peggy concierge widget stays in the shell). */}
+      {/* /ecosystem is a footer-linked surface. Website Spec v4 restores the
+       * public /peggy page to a live prototype shell page (mounted via
+       * PEGASUS_URLS above), alongside the in-shell Peggy concierge widget. */}
       <Route path="/ecosystem" component={Ecosystem} />
-      <Route path="/peggy">{() => <Redirect to="/" />}</Route>
-      {/* v3.0 Lean Launch Cut — Work With Apollo and Deal Architecture are out
-       * of the launch cut. Work With Apollo (licensed representation) redirects
-       * to /connect; Deal Architecture redirects home. Both stay registered via
-       * ROUTE_TO_URL so they can return later. */}
-      <Route path="/work-with-apollo">{() => <Redirect to="/connect" />}</Route>
-      <Route path="/deal-architecture">{() => <Redirect to="/" />}</Route>
+      {/* Website Spec v4 — Represent With Apollo is a live prototype shell page
+       * again (mounted via PEGASUS_URLS above). The legacy /deal-architecture
+       * URL 301s forward to /deal-strategy via legacyRedirects above. */}
       <Route path="/contact" component={Contact} />
       {/* Empire Doctrine v1.0.1 / Amendment 2: /systems, /education,
        * /calculators, /buyers, /wholesale, /capital-raising, /dreamspace
@@ -294,10 +285,10 @@ export function Router() {
         <Route key={from} path={from}>{() => <Redirect to={to} />}</Route>
       ))}
       
-      {/* MarketFlow Routes with Supabase Auth. v3.0 Lean Launch Cut — the
-       * public /marketflow landing is out of the launch and redirects home;
-       * /marketflow/access and the operator surfaces below stay live. */}
-      <Route path="/marketflow">{() => <Redirect to="/" />}</Route>
+      {/* MarketFlow Routes with Supabase Auth. Website Spec v4 restores the
+       * public /marketflow landing as a live prototype shell page (mounted via
+       * PEGASUS_URLS above); /marketflow/access and the operator surfaces below
+       * stay live as their own standalone surfaces. */}
       <Route path="/marketflow/access" component={MarketflowAccess} />
       {/* Website Structure v1 FINAL §7 — Pegasus Buyboxes moved off the
        * MarketFlow landing into a dedicated public surface. */}

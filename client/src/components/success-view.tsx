@@ -37,7 +37,7 @@ const TIMELINE = [
   {
     icon: Search,
     title: "Triaged",
-    sub: "Apollo reads every submission himself within 1–2 business days.",
+    sub: "Acquisitions reads every submission within 48 hours.",
   },
   {
     icon: Compass,
@@ -64,9 +64,9 @@ const FORM_COPY: Record<
   submit: {
     kicker: "Submission received",
     headline: "The property is in review.",
-    lead: "Apollo reads every serious submission personally. You will hear back with the structural read on your property and the next step, even if the answer is that Pegasus is not the right fit.",
+    lead: "Acquisitions reads every serious submission. You will hear back with the structural read on your property and the next step, even if the answer is that Pegasus is not the right fit.",
     expectations: [
-      "Most Strategy Snapshots are reviewed within 5 business days.",
+      "Most Property Reads come back within 48 hours.",
       "If we need more on the situation, we will reach out directly — no auto-emails.",
       "Every property gets a path. Not every property gets an offer.",
     ],
@@ -75,9 +75,9 @@ const FORM_COPY: Record<
   contact: {
     kicker: "Message received",
     headline: "The note is in.",
-    lead: "A real person reads every message that lands here. We will reply within 1–2 business days with a direct answer.",
+    lead: "The team reads every message that lands here. We will reply within 48 hours with a direct answer.",
     expectations: [
-      "Replies come from Apollo or the team lead closest to your topic.",
+      "Replies come from the team lead closest to your topic.",
       "If your note belongs in a structured path (sell, build, capital), we will redirect you to the right intake.",
       "Press and partnership requests are routed the same day.",
     ],

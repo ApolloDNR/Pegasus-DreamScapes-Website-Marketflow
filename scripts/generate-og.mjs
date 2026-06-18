@@ -112,7 +112,7 @@ const cards = [
     sub: "Refer a contact and we handle the relationship, with any referral fee documented.",
   },
   {
-    slug: "deal-architecture",
+    slug: "deal-strategy",
     kicker: "Deal Strategy · Pegasus DreamScapes",
     h1: "Property to plan.",
     h2: "Read once.",

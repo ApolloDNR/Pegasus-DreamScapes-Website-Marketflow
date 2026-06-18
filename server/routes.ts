@@ -235,29 +235,21 @@ export async function registerRoutes(
     ['/resources', '/library'],
     ['/invest', '/capital'],
     ['/partner', '/capital'],
+    // Website Spec v4 — permanent rename of the Deal Strategy surface.
+    ['/deal-architecture', '/deal-strategy'],
   ];
   for (const [from, to] of LEGACY_REDIRECTS) {
     app.get(from, (_req, res) => res.redirect(301, to));
   }
 
-  // ─── Website Doctrine v3.0 (Lean Launch Cut) demotions ────────────────
-  // These public pages are out of the lean launch cut but are expected to
-  // return, so we 302 (temporary) rather than 301 them: the audience lanes
-  // collapse into the canonical /submit intake, Work With Apollo into /connect,
-  // and the rest to the home page. Exact-match only, so subpaths that stay live
-  // (e.g. /marketflow/access, /library/:slug, /strategy-lab/classic) are not
-  // caught. Kept separate from the permanent 301 LEGACY_REDIRECTS above.
+  // ─── Website Spec v4 (Re-skin) residual demotions ─────────────────────
+  // The v4 re-skin restored the audience lanes, Strategy Lab, MarketFlow,
+  // Peggy, Represent With Apollo, and Deal Strategy to the live public
+  // surface, so they are no longer demoted. Only /library and /faq remain out
+  // of the v4 launch and 302 (temporary) to the home page. Exact-match only,
+  // so live subpaths (e.g. /library/:slug) are not caught. Kept separate from
+  // the permanent 301 LEGACY_REDIRECTS above.
   const V3_DEMOTION_REDIRECTS: Array<[string, string]> = [
-    ['/sellers', '/submit'],
-    ['/buyers', '/submit'],
-    ['/dealfinders', '/submit'],
-    ['/operators', '/submit'],
-    ['/referral', '/submit'],
-    ['/work-with-apollo', '/connect'],
-    ['/strategy-lab', '/'],
-    ['/marketflow', '/'],
-    ['/peggy', '/'],
-    ['/deal-architecture', '/'],
     ['/library', '/'],
     ['/faq', '/'],
   ];

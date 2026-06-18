@@ -72,8 +72,8 @@ const PIPELINE = [
 ];
 
 const TIMELINE = [
-  { phase: "Acquire", note: "Secured off-market at approximately $600K — below comparable value for the condition and area." },
-  { phase: "Define Scope", note: "Set a $100K improvement budget focused on kitchen, bathrooms, flooring, and finish quality — improvements that create visible value without overbuilding." },
+  { phase: "Acquire", note: "Acquired on the open market at approximately $600K — a dated property where the work was the opportunity." },
+  { phase: "Define Scope", note: "Set a $100K improvement budget focused on kitchen, bathrooms, flooring, and finish quality — improvements that present clearly to retail buyers without overbuilding." },
   { phase: "Execute", note: "Ran the improvements in sequence on the defined budget, managed by the Pegasus development team." },
   { phase: "Prepare", note: "Staged and positioned the finished product for the retail market." },
   { phase: "Exit", note: "Listed, accepted, and settled at approximately $840K — September 2025." },
@@ -688,9 +688,9 @@ export default function NelsonDrPage() {
             <p className="text-muted-foreground leading-relaxed">
               Some properties are not obvious wins at first glance. Some need the right
               scope, the right capital plan, or the right exit. Some need someone to
-              architect the deal before the market sees the finished version. That is
-              where Pegasus DreamScapes operates — in the architecture of the path, not
-              just the purchase.
+              structure the deal before the market sees the finished version. That is
+              where Pegasus DreamScapes operates — in the path to the finished product,
+              not just the purchase.
             </p>
           </CardSurface>
         </ScrollReveal>

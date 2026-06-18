@@ -43,13 +43,15 @@ describe("isCrawlablePublicPath", () => {
     }
   });
 
-  it("excludes v3-demoted bare routes from the sitemap (they 302-redirect)", () => {
+  it("excludes the remaining demoted bare route from the sitemap (it 302-redirects)", () => {
     const sitemapPaths = new Set(sitemapEntries().map((e) => e.path));
-    for (const p of ["/marketflow", "/library"]) {
-      expect(isCrawlablePublicPath(p)).toBe(false);
-      expect(sitemapPaths.has(p)).toBe(false);
-    }
-    // live subpaths must still be crawlable and advertised
+    // Website Spec v4 restored /marketflow to the live public surface, so it is
+    // crawlable and advertised again. /library remains demoted (302 → home).
+    expect(isCrawlablePublicPath("/library")).toBe(false);
+    expect(sitemapPaths.has("/library")).toBe(false);
+    // /marketflow is live again; its access subpath stays live too.
+    expect(isCrawlablePublicPath("/marketflow")).toBe(true);
+    expect(sitemapPaths.has("/marketflow")).toBe(true);
     expect(isCrawlablePublicPath("/marketflow/access")).toBe(true);
     expect(sitemapPaths.has("/marketflow/access")).toBe(true);
   });

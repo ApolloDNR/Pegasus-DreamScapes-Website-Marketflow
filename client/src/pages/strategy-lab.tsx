@@ -34,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
+import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from "@/lib/strategy-tier-ranges";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { usePeggyContext } from "@/contexts/peggy-context";
 import { useQuery } from "@tanstack/react-query";
@@ -1966,10 +1967,7 @@ export default function StrategyLabPage() {
                   >
                     <div className="flex items-baseline justify-between mb-2">
                       <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
-                        Recommended lane
-                      </div>
-                      <div className="text-[10px] uppercase tracking-[0.16em] font-supporting font-bold text-[hsl(var(--copper))]">
-                        {topLane.verdictLabel}
+                        Where this could go
                       </div>
                     </div>
                     <h3 className="font-serif text-2xl font-semibold leading-tight mb-1">
@@ -1987,10 +1985,7 @@ export default function StrategyLabPage() {
                   >
                     <div className="flex items-baseline justify-between mb-2">
                       <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
-                        Confidence
-                      </div>
-                      <div className="text-xs tabular-nums text-muted-foreground">
-                        {topLane.confidence.score}/100
+                        Read confidence
                       </div>
                     </div>
                     <div className="font-serif text-2xl font-semibold tabular-nums">
@@ -2009,48 +2004,27 @@ export default function StrategyLabPage() {
                     </p>
                   </div>
 
-                  {/* Card 3 — Primary metric */}
-                  {topLane.economics && (
-                    <div
-                      className="border border-[hsl(var(--rule))] p-4"
-                      data-testid="quick-card-metric"
-                    >
-                      <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
-                        Headline number
-                      </div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] font-supporting font-semibold text-muted-foreground mb-1">
-                        {topLane.economics.primaryMetric}
-                      </div>
-                      <div className="font-serif text-3xl font-semibold tabular-nums">
-                        {topLane.economics.primaryValue}
-                      </div>
-
-                      {quickMath && (
-                        <details className="mt-3 border-t border-[hsl(var(--rule))] pt-3 [&[open]>summary>span.chev]:rotate-90">
-                          <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
-                            <span className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
-                              How we got this number
-                            </span>
-                            <span className="chev transition-transform text-primary text-xs" aria-hidden="true">›</span>
-                          </summary>
-                          <ul className="mt-3 text-[11px] text-muted-foreground leading-relaxed space-y-1.5 font-mono" data-testid="quick-math-reveal">
-                            {quickMath.lines.map((ln, i) => (
-                              <li key={i} className="flex justify-between gap-3">
-                                <span className="text-foreground">{ln.label}</span>
-                                <span className="tabular-nums">{ln.value}</span>
-                              </li>
-                            ))}
-                            <li className="pt-1 text-[10px] italic border-t border-[hsl(var(--rule))]/50">
-                              Mgmt {quickMath.mgmtPct}% · Rate {quickMath.ratePct}% / 30 yr · Vacancy {quickMath.vacancyPct}% (Base)
-                            </li>
-                          </ul>
-                          <p className="mt-2 text-[10px] text-muted-foreground leading-snug">
-                            Edit any assumption above to recompute. The Strategy Snapshot Builder adds Stressed / Worst scenarios, DSCR, and the lane-by-lane sensitivity grid.
-                          </p>
-                        </details>
-                      )}
+                  {/* Card 3 — Strategy-tier range (illustrative, never property-specific) */}
+                  <div
+                    className="border border-[hsl(var(--rule))] p-4"
+                    data-testid="quick-card-metric"
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
+                      Strategy-tier range
                     </div>
-                  )}
+                    <div className="text-[11px] uppercase tracking-[0.16em] font-supporting font-semibold text-muted-foreground mb-1">
+                      {tierRangeFor(topLane.lane).strategy}
+                    </div>
+                    <div className="font-serif text-3xl font-semibold tabular-nums" data-testid="text-quick-tier-range">
+                      {tierRangeFor(topLane.lane).range}
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted-foreground leading-snug">
+                      Illustrative — {tierRangeFor(topLane.lane).basis}.
+                    </p>
+                    <p className="mt-2 text-[10px] text-muted-foreground leading-snug">
+                      {NOT_A_VALUATION_DISCLOSURE}
+                    </p>
+                  </div>
 
                   {/* See full analysis CTA */}
                   <button
@@ -2082,7 +2056,7 @@ export default function StrategyLabPage() {
                     <div className="mt-4 pt-4 border-t border-[hsl(var(--rule))]">
                       <p className="text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold mb-2">Ready for a real review?</p>
                       <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                        Apollo reviews every serious submission personally. Submit this property for a full structural read.
+                        Acquisitions reviews every serious submission. Submit this property for a full structural read.
                       </p>
                       <a
                         href={`/submit?intent=property${form.address ? `&address=${encodeURIComponent(form.address)}` : ""}`}
@@ -2220,10 +2194,10 @@ export default function StrategyLabPage() {
               data-testid="mobile-drawer-collapsed"
             >
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">Verdict</div>
+                <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">Where this could go</div>
                 <div className="font-serif text-base font-semibold truncate">{topLane.laneLabel}</div>
                 <div className="text-[11px] text-muted-foreground truncate">
-                  {topLane.economics?.primaryMetric}: <span className="font-semibold text-foreground">{topLane.economics?.primaryValue}</span>
+                  {tierRangeFor(topLane.lane).strategy}: <span className="font-semibold text-foreground">{tierRangeFor(topLane.lane).range}</span>
                 </div>
               </div>
               <ChevronUp className="w-5 h-5 text-muted-foreground shrink-0" />
@@ -2231,7 +2205,7 @@ export default function StrategyLabPage() {
           ) : (
             <div className="max-h-[78vh] overflow-y-auto">
               <div className="sticky top-0 bg-[hsl(var(--paper))] border-b border-[hsl(var(--rule))] px-4 py-2.5 flex items-center justify-between">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">Pegasus Verdict</div>
+                <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">Strategy read</div>
                 <button onClick={() => setDrawerOpen(false)} className="p-1" data-testid="mobile-drawer-close" aria-label="Close verdict">
                   <ChevronDown className="w-5 h-5 text-muted-foreground" />
                 </button>
@@ -2241,20 +2215,13 @@ export default function StrategyLabPage() {
                   <div className="font-serif text-2xl font-semibold leading-tight">{topLane.laneLabel}</div>
                   <div className="text-sm text-muted-foreground mt-1">{topLane.headline}</div>
                 </div>
-                {topLane.economics && (
-                  <div className="border border-[hsl(var(--rule))] p-3">
-                    <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">{topLane.economics.primaryMetric}</div>
-                    <div className="font-serif text-2xl font-semibold tabular-nums">{topLane.economics.primaryValue}</div>
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      {(topLane.economics.metrics ?? []).slice(0, 4).map((m) => (
-                        <div key={m.label}>
-                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-supporting">{m.label}</div>
-                          <div className="text-sm font-semibold tabular-nums">{m.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <div className="border border-[hsl(var(--rule))] p-3">
+                  <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">Strategy-tier range</div>
+                  <div className="text-[11px] uppercase tracking-[0.16em] font-supporting font-semibold text-muted-foreground mb-1">{tierRangeFor(topLane.lane).strategy}</div>
+                  <div className="font-serif text-2xl font-semibold tabular-nums" data-testid="text-drawer-tier-range">{tierRangeFor(topLane.lane).range}</div>
+                  <p className="mt-2 text-[11px] text-muted-foreground leading-snug">Illustrative — {tierRangeFor(topLane.lane).basis}.</p>
+                  <p className="mt-2 text-[10px] text-muted-foreground leading-snug">{NOT_A_VALUATION_DISCLOSURE}</p>
+                </div>
                 {framedMemo.paragraph && (
                   <div className="border-l-2 border-[hsl(var(--copper))] pl-3">
                     <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">Decision Memo</div>
@@ -2282,7 +2249,7 @@ export default function StrategyLabPage() {
                   <div className="mt-4 pt-4 border-t border-[hsl(var(--rule))]">
                     <p className="text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold mb-2">Ready for a real review?</p>
                     <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                      Apollo reviews every serious submission personally. Submit this property for a full structural read.
+                      Acquisitions reviews every serious submission. Submit this property for a full structural read.
                     </p>
                     <a
                       href={`/submit?intent=property${form.address ? `&address=${encodeURIComponent(form.address)}` : ""}`}

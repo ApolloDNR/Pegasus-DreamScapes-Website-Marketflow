@@ -17,6 +17,7 @@ import {
   type RiskFlag,
 } from "@shared/strategy-lab";
 import { LANE_PILLARS } from "@shared/strategy-lab/types";
+import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from "@/lib/strategy-tier-ranges";
 
 /* ── tokens (literal var refs from index.css :root) ─────────────────────── */
 const NAVY = "var(--pd-navy)";
@@ -29,35 +30,8 @@ const FONT_SUP = "var(--pd-font-supporting)";
 const FONT_SANS = "var(--pd-font-sans)";
 const FONT_DISP = "var(--pd-font-display)";
 
-/* ── tone-frame copy (verbatim from approved mockup) ────────────────────── */
+/* ── reading-lens type (UI preview only) ────────────────────────────────── */
 export type Tone = "owner" | "wholesaler" | "capital" | "admin";
-
-const TONE_FRAMES: Record<Tone, { kicker: string; verdict: string; cta: string }> = {
-  owner: {
-    kicker: "For the homeowner",
-    verdict:
-      "Your home reads as a viable refi-and-hold for a long-term operator. If you sell as-is, a serious buyer pays in the $410–$430k range. If you'd rather not list, we can talk about a private path.",
-    cta: "Talk to Apollo about a private offer",
-  },
-  wholesaler: {
-    kicker: "For the wholesaler",
-    verdict:
-      "Property assigns. Spread to ARV is 18%, refi math holds at 75% LTV with $40k cash left in. If your buyer is a BRRRR operator, push assignment at $425–$435k. If you're walking, comp depth is the only thing in the way.",
-    cta: "Submit to Pegasus's buyer list",
-  },
-  capital: {
-    kicker: "For the capital partner",
-    verdict:
-      "Deal structures as a 75% senior + 25% LP equity refinance with $40k of operator capital at close. DSCR 1.42 at 7.25%. Two open variables would tighten confidence: comp depth and a walk-through of 1985-era systems.",
-    cta: "Open the capital stack modeler",
-  },
-  admin: {
-    kicker: "For Pegasus HQ",
-    verdict:
-      "Route: BRRRR operator network (3 active). Submission SLA 48h. Confidence 72%, range 65–78%. Two flags before any offer: comp depth (3/5) and unverified plumbing/electrical on a 1985 build.",
-    cta: "Route to operator network",
-  },
-};
 
 /* ── scenario overlays (Conservative / Base / Aggressive) ───────────────── */
 export type Scenario = "conservative" | "base" | "aggressive";
@@ -221,7 +195,6 @@ export function InstrumentWorkbench(props: InstrumentWorkbenchProps) {
         />
         <RightVerdict
           tone={tone}
-          frame={TONE_FRAMES[tone]}
           snapshot={props.snapshot}
           topLane={props.topLane}
           framedMemo={props.framedMemo}
@@ -787,7 +760,7 @@ function CenterColumn({
           style={{ fontFamily: FONT_SERIF, color: MUTED }}
         >
           Confidence bands are a ±7 placeholder until the engine returns a
-          true range. The top lane is the engine's verdict for this scenario.
+          true range. The top lane is the strongest-fit path for this scenario.
         </div>
       </div>
 
@@ -1239,7 +1212,6 @@ function FlipCard({ finding, flip }: { finding: string; flip: string }) {
 
 function RightVerdict({
   tone: _tone,
-  frame,
   snapshot,
   topLane,
   framedMemo,
@@ -1255,7 +1227,6 @@ function RightVerdict({
   onOpenBlueprintTier,
 }: {
   tone: Tone;
-  frame: typeof TONE_FRAMES[Tone];
   snapshot: StrategySnapshot | null;
   topLane: LaneFitResult | undefined;
   framedMemo: { paragraph: string; nextStep: string };
@@ -1272,8 +1243,7 @@ function RightVerdict({
 }) {
   const conf = topLane?.confidence.score ?? 0;
   const band: [number, number] = [clampPct(conf - 7), clampPct(conf + 7)];
-  const primary = topLane?.economics?.primaryValue ?? "—";
-  const primaryLabel = topLane?.economics?.primaryMetric ?? "Top metric";
+  const tier = topLane ? tierRangeFor(topLane.lane) : null;
 
   return (
     <aside
@@ -1302,7 +1272,7 @@ function RightVerdict({
               className="text-[10px] tracking-[0.28em] uppercase font-semibold"
               style={{ fontFamily: FONT_SUP, color: COPPER }}
             >
-              Verdict · Live
+              Strategy range
             </span>
           </div>
           <span
@@ -1339,7 +1309,7 @@ function RightVerdict({
                 fontFamily: FONT_SERIF,
               }}
             >
-              {topLane ? `point estimate ${conf}%` : "Add an asking price to score"}
+              {topLane ? "read strength" : "Add an asking price to score"}
             </span>
           </div>
           <div
@@ -1381,13 +1351,13 @@ function RightVerdict({
           </div>
         </div>
 
-        {/* Top lane + primary metric */}
+        {/* Lead path + illustrative range */}
         <div className="px-5 pt-4 pb-2">
           <div
             className="text-[9px] tracking-[0.25em] uppercase font-semibold mb-1"
             style={{ fontFamily: FONT_SUP, color: COPPER }}
           >
-            Top lane
+            Lead path
           </div>
           <div
             className="text-[22px] leading-tight"
@@ -1402,12 +1372,13 @@ function RightVerdict({
               fontFamily: FONT_SERIF,
               color: "rgba(246,239,228,0.65)",
             }}
+            data-testid="instrument-tier-range"
           >
-            {primaryLabel}: {primary}
+            {tier ? `Illustrative range · ${tier.range}` : "Add an asking price to score"}
           </div>
         </div>
 
-        {/* Tone-framed verdict copy (UI preview) */}
+        {/* Illustrative range note (not a verdict / valuation) */}
         <div
           className="px-5 py-4 border-t"
           style={{
@@ -1419,7 +1390,7 @@ function RightVerdict({
             className="text-[9px] tracking-[0.25em] uppercase font-semibold mb-1.5"
             style={{ fontFamily: FONT_SUP, color: COPPER }}
           >
-            {frame.kicker} · UI preview
+            Illustrative range
           </div>
           <p
             className="text-[12.5px] leading-[1.6]"
@@ -1428,7 +1399,9 @@ function RightVerdict({
               color: "rgba(246,239,228,0.92)",
             }}
           >
-            {frame.verdict}
+            {tier
+              ? `${tier.strategy}: ${tier.range} — ${tier.basis}. ${NOT_A_VALUATION_DISCLOSURE}`
+              : `Add an asking price to see the illustrative strategy-tier range. ${NOT_A_VALUATION_DISCLOSURE}`}
           </p>
         </div>
 
@@ -1650,7 +1623,7 @@ function RightVerdict({
             }}
             data-testid="btn-submit-pegasus"
           >
-            {submitIsPending ? "Sending…" : frame.cta}
+            {submitIsPending ? "Sending…" : "Submit for a Property Read"}
           </button>
           <div className="flex items-center gap-2 mt-2.5">
             <div
@@ -1801,7 +1774,7 @@ function TrailDrawer({ show, toggle }: { show: boolean; toggle: () => void }) {
             <TrailLine ts="10:42:05" tag="LANE" msg="BRRRR · 67% → 72%" tone="up" />
             <TrailLine ts="10:42:06" tag="RISK" msg="Comp depth 3/5 flagged" tone="warn" />
             <TrailLine ts="10:42:08" tag="LENS" msg="Tone frame applied" />
-            <TrailLine ts="10:42:09" tag="VERDICT" msg="Top lane locked · range computed" tone="verdict" />
+            <TrailLine ts="10:42:09" tag="RANGE" msg="Top lane locked · range computed" tone="verdict" />
             <TrailLine ts="10:42:10" tag="EXPORT" msg="Snapshot PDF generated" />
           </div>
         </div>

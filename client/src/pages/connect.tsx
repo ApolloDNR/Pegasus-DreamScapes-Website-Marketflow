@@ -15,46 +15,36 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import founderApolloPath from "@assets/image_1778735694150.png";
 
-// Empire Doctrine v1.0.1 + Phase 2 polish — Apollo's personal QR landing.
-// Goal for the demo: premium, interactive, on-brand. Founder photo in
-// the hero, warm direct greeting from Apollo, soft Peggy presence (the
-// chat itself stays internal per v1.0.1 doctrine — public Peggy is a
-// v1.1 surface), preserved six routing buttons with full CTA
-// attribution wiring, and a direct contact strip at the foot of the
-// page. Single URL for both QR scans and direct nav.
-
-const FOUNDER_BASE = "/images/founder/apollo";
-const FOUNDER_SRCSET = (ext: "avif" | "webp" | "jpg") =>
-  [320, 480, 640, 768]
-    .map((w) => `${FOUNDER_BASE}-${w}.${ext} ${w}w`)
-    .join(", ");
-const FOUNDER_SIZES = "(max-width: 768px) 60vw, 360px";
+// Website Spec v4 — one front door, company-voiced. Submit → free Property
+// Read is the primary action. No founder portrait and no "talk to Apollo"
+// framing here: the page speaks for the firm, and the six lanes route every
+// kind of visitor to the right next step. Single URL for QR scans and direct
+// navigation; CTA attribution preserved.
 
 const ROUTES = [
   {
     href: "/submit?intent=property",
     label: "I have a property situation",
-    sub: "Bring us the address and the situation.",
+    sub: "Bring the address and what's going on.",
     icon: Building2,
   },
   {
     href: "/development",
     label: "I want to build, renovate, or develop",
-    sub: "Pegasus Development. Phased trajectory.",
+    sub: "Pegasus Development. Phased scope.",
     icon: Hammer,
   },
   {
     href: "/submit?intent=sell",
     label: "I want to sell a property",
-    sub: "Strategy-first review across every lane.",
+    sub: "A strategy-first review across every lane.",
     icon: DollarSign,
   },
   {
     href: "/capital",
-    label: "I am interested in capital partnerships",
-    sub: "Private, individual conversations only.",
+    label: "I am exploring capital partnership",
+    sub: "Specific projects, private conversations.",
     icon: Banknote,
   },
   {
@@ -65,8 +55,8 @@ const ROUTES = [
   },
   {
     href: "/contact",
-    label: "I just want to talk to Apollo",
-    sub: "Direct line. apollo@pegasusdreamscapes.com.",
+    label: "I have a question",
+    sub: "Send a note and we'll get back to you.",
     icon: MessageSquare,
   },
 ];
@@ -74,98 +64,70 @@ const ROUTES = [
 function GreetingHero() {
   return (
     <section className="relative bg-[hsl(var(--charcoal))] text-cream overflow-hidden">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" aria-hidden="true">
         <div className="absolute top-0 left-1/3 w-[60rem] h-[40rem] bg-gradient-radial from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
       </div>
-      <div className="relative max-w-5xl mx-auto px-6 lg:px-12 pt-28 lg:pt-32 pb-16 lg:pb-20">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Founder photo */}
-          <motion.div
-            className="lg:col-span-5"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-          >
-            <div className="relative max-w-[320px] mx-auto lg:mx-0">
-              <div className="absolute -inset-3 bg-gradient-to-br from-primary/30 via-transparent to-primary/10 blur-2xl rounded-lg" aria-hidden="true" />
-              <div className="relative">
-                <div className="relative aspect-[4/5] rounded-lg overflow-hidden ring-1 ring-primary/40">
-                  <picture>
-                    <source type="image/avif" srcSet={FOUNDER_SRCSET("avif")} sizes={FOUNDER_SIZES} />
-                    <source type="image/webp" srcSet={FOUNDER_SRCSET("webp")} sizes={FOUNDER_SIZES} />
-                    <img
-                      src={`${FOUNDER_BASE}-480.jpg`}
-                      srcSet={FOUNDER_SRCSET("jpg")}
-                      sizes={FOUNDER_SIZES}
-                      width={480}
-                      height={600}
-                      loading="eager"
-                      decoding="async"
-                      alt='Paolo "Apollo" Duran, Founder & Principal of Pegasus DreamScapes Corp.'
-                      className="absolute inset-0 w-full h-full object-cover object-top"
-                      data-testid="img-connect-founder"
-                      onError={(e) => {
-                        const t = e.currentTarget as HTMLImageElement;
-                        if (t.src !== founderApolloPath) t.src = founderApolloPath;
-                      }}
-                    />
-                  </picture>
-                  <div className="absolute inset-0 ring-1 ring-cream/15 rounded-lg pointer-events-none" />
-                </div>
-                <div className="brand-stripe mt-3" />
-              </div>
-            </div>
-          </motion.div>
+      <div className="relative max-w-5xl mx-auto px-6 lg:px-12 pt-28 lg:pt-36 pb-16 lg:pb-20">
+        <motion.div
+          className="max-w-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+        >
+          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
+            One front door · East Bay
+          </p>
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-cream leading-[1.04] mb-6">
+            Tell us what you're working with.
+          </h1>
+          <p className="font-serif text-lg sm:text-xl text-cream/85 italic mb-6 leading-snug max-w-xl">
+            Pick the lane that fits. We'll point you to the right next step.
+          </p>
+          <p className="text-base text-cream/75 leading-relaxed max-w-xl mb-8">
+            We read the situation, underwrite the numbers, and tell you what the
+            deal actually is — property, build, capital, or a straight question.
+            Submit a property and we aim to return a first read within 48 hours.
+          </p>
 
-          {/* Greeting */}
-          <motion.div
-            className="lg:col-span-7"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25 }}
-          >
-            <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
-              Paolo "Apollo" Duran · Founder & Principal
-            </p>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-cream leading-[1.04] mb-6">
-              Glad you're here.
-            </h1>
-            <p className="font-serif text-lg sm:text-xl text-cream/85 italic mb-6 leading-snug max-w-xl">
-              Pick the route that fits. We'll get you to the right place.
-            </p>
-            <p className="text-base text-cream/75 leading-relaxed max-w-xl mb-8">
-              Every door below opens to a real person on our team. No funnels, no
-              gimmicks. A real read on whatever brought you here: property,
-              build, capital, or just a conversation.
-            </p>
-
-            {/* Direct contact pills */}
-            <div className="flex flex-wrap gap-3">
-              <a
-                href="tel:+19257448525"
-                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-sm border border-cream/20 bg-cream/5 hover:bg-cream/10 hover:border-primary/60 transition-colors text-sm text-cream/95"
-                data-testid="link-connect-phone"
-                onClick={() => trackCtaClick("connect", "Phone tap", "tel:+19257448525")}
-              >
-                <Phone className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                <span className="font-medium">925-744-8525</span>
-              </a>
-              <a
-                href="mailto:apollo@pegasusdreamscapes.com"
-                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-sm border border-cream/20 bg-cream/5 hover:bg-cream/10 hover:border-primary/60 transition-colors text-sm text-cream/95"
-                data-testid="link-connect-email"
-                onClick={() => trackCtaClick("connect", "Email tap", "mailto:apollo@pegasusdreamscapes.com")}
-              >
-                <Mail className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                <span className="font-medium">apollo@pegasusdreamscapes.com</span>
-              </a>
-              <span className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-sm border border-cream/15 text-sm text-cream/70">
-                <MapPin className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                <span>East Bay, CA</span>
-              </span>
-            </div>
-          </motion.div>
-        </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/submit?intent=property"
+              onClick={() => trackCtaClick("connect", "Submit a property", "/submit?intent=property")}
+              className="
+                group inline-flex items-center gap-2.5 px-6 py-3.5 rounded-sm
+                bg-primary text-primary-foreground font-medium text-sm
+                hover:bg-primary/90 transition-colors
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--charcoal))]
+              "
+              data-testid="link-submit-property"
+            >
+              Submit a property
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+            </Link>
+            <a
+              href="tel:+19257448525"
+              className="inline-flex items-center gap-2.5 px-4 py-3 rounded-sm border border-cream/20 bg-cream/5 hover:bg-cream/10 hover:border-primary/60 transition-colors text-sm text-cream/95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--charcoal))]"
+              data-testid="link-connect-phone"
+              onClick={() => trackCtaClick("connect", "Phone tap", "tel:+19257448525")}
+            >
+              <Phone className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              <span className="font-medium">925-744-8525</span>
+            </a>
+            <a
+              href="mailto:apollo@pegasusdreamscapes.com"
+              className="inline-flex items-center gap-2.5 px-4 py-3 rounded-sm border border-cream/20 bg-cream/5 hover:bg-cream/10 hover:border-primary/60 transition-colors text-sm text-cream/95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--charcoal))]"
+              data-testid="link-connect-email"
+              onClick={() => trackCtaClick("connect", "Email tap", "mailto:apollo@pegasusdreamscapes.com")}
+            >
+              <Mail className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              <span className="font-medium">apollo@pegasusdreamscapes.com</span>
+            </a>
+            <span className="inline-flex items-center gap-2.5 px-4 py-3 rounded-sm border border-cream/15 text-sm text-cream/70">
+              <MapPin className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              <span>East Bay, CA</span>
+            </span>
+          </div>
+        </motion.div>
       </div>
       <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
     </section>
@@ -187,7 +149,7 @@ function RouteGrid() {
             What brought you here?
           </p>
           <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground leading-tight">
-            Pick a door. We'll meet you there.
+            Pick a lane. We'll meet you there.
           </h2>
         </motion.div>
 
@@ -241,11 +203,6 @@ function RouteGrid() {
 }
 
 function PeggyPresenceCard() {
-  // Empire Doctrine v1.0.1 lock: public Peggy chat is explicitly
-  // excluded from /connect. This card surfaces Peggy as a brand signal
-  // (she exists, she's in private beta with the Pegasus team) without
-  // mounting the chat itself. Lifts the lid on v1.1 without
-  // overclaiming today's surface.
   return (
     <section className="bg-background pb-16 lg:pb-20">
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
@@ -266,11 +223,14 @@ function PeggyPresenceCard() {
               <div className="flex items-baseline gap-3 mb-2 flex-wrap">
                 <p className="font-serif text-xl text-foreground font-semibold">Meet Peggy.</p>
                 <span className="text-[10px] uppercase tracking-[0.22em] text-primary font-supporting font-semibold px-2 py-0.5 rounded-sm bg-primary/10">
-                  Private beta
+                  Early access · in training
                 </span>
               </div>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Peggy is the Pegasus AI assistant, in private beta with our internal team. Once she's trained on the Pegasus voice and the doctrine she'll greet you here directly. Until then, every door above lands you with a real person.
+                Peggy is our intake concierge. Tell her your situation in the chat
+                and she'll route it to the right lane. Peggy is an intake
+                assistant; she makes no offers and gives no legal, tax, lending,
+                or investment advice.
               </p>
             </div>
           </div>
@@ -280,25 +240,11 @@ function PeggyPresenceCard() {
   );
 }
 
-function Footnote() {
-  return (
-    <section className="bg-background pb-20">
-      <div className="max-w-5xl mx-auto px-6 lg:px-12">
-        <div className="border-t border-border/60 pt-8 text-center">
-          <p className="text-xs text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-            Apollo Duran · DRE #02333658 · Keller Williams East Bay. Each office is independently owned and operated. Nothing on this page is an offer of securities or a solicitation to invest.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function ConnectPage() {
   useSEO({
-    title: "Connect with Apollo",
+    title: "Connect",
     description:
-      "Connect directly with Apollo Duran, Founder of Pegasus DreamScapes. Property situation, build or develop, capital partnership, vendor inquiry, or just a conversation. Pick your lane.",
+      "Tell us what you're working with — property, build, capital, or a question. Pick the lane and we'll point you to the right next step.",
     image: "/og/about.png",
   });
 
@@ -307,7 +253,6 @@ export default function ConnectPage() {
       <GreetingHero />
       <RouteGrid />
       <PeggyPresenceCard />
-      <Footnote />
     </div>
   );
 }

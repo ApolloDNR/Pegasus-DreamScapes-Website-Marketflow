@@ -92,8 +92,13 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     // Buyers" audience page (client/src/pegasus/), so it is canonical, not
     // retired.
     "/buyers",
-    // Website Structure v1 FINAL §1 / §4 — new primary-nav surfaces.
-    "/deal-architecture",
+    // Website Spec v4 (Re-skin) — restored "Who We Serve" audience lanes and
+    // What-We-Do surfaces, plus the renamed Deal Strategy page.
+    "/sellers",
+    "/dealfinders",
+    "/operators",
+    "/referral",
+    "/deal-strategy",
     "/work-with-apollo",
   ];
 

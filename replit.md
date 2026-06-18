@@ -6,17 +6,17 @@ The **controlling design doctrine** for the public website is the saved React de
 
 - `client/src/pegasus/` — the self-contained prototype (Landing.tsx, nav.tsx, peggy.tsx, forms.tsx, Saved.tsx, pages.tsx, data.tsx, theme.ts, routes.ts) plus its scoped design system `client/src/pegasus/_group.css` (loaded in `main.tsx`). This prototype **replaces the retired Empire Doctrine** as the source of truth for layout, typography, palette, copy, and motion.
 
-The **visual baseline** comes from `_group.css`:
+The **visual baseline** comes from `_group.css` — re-skinned to the **v4 locked spec** ("Linear meets Palantir", navy):
 
-- **Palette (light)**: Warm Sand bg `#f6f2ec` · Ink text `#1b1712` · Terracotta accent `#b16631` (bright `#d4925b`) · Navy `#1f3757` · Cream `#efe7da`. Dark mode overrides defined in the same file under `.pg-root.dark`.
-- **Typography**: Cormorant Garamond (display/serif) · Space Grotesk (sans/body). Loaded via `client/index.html` Google Fonts.
+- **Palette (navy system)**: Deep Navy bg `--bg #0D1B2A` · Copper primary/CTA `--accent #D4872E` (bright `#E3A463`) · Gold accent / lines / numerals `--gold #C9A84C` · Cream text `--cream` / `--text #F5E6D3` · Teal success `--teal #1A9E75` · Charcoal panels `--charcoal #11243A` / deep `#091421`. The retired warm-sand light surface is gone. Dark theme overrides live in the same file under `.pg-root[data-theme='dark']` (cinematic navy `--bg #091421`).
+- **Typography**: Fraunces (display/serif — `.font-serif-display`, `.section-numeral`) · Hanken Grotesk (UI/body — default) · JetBrains Mono (labels/data — `.pg-label`, `.nav-dropdown-head`). Loaded via `client/index.html` Google Fonts. Replaces the retired Cormorant Garamond + Space Grotesk/Space Mono.
 - The design system is scoped under `.pg-root` so it coexists with the existing shadcn token layer used by the functional surfaces.
 
 The Empire Doctrine `.md` files in `attached_assets/` and the old `docs/architecture/*` blueprints are **retired historical reference only** — they no longer govern. If anything below diverges from the prototype, the prototype wins. This file is operational README only.
 
 ## Website Director Standard
 
-The bar for every public page: it should read like a senior studio built it for Pegasus specifically — not like a template with the words swapped. Before shipping any change to a public surface, run it against this standard. A loadable copy lives at `.local/skills/website-director/SKILL.md`; this section is the source of truth.
+The bar for every public page: it should read like a senior studio built it for Pegasus specifically — not like a template with the words swapped. Before shipping any change to a public surface, run it against this standard. This `replit.md` section is the authoritative source of truth (there is no separate loadable skill file).
 
 **1. Every page has one job.** Name the single audience and the single next action before touching layout. If a page is trying to serve everyone, it serves no one. Per-page intent map (real wouter routes):
 
@@ -29,7 +29,7 @@ The bar for every public page: it should read like a senior studio built it for 
 | `/capital` | Capital partner | Back specific projects (not blind pools) | "Explore capital partnership" |
 | `/operators` | GC / sub / agent / title | Join the vetted build bench | "Join the build bench" |
 | `/referral` | Referral partner | Send a name, fee in writing | "Refer a contact" |
-| `/deal-architecture` | Considering working with us | Understand the method | "Start a review" |
+| `/deal-strategy` | Considering working with us | Understand the method | "Start a review" |
 | `/development` | Owner/partner on a build | See the build standard | "Explore Development" |
 | `/strategy-lab` | DIY underwriter | Run the numbers | "Open Strategy Lab" → `/strategy-lab/classic` |
 | `/marketflow` | Network participant | Request access by role | inline request-access form |
@@ -76,21 +76,37 @@ There **is** a single automated **negative** copy guard: `client/src/__tests__/p
 - Preferred communication style: simple, everyday language.
 - **Working Rule M.1**: every completion message must include two explicit lists — (1) what was done and how it improved the project, (2) what is unfinished, lazy, or stubbed.
 
-## Public routes (locked v1 FINAL)
+## Public routes (locked v4)
 
-**Primary nav** (5 + More): `/deal-architecture` · `/development` · `/strategy-lab` · `/work-with-apollo` · `/marketflow`. CTA: **Submit a Property** → `/submit`.
+**Nav (§6 — grouped dropdowns)** rendered by `nav.tsx` from `data.tsx`:
+- **Who We Serve ▾**: Sellers & Owners (`/sellers`) · Investor & Operator Buyers (`/buyers`) · Deal Finders & Wholesalers (`/dealfinders`) · Capital Partners (`/capital`) · Vendors & Trades (`/operators`) · Referral Partners (`/referral`).
+- **What We Do ▾**: Deal Strategy (`/deal-strategy`) · Investments (`/investments`) · Development (`/development`) · Strategy Lab (`/strategy-lab`) · MarketFlow (`/marketflow`).
+- **About** (`/about`) + primary CTA **Submit a Property → `/submit`**. Floating **Talk to Peggy** concierge (`peggy-fab`) on prototype pages.
 
-**More dropdown** (NAV_MORE, grouped): Learn (`/library`, `/faq`) · Network (`/vendor-network`, `/capital`) · Company (`/about`, `/projects`, `/connect`, `/contact`, `/peggy`) · Ecosystem (`/ecosystem`, footer-only) · Legal (`/disclosures`).
+**Live public routes** (un-redirected in the v4 re-skin — reverses the #250 "Lean Launch Cut"): `/` · `/sellers` · `/buyers` · `/dealfinders` · `/capital` · `/operators` · `/referral` · `/deal-strategy` · `/investments` · `/development` · `/strategy-lab` · `/marketflow` · `/work-with-apollo` · `/ecosystem` · `/about` · `/contact` · `/peggy` · `/submit` · `/connect`. Functional public routes: `/projects`, `/projects/nelson-dr`, `/library/:slug`, `/deal-blueprint`, `/vendor-network`, `/marketflow/access`, `/marketflow/<role>`, `/marketflow/buyboxes`, `/privacy`, `/terms`. Calculator suite at `/strategy-lab/classic`.
 
-**Other public surfaces**: `/submit` (canonical lead intake; `?intent=` prefill; honeypot `hp_company` + 3s anti-spam; `leadType: "submit"`) · `/projects/nelson-dr` (gated on real photos + founder-confirmed numbers) · `/marketflow/access` (request-access form) · `/marketflow/<role>` (role dashboards) · `/privacy` · `/terms` (plain-language legal pages; the interim "Draft · Pending Legal Review" banner was removed for launch per Apollo-approved Task #230).
+**Legacy redirects** (`App.tsx#legacyRedirects`): `/deal-architecture` → `/deal-strategy`; `/calculators` → `/strategy-lab/classic`; `/sell`,`/submit-property`,`/submit-deal`,`/wholesale` → `/submit?intent=…`; `/buy`,`/portal`,`/dealflow`,`/marketplace` → `/marketflow` (or a sub-role); `/resources`,`/education`,`/strategy-library` → `/library`. Verify the live map in `App.tsx` + `shared/seo-routes.ts` before asserting.
 
-**Retired routes** (`App.tsx#legacyRedirects`): `/sell`, `/submit-deal`, `/submit-property`, `/wholesale`, `/services`, `/resources`, `/buyers`, `/buy`, `/dreamspace`, `/partner`, `/capital-raising`, `/invest`, `/calculators`, `/education` — all redirect to the canonical surfaces. Calculator suite remains at `/strategy-lab/classic`.
+**Submit intake** `/submit`: `?intent=` prefill; honeypot `hp_company` + 3s anti-spam; `leadType: "submit"`. `/terms` + `/privacy` are plain-language legal pages (interim "Draft · Pending Legal Review" banner removed for launch, Task #230).
 
 ## Voice / copy
 
 Public copy is now governed by the prototype's own text in `client/src/pegasus/` — there are no externally-locked required phrases anymore.
 
 **Still-prudent compliance guards** (real-estate/securities exposure — keep avoiding even though no test enforces them): "Invest Now," "Invest With Us," "Investor Returns," "Passive Income," "Guaranteed Returns," "Principal Protected," "we buy houses fast," and generic guru language. Peggy is an AI strategy assistant / concierge / intake analyst (avoid "chatbot"). Negative-disclosure use of these phrases stays acceptable on `/capital` and `/terms`.
+
+## Funnel & footer disclosure (v4 locked)
+
+**Funnel**: Submit a property → free **Property Read** (a short, candid written read by Acquisitions, **within 48 hours**) → the submitter picks a lane (Sell to Pegasus · Build with Pegasus · the **Deal Blueprint**, *by request — not sold yet*). The product **ladder is three rungs**: Strategy Lab (free, self-serve, strategy-tier ranges) → Property Read (free, written) → Deal Blueprint (by request). Read timing is always **"within 48 hours"** — never "2-day" / "1–2 business days". Sources: `data.tsx` PRODUCTS, `forms.tsx` (StrategyTierStrip / STRATEGYLAB_FORM), `pages.tsx` (LAB_STEPS), plus the standalone post-submit surfaces (`success-view.tsx`, `snapshot-status.tsx`, `strategy-lab-submitted.tsx`, `contact.tsx`).
+
+- *Naming nuance*: the user-facing human read is **"Property Read"**. The Strategy Lab's auto-generated export PDF keeps its own distinct name **"Strategy Snapshot PDF"** (server route `/api/pdf/strategy-snapshot/by-id/:id`, locked by `peggy-tool-surface.test.ts`) — it is a different artifact and is intentionally NOT renamed. The lead form's internal `intent: 'strategy-snapshot'` payload key is also kept (HQ / analytics continuity).
+
+**Verbatim footer disclosure (every public page)** — rendered by the Pegasus Footer (`client/src/pegasus/pages.tsx`):
+> Paolo "Apollo" Duran · California DRE #02333658. Pegasus DreamScapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay — each office independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
+
+The functional-surfaces footer (`client/src/components/footer.tsx`) keeps its own longer, legally-worded disclosure (it refers to the Lab "Strategy Snapshots" as preliminary/informational) for admin / functional / standalone pages.
+
+**Voice**: company / department voice on public copy — the founder's name + DRE# appear only in the footer disclosure. Banned in body copy (enforced by `banned-phrases.ts` over the pegasus prototype; the standalone funnel pages were scrubbed by hand): "a real person" / "real person", "Apollo personally", "talk to Apollo", "off-market", "below comparable value", "architect" / "architecture", "$180m" / "180m+", "2-day".
 
 ## Status badges (retired guidance)
 
@@ -106,7 +122,7 @@ The old Amendment 2 §G status-badge requirement (Live · Private beta · In pri
 
 ## External dependencies
 
-- **UI**: Radix · Tailwind · CVA · Lucide · Google Fonts (Cormorant Garamond · Space Grotesk for the public prototype; the functional shadcn surfaces still use their existing font stack).
+- **UI**: Radix · Tailwind · CVA · Lucide · Google Fonts (Fraunces · Hanken Grotesk · JetBrains Mono for the public prototype; the functional shadcn surfaces still use their existing font stack).
 - **Data/Forms**: React Hook Form · Zod · TanStack Query · drizzle-zod.
 - **DB**: Supabase · Drizzle · Neon serverless PostgreSQL.
 - **Auth**: passport · express-session · connect-pg-simple · Supabase Auth.
@@ -122,7 +138,7 @@ The old Amendment 2 §G status-badge requirement (Live · Private beta · In pri
 
 ## Website Director Standard
 
-The permanent quality bar for the public website. The prototype (`client/src/pegasus/`) is the source of truth for *look*; this standard is the source of truth for *whether a page is doing its job*. A condensed, loadable copy lives at `.local/skills/website-director/SKILL.md` — read that skill before any public-site copy/layout/CTA work.
+The permanent quality bar for the public website. The prototype (`client/src/pegasus/`) is the source of truth for *look*; this standard is the source of truth for *whether a page is doing its job*. This `replit.md` section is authoritative — there is no separate loadable skill file.
 
 ### Per-page intent map
 
@@ -130,8 +146,8 @@ Every public page has ONE primary job. If a page does not move the visitor towar
 
 | Surface | Primary job | Visitor leaves knowing / doing |
 | --- | --- | --- |
-| Home (`/`) | Orient + route | What Pegasus is (deal architecture firm) and which lane fits them |
-| Deal Architecture (`/deal-architecture`) | Prove the method | How a deal gets read/underwritten → **Submit a Deal** |
+| Home (`/`) | Orient + route | What Pegasus is (a deal strategy + real estate execution firm) and which lane fits them |
+| Deal Strategy (`/deal-strategy`) | Prove the method | How a deal gets read/underwritten → **Submit a Deal** |
 | Development (`/development`) | Prove the build arm | That Pegasus executes scope → start a build conversation |
 | Strategy Lab (`/strategy-lab`) | Demonstrate a real tool | They can model a deal themselves → **Open Strategy Lab** |
 | Work with Apollo (`/work-with-apollo`) | Representation lanes | Sell/buy/complex-situation/deal → pick a lane |
@@ -157,7 +173,7 @@ Interior-page CTAs are **context-specific**, never a blanket "Submit a Property"
 | Context | Primary CTA label | Routes to |
 | --- | --- | --- |
 | Global nav | Submit a Property | `/submit` |
-| Deal Architecture | Submit a Deal | `/submit` (deal intent) |
+| Deal Strategy | Submit a Deal | `/submit` (deal intent) |
 | Strategy Lab | Open Strategy Lab | the on-page console |
 | Development | Start a build conversation | dev intake / contact |
 | Work with Apollo | Continue below / Request a Property Review / Submit a Deal | form anchor or `/submit?intent=` |

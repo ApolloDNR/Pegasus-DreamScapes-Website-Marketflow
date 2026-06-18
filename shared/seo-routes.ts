@@ -29,6 +29,38 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/home.png`,
   },
 
+  // ---- Who We Serve ----
+  "/sellers": {
+    title: tag("Sellers & Owners"),
+    description:
+      "For owners with a complex or stuck property — inherited, distressed, occupied, or stalled. Get a clear written read and a real route forward.",
+    image: `${SITE_URL}/og/sellers.png`,
+  },
+  "/buyers": {
+    title: tag("Buyers"),
+    description:
+      "Buy a finished home or buy into a deal with an investor's read — underwritten on real numbers before you commit. East Bay and beyond.",
+    image: `${SITE_URL}/og/buyers.png`,
+  },
+  "/dealfinders": {
+    title: tag("Deal Finders & Wholesalers"),
+    description:
+      "Bring a deal to Pegasus once and get a straight answer, written terms, and one buyer who actually closes. No mass blasts, no run-around.",
+    image: `${SITE_URL}/og/dealfinders.png`,
+  },
+  "/operators": {
+    title: tag("Operators & Vendors"),
+    description:
+      "GCs, subcontractors, agents, and title — join the Pegasus build bench and get matched to projects that fit your trade and your capacity.",
+    image: `${SITE_URL}/og/operators.png`,
+  },
+  "/referral": {
+    title: tag("Referral Partners"),
+    description:
+      "Send one name. We handle the relationship and put any referral fee in writing before anything moves. A clean, accountable handoff.",
+    image: `${SITE_URL}/og/referral.png`,
+  },
+
   // ---- Capital partners ----
   "/capital": {
     title: tag("Capital Partners"),
@@ -37,10 +69,16 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/capital.png`,
   },
   // ---- What We Do ----
+  "/deal-strategy": {
+    title: tag("Deal Strategy"),
+    description:
+      "How a property becomes a plan: we read the situation and the numbers once, then map the route — sell, reposition, build, or partner.",
+    image: `${SITE_URL}/og/deal-strategy.png`,
+  },
   "/investments": {
     title: tag("Investments"),
     description:
-      "We acquire distressed, dated, and off-market property, reposition it with discipline, and exit on a plan written before we close.",
+      "We acquire distressed, dated, and overlooked property, reposition it with discipline, and exit on a plan written before we close.",
     image: `${SITE_URL}/og/investments.png`,
   },
   "/development": {
@@ -48,6 +86,12 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "Our development team scopes every renovation and ground-up build to a real budget and draw schedule, and delivers finished, on time.",
     image: `${SITE_URL}/og/development.png`,
+  },
+  "/strategy-lab": {
+    title: tag("Strategy Lab"),
+    description:
+      "Model a deal yourself in minutes. The Strategy Lab returns strategy-tier ranges, likely lanes, and the risks — directional, not a CMA or appraisal.",
+    image: `${SITE_URL}/og/strategy-lab.png`,
   },
   "/marketflow": {
     title: tag("MarketFlow"),
@@ -69,6 +113,18 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   },
 
   // ---- Company / proof / contact ----
+  "/work-with-apollo": {
+    title: tag("Represent With Apollo"),
+    description:
+      "Licensed representation with Apollo Duran through Keller Williams East Bay — list, buy, or work through a complex situation. DRE #02333658.",
+    image: `${SITE_URL}/og/work-with-apollo.png`,
+  },
+  "/peggy": {
+    title: tag("Peggy"),
+    description:
+      "Describe your deal in plain language. Peggy is an intake assistant — she frames your options and routes you to the next step. No offers, no advice.",
+    image: `${SITE_URL}/og/peggy.png`,
+  },
   "/about": {
     title: tag("About"),
     description:
@@ -97,7 +153,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/contact": {
     title: tag("Contact"),
     description:
-      "Tell us about the property or the situation and get a clear, written read from a real person. Reach Pegasus DreamScapes in the East Bay.",
+      "Tell us about the property or the situation and get a clear, written read from our team. Reach Pegasus DreamScapes in the East Bay.",
     image: `${SITE_URL}/og/contact.png`,
   },
   "/submit": {
@@ -175,11 +231,11 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
-  // Doctrine v3.0 lean cut: these bare routes 302-redirect to a kept surface,
-  // so they must not be advertised in the sitemap. Their SEO_ROUTES entries are
-  // retained only so seoFor()'s prefix fallbacks keep serving live subpaths
-  // (e.g. /marketflow/access, /marketflow/<role>). Exact-match, bare path only.
-  /^\/marketflow$/,
+  // Website Spec v4: /library remains demoted (302 → home), so it must not be
+  // advertised in the sitemap. Its SEO_ROUTES entry is retained only so
+  // seoFor()'s prefix fallback keeps serving live subpaths (e.g. /library/:slug).
+  // /marketflow was restored to the live public surface in v4 and is crawlable
+  // again. Exact-match, bare path only.
   /^\/library$/,
 ];
 

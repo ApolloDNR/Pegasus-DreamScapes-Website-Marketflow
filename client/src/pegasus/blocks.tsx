@@ -9,7 +9,7 @@ import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
-  ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON,
+  ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON, DEPARTMENTS, DEPT_PILLARS,
 } from './data';
 
 /* ----------------------------------------------------------------
@@ -73,7 +73,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
                 A real estate investment, development, and systems company. We read the situation, underwrite the numbers, and tell you what the deal actually is.
               </p>
               <div className="pg-label !text-[9px] !tracking-[0.26em] text-[var(--cream)]/55 mt-6">
-                East Bay · Off-market &amp; value-add · Apollo Duran, DRE #02333658
+                East Bay · Value-add &amp; repositioning · Contra Costa &amp; Alameda County
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
@@ -110,8 +110,137 @@ export function HomeIntro() {
         </div>
         <div className="lg:col-span-8 reveal delay-100">
           <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-[-0.01em]">
-            We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. We <span className="text-[var(--accent)]">develop</span> it with Apollo and licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> — underwriting, intake, and the marketplace — that hold every deal to the same read.
+            We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. Our Development team <span className="text-[var(--accent)]">builds</span> it with licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> — underwriting, intake, and the marketplace — that hold every deal to the same read.
           </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------------
+   How a deal moves — departments (Acquisitions → Development →
+   Dispositions → Asset Management) + two supporting pillars.
+   Shows structure, not headcount.
+---------------------------------------------------------------- */
+export function HowADealMovesBlock() {
+  const last = DEPARTMENTS.length - 1;
+  return (
+    <section className="relative py-24 lg:py-32 overflow-hidden bg-[var(--navy)] text-[var(--cream)]">
+      <ContourLines className="absolute inset-x-0 top-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.08] float-slow" />
+      <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead dark center eyebrow="How a deal moves"
+          title={<>From intake to a finished asset.</>}
+          copy="A property moves through Pegasus in order — Acquisitions reads it, Development builds it, Dispositions places it, and Asset Management runs what we hold. Two pillars support all four." />
+
+        {/* Desktop: horizontal department flow */}
+        <ol className="hidden lg:flex mt-4" aria-label="How a deal moves through Pegasus departments">
+          {DEPARTMENTS.map((d, i) => (
+            <li key={d.name} className="reveal relative flex-1 px-3" style={{ animationDelay: `${i * 80}ms` }}>
+              {i < last && (
+                <span aria-hidden="true"
+                  className="step-connector absolute top-[26px] left-[calc(50%+34px)] right-[calc(-50%+34px)] h-px bg-gradient-to-r from-[var(--accent-bright)]/45 to-[var(--accent-bright)]/12"
+                  style={{ animationDelay: `${i * 80 + 240}ms` }} />
+              )}
+              <div className="relative z-10 mb-6 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">
+                {d.stage}
+              </div>
+              <div className="flex items-center gap-2.5 mb-3">
+                <span className="text-[var(--accent-bright)]"><Ico name={d.icon} className="w-4 h-4" /></span>
+                <span className="font-serif-display text-xl text-[var(--cream)] leading-tight">{d.name}</span>
+              </div>
+              <p className="text-[rgba(239,231,218,0.6)] text-[0.84rem] leading-relaxed pr-6">{d.desc}</p>
+            </li>
+          ))}
+        </ol>
+
+        {/* Mobile: vertical spine */}
+        <ol className="lg:hidden relative mt-4">
+          <span aria-hidden="true" className="draw-on-view step-spine absolute left-[26px] top-4 bottom-4 w-px bg-gradient-to-b from-[var(--accent-bright)]/45 via-[var(--accent-bright)]/20 to-transparent" />
+          {DEPARTMENTS.map((d, i) => (
+            <li key={d.name} className="reveal relative flex gap-5 pb-8 last:pb-0" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="relative z-10 shrink-0 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">{d.stage}</div>
+              <div className="pt-1.5">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <span className="text-[var(--accent-bright)]"><Ico name={d.icon} className="w-4 h-4" /></span>
+                  <span className="font-serif-display text-xl text-[var(--cream)] leading-none">{d.name}</span>
+                </div>
+                <p className="text-[rgba(239,231,218,0.6)] text-[0.88rem] leading-relaxed">{d.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        {/* Two supporting pillars */}
+        <div className="mt-14 pt-10 border-t border-[rgba(239,231,218,0.14)]">
+          <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6 text-center">Supported across every deal</div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {DEPT_PILLARS.map((p, i) => (
+              <div key={p.name} className="reveal rounded-[3px] border border-[rgba(239,231,218,0.18)] bg-[rgba(245,230,211,0.03)] p-6" style={{ animationDelay: `${i * 90}ms` }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-[var(--accent-bright)]"><Ico name={p.icon} className="w-4 h-4" /></span>
+                  <span className="font-serif-display text-xl text-[var(--cream)]">{p.name}</span>
+                </div>
+                <p className="text-[rgba(239,231,218,0.62)] text-[0.85rem] leading-relaxed">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-center pg-label !text-[8px] !tracking-[0.22em] text-[rgba(245,230,211,0.4)]">Structure, not headcount</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Strategy Lab feature teaser — ranges only, route to the tool.
+---------------------------------------------------------------- */
+export function StrategyLabFeature({ go }: { go: Nav }) {
+  const SAMPLE: { k: string; v: string }[] = [
+    { k: 'All-in basis', v: '$420K – $470K' },
+    { k: 'After-repair value', v: '$610K – $660K' },
+    { k: 'Indicated spread', v: 'Mid-tier' },
+  ];
+  return (
+    <section className="relative py-24 lg:py-32 overflow-hidden">
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LAB</div>
+      <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        <div className="lg:col-span-6 reveal">
+          <div className="pg-label text-[var(--accent)] mb-5">Run it yourself · Strategy Lab</div>
+          <h2 className="font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-[-0.01em] text-[var(--text)] mb-6">
+            Model the deal before you talk to anyone.
+          </h2>
+          <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-xl">
+            Enter what you know. The Lab returns strategy-tier ranges, the lanes that could fit, and the risks to weigh — in minutes, at your own pace. It is a planning tool, not a valuation, appraisal, CMA, or BPO.
+          </p>
+          <ul className="space-y-3.5 mb-10">
+            {['Strategy-tier ranges, not a single verdict', 'The lanes that could fit, and the risk behind each', 'A clear next step you can act on'].map((pt) => (
+              <li key={pt} className="flex gap-3.5 leading-relaxed text-[var(--text-2)]">
+                <Check className="w-4 h-4 mt-1 shrink-0 text-[var(--accent)]" strokeWidth={2} />
+                <span>{pt}</span>
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={() => go('strategylab')} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            Open Strategy Lab <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+        <div className="lg:col-span-6 reveal delay-100">
+          <div className="peggy-shadow relative overflow-hidden rounded-sm bg-[var(--navy)] text-[var(--cream)] p-8 sm:p-10">
+            <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.12] float-slow" />
+            <div className="relative">
+              <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6">Sample read · ranges only</div>
+              {SAMPLE.map((row) => (
+                <div key={row.k} className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(239,231,218,0.14)] last:border-b-0">
+                  <span className="font-supporting text-[0.7rem] uppercase tracking-[0.18em] text-[rgba(245,230,211,0.55)]">{row.k}</span>
+                  <span className="font-mono text-lg text-[var(--cream)]">{row.v}</span>
+                </div>
+              ))}
+              <p className="mt-6 text-[rgba(239,231,218,0.5)] text-[0.72rem] leading-relaxed">
+                Illustrative ranges only. Not a valuation, appraisal, CMA, or BPO of any specific property.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -277,7 +406,7 @@ export function ProcessSteps({ eyebrow, title, copy, steps, tone = 'page' }:
 }
 
 /* ----------------------------------------------------------------
-   Deal Architecture engine (infographic)
+   Deal Strategy engine (infographic)
 ---------------------------------------------------------------- */
 export function EngineBlock({ go }: { go: Nav }) {
   return (
@@ -307,7 +436,7 @@ export function EngineBlock({ go }: { go: Nav }) {
         <div className="reveal max-w-3xl mx-auto text-center rounded-[3px] border border-[var(--accent)]/40 bg-[rgba(213,127,46,0.1)] p-7 sm:p-9 lg:p-11">
           <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-4">{ENGINE_OUTPUT.label}</div>
           <p className="font-serif-display text-3xl md:text-4xl text-[var(--cream)] leading-snug mb-5">{ENGINE_OUTPUT.desc}</p>
-          <button type="button" onClick={() => go('dealarchitecture')}
+          <button type="button" onClick={() => go('dealstrategy')}
             className="btn-solid-light px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             See how the engine works <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </button>
@@ -426,7 +555,7 @@ export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }
 }
 
 /* ----------------------------------------------------------------
-   Product ladder (5 steps)
+   Product ladder (3 rungs)
 ---------------------------------------------------------------- */
 export function ProductLadderBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const run = (a: StartAction) => { if (a === 'peggy') openPeggy(); else go(a); };
@@ -434,7 +563,7 @@ export function ProductLadderBlock({ go, openPeggy }: { go: Nav; openPeggy: () =
     <section className="relative py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)] overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="The product ladder" title="From a quick model to a full plan."
-          copy="Five steps, from a free model you run yourself to a full written plan. Each one stands on its own, so you go only as far as the deal needs." />
+          copy="Three rungs, from a free model you run yourself to a full written plan. Each one stands on its own, so you go only as far as the deal needs." />
         <div className="border-t border-[var(--line)]">
           {PRODUCTS.map((p, i) => (
             <div key={p.name} className="ladder-rung reveal grid md:grid-cols-12 gap-4 md:gap-8 items-center py-7 border-b border-[var(--line)]" style={{ animationDelay: `${i * 80}ms` }}>
@@ -647,7 +776,7 @@ export function NelsonProof({ go }: { go: Nav }) {
           <div className="lg:col-span-6 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">The work · {NELSON.name}</div>
             <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">
-              Off-market acquisition. Full reposition. Delivered move-in ready.
+              Acquired and repositioned. Delivered move-in ready.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-8 mb-10">

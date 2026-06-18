@@ -246,12 +246,12 @@ export default function SnapshotStatus() {
           {state === "submitted" && (
             <div className="space-y-4">
               <p className="text-base text-foreground leading-relaxed">
-                Your submission is in the queue. A real person, not an
-                automation, reviews every property that comes in.
+                Your submission is in the queue. Acquisitions reviews every
+                property that comes in — not an automation.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 We'll move it into review within one business day and reach out
-                with the Strategy Snapshot in 1–2 business days. You'll get an
+                with the Property Read within 48 hours. You'll get an
                 email when there's an update.
               </p>
             </div>
@@ -388,7 +388,7 @@ export default function SnapshotStatus() {
               </span>
             </p>
             <p className="text-xs text-muted-foreground">
-              We've routed your selection internally and a real person will
+              We've routed your selection internally and the team will
               follow up shortly.
             </p>
           </motion.div>

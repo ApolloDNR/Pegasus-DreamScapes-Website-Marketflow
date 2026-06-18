@@ -10,7 +10,7 @@ import {
   PageHero, Hero, HomeIntro, ThreePillarsBlock, PillarSection, ProcessSteps,
   EngineBlock, DealReadStepper, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
-  SplitPaths, NextStep, CTABand, DealFindersExtras,
+  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, StrategyLabFeature, LaneCardsBlock,
 } from './blocks';
 import {
   LeadSection, StrategyCalculator, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
@@ -29,7 +29,7 @@ const MARKETFLOW_FORM: FormCfg = {
   ],
   intent: 'marketflow-access',
   heading: <>Request <span className="italic text-[var(--accent-bright)]">access.</span></>,
-  lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and a real person will review your fit for the network.',
+  lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and our team will review your fit for the network.',
   submit: 'Request MarketFlow Access',
   third: { label: 'Firm, fund, or trade', placeholder: 'Where you operate (optional)' },
   messageLabel: 'How you participate',
@@ -52,7 +52,7 @@ const APOLLO_REP = {
   buyer: {
     label: 'Buyer representation',
     desc: 'Make offers backed by real numbers, and see opportunities through the Pegasus network before they reach the open market.',
-    points: ['Offers grounded in what a property is actually worth', 'First look at off-market and repositioned homes', 'A plain read when the right move is to wait or walk'],
+    points: ['Offers grounded in what a property is actually worth', 'First look at repositioned and newly built homes', 'A plain read when the right move is to wait or walk'],
   },
 };
 
@@ -69,8 +69,13 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
       <Hero go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />
       <HomeIntro />
       <ProofStats />
+      <HowADealMovesBlock />
+      <LaneCardsBlock go={go} />
+      <ProductLadderBlock go={go} openPeggy={openPeggy} />
+      <StrategyLabFeature go={go} />
       <NelsonProof go={go} />
-      <DoctrineBlock />
+      <ApolloBlock go={go} portrait={false} />
+      <MarketFlowBlock go={go} dark />
       <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="" />
       <CTABand go={go} openPeggy={openPeggy} primaryAction="submit" primaryLabel="Submit a Property"
         title="Send us the situation. We'll map the path forward."
@@ -190,9 +195,9 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
 }
 
 /* ================================================================
-   DEAL ARCHITECTURE
+   DEAL STRATEGY
    ================================================================ */
-export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
+export function DealStrategyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   return (
     <>
       <PageHero eyebrow="What we do · The engine"
@@ -218,7 +223,7 @@ export function DealArchitecturePage({ go, openPeggy }: { go: Nav; openPeggy: ()
             <p className="text-[var(--muted)] leading-relaxed max-w-xl">
               Sometimes that route is a fast sale. Sometimes a value-add reposition, a ground-up build, or a capital partnership. Sometimes the honest answer is that there is no deal, and we will tell you that too.
             </p>
-            <button type="button" onClick={() => go('submit')} data-testid="button-deal-architecture-submit"
+            <button type="button" onClick={() => go('submit')} data-testid="button-deal-strategy-submit"
               className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
               Submit a Deal <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
@@ -243,7 +248,7 @@ export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
         title={<>We acquire what <span className="italic text-[var(--accent-bright)]">others overlook.</span></>}
         image={IMG('pegasus-after.png')}
         scrimTop
-        lead="Distressed, dated, off-market, and overlooked property. We buy it right, reposition it with discipline, and exit on a plan written before we close." />
+        lead="Distressed, dated, and overlooked property. We buy it right, reposition it with discipline, and exit on a plan written before we close." />
       <PillarSection p={INVESTMENTS} go={go} />
       <Qualifier forYou={CATEGORIES.capital.forYou} notFit={CATEGORIES.capital.notFit} />
       <NextStep go={go} label="Partner on a deal as a capital partner" route="capital" />
@@ -273,8 +278,8 @@ function BuildProcessBlock() {
 const LAB_STEPS = [
   { n: '01', icon: Compass, t: 'Describe the property', d: 'Location, property type, condition, occupancy, your role, and your goal. The console returns a Property Fit Score and flags the right lane before you touch a number.' },
   { n: '02', icon: Calculator, t: 'Underwrite the spread', d: 'Set acquisition basis, rehab scope, hold costs, and exit strategy. The Instant Strategy Preview models carry costs, selling costs, and live margin in real time.' },
-  { n: '03', icon: Ruler, t: 'Get a written Strategy Snapshot', d: 'Hand the situation to a person. A short, candid written read of the path and the risk — not a form letter, usually back within two business days.' },
-  { n: '04', icon: Landmark, t: 'Commission the Deal Blueprint', d: 'For deals that earn a full plan after a Strategy Review: scope, capital stack, construction approach, exit, and risk in a single documented engagement.' },
+  { n: '03', icon: Ruler, t: 'Get a written Property Read', d: 'Hand the situation to the team. A short, candid written read of the path and the risk — not a form letter, usually back within 48 hours.' },
+  { n: '04', icon: Landmark, t: 'Commission the Deal Blueprint', d: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in a single documented engagement.' },
 ];
 
 export function DevelopmentPage({ go }: { go: Nav }) {
@@ -339,7 +344,7 @@ const LAB_OUTPUTS = [
   { label: 'All-in basis', hint: 'Calculated after your acquisition, repair, carry, and exit assumptions are entered.' },
   { label: 'Spread logic', hint: 'The Lab compares your estimated basis against projected delivered value, then flags whether the spread looks strong, thin, or incomplete.' },
   { label: 'Lane fit', hint: 'Possible lanes include Retail Listing, Value-Add Rehab, ADU / Development Screen, Partner / JV Review, MarketFlow Disposition, or Deal Blueprint.' },
-  { label: 'Recommended next step', hint: 'Request a human Strategy Snapshot when the numbers, condition, title, occupancy, and timeline need a real review.' },
+  { label: 'Recommended next step', hint: 'Request a written Property Read when the numbers, condition, title, occupancy, and timeline need a closer review.' },
 ];
 
 function LabPreview() {
@@ -387,7 +392,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
       <StrategyConsole go={go} model={model} />
       <StrategyCalculator go={go} model={model} />
       <StrategyTierStrip />
-      <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Strategy Snapshot" tone="navy" strategy={model.snapshot} />
+      <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Property Read" tone="navy" strategy={model.snapshot} />
     </>
   );
 }
@@ -397,7 +402,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
    ================================================================ */
 const MARKETFLOW_ACCESS = [
   { num: '01', title: 'Apply', desc: 'Tell us how you operate and where your capital or capacity sits. One short request, no obligation.' },
-  { num: '02', title: 'We review fit', desc: 'A real person reviews every request for fit. We would rather add fewer partners and actually service them.' },
+  { num: '02', title: 'We review fit', desc: 'Our team reviews every request for fit. We would rather add fewer partners and actually service them.' },
   { num: '03', title: 'You are introduced', desc: 'Approved members are onboarded to reviewed dealflow and the operators behind it, as opportunities match.' },
 ];
 
@@ -407,7 +412,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
         image={IMG('pegasus-casestudy.png')}
         scrimTop
-        lead="A private, vetted network — not an open marketplace. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and a real person reviews every fit." />
+        lead="A private, vetted network — not an open marketplace. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and our team reviews every fit." />
       <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -707,7 +712,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--line-soft)] rounded-[3px] overflow-hidden">
             {[
-              { icon: Calculator, title: 'Reads the numbers', desc: 'Talks basis, ARV, rehab budget, carry, and exit costs, and frames the spread before you commit.' },
+              { icon: Calculator, title: 'Reads the numbers', desc: 'Talks basis, ARV, rehab budget, carry, and exit costs in plain language, so you walk in oriented.' },
               { icon: Compass, title: 'Routes the deal', desc: 'Sorts a situation into the right lane: a sale, a value-add, a capital placement, or a referral.' },
               { icon: Ruler, title: 'Scopes the work', desc: 'Speaks to draw schedules, scope discipline, and what a renovation timeline really looks like.' },
               { icon: Landmark, title: 'Hands to a person', desc: 'Knows its limits. When a deal needs a licensed read, it sets up the handoff and the transcript travels with it.' },
@@ -786,7 +791,7 @@ export function Footer({ go }: { go: Nav }) {
     <footer className="bg-[var(--navy)] text-[var(--cream)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-20">
         <div className="grid grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
-          <div className="col-span-2 md:col-span-6">
+          <div className="col-span-2 md:col-span-4">
             <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
               <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
@@ -798,6 +803,13 @@ export function Footer({ go }: { go: Nav }) {
               We read the situation, underwrite the numbers, and tell you what the deal actually is.
             </p>
           </div>
+
+          <FooterCol title="Company">
+            <FooterLink label="About the Firm" onClick={() => go('about')} />
+            <FooterLink label="Represent with Apollo" onClick={() => go('apollo')} />
+            <FooterLink label="The Work" onClick={() => setLocation('/projects/nelson-dr')} />
+            <FooterLink label="Pegasus Ecosystem" onClick={() => go('ecosystem')} />
+          </FooterCol>
 
           <FooterCol title="Start here">
             <FooterLink label="Submit a Property" onClick={() => go('submit')} />
@@ -818,7 +830,7 @@ export function Footer({ go }: { go: Nav }) {
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
           <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658 · Pegasus DreamScapes Corp. is a real estate investment company and is not a brokerage.
+            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus DreamScapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay — each office independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
             <span>© {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.</span>

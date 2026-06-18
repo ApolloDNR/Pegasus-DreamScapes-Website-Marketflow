@@ -9,7 +9,7 @@ import {
   HomePage,
   CategoryPage,
   CapitalPage,
-  DealArchitecturePage,
+  DealStrategyPage,
   InvestmentsPage,
   DevelopmentPage,
   StrategyLabPage,
@@ -152,7 +152,7 @@ const PAGES: PageSpec[] = [
   { name: "Capital", route: "/capital", render: (go) => <CapitalPage go={go} /> },
   { name: "Operators", route: "/operators", render: (go) => <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={noop} /> },
   { name: "Referral", route: "/referral", render: (go) => <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={noop} /> },
-  { name: "Deal Architecture", route: "/deal-architecture", render: (go) => <DealArchitecturePage go={go} openPeggy={noop} /> },
+  { name: "Deal Strategy", route: "/deal-strategy", render: (go) => <DealStrategyPage go={go} openPeggy={noop} /> },
   { name: "Investments", route: "/investments", render: (go) => <InvestmentsPage go={go} openPeggy={noop} /> },
   { name: "Development", route: "/development", render: (go) => <DevelopmentPage go={go} /> },
   { name: "Strategy Lab", route: "/strategy-lab", render: (go) => <StrategyLabPage go={go} openPeggy={noop} /> },
@@ -224,7 +224,7 @@ describe("CTABand primaryAction always resolves to a real route (Task #201)", ()
     "submit",
     "apollo",
     "marketflow",
-    "dealarchitecture",
+    "dealstrategy",
   ];
 
   it("default primaryAction navigates to a real route", () => {

@@ -254,7 +254,7 @@ function ContactFormSection() {
     { icon: Mail, label: "Email", value: "apollo@pegasusdreamscapes.com", href: "mailto:apollo@pegasusdreamscapes.com" },
     { icon: Phone, label: "Direct", value: "925-744-8525", href: "tel:+19257448525" },
     { icon: MapPin, label: "Based in", value: "Bay Area, California", href: null },
-    { icon: Clock, label: "Response Time", value: "Within 1–2 business days", href: null },
+    { icon: Clock, label: "Response Time", value: "Within 48 hours", href: null },
   ];
 
   return (
@@ -270,7 +270,7 @@ function ContactFormSection() {
             Plain-text reaches us fastest.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
-            Use the form for press, partnerships, MarketFlow access, or anything else that doesn't fit a structured intake. A real person reads every message.
+            Use the form for press, partnerships, MarketFlow access, or anything else that doesn't fit a structured intake. The team reads every message.
           </p>
 
           <div className="space-y-1">

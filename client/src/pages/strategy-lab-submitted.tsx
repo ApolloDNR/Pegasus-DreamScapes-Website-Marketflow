@@ -40,7 +40,7 @@ export default function StrategyLabSubmittedPage() {
         hour: "numeric",
         minute: "2-digit",
       })
-    : "within two business days";
+    : "within 48 hours";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -49,10 +49,10 @@ export default function StrategyLabSubmittedPage() {
           Submission received
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
-          Your snapshot is in the review queue.
+          Your submission is in the review queue.
         </h1>
         <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-          Apollo and the Pegasus team will read every input you submitted, run our own pass, and reach out with a structural read. Every property gets a serious review. Not every property gets an offer.
+          The Pegasus team will read every input you submitted, run our own pass, and reach out with a structural read. Every property gets a serious review. Not every property gets an offer.
         </p>
 
         <div className="border border-[hsl(var(--copper))] bg-[hsl(var(--copper)/0.05)] p-5 mb-6" data-testid="card-sla">
@@ -61,7 +61,7 @@ export default function StrategyLabSubmittedPage() {
           </div>
           <p className="font-serif text-xl mb-1">First response by {slaText}.</p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            That window is two business days from the moment we received your snapshot. If we miss it, your request is escalated for priority review. Your submission moves to the front of the queue and Apollo is notified directly.
+            That window is 48 hours from the moment we received your submission. If we miss it, your request is escalated for priority review. Your submission moves to the front of the queue for a faster read.
           </p>
         </div>
 

@@ -9,7 +9,7 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   capital: '/capital',
   operators: '/operators',
   referral: '/referral',
-  dealarchitecture: '/deal-architecture',
+  dealstrategy: '/deal-strategy',
   investments: '/investments',
   development: '/development',
   strategylab: '/strategy-lab',
@@ -32,25 +32,14 @@ export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).
   {} as Record<string, Route>,
 );
 
-// Website Doctrine v3.0 (Lean Launch Cut) — URLs demoted out of the prototype
-// shell for the lean launch. They stay in ROUTE_TO_URL / the Route union (so
-// `go(...)` targets and route-map registration are unchanged and the pages can
-// return later), but App.tsx redirects them instead of rendering the shell:
-// the audience lanes collapse into /submit, the rest into / (or /connect for
-// Work With Apollo). Keeping them out of PEGASUS_URLS lets those App.tsx
-// redirects win over the prototype shell.
-export const REDIRECTED_URLS: string[] = [
-  '/sellers',
-  '/buyers',
-  '/dealfinders',
-  '/operators',
-  '/referral',
-  '/strategy-lab',
-  '/marketflow',
-  '/peggy',
-  '/deal-architecture',
-  '/work-with-apollo',
-];
+// Website Spec v4 (Re-skin) restores the full public surface that the v3 Lean
+// Launch Cut had temporarily demoted: the six "Who We Serve" audience lanes,
+// Deal Strategy, Strategy Lab, MarketFlow, Represent With Apollo, and the
+// public Peggy page all render the prototype shell again. Nothing is demoted
+// out of the shell, so this list is intentionally empty. It stays an exported
+// constant so the redirect-reversal guard test and the PEGASUS_URLS filter
+// below keep a single source of truth.
+export const REDIRECTED_URLS: string[] = [];
 
 // Every URL the prototype public shell owns. `/submit` and `/connect` are
 // deliberately excluded: they render canonical app-level pages (SubmitPage /
@@ -141,7 +130,7 @@ export function isSolidNavUrl(path: string): boolean {
 const KNOWN_TOP_SEGMENTS: Set<string> = new Set([
   // Pegasus prototype-owned public pages
   'sellers', 'buyers', 'dealfinders', 'capital', 'operators', 'referral',
-  'deal-architecture', 'investments', 'development', 'strategy-lab',
+  'deal-strategy', 'investments', 'development', 'strategy-lab',
   'marketflow', 'work-with-apollo', 'ecosystem', 'about', 'contact', 'peggy',
   'saved',
   // Standalone-chrome + functional public surfaces
