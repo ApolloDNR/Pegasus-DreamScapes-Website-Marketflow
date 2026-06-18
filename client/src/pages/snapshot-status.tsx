@@ -352,23 +352,22 @@ export default function SnapshotStatus() {
                 testId="next-step-blueprint"
               />
               <NextStepCard
-                href="#save"
                 icon={Bookmark}
                 title="Save and decide later"
-                desc="Keep the Snapshot on file. We'll check in periodically. No pressure."
+                desc="This Snapshot stays on file at this link — return any time from the email we sent. No pressure."
                 testId="next-step-save"
               />
             </div>
 
             <div className="text-center pt-6">
-              <a
-                href="#peggy"
+              <Link
+                href="/peggy"
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="link-ask-peggy"
               >
                 <MessageCircle className="w-4 h-4" />
                 Or ask Peggy a question about your Snapshot
-              </a>
+              </Link>
             </div>
           </motion.div>
         )}
@@ -486,16 +485,21 @@ function NextStepCard({
   desc,
   testId,
 }: {
-  href: string;
+  href?: string;
   icon: typeof Building;
   title: string;
   desc: string;
   testId: string;
 }) {
-  const isInternal = href.startsWith("/");
+  const isLink = Boolean(href);
+  const isInternal = href?.startsWith("/") ?? false;
   const inner = (
     <div
-      className="group h-full p-6 bg-card border border-border/50 rounded-lg hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
+      className={`h-full p-6 bg-card border border-border/50 rounded-lg transition-all ${
+        isLink
+          ? "group hover:border-primary/40 hover:shadow-md cursor-pointer"
+          : ""
+      }`}
       data-testid={testId}
     >
       <Icon className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors mb-4" />
@@ -503,11 +507,16 @@ function NextStepCard({
         {title}
       </h3>
       <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-      <div className="mt-4 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-        Continue <ArrowRight className="w-3 h-3" />
-      </div>
+      {isLink && (
+        <div className="mt-4 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+          Continue <ArrowRight className="w-3 h-3" />
+        </div>
+      )}
     </div>
   );
+  if (!href) {
+    return inner;
+  }
   if (isInternal) {
     return <Link href={href}>{inner}</Link>;
   }

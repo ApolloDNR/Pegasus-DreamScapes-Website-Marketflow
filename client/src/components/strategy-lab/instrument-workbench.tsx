@@ -1622,7 +1622,7 @@ function RightVerdict({
               className="text-[9px] tracking-[0.22em] uppercase font-semibold"
               style={{ fontFamily: FONT_SUP, color: CREAM }}
             >
-              SLA · 48 business hours
+              SLA · within 48 hours
             </span>
             <span
               className="text-[9px] italic"

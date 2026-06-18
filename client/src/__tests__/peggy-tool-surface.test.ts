@@ -43,13 +43,13 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     expect(PEGGY_SYSTEM_PROMPT).not.toContain("$1,497");
   });
 
-  it("names Strategy Library, Vendor Network, MarketFlow, Sell, Invest, Contact routes", () => {
+  it("names Strategy Library, Vendor Network, MarketFlow, Submit, Capital, Contact routes", () => {
     for (const route of [
       "/resources",
       "/vendor-network",
       "/marketflow",
-      "/sell",
-      "/invest",
+      "/submit",
+      "/capital",
       "/contact",
     ]) {
       expect(PEGGY_SYSTEM_PROMPT).toContain(route);
