@@ -9,7 +9,7 @@ The **controlling design doctrine** for the public website is the saved React de
 The **visual baseline** comes from `_group.css` — re-skinned to the **v4 locked spec** ("Linear meets Palantir", navy):
 
 - **Palette (navy system)**: Deep Navy bg `--bg #0D1B2A` · Copper primary/CTA `--accent #D4872E` (bright `#E3A463`) · Gold accent / lines / numerals `--gold #C9A84C` · Cream text `--cream` / `--text #F5E6D3` · Teal success `--teal #1A9E75` · Charcoal panels `--charcoal #11243A` / deep `#091421`. The retired warm-sand light surface is gone. Dark theme overrides live in the same file under `.pg-root[data-theme='dark']` (cinematic navy `--bg #091421`).
-- **Typography**: Fraunces (display/serif — `.font-serif-display`, `.section-numeral`) · Hanken Grotesk (UI/body — default) · JetBrains Mono (labels/data — `.pg-label`, `.nav-dropdown-head`). Loaded via `client/index.html` Google Fonts. Replaces the retired Cormorant Garamond + Space Grotesk/Space Mono.
+- **Typography**: Cormorant Garamond (display/serif — `.font-serif-display`, `.section-numeral`) · Space Grotesk (UI/body/labels — default, `.pg-label`, `.nav-dropdown-head`), with Cinzel · Inter · Montserrat · Space Mono as supporting faces. Loaded via `client/index.html` Google Fonts; the prototype reads the family names directly in `_group.css` and the functional layer reads them via the `--font-*` / `--pd-font-*` tokens in `index.css` — change all three places together. **Override note:** the v4 locked spec called for Fraunces + Hanken Grotesk + JetBrains Mono, but the founder reverted to this pre-v4 editorial pairing (the Fraunces/Hanken stack read as "too bubbly"). Keep Cormorant Garamond + Space Grotesk; do **not** restore Fraunces/Hanken/JetBrains without an explicit instruction.
 - The design system is scoped under `.pg-root` so it coexists with the existing shadcn token layer used by the functional surfaces.
 
 The Empire Doctrine `.md` files in `attached_assets/` and the old `docs/architecture/*` blueprints are **retired historical reference only** — they no longer govern. If anything below diverges from the prototype, the prototype wins. This file is operational README only.
@@ -122,7 +122,7 @@ The old Amendment 2 §G status-badge requirement (Live · Private beta · In pri
 
 ## External dependencies
 
-- **UI**: Radix · Tailwind · CVA · Lucide · Google Fonts (Fraunces · Hanken Grotesk · JetBrains Mono for the public prototype; the functional shadcn surfaces still use their existing font stack).
+- **UI**: Radix · Tailwind · CVA · Lucide · Google Fonts (Cormorant Garamond · Space Grotesk for the public prototype, plus Cinzel · Inter · Montserrat · Space Mono supporting; the functional shadcn surfaces still use their existing font stack).
 - **Data/Forms**: React Hook Form · Zod · TanStack Query · drizzle-zod.
 - **DB**: Supabase · Drizzle · Neon serverless PostgreSQL.
 - **Auth**: passport · express-session · connect-pg-simple · Supabase Auth.

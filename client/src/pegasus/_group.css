@@ -29,7 +29,7 @@
   color-scheme: dark;
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
@@ -60,12 +60,12 @@
 }
 
 .font-serif-display {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
 /* Editorial eyebrow label */
 .pg-label {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.26em;
   font-size: 11px;
@@ -80,7 +80,7 @@
 
 /* Oversized illustrative section numeral */
 .section-numeral {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   line-height: 0.78;
   letter-spacing: -0.02em;
@@ -303,7 +303,7 @@
   height: 20px;
 }
 .nav-dropdown-head {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 9px;
@@ -325,14 +325,14 @@
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 .nav-dropdown-item .nav-dd-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 1.3rem;
   line-height: 1.02;
   letter-spacing: 0.01em;
   transition: color 0.2s ease;
 }
 .nav-dropdown-item .nav-dd-desc {
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.72rem;
   line-height: 1.32;
   letter-spacing: 0.005em;
@@ -375,7 +375,7 @@ body.pg-menu-open { overflow: hidden; }
   align-items: center;
   justify-content: space-between;
   padding: 17px 2px;
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 11px;
@@ -390,7 +390,7 @@ body.pg-menu-open { overflow: hidden; }
   padding: 12px 6px;
   border: 1px solid var(--line);
   border-radius: 2px;
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 9.5px;
@@ -421,7 +421,7 @@ body.pg-menu-open { overflow: hidden; }
   text-align: left;
   padding: 10px 0 10px 16px;
   border-left: 2px solid var(--line);
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 1.5rem;
   line-height: 1.12;
   color: var(--text);
@@ -435,7 +435,7 @@ body.pg-menu-open { overflow: hidden; }
 }
 .nav-m-acc-item .nav-m-acc-desc {
   display: block;
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.74rem;
   letter-spacing: 0.005em;
   color: var(--text);
@@ -644,7 +644,7 @@ body.pg-menu-open { overflow: hidden; }
   position: absolute;
   top: 18px;
   z-index: 15;
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 9px;
@@ -662,7 +662,7 @@ body.pg-menu-open { overflow: hidden; }
   border: 0;
   border-bottom: 1px solid var(--line);
   padding: 12px 2px;
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.95rem;
   color: var(--text);
   transition: border-color 0.35s ease;
@@ -678,7 +678,7 @@ select.pg-field option { color: #1b1712; }
 .calc-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .calc-num { -moz-appearance: textfield; appearance: textfield; }
 .pg-field-label {
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: 9px;
@@ -755,7 +755,7 @@ select.pg-field option { color: #1b1712; }
   box-shadow: 0 14px 34px -12px rgba(13, 27, 44, 0.7);
 }
 .peggy-fab-label {
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: 10px;
@@ -868,7 +868,7 @@ select.pg-field option { color: #1b1712; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -888,7 +888,7 @@ select.pg-field option { color: #1b1712; }
 }
 .peggy-action.is-ghost:hover { border-color: var(--accent-bright); box-shadow: none; }
 .peggy-chip {
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.78rem;
   color: var(--cream);
   background: rgba(239, 231, 218, 0.06);
@@ -921,7 +921,7 @@ select.pg-field option { color: #1b1712; }
   border: 0;
   outline: none;
   color: var(--cream);
-  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.88rem;
   padding: 8px 0;
 }

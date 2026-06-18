@@ -74,13 +74,13 @@
   --chart-3: 38 38% 60%;
   --chart-4: 213 45% 18%;
   --chart-5: 26 50% 38%;
-  /* Brand typography (v4 re-skin — Pegasus Brand Guidelines):
-     Fraunces = display/serif · Hanken Grotesk = UI/body · JetBrains Mono = labels/data. */
-  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
-  --font-serif: 'Fraunces', Georgia, serif;
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-supporting: 'Hanken Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* Brand typography (restored pre-v4 stack):
+     Cormorant Garamond = display/serif · Space Grotesk = sans/body/supporting. */
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-supporting: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: Menlo, monospace;
   --radius: .375rem;
   --shadow-2xs: 0 1px 2px 0 hsl(214 55% 11% / 0.04);
   --shadow-xs: 0 1px 3px 0 hsl(214 55% 11% / 0.05);
@@ -128,10 +128,10 @@
   --pd-charcoal: #1b1712;
   --pd-rule: #e2d6bf;
   --pd-muted: #4a4236;
-  --pd-font-display: "Fraunces", serif;
-  --pd-font-serif: "Fraunces", serif;
-  --pd-font-supporting: "Hanken Grotesk", system-ui, sans-serif;
-  --pd-font-sans: "Hanken Grotesk", system-ui, sans-serif;
+  --pd-font-display: "Cormorant Garamond", serif;
+  --pd-font-serif: "Cormorant Garamond", serif;
+  --pd-font-supporting: "Space Grotesk", system-ui, sans-serif;
+  --pd-font-sans: "Space Grotesk", system-ui, sans-serif;
 }
 
 /* DARK MODE — Deep Navy bg with Warm Cream type, Rich Copper accents */
