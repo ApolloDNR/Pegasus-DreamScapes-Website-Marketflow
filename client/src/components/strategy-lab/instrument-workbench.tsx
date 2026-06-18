@@ -78,6 +78,21 @@ function clampPct(n: number): number {
   return Math.max(0, Math.min(100, n));
 }
 
+/* Ranges-only doctrine: the Lab never shows a property-specific 0–100 score
+   or a hard verdict. We translate the engine's internal confidence into a
+   qualitative "read strength" word + a 3-step index (0=Thin, 1=Workable,
+   2=Strong; -1=needs data) and never surface the underlying number. */
+function readStrength(
+  topLane: LaneFitResult | undefined,
+  conf: number,
+): { word: string; idx: number } {
+  if (!topLane || topLane.verdict === "needs_more_data")
+    return { word: "Needs data", idx: -1 };
+  if (conf >= 70) return { word: "Strong", idx: 2 };
+  if (conf >= 45) return { word: "Workable", idx: 1 };
+  return { word: "Thin", idx: 0 };
+}
+
 /* ────────────── PUBLIC PROPS ────────────── */
 
 export interface InstrumentWorkbenchProps {
@@ -708,7 +723,7 @@ function CenterColumn({
             className="text-[10px] tracking-[0.2em] uppercase"
             style={{ fontFamily: FONT_SUP, color: MUTED }}
           >
-            {snapshot?.lanes.length ? "Sorted by confidence" : "Awaiting inputs"}
+            {snapshot?.lanes.length ? "Sorted by read strength" : "Awaiting inputs"}
           </span>
         </div>
         <div
@@ -759,8 +774,9 @@ function CenterColumn({
           className="text-[10px] mt-3 italic leading-relaxed"
           style={{ fontFamily: FONT_SERIF, color: MUTED }}
         >
-          Confidence bands are a ±7 placeholder until the engine returns a
-          true range. The top lane is the strongest-fit path for this scenario.
+          Bars show relative read strength across lanes — a directional fit
+          signal, not a score or valuation. The top lane is the strongest-fit
+          path for this scenario.
         </div>
       </div>
 
@@ -789,7 +805,7 @@ function CenterColumn({
               className="text-[11px] italic"
               style={{ fontFamily: FONT_SERIF, color: MUTED }}
             >
-              Solve for the offer that hits your confidence target.
+              Solve for the offer that hits your target read strength.
             </span>
             <span
               className="text-[8px] tracking-[0.2em] uppercase px-1.5 py-0.5 font-semibold"
@@ -830,10 +846,10 @@ function CenterColumn({
                 </select>
               </div>
               <div>
-                <Lbl>Target confidence</Lbl>
+                <Lbl>Target read</Lbl>
                 <input
                   disabled
-                  defaultValue="75%"
+                  defaultValue="Strong"
                   className="mt-1 w-full text-[13px] py-1.5 px-2 bg-white/60 border-0 border-b-2 opacity-60"
                   style={{
                     borderColor: NAVY,
@@ -1095,24 +1111,6 @@ function LaneRow({
               : "none",
           }}
         />
-        <div
-          className="absolute top-0 bottom-0 w-px"
-          style={{ left: "50%", backgroundColor: "rgba(13,27,45,0.2)" }}
-        />
-        <div
-          className="absolute top-0 bottom-0 w-px"
-          style={{ left: "75%", backgroundColor: "rgba(13,27,45,0.2)" }}
-        />
-      </div>
-      <div
-        className="w-20 text-right text-[11px] tabular-nums"
-        style={{
-          fontFamily: FONT_SERIF,
-          color: top ? COPPER : MUTED,
-          fontWeight: top ? 600 : 500,
-        }}
-      >
-        {lo}–{hi}%
       </div>
       <div
         className="w-28 text-right text-[9px] tracking-[0.18em] uppercase font-semibold"
@@ -1242,7 +1240,7 @@ function RightVerdict({
   onOpenBlueprintTier: (key: string) => void;
 }) {
   const conf = topLane?.confidence.score ?? 0;
-  const band: [number, number] = [clampPct(conf - 7), clampPct(conf + 7)];
+  const rs = readStrength(topLane, conf);
   const tier = topLane ? tierRangeFor(topLane.lane) : null;
 
   return (
@@ -1283,7 +1281,7 @@ function RightVerdict({
           </span>
         </div>
 
-        {/* Confidence band */}
+        {/* Read strength — qualitative only; no 0–100 score (ranges doctrine) */}
         <div className="px-5 pt-4">
           <div
             className="text-[9px] tracking-[0.25em] uppercase font-semibold mb-1.5"
@@ -1292,15 +1290,15 @@ function RightVerdict({
               color: "rgba(246,239,228,0.5)",
             }}
           >
-            Confidence range
+            Read strength
           </div>
-          <div className="flex items-baseline gap-2 mb-2">
+          <div className="flex items-baseline gap-2 mb-2.5">
             <span
-              className="text-[32px] tabular-nums leading-none"
+              className="text-[28px] leading-none"
               style={{ fontFamily: FONT_SERIF, fontWeight: 500, color: CREAM }}
-              data-testid="instrument-conf-band"
+              data-testid="instrument-read-strength"
             >
-              {topLane ? `${band[0]}–${band[1]}%` : "—"}
+              {topLane ? rs.word : "—"}
             </span>
             <span
               className="text-[11px] italic"
@@ -1309,45 +1307,35 @@ function RightVerdict({
                 fontFamily: FONT_SERIF,
               }}
             >
-              {topLane ? "read strength" : "Add an asking price to score"}
+              {topLane ? "directional read, not a valuation" : "Add an asking price to read"}
             </span>
           </div>
-          <div
-            className="relative h-2 rounded-sm"
-            style={{ backgroundColor: "rgba(246,239,228,0.12)" }}
-          >
-            {topLane && (
-              <>
+          <div className="flex gap-1">
+            {["Thin", "Workable", "Strong"].map((seg, i) => (
+              <div key={seg} className="flex-1">
                 <div
-                  className="absolute top-0 bottom-0 rounded-sm"
+                  className="h-2 rounded-sm"
                   style={{
-                    left: `${band[0]}%`,
-                    width: `${Math.max(2, band[1] - band[0])}%`,
-                    backgroundColor: COPPER,
+                    backgroundColor:
+                      topLane && rs.idx >= i
+                        ? COPPER
+                        : "rgba(246,239,228,0.12)",
                   }}
                 />
                 <div
-                  className="absolute top-0 bottom-0 w-px"
-                  style={{ left: `${conf}%`, backgroundColor: CREAM }}
-                />
-              </>
-            )}
-            <div
-              className="absolute top-0 bottom-0 w-px"
-              style={{ left: "75%", backgroundColor: "rgba(246,239,228,0.4)" }}
-            />
-          </div>
-          <div
-            className="flex justify-between text-[8px] tracking-[0.18em] uppercase mt-1"
-            style={{
-              fontFamily: FONT_SUP,
-              color: "rgba(246,239,228,0.45)",
-            }}
-          >
-            <span>0</span>
-            <span>50</span>
-            <span style={{ color: COPPER }}>75 target</span>
-            <span>100</span>
+                  className="text-[8px] tracking-[0.16em] uppercase mt-1 text-center"
+                  style={{
+                    fontFamily: FONT_SUP,
+                    color:
+                      topLane && rs.idx === i
+                        ? COPPER
+                        : "rgba(246,239,228,0.4)",
+                  }}
+                >
+                  {seg}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

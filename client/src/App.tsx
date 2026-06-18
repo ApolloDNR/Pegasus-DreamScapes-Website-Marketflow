@@ -157,7 +157,7 @@ export const legacyRedirects: [string, string][] = [
   ["/invest", "/capital"],
   // Phase 1 route-cleanup (Apollo guardrail #3 — redirects, not 410s,
   // for paths that still have a clear canonical replacement).
-  ["/calculators", "/strategy-lab/classic"],
+  ["/calculators", "/strategy-lab?tool=calculators"],
   ["/education", "/library"],
   ["/wholesale", "/submit?intent=deal-jv"],
   // Website Spec v4 (Re-skin) — the audience lanes are restored to the public

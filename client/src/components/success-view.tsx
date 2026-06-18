@@ -86,7 +86,7 @@ const FORM_COPY: Record<
   marketflow_access: {
     kicker: "Request received",
     headline: "Your access request is logged.",
-    lead: "MarketFlow is invite-only. We will confirm the introduction and reach out within 48 business hours with next steps.",
+    lead: "MarketFlow is invite-only. We will confirm the introduction and reach out within 48 hours with next steps.",
     expectations: [
       "We verify every introduction by hand before sending an invite.",
       "If there is a fit, you will get a personal invite link and onboarding call.",

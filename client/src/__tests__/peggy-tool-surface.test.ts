@@ -9,7 +9,7 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("Full Path");
   });
 
-  it("names all 8 classic calculators by name", () => {
+  it("names all 8 Quick Tools calculators by name", () => {
     for (const name of [
       "ARV",
       "ROI",
@@ -22,7 +22,9 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     ]) {
       expect(PEGGY_SYSTEM_PROMPT).toContain(name);
     }
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab/classic");
+    // The classic suite is retired; the calculators now live in-page in the
+    // unified Lab, deep-linkable via the Quick Tools query param.
+    expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab?tool=calculators");
   });
 
   it("names the Strategy Snapshot PDF and route family", () => {

@@ -133,7 +133,8 @@ const STANDALONE_URLS: string[] = [
   "/strategy-lab/library",
   "/strategy-lab/submitted",
   "/strategy-lab/blueprint-confirmed",
-  "/strategy-lab/classic",
+  // /strategy-lab/classic is now a pure redirect into the unified Lab's
+  // in-page Quick Tools, so it is excluded here like the other redirects.
   "/marketflow/access",
   "/marketflow/buyboxes",
 ];
@@ -175,7 +176,7 @@ describe("Every standalone (non-prototype) public route renders real content, ne
   // Non-vacuous guard: if the list ever empties out the suite must not
   // silently pass with no cases. Pin a sane floor.
   it("STANDALONE_URLS covers the standalone public surface", () => {
-    expect(STANDALONE_URLS.length).toBeGreaterThanOrEqual(15);
+    expect(STANDALONE_URLS.length).toBeGreaterThanOrEqual(14);
   });
 
   // Guard the list against drift back into prototype territory: anything the
@@ -220,13 +221,19 @@ describe("Every standalone (non-prototype) public route renders real content, ne
     // Dynamic :param detail routes — no canned id/slug to resolve here;
     // tracked as a follow-up (#217).
     const isDynamic = (u: string) => u.includes(":");
+    // Component-mounted routes that intentionally render only a <Redirect>,
+    // not real content — excluded like the legacyRedirects map. The classic
+    // calculator suite now folds into the unified Lab's in-page Quick Tools,
+    // so /strategy-lab/classic forwards to /strategy-lab?tool=calculators.
+    const REDIRECT_ONLY = new Set(["/strategy-lab/classic"]);
 
     const expectedStandalone = componentRoutes.filter(
       (u) =>
         !isPegasusUrl(u) && // shadowed by the prototype shell (matched first)
         !AUTH_FORMS.has(u) &&
         !isAdmin(u) &&
-        !isDynamic(u),
+        !isDynamic(u) &&
+        !REDIRECT_ONLY.has(u),
     );
 
     const covered = new Set(STANDALONE_URLS);

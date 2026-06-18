@@ -73,6 +73,11 @@ import { PathMap } from "@/components/strategy-lab/path-map";
 import { StrategyFitBoard } from "@/components/strategy-lab/fit-board";
 import { SensitivityHeatmap } from "@/components/strategy-lab/sensitivity-heatmap";
 import { InstrumentWorkbench } from "@/components/strategy-lab/instrument-workbench";
+import {
+  CalculatorToolsPanel,
+  readActiveTabFromUrl as readCalcTabFromUrl,
+  type CalcTabKey,
+} from "@/components/strategy-lab/calculator-tools-panel";
 import { useAccountWall } from "@/hooks/use-account-wall";
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -679,11 +684,14 @@ export default function StrategyLabPage() {
   }, []);
 
   const [form, setForm] = useState<FormState>(EMPTY_STATE);
-  const [mode, setMode] = useState<"quick" | "full">(() => {
+  const [mode, setMode] = useState<"quick" | "full" | "tools">(() => {
     if (typeof window === "undefined") return "quick";
-    const m = new URLSearchParams(window.location.search).get("mode");
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get("mode");
+    if (params.get("tool") === "calculators" || m === "tools") return "tools";
     return m === "full" || m === "fullpath" ? "full" : "quick";
   });
+  const [calcTab, setCalcTab] = useState<CalcTabKey>(readCalcTabFromUrl);
 
   // Deep-link to ?mode=full → scroll past hero to the workbench on mount.
   useEffect(() => {
@@ -868,89 +876,6 @@ export default function StrategyLabPage() {
 
   const topLane = snapshot?.lanes[0];
 
-  // "How we got this number" — substituted values for the headline metric of
-  // the TOP lane that the snapshot actually surfaces. Keeps the math reveal
-  // honest: if Quick Read shows "Monthly cash flow", the chain shown is NOI
-  // minus debt service, not a generic refi expression.
-  const quickMath = useMemo(() => {
-    if (!snapshot || !topLane) return null;
-    const price = engineInputs.property.purchasePrice ?? engineInputs.property.askingPrice ?? 0;
-    if (!price) return null;
-    const arv = engineInputs.property.arvEstimate ?? 0;
-    const rehab = engineInputs.property.rehabBudget ?? 0;
-    const rent = engineInputs.property.marketRent ?? 0;
-    const ltvPct = parseNum(quickAssumptions.loanLtvPct) ?? 75;
-    const ratePct = parseNum(quickAssumptions.loanRatePct) ?? 7.5;
-    const mgmtPct = parseNum(quickAssumptions.managementPct) ?? 8;
-    const closingPct = parseNum(quickAssumptions.closingReservePct) ?? 3;
-    const vacancyPct = parseNum(quickAssumptions.vacancyPct) ?? 8;
-    const downPayment = price * (1 - ltvPct / 100);
-    const loanAmount = price * (ltvPct / 100);
-    const closingReserve = price * (closingPct / 100);
-    const totalCashIn = downPayment + rehab + closingReserve;
-    const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
-
-    // Lane-specific arithmetic chain leading to the displayed primaryValue.
-    const lane = topLane.lane;
-    const base = snapshot.scenarios.base;
-    const lines: { label: string; value: string }[] = [
-      { label: "Effective price", value: fmt(price) },
-      { label: `Down payment (price × ${(100 - ltvPct).toFixed(0)}%)`, value: fmt(downPayment) },
-      { label: `Loan amount (price × ${ltvPct}%)`, value: fmt(loanAmount) },
-      { label: `Closing reserve (price × ${closingPct}%)`, value: fmt(closingReserve) },
-      { label: "Total cash in (down + rehab + closing)", value: fmt(totalCashIn) },
-    ];
-
-    // Lane-specific arithmetic that mirrors shared/strategy-lab/lanes.ts so
-    // every line in the reveal terminates at the same number the lane scorer
-    // surfaced as `economics.primaryValue`. Calculator-math test asserts
-    // parity for BRRRR + rental_hold.
-    if (lane === "flip") {
-      const closing = arv * 0.06; // lanes.ts: closing = c.arv * 0.06
-      const netProfit = arv - price - rehab - closing;
-      lines.push(
-        { label: "Selling cost (ARV × 6%)", value: fmt(closing) },
-        { label: "Net profit = ARV − price − rehab − selling", value: fmt(netProfit) },
-      );
-    } else if (lane === "wholetail") {
-      const closing = arv * 0.07; // lanes.ts: c.arv * 0.07
-      const netProfit = arv - price - rehab - closing;
-      lines.push(
-        { label: "Selling cost (ARV × 7%)", value: fmt(closing) },
-        { label: "Net after light rehab = ARV − price − rehab − selling", value: fmt(netProfit) },
-      );
-    } else if (lane === "brrrr") {
-      // lanes.ts scoreBrrrr uses totalIn = askingPrice + rehab (NOT the
-      // engine's down+rehab+closing). Mirror exactly so the reveal lands
-      // on the same `Cash left in after refi` value.
-      const refiProceeds = arv * 0.75;
-      const totalIn = price + rehab;
-      const cashLeft = Math.max(0, totalIn - refiProceeds);
-      lines.push(
-        { label: "Total in (price + rehab)", value: fmt(totalIn) },
-        { label: "Refi cash-out (ARV × 75% LTV)", value: fmt(refiProceeds) },
-        { label: "Cash left in = max(0, total in − refi)", value: fmt(cashLeft) },
-      );
-    } else if (lane === "rental_hold" || lane === "jv") {
-      lines.push(
-        { label: `EGI (rent × 12 × ${(100 - vacancyPct).toFixed(0)}%)`, value: fmt(base.effectiveGrossIncome) },
-        { label: "NOI (EGI − opex, Base)", value: fmt(base.noiAnnual) },
-        { label: `Debt service @ ${ratePct}% / 30 yr`, value: fmt(base.annualDebtService) },
-        { label: "Annual cash flow = NOI − debt", value: fmt(base.annualCashFlow) },
-        { label: "Monthly cash flow = annual / 12", value: fmt(base.annualCashFlow / 12) },
-      );
-    } else if (lane === "wholesale") {
-      // lanes.ts: fee = max(0, arv * 0.7 - rehab - askingPrice)
-      const seventyMao = arv * 0.7 - rehab;
-      const fee = Math.max(0, seventyMao - price);
-      lines.push(
-        { label: "70% rule MAO = ARV × 70% − rehab", value: fmt(seventyMao) },
-        { label: "Assignment fee = max(0, MAO − asking)", value: fmt(fee) },
-      );
-    }
-
-    return { price, arv, rehab, rent, ltvPct, ratePct, mgmtPct, closingPct, vacancyPct, lines, fmt };
-  }, [snapshot, topLane, engineInputs, quickAssumptions]);
 
   // ── Persistence + share + PDF + submit (Task #84) ──────────────────────
   const { isAuthenticated } = useSupabaseAuth();
@@ -1731,6 +1656,16 @@ export default function StrategyLabPage() {
               >
                 Full Snapshot
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "tools"}
+                onClick={() => setMode("tools")}
+                className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "tools" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
+                data-testid="mode-tools"
+              >
+                Quick Tools
+              </button>
             </div>
             {mode === "full" && (
               <nav
@@ -1740,7 +1675,7 @@ export default function StrategyLabPage() {
               >
                 {[
                   { id: "section-identity", label: "Property" },
-                  { id: "section-recommendation", label: "Verdict" },
+                  { id: "section-recommendation", label: "Read" },
                   { id: "section-fit", label: "Fit" },
                   { id: "section-risk", label: "Risk" },
                   { id: "section-memo", label: "Memo" },
@@ -1807,7 +1742,7 @@ export default function StrategyLabPage() {
                   </div>
                 </div>
                 <h2 className="font-serif text-3xl font-semibold tracking-tight leading-tight">
-                  Five fields. One verdict.
+                  Five fields. One read.
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                   The basics. Pegasus reads the most likely outcome lane and the headline number, live as you type.
@@ -1892,7 +1827,7 @@ export default function StrategyLabPage() {
                   <span className="chev transition-transform text-primary text-xs" aria-hidden="true">›</span>
                 </summary>
                 <p className="mt-2 text-[11px] text-muted-foreground leading-snug" data-testid="quick-assumptions-scope">
-                  These drive scenario economics (cash flow, NOI, capital stack). Lane scoring still uses the doctrinal levers (70% rule for flips, 75% refi for BRRRR) so verdicts stay comparable across deals.
+                  These drive scenario economics (cash flow, NOI, capital stack). Lane scoring still uses the doctrinal levers (70% rule for flips, 75% refi for BRRRR) so reads stay comparable across deals.
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <Field label="Loan LTV" hint="Default 75%.">
@@ -1952,10 +1887,10 @@ export default function StrategyLabPage() {
               {!snapshot || !topLane ? (
                 <div className="border border-dashed border-[hsl(var(--rule))] p-6 text-center">
                   <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
-                    Pegasus Verdict
+                    Pegasus Read
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Enter an asking price to see the live verdict.
+                    Enter an asking price to see the live read.
                   </div>
                 </div>
               ) : (
@@ -1978,29 +1913,25 @@ export default function StrategyLabPage() {
                     </p>
                   </div>
 
-                  {/* Card 2 — Confidence */}
+                  {/* Card 2 — Signals (qualitative; no score or grade shown) */}
                   <div
                     className="border border-[hsl(var(--rule))] p-4"
-                    data-testid="quick-card-confidence"
+                    data-testid="quick-card-signals"
                   >
                     <div className="flex items-baseline justify-between mb-2">
                       <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary">
-                        Read confidence
+                        Signals
                       </div>
                     </div>
-                    <div className="font-serif text-2xl font-semibold tabular-nums">
+                    <p className="text-sm text-foreground leading-snug">
                       {topLane.confidence.score >= 70
-                        ? "Strong"
+                        ? "The inputs you entered point cleanly to this lane."
                         : topLane.confidence.score >= 45
-                          ? "Moderate"
-                          : "Thin"}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-snug mt-1">
-                      {topLane.confidence.score >= 70
-                        ? "Inputs support this read."
-                        : topLane.confidence.score >= 45
-                          ? "Some inputs need firming up."
-                          : "Add more data for a stronger read."}
+                          ? "This lane fits, but a few inputs need firming up."
+                          : "Early signal only — add ARV, rehab, or rent for a clearer read."}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-2">
+                      Scenario guidance from your inputs — not a valuation.
                     </p>
                   </div>
 
@@ -2124,7 +2055,15 @@ export default function StrategyLabPage() {
         />
       )}
 
-      {/* Portable calculators — canonical card row. Deep-link to /strategy-lab/classic?tab=. Always visible. */}
+      {/* Quick Tools — the eight portable calculators, folded in-page (retires the standalone classic suite). */}
+      {mode === "tools" && (
+        <main className="max-w-[1320px] mx-auto px-2 sm:px-6 lg:px-10 py-6" data-testid="strategy-lab-tools">
+          <CalculatorToolsPanel activeTab={calcTab} setActiveTab={setCalcTab} />
+        </main>
+      )}
+
+      {/* Portable calculators — entry row into the in-page Quick Tools. Hidden while Quick Tools is open. */}
+      {mode !== "tools" && (
       <section className="border-t border-b border-[hsl(var(--rule))] bg-[hsl(var(--paper))]" data-testid="strategy-lab-calc-row" aria-labelledby="portable-calc-heading">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-10 py-10">
           <div className="flex items-end justify-between gap-6 mb-5">
@@ -2139,13 +2078,14 @@ export default function StrategyLabPage() {
                 Need just one number? Pull the right calculator.
               </h2>
             </div>
-            <Link
-              href="/strategy-lab/classic"
+            <button
+              type="button"
+              onClick={() => setMode("tools")}
               className="hidden md:inline text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))]"
-              data-testid="link-classic-suite"
+              data-testid="btn-open-all-tools"
             >
-              See the classic suite →
-            </Link>
+              Open all tools →
+            </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-testid="calc-tiles">
             {[
@@ -2158,10 +2098,19 @@ export default function StrategyLabPage() {
               { tab: "ownvsrent", label: "Own vs Rent", desc: "Net worth crossover year." },
               { tab: "hardmoney", label: "Hard Money", desc: "Short-term carry cost." },
             ].map((c) => (
-              <Link
+              <button
                 key={c.tab}
-                href={`/strategy-lab/classic?tab=${c.tab}`}
-                className="group relative block border border-[hsl(var(--rule))] bg-background hover:bg-[hsl(var(--paper))] hover:border-[hsl(var(--copper))]/60 transition-colors p-4"
+                type="button"
+                onClick={() => {
+                  setCalcTab(c.tab as CalcTabKey);
+                  setMode("tools");
+                  requestAnimationFrame(() => {
+                    document
+                      .querySelector('[data-testid="strategy-lab-tools"]')
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
+                }}
+                className="group relative block text-left w-full border border-[hsl(var(--rule))] bg-background hover:bg-[hsl(var(--paper))] hover:border-[hsl(var(--copper))]/60 transition-colors p-4"
                 data-testid={`calc-tile-${c.tab}`}
               >
                 <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
@@ -2177,11 +2126,12 @@ export default function StrategyLabPage() {
                 >
                   →
                 </span>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
       </section>
+      )}
 
       {/* Mobile sticky Verdict drawer (Task #84) — Full Path only */}
       {mode === "full" && snapshot && topLane && (

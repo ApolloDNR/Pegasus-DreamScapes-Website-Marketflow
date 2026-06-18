@@ -265,7 +265,7 @@ export const ECOSYSTEM: {
   route?: Route;
 }[] = [
   { key: 'hq', name: 'Pegasus HQ', role: 'The strategy firm', desc: 'Where deals are read, underwritten, and turned into a plan. The underwriting standard every other part follows.', icon: 'compass', status: 'Operating', route: 'contact' },
-  { key: 'peggy', name: 'PeggyAI', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Operating', route: 'peggy' },
+  { key: 'peggy', name: 'PeggyAI', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Early access', route: 'peggy' },
   { key: 'lab', name: 'Strategy Lab', role: 'The underwriting tool', desc: 'Self-serve modeling that returns an Instant Strategy Preview on any deal.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
   { key: 'marketflow', name: 'MarketFlow', role: 'The marketplace', desc: 'Three lanes that move deals, match capital, and place finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
   { key: 'capstack', name: 'CapStack', role: 'The capital layer', desc: 'How funding is structured and matched to projects, on defined terms.', icon: 'layers', status: 'Building', route: 'capital' },
@@ -482,6 +482,11 @@ export const PEGGY_FOLLOWUPS: string[] = [
 ];
 
 export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs the team, we respond within 48 hours.';
+
+/* Honest launch status. Peggy is live for intake and orientation but still being
+   widened, so every surface that shows the widget states it plainly (replit.md
+   launch checklist: "PeggyAI shown with honest status wherever surfaced"). */
+export const PEGGY_STATUS = 'Early access · in training';
 
 /* Compliance note shown in the panel footer. Peggy is intake only — she never
    approves, prices, or advises. Publishing the guardrail is the credibility move. */

@@ -545,7 +545,7 @@ function HowItWorksSection() {
     {
       index: "02",
       label: "Review",
-      desc: "Apollo reads your submission personally and pulls comps within 5 business days.",
+      desc: "Acquisitions reads your submission and pulls comps within 48 hours.",
     },
     {
       index: "03",

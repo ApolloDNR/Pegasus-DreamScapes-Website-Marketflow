@@ -250,9 +250,8 @@ export default function SnapshotStatus() {
                 property that comes in — not an automation.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                We'll move it into review within one business day and reach out
-                with the Property Read within 48 hours. You'll get an
-                email when there's an update.
+                We'll move it into review and reach out with the Property Read
+                within 48 hours. You'll get an email when there's an update.
               </p>
             </div>
           )}
@@ -348,8 +347,8 @@ export default function SnapshotStatus() {
               <NextStepCard
                 href="/deal-blueprint"
                 icon={FileText}
-                title="Get the Deal Blueprint"
-                desc="Commission a Pegasus Deal Blueprint by review, a deeper, structured analysis."
+                title="Request the Deal Blueprint"
+                desc="Request a Pegasus Deal Blueprint by review, a deeper, structured analysis."
                 testId="next-step-blueprint"
               />
               <NextStepCard
@@ -522,7 +521,7 @@ function labelForChoice(c?: "sell" | "build" | "blueprint" | "save"): string {
     case "build":
       return "Build with Pegasus";
     case "blueprint":
-      return "Get the Deal Blueprint";
+      return "Request the Deal Blueprint";
     case "save":
       return "Save and decide later";
     default:

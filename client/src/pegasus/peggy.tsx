@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useId, useState, useCallback } from 'react';
 import { X, Send, ArrowRight, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import type { ChatTurn, PeggyHandoff, Nav } from './theme';
-import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE } from './data';
+import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS } from './data';
 import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
 
@@ -229,6 +229,10 @@ export function Peggy({
           <div className="leading-none">
             <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
             <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Guided Intake Concierge</div>
+            <div className="flex items-center gap-1.5 mt-1.5" data-testid="peggy-status">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" />
+              <span className="pg-label !text-[8px] !tracking-[0.18em] normal-case text-[var(--cream)]/55">{PEGGY_STATUS}</span>
+            </div>
           </div>
           {conversationStarted && <SaveChatButton turns={transcriptTurns(messages)} />}
           <button type="button" onClick={close} aria-label="Close" className="ml-3 text-[var(--cream)]/60 hover:text-[var(--cream)] transition-colors">

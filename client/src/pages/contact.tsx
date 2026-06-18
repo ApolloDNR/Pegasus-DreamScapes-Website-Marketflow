@@ -123,7 +123,7 @@ function ContactRoutingSection() {
       icon: Building,
       kicker: "Sellers",
       title: "Have a property?",
-      desc: "Submit it through the structured intake. Reviewed and routed within 24 business hours.",
+      desc: "Submit it through the structured intake. Reviewed and routed within 48 hours.",
       cta: "Submit a Property",
       href: "/submit",
     },

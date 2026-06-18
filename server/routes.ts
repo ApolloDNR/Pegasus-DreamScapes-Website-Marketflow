@@ -257,6 +257,22 @@ export async function registerRoutes(
     app.get(from, (_req, res) => res.redirect(302, to));
   }
 
+  // The classic calculator suite was folded into the unified Strategy Lab.
+  // /calculators and /strategy-lab/classic now 301 to the Lab's Quick Tools
+  // surface, preserving a ?tab= deep link so previously shared calculator
+  // links keep landing on the right tool. Registered before the SPA fallback
+  // so direct hits / crawlers get a real redirect (not a 410 or a blank shell).
+  const CALC_TOOLS_URL = '/strategy-lab?tool=calculators';
+  for (const from of ['/calculators', '/strategy-lab/classic']) {
+    app.get(from, (req, res) => {
+      const tab = typeof req.query.tab === 'string' ? req.query.tab.trim() : '';
+      res.redirect(
+        301,
+        tab ? `${CALC_TOOLS_URL}&tab=${encodeURIComponent(tab)}` : CALC_TOOLS_URL,
+      );
+    });
+  }
+
   // Retired-from-public routes: return 410 Gone for direct HTTP requests.
   // Brief §1: these routes are gone from the v1 public surface entirely
   // (no clean canonical successor that preserves the original intent).
@@ -269,7 +285,6 @@ export async function registerRoutes(
   // not be 410'd here either.
   const GONE_ROUTES = [
     '/education',
-    '/calculators',
     '/wholesale',
     '/systems',
     '/dreamspace',
