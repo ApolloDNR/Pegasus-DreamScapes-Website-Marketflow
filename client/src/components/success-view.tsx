@@ -193,7 +193,7 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
               <Link href="/strategy-lab">
                 <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
                   <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">Run Strategy Lab</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">See how your property scores across 14 strategies while we prepare the review.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">See where your property fits across 14 strategies — ranges and lane fit — while we prepare the review.</p>
                 </div>
               </Link>
               <Link href="/projects">
