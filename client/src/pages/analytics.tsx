@@ -1,5 +1,5 @@
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { AnalyticsDashboard, sampleAnalyticsData } from "@/components/analytics-dashboard";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +35,23 @@ interface AnalyticsData {
   fundingProgress: Array<{ project: string; raised: number; goal: number }>;
   dealStatus: Array<{ status: string; count: number; color: string }>;
 }
+
+const EMPTY_ANALYTICS_DATA: AnalyticsData = {
+  stats: {
+    totalDeals: 0,
+    totalVolume: 0,
+    activeProjects: 0,
+    totalUsers: 0,
+    dealsChange: 0,
+    volumeChange: 0,
+    projectsChange: 0,
+    usersChange: 0,
+  },
+  dealVolumeData: [],
+  roleDistribution: [],
+  fundingProgress: [],
+  dealStatus: [],
+};
 
 export default function AnalyticsPage() {
   const { isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
@@ -91,9 +108,15 @@ export default function AnalyticsPage() {
     refetch();
   };
   
-  const rawData = analyticsData || sampleAnalyticsData;
+  const rawData = analyticsData || EMPTY_ANALYTICS_DATA;
   const displayData = getFilteredData(rawData);
   const isRefreshing = isDataLoading || isRefetching;
+  const laneStats = {
+    wholesale: laneFilter === "wholesale" ? displayData.stats.totalDeals : 0,
+    capital: laneFilter === "capital" ? displayData.stats.activeProjects : 0,
+    listings: laneFilter === "listings" ? displayData.stats.totalDeals : 0,
+  };
+  const userRoles = new Map(displayData.roleDistribution.map((role) => [role.role.toLowerCase(), role.count]));
 
   if (isLoading) {
     return (
@@ -171,7 +194,7 @@ export default function AnalyticsPage() {
                     Analytics Dashboard
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Platform performance metrics and insights
+                    Verified platform metrics. Empty states mean no approved activity has been recorded yet.
                   </p>
                 </div>
               </div>
@@ -261,8 +284,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-wholesale-deals">89</div>
-                    <p className="text-xs text-emerald-600">+15% vs last month</p>
+                    <div className="text-2xl font-bold" data-testid="stat-wholesale-deals">{laneStats.wholesale}</div>
+                    <p className="text-xs text-muted-foreground">Real reviewed activity only</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -272,8 +295,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-capital-projects">12</div>
-                    <p className="text-xs text-emerald-600">+8% vs last month</p>
+                    <div className="text-2xl font-bold" data-testid="stat-capital-projects">{laneStats.capital}</div>
+                    <p className="text-xs text-muted-foreground">Real reviewed activity only</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -283,8 +306,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-listings">55</div>
-                    <p className="text-xs text-muted-foreground">No change</p>
+                    <div className="text-2xl font-bold" data-testid="stat-listings">{laneStats.listings}</div>
+                    <p className="text-xs text-muted-foreground">Real reviewed activity only</p>
                   </CardContent>
                 </Card>
               </div>
@@ -302,45 +325,45 @@ export default function AnalyticsPage() {
                       <span className="text-sm">Views</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-full bg-primary rounded-full" />
+                          <div className="h-full w-0 bg-primary rounded-full" />
                         </div>
-                        <span className="text-sm font-medium w-16 text-right">12,450</span>
+                        <span className="text-sm font-medium w-16 text-right">0</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Saved</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-3/4 bg-primary rounded-full" />
+                          <div className="h-full w-0 bg-primary rounded-full" />
                         </div>
-                        <span className="text-sm font-medium w-16 text-right">3,240</span>
+                        <span className="text-sm font-medium w-16 text-right">0</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Inquiries</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-1/2 bg-primary rounded-full" />
+                          <div className="h-full w-0 bg-primary rounded-full" />
                         </div>
-                        <span className="text-sm font-medium w-16 text-right">890</span>
+                        <span className="text-sm font-medium w-16 text-right">0</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Offers</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-1/4 bg-primary rounded-full" />
+                          <div className="h-full w-0 bg-primary rounded-full" />
                         </div>
-                        <span className="text-sm font-medium w-16 text-right">245</span>
+                        <span className="text-sm font-medium w-16 text-right">0</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Closed</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-[10%] bg-emerald-500 rounded-full" />
+                          <div className="h-full w-0 bg-emerald-500 rounded-full" />
                         </div>
-                        <span className="text-sm font-medium w-16 text-right">67</span>
+                        <span className="text-sm font-medium w-16 text-right">0</span>
                       </div>
                     </div>
                   </div>
@@ -357,8 +380,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-investors">420</div>
-                    <p className="text-xs text-emerald-600">+28 this month</p>
+                    <div className="text-2xl font-bold" data-testid="stat-investors">{userRoles.get("investors") || 0}</div>
+                    <p className="text-xs text-muted-foreground">Verified accounts only</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -368,8 +391,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-wholesalers">180</div>
-                    <p className="text-xs text-emerald-600">+12 this month</p>
+                    <div className="text-2xl font-bold" data-testid="stat-wholesalers">{userRoles.get("wholesalers") || 0}</div>
+                    <p className="text-xs text-muted-foreground">Verified accounts only</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -379,8 +402,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-dreamscapers">95</div>
-                    <p className="text-xs text-emerald-600">+5 this month</p>
+                    <div className="text-2xl font-bold" data-testid="stat-dreamscapers">{userRoles.get("dreamscapers") || 0}</div>
+                    <p className="text-xs text-muted-foreground">Verified accounts only</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -390,8 +413,8 @@ export default function AnalyticsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold" data-testid="stat-buyers">152</div>
-                    <p className="text-xs text-emerald-600">+18 this month</p>
+                    <div className="text-2xl font-bold" data-testid="stat-buyers">{userRoles.get("buyers") || 0}</div>
+                    <p className="text-xs text-muted-foreground">Verified accounts only</p>
                   </CardContent>
                 </Card>
               </div>
@@ -407,19 +430,19 @@ export default function AnalyticsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm font-medium">Active users (last 7 days)</span>
-                      <span className="text-sm" data-testid="stat-active-7d">324</span>
+                      <span className="text-sm" data-testid="stat-active-7d">0</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm font-medium">New registrations (this month)</span>
-                      <span className="text-sm" data-testid="stat-new-registrations">63</span>
+                      <span className="text-sm" data-testid="stat-new-registrations">0</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm font-medium">Verified users</span>
-                      <span className="text-sm" data-testid="stat-verified">712</span>
+                      <span className="text-sm" data-testid="stat-verified">{displayData.stats.totalUsers}</span>
                     </div>
                     <div className="flex items-center justify-between py-2">
                       <span className="text-sm font-medium">Avg. session duration</span>
-                      <span className="text-sm" data-testid="stat-avg-session">12m 34s</span>
+                      <span className="text-sm" data-testid="stat-avg-session">Not enough data</span>
                     </div>
                   </div>
                 </CardContent>

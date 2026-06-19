@@ -33,7 +33,7 @@ describe("StrategyConsole — input-confidence indicator", () => {
   it("moves to Medium once three fields are filled", () => {
     render(<ConsoleHarness />);
     fireEvent.change(screen.getByTestId("input-console-address"), {
-      target: { value: "123 Main St" },
+      target: { value: "1428 Walnut Blvd" },
     });
     fireEvent.change(screen.getByTestId("input-console-zip"), {
       target: { value: "94521" },
@@ -47,7 +47,7 @@ describe("StrategyConsole — input-confidence indicator", () => {
   it("reaches High once six fields are filled", () => {
     render(<ConsoleHarness />);
     for (const [testid, value] of [
-      ["input-console-address", "123 Main St"],
+      ["input-console-address", "1428 Walnut Blvd"],
       ["input-console-zip", "94521"],
       ["input-console-beds", "3"],
       ["input-console-baths", "2"],

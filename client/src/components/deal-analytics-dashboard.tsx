@@ -69,33 +69,29 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
     staleTime: 1000 * 60 * 15,
   });
 
-  const mockStats: DashboardStats = stats || {
-    totalDealsViewed: 156,
-    dealsSaved: 24,
-    offersSubmitted: 12,
-    dealsWon: 3,
-    totalInvested: 485000,
-    totalReturns: 127500,
-    avgROI: 26.3,
-    activeNegotiations: 5,
-    pendingOffers: 3,
-    monthlyGrowth: 12.5,
+  const displayStats: DashboardStats = stats || {
+    totalDealsViewed: 0,
+    dealsSaved: 0,
+    offersSubmitted: 0,
+    dealsWon: 0,
+    totalInvested: 0,
+    totalReturns: 0,
+    avgROI: 0,
+    activeNegotiations: 0,
+    pendingOffers: 0,
+    monthlyGrowth: 0,
   };
 
-  const mockActivity: DealActivity[] = activity || [
-    { id: "1", type: "offer", dealTitle: "123 Main St Flip", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), details: "Submitted $175,000 offer" },
-    { id: "2", type: "saved", dealTitle: "456 Oak Ave Rental", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
-    { id: "3", type: "counter", dealTitle: "789 Pine Rd", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), details: "Counter offer received: $165,000" },
-    { id: "4", type: "viewed", dealTitle: "321 Elm St", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString() },
-    { id: "5", type: "accepted", dealTitle: "555 Cedar Ln", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), details: "Offer accepted!" },
-  ];
-
-  const mockInsights: MarketInsight[] = insights || [
-    { metric: "Average Deal Size", value: "$185,000", trend: "up", change: "+8%", description: "vs last month" },
-    { metric: "Days on Market", value: "12 days", trend: "down", change: "-3 days", description: "faster closings" },
-    { metric: "Investor Activity", value: "High", trend: "up", change: "+15%", description: "more competition" },
-    { metric: "Available Deals", value: "234", trend: "stable", change: "0%", description: "steady supply" },
-  ];
+  const displayActivity: DealActivity[] = activity || [];
+  const displayInsights: MarketInsight[] = insights || [];
+  const hasPerformanceHistory =
+    displayStats.totalInvested > 0 ||
+    displayStats.totalReturns > 0 ||
+    displayStats.offersSubmitted > 0 ||
+    displayStats.activeNegotiations > 0;
+  const winRate = displayStats.offersSubmitted > 0
+    ? `${Math.round((displayStats.dealsWon / displayStats.offersSubmitted) * 100)}% win rate`
+    : "No offer history yet";
 
   if (!userId) {
     return (
@@ -121,41 +117,41 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
           <h2 className="text-2xl font-bold">Deal Analytics</h2>
           <p className="text-muted-foreground">Your performance and market insights</p>
         </div>
-        <Badge className={mockStats.monthlyGrowth > 0 
-          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
-          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+        <Badge className={displayStats.monthlyGrowth > 0
+          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+          : "bg-muted text-muted-foreground"
         }>
-          {mockStats.monthlyGrowth > 0 ? (
+          {displayStats.monthlyGrowth > 0 ? (
             <ArrowUpRight className="w-3 h-3 mr-1" />
           ) : (
-            <ArrowDownRight className="w-3 h-3 mr-1" />
+            <Clock className="w-3 h-3 mr-1" />
           )}
-          {Math.abs(mockStats.monthlyGrowth)}% this month
+          {displayStats.monthlyGrowth > 0 ? `${Math.abs(displayStats.monthlyGrowth)}% this month` : "No live history yet"}
         </Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Deals Viewed"
-          value={mockStats.totalDealsViewed.toString()}
+          value={displayStats.totalDealsViewed.toString()}
           icon={<Eye className="w-5 h-5 text-blue-500" />}
-          subtitle={`${mockStats.dealsSaved} saved`}
+          subtitle={`${displayStats.dealsSaved} saved`}
         />
         <StatCard
           title="Offers Submitted"
-          value={mockStats.offersSubmitted.toString()}
+          value={displayStats.offersSubmitted.toString()}
           icon={<FileText className="w-5 h-5 text-purple-500" />}
-          subtitle={`${mockStats.pendingOffers} pending`}
+          subtitle={`${displayStats.pendingOffers} pending`}
         />
         <StatCard
           title="Deals Won"
-          value={mockStats.dealsWon.toString()}
+          value={displayStats.dealsWon.toString()}
           icon={<Award className="w-5 h-5 text-amber-500" />}
-          subtitle={`${Math.round((mockStats.dealsWon / mockStats.offersSubmitted) * 100)}% win rate`}
+          subtitle={winRate}
         />
         <StatCard
           title="Active Negotiations"
-          value={mockStats.activeNegotiations.toString()}
+          value={displayStats.activeNegotiations.toString()}
           icon={<MessageSquare className="w-5 h-5 text-green-500" />}
           subtitle="in progress"
         />
@@ -170,47 +166,56 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-6">
-              <div className="text-center p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground mb-1">Total Invested</p>
-                <p className="text-2xl font-bold">
-                  ${(mockStats.totalInvested / 1000).toFixed(0)}k
-                </p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-green-50 dark:bg-green-950/30">
-                <p className="text-sm text-muted-foreground mb-1">Total Returns</p>
-                <p className="text-2xl font-bold text-green-600">
-                  ${(mockStats.totalReturns / 1000).toFixed(0)}k
-                </p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30">
-                <p className="text-sm text-muted-foreground mb-1">Average ROI</p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {mockStats.avgROI}%
-                </p>
-              </div>
-            </div>
+            {hasPerformanceHistory ? (
+              <>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="text-center p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground mb-1">Total Invested</p>
+                    <p className="text-2xl font-bold">
+                      ${(displayStats.totalInvested / 1000).toFixed(0)}k
+                    </p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-green-50 dark:bg-green-950/30">
+                    <p className="text-sm text-muted-foreground mb-1">Total Returns</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      ${(displayStats.totalReturns / 1000).toFixed(0)}k
+                    </p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30">
+                    <p className="text-sm text-muted-foreground mb-1">Average ROI</p>
+                    <p className="text-2xl font-bold text-amber-600">
+                      {displayStats.avgROI}%
+                    </p>
+                  </div>
+                </div>
 
-            <div className="mt-6 space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Portfolio Growth</span>
-                  <span className="text-sm text-muted-foreground">
-                    ${(mockStats.totalInvested + mockStats.totalReturns).toLocaleString()}
-                  </span>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Portfolio Growth</span>
+                      <span className="text-sm text-muted-foreground">
+                        ${(displayStats.totalInvested + displayStats.totalReturns).toLocaleString()}
+                      </span>
+                    </div>
+                    <Progress value={Math.min(100, Math.max(0, displayStats.monthlyGrowth))} className="h-2" />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Deal Pipeline</span>
+                      <span className="text-sm text-muted-foreground">
+                        {displayStats.activeNegotiations + displayStats.pendingOffers} active
+                      </span>
+                    </div>
+                    <Progress value={displayStats.activeNegotiations || displayStats.pendingOffers ? 60 : 0} className="h-2" />
+                  </div>
                 </div>
-                <Progress value={75} className="h-2" />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Deal Pipeline</span>
-                  <span className="text-sm text-muted-foreground">
-                    {mockStats.activeNegotiations + mockStats.pendingOffers} active
-                  </span>
-                </div>
-                <Progress value={60} className="h-2" />
-              </div>
-            </div>
+              </>
+            ) : (
+              <EmptyAnalyticsState
+                title="Performance appears after real activity."
+                description="MarketFlow analytics stay empty until approved members view reviewed opportunities, submit offers, or close deals inside the live workflow."
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -222,11 +227,18 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {mockActivity.slice(0, 5).map((item) => (
-                <ActivityItem key={item.id} activity={item} />
-              ))}
-            </div>
+            {displayActivity.length > 0 ? (
+              <div className="space-y-3">
+                {displayActivity.slice(0, 5).map((item) => (
+                  <ActivityItem key={item.id} activity={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyAnalyticsState
+                title="No activity recorded yet."
+                description="Actions will appear here after real MarketFlow interactions are logged."
+              />
+            )}
           </CardContent>
         </Card>
       </div>
@@ -243,9 +255,18 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {mockInsights.map((insight, index) => (
-              <InsightCard key={index} insight={insight} />
-            ))}
+            {displayInsights.length > 0 ? (
+              displayInsights.map((insight, index) => (
+                <InsightCard key={index} insight={insight} />
+              ))
+            ) : (
+              <div className="md:col-span-2 lg:col-span-4">
+                <EmptyAnalyticsState
+                  title="Market insights are pending live data."
+                  description="Pegasus will publish market insight cards only after the underlying data source is wired and reviewed."
+                />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -258,15 +279,15 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
         </TabsList>
 
         <TabsContent value="performance">
-          <PerformanceMetrics stats={mockStats} />
+          <PerformanceMetrics stats={displayStats} />
         </TabsContent>
 
         <TabsContent value="pipeline">
-          <PipelineOverview />
+          <PipelineOverview stats={displayStats} />
         </TabsContent>
 
         <TabsContent value="history">
-          <DealHistory activity={mockActivity} />
+          <DealHistory activity={displayActivity} />
         </TabsContent>
       </Tabs>
     </div>
@@ -295,6 +316,24 @@ function StatCard({
         <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function EmptyAnalyticsState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-lg border border-dashed p-6 text-center">
+      <Activity className="mx-auto mb-3 h-6 w-6 text-muted-foreground" />
+      <p className="text-sm font-medium">{title}</p>
+      <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">
+        {description}
+      </p>
+    </div>
   );
 }
 
@@ -377,11 +416,41 @@ function InsightCard({ insight }: { insight: MarketInsight }) {
 }
 
 function PerformanceMetrics({ stats }: { stats: DashboardStats }) {
+  const hasHistory = stats.totalDealsViewed > 0 || stats.offersSubmitted > 0 || stats.totalInvested > 0;
+  if (!hasHistory) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance Metrics</CardTitle>
+          <CardDescription>Calculated only from real MarketFlow activity</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EmptyAnalyticsState
+            title="No performance metrics yet."
+            description="Targets and conversion rates appear after real views, saved deals, offers, and closed outcomes are recorded."
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   const metrics = [
-    { label: "Deal View Rate", value: 85, target: 80 },
-    { label: "Offer Conversion", value: 42, target: 50 },
-    { label: "Win Rate", value: 25, target: 30 },
-    { label: "Response Time", value: 92, target: 90 },
+    {
+      label: "Save Rate",
+      value: stats.totalDealsViewed > 0 ? Math.round((stats.dealsSaved / stats.totalDealsViewed) * 100) : 0,
+    },
+    {
+      label: "Offer Conversion",
+      value: stats.dealsSaved > 0 ? Math.round((stats.offersSubmitted / stats.dealsSaved) * 100) : 0,
+    },
+    {
+      label: "Win Rate",
+      value: stats.offersSubmitted > 0 ? Math.round((stats.dealsWon / stats.offersSubmitted) * 100) : 0,
+    },
+    {
+      label: "Return Ratio",
+      value: stats.totalInvested > 0 ? Math.round((stats.totalReturns / stats.totalInvested) * 100) : 0,
+    },
   ];
 
   return (
@@ -395,23 +464,10 @@ function PerformanceMetrics({ stats }: { stats: DashboardStats }) {
           <div key={metric.label}>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">{metric.label}</span>
-              <div className="flex items-center gap-2">
-                <span className={`text-sm font-medium ${
-                  metric.value >= metric.target ? "text-green-600" : "text-amber-600"
-                }`}>
-                  {metric.value}%
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  / {metric.target}% target
-                </span>
-              </div>
+              <span className="text-sm font-medium text-muted-foreground">{metric.value}%</span>
             </div>
             <div className="relative">
               <Progress value={metric.value} className="h-2" />
-              <div 
-                className="absolute top-0 w-0.5 h-2 bg-gray-400"
-                style={{ left: `${metric.target}%` }}
-              />
             </div>
           </div>
         ))}
@@ -420,14 +476,14 @@ function PerformanceMetrics({ stats }: { stats: DashboardStats }) {
   );
 }
 
-function PipelineOverview() {
+function PipelineOverview({ stats }: { stats: DashboardStats }) {
   const stages = [
-    { name: "Viewing", count: 45, color: "bg-gray-200" },
-    { name: "Saved", count: 24, color: "bg-blue-200" },
-    { name: "Offer Sent", count: 8, color: "bg-purple-200" },
-    { name: "Negotiating", count: 5, color: "bg-amber-200" },
-    { name: "Under Contract", count: 2, color: "bg-green-200" },
-    { name: "Closed", count: 3, color: "bg-green-400" },
+    { name: "Viewed", count: stats.totalDealsViewed, color: "bg-gray-200" },
+    { name: "Saved", count: stats.dealsSaved, color: "bg-blue-200" },
+    { name: "Offer Sent", count: stats.offersSubmitted, color: "bg-purple-200" },
+    { name: "Negotiating", count: stats.activeNegotiations, color: "bg-amber-200" },
+    { name: "Pending", count: stats.pendingOffers, color: "bg-green-200" },
+    { name: "Closed", count: stats.dealsWon, color: "bg-green-400" },
   ];
 
   const total = stages.reduce((sum, s) => sum + s.count, 0);
@@ -439,24 +495,33 @@ function PipelineOverview() {
         <CardDescription>Your deals at each stage</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex h-4 rounded-full overflow-hidden mb-4">
-          {stages.map((stage) => (
-            <div
-              key={stage.name}
-              className={stage.color}
-              style={{ width: `${(stage.count / total) * 100}%` }}
-            />
-          ))}
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {stages.map((stage) => (
-            <div key={stage.name} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded ${stage.color}`} />
-              <span className="text-sm">{stage.name}</span>
-              <span className="text-sm font-medium ml-auto">{stage.count}</span>
+        {total > 0 ? (
+          <>
+            <div className="flex h-4 rounded-full overflow-hidden mb-4">
+              {stages.map((stage) => (
+                <div
+                  key={stage.name}
+                  className={stage.color}
+                  style={{ width: `${(stage.count / total) * 100}%` }}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+            <div className="grid grid-cols-3 gap-4">
+              {stages.map((stage) => (
+                <div key={stage.name} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded ${stage.color}`} />
+                  <span className="text-sm">{stage.name}</span>
+                  <span className="text-sm font-medium ml-auto">{stage.count}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <EmptyAnalyticsState
+            title="Pipeline is empty."
+            description="Reviewed activity will populate the pipeline once MarketFlow has real member actions."
+          />
+        )}
       </CardContent>
     </Card>
   );
@@ -470,13 +535,20 @@ function DealHistory({ activity }: { activity: DealActivity[] }) {
         <CardDescription>Your recent deal interactions</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {activity.map((item) => (
-            <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg border">
-              <ActivityItem activity={item} />
-            </div>
-          ))}
-        </div>
+        {activity.length > 0 ? (
+          <div className="space-y-4">
+            {activity.map((item) => (
+              <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg border">
+                <ActivityItem activity={item} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyAnalyticsState
+            title="No history yet."
+            description="MarketFlow will show real interaction history here after member actions are recorded."
+          />
+        )}
       </CardContent>
     </Card>
   );

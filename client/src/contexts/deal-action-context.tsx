@@ -1167,7 +1167,7 @@ function CapitalRaiseTermsForm({ projectId, mode, existingOfferId, onClose }: Fo
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Describe the investment opportunity..."
+              placeholder="Describe the capital participation request..."
               className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
               data-testid="input-project-description"
             />
@@ -1329,7 +1329,7 @@ function CapitalInvestmentForm({ projectId, mode, existingOfferId, onClose }: Fo
               <span className="ml-2 font-medium">{formatCurrency(remaining)}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Min Investment:</span>
+              <span className="text-muted-foreground">Minimum Capital:</span>
               <span className="ml-2 font-medium">{formatCurrency(project?.minInvestment)}</span>
             </div>
             <div>
@@ -1552,7 +1552,7 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
           Capital Accept Terms
         </DialogTitle>
         <DialogDescription>
-          Accept the investment opportunity as posted
+          Accept the capital participation request as posted
         </DialogDescription>
       </DialogHeader>
 

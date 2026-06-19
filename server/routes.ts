@@ -7637,7 +7637,7 @@ export async function registerRoutes(
         const notificationMessage = status === "rejected" && rejectionReason
           ? `Reason: ${rejectionReason}`
           : status === "approved" || status === "funding"
-          ? "Your project is now open for investment."
+          ? "Your project is now open for capital review."
           : undefined;
         
         await storage.createNotification({
@@ -8317,18 +8317,17 @@ export async function registerRoutes(
     try {
       const userId = req.params.userId || (req.user as any)?.claims?.sub;
       
-      // Return mock data for now - can be populated from actual user activity
       const stats = {
-        totalDealsViewed: 156,
-        dealsSaved: 24,
-        offersSubmitted: 12,
-        dealsWon: 3,
-        totalInvested: 485000,
-        totalReturns: 127500,
-        avgROI: 26.3,
-        activeNegotiations: 5,
-        pendingOffers: 3,
-        monthlyGrowth: 12.5,
+        totalDealsViewed: 0,
+        dealsSaved: 0,
+        offersSubmitted: 0,
+        dealsWon: 0,
+        totalInvested: 0,
+        totalReturns: 0,
+        avgROI: 0,
+        activeNegotiations: 0,
+        pendingOffers: 0,
+        monthlyGrowth: 0,
       };
 
       res.json(stats);
@@ -8341,10 +8340,7 @@ export async function registerRoutes(
   // Get user activity feed
   app.get("/api/analytics/activity/:userId?", async (req, res) => {
     try {
-      const activity = [
-        { id: "1", type: "offer", dealTitle: "Sample Deal", timestamp: new Date().toISOString(), details: "Submitted offer" },
-      ];
-      res.json(activity);
+      res.json([]);
     } catch (error) {
       console.error("Error fetching activity:", error);
       res.status(500).json({ message: "Failed to fetch activity" });
@@ -8354,13 +8350,7 @@ export async function registerRoutes(
   // Get market insights
   app.get("/api/analytics/market-insights", async (_req, res) => {
     try {
-      const insights = [
-        { metric: "Average Deal Size", value: "$185,000", trend: "up", change: "+8%", description: "vs last month" },
-        { metric: "Days on Market", value: "12 days", trend: "down", change: "-3 days", description: "faster closings" },
-        { metric: "Investor Activity", value: "High", trend: "up", change: "+15%", description: "more competition" },
-        { metric: "Available Deals", value: "234", trend: "stable", change: "0%", description: "steady supply" },
-      ];
-      res.json(insights);
+      res.json([]);
     } catch (error) {
       console.error("Error fetching market insights:", error);
       res.status(500).json({ message: "Failed to fetch insights" });

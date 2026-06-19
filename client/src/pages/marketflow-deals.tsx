@@ -161,10 +161,96 @@ export default function MarketflowDeals() {
     description: "Private MarketFlow dealflow surface.",
     noIndex: true,
   });
+  const { isAuthenticated, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
+  const shouldShowOperatorChrome = isAuthenticated && !isGuestMode;
+
+  if (!shouldShowOperatorChrome) {
+    return (
+      <div className="min-h-[calc(100vh-120px)] bg-background px-4 py-20 sm:py-24">
+        <MarketflowPrivateBetaHold
+          isGuestMode={isGuestMode}
+          guestRole={guestRole}
+          exitGuestMode={exitGuestMode}
+        />
+      </div>
+    );
+  }
+
   return (
     <MarketplaceLayout>
       <DealsPage />
     </MarketplaceLayout>
+  );
+}
+
+function MarketflowPrivateBetaHold({
+  isGuestMode,
+  guestRole,
+  exitGuestMode,
+}: {
+  isGuestMode: boolean;
+  guestRole: string | null;
+  exitGuestMode: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
+      <Card className="mx-auto max-w-3xl border-primary/20 bg-card">
+        <CardContent className="p-8 text-center sm:p-12">
+          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
+            <LockKeyhole className="h-6 w-6 text-primary" />
+          </div>
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+            MarketFlow private beta
+          </p>
+          <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+            Reviewed opportunities are not shown as sample inventory.
+          </h1>
+          <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-foreground">
+            MarketFlow is a private routing layer. Request access, submit a deal,
+            or sign in after approval to view live opportunities backed by real review data.
+          </p>
+          <div className="flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/marketflow/access">
+              <Button
+                size="lg"
+                className="min-h-[48px] w-full gap-2 rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                data-testid="button-marketflow-request-access"
+              >
+                Request Access
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/marketflow/submit">
+              <Button
+                size="lg"
+                variant="outline"
+                className="min-h-[48px] w-full rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                data-testid="button-marketflow-submit-deal"
+              >
+                Submit a Deal
+              </Button>
+            </Link>
+            {isGuestMode && (
+              <Button
+                size="lg"
+                variant="ghost"
+                onClick={exitGuestMode}
+                className="min-h-[48px] w-full rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                data-testid="button-exit-guest"
+              >
+                Exit Preview
+              </Button>
+            )}
+          </div>
+          {guestRole && (
+            <p className="mt-6 text-xs text-muted-foreground">
+              Current preview role: {guestRole.replace(/_/g, " ")}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -382,64 +468,11 @@ function DealsPage() {
 
   if (!shouldFetchLiveData) {
     return (
-      <div className="space-y-6">
-        <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
-        <Card className="mx-auto max-w-3xl border-primary/20 bg-card">
-          <CardContent className="p-8 text-center sm:p-12">
-            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
-              <LockKeyhole className="h-6 w-6 text-primary" />
-            </div>
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
-              MarketFlow private beta
-            </p>
-            <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-              Reviewed opportunities are not shown as sample inventory.
-            </h1>
-            <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-foreground">
-              MarketFlow is a private routing layer. Request access, submit a deal,
-              or sign in after approval to view live opportunities backed by real review data.
-            </p>
-            <div className="flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href="/marketflow/access">
-                <Button
-                  size="lg"
-                  className="min-h-[48px] w-full gap-2 rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
-                  data-testid="button-marketflow-request-access"
-                >
-                  Request Access
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/marketflow/submit">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="min-h-[48px] w-full rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
-                  data-testid="button-marketflow-submit-deal"
-                >
-                  Submit a Deal
-                </Button>
-              </Link>
-              {isGuestMode && (
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  onClick={exitGuestMode}
-                  className="min-h-[48px] w-full rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
-                  data-testid="button-exit-guest"
-                >
-                  Exit Preview
-                </Button>
-              )}
-            </div>
-            {guestRole && (
-              <p className="mt-6 text-xs text-muted-foreground">
-                Current preview role: {guestRole.replace(/_/g, " ")}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <MarketflowPrivateBetaHold
+        isGuestMode={isGuestMode}
+        guestRole={guestRole}
+        exitGuestMode={exitGuestMode}
+      />
     );
   }
 
@@ -521,8 +554,8 @@ function DealsPage() {
               <div className="flex items-center gap-3">
                 <Eye className="w-5 h-5 text-amber-600" />
                 <div>
-                  <h3 className="font-medium">Guest Preview Mode: {guestRole?.replace(/_/g, ' ')}</h3>
-                  <p className="text-sm text-muted-foreground">You're viewing sample data. Sign in to take actions.</p>
+                  <h3 className="font-medium">Private beta preview: {guestRole?.replace(/_/g, ' ')}</h3>
+                  <p className="text-sm text-muted-foreground">Approved members can view reviewed opportunities and take action when real inventory is available.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -1595,7 +1628,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
       toast({ title: "Link copied!", description: "Deal link copied to clipboard" });
     } else {
       const subject = encodeURIComponent(`Check out this deal: ${address}`);
-      const body = encodeURIComponent(`I found this investment opportunity:\n\n${address}\n${cityState}\nAsking: $${askPrice.toLocaleString()}\nARV: $${arv.toLocaleString()}\nProfit: $${profit.toLocaleString()}\n\nView details: ${dealUrl}`);
+      const body = encodeURIComponent(`I found this reviewed opportunity:\n\n${address}\n${cityState}\nAsking: $${askPrice.toLocaleString()}\nARV: $${arv.toLocaleString()}\nProfit: $${profit.toLocaleString()}\n\nView details: ${dealUrl}`);
       window.open(`mailto:?subject=${subject}&body=${body}`);
     }
   };
@@ -2143,7 +2176,7 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           </div>
           {project.minInvestment && (
             <div className="mt-2 pt-2 border-t border-muted text-xs">
-              <span className="text-muted-foreground">Min Investment: </span>
+              <span className="text-muted-foreground">Minimum Capital: </span>
               <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
             </div>
           )}
@@ -2508,7 +2541,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           </div>
           {project.minInvestment && (
             <div className="mt-2 pt-2 border-t border-muted text-xs">
-              <span className="text-muted-foreground">Min Investment: </span>
+              <span className="text-muted-foreground">Minimum Capital: </span>
               <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
             </div>
           )}

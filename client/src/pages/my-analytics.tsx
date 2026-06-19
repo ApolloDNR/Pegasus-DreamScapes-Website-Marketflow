@@ -54,10 +54,10 @@ export default function MyAnalyticsPage() {
               <Info className="w-5 h-5 text-blue-500 shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                  Demo Mode - Sample Data
+                  Private beta analytics
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-500">
-                  Sign in to see your personalized analytics and save your preferences.
+                  Sign in to see real analytics when approved MarketFlow activity exists.
                 </p>
               </div>
               <Link href="/login">
@@ -76,7 +76,7 @@ export default function MyAnalyticsPage() {
               <BarChart3 className="w-8 h-8 text-primary" />
               My Analytics
               {isDemoMode && (
-                <Badge variant="secondary" className="text-xs">Demo</Badge>
+                <Badge variant="secondary" className="text-xs">Pending</Badge>
               )}
             </h1>
             <p className="text-muted-foreground">
@@ -137,20 +137,20 @@ export default function MyAnalyticsPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      The more you interact with deals, the smarter our AI recommendations become.
+                      Recommendations are held until real MarketFlow activity is available.
                     </p>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
                         <span>Deals viewed</span>
-                        <span className="font-medium">156</span>
+                        <span className="font-medium">0</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Deals saved</span>
-                        <span className="font-medium">24</span>
+                        <span className="font-medium">0</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Feedback given</span>
-                        <span className="font-medium">12</span>
+                        <span className="font-medium">0</span>
                       </div>
                     </div>
                   </CardContent>

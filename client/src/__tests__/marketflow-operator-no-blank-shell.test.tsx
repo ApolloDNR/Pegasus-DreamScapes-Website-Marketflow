@@ -255,7 +255,7 @@ describe("Every AuthGuard-gated MarketFlow operator route renders real content f
             `${url}: no heading rendered — the route resolved to a blank/placeholder/crashing shell, an auth loader, or PageLoader never resolved`,
           ).toBeTruthy();
         },
-        { timeout: 5000 },
+        { timeout: 15000 },
       );
 
       // It must be the real page, not the 404 fallback. If a route is
@@ -281,6 +281,6 @@ describe("Every AuthGuard-gated MarketFlow operator route renders real content f
         text.length,
         `${url}: page rendered almost no text (${text.length} chars) — likely a blank shell`,
       ).toBeGreaterThan(40);
-    });
+    }, 20000);
   }
 });

@@ -93,57 +93,9 @@ export function NotificationBell({ userId }: { userId?: string }) {
     },
   });
 
-  const mockNotifications: Notification[] = notifications || [
-    {
-      id: "1",
-      type: "offer_received",
-      title: "New Offer Received",
-      message: "Sarah Connor submitted an offer of $185,000 on 123 Main St",
-      dealId: "deal-1",
-      dealType: "wholesale",
-      senderName: "Sarah Connor",
-      isRead: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-      actionUrl: "/marketflow/deals/deal-1",
-      priority: "high",
-    },
-    {
-      id: "2",
-      type: "counter_offer",
-      title: "Counter Offer",
-      message: "Mike Johnson countered with $175,000 on 456 Oak Ave",
-      dealId: "deal-2",
-      dealType: "wholesale",
-      senderName: "Mike Johnson",
-      isRead: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      actionUrl: "/marketflow/negotiate/deal-2",
-      priority: "normal",
-    },
-    {
-      id: "3",
-      type: "jv_request",
-      title: "JV Partnership Request",
-      message: "Alex Chen wants to partner on a wholesale deal",
-      senderName: "Alex Chen",
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      priority: "normal",
-    },
-    {
-      id: "4",
-      type: "message",
-      title: "New Message",
-      message: "You have a new message about the Atlanta property",
-      senderName: "Lisa Park",
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-      actionUrl: "/messages",
-      priority: "low",
-    },
-  ];
+  const displayNotifications: Notification[] = notifications || [];
 
-  const unreadCount = mockNotifications.filter((n) => !n.isRead).length;
+  const unreadCount = displayNotifications.filter((n) => !n.isRead).length;
 
   if (!userId) {
     return (
@@ -198,8 +150,8 @@ export function NotificationBell({ userId }: { userId?: string }) {
 
         <ScrollArea className="h-[calc(100vh-200px)]">
           <div className="space-y-2 pr-4">
-            {mockNotifications.length > 0 ? (
-              mockNotifications.map((notification) => (
+            {displayNotifications.length > 0 ? (
+              displayNotifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}

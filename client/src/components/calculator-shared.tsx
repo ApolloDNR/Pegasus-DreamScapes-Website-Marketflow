@@ -319,7 +319,7 @@ export function CalculatorActions({
               <Label htmlFor="analysis-name">Analysis Name</Label>
               <Input
                 id="analysis-name"
-                placeholder="e.g., 123 Main St Flip Analysis"
+                placeholder="e.g., East Bay Flip Analysis"
                 value={analysisName}
                 onChange={(e) => setAnalysisName(e.target.value)}
                 data-testid="input-analysis-name"

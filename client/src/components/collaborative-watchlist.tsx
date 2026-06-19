@@ -104,40 +104,7 @@ export function CollaborativeWatchlists({ userId }: { userId?: string }) {
     },
   });
 
-  const mockWatchlists: SharedWatchlist[] = watchlists || [
-    {
-      id: "1",
-      name: "Hot Wholesale Deals",
-      description: "Best wholesale opportunities this week",
-      color: "#F59E0B",
-      dealCount: 12,
-      owner: { id: "user1", name: "John Smith", avatar: undefined },
-      collaborators: [
-        { id: "user2", name: "Sarah Connor", role: "editor" },
-        { id: "user3", name: "Mike Johnson", role: "viewer" },
-      ],
-      isOwner: true,
-      canEdit: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      aiSummary: "12 deals with average 23% ROI potential. 3 deals marked urgent.",
-    },
-    {
-      id: "2",
-      name: "Atlanta Multifamily",
-      color: "#3B82F6",
-      dealCount: 5,
-      owner: { id: "user2", name: "Sarah Connor" },
-      collaborators: [
-        { id: "user1", name: "John Smith", role: "editor" },
-      ],
-      isOwner: false,
-      canEdit: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      aiSummary: "5 multifamily properties in Atlanta metro. Best opportunity: 4-unit near Midtown.",
-    },
-  ];
+  const displayWatchlists: SharedWatchlist[] = watchlists || [];
 
   if (!userId) {
     return (
@@ -209,15 +176,27 @@ export function CollaborativeWatchlists({ userId }: { userId?: string }) {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {mockWatchlists.map((list) => (
-          <WatchlistCard
-            key={list.id}
-            watchlist={list}
-            onSelect={() => setSelectedList(list)}
-          />
-        ))}
-      </div>
+      {displayWatchlists.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="p-6 text-center">
+            <FolderOpen className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <h4 className="font-medium mb-1">No shared watchlists yet</h4>
+            <p className="text-sm text-muted-foreground">
+              Create the first list when you have reviewed opportunities ready to curate with partners.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {displayWatchlists.map((list) => (
+            <WatchlistCard
+              key={list.id}
+              watchlist={list}
+              onSelect={() => setSelectedList(list)}
+            />
+          ))}
+        </div>
+      )}
 
       {selectedList && (
         <WatchlistDetailDialog

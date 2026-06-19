@@ -2,8 +2,8 @@
  * Strategy Lab — Property Fit Score derivation + autofill handoff (Task #181).
  *
  * The Property Console blends the live underwriting margin with qualitative
- * inputs (condition, occupancy, goal, seller motivation) into a mock "Fit
- * Score" that visitors see, and its "Use a sample property" autofill seeds
+ * inputs (condition, occupancy, goal, seller motivation) into a directional "Fit
+ * Score" that visitors see, and its "Use an example property" autofill seeds
  * acquisition / rehab / ARV into the shared underwriting model so the Instant
  * Strategy Preview reflects the chosen sample. Neither path had a test, so a
  * future edit could silently shift the score or break the autofill handoff.

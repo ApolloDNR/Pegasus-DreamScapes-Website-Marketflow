@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
@@ -85,7 +85,7 @@ interface CommunityPost {
   viewCount?: number;
   replyCount?: number;
   createdAt: string;
-  // Joined user info (from mock data)
+  // Joined user info supplied by the community API
   authorName?: string;
   authorRole?: string;
   authorAvatar?: string;
@@ -215,19 +215,20 @@ export default function DealflowCommunity() {
     },
   });
 
-  // Mock data for richer display when API data is minimal
-  const enrichPost = (post: CommunityPost): CommunityPost => ({
-    ...post,
-    authorName: post.authorName || "Dreamscaper",
-    authorRole: post.authorRole || "Investor",
-    authorAvatar: post.authorAvatar,
-    likeCount: post.likeCount || Math.floor(Math.random() * 50),
-    replyCount: post.replyCount || Math.floor(Math.random() * 20),
-    viewCount: post.viewCount || Math.floor(Math.random() * 200),
-    shareCount: post.shareCount || Math.floor(Math.random() * 10),
-  });
-
-  const displayPosts = (activeTab === "feed" ? feedPosts : categoryPosts).map(enrichPost);
+  const displayPosts = useMemo(
+    () =>
+      (activeTab === "feed" ? feedPosts : categoryPosts).map((post) => ({
+        ...post,
+        authorName: post.authorName || "Member",
+        authorRole: post.authorRole || "MarketFlow member",
+        authorAvatar: post.authorAvatar,
+        likeCount: post.likeCount || 0,
+        replyCount: post.replyCount || 0,
+        viewCount: post.viewCount || 0,
+        shareCount: post.shareCount || 0,
+      })),
+    [activeTab, feedPosts, categoryPosts],
+  );
 
   // Filter posts by search
   const filteredPosts = displayPosts.filter((post) =>
@@ -236,21 +237,33 @@ export default function DealflowCommunity() {
     post.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Trending topics
-  const trendingTopics = [
-    { tag: "FixAndFlip", count: 156, trending: true },
-    { tag: "DistressedDeals", count: 98 },
-    { tag: "DesignROI", count: 87 },
-    { tag: "CurbAppeal", count: 64 },
-    { tag: "KitchenStaging", count: 52 },
-  ];
+  const trendingTopics = useMemo(() => {
+    const counts = new Map<string, number>();
+    displayPosts.forEach((post) => {
+      post.tags?.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1));
+    });
+    return Array.from(counts.entries())
+      .map(([tag, count]) => ({ tag, count, trending: false }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map((topic, index) => ({ ...topic, trending: index === 0 }));
+  }, [displayPosts]);
 
-  // Featured members
-  const featuredMembers = [
-    { name: "Marcus Chen", role: "Top Investor", avatar: "", deals: 24 },
-    { name: "Sarah Williams", role: "Dreamscaper", avatar: "", deals: 18 },
-    { name: "Alex Thompson", role: "Wholesaler", avatar: "", deals: 32 },
-  ];
+  const featuredMembers = useMemo(() => {
+    const members = new Map<string, { name: string; role: string; posts: number }>();
+    displayPosts.forEach((post) => {
+      const key = post.userId || post.authorName || "member";
+      const existing = members.get(key);
+      members.set(key, {
+        name: post.authorName || "Member",
+        role: post.authorRole || "MarketFlow member",
+        posts: (existing?.posts || 0) + 1,
+      });
+    });
+    return Array.from(members.values())
+      .sort((a, b) => b.posts - a.posts)
+      .slice(0, 3);
+  }, [displayPosts]);
 
   const handleShare = (post: CommunityPost) => {
     navigator.clipboard.writeText(`${window.location.origin}/dealflow/community?post=${post.id}`);
@@ -373,10 +386,10 @@ export default function DealflowCommunity() {
                       <Building2 className="w-8 h-8 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-sm">Investment Opportunity</p>
+                      <p className="font-medium text-sm">Linked opportunity</p>
                       <p className="text-xs text-muted-foreground">Click to view project details</p>
                       <Badge className="mt-1 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 text-xs">
-                        Open for Investment
+                        Under review
                       </Badge>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -615,68 +628,70 @@ export default function DealflowCommunity() {
               </CardContent>
             </Card>
 
-            {/* Trending Topics */}
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Trending Topics
-                </h3>
-                <div className="space-y-3">
-                  {trendingTopics.map((topic, i) => (
-                    <div 
-                      key={i} 
-                      className="flex items-center justify-between hover:bg-secondary/50 p-2 -mx-2 rounded-lg cursor-pointer transition-colors"
-                      onClick={() => setSearchQuery(topic.tag)}
-                      data-testid={`trending-${topic.tag}`}
-                    >
-                      <div>
-                        <p className="font-medium text-sm flex items-center gap-1">
-                          #{topic.tag}
-                          {topic.trending && <Flame className="w-3 h-3 text-red-500" />}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+            {trendingTopics.length > 0 && (
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Trending Topics
+                  </h3>
+                  <div className="space-y-3">
+                    {trendingTopics.map((topic, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between hover:bg-secondary/50 p-2 -mx-2 rounded-lg cursor-pointer transition-colors"
+                        onClick={() => setSearchQuery(topic.tag)}
+                        data-testid={`trending-${topic.tag}`}
+                      >
+                        <div>
+                          <p className="font-medium text-sm flex items-center gap-1">
+                            #{topic.tag}
+                            {topic.trending && <Flame className="w-3 h-3 text-red-500" />}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Featured Members */}
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-amber-500" />
-                  Top Contributors
-                </h3>
-                <div className="space-y-3">
-                  {featuredMembers.map((member, i) => (
-                    <div 
-                      key={i} 
-                      className="flex items-center gap-3 hover:bg-secondary/50 p-2 -mx-2 rounded-lg cursor-pointer transition-colors"
-                    >
-                      <Avatar className="w-10 h-10">
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {member.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.role}</p>
+            {featuredMembers.length > 0 && (
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold flex items-center gap-2 mb-4">
+                    <Sparkles className="w-5 h-5 text-amber-500" />
+                    Top Contributors
+                  </h3>
+                  <div className="space-y-3">
+                    {featuredMembers.map((member, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 hover:bg-secondary/50 p-2 -mx-2 rounded-lg cursor-pointer transition-colors"
+                      >
+                        <Avatar className="w-10 h-10">
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            {member.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{member.name}</p>
+                          <p className="text-xs text-muted-foreground">{member.role}</p>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {member.posts} posts
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {member.deals} deals
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-                <Button variant="outline" className="w-full mt-4" size="sm">
-                  View All Members
-                </Button>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                  <Button variant="outline" className="w-full mt-4" size="sm">
+                    View All Members
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Categories */}
             <Card>
@@ -718,7 +733,7 @@ export default function DealflowCommunity() {
               </Avatar>
               <div className="flex-1">
                 <p className="font-medium text-sm">{profile?.display_name || user?.email?.split("@")[0] || "User"}</p>
-                <Badge variant="secondary" className="text-xs">Public</Badge>
+                <Badge variant="secondary" className="text-xs">Private beta</Badge>
               </div>
             </div>
             

@@ -72,10 +72,10 @@ export function DealProgressTracker() {
   }
 
   const defaultStats: NegotiationStats = {
-    activeNegotiations: 3,
-    pendingOffers: 2,
-    acceptedDeals: 1,
-    totalValue: 125000
+    activeNegotiations: 0,
+    pendingOffers: 0,
+    acceptedDeals: 0,
+    totalValue: 0
   };
 
   const displayStats = stats || defaultStats;
@@ -165,49 +165,7 @@ export function ActivityTimeline() {
     return null;
   }
 
-  const sampleActivities: ActivityItem[] = [
-    {
-      id: "1",
-      type: "offer_sent",
-      title: "Offer Submitted",
-      description: "You submitted an offer on 123 Main St",
-      dealId: "deal-1",
-      dealAddress: "123 Main St",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      amount: 15000
-    },
-    {
-      id: "2",
-      type: "counter_offer",
-      title: "Counter-Offer Received",
-      description: "Seller countered on 456 Oak Ave",
-      dealId: "deal-2",
-      dealAddress: "456 Oak Ave",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      amount: 18000
-    },
-    {
-      id: "3",
-      type: "deal_saved",
-      title: "Deal Saved",
-      description: "You saved 789 Pine Rd to your collection",
-      dealId: "deal-3",
-      dealAddress: "789 Pine Rd",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5)
-    },
-    {
-      id: "4",
-      type: "accepted",
-      title: "Offer Accepted!",
-      description: "Your offer on 321 Elm St was accepted",
-      dealId: "deal-4",
-      dealAddress: "321 Elm St",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      amount: 12500
-    }
-  ];
-
-  const displayActivities = activities || sampleActivities;
+  const displayActivities = activities || [];
 
   const getActivityIcon = (type: ActivityItem["type"]) => {
     switch (type) {
@@ -278,33 +236,43 @@ export function ActivityTimeline() {
       <CardContent>
         <ScrollArea className="h-[240px]">
           <div className="space-y-3 pr-4">
-            {displayActivities.map((activity, index) => (
-              <div 
-                key={activity.id} 
-                className={`relative flex gap-3 p-2 rounded-lg border ${getActivityColor(activity.type)}`}
-                data-testid={`activity-item-${activity.id}`}
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted shrink-0">
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium truncate">{activity.title}</p>
-                    <span className="text-[10px] text-muted-foreground shrink-0">
-                      {formatTime(activity.timestamp)}
-                    </span>
+            {displayActivities.length > 0 ? (
+              displayActivities.map((activity) => (
+                <div
+                  key={activity.id}
+                  className={`relative flex gap-3 p-2 rounded-lg border ${getActivityColor(activity.type)}`}
+                  data-testid={`activity-item-${activity.id}`}
+                >
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted shrink-0">
+                    {getActivityIcon(activity.type)}
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {activity.description}
-                  </p>
-                  {activity.amount && (
-                    <Badge variant="secondary" className="mt-1 text-[10px]">
-                      ${activity.amount.toLocaleString()}
-                    </Badge>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium truncate">{activity.title}</p>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {formatTime(activity.timestamp)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {activity.description}
+                    </p>
+                    {activity.amount && (
+                      <Badge variant="secondary" className="mt-1 text-[10px]">
+                        ${activity.amount.toLocaleString()}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="rounded-lg border border-dashed p-6 text-center">
+                <Clock className="mx-auto mb-3 h-6 w-6 text-muted-foreground" />
+                <p className="text-sm font-medium">No MarketFlow activity yet.</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Real offers, messages, saved deals, and JV requests will appear here when they are recorded.
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </ScrollArea>
       </CardContent>

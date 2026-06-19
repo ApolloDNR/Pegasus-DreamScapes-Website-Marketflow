@@ -310,13 +310,14 @@ export function Router() {
       <Route path="/marketflow/resources">{() => <AuthGuard><MarketplaceResources /></AuthGuard>}</Route>
       {/* Empire Doctrine v1.0.1 — private MarketFlow surfaces. The public
           v1 surface is /marketflow (gated landing) and /marketflow/access
-          (request-access form). All dashboards / deal / capital / property
-          / negotiate / offer-studio routes are operator surfaces and
-          must be behind AuthGuard so unauthenticated users cannot render
-          them. */}
+          (request-access form). Most dashboards / capital / property /
+          negotiate / offer-studio routes are operator surfaces and stay
+          behind AuthGuard. /marketflow/deals self-gates: public visitors
+          see the private-beta hold, and authenticated operators see real
+          reviewed opportunities. */}
       <Route path="/marketflow/community">{() => <AuthGuard><DealflowCommunity /></AuthGuard>}</Route>
       <Route path="/marketflow/messages">{() => <AuthGuard><DealflowMessages /></AuthGuard>}</Route>
-      <Route path="/marketflow/deals">{() => <AuthGuard><MarketflowDeals /></AuthGuard>}</Route>
+      <Route path="/marketflow/deals" component={MarketflowDeals} />
       <Route path="/marketflow/deals/:id">{() => <AuthGuard><MarketplaceDealDetail /></AuthGuard>}</Route>
       <Route path="/marketflow/capital">{() => <AuthGuard><MarketplaceCapital /></AuthGuard>}</Route>
       <Route path="/marketflow/capital/:id">{() => <AuthGuard><MarketplaceCapitalDetail /></AuthGuard>}</Route>

@@ -645,7 +645,7 @@ export default function DealflowProject() {
                   </Card>
                   <Card>
                     <CardContent className="pt-5 pb-4">
-                      <p className="text-sm text-muted-foreground">Min Investment</p>
+                      <p className="text-sm text-muted-foreground">Minimum Capital</p>
                       <p className="text-xl font-bold">{formatCurrency(project.minInvestment)}</p>
                     </CardContent>
                   </Card>
@@ -840,7 +840,7 @@ export default function DealflowProject() {
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p className="font-medium">No investors yet</p>
-                      <p className="text-sm">Be the first to invest in this project</p>
+                      <p className="text-sm">Be the first to submit capital interest</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -925,7 +925,7 @@ export default function DealflowProject() {
 
                 <div className="pt-4 border-t space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Min Investment</span>
+                    <span className="text-muted-foreground">Minimum Capital</span>
                     <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
                   </div>
                   <div className="flex justify-between">

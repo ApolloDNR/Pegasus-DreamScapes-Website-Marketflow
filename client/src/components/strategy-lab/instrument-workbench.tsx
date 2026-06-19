@@ -1735,7 +1735,7 @@ function TrailDrawer({ show, toggle }: { show: boolean; toggle: () => void }) {
               border: `1px solid ${show ? CREAM : COPPER}`,
             }}
           >
-            Demo data
+            Example trail
           </span>
         </div>
         <span

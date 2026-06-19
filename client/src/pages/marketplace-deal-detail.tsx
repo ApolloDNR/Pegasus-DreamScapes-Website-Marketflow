@@ -102,7 +102,7 @@ function DealDetailPage() {
               Reviewed deal details require approved access.
             </h3>
             <p className="mx-auto mb-8 max-w-lg text-base leading-relaxed text-muted-foreground">
-              Pegasus does not show sample deal pages as live inventory. Request access
+              Pegasus does not show placeholder deal pages as live inventory. Request access
               or submit a real opportunity for review.
             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row">

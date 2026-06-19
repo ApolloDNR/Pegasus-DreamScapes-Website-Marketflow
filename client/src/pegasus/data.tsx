@@ -418,7 +418,7 @@ export const PEGGY_CHIPS: string[] = [
 
 /* Role-aware starter chips. Peggy opens by asking who she is helping, then
    shows prompts tuned to that role, plus follow-up chips that persist through
-   the conversation for that path. Mock routing only — no real AI. */
+   the conversation for that path. Draft routing only — no real AI. */
 export const PEGGY_ROLES: { role: string; label: string; chips: string[]; followups: string[] }[] = [
   {
     role: 'seller', label: 'I want to sell a property',

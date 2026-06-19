@@ -418,7 +418,7 @@ export function OfferStudio({
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Choose Your Deal Structure</h3>
-        <p className="text-sm text-muted-foreground">Select how you want to structure this investment opportunity</p>
+        <p className="text-sm text-muted-foreground">Select how you want to structure this capital participation</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

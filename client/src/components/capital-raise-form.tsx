@@ -419,7 +419,7 @@ export function CapitalRaiseForm({ onSuccess }: CapitalRaiseFormProps) {
                         <FormLabel>Project Description</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe the investment opportunity in detail. Include information about the property condition, neighborhood, renovation plans, and why this is a compelling deal for investors..."
+                            placeholder="Describe the capital participation request in detail. Include information about the property condition, neighborhood, renovation plans, and why this is a compelling reviewed opportunity..."
                             className="min-h-[150px]"
                             {...field}
                             data-testid="textarea-capital-description"
@@ -956,7 +956,7 @@ export function CapitalRaiseForm({ onSuccess }: CapitalRaiseFormProps) {
                       }</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Min Investment</p>
+                      <p className="text-muted-foreground">Minimum Capital</p>
                       <p className="font-semibold">{form.watch("minInvestment") ? formatCurrency(form.watch("minInvestment")!) : "—"}</p>
                     </div>
                     <div>

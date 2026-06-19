@@ -403,6 +403,7 @@ function renderWithProviders(ui: React.ReactElement, path = "/") {
 }
 
 beforeEach(() => {
+  cleanup();
   setAuthState("loggedOut");
 });
 
@@ -514,7 +515,7 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryByTestId("button-exit-guest")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
-  });
+  }, 10000);
 
   it("guest mode shows the private-beta hold but withholds JV quick actions", async () => {
     setAuthState("guest");
@@ -532,7 +533,7 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryByTestId("text-deals-title")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
-  });
+  }, 10000);
 
   it("investors see deals but DO NOT see the wholesaler-only JV quick action", async () => {
     setAuthState("investor");

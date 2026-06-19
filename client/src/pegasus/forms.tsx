@@ -382,7 +382,7 @@ function WaterfallRow({ label, value, sign, strong = false }:
 
 /* ----------------------------------------------------------------
    Strategy Lab · Property console (qualitative inputs + Fit Score)
-   Front-end only. Mock autofill seeds the shared underwriting model.
+   Front-end only. Example autofill seeds the shared underwriting model.
 ---------------------------------------------------------------- */
 const SAMPLE_PROPERTIES = [
   { addr: '1428 Walnut Blvd, Concord, CA', zip: '94521', acq: 575000, rehab: 85000, arv: 815000, type: 'Single-family (SFR)', cond: 'Good', occ: 'Vacant', beds: 3, baths: 2, sqft: 1620, rent: 3200 },
@@ -457,7 +457,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
     setZip(s.zip); setBeds(String(s.beds)); setBaths(String(s.baths)); setSqft(String(s.sqft)); setRent(String(s.rent));
   };
 
-  // Mock Property Fit Score: blends the live margin read with the situation.
+  // Directional Property Fit Score: blends the live margin read with the situation.
   const marginScore = Math.max(0, Math.min(50, (margin / 25) * 50));
   const condBonus = cond === 'Distressed' || cond === 'Poor' ? 16 : cond === 'Fair' ? 12 : cond === 'Good' ? 9 : 4;
   const occBonus = occ === 'Probate / estate' || occ === 'Vacant' ? 12 : occ === 'Tenant-occupied' ? 8 : 4;
@@ -516,7 +516,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Strategy Lab · Property console"
           title={<>Start with the property,<br />get a read on the fit.</>}
-          copy="Tell us about the property and what you want to do. We will frame a mock Property Fit Score and point you to the lane that fits. This is directional orientation only, not an offer or an underwrite." />
+          copy="Tell us about the property and what you want to do. We will frame a directional Property Fit Score and point you to the lane that fits. This is orientation only, not an offer or an underwrite." />
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           <div className="lg:col-span-7 reveal">
             <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-7">
@@ -528,7 +528,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
               </div>
               <button type="button" onClick={autofill}
                 className="btn-line px-6 py-3.5 pg-label !text-[10px] whitespace-nowrap" data-testid="button-console-autofill">
-                Use a sample property
+                Use an example property
               </button>
             </div>
             <div className="grid sm:grid-cols-2 gap-5">

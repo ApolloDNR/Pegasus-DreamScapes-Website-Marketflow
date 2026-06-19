@@ -544,7 +544,7 @@ export function CapitalProjectMatchCard({
 
         <div className="grid grid-cols-2 gap-2 text-sm mb-4">
           <div className="p-2 bg-secondary/50 rounded">
-            <p className="text-xs text-muted-foreground">Min Investment</p>
+            <p className="text-xs text-muted-foreground">Minimum Capital</p>
             <p className="font-semibold">{formatCurrency(project.minInvestment)}</p>
           </div>
           <div className="p-2 bg-secondary/50 rounded">

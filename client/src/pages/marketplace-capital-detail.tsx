@@ -213,8 +213,8 @@ function CapitalDetailPage() {
                       dealLabel={project.title}
                     />
                     <ShareButtons 
-                      title={`Capital Opportunity: ${project.title}`}
-                      description={`Invest in ${project.title} - ${project.structure} structure, seeking $${((project.fundingGoal || 0) / 1000).toFixed(0)}K`}
+                      title={`Capital Review: ${project.title}`}
+                      description={`${project.title} - ${project.structure} structure, seeking $${((project.fundingGoal || 0) / 1000).toFixed(0)}K in reviewed capital participation.`}
                     />
                     <Button 
                       variant="outline" 
@@ -308,12 +308,12 @@ function CapitalDetailPage() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t">
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Min Investment</p>
+                    <p className="text-xs text-muted-foreground mb-1">Minimum Capital</p>
                     <p className="font-semibold">${((project.minInvestment || 0) / 1000).toFixed(0)}K</p>
                   </div>
                   {project.maxInvestmentPerInvestor && (
                     <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Max Investment</p>
+                      <p className="text-xs text-muted-foreground mb-1">Maximum Capital</p>
                       <p className="font-semibold">${(project.maxInvestmentPerInvestor / 1000).toFixed(0)}K</p>
                     </div>
                   )}
@@ -476,7 +476,7 @@ function CapitalDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wallet className="w-5 h-5 text-primary" />
-                  Invest in This Project
+                  Discuss Capital Participation
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -486,7 +486,7 @@ function CapitalDetailPage() {
                     ${((project.fundingGoal || 0) / 1000).toFixed(0)}K
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {project.structure} Structure | Min ${((project.minInvestment || 0) / 1000).toFixed(0)}K
+                    {project.structure} Structure | Minimum ${((project.minInvestment || 0) / 1000).toFixed(0)}K
                   </p>
                 </div>
 
@@ -494,7 +494,7 @@ function CapitalDetailPage() {
                   <div className="text-center py-4">
                     <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-2" />
                     <p className="font-medium text-green-600">Fully Funded</p>
-                    <p className="text-sm text-muted-foreground">This opportunity is no longer accepting investments</p>
+                    <p className="text-sm text-muted-foreground">This opportunity is no longer accepting capital interest</p>
                   </div>
                 ) : (
                   <>
@@ -597,7 +597,7 @@ function CapitalDetailPage() {
               <CardContent className="space-y-2">
                 <Button variant="outline" className="w-full justify-start" data-testid="button-download-pitch">
                   <Download className="w-4 h-4 mr-2" />
-                  Investment Pitch Deck
+                  Project Deck
                 </Button>
                 <Button variant="outline" className="w-full justify-start" data-testid="button-download-proforma">
                   <Download className="w-4 h-4 mr-2" />
@@ -605,7 +605,7 @@ function CapitalDetailPage() {
                 </Button>
                 <Button variant="outline" className="w-full justify-start" data-testid="button-download-agreement">
                   <Download className="w-4 h-4 mr-2" />
-                  Investment Agreement
+                  Participation Terms
                 </Button>
                 <p className="text-xs text-muted-foreground text-center pt-2">
                   Documents available after expressing interest
@@ -631,7 +631,7 @@ function CommitCapitalForm({ project, onClose }: { project: CapitalProject; onCl
     if (!amount || Number(amount) < (project.minInvestment || 0)) {
       toast({
         title: "Invalid Amount",
-        description: `Minimum investment is $${((project.minInvestment || 0) / 1000).toFixed(0)}K`,
+        description: `Minimum capital amount is $${((project.minInvestment || 0) / 1000).toFixed(0)}K`,
         variant: "destructive",
       });
       return;
@@ -665,9 +665,9 @@ function CommitCapitalForm({ project, onClose }: { project: CapitalProject; onCl
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Express Investment Interest</DialogTitle>
+        <DialogTitle>Submit Capital Interest</DialogTitle>
         <DialogDescription>
-          Submit your interest in {project.title}. The operator will review and contact you with next steps.
+          Submit your interest in reviewing {project.title}. The operator will contact you with next steps.
         </DialogDescription>
       </DialogHeader>
 
@@ -682,13 +682,13 @@ function CommitCapitalForm({ project, onClose }: { project: CapitalProject; onCl
             <span className="font-medium">{project.structure}</span>
           </div>
           <div className="flex items-center justify-between text-sm mt-1">
-            <span className="text-muted-foreground">Min Investment:</span>
+            <span className="text-muted-foreground">Minimum Capital:</span>
             <span className="font-medium">${((project.minInvestment || 0) / 1000).toFixed(0)}K</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Investment Amount ($)</label>
+          <label className="text-sm font-medium">Potential Capital Amount ($)</label>
           <Input
             type="number"
             placeholder={`Minimum ${(project.minInvestment || 0).toLocaleString()}`}
@@ -771,7 +771,7 @@ function StatusBadge({ status }: { status: string | null }) {
   return (
     <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
       <Target className="w-3 h-3 mr-1" />
-      Open for Investment
+      Capital Review Open
     </Badge>
   );
 }

@@ -360,7 +360,7 @@ function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: 
                   <DollarSign className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Min Investment</p>
+                  <p className="text-xs text-muted-foreground">Minimum Capital</p>
                   <p className="text-sm font-medium">
                     ${((project.minInvestment || 0) / 1000).toFixed(0)}K
                   </p>

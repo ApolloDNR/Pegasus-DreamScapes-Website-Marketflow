@@ -410,7 +410,7 @@ export default function SignupPage() {
               Explore as Guest
             </Button>
             <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
-              Preview only. Sample data. No real actions.
+              Preview only. Private-beta walkthrough. No real actions.
             </p>
           </div>
 

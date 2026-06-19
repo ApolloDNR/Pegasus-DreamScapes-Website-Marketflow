@@ -129,6 +129,17 @@ export function DealVolumeChart({ data, isLoading, "data-testid": testId }: Deal
       </Card>
     );
   }
+
+  if (data.length === 0) {
+    return (
+      <EmptyChartCard
+        title="Deal Volume Trends"
+        icon={<TrendingUp className="w-5 h-5 text-primary" />}
+        message="No verified deal-volume history is available yet."
+        testId={testId}
+      />
+    );
+  }
   
   return (
     <Card data-testid={testId}>
@@ -189,6 +200,17 @@ export function RoleDistributionChart({ data, isLoading, "data-testid": testId }
           <Skeleton className="h-[250px] w-full" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <EmptyChartCard
+        title="User Distribution by Role"
+        icon={<Users className="w-5 h-5 text-primary" />}
+        message="Role analytics will appear after real user activity is connected."
+        testId={testId}
+      />
     );
   }
   
@@ -257,6 +279,17 @@ export function FundingProgressChart({ data, isLoading, "data-testid": testId }:
       </Card>
     );
   }
+
+  if (data.length === 0) {
+    return (
+      <EmptyChartCard
+        title="Capital Project Funding"
+        icon={<DollarSign className="w-5 h-5 text-primary" />}
+        message="No reviewed capital project funding data is available yet."
+        testId={testId}
+      />
+    );
+  }
   
   const chartConfig: ChartConfig = {
     raised: { label: "Raised", color: "hsl(var(--chart-1))" },
@@ -321,6 +354,17 @@ export function DealStatusChart({ data, isLoading, "data-testid": testId }: Deal
           <Skeleton className="h-[200px] w-full" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <EmptyChartCard
+        title="Deals by Status"
+        icon={<FileText className="w-5 h-5 text-primary" />}
+        message="Deal status analytics will appear after reviewed opportunities enter the system."
+        testId={testId}
+      />
     );
   }
   
@@ -457,47 +501,32 @@ export function AnalyticsDashboard({
   );
 }
 
-// Sample data for demonstration
-export const sampleAnalyticsData = {
-  stats: {
-    totalDeals: 156,
-    totalVolume: 24500000,
-    activeProjects: 12,
-    totalUsers: 847,
-    dealsChange: 12,
-    volumeChange: 8,
-    projectsChange: -5,
-    usersChange: 23,
-  },
-  dealVolumeData: [
-    { month: 'Jan', deals: 12, volume: 1800 },
-    { month: 'Feb', deals: 15, volume: 2200 },
-    { month: 'Mar', deals: 18, volume: 2800 },
-    { month: 'Apr', deals: 14, volume: 2100 },
-    { month: 'May', deals: 22, volume: 3400 },
-    { month: 'Jun', deals: 25, volume: 3800 },
-    { month: 'Jul', deals: 28, volume: 4200 },
-    { month: 'Aug', deals: 24, volume: 3600 },
-  ],
-  roleDistribution: [
-    { role: 'Investors', count: 420, color: '#c9a55c' },
-    { role: 'Wholesalers', count: 180, color: '#2563eb' },
-    { role: 'Dreamscapers', count: 95, color: '#16a34a' },
-    { role: 'Buyers', count: 152, color: '#dc2626' },
-  ],
-  fundingProgress: [
-    { project: 'Scottsdale Luxury Flip', raised: 112000, goal: 150000 },
-    { project: 'Mesa Duplex Conversion', raised: 85000, goal: 85000 },
-    { project: 'Gilbert Rental Portfolio', raised: 140000, goal: 280000 },
-    { project: 'Tempe Townhome Dev', raised: 125000, goal: 450000 },
-  ],
-  dealStatus: [
-    { status: 'Under Review', count: 24, color: '#f59e0b' },
-    { status: 'Listed', count: 45, color: '#3b82f6' },
-    { status: 'Under Contract', count: 18, color: '#8b5cf6' },
-    { status: 'Sold', count: 67, color: '#10b981' },
-    { status: 'Withdrawn', count: 2, color: '#ef4444' },
-  ],
-};
+function EmptyChartCard({
+  title,
+  icon,
+  message,
+  testId,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  message: string;
+  testId?: string;
+}) {
+  return (
+    <Card data-testid={testId}>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          {icon}
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[220px] rounded-lg border border-dashed flex items-center justify-center px-6 text-center">
+          <p className="text-sm text-muted-foreground max-w-sm">{message}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default AnalyticsDashboard;

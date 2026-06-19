@@ -230,7 +230,7 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
           <div className="peggy-shadow relative overflow-hidden rounded-sm bg-[var(--navy)] text-[var(--cream)] p-8 sm:p-10">
             <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.12] float-slow" />
             <div className="relative">
-              <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6">Sample read · ranges only</div>
+              <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6">Example read · ranges only</div>
               {SAMPLE.map((row) => (
                 <div key={row.k} className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(239,231,218,0.14)] last:border-b-0">
                   <span className="font-supporting text-[0.7rem] uppercase tracking-[0.18em] text-[rgba(245,230,211,0.55)]">{row.k}</span>
@@ -1068,7 +1068,7 @@ export function DealFindersExtras({ go }: { go: Nav }) {
             ))}
           </div>
           <p className="mt-7 text-[0.82rem] leading-relaxed text-[var(--muted)] max-w-2xl">
-            The Buy Box is mock criteria for orientation and may change at any time. It is not an offer to purchase. Every submission is reviewed by a person and any purchase is subject to underwriting and a written agreement.
+            The Buy Box is orientation criteria and may change at any time. It is not an offer to purchase. Every submission is reviewed by a person and any purchase is subject to underwriting and a written agreement.
           </p>
         </div>
       </section>
