@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,9 +12,7 @@ import { useDealAction } from "@/contexts/deal-action-context";
 import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { useDemoMode } from "@/contexts/demo-mode-context";
 import { useSEO } from "@/hooks/use-seo";
-import { sampleWholesaleDeals } from "@/lib/sample-data";
 import type { WholesaleDeal } from "@shared/schema";
 import {
   ArrowLeft,
@@ -71,23 +69,11 @@ function DealDetailPage() {
   const { openDealAction } = useDealAction();
   const { trackDealView } = useAnalytics();
   const { isAuthenticated } = useSupabaseAuth();
-  const { isDemoMode } = useDemoMode();
-  
-  const isGuestMode = !isAuthenticated;
-  const useSampleData = isGuestMode || isDemoMode;
-  
-  const sampleDeal = useMemo(() => {
-    if (!useSampleData) return null;
-    const numericId = parseInt(dealId || "0");
-    return sampleWholesaleDeals.find(d => d.id === numericId) as WholesaleDeal | undefined;
-  }, [dealId, useSampleData]);
 
-  const { data: apiDeal, isLoading, error } = useQuery<WholesaleDeal>({
+  const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
-    enabled: !useSampleData && !!dealId,
+    enabled: isAuthenticated && !!dealId,
   });
-  
-  const deal = useSampleData ? sampleDeal : apiDeal;
 
   useSEO({
     title: deal?.propertyAddress ? `${deal.propertyAddress} - Wholesale Deal` : "Deal Details",
@@ -101,11 +87,47 @@ function DealDetailPage() {
     }
   }, [deal?.id, trackDealView]);
 
-  if (isLoading && !useSampleData) {
+  if (!isAuthenticated) {
+    return (
+      <div className="p-6">
+        <Card className="mx-auto max-w-2xl border-primary/20">
+          <CardContent className="p-8 text-center sm:p-12">
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
+              <Lock className="h-6 w-6 text-primary" />
+            </div>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+              MarketFlow private beta
+            </p>
+            <h3 className="mb-4 font-serif text-3xl font-semibold tracking-tight">
+              Reviewed deal details require approved access.
+            </h3>
+            <p className="mx-auto mb-8 max-w-lg text-base leading-relaxed text-muted-foreground">
+              Pegasus does not show sample deal pages as live inventory. Request access
+              or submit a real opportunity for review.
+            </p>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/marketflow/access">
+                <Button className="min-h-[44px] rounded-sm text-xs font-semibold uppercase tracking-[0.16em]">
+                  Request Access
+                </Button>
+              </Link>
+              <Link href="/marketflow/submit">
+                <Button variant="outline" className="min-h-[44px] rounded-sm text-xs font-semibold uppercase tracking-[0.16em]">
+                  Submit a Deal
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return <DealDetailSkeleton />;
   }
 
-  if (error && !useSampleData) {
+  if (error) {
     const isNetworkError = error instanceof Error && 
       (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("500"));
     

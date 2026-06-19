@@ -1720,8 +1720,7 @@ export async function registerRoutes(
       res.json({
         savedDeals: savedDeals.length,
         activeDeals,
-        pendingDeals: allSaved.filter((b: any) => b.action === 'save').length,
-        matchScore: 87 // Placeholder for AI matching score
+        pendingDeals: allSaved.filter((b: any) => b.action === 'save').length
       });
     } catch (error) {
       console.error("Error fetching dealflow stats:", error);
@@ -8409,23 +8408,7 @@ export async function registerRoutes(
   // Get AI curated deals
   app.get("/api/ai/curated-deals/:userId?", async (req, res) => {
     try {
-      // Return curated deals based on user preferences
-      const curatedDeals = [
-        {
-          id: "deal-1",
-          title: "123 Main St - Fix & Flip",
-          address: "123 Main St, Atlanta, GA",
-          matchScore: 92,
-          aiReason: "Matches your preference for single-family flips in Atlanta metro",
-          confidence: 0.89,
-          dealType: "wholesale",
-          highlights: ["High ROI potential", "Below market value", "Quick close possible"],
-          riskFactors: [],
-          expectedROI: 28,
-          urgency: "high",
-        },
-      ];
-      res.json(curatedDeals);
+      res.json([]);
     } catch (error) {
       console.error("Error fetching curated deals:", error);
       res.status(500).json({ message: "Failed to fetch curated deals" });

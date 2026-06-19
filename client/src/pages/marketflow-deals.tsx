@@ -6,7 +6,6 @@ import { useSEO } from "@/hooks/use-seo";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
-import { useDemoMode } from "@/contexts/demo-mode-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
-import { sampleWholesaleDeals } from "@/lib/sample-data";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useSpring } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
 import { DealProgressTracker, ActivityTimeline } from "@/components/deal-progress-tracker";
@@ -65,7 +63,6 @@ import {
   Calendar,
   Bookmark,
   BookmarkCheck,
-  Target,
   Sparkles,
   ArrowRight,
   Percent,
@@ -107,6 +104,7 @@ import {
   ClipboardList,
   Folder,
   FolderOpen,
+  LockKeyhole,
   Plus,
   RefreshCw
 } from "lucide-react";
@@ -300,14 +298,12 @@ function DealsPage() {
   }, [handleKeyDown]);
   
   const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
-  const { isDemoMode, disableDemoMode } = useDemoMode();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
   const { openDealAction } = useDealAction();
   const [, setLocation] = useLocation();
 
-  const canBrowse = isAuthenticated || isGuestMode || isDemoMode;
-  const shouldFetchLiveData = isAuthenticated && !isDemoMode && !isGuestMode;
+  const shouldFetchLiveData = isAuthenticated && !isGuestMode;
 
   const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
@@ -328,14 +324,9 @@ function DealsPage() {
     if (!isAuthenticated && !isGuestMode) {
       toast({
         title: "Sign in required",
-        description: isDemoMode 
-          ? "Demo mode allows browsing only. Sign up for an account to take action on deals."
-          : "Please sign in to take action on deals.",
+        description: "Please sign in or request MarketFlow access before taking action on reviewed opportunities.",
         variant: "default",
       });
-      if (isDemoMode) {
-        setTimeout(() => setLocation("/signup"), 2000);
-      }
       return;
     }
     if (actionType === "jv_request") {
@@ -349,9 +340,7 @@ function DealsPage() {
     if (!isAuthenticated) {
       toast({
         title: "Sign in required",
-        description: isDemoMode 
-          ? "Demo mode allows browsing only. Sign up to save deals to your watchlist."
-          : "Please sign in to save deals.",
+        description: "Please sign in or request MarketFlow access before saving reviewed opportunities.",
         variant: "default",
       });
       return;
@@ -359,14 +348,7 @@ function DealsPage() {
     await toggleSaveItem('wholesale_deal', dealId);
   };
 
-  const useSampleData = isGuestMode || isDemoMode || (!deals?.length && !dealsLoading);
-  const displayDeals = useSampleData 
-    ? sampleWholesaleDeals.map(d => ({
-        ...d,
-        id: String(d.id),
-        matchScore: Math.floor(Math.random() * 40) + 60
-      })) as WholesaleDeal[]
-    : (deals || []) as WholesaleDeal[];
+  const displayDeals = (deals || []) as WholesaleDeal[];
   
   const filteredDeals = displayDeals?.filter(deal => {
     let matches = true;
@@ -398,45 +380,74 @@ function DealsPage() {
     selectedCount: bulkSelectedCount
   } = useBulkSelection(filteredDeals);
 
+  if (!shouldFetchLiveData) {
+    return (
+      <div className="space-y-6">
+        <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
+        <Card className="mx-auto max-w-3xl border-primary/20 bg-card">
+          <CardContent className="p-8 text-center sm:p-12">
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
+              <LockKeyhole className="h-6 w-6 text-primary" />
+            </div>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+              MarketFlow private beta
+            </p>
+            <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              Reviewed opportunities are not shown as sample inventory.
+            </h1>
+            <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-foreground">
+              MarketFlow is a private routing layer. Request access, submit a deal,
+              or sign in after approval to view live opportunities backed by real review data.
+            </p>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/marketflow/access">
+                <Button
+                  size="lg"
+                  className="min-h-[48px] w-full gap-2 rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                  data-testid="button-marketflow-request-access"
+                >
+                  Request Access
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/marketflow/submit">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="min-h-[48px] w-full rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                  data-testid="button-marketflow-submit-deal"
+                >
+                  Submit a Deal
+                </Button>
+              </Link>
+              {isGuestMode && (
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  onClick={exitGuestMode}
+                  className="min-h-[48px] w-full rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                  data-testid="button-exit-guest"
+                >
+                  Exit Preview
+                </Button>
+              )}
+            </div>
+            {guestRole && (
+              <p className="mt-6 text-xs text-muted-foreground">
+                Current preview role: {guestRole.replace(/_/g, " ")}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Beta Banner */}
       <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
       
-      {/* Demo Mode Banner */}
-      {isDemoMode && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Eye className="w-5 h-5 text-amber-500" />
-            <div>
-              <p className="font-medium text-foreground">Demo Mode Active</p>
-              <p className="text-sm text-muted-foreground">
-                You're exploring the marketplace in demo mode. Sign up to unlock full features.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/signup">
-              <Button size="sm" data-testid="button-demo-signup">
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign Up
-              </Button>
-            </Link>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => {
-                disableDemoMode();
-                setLocation("/marketflow");
-              }}
-              data-testid="button-exit-demo"
-            >
-              Exit Demo
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Progress Tracker - shows pipeline status for authenticated users */}
       <DealProgressTracker />
 
@@ -792,7 +803,7 @@ function DealsPage() {
             }))}
             onDealSelect={(dealId) => openDealAction(dealId, "wholesale_accept")}
             selectedDealId={undefined}
-            isLoading={dealsLoading && !useSampleData}
+            isLoading={dealsLoading}
           />
         </div>
       )}
@@ -801,7 +812,7 @@ function DealsPage() {
         viewMode === "grid" ? (
           <GridView 
             deals={filteredDeals}
-            isLoading={dealsLoading && !useSampleData}
+            isLoading={dealsLoading}
             onSave={handleSaveDeal}
             onAction={handleDealAction}
             onAcceptTerms={(deal) => {
@@ -1421,7 +1432,7 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
   const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
   const profit = arv - askPrice - repairs;
   const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : '0';
-  const matchScore = deal.matchScore || Math.floor(Math.random() * 40) + 60;
+  const matchScore = typeof deal.matchScore === "number" ? deal.matchScore : null;
 
   const cardBorderClass = dragIntent === "like" 
     ? "ring-4 ring-green-500/50" 
@@ -1457,9 +1468,11 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
           PASS
         </motion.div>
 
-        <div className="absolute top-4 left-1/2 -translate-x-1/2">
-          <MatchScoreBadge score={matchScore} />
-        </div>
+        {matchScore !== null && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <MatchScoreBadge score={matchScore} />
+          </div>
+        )}
 
         <div className="absolute bottom-2 left-2 flex gap-1">
           <StatusBadge status={deal.status || "Under Review"} />
@@ -1565,7 +1578,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
   const arv = deal.arv || 0;
   const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
   const profit = arv - askPrice - repairs;
-  const matchScore = deal.matchScore || Math.floor(Math.random() * 40) + 60;
+  const matchScore = typeof deal.matchScore === "number" ? deal.matchScore : null;
   const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : "0";
 
   // Calculator values
@@ -1574,16 +1587,6 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
   const calcProfit = arv - calcOffer - calcRepairs;
   const calcROI = calcOffer > 0 ? ((calcProfit / calcOffer) * 100).toFixed(1) : "0";
   const cashOnCash = calcOffer > 0 ? ((calcProfit / (calcOffer * 0.25)) * 100).toFixed(1) : "0"; // 25% down
-
-  // Match score breakdown
-  const getMatchBreakdown = (score: number) => {
-    const propertyMatch = Math.min(100, Math.floor(score * 0.3 + Math.random() * 20));
-    const locationMatch = Math.min(100, Math.floor(score * 0.25 + Math.random() * 15));
-    const priceMatch = Math.min(100, Math.floor(score * 0.25 + Math.random() * 20));
-    const strategyMatch = Math.min(100, Math.floor(score * 0.2 + Math.random() * 15));
-    return { propertyMatch, locationMatch, priceMatch, strategyMatch };
-  };
-  const matchBreakdown = getMatchBreakdown(matchScore);
 
   const handleShare = async (type: "copy" | "email") => {
     const dealUrl = `${window.location.origin}/marketflow/deals/${deal.id}`;
@@ -1718,54 +1721,23 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
           )}
         </div>
 
-        {/* Match Score with Explanation Tooltip */}
-        <div className="absolute top-2 right-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="cursor-help">
-                <MatchScoreBadge score={matchScore} size="sm" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="w-48 p-3" side="left">
-              <div className="space-y-2">
-                <p className="font-semibold text-xs flex items-center gap-1">
-                  <Target className="w-3 h-3" />
-                  Match Breakdown
-                </p>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">Property Type</span>
-                    <div className="flex items-center gap-1">
-                      <Progress value={matchBreakdown.propertyMatch} className="w-12 h-1.5" />
-                      <span className="w-8 text-right">{matchBreakdown.propertyMatch}%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">Location</span>
-                    <div className="flex items-center gap-1">
-                      <Progress value={matchBreakdown.locationMatch} className="w-12 h-1.5" />
-                      <span className="w-8 text-right">{matchBreakdown.locationMatch}%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">Price Range</span>
-                    <div className="flex items-center gap-1">
-                      <Progress value={matchBreakdown.priceMatch} className="w-12 h-1.5" />
-                      <span className="w-8 text-right">{matchBreakdown.priceMatch}%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">Strategy Fit</span>
-                    <div className="flex items-center gap-1">
-                      <Progress value={matchBreakdown.strategyMatch} className="w-12 h-1.5" />
-                      <span className="w-8 text-right">{matchBreakdown.strategyMatch}%</span>
-                    </div>
-                  </div>
+        {matchScore !== null && (
+          <div className="absolute top-2 right-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-help">
+                  <MatchScoreBadge score={matchScore} size="sm" />
                 </div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-56 p-3" side="left">
+                <p className="text-xs leading-relaxed">
+                  Stored match score. Detailed fit factors stay hidden unless backed by
+                  the approved buyer/operator profile.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
         <Button
           size="icon"

@@ -35,7 +35,6 @@ import {
   Sparkles,
   TrendingUp,
   DollarSign,
-  Target,
   Shield,
   Zap,
   Activity,
@@ -177,10 +176,9 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   ];
 
   const quickStats: QuickStat[] = [
-    { label: "Match Score", value: "87%", icon: Target, color: "bg-primary" },
     { label: "Saved Deals", value: statsData?.savedDeals || 0, icon: BookmarkCheck, color: "bg-blue-500" },
-    { label: "Active", value: statsData?.activeDeals || 12, change: "+4", trend: 'up', icon: TrendingUp, color: "bg-green-500" },
-    { label: "Pending", value: statsData?.pendingDeals || 3, icon: Clock, color: "bg-amber-500" },
+    { label: "Active", value: statsData?.activeDeals || 0, icon: TrendingUp, color: "bg-green-500" },
+    { label: "Pending", value: statsData?.pendingDeals || 0, icon: Clock, color: "bg-amber-500" },
   ];
 
   const getUserInitials = () => {

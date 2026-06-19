@@ -131,9 +131,10 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
                     <span className="font-semibold text-foreground">Wholesalers</span> can submit deals to the MarketFlow platform.
                   </p>
                   {currentRole && (
-                    <p className="text-sm text-muted-foreground">
-                      Your current role: <Badge variant="secondary">{currentRole.replace(/_/g, " ")}</Badge>
-                    </p>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <span>Your current role:</span>
+                      <Badge variant="secondary">{currentRole.replace(/_/g, " ")}</Badge>
+                    </div>
                   )}
                 </div>
                 

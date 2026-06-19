@@ -704,7 +704,11 @@ export function WholesaleDealMatchCard({
   const totalCost = deal.contractPrice + deal.assignmentFee + deal.estimatedRepairs;
   const spread = deal.arv - totalCost;
   const roi = totalCost > 0 ? ((spread / totalCost) * 100).toFixed(1) : "0";
-  const displayScore = matchScore ?? deal.matchScore ?? 75;
+  const displayScore = typeof matchScore === "number"
+    ? matchScore
+    : typeof deal.matchScore === "number"
+      ? deal.matchScore
+      : null;
 
   return (
     <Card className="overflow-hidden" data-testid={`match-card-deal-${deal.id}`}>
@@ -743,11 +747,13 @@ export function WholesaleDealMatchCard({
           )}
         </div>
 
-        <div className="absolute top-3 right-3">
-          <div className="bg-white/95 backdrop-blur-sm rounded-full p-1 shadow-lg">
-            <MatchScoreRing score={displayScore} size="md" breakdown={scoreBreakdown} />
+        {displayScore !== null && (
+          <div className="absolute top-3 right-3">
+            <div className="bg-white/95 backdrop-blur-sm rounded-full p-1 shadow-lg">
+              <MatchScoreRing score={displayScore} size="md" breakdown={scoreBreakdown} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="absolute bottom-3 left-3 right-3">
           <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{deal.propertyAddress}</h3>
@@ -925,7 +931,11 @@ export function WholesaleDealGridCard({
   const totalCost = deal.contractPrice + deal.assignmentFee + deal.estimatedRepairs;
   const spread = deal.arv - totalCost;
   const roi = totalCost > 0 ? ((spread / totalCost) * 100).toFixed(1) : "0";
-  const displayScore = matchScore ?? deal.matchScore ?? 75;
+  const displayScore = typeof matchScore === "number"
+    ? matchScore
+    : typeof deal.matchScore === "number"
+      ? deal.matchScore
+      : null;
 
   return (
     <Card className="overflow-hidden hover-elevate" data-testid={`grid-card-deal-${deal.id}`}>
@@ -951,9 +961,11 @@ export function WholesaleDealGridCard({
           <Badge className="bg-amber-600 text-white text-xs">Wholesale</Badge>
         </div>
         
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-0.5">
-          <MatchScoreRing score={displayScore} size="sm" breakdown={scoreBreakdown} />
-        </div>
+        {displayScore !== null && (
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-0.5">
+            <MatchScoreRing score={displayScore} size="sm" breakdown={scoreBreakdown} />
+          </div>
+        )}
       </div>
       
       <CardContent className="p-4">

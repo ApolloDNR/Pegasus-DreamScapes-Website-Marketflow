@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
-import { useDemoMode } from "@/contexts/demo-mode-context";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSEO } from "@/hooks/use-seo";
 import { useFeatureFlags } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import {
   Loader2,
   ArrowRight,
   CheckCircle2,
-  Eye,
   Clock,
   Construction,
   Lock,
@@ -23,8 +21,7 @@ import {
 
 export default function MarketplacePage() {
   const [, setLocation] = useLocation();
-  const { isLoading, isAuthenticated, userRole, isGuestMode } = useSupabaseAuth();
-  const { isDemoMode } = useDemoMode();
+  const { isLoading, isAuthenticated } = useSupabaseAuth();
 
   useSEO({
     title: "MarketFlow Beta",
@@ -33,10 +30,10 @@ export default function MarketplacePage() {
   });
 
   useEffect(() => {
-    if (!isLoading && (isAuthenticated || isDemoMode || isGuestMode)) {
+    if (!isLoading && isAuthenticated) {
       setLocation("/marketflow/deals");
     }
-  }, [isLoading, isAuthenticated, isDemoMode, isGuestMode, setLocation]);
+  }, [isLoading, isAuthenticated, setLocation]);
 
   if (isLoading) {
     return (
@@ -103,17 +100,6 @@ export default function MarketplacePage() {
 }
 
 function HeroSection() {
-  const { enableDemoMode } = useDemoMode();
-  const { enterGuestMode } = useSupabaseAuth();
-  const [, setLocation] = useLocation();
-
-  const handleDemoMode = () => {
-    enableDemoMode();
-    // Also enter guest mode so the AuthGuard on /marketflow/deals lets us through.
-    enterGuestMode("investor");
-    setLocation("/marketflow/deals");
-  };
-
   return (
     <section
       className="relative py-24 lg:py-32 overflow-hidden"
@@ -159,10 +145,6 @@ function HeroSection() {
                   Sign In
                 </Button>
               </Link>
-              <Button size="lg" variant="ghost" onClick={handleDemoMode} className="text-cream/85 hover:bg-cream/10 hover:text-cream" data-testid="button-demo-mode">
-                <Eye className="w-4 h-4 mr-2" />
-                Try Demo Mode
-              </Button>
             </div>
             <p className="text-[11px] uppercase tracking-[0.25em] text-cream/55 mt-6 font-supporting">
               Private beta. Access and features may be limited while the platform evolves.

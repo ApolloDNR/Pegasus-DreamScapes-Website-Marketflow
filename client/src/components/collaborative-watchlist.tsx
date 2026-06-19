@@ -359,27 +359,7 @@ function WatchlistDetailDialog({
     enabled: open,
   });
 
-  const mockDeals: WatchlistDeal[] = deals || [
-    {
-      id: "deal1",
-      title: "123 Main St Flip",
-      address: "123 Main St, Atlanta, GA",
-      dealType: "wholesale",
-      addedBy: { id: "user1", name: "John" },
-      addedAt: new Date().toISOString(),
-      matchScore: 92,
-    },
-    {
-      id: "deal2",
-      title: "456 Oak Ave Rental",
-      address: "456 Oak Ave, Marietta, GA",
-      dealType: "wholesale",
-      addedBy: { id: "user2", name: "Sarah" },
-      addedAt: new Date().toISOString(),
-      notes: "Great cash flow potential",
-      matchScore: 85,
-    },
-  ];
+  const reviewedDeals: WatchlistDeal[] = deals || [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -459,7 +439,12 @@ function WatchlistDetailDialog({
           <div className="border-t pt-4">
             <h4 className="font-medium mb-3">Deals in this list</h4>
             <div className="space-y-2">
-              {mockDeals.map((deal) => (
+              {reviewedDeals.length === 0 && (
+                <div className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
+                  No reviewed deals have been added to this shared list yet.
+                </div>
+              )}
+              {reviewedDeals.map((deal) => (
                 <div 
                   key={deal.id}
                   className="flex items-center justify-between p-3 rounded-lg border hover-elevate"

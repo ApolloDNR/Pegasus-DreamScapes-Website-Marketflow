@@ -67,7 +67,9 @@ app.use((req, res, next) => {
   await seedLibraryBeginnerPath();
   await seedLibraryGlossary();
   await seedCommunityCategories();
-  await seedDealflowData();
+  if (process.env.NODE_ENV !== "production") {
+    await seedDealflowData();
+  }
   await registerRoutes(httpServer, app);
   startPeggyCron();
 

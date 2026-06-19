@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, within } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -309,14 +309,15 @@ vi.mock("@/components/listing-form", () => ({
   ListingForm: () => <div data-testid="listing-form-stub" />,
 }));
 
-// Inject a sample deal with jvAllowed=true so the role-gated JV quick-action
-// surface (`quick-jv-*`) actually has a chance to render. Without this, the
-// production sample-data has no jvAllowed flag, which would mask the gating
-// regression we're trying to catch.
-vi.mock("@/lib/sample-data", () => ({
-  sampleWholesaleDeals: [
+// Feed reviewed deal data only through the API mock. Disabled queries return
+// no data so logged-out and guest states cannot fall back to sample inventory.
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual<typeof import("@tanstack/react-query")>(
+    "@tanstack/react-query",
+  );
+  const reviewedWholesaleDeals = [
     {
-      id: 9001,
+      id: "reviewed-9001",
       propertyAddress: "123 Test St",
       city: "Phoenix",
       state: "AZ",
@@ -328,45 +329,33 @@ vi.mock("@/lib/sample-data", () => ({
       assignmentFee: 10000,
       jvAllowed: true,
       negotiationAllowed: true,
-      status: "Listed",
+      status: "Under Review",
       photos: [],
     },
-    {
-      id: 9002,
-      propertyAddress: "456 Sample Ave",
-      city: "Dallas",
-      state: "TX",
-      zipCode: "75201",
-      propertyType: "Single Family",
-      arv: 425000,
-      askingPrice: 265000,
-      repairEstimate: 60000,
-      assignmentFee: 18000,
-      jvAllowed: true,
-      negotiationAllowed: true,
-      status: "Listed",
-      photos: [],
-    },
-  ],
-}));
-
-// Force `useQuery` to resolve immediately with no live data so the deals page
-// falls into its sample-data path for every role under test.
-vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual<typeof import("@tanstack/react-query")>(
-    "@tanstack/react-query",
-  );
+  ];
   return {
     ...actual,
-    useQuery: () => ({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-      isSuccess: false,
-      isPending: false,
-      error: null,
-      refetch: vi.fn(),
-    }),
+    useQuery: (options: { queryKey?: unknown[]; enabled?: boolean }) => {
+      const queryKey = Array.isArray(options?.queryKey)
+        ? options.queryKey[0]
+        : options?.queryKey;
+      const data =
+        options?.enabled === false
+          ? undefined
+          : queryKey === "/api/wholesale-deals"
+            ? reviewedWholesaleDeals
+            : [];
+
+      return {
+        data,
+        isLoading: false,
+        isError: false,
+        isSuccess: options?.enabled !== false,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      };
+    },
   };
 });
 
@@ -516,17 +505,18 @@ describe("marketflow-deals page gating", () => {
 
     renderWithProviders(<MarketflowDeals />);
 
-    // Sample-data preview still renders the page header.
-    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
-    // Guest banner must not leak to fully logged-out viewers.
+    expect(
+      screen.getByText(/reviewed opportunities are not shown as sample inventory/i),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-request-access")).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-submit-deal")).toBeInTheDocument();
+    expect(screen.queryByTestId("text-deals-title")).toBeNull();
     expect(screen.queryByTestId("button-exit-guest")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
-    // The role-gated JV quick action must NOT render for unauthenticated
-    // viewers. (showJVRequest === false → quick-jv-* buttons are withheld.)
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("guest mode shows the guest preview banner but withholds JV quick actions", async () => {
+  it("guest mode shows the private-beta hold but withholds JV quick actions", async () => {
     setAuthState("guest");
     const { default: MarketflowDeals } = await import(
       "@/pages/marketflow-deals"
@@ -534,10 +524,13 @@ describe("marketflow-deals page gating", () => {
 
     renderWithProviders(<MarketflowDeals />);
 
-    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(
+      screen.getByText(/reviewed opportunities are not shown as sample inventory/i),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("button-exit-guest")).toBeInTheDocument();
-    expect(screen.getByTestId("button-sign-in-guest")).toBeInTheDocument();
-    // Guest investor is NOT a wholesaler/admin → no JV quick action.
+    expect(screen.getByTestId("button-marketflow-request-access")).toBeInTheDocument();
+    expect(screen.queryByTestId("text-deals-title")).toBeNull();
+    expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
@@ -550,11 +543,11 @@ describe("marketflow-deals page gating", () => {
     renderWithProviders(<MarketflowDeals />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
-    // Investor sample card renders (deals visible, not hidden).
+    // Authenticated users can see reviewed API-backed deals.
     expect(
       screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
-    // Critical gate: investors are NOT wholesalers → quick-jv must be absent.
+    // Critical gate: investors are not wholesalers, so quick-jv must be absent.
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
@@ -570,7 +563,7 @@ describe("marketflow-deals page gating", () => {
     expect(
       screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
-    // Dreamscapers are not wholesalers — JV quick action stays hidden.
+    // Dreamscapers are not wholesalers, so JV quick action stays hidden.
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
@@ -587,7 +580,7 @@ describe("marketflow-deals page gating", () => {
       screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
     // Critical gate: showJVRequest is true for wholesalers, so on the
-    // injected JV-allowed sample deals the quick-jv-* surface renders.
+    // reviewed JV-allowed deal the quick-jv-* surface renders.
     expect(
       screen.getAllByTestId(/^quick-jv-/).length,
     ).toBeGreaterThan(0);
@@ -619,7 +612,7 @@ describe("marketflow-dashboard page gating", () => {
     ["wholesaler", "wholesaler"],
     ["dreamscaper", "dreamscaper"],
     ["admin", "admin"],
-  ])("renders the investor dashboard shell for %s", async (role) => {
+  ])("renders the private-beta hold for %s", async (role) => {
     setAuthState(role);
     const { default: MarketflowDashboard } = await import(
       "@/pages/marketflow-dashboard"
@@ -627,15 +620,12 @@ describe("marketflow-dashboard page gating", () => {
 
     renderWithProviders(<MarketflowDashboard />);
 
-    // The dashboard does not currently page-gate. This test locks that
-    // contract so a future regression that silently hides the dashboard
-    // for valid investors is caught.
-    const titles = screen.getAllByTestId("text-dashboard-title");
-    expect(titles.length).toBeGreaterThan(0);
-    expect(within(titles[0]).getByText(/investor dashboard/i)).toBeInTheDocument();
-    // Saved/Active/Exited tabs should always render.
-    expect(screen.getByTestId("tab-saved")).toBeInTheDocument();
-    expect(screen.getByTestId("tab-active")).toBeInTheDocument();
-    expect(screen.getByTestId("tab-exited")).toBeInTheDocument();
+    expect(screen.getByText(/live dealflow only appears after review/i)).toBeInTheDocument();
+    expect(screen.getByText(/fake portfolio returns/i)).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-dashboard-access")).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-dashboard-overview")).toBeInTheDocument();
+    expect(screen.queryByTestId("tab-saved")).toBeNull();
+    expect(screen.queryByTestId("tab-active")).toBeNull();
+    expect(screen.queryByTestId("tab-exited")).toBeNull();
   });
 });
