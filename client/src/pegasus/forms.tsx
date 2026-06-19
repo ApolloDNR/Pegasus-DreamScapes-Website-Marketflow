@@ -781,8 +781,8 @@ export function StrategyTierStrip() {
     },
     {
       key: 'blueprint', name: 'Deal Blueprint', price: 'By Review',
-      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Commissioned by engagement after a Property Read, not bought off the shelf.',
-      cta: 'Start a Deal Blueprint', action: () => goSubmit('blueprint'), emphasis: false,
+      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Scoped after a Property Read, not bought off the shelf.',
+      cta: 'Request Blueprint Review', action: () => goSubmit('blueprint'), emphasis: false,
     },
   ];
   return (
@@ -790,7 +790,7 @@ export function StrategyTierStrip() {
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Strategy Lab · Levels of depth"
           title={<>Go as far as the deal deserves.</>}
-          copy="Three tiers, increasing depth. Start free and self-serve, escalate to a human-written read, and engage the full Blueprint when the deal is worth a plan." />
+          copy="Three tiers, increasing depth. Start free and self-serve, escalate to a human-written read, and request Blueprint review when the deal is worth a plan." />
         <div className="grid md:grid-cols-3 gap-5" data-testid="strategy-tier-strip">
           {tiers.map((t) => (
             <div key={t.key}

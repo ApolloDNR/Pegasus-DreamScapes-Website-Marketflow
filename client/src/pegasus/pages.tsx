@@ -280,7 +280,7 @@ const LAB_STEPS = [
   { n: '01', icon: Compass, t: 'Describe the property', d: 'Location, property type, condition, occupancy, your role, and your goal. The console returns a Property Fit Score and flags the right lane before you touch a number.' },
   { n: '02', icon: Calculator, t: 'Underwrite the spread', d: 'Set acquisition basis, rehab scope, hold costs, and exit strategy. The Instant Strategy Preview models carry costs, selling costs, and live margin in real time.' },
   { n: '03', icon: Ruler, t: 'Get a written Property Read', d: 'Hand the situation to the team. A short, candid written read of the path and the risk — not a form letter, back within 48 hours.' },
-  { n: '04', icon: Landmark, t: 'Commission the Deal Blueprint', d: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in a single documented engagement.' },
+  { n: '04', icon: Landmark, t: 'Request Blueprint review', d: 'For deals that earn a deeper plan after a Property Read: scope, capital stack, construction approach, exit, and risk in one reviewed engagement.' },
 ];
 
 export function DevelopmentPage({ go }: { go: Nav }) {

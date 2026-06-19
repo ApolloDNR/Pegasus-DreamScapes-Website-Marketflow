@@ -3129,15 +3129,15 @@ export type InsertLaneFitResult = z.infer<typeof insertLaneFitResultSchema>;
 export type LaneFitResultRow = typeof laneFitResult.$inferSelect;
 
 // ============================================================================
-// STRATEGY LAB — Submission, Blueprint Order, Touchpoint telemetry (Task #85)
+// STRATEGY LAB — Submission, legacy Blueprint order, Touchpoint telemetry (Task #85)
 // ============================================================================
 // Three new tables. `pegasus_submission` records every "Submit to Pegasus"
 // hand-off (rich row, separate from the legacy boolean on propertyAnalysis so
-// resubmissions and review status survive). `blueprint_order` records paid
-// Pegasus Deal Blueprint orders across three CMS-priced tiers, with a Stripe
-// session id when Stripe is configured or "invoice" status when not.
+// resubmissions and review status survive). `blueprint_order` is retained for
+// historical/admin order records, but the public launch path now treats Deal
+// Blueprint as a scoped-by-review engagement instead of a fixed-price checkout.
 // `strategy_lab_touchpoint` is funnel telemetry: each meaningful action (run,
-// save, share, pdf, submit, blueprint_order, peggy_lab_mode) lands here,
+// save, share, pdf, submit, blueprint_view, peggy_lab_mode) lands here,
 // joined to either userId or sessionId, for the /admin/strategy-lab view.
 
 export const pegasusSubmission = pgTable("pegasus_submission", {
@@ -3181,7 +3181,7 @@ export const blueprintOrder = pgTable("blueprint_order", {
     .references(() => propertyAnalysis.id, { onDelete: "set null" }),
   userId: varchar("user_id", { length: 255 }),
   sessionId: varchar("session_id", { length: 64 }),
-  // tier: singlepath | comparison | complete (CMS-configurable price/title).
+  // Legacy tier key for historical/admin order records.
   tier: varchar("tier", { length: 24 }).notNull(),
   priceCents: integer("price_cents").notNull(),
   contactName: varchar("contact_name", { length: 200 }),
@@ -3211,7 +3211,7 @@ export const strategyLabTouchpoint = pgTable("strategy_lab_touchpoint", {
   userId: varchar("user_id", { length: 255 }),
   sessionId: varchar("session_id", { length: 64 }),
   propertyAnalysisId: integer("property_analysis_id"),
-  // action: run | save | share | pdf | submit | blueprint_view | blueprint_order | peggy_lab_mode | account_wall
+  // action: run | save | share | pdf | submit | blueprint_view | peggy_lab_mode | account_wall
   action: varchar("action", { length: 32 }).notNull(),
   laneVerdict: varchar("lane_verdict", { length: 24 }),
   topLane: varchar("top_lane", { length: 32 }),

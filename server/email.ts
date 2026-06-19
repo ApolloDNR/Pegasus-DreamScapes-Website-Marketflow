@@ -707,7 +707,9 @@ export async function sendSavedAnalysisPDFEmail(params: {
 }
 
 // ============================================================================
-// STRATEGY LAB — Submit-to-Pegasus + Blueprint order notifications (Task #85)
+// STRATEGY LAB — Submit-to-Pegasus + legacy Blueprint order notifications
+// Public launch flow is by review; the order helper remains only for
+// historical/admin compatibility.
 // ============================================================================
 
 function escapeEmailHtml(s: string | null | undefined): string {

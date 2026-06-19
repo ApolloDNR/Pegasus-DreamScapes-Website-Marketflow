@@ -37,7 +37,6 @@ import { trackEvent } from "@/lib/analytics";
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from "@/lib/strategy-tier-ranges";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { usePeggyContext } from "@/contexts/peggy-context";
-import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1251,65 +1250,14 @@ export default function StrategyLabPage() {
     },
   });
 
-  // Blueprint tiers (CMS-overridable via site_content)
-  const blueprintTiersQuery = useQuery<{
-    tiers: Array<{ key: string; title: string; priceCents: number; description: string; turnaroundDays: string }>;
-    stripeEnabled: boolean;
-  }>({
-    queryKey: ["/api/strategy-lab/blueprint-tiers"],
-    // Dormant: the Deal Blueprint is now a by-review engagement (the Lab
-    // upsell routes to /deal-blueprint), so we no longer fetch or display
-    // fixed public prices. The endpoint + order path are kept reversible.
-    enabled: false,
-  });
-  const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false);
-  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
-  const [blueprintForm, setBlueprintForm] = useState({ buyerName: "", email: "", phone: "", notes: "" });
-  const blueprintOrderMutation = useMutation({
-    mutationFn: async (vals: { tierId: string; buyerName: string; email: string; phone: string; notes: string }) => {
-      let id = analysisId;
-      if (!id && snapshot) {
-        const payload = buildAnalysisPayload();
-        if (payload) {
-          const res = await apiRequest("POST", "/api/property-analyses", payload);
-          const created = await res.json();
-          id = created.id;
-          setAnalysisId(created.id);
-        }
-      }
-      const res = await apiRequest("POST", "/api/strategy-lab/blueprint-order", {
-        propertyAnalysisId: id ?? undefined,
-        sessionId: sessionIdRef.current,
-        tier: vals.tierId,
-        contactName: vals.buyerName || undefined,
-        contactEmail: vals.email || undefined,
-        contactPhone: vals.phone || undefined,
-        notes: vals.notes || undefined,
-      });
-      return (await res.json()) as {
-        orderId: number;
-        paymentMethod: "stripe" | "invoice";
-        paymentStatus: string;
-        checkoutUrl: string | null;
-      };
-    },
-    onSuccess: (data) => {
-      fireTouchpoint("blueprint_order_created", { orderId: data.orderId, paymentMethod: data.paymentMethod });
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-        return;
-      }
-      setBlueprintDialogOpen(false);
-      toast({
-        title: "Order received. Invoice incoming.",
-        description: "Apollo's team will email a custom invoice within one business day.",
-      });
-      navigate(`/strategy-lab/blueprint-confirmed?orderId=${data.orderId}`);
-    },
-    onError: (err: any) => {
-      toast({ title: "Could not place order", description: err?.message ?? "Try again.", variant: "destructive" });
-    },
-  });
+  const handleBlueprintReview = useCallback((source: string = "strategy_lab") => {
+    fireTouchpoint("blueprint_review_open", {
+      source,
+      analysisId: analysisId ?? undefined,
+      topLane: snapshot?.topLane ?? undefined,
+    });
+    navigate("/deal-blueprint");
+  }, [analysisId, fireTouchpoint, navigate, snapshot?.topLane]);
 
   const handleSave = useCallback(() => {
     if (!snapshot) {
@@ -2045,11 +1993,9 @@ export default function StrategyLabPage() {
           isAuthenticated={isAuthenticated}
           runsLeft={runsLeft}
           freeRunLimit={FREE_RUN_LIMIT}
-          blueprintTiers={blueprintTiersQuery.data?.tiers ?? []}
+          blueprintTiers={[]}
           onOpenBlueprintTier={(key) => {
-            setSelectedTierId(key);
-            setBlueprintDialogOpen(true);
-            fireTouchpoint("blueprint_tier_open", { tierId: key });
+            handleBlueprintReview(`tier:${key}`);
           }}
           fireTouchpoint={fireTouchpoint}
         />
@@ -2503,89 +2449,6 @@ export default function StrategyLabPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Blueprint Order Dialog (Task #85) ───────────────────────────── */}
-      <Dialog open={blueprintDialogOpen} onOpenChange={setBlueprintDialogOpen}>
-        <DialogContent className="sm:max-w-lg" data-testid="dialog-blueprint-order">
-          <DialogHeader>
-            <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary mb-2">
-              Pegasus Deal Blueprint
-            </div>
-            <DialogTitle className="font-serif text-2xl">
-              {(() => {
-                const t = blueprintTiersQuery.data?.tiers.find((x) => x.key === selectedTierId);
-                return t ? `${t.title}: $${(t.priceCents / 100).toLocaleString()}` : "Order a Blueprint";
-              })()}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Confirm your contact info and we'll either send a Stripe checkout link or a custom invoice within one business day. Work begins once payment is received.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div>
-              <Label htmlFor="bp-name" className="text-xs font-supporting font-semibold">Name</Label>
-              <Input
-                id="bp-name"
-                value={blueprintForm.buyerName}
-                onChange={(e) => setBlueprintForm((s) => ({ ...s, buyerName: e.target.value }))}
-                data-testid="input-bp-name"
-              />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="bp-email" className="text-xs font-supporting font-semibold">Email</Label>
-                <Input
-                  id="bp-email"
-                  type="email"
-                  value={blueprintForm.email}
-                  onChange={(e) => setBlueprintForm((s) => ({ ...s, email: e.target.value }))}
-                  data-testid="input-bp-email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="bp-phone" className="text-xs font-supporting font-semibold">Phone</Label>
-                <Input
-                  id="bp-phone"
-                  value={blueprintForm.phone}
-                  onChange={(e) => setBlueprintForm((s) => ({ ...s, phone: e.target.value }))}
-                  data-testid="input-bp-phone"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="bp-notes" className="text-xs font-supporting font-semibold">Anything we should know?</Label>
-              <Textarea
-                id="bp-notes"
-                rows={3}
-                value={blueprintForm.notes}
-                onChange={(e) => setBlueprintForm((s) => ({ ...s, notes: e.target.value }))}
-                data-testid="textarea-bp-notes"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <button
-              type="button"
-              className="border border-[hsl(var(--rule))] px-4 py-2 text-sm font-supporting font-semibold"
-              onClick={() => setBlueprintDialogOpen(false)}
-              data-testid="btn-bp-cancel"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={!selectedTierId || blueprintOrderMutation.isPending}
-              onClick={() => {
-                if (!selectedTierId) return;
-                blueprintOrderMutation.mutate({ tierId: selectedTierId, ...blueprintForm });
-              }}
-              className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold disabled:opacity-60"
-              data-testid="btn-bp-confirm"
-            >
-              {blueprintOrderMutation.isPending ? "Placing order…" : "Place order"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

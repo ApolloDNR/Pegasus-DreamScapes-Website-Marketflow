@@ -201,8 +201,8 @@ export const PRODUCTS: {
     step: '03',
     name: 'Deal Blueprint',
     kind: 'By request',
-    desc: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in one documented engagement. By request — not sold yet.',
-    cta: 'Start a Deal Blueprint',
+    desc: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in one reviewed engagement. By review, not self-serve.',
+    cta: 'Request Blueprint Review',
     action: 'contact',
   },
 ];

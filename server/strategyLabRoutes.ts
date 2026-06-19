@@ -3,9 +3,9 @@
  *
  * Endpoints:
  *  POST  /api/strategy-lab/touchpoint           anon ok — funnel telemetry
- *  GET   /api/strategy-lab/blueprint-tiers      public — CMS-configurable tiers
+ *  GET   /api/strategy-lab/blueprint-tiers      public — by-review status only
  *  POST  /api/strategy-lab/submit               escalated submit-to-Pegasus
- *  POST  /api/strategy-lab/blueprint-order      paid Blueprint order (Stripe or invoice)
+ *  POST  /api/strategy-lab/blueprint-order      disabled public checkout path
  *  GET   /api/admin/strategy-lab                admin only — funnel + submissions + orders
  *  PATCH /api/admin/strategy-lab/submissions/:id/status   admin only
  */
@@ -13,11 +13,7 @@ import type { Express, Request, Response, RequestHandler } from "express";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { storage } from "./storage";
-import {
-  sendPegasusSubmissionNotification,
-  sendBlueprintOrderNotification,
-} from "./email";
-import { extractSupabaseUser } from "./supabaseAuth";
+import { sendPegasusSubmissionNotification } from "./email";
 import { generateStrategySnapshotPDF } from "./pdf";
 
 interface AuthCtx {
@@ -37,78 +33,6 @@ function authUserId(req: Request): string | null {
 function authUserEmail(req: Request): string | null {
   const u = (req as AuthedRequest).user;
   return (u?.claims?.email ?? req.supabaseUser?.email ?? null)?.toLowerCase() ?? null;
-}
-
-// ───────────────────────────────────────────────────────────────────────────
-// Blueprint tier defaults — CMS-overridable via siteContent keys.
-// ───────────────────────────────────────────────────────────────────────────
-const TIER_KEYS = ["singlepath", "comparison", "complete"] as const;
-type TierKey = (typeof TIER_KEYS)[number];
-
-const TIER_DEFAULTS: Record<TierKey, { title: string; priceCents: number; description: string; turnaroundDays: string }> = {
-  singlepath: {
-    title: "Single-Path Blueprint",
-    priceCents: 49700,
-    description:
-      "One recommended lane underwritten end-to-end. Numbers, capital stack, risk register, and a 30-day execution memo.",
-    turnaroundDays: "5–7 business days",
-  },
-  comparison: {
-    title: "Comparison Blueprint",
-    priceCents: 89700,
-    description:
-      "Two viable lanes underwritten side-by-side so you can choose with the math in front of you. Includes sensitivity heatmap and exit framing.",
-    turnaroundDays: "7–10 business days",
-  },
-  complete: {
-    title: "Complete Strategy Stack",
-    priceCents: 149700,
-    description:
-      "Every lane that survives the screen, with creative-finance and JV variants. Includes capital partner intro framing and a written 90-day plan.",
-    turnaroundDays: "10–14 business days",
-  },
-};
-
-// CMS overrides accept both the canonical key family
-//   `home.blueprint.tier.{key}.{field}` (per replit.md spec)
-// and a shorter alias `blueprint.{key}.{field}` for operator convenience.
-// The canonical form wins if both rows exist for the same field.
-async function loadBlueprintTiers() {
-  const tiers = await Promise.all(TIER_KEYS.map(async (key) => {
-    const def = TIER_DEFAULTS[key];
-    const [
-      titleRow, priceRow, descRow, turnRow, scopeRow,
-      titleAlt, priceAlt, descAlt, turnAlt, scopeAlt,
-      priceDollarsAlt,
-    ] = await Promise.all([
-      storage.getSiteContent(`home.blueprint.tier.${key}.title`),
-      storage.getSiteContent(`home.blueprint.tier.${key}.priceCents`),
-      storage.getSiteContent(`home.blueprint.tier.${key}.description`),
-      storage.getSiteContent(`home.blueprint.tier.${key}.turnaroundDays`),
-      storage.getSiteContent(`home.blueprint.tier.${key}.scope`),
-      storage.getSiteContent(`blueprint.${key}.title`),
-      storage.getSiteContent(`blueprint.${key}.priceCents`),
-      storage.getSiteContent(`blueprint.${key}.description`),
-      storage.getSiteContent(`blueprint.${key}.turnaroundDays`),
-      storage.getSiteContent(`blueprint.${key}.scope`),
-      storage.getSiteContent(`blueprint.${key}.price`),
-    ]);
-    const rawPriceCents = priceRow?.value ?? priceAlt?.value;
-    let priceCents = rawPriceCents ? parseInt(rawPriceCents, 10) : def.priceCents;
-    if (!Number.isFinite(priceCents) || priceCents <= 0) {
-      const dollars = priceDollarsAlt?.value ? parseFloat(priceDollarsAlt.value) : NaN;
-      priceCents = Number.isFinite(dollars) && dollars > 0 ? Math.round(dollars * 100) : def.priceCents;
-    }
-    return {
-      key,
-      title: titleRow?.value || titleAlt?.value || def.title,
-      priceCents,
-      description: descRow?.value || descAlt?.value || def.description,
-      turnaroundDays: turnRow?.value || turnAlt?.value || def.turnaroundDays,
-      scope: scopeRow?.value || scopeAlt?.value || def.description,
-    };
-  }));
-  return tiers;
 }
 
 // 48 business hours from `from` (skipping Sat/Sun, no holiday calendar).
@@ -168,15 +92,16 @@ export function registerStrategyLabRoutes(app: Express, ctx: AuthCtx) {
     }
   });
 
-  // ── Blueprint tier catalog (public read) ───────────────────────────────
+  // ── Deal Blueprint public mode (by review, no public fixed pricing) ────
   app.get("/api/strategy-lab/blueprint-tiers", async (_req, res) => {
-    try {
-      const tiers = await loadBlueprintTiers();
-      res.json({ tiers, stripeEnabled: !!process.env.STRIPE_SECRET_KEY });
-    } catch (err) {
-      console.error("blueprint-tiers error:", err);
-      res.json({ tiers: TIER_KEYS.map((k) => ({ key: k, ...TIER_DEFAULTS[k] })), stripeEnabled: false });
-    }
+    res.json({
+      tiers: [],
+      stripeEnabled: false,
+      mode: "by_review",
+      requestPath: "/submit?intent=blueprint",
+      message:
+        "Deal Blueprints are scoped and quoted per property after Pegasus reviews the situation.",
+    });
   });
 
   // ── Submit-to-Pegasus (rich submission row + email + PDF attached) ─────
@@ -278,164 +203,15 @@ export function registerStrategyLabRoutes(app: Express, ctx: AuthCtx) {
     }
   });
 
-  // ── Blueprint order (Stripe checkout if configured, else invoice) ──────
-  const orderSchema = z.object({
-    propertyAnalysisId: z.number().int().positive().optional(),
-    sessionId: z.string().min(8).max(64).optional(),
-    tier: z.enum(TIER_KEYS),
-    contactName: z.string().max(200).optional(),
-    contactEmail: z.string().email().max(255).optional(),
-    contactPhone: z.string().max(40).optional(),
-    notes: z.string().max(2000).optional(),
-  });
-
-  app.post("/api/strategy-lab/blueprint-order", isAuthenticated, async (req: any, res) => {
-    try {
-      const parsed = orderSchema.parse(req.body ?? {});
-      const userId = authUserId(req);
-      const userEmail = authUserEmail(req);
-      const tiers = await loadBlueprintTiers();
-      const tier = tiers.find((t) => t.key === parsed.tier);
-      if (!tier) return res.status(400).json({ error: "Unknown tier" });
-
-      // If a propertyAnalysisId is referenced, enforce strict ownership so a
-      // signed-in user cannot pin an order to an analysis they do not own.
-      if (parsed.propertyAnalysisId) {
-        const refAnalysis = await storage.getPropertyAnalysis(parsed.propertyAnalysisId);
-        if (!refAnalysis) return res.status(404).json({ error: "Analysis not found" });
-        if (refAnalysis.userId) {
-          if (!userId || refAnalysis.userId !== userId) {
-            return res.status(403).json({ error: "Not your analysis" });
-          }
-        } else if (refAnalysis.sessionId) {
-          if (!parsed.sessionId || parsed.sessionId !== refAnalysis.sessionId) {
-            return res.status(403).json({ error: "Not your analysis" });
-          }
-        }
-      }
-
-      const stripeEnabled = !!process.env.STRIPE_SECRET_KEY;
-      let paymentMethod: "stripe" | "invoice" = stripeEnabled ? "stripe" : "invoice";
-      let paymentStatus: string = stripeEnabled ? "pending" : "invoiced";
-
-      const order = await storage.createBlueprintOrder({
-        propertyAnalysisId: parsed.propertyAnalysisId ?? null,
-        userId: userId ?? null,
-        sessionId: parsed.sessionId ?? null,
-        tier: parsed.tier,
-        priceCents: tier.priceCents,
-        contactName: parsed.contactName ?? null,
-        contactEmail: parsed.contactEmail ?? userEmail ?? null,
-        contactPhone: parsed.contactPhone ?? null,
-        notes: parsed.notes ?? null,
-        paymentMethod,
-        paymentStatus,
-      });
-
-      await storage.createStrategyLabTouchpoint({
-        userId: userId ?? null,
-        sessionId: parsed.sessionId ?? null,
-        propertyAnalysisId: parsed.propertyAnalysisId ?? null,
-        action: "blueprint_order",
-        payload: { orderId: order.id, tier: parsed.tier, priceCents: tier.priceCents, paymentMethod },
-      });
-
-      // Stripe checkout. When STRIPE_SECRET_KEY is set we create a real
-      // Checkout Session via Stripe's REST API (no SDK dependency required)
-      // and persist the session id for later reconciliation. When the key is
-      // absent we fall back to the invoice flow so the user is never blocked.
-      let checkoutUrl: string | null = null;
-      let stripeSessionId: string | null = null;
-      if (stripeEnabled) {
-        try {
-          const origin = `${req.protocol}://${req.get("host")}`;
-          const params = new URLSearchParams();
-          params.append("mode", "payment");
-          params.append("success_url", `${origin}/strategy-lab/blueprint-confirmed?orderId=${order.id}`);
-          params.append("cancel_url", `${origin}/strategy-lab?blueprint=cancelled&order=${order.id}`);
-          params.append("client_reference_id", String(order.id));
-          if (parsed.contactEmail ?? userEmail) {
-            params.append("customer_email", String(parsed.contactEmail ?? userEmail));
-          }
-          params.append("line_items[0][price_data][currency]", "usd");
-          params.append("line_items[0][price_data][product_data][name]", `Pegasus Deal Blueprint — ${tier.title}`);
-          params.append("line_items[0][price_data][unit_amount]", String(tier.priceCents));
-          params.append("line_items[0][quantity]", "1");
-          params.append("metadata[orderId]", String(order.id));
-          params.append("metadata[tier]", parsed.tier);
-
-          const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: params.toString(),
-          });
-          if (!stripeRes.ok) {
-            const errText = await stripeRes.text();
-            throw new Error(`Stripe ${stripeRes.status}: ${errText}`);
-          }
-          const session = (await stripeRes.json()) as { id: string; url: string };
-          stripeSessionId = session.id;
-          checkoutUrl = session.url;
-          await storage.updateBlueprintOrder(order.id, { stripeSessionId });
-        } catch (stripeErr) {
-          console.error("stripe checkout failed (falling back to invoice):", stripeErr);
-          await storage.updateBlueprintOrder(order.id, {
-            paymentMethod: "invoice",
-            paymentStatus: "invoiced",
-          });
-          paymentMethod = "invoice";
-          paymentStatus = "invoiced";
-        }
-      }
-
-      try {
-        // Generate the Strategy Snapshot PDF for the linked analysis (if any)
-        // and attach it to Apollo's order email so the team has the full
-        // underwriting context to start work without round-tripping the user.
-        let pdfBuffer: Buffer | null = null;
-        if (parsed.propertyAnalysisId) {
-          try {
-            const linked = await storage.getPropertyAnalysis(parsed.propertyAnalysisId);
-            if (linked) pdfBuffer = await generateStrategySnapshotPDF(linked);
-          } catch (pdfErr) {
-            console.error("blueprint snapshot pdf failed (non-fatal):", pdfErr);
-          }
-        }
-        await sendBlueprintOrderNotification({
-          orderId: order.id,
-          tier: parsed.tier,
-          tierTitle: tier.title,
-          priceCents: tier.priceCents,
-          paymentMethod,
-          contactName: parsed.contactName ?? null,
-          contactEmail: parsed.contactEmail ?? userEmail ?? null,
-          contactPhone: parsed.contactPhone ?? null,
-          propertyAnalysisId: parsed.propertyAnalysisId ?? null,
-          notes: parsed.notes ?? null,
-          pdfBuffer,
-        });
-      } catch (emailErr) {
-        console.error("blueprint email failed (non-fatal):", emailErr);
-      }
-
-      res.json({
-        orderId: order.id,
-        tier: parsed.tier,
-        priceCents: tier.priceCents,
-        paymentMethod,
-        paymentStatus,
-        checkoutUrl,
-      });
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ error: fromError(err).toString() });
-      }
-      console.error("blueprint-order error:", err);
-      res.status(500).json({ error: "Could not create order" });
-    }
+  // ── Public Blueprint checkout/order path intentionally disabled ────────
+  app.post("/api/strategy-lab/blueprint-order", isAuthenticated, async (_req, res) => {
+    res.status(410).json({
+      error: "Deal Blueprint checkout is not available publicly.",
+      mode: "by_review",
+      requestPath: "/submit?intent=blueprint",
+      message:
+        "Deal Blueprints are scoped and quoted per property after Pegasus reviews the situation.",
+    });
   });
 
   // ── Owner / admin GET single submission (for /strategy-lab/submitted) ─

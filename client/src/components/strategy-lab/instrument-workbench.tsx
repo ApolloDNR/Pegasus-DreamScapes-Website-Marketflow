@@ -1431,7 +1431,7 @@ function RightReadPanel({
         )}
       </div>
 
-      {/* Capital stack modeler tease — routes to /deal-blueprint */}
+      {/* Capital stack preview — routes to the by-review Blueprint page */}
       <div
         className="rounded-sm overflow-hidden"
         style={{
@@ -1458,7 +1458,7 @@ function RightReadPanel({
                 border: `1px solid ${COPPER}`,
               }}
             >
-              Blueprint preview
+              Review preview
             </span>
           </div>
         </div>
@@ -1504,7 +1504,7 @@ function RightReadPanel({
             style={{ fontFamily: FONT_SUP, color: COPPER, borderColor: COPPER }}
             data-testid="instrument-open-modeler"
           >
-            Open modeler →
+            Review Blueprint process →
           </a>
         </div>
       </div>
@@ -1651,9 +1651,7 @@ function RightReadPanel({
         </div>
       </div>
 
-      {/* Deal Blueprint — by-review engagement (not a self-serve paid product).
-          Routes to /deal-blueprint, which explains the scoped-per-property
-          process. The priced order path in strategy-lab.tsx is left dormant. */}
+      {/* Deal Blueprint — by-review engagement, not a self-serve paid product. */}
       <div
         className="rounded-sm p-4"
         style={{
@@ -1673,9 +1671,9 @@ function RightReadPanel({
           style={{ fontFamily: FONT_SERIF, color: NAVY }}
         >
           Want a written underwriting and structure memo for this property,
-          prepared by the Pegasus team? It's a by-review engagement — scoped
-          and quoted per property after a Strategy Review, not bought off the
-          shelf.
+          prepared by the Pegasus team? It is scoped and quoted per property
+          after review, with work beginning only after scope and terms are
+          confirmed.
         </p>
         <a
           href="/deal-blueprint"
