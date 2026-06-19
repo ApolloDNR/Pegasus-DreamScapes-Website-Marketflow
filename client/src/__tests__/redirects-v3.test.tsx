@@ -19,14 +19,14 @@ import type { Nav, Route } from "@/pegasus/theme";
 // of the live site and redirected them. Website Spec v4 reverses that cut: the
 // "Who We Serve" audience lanes plus /strategy-lab, /marketflow, /peggy,
 // /deal-strategy (renamed from /deal-architecture), and /work-with-apollo are
-// live prototype-shell pages again. Only /library and /faq remain demoted.
+// live prototype-shell pages again. Only /library remains demoted.
 //
 // This net locks the reversal in so a future edit cannot silently re-demote a
 // restored surface or strand a stale redirect:
 //   1. reversed — REDIRECTED_URLS is empty (nothing is pulled from the shell).
 //   2. restored — every surface that came back renders the prototype shell
 //      (is in PEGASUS_URLS) and has NO redirect rule pointing it away.
-//   3. residual — /library and /faq still 302 to home, and the legacy
+//   3. residual — /library still 302s to home, and the legacy
 //      /deal-architecture URL 301s forward to the live /deal-strategy.
 //   4. no-stale-link — the live chrome (nav + footer) and a few shell pages
 //      never link to a still-demoted or renamed-away URL.
@@ -49,8 +49,8 @@ const RESTORED_URLS: string[] = [
   "/work-with-apollo",
 ];
 
-// Still demoted in v4: the two standalone pages that 302-redirect to home.
-const DEMOTED_URLS: string[] = ["/library", "/faq"];
+// Still demoted in v4: the standalone page that 302-redirects to home.
+const DEMOTED_URLS: string[] = ["/library"];
 
 // The renamed Deal Strategy surface: its legacy URL 301s forward to the live
 // /deal-strategy shell page.

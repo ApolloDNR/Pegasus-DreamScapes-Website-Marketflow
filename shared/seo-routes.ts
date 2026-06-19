@@ -206,6 +206,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Terms of use for the Pegasus DreamScapes website, Strategy Review intake, and MarketFlow access. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/terms.png`,
   },
+
+  "/faq": {
+    title: tag("FAQ"),
+    description:
+      "Straight answers on submitting a property, working with Pegasus DreamScapes, the MarketFlow network, and Buyboxes — fees, timing, and how reviews work.",
+    image: DEFAULT_OG_IMAGE,
+  },
 };
 
 export function seoFor(pathname: string): SeoRoute {

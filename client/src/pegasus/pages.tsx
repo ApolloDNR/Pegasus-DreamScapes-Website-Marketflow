@@ -76,7 +76,7 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
       <NelsonProof go={go} />
       <ApolloBlock go={go} portrait={false} />
       <MarketFlowBlock go={go} dark />
-      <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="" />
+      <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="/faq" />
       <CTABand go={go} openPeggy={openPeggy} primaryAction="submit" primaryLabel="Submit a Property"
         title="Send us the situation. We'll map the path forward."
         text="Complex, distressed, inherited, or simply complicated: every property gets a plain-language read. No pressure, no obligation." />
@@ -187,7 +187,7 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
       {cat.rich.includes('marketflow') && <MarketFlowBlock go={go} />}
       {cat.rich.includes('stats') && <ProofStats />}
       {cat.rich.includes('process') && <BuildProcessBlock />}
-      {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." allHref="" />}
+      {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." allHref={cat.faqAnchor ? `/faq#${cat.faqAnchor}` : '/faq'} />}
       {cat.secondary && <NextStep go={go} label={cat.secondary.label} route={cat.secondary.route} />}
       <LeadSection cfg={cat.form} eyebrow={cat.eyebrow} tone="navy" />
     </>

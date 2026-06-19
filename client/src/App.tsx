@@ -140,6 +140,7 @@ const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
 const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
 const Ecosystem = lazy(() => import("@/pages/ecosystem"));
+const FAQ = lazy(() => import("@/pages/faq"));
 
 export const legacyRedirects: [string, string][] = [
   // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
@@ -243,8 +244,9 @@ export function Router() {
       <Route path="/library/:slug" component={ArticleDetail} />
       <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
-      {/* v3.0 Lean Launch Cut — /faq is out of the launch and redirects home. */}
-      <Route path="/faq">{() => <Redirect to="/" />}</Route>
+      {/* Restored to the live public surface: the full FAQ page (accordion +
+       * FAQPage JSON-LD), fed by the shared/faq-data.ts source of truth. */}
+      <Route path="/faq" component={FAQ} />
       {/* /ecosystem is a footer-linked surface. Website Spec v4 restores the
        * public /peggy page to a live prototype shell page (mounted via
        * PEGASUS_URLS above), alongside the in-shell Peggy concierge widget. */}

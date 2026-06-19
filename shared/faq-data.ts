@@ -24,11 +24,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "Is there a fee to submit?",
-        a: "No. Submissions are free. Apollo reviews every serious intake personally.",
+        a: "No. Submissions are free. Every serious intake gets reviewed — not an auto-reply.",
       },
       {
         q: "How long does a review take?",
-        a: "Most Strategy Snapshots are reviewed within 5 business days. If we need more information, we reach out directly. No auto-emails.",
+        a: "A free property review comes back within 48 hours. If we need more to give you a straight answer, we reach out directly.",
       },
       {
         q: "Do you guarantee an offer?",
@@ -45,7 +45,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "Is Apollo licensed?",
-        a: "Yes. Apollo Duran, DRE #02333658, operates under Keller Williams East Bay. Every transaction is under fiduciary standard.",
+        a: "Yes. Apollo Duran, California DRE #02333658, provides licensed real estate services through Keller Williams Realty East Bay — each office independently owned and operated. Licensed work is held to a fiduciary standard.",
       },
       {
         q: "Can you help if I just want to list my property?",
@@ -53,11 +53,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "What is the Strategy Lab?",
-        a: "A free property analysis tool that runs your inputs against 14 real estate strategies (Fix & Flip, BRRRR, ADU, Wholesale, etc.) and produces a preliminary verdict. It's a starting point, not a final answer. Apollo reviews the situation before any decisions are made.",
+        a: "A free tool you run yourself. Enter a property's basics and it sorts the main investment lanes — fix and flip, BRRRR, rental hold, ADU and development, wholesale, and more — showing where each lands as a range, where the risks are, and a suggested next step. It's a starting point, not a final answer.",
       },
       {
         q: "What's the difference between a Strategy Snapshot and a Deal Blueprint?",
-        a: "Two depths of the same Strategy Lab tool. The Strategy Snapshot is preliminary and informational: a free preliminary read with no account required (lane fit, verdict, headline math), or a fuller saved snapshot with a Pegasus account (scenarios, risk register, sensitivity, sharable). The Deal Blueprint is a human-prepared memo for a specific property, commissioned by engagement after a review: underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. Most submissions don't need a Blueprint. We tell you which fits before you commit.",
+        a: "Two depths of the same Strategy Lab work. The Strategy Snapshot is preliminary and informational: a free read with no account required (lane fit, ranges, headline math), or a fuller saved snapshot with a Pegasus account (scenarios, risk register, sensitivity, shareable). The Deal Blueprint is a deeper, human-prepared memo for one specific property — underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. It's available by request after a review; most submissions don't need one, and we tell you which fits before you commit.",
       },
     ],
   },

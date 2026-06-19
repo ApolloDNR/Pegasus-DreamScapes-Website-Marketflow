@@ -126,6 +126,7 @@ const STANDALONE_URLS: string[] = [
   "/projects",
   "/projects/nelson-dr",
   "/vendor-network",
+  "/faq",
   "/disclosures",
   "/privacy",
   "/terms",

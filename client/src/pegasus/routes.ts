@@ -77,6 +77,7 @@ const STANDALONE_DARK_HERO: string[] = [
   '/privacy',
   '/terms',
   '/disclosures',
+  '/faq',
   '/deal-blueprint',
 ];
 

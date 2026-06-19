@@ -245,13 +245,12 @@ export async function registerRoutes(
   // ─── Website Spec v4 (Re-skin) residual demotions ─────────────────────
   // The v4 re-skin restored the audience lanes, Strategy Lab, MarketFlow,
   // Peggy, Represent With Apollo, and Deal Strategy to the live public
-  // surface, so they are no longer demoted. Only /library and /faq remain out
+  // surface, so they are no longer demoted. Only /library remains out
   // of the v4 launch and 302 (temporary) to the home page. Exact-match only,
   // so live subpaths (e.g. /library/:slug) are not caught. Kept separate from
   // the permanent 301 LEGACY_REDIRECTS above.
   const V3_DEMOTION_REDIRECTS: Array<[string, string]> = [
     ['/library', '/'],
-    ['/faq', '/'],
   ];
   for (const [from, to] of V3_DEMOTION_REDIRECTS) {
     app.get(from, (_req, res) => res.redirect(302, to));

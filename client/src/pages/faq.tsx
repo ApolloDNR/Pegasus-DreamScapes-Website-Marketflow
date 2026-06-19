@@ -35,10 +35,12 @@ const SECTIONS = FAQ_SECTIONS.map((section) => ({
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 export default function FAQ() {
+  // Mirror the single-source /faq entry in shared/seo-routes.ts so the
+  // client-applied meta after hydration matches the SSR-injected tags.
   useSEO({
     title: "FAQ",
     description:
-      "Frequently asked questions about submitting a property, working with Pegasus DreamScapes, and the MarketFlow network.",
+      "Straight answers on submitting a property, working with Pegasus DreamScapes, the MarketFlow network, and Buyboxes — fees, timing, and how reviews work.",
     image: "/og/default.png",
   });
 
