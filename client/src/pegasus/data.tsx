@@ -31,13 +31,9 @@ export const NAV_GROUPS: NavGroup[] = [
 /* ================================================================
    CREDIBILITY STATS
    ================================================================ */
-// [CONFIRM: the "250+ underwritten" figure is a claimed number — verify with
-// Apollo before launch or soften to a range. The first stat is intentionally
-// qualitative (no invented dollar figure); the read promise is "within 48
-// hours" per the locked spec.]
 export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
   { value: 'Deal by deal', label: 'How every property is read', sub: 'Underwritten on real numbers, not hope' },
-  { value: '250+', label: 'Opportunities underwritten', sub: 'Each one read deal by deal' },
+  { value: '4 lanes', label: 'How Pegasus participates', sub: 'List, buy, partner, or route' },
   { value: '48 hours', label: 'First strategy read', sub: 'From intake to a written path' },
   { value: 'East Bay', label: 'Where we focus', sub: 'Contra Costa & Alameda County' },
 ];
@@ -337,18 +333,15 @@ export const APOLLO = {
 /* ================================================================
    NELSON DRIVE CASE STUDY
    ================================================================ */
-// [CONFIRM: every Nelson Drive figure below — ≈$600K acquired, $100K renovation,
-// ≈$840K delivered, settled September 2025 — must be Apollo-confirmed against the
-// real deal record before this case study goes public.]
 export const NELSON = {
   name: 'Nelson Drive',
   location: 'Richmond / El Sobrante Area, CA',
   blurb: 'A dated single-family home, acquired, fully renovated, and delivered move-in ready.',
   rows: [
-    { k: 'Acquired', v: '≈ $600K', note: 'Acquired for full renovation' },
-    { k: 'Renovation', v: '$100K', note: 'Managed by the build team' },
-    { k: 'Delivered', v: '≈ $840K', note: 'Renovated and delivered move-in ready' },
-    { k: 'Settled', v: 'September 2025', note: 'Closed and delivered' },
+    { k: 'Basis', v: 'Acquired', note: 'Purchased for full renovation' },
+    { k: 'Scope', v: 'Full refresh', note: 'Managed with the build team' },
+    { k: 'Exit', v: 'Delivered', note: 'Renovated and move-in ready' },
+    { k: 'Status', v: 'Closed', note: 'Finished and delivered' },
   ],
 };
 
@@ -367,6 +360,53 @@ export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: 
 /* ================================================================
    PEGGY — suggested prompts
    ================================================================ */
+export const PARTICIPATION_LANES: {
+  key: string;
+  title: string;
+  desc: string;
+  points: string[];
+  icon: string;
+  cta: string;
+  href: string;
+}[] = [
+  {
+    key: 'seller-representation',
+    title: 'Ready to list',
+    desc: 'Apollo can represent clean, ready-to-market sellers through Keller Williams Realty East Bay, with Pegasus-level pricing, prep, and timing discipline behind the listing.',
+    points: ['Agency representation through KW East Bay', 'Pricing, prep, and launch strategy', 'Investor-minded read before you spend'],
+    icon: 'home',
+    cta: 'Work With Apollo',
+    href: '/work-with-apollo',
+  },
+  {
+    key: 'complex-owner',
+    title: 'Complex owner situation',
+    desc: 'Inherited, distressed, occupied, behind on work, or under a deadline? Submit the property and Pegasus will map the honest lane before anyone pushes a product.',
+    points: ['Direct purchase, listing, JV, reposition, or pass', 'No offer until review and written terms', 'A written path within the launch standard'],
+    icon: 'compass',
+    cta: 'Submit Property',
+    href: '/submit?intent=seller',
+  },
+  {
+    key: 'buyer-representation',
+    title: 'Buyer or investor client',
+    desc: 'Apollo can represent buyers who want a sharper read: buy-box discipline, diligence, and offer strategy informed by how operators actually underwrite property.',
+    points: ['Buyer representation through KW East Bay', 'Value-add and finished-home thinking', 'A plain walk-away point before you overpay'],
+    icon: 'key',
+    cta: 'Work With Apollo',
+    href: '/work-with-apollo',
+  },
+  {
+    key: 'dealfinder-jv',
+    title: 'Deal finder or wholesaler',
+    desc: 'Bring the opportunity once. If it fits, Pegasus may buy it. If another buyer is the better route, we can JV or route through the network after written terms.',
+    points: ['Source protection and written terms first', 'Direct acquisition when it fits the buy box', 'JV or MarketFlow routing when that is better'],
+    icon: 'handshake',
+    cta: 'Submit a Deal',
+    href: '/submit?intent=deal-jv',
+  },
+];
+
 export const PEGGY_CHIPS: string[] = [
   'I inherited a house and I am not sure what to do with it',
   'I have a deal. What is your basis and where would you come in?',

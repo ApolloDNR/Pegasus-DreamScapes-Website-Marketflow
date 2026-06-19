@@ -10,7 +10,7 @@ import {
   PageHero, Hero, HomeIntro, ThreePillarsBlock, PillarSection, ProcessSteps,
   EngineBlock, DealReadStepper, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
-  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, StrategyLabFeature, LaneCardsBlock,
+  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock,
 } from './blocks';
 import {
   LeadSection, StrategyCalculator, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
@@ -33,12 +33,12 @@ const MARKETFLOW_FORM: FormCfg = {
   submit: 'Request MarketFlow Access',
   third: { label: 'Firm, fund, or trade', placeholder: 'Where you operate (optional)' },
   messageLabel: 'How you participate',
-  messagePlaceholder: 'Share your typical check size or build capacity, and the deal types you focus on.',
+  messagePlaceholder: 'Share your market, role, capacity, buy box, or the deal types you focus on.',
 };
 
 const MARKETFLOW_PREVIEW = [
-  { tag: 'Sample deal card', title: 'Value-add SFR · East Bay', lines: ['All-in vs. delivered value', 'Scope & projected timeline', 'Status: reviewed · under contract'] },
-  { tag: 'Operator profile', title: 'Licensed GC · verified operator', lines: ['Trade verified · references checked', 'On-time delivery record', 'Active in Contra Costa'] },
+  { tag: 'Opportunity record', title: 'Value-add property file', lines: ['Basis, scope, timeline, and source', 'Lane fit and next review step', 'Shown only after approval'] },
+  { tag: 'Operator profile', title: 'Licensed GC profile', lines: ['Trade and license reviewed', 'References and capacity noted', 'Matched to the right project type'] },
   { tag: 'Buyer interest', title: 'Capital partner mandate', lines: ['Check size & risk band', 'Asset types they back', 'Matched to projects, not pools'] },
   { tag: 'Trust layer', title: 'Verification badges', lines: ['Identity & license reviewed', 'Source attribution logged', 'Written terms before introductions'] },
 ];
@@ -70,6 +70,7 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
       <HomeIntro />
       <ProofStats />
       <HowADealMovesBlock />
+      <ParticipationLanesBlock />
       <LaneCardsBlock go={go} />
       <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <StrategyLabFeature go={go} />
@@ -418,7 +419,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="A look inside"
             title="What members see."
-            copy="A preview of the MarketFlow experience. These are sample cards for illustration; live dealflow, profiles, and matches appear once your access is reviewed and approved." />
+            copy="A product preview of the records approved members use. No live deal inventory is published here; dealflow, profiles, and introductions only appear after reviewed access." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {MARKETFLOW_PREVIEW.map((c, i) => (
               <div key={c.title} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
@@ -435,7 +436,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
             ))}
           </div>
           <p className="mt-7 text-[0.8rem] text-[var(--muted)] max-w-2xl">
-            Preview content is illustrative and not an offer, a listing, or a solicitation. Access is private and reviewed by a person; participation is subject to a written agreement.
+            Preview content shows record types only. It is not live inventory, an offer, a listing, or a solicitation. Access is private and reviewed by a person; participation is subject to a written agreement.
           </p>
         </div>
       </section>

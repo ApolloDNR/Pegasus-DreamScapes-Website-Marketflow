@@ -10,6 +10,7 @@ import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON, DEPARTMENTS, DEPT_PILLARS,
+  PARTICIPATION_LANES,
 } from './data';
 
 /* ----------------------------------------------------------------
@@ -242,6 +243,51 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------------
+   Public participation lanes
+---------------------------------------------------------------- */
+export function ParticipationLanesBlock() {
+  return (
+    <section className="relative py-24 lg:py-32 overflow-hidden">
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LANES</div>
+      <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
+        <SectionHead eyebrow="Four doors into the firm" title="Start in the lane that actually fits."
+          copy="Pegasus is not one product trying to fit every property. The first job is to identify the right lane: representation, review, buyer guidance, or a protected deal submission." />
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
+          {PARTICIPATION_LANES.map((lane, i) => (
+            <a key={lane.key} href={lane.href}
+              className="surface-card group reveal flex min-h-[27rem] flex-col p-7 sm:p-8 transition-transform hover:-translate-y-1 focus-visible:-translate-y-1"
+              style={{ animationDelay: `${i * 80}ms` }}>
+              <div className="mb-7 flex items-start justify-between">
+                <div className="door-icon"><Ico name={lane.icon} className="h-5 w-5" /></div>
+                <span aria-hidden="true" className="font-serif-display text-2xl leading-none text-[var(--line)] transition-colors duration-500 group-hover:text-[var(--accent)]">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+              </div>
+              <h3 className="font-serif-display text-2xl text-[var(--text)] leading-tight mb-3">{lane.title}</h3>
+              <p className="text-[var(--muted)] text-[0.9rem] leading-relaxed mb-7">{lane.desc}</p>
+              <ul className="space-y-3 mb-8">
+                {lane.points.map((point) => (
+                  <li key={point} className="flex gap-3 text-[var(--text-2)] text-[0.82rem] leading-relaxed">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--accent)]" strokeWidth={2} />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto border-t border-[var(--line-soft)] pt-5 pg-label !text-[9px] !tracking-[0.2em] text-[var(--text)] flex items-center gap-2 transition-colors group-hover:text-[var(--accent)]">
+                {lane.cta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </div>
+            </a>
+          ))}
+        </div>
+        <p className="mt-7 max-w-3xl text-[0.82rem] leading-relaxed text-[var(--muted)]">
+          Brokerage services are provided by Apollo through Keller Williams Realty East Bay. Pegasus DreamScapes is not a licensed brokerage; complex property reviews, acquisitions, JV routes, and MarketFlow participation are separate from agency representation and subject to written terms.
+        </p>
       </div>
     </section>
   );
@@ -752,7 +798,7 @@ export function ProofStats() {
     <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Proof" title="A track record, not a pitch."
-          copy="Disciplined underwriting, executed value-add, and reads returned on time. These are the numbers behind the standard." />
+          copy="Disciplined underwriting, executed value-add, and reads returned on time. These are the operating standards behind the firm." />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
           {STATS.map((s, i) => (
             <div key={i} className={`reveal ${i > 0 ? 'lg:border-l lg:border-[var(--line)] lg:pl-8' : ''}`} style={{ animationDelay: `${i * 100}ms` }}>
