@@ -35,17 +35,18 @@ const HERO_SIGNALS = [
   { icon: 'route', label: 'Aligned next step' },
 ];
 
-const HERO_STEPS = [
-  { n: '01', icon: 'home', title: 'Situation', desc: 'Property, pressure, owner goal, and constraints.' },
-  { n: '02', icon: 'calculator', title: 'Underwrite', desc: 'Basis, scope, carry, risk, and realistic exit.' },
-  { n: '03', icon: 'layers', title: 'Structure', desc: 'List, buy, partner, route, or pass with a reason.' },
-];
-
 const HERO_LANES = [
   { key: 'list', title: 'List', desc: 'For clean listings where Apollo represents through KW East Bay.' },
   { key: 'buy', title: 'Buy', desc: 'For as-is situations that fit the numbers and written terms.' },
   { key: 'partner', title: 'Partner', desc: 'For deals where shared execution creates the cleaner outcome.' },
   { key: 'route', title: 'Route', desc: 'For opportunities better matched to a vetted buyer or network lane.' },
+];
+
+const HERO_READ_ROWS = [
+  { label: 'Property facts', value: 'Condition, occupancy, debt, title, timeline' },
+  { label: 'Number read', value: 'Basis, scope, carry, exit, margin, risk' },
+  { label: 'Participation', value: 'Represent, acquire, partner, route, or pass' },
+  { label: 'Human step', value: 'Written review before terms or action' },
 ];
 
 function HeroWorkboard({ go }: { go: Nav }) {
@@ -57,27 +58,35 @@ function HeroWorkboard({ go }: { go: Nav }) {
       <div className="hero-workboard-photo" aria-hidden="true">
         <img src={IMG('nelson/nelson-kitchen-1280.jpg')} alt="" />
       </div>
-      <ContourLines className="hero-workboard-contours" />
+      <div className="hero-workboard-etching" aria-hidden="true">
+        <svg viewBox="0 0 760 420" fill="none" preserveAspectRatio="xMidYMid meet">
+          <path d="M94 318H666M142 126H618M178 126V318M582 126V318" />
+          <path d="M186 126L380 54L574 126" />
+          <path d="M238 318V192H326V318M434 318V192H522V318" />
+          <path d="M226 162H534M132 346H628M166 374H594" />
+          <circle cx="180" cy="126" r="28" />
+          <circle cx="580" cy="126" r="28" />
+          <path d="M62 244H128M632 244H698M80 184H128M632 184H680M80 304H128M632 304H680" />
+        </svg>
+      </div>
       <div className="hero-workboard-inner">
         <div className="flex items-center justify-between gap-5 border-b border-[rgba(245,230,211,0.16)] pb-5">
           <div>
-            <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Pegasus property read</div>
-            <div className="mt-2 font-serif-display text-2xl text-[var(--cream)]">Route the right path.</div>
+            <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Private property read</div>
+            <div className="mt-2 font-serif-display text-2xl text-[var(--cream)]">Facts before pressure.</div>
           </div>
           <BrandMark boxClassName="w-12 h-12" onDark />
         </div>
 
-        <ol className="hero-step-grid" aria-label="Pegasus review path">
-          {HERO_STEPS.map((step) => (
-            <li key={step.n} className="hero-step">
-              <div className="hero-step-node">
-                <Ico name={step.icon} className="h-4 w-4" />
-              </div>
-              <div className="pg-label !text-[8px] text-[var(--accent-bright)]">{step.n} / {step.title}</div>
-              <p>{step.desc}</p>
-            </li>
+        <div className="hero-read-ledger" aria-label="Pegasus property read components">
+          {HERO_READ_ROWS.map((row, i) => (
+            <div key={row.label} className="hero-read-row">
+              <span>{String(i + 1).padStart(2, '0')}</span>
+              <strong>{row.label}</strong>
+              <p>{row.value}</p>
+            </div>
           ))}
-        </ol>
+        </div>
 
         <div className="hero-lane-panel">
           <div>
@@ -98,6 +107,12 @@ function HeroWorkboard({ go }: { go: Nav }) {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="hero-review-note">
+          <span>No instant offer</span>
+          <span>No public marketplace promise</span>
+          <span>Licensed representation stays separate</span>
         </div>
 
         <button type="button" onClick={() => go('strategylab')} className="hero-workboard-link group">
@@ -199,11 +214,11 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               Deal Strategy &amp; Real Estate Execution | East Bay
             </div>
             <h1 className="font-serif-display max-w-[12ch] text-[clamp(2.9rem,5.8vw,6.25rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo [text-wrap:balance]">
-              Complex property. <span className="block italic text-[var(--accent-bright)]">Clear path forward.</span>
+              Complex property. <span className="block italic text-[var(--accent-bright)]">A clearer way out.</span>
             </h1>
             <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
             <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
-              Bring the property or the situation. Pegasus underwrites the numbers, reads the constraints, and puts the next step in plain language.
+              Bring the property, the deal, or the stuck situation. Pegasus reads the facts, underwrites the numbers, and puts the next responsible move in plain language.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
@@ -276,7 +291,7 @@ export function HomeIntro() {
           <div className="pg-label text-[var(--accent)]">Who we serve</div>
           <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
           <h2 className="font-serif-display text-5xl leading-[1.02] tracking-[0em] text-[var(--text)] md:text-7xl [text-wrap:balance]">
-            Serious help for every side of the property decision.
+            One firm. Different duties for different people.
           </h2>
         </div>
         <div className="reveal delay-100 lg:col-span-7">
@@ -293,7 +308,7 @@ export function HomeIntro() {
             ))}
           </div>
           <p className="mt-8 max-w-2xl text-[var(--muted)] leading-relaxed">
-            The public path is simple: bring the property or the situation, Pegasus reviews it, the numbers get underwritten, and the right lane is put in writing. No guaranteed offer. No pressure. No marketplace promise before the data and terms are real.
+            Clean sellers can request representation through Apollo at Keller Williams Realty East Bay. Complex owners, buyers, deal finders, and partners enter through the Pegasus operating lanes. The duty changes by lane; the standard stays disciplined.
           </p>
         </div>
       </div>

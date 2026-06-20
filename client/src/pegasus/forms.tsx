@@ -394,10 +394,10 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
     model.rehab > model.arv * 0.18 ? 'Scope is heavy relative to delivered value.' : 'Scope is proportionate to the projected exit.',
   ];
   const proofRail = [
-    { num: '01', label: 'Basis', note: 'Where the deal begins.' },
-    { num: '02', label: 'Scope', note: 'What the work may take.' },
-    { num: '03', label: 'Carry', note: 'What time costs.' },
-    { num: '04', label: 'Lane', note: 'How it should move.' },
+    { num: '01', label: 'Situation', note: 'Address, condition, timing, and pressure.' },
+    { num: '02', label: 'Basis', note: 'Acquisition, scope, carry, and exit cost.' },
+    { num: '03', label: 'Lane', note: 'List, buy, partner, route, or pass.' },
+    { num: '04', label: 'Review', note: 'A human read before any decision.' },
   ];
 
   return (
@@ -406,11 +406,16 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
         <div className="min-w-0 lg:col-span-5">
           <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
           <h1 className="strategy-command-title mt-5 max-w-[11ch] font-serif-display text-[clamp(3.35rem,6vw,6.65rem)] leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
-            Underwrite before you commit.
+            Read the deal before you commit.
           </h1>
           <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
-            Model basis, scope, carry, exit, and lane fit before the deal costs you real money. Use the Lab privately first. Send it for a human Property Read when the situation deserves a written answer.
+            Put the property through the same first-pass questions an operator asks: what is the situation, what are the numbers, what lane fits, and what needs a human review before anyone moves.
           </p>
+          <div className="strategy-command-note">
+            <span>Private orientation</span>
+            <span>No automated offer</span>
+            <span>No valuation or appraisal</span>
+          </div>
           <div className="strategy-command-actions">
             <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
               Run the Model <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
