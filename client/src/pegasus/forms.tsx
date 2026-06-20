@@ -374,6 +374,13 @@ function clampScore(v: number) {
 
 export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyModel }) {
   const [active, setActive] = useState<'spread' | 'lanes' | 'review'>('spread');
+  const jumpToConsole = () => {
+    const target = document.getElementById('strategy-console');
+    if (!target || typeof target.scrollIntoView !== 'function') return;
+    const reduceMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior = reduceMotion ? 'auto' : 'smooth';
+    target.scrollIntoView({ behavior, block: 'start' });
+  };
   const laneFit = [
     { label: 'Value-add rehab', score: clampScore(42 + model.margin * 2.6), note: 'Best when margin and scope still hold after carry.' },
     { label: 'As-is acquisition', score: clampScore(52 + (model.seventy - model.acq) / 12000), note: 'Depends on basis, access, title, and timeline.' },
@@ -386,36 +393,62 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
     model.holdMonths > 12 ? 'Longer hold period increases carry exposure.' : 'Hold period is inside a normal quick-turn window.',
     model.rehab > model.arv * 0.18 ? 'Scope is heavy relative to delivered value.' : 'Scope is proportionate to the projected exit.',
   ];
+  const proofRail = [
+    { num: '01', label: 'Basis', note: 'Where the deal begins.' },
+    { num: '02', label: 'Scope', note: 'What the work may take.' },
+    { num: '03', label: 'Carry', note: 'What time costs.' },
+    { num: '04', label: 'Lane', note: 'How it should move.' },
+  ];
 
   return (
-    <section className="strategy-command-section">
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
+    <section className="strategy-command-section" data-testid="strategy-lab-premium-hero">
+      <div className="strategy-command-shell mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
         <div className="min-w-0 lg:col-span-5">
-          <div className="pg-label text-[var(--accent-bright)]">Live strategy board</div>
-          <h2 className="mt-5 max-w-[10ch] font-serif-display text-[clamp(3rem,6vw,6rem)] leading-[0.98] text-[var(--cream)] [text-wrap:balance]">
-            The deal starts talking back.
-          </h2>
-          <p className="mt-6 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
-            Strategy Lab is not a promise engine. It is a disciplined first read: basis, spread, lane fit, risk, and the moment where automation should hand the file to a person.
+          <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
+          <h1 className="strategy-command-title mt-5 max-w-[11ch] font-serif-display text-[clamp(3.35rem,6vw,6.65rem)] leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
+            Underwrite before you commit.
+          </h1>
+          <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
+            Model basis, scope, carry, exit, and lane fit before the deal costs you real money. Use the Lab privately first. Send it for a human Property Read when the situation deserves a written answer.
           </p>
           <div className="strategy-command-actions">
-            <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+            <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+              Run the Model <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+            <button type="button" onClick={() => go('submit')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
               Submit for Property Read <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
-            <button type="button" onClick={() => go('connect')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Ask where this fits <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </button>
+          </div>
+          <div className="strategy-proof-rail" aria-label="Strategy Lab read sequence">
+            {proofRail.map((item) => (
+              <div key={item.num} className="strategy-proof-item">
+                <span>{item.num}</span>
+                <strong>{item.label}</strong>
+                <small>{item.note}</small>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="min-w-0 lg:col-span-7">
           <div className="strategy-command-board" data-testid="strategy-command-board">
-            <div className="strategy-command-photo" aria-hidden="true">
-              <img src={IMG('nelson/nelson-kitchen-1280.jpg')} alt="" />
+            <div className="strategy-etching" aria-hidden="true">
+              <svg viewBox="0 0 820 560" fill="none" preserveAspectRatio="xMidYMid slice">
+                <path d="M90 410H730M132 115H690M164 116V410M658 116V410" />
+                <path d="M205 178L410 84L615 178V410H205V178Z" />
+                <path d="M262 410V250H366V410M454 410V250H558V410M250 205H570" />
+                <path d="M92 410L134 474H686L728 410M164 116L128 82M658 116L694 82" />
+                <circle cx="190" cy="178" r="36" />
+                <circle cx="630" cy="178" r="36" />
+                <circle cx="410" cy="84" r="30" />
+                <path d="M115 492H706M150 520H670" />
+                <path d="M110 146H52M110 214H72M110 282H52M110 350H72" />
+                <path d="M710 146H768M710 214H748M710 282H768M710 350H748" />
+              </svg>
             </div>
             <div className="strategy-command-top">
               <div>
-                <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Current model</div>
+                <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Live underwriting read</div>
                 <div className="mt-2 font-serif-display text-3xl text-[var(--cream)]">{model.read.label}</div>
               </div>
               <div className="strategy-score-dial" aria-label={`Fit score ${clampScore(model.margin * 3 + 48)} out of 100`}>
@@ -525,6 +558,11 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
                   </p>
                 </>
               )}
+            </div>
+            <div className="strategy-command-foot">
+              <span>Orientation only</span>
+              <span>No offer. No valuation.</span>
+              <span>Human review before action.</span>
             </div>
           </div>
         </div>

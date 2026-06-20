@@ -377,17 +377,14 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
   const model = useStrategyModel();
   return (
     <>
-      <PageHero eyebrow="Systems · Strategy Lab"
-        title={<>Model it. Read it. <span className="italic text-[var(--accent-bright)]">Get it in writing.</span></>}
-        image={IMG('pegasus-living.png')}
-        scrimTop
-        lead="A real underwriting console, free to start. Enter a property and the Lab scores the fit, models the spread with carry and exit costs in real time, and hands you a written read when you want one. Built for investors, agents, and owners sizing up a deal." />
       <StrategyCommandBoard go={go} model={model} />
       <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
         copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
         steps={LAB_STEPS} />
       <LabPreview />
-      <StrategyConsole go={go} model={model} />
+      <div id="strategy-console" className="scroll-mt-24">
+        <StrategyConsole go={go} model={model} />
+      </div>
       <StrategyCalculator go={go} model={model} />
       <StrategyTierStrip />
       <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Property Read" tone="navy" strategy={model.snapshot} />
