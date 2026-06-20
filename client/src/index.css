@@ -1,4 +1,4 @@
-/* Fonts loaded via <link> in client/index.html (subset to weights actually used). */
+/* Fonts are bundled locally through @fontsource in client/src/main.tsx. */
 
 @tailwind base;
 @tailwind components;
@@ -76,10 +76,11 @@
   --chart-5: 26 50% 38%;
   /* Brand typography (restored pre-v4 stack):
      Cormorant Garamond = display/serif · Space Grotesk = sans/body/supporting. */
-  --font-sans: 'Space Grotesk', system-ui, sans-serif;
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-supporting: 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-supporting: 'Inter', system-ui, sans-serif;
+  --font-label: 'Cinzel', 'Inter', serif;
   --font-mono: Menlo, monospace;
   --radius: .375rem;
   --shadow-2xs: 0 1px 2px 0 hsl(214 55% 11% / 0.04);
@@ -128,10 +129,10 @@
   --pd-charcoal: #1b1712;
   --pd-rule: #e2d6bf;
   --pd-muted: #4a4236;
-  --pd-font-display: "Cormorant Garamond", serif;
-  --pd-font-serif: "Cormorant Garamond", serif;
-  --pd-font-supporting: "Space Grotesk", system-ui, sans-serif;
-  --pd-font-sans: "Space Grotesk", system-ui, sans-serif;
+  --pd-font-display: "Playfair Display", Georgia, serif;
+  --pd-font-serif: "Playfair Display", Georgia, serif;
+  --pd-font-supporting: "Inter", system-ui, sans-serif;
+  --pd-font-sans: "Inter", system-ui, sans-serif;
 }
 
 /* DARK MODE — Deep Navy bg with Warm Cream type, Rich Copper accents */
@@ -737,7 +738,7 @@ html {
   [data-testid="card-invest-action"] { display: none !important; }
   @page { margin: 2cm; size: letter; }
   body::before {
-    content: "Pegasus DreamScapes Corp — Investment Summary";
+    content: "Pegasus Dreamscapes Corp - Investment Summary";
     display: block;
     font-size: 10pt;
     color: #666 !important;

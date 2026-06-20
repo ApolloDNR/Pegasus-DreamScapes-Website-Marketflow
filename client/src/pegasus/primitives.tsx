@@ -6,7 +6,7 @@ import brandEmblem from '@/assets/brand/pegasus-emblem.png';
 export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
 
 /* ----------------------------------------------------------------
-   Brand mark — the official Pegasus DreamScapes emblem (navy winged
+   Brand mark — the official Pegasus Dreamscapes emblem (navy winged
    Pegasus over the house roof), used as a transparent PNG so the real
    logo shows consistently across every public surface. On dark
    backgrounds (onDark) a soft glow keeps the navy elements legible
@@ -16,7 +16,7 @@ export function BrandMark({ boxClassName = 'w-11 h-11', onDark = false, classNam
   { boxClassName?: string; onDark?: boolean; className?: string }) {
   return (
     <span className={`inline-flex items-center justify-center shrink-0 ${boxClassName} ${className}`}>
-      <img src={brandEmblem} alt="Pegasus DreamScapes"
+      <img src={brandEmblem} alt="Pegasus Dreamscapes"
         className="w-full h-full object-contain"
         style={onDark ? { filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.55))' } : undefined} />
     </span>

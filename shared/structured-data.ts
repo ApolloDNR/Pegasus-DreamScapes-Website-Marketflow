@@ -35,8 +35,8 @@ function organizationNode(): Record<string, unknown> {
   return {
     "@type": "Organization",
     "@id": ORG_ID,
-    name: "Pegasus DreamScapes Corp.",
-    alternateName: "Pegasus DreamScapes",
+    name: "Pegasus Dreamscapes Corp.",
+    alternateName: "Pegasus Dreamscapes",
     url: SITE_URL,
     logo: LOGO_URL,
     image: DEFAULT_IMAGE,
@@ -58,8 +58,8 @@ function realEstateAgentNode(): Record<string, unknown> {
   return {
     "@type": "RealEstateAgent",
     "@id": ORG_ID,
-    name: "Pegasus DreamScapes Corp.",
-    alternateName: "Pegasus DreamScapes",
+    name: "Pegasus Dreamscapes Corp.",
+    alternateName: "Pegasus Dreamscapes",
     url: SITE_URL,
     logo: LOGO_URL,
     image: DEFAULT_IMAGE,

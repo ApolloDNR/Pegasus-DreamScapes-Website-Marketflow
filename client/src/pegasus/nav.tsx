@@ -55,7 +55,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
         <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5">
           <BrandMark boxClassName="w-12 h-12" onDark={overHero || theme === 'dark'} />
           <div className="hidden sm:flex flex-col leading-none text-left">
-            <span className="font-serif-display text-[22px] tracking-[0.06em] leading-none">Pegasus DreamScapes</span>
+            <span className="font-serif-display text-[22px] tracking-[0.06em] leading-none">Pegasus Dreamscapes</span>
             <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
           </div>
         </button>

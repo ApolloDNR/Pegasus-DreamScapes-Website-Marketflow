@@ -57,7 +57,7 @@ const APOLLO_REP = {
 };
 
 const APOLLO_DISCLOSURE =
-  'Paolo “Apollo” Duran · Licensed California real estate salesperson · DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus DreamScapes is not a licensed brokerage; agency representation is provided through Keller Williams Realty East Bay. This page is not a listing or buyer-representation agreement.';
+  'Paolo “Apollo” Duran · Licensed California real estate salesperson · DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus Dreamscapes is not a licensed brokerage; agency representation is provided through Keller Williams Realty East Bay. This page is not a listing or buyer-representation agreement.';
 
 /* ================================================================
    HOME
@@ -68,11 +68,7 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
     <>
       <Hero go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />
       <HomeIntro />
-      <ProofStats />
       <HowADealMovesBlock />
-      <ParticipationLanesBlock />
-      <LaneCardsBlock go={go} />
-      <ProductLadderBlock go={go} openPeggy={openPeggy} />
       <StrategyLabFeature go={go} />
       <NelsonProof go={go} />
       <ApolloBlock go={go} portrait={false} />
@@ -580,7 +576,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       <PageHero eyebrow="What we do · Representation"
         title={<>Represent with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
         image={IMG('pegasus-craft-blueprint.png')}
-        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay (DRE #02333658), backed by the full Pegasus standard. Pegasus DreamScapes is not a brokerage." />
+        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay (DRE #02333658), backed by the full Pegasus standard. Pegasus Dreamscapes is not a brokerage." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -744,7 +740,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
       <PageHero eyebrow="The Firm"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">strategy.</span></>}
         image={IMG('hero/luxury-home-1280.jpg')}
-        lead="Pegasus DreamScapes is a real estate investment, development, and systems company in the East Bay. One firm that reads the situation, underwrites the numbers, builds the work, and sees a deal through, instead of handing you off." />
+        lead="Pegasus Dreamscapes is a real estate investment, development, and systems company in the East Bay. One firm that reads the situation, underwrites the numbers, builds the work, and sees a deal through, instead of handing you off." />
       <ApolloBlock go={go} showCta={false} />
       <DoctrineBlock dark />
       <ProofStats />
@@ -796,7 +792,7 @@ export function Footer({ go }: { go: Nav }) {
             <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
               <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
-                <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus DreamScapes</span>
+                <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus Dreamscapes</span>
                 <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
               </div>
             </button>
@@ -831,10 +827,10 @@ export function Footer({ go }: { go: Nav }) {
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
           <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus DreamScapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay — each office independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
+            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus Dreamscapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay — each office independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
-            <span>© {new Date().getFullYear()} Pegasus DreamScapes Corp. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.</span>
             <span>NAR · CAR · Equal Housing Opportunity</span>
           </div>
         </div>

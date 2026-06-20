@@ -1,5 +1,5 @@
 /* ============================================================
-   Pegasus DreamScapes — Editorial Estate
+   Pegasus Dreamscapes — Editorial Estate
    Themeable design system (light / dark), brand: navy + copper
    ============================================================ */
 
@@ -29,7 +29,11 @@
   color-scheme: dark;
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  --pg-font-display: 'Playfair Display', Georgia, serif;
+  --pg-font-ui: 'Inter', system-ui, sans-serif;
+  --pg-font-label: 'Cinzel', 'Inter', serif;
+
+  font-family: var(--pg-font-ui);
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
@@ -60,14 +64,14 @@
 }
 
 .font-serif-display {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--pg-font-display);
 }
 
 /* Editorial eyebrow label */
 .pg-label {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.18em;
   font-size: 11px;
   font-weight: 500;
 }
@@ -80,7 +84,7 @@
 
 /* Oversized illustrative section numeral */
 .section-numeral {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--pg-font-display);
   font-weight: 300;
   line-height: 0.78;
   letter-spacing: -0.02em;
@@ -303,7 +307,7 @@
   height: 20px;
 }
 .nav-dropdown-head {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 9px;
@@ -325,14 +329,14 @@
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 .nav-dropdown-item .nav-dd-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--pg-font-display);
   font-size: 1.3rem;
   line-height: 1.02;
   letter-spacing: 0.01em;
   transition: color 0.2s ease;
 }
 .nav-dropdown-item .nav-dd-desc {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-ui);
   font-size: 0.72rem;
   line-height: 1.32;
   letter-spacing: 0.005em;
@@ -375,7 +379,7 @@ body.pg-menu-open { overflow: hidden; }
   align-items: center;
   justify-content: space-between;
   padding: 17px 2px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 11px;
@@ -390,7 +394,7 @@ body.pg-menu-open { overflow: hidden; }
   padding: 12px 6px;
   border: 1px solid var(--line);
   border-radius: 2px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 9.5px;
@@ -421,7 +425,7 @@ body.pg-menu-open { overflow: hidden; }
   text-align: left;
   padding: 10px 0 10px 16px;
   border-left: 2px solid var(--line);
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--pg-font-display);
   font-size: 1.5rem;
   line-height: 1.12;
   color: var(--text);
@@ -435,7 +439,7 @@ body.pg-menu-open { overflow: hidden; }
 }
 .nav-m-acc-item .nav-m-acc-desc {
   display: block;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-ui);
   font-size: 0.74rem;
   letter-spacing: 0.005em;
   color: var(--text);
@@ -472,6 +476,305 @@ body.pg-menu-open { overflow: hidden; }
   transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hero-cta:hover::after { transform: scaleX(1); }
+
+.hero-estate-shell {
+  background:
+    radial-gradient(circle at 75% 35%, rgba(200, 122, 58, 0.12), transparent 34%),
+    linear-gradient(135deg, #07111d 0%, #0d1b2a 45%, #102238 100%);
+}
+
+.hero-estate-shell::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 135, 46, 0.42), rgba(245, 230, 211, 0.18), transparent);
+}
+
+.hero-signal-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 2.25rem;
+  border-top: 1px solid rgba(245, 230, 211, 0.18);
+  border-bottom: 1px solid rgba(245, 230, 211, 0.12);
+}
+
+.hero-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 4.5rem;
+  padding: 1rem 1.5rem 1rem 0;
+  margin-right: 1.5rem;
+  color: rgba(245, 230, 211, 0.82);
+  border-right: 1px solid rgba(212, 135, 46, 0.28);
+  font-family: var(--pg-font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.hero-signal svg {
+  color: var(--accent-bright);
+  flex: 0 0 auto;
+}
+
+.hero-workboard {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 34rem;
+  overflow: hidden;
+  border: 1px solid rgba(212, 135, 46, 0.28);
+  border-radius: 3px;
+  background: rgba(7, 17, 29, 0.72);
+  box-shadow: 0 32px 80px -38px rgba(0, 0, 0, 0.78), inset 0 0 0 1px rgba(245, 230, 211, 0.04);
+  isolation: isolate;
+}
+
+.hero-workboard::before {
+  content: '';
+  position: absolute;
+  inset: 1.1rem;
+  border: 1px solid rgba(212, 135, 46, 0.16);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hero-workboard-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.hero-workboard-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.2;
+  filter: saturate(0.85) contrast(1.08);
+  transform: scale(1.04);
+}
+
+.hero-workboard-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(7, 17, 29, 0.94), rgba(7, 17, 29, 0.66)),
+    radial-gradient(circle at 70% 28%, rgba(212, 135, 46, 0.12), transparent 34%);
+}
+
+.hero-workboard-contours {
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  height: 52%;
+  color: var(--accent-2);
+  opacity: 0.12;
+  z-index: -1;
+}
+
+.hero-workboard-inner {
+  position: relative;
+  z-index: 3;
+  padding: clamp(1.4rem, 3vw, 2.5rem);
+}
+
+.hero-step-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 1.75rem;
+  background: rgba(245, 230, 211, 0.1);
+}
+
+.hero-step {
+  min-height: 12rem;
+  padding: 1.15rem;
+  background: rgba(7, 17, 29, 0.72);
+}
+
+.hero-step-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(212, 135, 46, 0.42);
+  color: var(--accent-bright);
+  background: rgba(212, 135, 46, 0.08);
+}
+
+.hero-step p {
+  margin-top: 0.75rem;
+  color: rgba(245, 230, 211, 0.6);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.hero-lane-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.5rem;
+  align-items: end;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(245, 230, 211, 0.14);
+}
+
+.hero-lane-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(4.75rem, 1fr));
+  gap: 0.5rem;
+}
+
+.hero-lane-switcher button {
+  min-height: 2.65rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(245, 230, 211, 0.18);
+  color: rgba(245, 230, 211, 0.68);
+  background: rgba(245, 230, 211, 0.04);
+  font-family: var(--pg-font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: border-color 0.28s ease, color 0.28s ease, background-color 0.28s ease, transform 0.28s ease;
+}
+
+.hero-lane-switcher button:hover,
+.hero-lane-switcher button:focus-visible,
+.hero-lane-switcher button.is-active {
+  border-color: rgba(212, 135, 46, 0.68);
+  color: var(--accent-bright);
+  background: rgba(212, 135, 46, 0.12);
+  transform: translateY(-1px);
+}
+
+.hero-workboard-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+  color: var(--accent-bright);
+  font-family: var(--pg-font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.home-intro-section {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(212, 135, 46, 0.08), transparent 28%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+}
+
+.home-lane-ledger {
+  border-top: 1px solid var(--line);
+}
+
+.home-lane-row {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+  gap: 1.4rem;
+  align-items: center;
+  min-height: 7.2rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.home-lane-row:hover,
+.home-lane-row:focus-visible {
+  background: rgba(212, 135, 46, 0.06);
+}
+
+.home-lane-num {
+  color: var(--accent);
+  font-family: var(--pg-font-display);
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.home-lane-title,
+.home-lane-desc {
+  display: block;
+}
+
+.home-lane-title {
+  color: var(--text);
+  font-family: var(--pg-font-display);
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  line-height: 1.05;
+}
+
+.home-lane-desc {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.home-lane-arrow {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--accent);
+  transition: transform 0.3s ease;
+}
+
+.home-lane-row:hover .home-lane-arrow,
+.home-lane-row:focus-visible .home-lane-arrow {
+  transform: translate(2px, -2px);
+}
+
+@media (max-width: 1023px) {
+  .hero-workboard {
+    min-height: auto;
+  }
+
+  .hero-step-grid,
+  .hero-lane-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-step {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-signal-rail {
+    border-bottom: 0;
+  }
+
+  .hero-signal {
+    flex: 1 1 50%;
+    width: auto;
+    min-width: 0;
+    min-height: 3.5rem;
+    margin-right: 0;
+    padding: 0.9rem 0.65rem 0.9rem 0;
+    font-size: 0.58rem;
+  }
+
+  .hero-lane-switcher {
+    grid-template-columns: 1fr;
+  }
+
+  .home-lane-row {
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.25rem 0;
+  }
+
+  .home-lane-arrow {
+    grid-column: 2;
+  }
+}
 
 /* ---- Surface card ---- */
 .surface-card {
@@ -644,7 +947,7 @@ body.pg-menu-open { overflow: hidden; }
   position: absolute;
   top: 18px;
   z-index: 15;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 9px;
@@ -662,7 +965,7 @@ body.pg-menu-open { overflow: hidden; }
   border: 0;
   border-bottom: 1px solid var(--line);
   padding: 12px 2px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-ui);
   font-size: 0.95rem;
   color: var(--text);
   transition: border-color 0.35s ease;
@@ -678,7 +981,7 @@ select.pg-field option { color: #1b1712; }
 .calc-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .calc-num { -moz-appearance: textfield; appearance: textfield; }
 .pg-field-label {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: 9px;
@@ -755,7 +1058,7 @@ select.pg-field option { color: #1b1712; }
   box-shadow: 0 14px 34px -12px rgba(13, 27, 44, 0.7);
 }
 .peggy-fab-label {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: 10px;
@@ -868,7 +1171,7 @@ select.pg-field option { color: #1b1712; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-label);
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -888,7 +1191,7 @@ select.pg-field option { color: #1b1712; }
 }
 .peggy-action.is-ghost:hover { border-color: var(--accent-bright); box-shadow: none; }
 .peggy-chip {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-ui);
   font-size: 0.78rem;
   color: var(--cream);
   background: rgba(239, 231, 218, 0.06);
@@ -921,7 +1224,7 @@ select.pg-field option { color: #1b1712; }
   border: 0;
   outline: none;
   color: var(--cream);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--pg-font-ui);
   font-size: 0.88rem;
   padding: 8px 0;
 }
@@ -1061,7 +1364,7 @@ select.pg-field option { color: #1b1712; }
 
 /* Refined editorial type: ligatures + kerning on the display serif */
 .font-serif-display {
-  font-feature-settings: 'liga' 1, 'dlig' 1, 'kern' 1;
+  font-feature-settings: 'liga' 1, 'kern' 1;
 }
 
 /* Brand text selection */

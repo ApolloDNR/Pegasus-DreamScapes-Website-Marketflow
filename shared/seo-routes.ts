@@ -15,7 +15,7 @@ export interface SeoRoute {
   type?: "website" | "article";
 }
 
-export const BRAND = "Pegasus DreamScapes";
+export const BRAND = "Pegasus Dreamscapes";
 const tag = (page: string) => `${page} · ${BRAND}`;
 
 export const SITE_URL = "https://pegasusdreamscapes.com";
@@ -102,7 +102,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/marketflow/access": {
     title: tag("Request MarketFlow Access"),
     description:
-      "Request access to MarketFlow, the private deal network for Pegasus DreamScapes. Membership is reviewed by a person, not opened to everyone.",
+      "Request access to MarketFlow, the private deal network for Pegasus Dreamscapes. Membership is reviewed by a person, not opened to everyone.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/marketflow/buyboxes": {
@@ -140,7 +140,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/projects": {
     title: tag("Projects"),
     description:
-      "Selected case studies from the Pegasus DreamScapes portfolio: real before and after, with the numbers and the process behind each one.",
+      "Selected case studies from the Pegasus Dreamscapes portfolio: real before and after, with the numbers and the process behind each one.",
     image: `${SITE_URL}/og/projects.png`,
   },
   "/projects/nelson-dr": {
@@ -153,19 +153,19 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/connect": {
     title: tag("Connect"),
     description:
-      "Apollo's direct routing: property, build, sell, capital, vendor, or just a conversation. Reach Pegasus DreamScapes in the East Bay.",
+      "Apollo's direct routing: property, build, sell, capital, vendor, or just a conversation. Reach Pegasus Dreamscapes in the East Bay.",
     image: `${SITE_URL}/og/connect.png`,
   },
   "/contact": {
     title: tag("Contact"),
     description:
-      "Tell us about the property or the situation and get a clear, written read from our team. Reach Pegasus DreamScapes in the East Bay.",
+      "Tell us about the property or the situation and get a clear, written read from our team. Reach Pegasus Dreamscapes in the East Bay.",
     image: `${SITE_URL}/og/contact.png`,
   },
   "/submit": {
     title: tag("Submit a Property"),
     description:
-      "Submit a property or a deal to Pegasus DreamScapes. Every serious submission gets a real read and a clear path forward. No pressure.",
+      "Submit a property or a deal to Pegasus Dreamscapes. Every serious submission gets a real read and a clear path forward. No pressure.",
     image: `${SITE_URL}/og/submit.png`,
   },
   "/deal-blueprint": {
@@ -185,32 +185,32 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/vendor-network": {
     title: tag("Vendor Network"),
     description:
-      "Apply to the private Pegasus DreamScapes vendor network: vetted contractors, lenders, agents, and operators routed to active deal flow.",
+      "Apply to the private Pegasus Dreamscapes vendor network: vetted contractors, lenders, agents, and operators routed to active deal flow.",
     image: `${SITE_URL}/og/vendor-network.png`,
   },
   "/disclosures": {
     title: tag("Disclosures"),
     description:
-      "Disclosures for Pegasus DreamScapes Corp. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.",
+      "Disclosures for Pegasus Dreamscapes Corp. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.",
     image: `${SITE_URL}/og/disclosures.png`,
   },
   "/privacy": {
     title: tag("Privacy"),
     description:
-      "Privacy notice for Pegasus DreamScapes Corp: what we collect, how we use it, and how to reach us. Draft pending qualified legal review.",
+      "Privacy notice for Pegasus Dreamscapes Corp: what we collect, how we use it, and how to reach us. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/privacy.png`,
   },
   "/terms": {
     title: tag("Terms"),
     description:
-      "Terms of use for the Pegasus DreamScapes website, Strategy Review intake, and MarketFlow access. Draft pending qualified legal review.",
+      "Terms of use for the Pegasus Dreamscapes website, Strategy Review intake, and MarketFlow access. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/terms.png`,
   },
 
   "/faq": {
     title: tag("FAQ"),
     description:
-      "Straight answers on submitting a property, working with Pegasus DreamScapes, the MarketFlow network, and Buyboxes — fees, timing, and how reviews work.",
+      "Straight answers on submitting a property, working with Pegasus Dreamscapes, the MarketFlow network, and Buyboxes — fees, timing, and how reviews work.",
     image: DEFAULT_OG_IMAGE,
   },
 };

@@ -85,7 +85,7 @@ export default function SubmitPage() {
   useSEO({
     title: "Submit a Property",
     description:
-      "Submit a property to Pegasus DreamScapes. Every property gets a path. Our team reviews every serious submission. No pressure.",
+      "Submit a property to Pegasus Dreamscapes. Every property gets a path. Our team reviews every serious submission. No pressure.",
     image: "/og/submit.png",
   });
 
@@ -456,7 +456,7 @@ export default function SubmitPage() {
                     </FormControl>
                     <div className="space-y-1 leading-snug">
                       <FormLabel className="text-sm font-normal text-foreground">
-                        I understand Pegasus DreamScapes will review this submission and may
+                        I understand Pegasus Dreamscapes will review this submission and may
                         contact me by phone, text, or email about the property. I understand the
                         review is preliminary, is not an offer, and does not commit Pegasus or me
                         to a transaction. I can withdraw at any time.

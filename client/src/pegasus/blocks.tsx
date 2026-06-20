@@ -28,6 +28,86 @@ function Ico({ name, className, strokeWidth = 1.5 }: { name: string; className?:
 
 export type StartAction = 'contact' | 'strategylab' | 'peggy';
 
+const HERO_SIGNALS = [
+  { icon: 'compass', label: 'Disciplined strategy' },
+  { icon: 'calculator', label: 'Real underwriting' },
+  { icon: 'shield', label: 'Operator integrity' },
+  { icon: 'route', label: 'Aligned next step' },
+];
+
+const HERO_STEPS = [
+  { n: '01', icon: 'home', title: 'Situation', desc: 'Property, pressure, owner goal, and constraints.' },
+  { n: '02', icon: 'calculator', title: 'Underwrite', desc: 'Basis, scope, carry, risk, and realistic exit.' },
+  { n: '03', icon: 'layers', title: 'Structure', desc: 'List, buy, partner, route, or pass with a reason.' },
+];
+
+const HERO_LANES = [
+  { key: 'list', title: 'List', desc: 'For clean listings where Apollo represents through KW East Bay.' },
+  { key: 'buy', title: 'Buy', desc: 'For as-is situations that fit the numbers and written terms.' },
+  { key: 'partner', title: 'Partner', desc: 'For deals where shared execution creates the cleaner outcome.' },
+  { key: 'route', title: 'Route', desc: 'For opportunities better matched to a vetted buyer or network lane.' },
+];
+
+function HeroWorkboard({ go }: { go: Nav }) {
+  const [activeLane, setActiveLane] = useState(HERO_LANES[2].key);
+  const active = HERO_LANES.find((lane) => lane.key === activeLane) ?? HERO_LANES[0];
+
+  return (
+      <div className="hero-workboard reveal delay-200" data-testid="hero-workboard">
+      <div className="hero-workboard-photo" aria-hidden="true">
+        <img src={IMG('nelson/nelson-kitchen-1280.jpg')} alt="" />
+      </div>
+      <ContourLines className="hero-workboard-contours" />
+      <div className="hero-workboard-inner">
+        <div className="flex items-center justify-between gap-5 border-b border-[rgba(245,230,211,0.16)] pb-5">
+          <div>
+            <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Pegasus property read</div>
+            <div className="mt-2 font-serif-display text-2xl text-[var(--cream)]">Route the right path.</div>
+          </div>
+          <BrandMark boxClassName="w-12 h-12" onDark />
+        </div>
+
+        <ol className="hero-step-grid" aria-label="Pegasus review path">
+          {HERO_STEPS.map((step) => (
+            <li key={step.n} className="hero-step">
+              <div className="hero-step-node">
+                <Ico name={step.icon} className="h-4 w-4" />
+              </div>
+              <div className="pg-label !text-[8px] text-[var(--accent-bright)]">{step.n} / {step.title}</div>
+              <p>{step.desc}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div className="hero-lane-panel">
+          <div>
+            <div className="pg-label !text-[8px] text-[var(--cream)]/45">Participation lane</div>
+            <div className="mt-2 font-serif-display text-3xl text-[var(--cream)]">{active.title}</div>
+            <p className="mt-2 text-[0.9rem] leading-relaxed text-[rgba(245,230,211,0.64)]">{active.desc}</p>
+          </div>
+          <div className="hero-lane-switcher" aria-label="Participation lanes">
+            {HERO_LANES.map((lane) => (
+              <button
+                key={lane.key}
+                type="button"
+                aria-pressed={activeLane === lane.key}
+                onClick={() => setActiveLane(lane.key)}
+                className={activeLane === lane.key ? 'is-active' : ''}
+              >
+                {lane.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button type="button" onClick={() => go('strategylab')} className="hero-workboard-link group">
+          Open the Strategy Lab <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ----------------------------------------------------------------
    Page hero
 ---------------------------------------------------------------- */
@@ -51,15 +131,16 @@ export function PageHero({ eyebrow, title, image, lead, focus = 'center', scrimT
 /* ----------------------------------------------------------------
    Home hero
 ---------------------------------------------------------------- */
-export function Hero({ go, theme, parallaxRef, openPeggy }:
+export function LegacyHero({ go, theme, parallaxRef, openPeggy }:
   { go: Nav; theme: Theme; parallaxRef: React.RefObject<HTMLDivElement | null>; openPeggy: () => void }) {
   return (
-    <section className="relative h-[96vh] min-h-[680px] max-h-[1000px] w-full overflow-hidden">
+    <section className="hero-estate-shell relative min-h-[clamp(760px,100vh,980px)] w-full overflow-hidden">
       <div ref={parallaxRef as React.RefObject<HTMLDivElement>} className="hero-parallax absolute inset-0">
         <img key={theme} src={IMG(theme === 'dark' ? 'pegasus-hero-cinematic.png' : 'pegasus-hero-light.png')}
           alt="East Bay luxury hillside home" className="ken-burns absolute inset-0 w-full h-full object-cover" />
       </div>
       <div className="absolute inset-0 hero-vignette pointer-events-none" />
+      <div className="absolute inset-0 hero-scrim-top pointer-events-none" />
       <div className="absolute inset-0 hero-scrim-bottom" />
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
@@ -95,10 +176,73 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
   );
 }
 
+export function Hero({ go, theme, parallaxRef, openPeggy }:
+  { go: Nav; theme: Theme; parallaxRef: React.RefObject<HTMLDivElement | null>; openPeggy: () => void }) {
+  return (
+    <section className="hero-estate-shell relative min-h-[clamp(760px,100vh,980px)] w-full overflow-hidden">
+      <div ref={parallaxRef as React.RefObject<HTMLDivElement>} className="hero-parallax absolute inset-0">
+        <img
+          key={theme}
+          src={IMG(theme === 'dark' ? 'pegasus-hero-cinematic.png' : 'pegasus-hero-light.png')}
+          alt="East Bay luxury hillside home"
+          className="ken-burns absolute inset-0 h-full w-full object-cover"
+        />
+      </div>
+      <div className="absolute inset-0 hero-vignette pointer-events-none" />
+      <div className="absolute inset-0 hero-scrim-top pointer-events-none" />
+      <div className="absolute inset-0 hero-scrim-bottom" />
+
+      <div className="relative mx-auto max-w-[1440px] px-6 pb-20 pt-32 text-[var(--cream)] lg:px-12 lg:pb-24 lg:pt-36">
+        <div className="grid min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-center gap-12 lg:grid-cols-12 xl:gap-16">
+          <div className="min-w-0 lg:col-span-6 xl:col-span-5">
+            <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo reveal !tracking-[0.22em]">
+              Deal Strategy &amp; Real Estate Execution | East Bay
+            </div>
+            <h1 className="font-serif-display max-w-[11ch] text-[clamp(3rem,6.8vw,7rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo reveal delay-100 [text-wrap:balance]">
+              Complex property. <span className="italic text-[var(--accent-bright)]">Clear path forward.</span>
+            </h1>
+            <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
+            <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo reveal delay-200 md:text-[1.15rem]">
+              Pegasus Dreamscapes reviews property situations, underwrites the numbers, and routes the right next step: list, buy, partner, or prepare for private network review.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4 reveal delay-300">
+              <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+                Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              </button>
+              <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+                Strategy Lab <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              </button>
+              <button type="button" onClick={openPeggy} className="link-underline inline-flex items-center gap-2.5 text-[var(--cream)]/76 transition-colors hover:text-[var(--cream)] pg-label !text-[10px] !tracking-[0.14em]">
+                Talk to PeggyAI
+              </button>
+            </div>
+            <div className="hero-signal-rail reveal delay-400" aria-label="Pegasus operating signals">
+              {HERO_SIGNALS.map((signal) => (
+                <div key={signal.label} className="hero-signal">
+                  <Ico name={signal.icon} className="h-4 w-4" />
+                  <span>{signal.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="min-w-0 lg:col-span-6 xl:col-span-7">
+            <HeroWorkboard go={go} />
+          </div>
+        </div>
+      </div>
+
+      <div aria-hidden="true" className="absolute bottom-7 left-1/2 -translate-x-1/2 text-[var(--cream)]/80 scroll-cue">
+        <ChevronDown className="h-6 w-6" />
+      </div>
+    </section>
+  );
+}
+
 /* ----------------------------------------------------------------
    Home business intro
 ---------------------------------------------------------------- */
-export function HomeIntro() {
+export function LegacyHomeIntro() {
   return (
     <section className="py-20 lg:py-28">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
@@ -124,6 +268,39 @@ export function HomeIntro() {
    Dispositions → Asset Management) + two supporting pillars.
    Shows structure, not headcount.
 ---------------------------------------------------------------- */
+export function HomeIntro() {
+  return (
+    <section className="home-intro-section border-t border-[rgba(245,230,211,0.12)] py-24 lg:py-32">
+      <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-6 lg:grid-cols-12 lg:px-12 xl:gap-16">
+        <div className="reveal lg:col-span-5">
+          <div className="pg-label text-[var(--accent)]">Who we serve</div>
+          <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
+          <h2 className="font-serif-display text-5xl leading-[1.02] tracking-[0em] text-[var(--text)] md:text-7xl [text-wrap:balance]">
+            Serious help for every side of the property decision.
+          </h2>
+        </div>
+        <div className="reveal delay-100 lg:col-span-7">
+          <div className="home-lane-ledger">
+            {PARTICIPATION_LANES.map((lane, i) => (
+              <a key={lane.key} href={lane.href} className="home-lane-row group">
+                <span className="home-lane-num">{String(i + 1).padStart(2, '0')}</span>
+                <span>
+                  <span className="home-lane-title">{lane.title}</span>
+                  <span className="home-lane-desc">{lane.desc}</span>
+                </span>
+                <ArrowUpRight className="home-lane-arrow" />
+              </a>
+            ))}
+          </div>
+          <p className="mt-8 max-w-2xl text-[var(--muted)] leading-relaxed">
+            The public path is simple: bring the property or the situation, Pegasus reviews it, the numbers get underwritten, and the right lane is put in writing. No guaranteed offer. No pressure. No marketplace promise before the data and terms are real.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HowADealMovesBlock() {
   const last = DEPARTMENTS.length - 1;
   return (
@@ -286,7 +463,7 @@ export function ParticipationLanesBlock() {
           ))}
         </div>
         <p className="mt-7 max-w-3xl text-[0.82rem] leading-relaxed text-[var(--muted)]">
-          Brokerage services are provided by Apollo through Keller Williams Realty East Bay. Pegasus DreamScapes is not a licensed brokerage; complex property reviews, acquisitions, JV routes, and MarketFlow participation are separate from agency representation and subject to written terms.
+          Brokerage services are provided by Apollo through Keller Williams Realty East Bay. Pegasus Dreamscapes is not a licensed brokerage; complex property reviews, acquisitions, JV routes, and MarketFlow participation are separate from agency representation and subject to written terms.
         </p>
       </div>
     </section>

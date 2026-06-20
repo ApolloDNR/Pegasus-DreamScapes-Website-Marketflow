@@ -10,14 +10,14 @@ interface SEOProps {
 }
 
 // Empire Doctrine v1.0.1 — Wave 4 title pattern:
-//   [Page] · Pegasus DreamScapes
+//   [Page] · Pegasus Dreamscapes
 // Tagline is dropped from per-page titles so they stay under the
 // 60-character SERP truncation limit. The home (no `title` passed)
 // still renders the brand + tagline as the bare-document title.
-const BRAND = "Pegasus DreamScapes";
+const BRAND = "Pegasus Dreamscapes";
 const BASE_TITLE = BRAND;
 const BASE_DESCRIPTION =
-  "Pegasus DreamScapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
+  "Pegasus Dreamscapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
 const SITE_URL = "https://pegasusdreamscapes.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 
