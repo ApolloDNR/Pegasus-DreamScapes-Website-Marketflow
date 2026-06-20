@@ -53,7 +53,7 @@ function HeroWorkboard({ go }: { go: Nav }) {
   const active = HERO_LANES.find((lane) => lane.key === activeLane) ?? HERO_LANES[0];
 
   return (
-      <div className="hero-workboard" data-testid="hero-workboard">
+    <div className="hero-workboard" data-testid="hero-workboard">
       <div className="hero-workboard-photo" aria-hidden="true">
         <img src={IMG('nelson/nelson-kitchen-1280.jpg')} alt="" />
       </div>
@@ -198,12 +198,12 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
             <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo !tracking-[0.22em]">
               Deal Strategy &amp; Real Estate Execution | East Bay
             </div>
-            <h1 className="font-serif-display max-w-[11ch] text-[clamp(3rem,6.8vw,7rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo [text-wrap:balance]">
-              Complex property. <span className="italic text-[var(--accent-bright)]">Clear path forward.</span>
+            <h1 className="font-serif-display max-w-[12ch] text-[clamp(2.9rem,5.8vw,6.25rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo [text-wrap:balance]">
+              Complex property. <span className="block italic text-[var(--accent-bright)]">Clear path forward.</span>
             </h1>
             <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
             <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
-              Pegasus Dreamscapes reviews property situations, underwrites the numbers, and routes the right next step: list, buy, partner, or prepare for private network review.
+              Bring the property or the situation. Pegasus underwrites the numbers, reads the constraints, and puts the next step in plain language.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
