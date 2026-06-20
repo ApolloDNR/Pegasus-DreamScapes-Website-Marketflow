@@ -120,9 +120,9 @@ export function PageHero({ eyebrow, title, image, lead, focus = 'center', scrimT
       {scrimTop && <div className="absolute inset-x-0 top-0 h-1/2 hero-scrim-top pointer-events-none" />}
       <div className="absolute inset-0 hero-scrim-bottom" />
       <div className="relative w-full max-w-[1320px] mx-auto px-6 lg:px-12 pt-32 lg:pt-36 pb-16 lg:pb-20 text-[var(--cream)]">
-        <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/90 text-on-photo mb-6 reveal">{eyebrow}</div>
-        <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[-0.01em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] text-on-photo reveal delay-100">{title}</h1>
-        <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 text-on-photo reveal delay-200">{lead}</p>
+        <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/90 text-on-photo mb-6">{eyebrow}</div>
+        <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[0em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] text-on-photo">{title}</h1>
+        <p className="font-serif-display italic text-xl md:text-2xl text-[var(--cream)]/90 leading-snug max-w-2xl mt-7 text-on-photo">{lead}</p>
       </div>
     </section>
   );

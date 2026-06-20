@@ -13,7 +13,7 @@ import {
   SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock,
 } from './blocks';
 import {
-  LeadSection, StrategyCalculator, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
+  LeadSection, StrategyCalculator, StrategyCommandBoard, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
 } from './forms';
 
 const INVESTMENTS = PILLARS3[0];
@@ -382,6 +382,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
         image={IMG('pegasus-living.png')}
         scrimTop
         lead="A real underwriting console, free to start. Enter a property and the Lab scores the fit, models the spread with carry and exit costs in real time, and hands you a written read when you want one. Built for investors, agents, and owners sizing up a deal." />
+      <StrategyCommandBoard go={go} model={model} />
       <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
         copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
         steps={LAB_STEPS} />

@@ -1,10 +1,10 @@
 import React, { useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck, Calculator, FileText, Gauge, Route as RouteIcon } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
-import { usd0, SectionHead, ContourLines, BrandMark } from './primitives';
+import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from '@/lib/strategy-tier-ranges';
 
@@ -366,6 +366,171 @@ export function useStrategyModel(): StrategyModel {
     acq, setAcq, rehab, setRehab, arv, setArv, holdMonths, setHoldMonths, carryRate, setCarryRate, exitRate, setExitRate,
     hardCost, carry, exitCosts, netProceeds, totalCost, spread, margin, cashOnCost, seventy, read, snapshot,
   };
+}
+
+function clampScore(v: number) {
+  return Math.max(12, Math.min(96, Math.round(v)));
+}
+
+export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyModel }) {
+  const [active, setActive] = useState<'spread' | 'lanes' | 'review'>('spread');
+  const laneFit = [
+    { label: 'Value-add rehab', score: clampScore(42 + model.margin * 2.6), note: 'Best when margin and scope still hold after carry.' },
+    { label: 'As-is acquisition', score: clampScore(52 + (model.seventy - model.acq) / 12000), note: 'Depends on basis, access, title, and timeline.' },
+    { label: 'Retail listing', score: clampScore(model.margin < 8 ? 74 : 46), note: 'Cleaner when the property is ready or seller equity matters most.' },
+    { label: 'Blueprint review', score: clampScore(model.margin < 10 ? 82 : 58), note: 'Useful when the deal needs scope, vendors, capital stack, and timeline.' },
+  ];
+  const strongestLane = laneFit.reduce((best, lane) => (lane.score > best.score ? lane : best), laneFit[0]);
+  const riskNotes = [
+    model.margin < 8 ? 'Margin is thin after carry and exit costs.' : 'Spread holds under the current assumptions.',
+    model.holdMonths > 12 ? 'Longer hold period increases carry exposure.' : 'Hold period is inside a normal quick-turn window.',
+    model.rehab > model.arv * 0.18 ? 'Scope is heavy relative to delivered value.' : 'Scope is proportionate to the projected exit.',
+  ];
+
+  return (
+    <section className="strategy-command-section">
+      <div className="mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
+        <div className="min-w-0 lg:col-span-5">
+          <div className="pg-label text-[var(--accent-bright)]">Live strategy board</div>
+          <h2 className="mt-5 max-w-[10ch] font-serif-display text-[clamp(3rem,6vw,6rem)] leading-[0.98] text-[var(--cream)] [text-wrap:balance]">
+            The deal starts talking back.
+          </h2>
+          <p className="mt-6 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
+            Strategy Lab is not a promise engine. It is a disciplined first read: basis, spread, lane fit, risk, and the moment where automation should hand the file to a person.
+          </p>
+          <div className="strategy-command-actions">
+            <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+              Submit for Property Read <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+            <button type="button" onClick={() => go('connect')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+              Ask where this fits <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+        </div>
+
+        <div className="min-w-0 lg:col-span-7">
+          <div className="strategy-command-board" data-testid="strategy-command-board">
+            <div className="strategy-command-photo" aria-hidden="true">
+              <img src={IMG('nelson/nelson-kitchen-1280.jpg')} alt="" />
+            </div>
+            <div className="strategy-command-top">
+              <div>
+                <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Current model</div>
+                <div className="mt-2 font-serif-display text-3xl text-[var(--cream)]">{model.read.label}</div>
+              </div>
+              <div className="strategy-score-dial" aria-label={`Fit score ${clampScore(model.margin * 3 + 48)} out of 100`}>
+                <Gauge className="h-5 w-5" />
+                <span>{clampScore(model.margin * 3 + 48)}</span>
+              </div>
+            </div>
+
+            <div className="strategy-metric-grid">
+              <div>
+                <span>All-in basis</span>
+                <strong>{usd0(model.totalCost)}</strong>
+                <small>Basis + carry + exit</small>
+              </div>
+              <div>
+                <span>Net spread</span>
+                <strong>{usd0(model.spread)}</strong>
+                <small>{model.margin.toFixed(1)}% margin on cost</small>
+              </div>
+              <div>
+                <span>70% guide</span>
+                <strong>{usd0(model.seventy)}</strong>
+                <small>Orientation only, not an offer</small>
+              </div>
+            </div>
+
+            <div className="strategy-tab-row" aria-label="Strategy board views">
+              {[
+                { key: 'spread' as const, label: 'Spread', icon: Calculator },
+                { key: 'lanes' as const, label: 'Lanes', icon: RouteIcon },
+                { key: 'review' as const, label: 'Review', icon: FileText },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    aria-pressed={active === tab.key}
+                    onClick={() => setActive(tab.key)}
+                    className={active === tab.key ? 'is-active' : ''}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="strategy-tab-panel">
+              {active === 'spread' && (
+                <>
+                  <div className="strategy-panel-head">
+                    <span>Basis to exit</span>
+                    <strong>{model.read.lane}</strong>
+                  </div>
+                  <div className="strategy-waterfall">
+                    {[
+                      ['Acquisition', model.acq],
+                      ['Scope', model.rehab],
+                      ['Carry', model.carry],
+                      ['Exit costs', model.exitCosts],
+                    ].map(([label, value]) => (
+                      <div key={label as string}>
+                        <span>{label}</span>
+                        <i style={{ width: `${Math.max(12, Math.min(100, (Number(value) / model.totalCost) * 100))}%` }} />
+                        <strong>{usd0(Number(value))}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {active === 'lanes' && (
+                <>
+                  <div className="strategy-panel-head">
+                    <span>Strongest lane</span>
+                    <strong>{strongestLane.label}</strong>
+                  </div>
+                  <div className="strategy-lane-bars">
+                    {laneFit.map((lane) => (
+                      <div key={lane.label}>
+                        <div><span>{lane.label}</span><strong>{lane.score}</strong></div>
+                        <i><b style={{ width: `${lane.score}%` }} /></i>
+                        <p>{lane.note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {active === 'review' && (
+                <>
+                  <div className="strategy-panel-head">
+                    <span>Human review trigger</span>
+                    <strong>Property Read</strong>
+                  </div>
+                  <ul className="strategy-risk-list">
+                    {riskNotes.map((note) => (
+                      <li key={note}>
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        <span>{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-5 text-[0.84rem] leading-relaxed text-[rgba(245,230,211,0.58)]">
+                    A written Property Read checks condition, title, occupancy, market support, scope, and terms. The Lab output is orientation, not valuation or an offer.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function WaterfallRow({ label, value, sign, strong = false }:

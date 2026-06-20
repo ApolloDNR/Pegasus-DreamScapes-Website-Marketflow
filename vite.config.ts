@@ -1,7 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { existsSync, realpathSync } from "fs";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+
+const projectRoot = import.meta.dirname;
+const localNodeModules = path.resolve(projectRoot, "node_modules");
+const nodeModulesRoot = existsSync(localNodeModules)
+  ? realpathSync(localNodeModules)
+  : localNodeModules;
 
 export default defineConfig({
   plugins: [
@@ -26,14 +33,15 @@ export default defineConfig({
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: path.resolve(projectRoot, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(projectRoot, "dist/public"),
     emptyOutDir: true,
   },
   server: {
     fs: {
       strict: true,
+      allow: [projectRoot, nodeModulesRoot],
       deny: ["**/.*"],
     },
   },

@@ -65,7 +65,7 @@ export function isPegasusUrl(path: string): boolean {
 
 // Public surfaces the prototype shell does NOT own, but which should still wear
 // the pegasus NavBar/Footer chrome (instead of the legacy global chrome) so the
-// public site reads as one seamless experience. Admin and marketflow auth
+// public site reads as one coherent experience. Admin and marketflow auth
 // surfaces intentionally keep the legacy chrome. Pages with a LIGHT top section
 // are listed in STANDALONE_SOLID_NAV so the nav renders solid (not the
 // transparent-over-dark-hero treatment) and stays legible.
