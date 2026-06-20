@@ -53,7 +53,7 @@ function HeroWorkboard({ go }: { go: Nav }) {
   const active = HERO_LANES.find((lane) => lane.key === activeLane) ?? HERO_LANES[0];
 
   return (
-      <div className="hero-workboard reveal delay-200" data-testid="hero-workboard">
+      <div className="hero-workboard" data-testid="hero-workboard">
       <div className="hero-workboard-photo" aria-hidden="true">
         <img src={IMG('nelson/nelson-kitchen-1280.jpg')} alt="" />
       </div>
@@ -195,17 +195,17 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="relative mx-auto max-w-[1440px] px-6 pb-20 pt-32 text-[var(--cream)] lg:px-12 lg:pb-24 lg:pt-36">
         <div className="grid min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-center gap-12 lg:grid-cols-12 xl:gap-16">
           <div className="min-w-0 lg:col-span-6 xl:col-span-5">
-            <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo reveal !tracking-[0.22em]">
+            <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo !tracking-[0.22em]">
               Deal Strategy &amp; Real Estate Execution | East Bay
             </div>
-            <h1 className="font-serif-display max-w-[11ch] text-[clamp(3rem,6.8vw,7rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo reveal delay-100 [text-wrap:balance]">
+            <h1 className="font-serif-display max-w-[11ch] text-[clamp(3rem,6.8vw,7rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo [text-wrap:balance]">
               Complex property. <span className="italic text-[var(--accent-bright)]">Clear path forward.</span>
             </h1>
             <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
-            <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo reveal delay-200 md:text-[1.15rem]">
+            <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
               Pegasus Dreamscapes reviews property situations, underwrites the numbers, and routes the right next step: list, buy, partner, or prepare for private network review.
             </p>
-            <div className="mt-9 flex flex-wrap items-center gap-4 reveal delay-300">
+            <div className="mt-9 flex flex-wrap items-center gap-4">
               <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
@@ -213,10 +213,10 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
                 Strategy Lab <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
               <button type="button" onClick={openPeggy} className="link-underline inline-flex items-center gap-2.5 text-[var(--cream)]/76 transition-colors hover:text-[var(--cream)] pg-label !text-[10px] !tracking-[0.14em]">
-                Talk to PeggyAI
+                Talk to Peggy
               </button>
             </div>
-            <div className="hero-signal-rail reveal delay-400" aria-label="Pegasus operating signals">
+            <div className="hero-signal-rail" aria-label="Pegasus operating signals">
               {HERO_SIGNALS.map((signal) => (
                 <div key={signal.label} className="hero-signal">
                   <Ico name={signal.icon} className="h-4 w-4" />
