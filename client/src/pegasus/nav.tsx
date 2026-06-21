@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Menu, X, ArrowRight, Phone, ChevronDown } from 'lucide-react';
+import { Menu, X, ArrowRight, Phone, ChevronDown, ConciergeBell } from 'lucide-react';
 import type { Route, Nav, Theme } from './theme';
 import { ThemeToggle, BrandMark } from './primitives';
 import { NAV_GROUPS } from './data';
 
-export function NavBar({ go, route, theme, toggleTheme, scrolled }:
-  { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean }) {
+export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
+  { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean; openPeggy?: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<number | null>(null);
   const [mAcc, setMAcc] = useState<number | null>(null);
@@ -97,6 +97,12 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
 
         <div className="flex items-center gap-3 lg:gap-4">
           <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
+          {openPeggy && (
+            <button type="button" onClick={openPeggy} data-testid="button-nav-peggy"
+              className={`hidden lg:inline-flex nav-peggy-btn${overHero ? ' is-over-hero' : ''}`}>
+              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to Peggy
+            </button>
+          )}
           <button type="button" onClick={() => go('submit')}
             className={`hidden sm:inline-flex ${overHero ? 'btn-solid-light' : 'btn-primary'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
             Submit a Property
@@ -123,6 +129,13 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
               className="btn-line w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.18em] text-center inline-flex items-center justify-center gap-2.5">
               <Phone className="w-3.5 h-3.5" strokeWidth={1.7} /> Call 925-744-8525
             </a>
+            {openPeggy && (
+              <button type="button" onClick={() => { setMenuOpen(false); openPeggy(); }}
+                data-testid="button-mobile-nav-peggy"
+                className="btn-line w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.18em] text-center inline-flex items-center justify-center gap-2.5">
+                <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
+              </button>
+            )}
           </div>
 
           <div className="mt-7 flex flex-col">

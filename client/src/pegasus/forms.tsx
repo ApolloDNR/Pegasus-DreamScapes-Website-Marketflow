@@ -709,6 +709,14 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                   </div>
                 </div>
 
+                {rehab > 0 && arv > 0 && (
+                  <div className="border-t border-[rgba(239,231,218,0.16)] pt-5 mb-6">
+                    <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent-bright)] mb-2.5">Cost sensitivity</div>
+                    <p className="text-[var(--cream)]/65 text-[0.8rem] leading-relaxed">
+                      Repair scope drives the widest variance. A ±10% swing in your budget ({usd0(Math.round(rehab * 0.1 / 500) * 500)}) shifts the margin by roughly {Math.max(1, Math.round(rehab * 0.1 / arv * 100))}–{Math.max(2, Math.round(rehab * 0.13 / arv * 100))} pts. Labor contingency and material escalation are modeled at flat rates here.
+                    </p>
+                  </div>
+                )}
                 <div className="border-t border-[rgba(239,231,218,0.16)] pt-6 mb-6">
                   <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent-bright)] mb-3">Possible lanes</div>
                   <div className="flex flex-wrap gap-2" data-testid="list-output-lanes">

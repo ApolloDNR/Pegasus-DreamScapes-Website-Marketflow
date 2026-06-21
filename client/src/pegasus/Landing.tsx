@@ -110,7 +110,7 @@ export function Landing() {
       data-theme={theme === 'dark' ? 'dark' : undefined}>
       <div ref={progressRef} className="scroll-progress" />
 
-      <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} />
+      <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} openPeggy={openPeggy} />
 
       <main key={route} className="page-in">
         {route === 'home' && <HomePage go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />}

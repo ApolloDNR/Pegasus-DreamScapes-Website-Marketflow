@@ -199,7 +199,8 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
   const SAMPLE: { k: string; v: string }[] = [
     { k: 'All-in basis', v: '$420K – $470K' },
     { k: 'After-repair value', v: '$610K – $660K' },
-    { k: 'Indicated spread', v: 'Mid-tier' },
+    { k: 'Indicated spread', v: 'Mid-tier · Value-Add zone' },
+    { k: 'Suggested lane', v: 'Value-Add Rehab' },
   ];
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
@@ -211,10 +212,10 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
             Model the deal before you talk to anyone.
           </h2>
           <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-xl">
-            Enter what you know. The Lab returns strategy-tier ranges, the lanes that could fit, and the risks to weigh — in minutes, at your own pace. It is a planning tool, not a valuation, appraisal, CMA, or BPO.
+            Enter what you know. The Lab scores the property fit, models the full cost waterfall with carry and exit assumptions in real time, and surfaces the lanes and risk flags the numbers point to — at your own pace. A planning tool, not a valuation, appraisal, CMA, or BPO.
           </p>
           <ul className="space-y-3.5 mb-10">
-            {['Strategy-tier ranges, not a single verdict', 'The lanes that could fit, and the risk behind each', 'A clear next step you can act on'].map((pt) => (
+            {['A property fit score and strategy-tier ranges', 'The lanes that could fit, with risk flags behind each', 'A full cost waterfall and a clear next step'].map((pt) => (
               <li key={pt} className="flex gap-3.5 leading-relaxed text-[var(--text-2)]">
                 <Check className="w-4 h-4 mt-1 shrink-0 text-[var(--accent)]" strokeWidth={2} />
                 <span>{pt}</span>
@@ -254,8 +255,8 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)] overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Where do you fit?" title="Pick your situation."
-          copy="Choose the one that matches where you are. Each goes straight to the right next step." />
+        <SectionHead eyebrow="Choose your path" title="Pick your situation."
+          copy="Each path goes straight to the right next step. No wrong door, no obligation before you know where you stand." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {LANE_CARDS.map((c, i) => (
             <button key={c.key} type="button" onClick={() => go(c.key)}

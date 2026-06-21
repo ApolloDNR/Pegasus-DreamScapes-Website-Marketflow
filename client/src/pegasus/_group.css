@@ -485,15 +485,15 @@ body.pg-menu-open { overflow: hidden; }
 }
 .surface-card:hover {
   background: var(--surface-2);
-  transform: translateY(-5px);
-  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
-  box-shadow: 0 24px 50px -24px rgba(20, 28, 48, 0.4);
+  transform: translateY(-6px);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 30px 60px -20px rgba(20, 28, 48, 0.48);
 }
 .pg-root[data-theme='dark'] .surface-card {
   box-shadow: none;
 }
 .pg-root[data-theme='dark'] .surface-card:hover {
-  box-shadow: 0 26px 56px -22px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 30px 64px -20px rgba(0, 0, 0, 0.65);
 }
 .surface-card::before {
   content: '';
@@ -1078,4 +1078,43 @@ select.pg-field option { color: #1b1712; }
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+/* ---- Peggy concierge button (desktop nav) ---- */
+.nav-peggy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 135, 46, 0.38);
+  background: rgba(212, 135, 46, 0.06);
+  color: var(--accent-bright);
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 9px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.35s ease, background-color 0.35s ease, color 0.35s ease,
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-peggy-btn:hover {
+  border-color: var(--accent-bright);
+  background: rgba(226, 164, 99, 0.16);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.nav-peggy-btn.is-over-hero {
+  border-color: rgba(239, 231, 218, 0.38);
+  color: rgba(239, 231, 218, 0.92);
+  background: rgba(239, 231, 218, 0.08);
+}
+.nav-peggy-btn.is-over-hero:hover {
+  border-color: var(--accent-bright);
+  background: rgba(226, 164, 99, 0.18);
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-peggy-btn { transition: none !important; }
 }
