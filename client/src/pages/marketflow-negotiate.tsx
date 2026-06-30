@@ -980,7 +980,7 @@ User Question: ${promptText}
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          Peggy AI Advisor
+          Peggy Advisor
           <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
         </CardTitle>
         <CardDescription className="text-sm">

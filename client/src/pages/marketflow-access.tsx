@@ -30,7 +30,7 @@ import { SuccessView } from "@/components/success-view";
 
 function WhatYouGet() {
   const perks = [
-    { title: "Reviewed deal flow", desc: "Every listing has passed a Pegasus structural read. No noise, no cold listings." },
+    { title: "Reviewed opportunities", desc: "Every record starts with a Pegasus structural read. No noise, no cold blasts." },
     { title: "Verified operator network", desc: "Buyers, wholesalers, and capital partners: all introduced, not anonymous." },
     { title: "Private deal room", desc: "Negotiate, structure JVs, and coordinate capital in one place." },
     { title: "Priority review queue", desc: "Submissions from network members jump the general intake queue." },
@@ -67,11 +67,11 @@ export default function MarketflowAccessPage() {
   useSEO({
     title: "Request MarketFlow Access",
     description:
-      "Request access to MarketFlow, the private dealflow layer of Pegasus DreamScapes. Access is by introduction.",
+      "Request access to MarketFlow, the private routing layer of Pegasus Dreamscapes. Access is by introduction.",
     image: "/og/marketflow.png",
   });
 
-  // Brief §11 analytics — page-view event for the access funnel.
+  // Brief Section11 analytics - page-view event for the access funnel.
   useEffect(() => {
     trackEvent("marketflow_access_opened");
   }, []);
@@ -154,7 +154,7 @@ export default function MarketflowAccessPage() {
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-xl mx-auto px-6 lg:px-12">
         <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          MarketFlow · Beta Access
+          MarketFlow &middot; Beta Access
         </p>
         <h1 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-4">
           Request beta access.

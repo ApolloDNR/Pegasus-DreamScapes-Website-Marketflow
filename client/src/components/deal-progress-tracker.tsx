@@ -176,7 +176,7 @@ export function ActivityTimeline() {
       case "rejected": return <AlertCircle className="w-3 h-3 text-red-500" />;
       case "deal_saved": return <Home className="w-3 h-3 text-blue-500" />;
       case "message": return <MessageSquare className="w-3 h-3" />;
-      case "jv_request": return <Handshake className="w-3 h-3 text-purple-500" />;
+      case "jv_request": return <Handshake className="w-3 h-3 text-primary" />;
       default: return <Activity className="w-3 h-3" />;
     }
   };

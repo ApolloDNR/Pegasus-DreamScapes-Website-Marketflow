@@ -142,9 +142,9 @@ const STRUCTURE_OPTIONS = [
     label: "Equity Partnership",
     icon: Users,
     description: "Profit sharing with the seller",
-    color: "text-purple-600",
-    bgColor: "bg-purple-500/10",
-    borderColor: "border-purple-500/30",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+    borderColor: "border-primary/30",
   },
   {
     id: "hybrid",
@@ -243,7 +243,7 @@ export function OfferStudio({
     const welcomeMessage: ChatMessage = {
       id: "welcome",
       sender: "peggy",
-      senderName: "Peggy AI",
+      senderName: "Peggy",
       message: `Hi there! I'm here to help you craft the perfect offer for ${dealInfo.propertyAddress}. The asking price is ${formatCurrency(dealInfo.askingPrice)}${dealInfo.arv ? ` with an ARV of ${formatCurrency(dealInfo.arv)}` : ""}. What type of deal structure are you considering?`,
       timestamp: new Date(),
       isAI: true,
@@ -317,7 +317,7 @@ export function OfferStudio({
     return {
       id: Date.now().toString(),
       sender: "peggy",
-      senderName: "Peggy AI",
+      senderName: "Peggy",
       message: response,
       timestamp: new Date(),
       isAI: true,
@@ -465,12 +465,12 @@ export function OfferStudio({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30"
+          className="p-4 rounded-lg bg-primary/10 border border-primary/30"
         >
           <div className="flex items-start gap-3">
-            <Users className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <Users className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-purple-700">Equity Partnership Details</p>
+              <p className="font-medium text-primary">Equity Partnership Details</p>
               <p className="text-sm text-muted-foreground mt-1">
                 You'll share profits with the seller. Configure equity split and preferred returns in the next step.
               </p>
@@ -640,10 +640,10 @@ export function OfferStudio({
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="space-y-4 p-4 rounded-lg bg-purple-500/5 border border-purple-500/20"
+          className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20"
         >
           <h4 className="font-medium flex items-center gap-2">
-            <Users className="w-4 h-4 text-purple-600" />
+            <Users className="w-4 h-4 text-primary" />
             Equity Terms
           </h4>
           
@@ -1116,13 +1116,13 @@ export function OfferStudio({
           </div>
 
           <div className="w-80 border-l flex flex-col bg-muted/20">
-            <div className="p-4 border-b bg-gradient-to-r from-primary/10 to-purple-500/10">
+            <div className="p-4 border-b bg-gradient-to-r from-primary/10 to-amber-600/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Peggy AI</h3>
+                  <h3 className="font-semibold">Peggy</h3>
                   <p className="text-xs text-muted-foreground">Your deal co-pilot</p>
                 </div>
                 <Badge variant="secondary" className="ml-auto text-xs">
@@ -1198,7 +1198,7 @@ export function OfferStudio({
                   >
                     <Avatar className="w-7 h-7 flex-shrink-0">
                       {msg.isAI ? (
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-purple-500 text-white text-xs">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-amber-600 text-white text-xs">
                           <Bot className="w-4 h-4" />
                         </AvatarFallback>
                       ) : (
@@ -1212,7 +1212,7 @@ export function OfferStudio({
                         msg.sender === "user"
                           ? "bg-primary text-primary-foreground ml-auto"
                           : msg.isAI
-                            ? "bg-gradient-to-br from-primary/10 to-purple-500/10 border"
+                            ? "bg-gradient-to-br from-primary/10 to-amber-600/10 border"
                             : "bg-muted"
                       }`}
                     >
@@ -1223,11 +1223,11 @@ export function OfferStudio({
                 {isPeggyTyping && (
                   <div className="flex gap-2">
                     <Avatar className="w-7 h-7 flex-shrink-0">
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-purple-500 text-white text-xs">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-amber-600 text-white text-xs">
                         <Bot className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 border">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-amber-600/10 border">
                       <div className="flex gap-1">
                         <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" />
                         <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />

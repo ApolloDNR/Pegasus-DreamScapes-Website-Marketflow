@@ -32,7 +32,7 @@ export function SavedPage({ go }: { go: Nav }) {
           </h1>
           <p className="text-[var(--text)]/70 text-lg leading-relaxed">
             Pick up exactly where you left off. Reopen a saved underwriting model or revisit a
-            conversation with PeggyAI, then carry it forward into a written review.
+            conversation with Peggy, then carry it forward into a written review.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export function SavedPage({ go }: { go: Nav }) {
           <div>
             <div className="flex items-center gap-2.5 mb-7">
               <ConciergeBell className="w-4 h-4 text-[var(--accent)]" strokeWidth={1.8} />
-              <h2 className="pg-label !text-[10px] !tracking-[0.2em]">PeggyAI conversations</h2>
+              <h2 className="pg-label !text-[10px] !tracking-[0.2em]">Peggy conversations</h2>
             </div>
 
             {chatRows.length === 0 && (
@@ -103,7 +103,7 @@ export function SavedPage({ go }: { go: Nav }) {
                 <p className="text-[var(--text)]/60 mb-5">You have not saved a conversation yet.</p>
                 <button type="button" onClick={() => go('peggy')}
                   className="btn-line px-6 py-3 pg-label !text-[10px] inline-flex items-center gap-2.5 group">
-                  Talk to PeggyAI <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  Talk to Peggy <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             )}

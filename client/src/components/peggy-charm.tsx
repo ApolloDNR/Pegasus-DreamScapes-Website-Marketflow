@@ -37,7 +37,7 @@ const TIPS = {
     { icon: MessageCircle, text: "Properties under 30 days on market get more competitive offers" },
   ],
   general: [
-    { icon: Sparkles, text: "I'm Peggy, your AI deal assistant. How can I help today?" },
+    { icon: Sparkles, text: "I'm Peggy. How can I help with the deal today?" },
     { icon: TrendingUp, text: "Browse deals with Match Score to find your best opportunities" },
     { icon: Lightbulb, text: "Save deals to your watchlist to track price changes" },
   ],

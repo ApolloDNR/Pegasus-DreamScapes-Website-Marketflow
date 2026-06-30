@@ -187,7 +187,7 @@ function NotificationItem({
     offer_accepted: <Check className="w-4 h-4 text-green-500" />,
     counter_offer: <TrendingUp className="w-4 h-4 text-amber-500" />,
     message: <MessageSquare className="w-4 h-4 text-blue-500" />,
-    jv_request: <Handshake className="w-4 h-4 text-purple-500" />,
+    jv_request: <Handshake className="w-4 h-4 text-primary" />,
     document: <FileText className="w-4 h-4 text-gray-500" />,
     system: <Info className="w-4 h-4 text-gray-500" />,
   };

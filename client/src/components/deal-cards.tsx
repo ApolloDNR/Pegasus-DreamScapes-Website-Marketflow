@@ -349,7 +349,7 @@ function DealBadges({
         </Badge>
       )}
       {isTrending && (
-        <Badge className="bg-purple-500 text-white text-xs px-2 py-0.5">
+        <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
           <TrendingUp className="w-3 h-3 mr-1" />
           Trending
         </Badge>

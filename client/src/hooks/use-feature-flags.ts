@@ -88,7 +88,7 @@ export function useFeatureFlags() {
       'Accept Terms (Quick Offer)',
       'Counter Offers',
       'Negotiation Room with Chat',
-      'Peggy AI Assistant',
+      'Peggy',
       'Match Score Compatibility',
     ],
   }), []);

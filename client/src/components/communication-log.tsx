@@ -58,7 +58,7 @@ const TYPE_ICONS = {
 const TYPE_COLORS = {
   call: "bg-blue-500",
   email: "bg-green-500",
-  message: "bg-purple-500",
+  message: "bg-primary",
   meeting: "bg-orange-500",
   note: "bg-gray-500",
 };

@@ -16,7 +16,7 @@ import {
   FOOTER_MORE_EXTRA,
 } from "@/config/navigation";
 
-// Website Structure v1 FINAL §8 — footer link grid uses the four
+// Website Structure v1 FINAL Section8 - footer link grid uses the four
 // canonical columns: Company / Tools / Network / Legal. Per nav-parity
 // test every NAV_PRIMARY label must appear as a `link-footer-{slug}`
 // testid and every NAV_MORE label as a `link-footer-more-{slug}` testid
@@ -70,7 +70,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navPrimary("/work-with-apollo"),
       navMore("/vendor-network"),
       navMore("/capital"),
-      // Amendment 2 §C — footer-only Audience-B release valve.
+      // Amendment 2 SectionC - footer-only Audience-B release valve.
       navMore("/ecosystem"),
     ],
   },
@@ -164,7 +164,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-12">
           <div className="md:col-span-4 space-y-5">
-            <Link href="/" className="block" aria-label="Pegasus DreamScapes home">
+            <Link href="/" className="block" aria-label="Pegasus Dreamscapes home">
               <img
                 src={logoImage}
                 alt=""
@@ -174,13 +174,13 @@ export function Footer() {
               />
             </Link>
             <div>
-              <p className="font-display text-xl text-foreground tracking-[0.18em]">Pegasus DreamScapes</p>
+              <p className="font-display text-xl text-foreground tracking-[0.18em]">Pegasus Dreamscapes</p>
               <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium font-supporting">
                 Read the property. Underwrite the numbers. Design the route.
               </p>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-              Pegasus DreamScapes is a strategy-first real estate operating company and an emerging vertically integrated developer, building from disciplined small-scale execution toward a generational development practice.
+              Pegasus Dreamscapes is a strategy-first real estate operating company and an emerging vertically integrated developer, building from disciplined small-scale execution toward a generational development practice.
             </p>
             <div className="space-y-3 pt-3 border-t border-border/40 mt-4">
               <a
@@ -218,7 +218,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 onClick={() => trackEvent("social_tap", { platform: "linkedin", location: "footer" })}
                 className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
-                aria-label="Pegasus DreamScapes on LinkedIn"
+                aria-label="Pegasus Dreamscapes on LinkedIn"
                 data-testid="link-footer-linkedin"
               >
                 <Linkedin className="w-3.5 h-3.5" />
@@ -269,7 +269,7 @@ export function Footer() {
                   <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-primary/10 text-primary rounded">BETA</span>
                 </span>
               </Link>
-              <span className="text-border">·</span>
+              <span className="text-border">&middot;</span>
               {isAuthenticated ? (
                 <Link href="/marketflow/dashboard">
                   <span className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-dashboard">
@@ -290,7 +290,7 @@ export function Footer() {
               )}
             </div>
           </div>
-          {/* Website Structure v1 FINAL §8 — locked legal disclosure
+          {/* Website Structure v1 FINAL Section8 - locked legal disclosure
               block. Surfaces on every page. Asserted by
               public-voice.test.tsx. */}
           <div
@@ -301,14 +301,14 @@ export function Footer() {
               Legal disclosure
             </p>
             <ul className="space-y-1.5 text-[11px] text-muted-foreground/85 leading-relaxed font-supporting">
-              <li>Pegasus DreamScapes Corp. is a California Corporation.</li>
+              <li>Pegasus Dreamscapes Corp. is a California Corporation.</li>
               <li>
                 Founder Paolo &ldquo;Apollo&rdquo; Duran is a licensed California real estate
                 agent. DRE #02333658, Keller Williams Realty East Bay
                 (each office independently owned and operated).
               </li>
               <li>
-                Pegasus DreamScapes is a separate development, investment,
+                Pegasus Dreamscapes is a separate development, investment,
                 and property strategy company.
               </li>
               <li>
@@ -322,10 +322,10 @@ export function Footer() {
             </ul>
           </div>
           <p className="text-xs uppercase tracking-[0.22em] text-foreground/75 font-supporting font-medium" data-testid="text-footer-dre">
-            Founder · Paolo &ldquo;Apollo&rdquo; Duran · DRE #02333658 · Keller Williams East Bay
+            Founder &middot; Paolo &ldquo;Apollo&rdquo; Duran &middot; DRE #02333658 &middot; Keller Williams East Bay
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground/85 font-supporting" data-testid="text-footer-credentials">
-            NAR member NRDS #159537628 · CAR via CCAR #36424 · East Bay, California
+            NAR member NRDS #159537628 &middot; CAR via CCAR #36424 &middot; East Bay, California
           </p>
           <div className="mt-3 flex items-center gap-3">
             <svg
@@ -357,7 +357,7 @@ export function Footer() {
               />
               <div>
                 <p className="text-xs text-muted-foreground" data-testid="text-copyright">
-                  &copy; {new Date().getFullYear()} Pegasus DreamScapes Corp. · A California Corporation. All rights reserved.
+                  &copy; {new Date().getFullYear()} Pegasus Dreamscapes Corp. &middot; A California Corporation. All rights reserved.
                 </p>
                 <p className="text-[11px] text-muted-foreground/80 mt-1.5 max-w-2xl leading-relaxed" data-testid="text-footer-disclosure">
                   Nothing on this website is an offer or solicitation to buy or sell securities, real property, or investment products. Capital relationships are private and discussed individually under written agreement. Information shown here is preliminary and informational only. Real estate transactions are facilitated through licensed partners. See our <Link href="/disclosures"><span className="underline hover:text-foreground transition-colors cursor-pointer">Disclosures</span></Link> page for full terms.

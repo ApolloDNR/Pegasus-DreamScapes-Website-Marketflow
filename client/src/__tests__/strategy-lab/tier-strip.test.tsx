@@ -1,7 +1,7 @@
 /**
  * Strategy Lab — Tier strip render + routing guard (Task #176).
  *
- * Locks in the premium "Levels of depth" upgrade:
+ * Locks in the premium planning-depth upgrade:
  *   1. All three tiers (Instant Strategy Preview / Property Read /
  *      Deal Blueprint) render.
  *   2. The "Property Read" CTA routes to /submit.

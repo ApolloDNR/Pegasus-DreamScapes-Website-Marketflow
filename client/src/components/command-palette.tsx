@@ -71,10 +71,10 @@ export function CommandPalette() {
 
   const navigationItems: CommandItem[] = [
     { id: "home", label: "Home", description: "Return to homepage", icon: Home, href: "/", keywords: ["main", "start"] },
-    { id: "properties", label: "Properties for Buyers", description: "Browse renovated homes", icon: Home, href: "/buyers", keywords: ["buy", "house", "real estate"] },
-    { id: "wholesale", label: "Wholesale Deals", description: "Off-market investment opportunities", icon: Briefcase, href: "/wholesale", keywords: ["deals", "investment"] },
-    { id: "sell", label: "Sell Your Property", description: "Get a cash offer today", icon: DollarSign, href: "/sell", keywords: ["sell", "cash", "offer"] },
-    { id: "invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp, href: "/invest", keywords: ["partner", "capital"] },
+    { id: "properties", label: "For Buyers", description: "Find a finished home or an investor-side read", icon: Home, href: "/buyers", keywords: ["buy", "house", "real estate"] },
+    { id: "wholesale", label: "For Partners", description: "Bring a lead, deal, or JV opportunity", icon: Briefcase, href: "/partners", keywords: ["deals", "investment", "jv"] },
+    { id: "sell", label: "For Sellers", description: "Submit a property or plan a listing", icon: DollarSign, href: "/sellers", keywords: ["sell", "property", "listing"] },
+    { id: "invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp, href: "/capital", keywords: ["partner", "capital"] },
     { id: "projects", label: "Case Studies", description: "Real project examples", icon: Target, href: "/projects", keywords: ["portfolio", "examples"] },
     { id: "about", label: "About Us", description: "Our story and mission", icon: Users, href: "/about", keywords: ["team", "company"] },
     { id: "contact", label: "Contact", description: "Get in touch", icon: Mail, href: "/contact", keywords: ["email", "phone", "message"] },
@@ -82,20 +82,20 @@ export function CommandPalette() {
 
   const toolItems: CommandItem[] = [
     { id: "strategy-lab", label: "Strategy Lab", description: "Run a property through the Pegasus lens", icon: Calculator, href: "/strategy-lab", keywords: ["math", "analyze", "calculator", "lane", "verdict"], badge: "New" },
-    { id: "resources", label: "Investment Guides", description: "Learn the fundamentals", icon: BookOpen, href: "/resources", keywords: ["learn", "education"] },
-    { id: "community", label: "Community Hub", description: "Connect with investors", icon: MessageSquare, href: "/dealflow/community", keywords: ["forum", "chat", "social"] },
+    { id: "resources", label: "Strategy Library", description: "Read the Pegasus frameworks", icon: BookOpen, href: "/strategy-lab/library", keywords: ["learn", "education"] },
+    { id: "community", label: "MarketFlow Community", description: "Private network conversations", icon: MessageSquare, href: "/marketflow/community", keywords: ["forum", "chat", "social"] },
   ];
 
   const dealflowItems: CommandItem[] = isAuthenticated ? [
-    { id: "dealflow", label: "Dealflow Hub", description: "Your investment command center", icon: Sparkles, href: "/dealflow", keywords: ["dashboard", "main"], badge: "New" },
-    { id: "deals", label: "Discover Deals", description: "Swipe through opportunities", icon: Heart, href: "/dealflow/deals", keywords: ["match", "swipe"] },
-    { id: "community-feed", label: "Community Feed", description: "Social updates from your network", icon: MessageSquare, href: "/dealflow/community", keywords: ["posts", "social"] },
-    { id: "messages", label: "Messages", description: "Direct messages", icon: Mail, href: "/dealflow/messages", keywords: ["chat", "dm"] },
-    { id: "office", label: "My Office", description: "Saved deals and analytics", icon: BarChart3, href: "/dealflow/office", keywords: ["saved", "dashboard"] },
+    { id: "dealflow", label: "MarketFlow Hub", description: "Your private opportunity dashboard", icon: Sparkles, href: "/marketflow", keywords: ["dashboard", "main"], badge: "New" },
+    { id: "deals", label: "Reviewed Opportunities", description: "Browse approved records", icon: Heart, href: "/marketflow/deals", keywords: ["match", "deals"] },
+    { id: "community-feed", label: "Network Feed", description: "Updates from the private network", icon: MessageSquare, href: "/marketflow/community", keywords: ["posts", "social"] },
+    { id: "messages", label: "Messages", description: "Direct messages", icon: Mail, href: "/marketflow/messages", keywords: ["chat", "dm"] },
+    { id: "office", label: "My Office", description: "Saved deals and analytics", icon: BarChart3, href: "/marketflow", keywords: ["saved", "dashboard"] },
   ] : [];
 
   const staffItems: CommandItem[] = isAdmin ? [
-    { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/dealflow/hq", keywords: ["admin", "staff"], badge: "Staff" },
+    { id: "hq", label: "HQ Dashboard", description: "Staff command center", icon: Shield, href: "/marketflow/admin", keywords: ["admin", "staff"], badge: "Staff" },
   ] : [];
 
   const quickActions: CommandItem[] = [

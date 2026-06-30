@@ -10,7 +10,7 @@ import { useTheme } from '@/components/theme-provider';
 
 /**
  * PegasusStandaloneShell renders the prototype's NavBar + Footer + Peggy dock
- * around a standalone (non-prototype) public page — e.g. /submit — so the
+ * around a standalone (non-prototype) public page - e.g. /submit - so the
  * whole public site wears ONE chrome instead of jarring users with the legacy
  * global nav/footer.
  *

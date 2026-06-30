@@ -29,7 +29,7 @@ const DOES_NOT = [
   "Never gives legal, tax, or investment advice.",
   "Never shares other clients' data.",
   "Never claims outcomes or guarantees.",
-  "Never bypasses human review for an actual offer.",
+  "Never bypasses a written Pegasus read for an actual offer.",
 ];
 
 export default function Peggy() {
@@ -198,7 +198,7 @@ export default function Peggy() {
             </div>
             <div className="rounded-lg bg-card border border-border/50 px-5 py-4">
               <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-1.5">Peggy</p>
-              <p className="text-foreground/90 italic">"That's a Strategy Review fit. I'll route it to Apollo with what we've got and book a 20-minute call. I won't quote a number; that's the human review. Cool?"</p>
+              <p className="text-foreground/90 italic">"That's a Property Read fit. I'll route it to Apollo with what we've got and book a 20-minute call. I won't quote a number; that takes a written Pegasus read. Cool?"</p>
             </div>
           </div>
         </div>

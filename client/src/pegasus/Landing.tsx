@@ -61,14 +61,17 @@ export function Landing() {
     go('contact');
   }, [go]);
 
-  // Reveal observer — re-run on route change so new page elements animate in
+  // Reveal observer - re-run on route change so new page elements animate in
   useEffect(() => {
     observerRef.current?.disconnect();
     const obs = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           if (entry.target.classList.contains('draw-on-view')) entry.target.classList.add('is-drawn');
-          else entry.target.classList.add('animate-fade-in-up');
+          else {
+            entry.target.classList.remove('reveal-pending');
+            entry.target.classList.add('animate-fade-in-up');
+          }
           obs.unobserve(entry.target);
         }
       });
@@ -76,7 +79,7 @@ export function Landing() {
     observerRef.current = obs;
     const id = requestAnimationFrame(() => {
       document.querySelectorAll('.reveal, .draw-on-view').forEach((el) => {
-        if (el.classList.contains('reveal') && !el.classList.contains('animate-fade-in-up')) el.classList.add('opacity-0');
+        if (el.classList.contains('reveal') && !el.classList.contains('animate-fade-in-up')) el.classList.add('reveal-pending');
         obs.observe(el);
       });
     });

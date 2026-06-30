@@ -1167,7 +1167,7 @@ export function NegotiationRoom({
           </div>
         </DialogHeader>
 
-        {/* 3-Column Layout: Chat | Offer Ladder | Peggy AI */}
+        {/* 3-Column Layout: Chat | Offer Ladder | Peggy */}
         <div className="flex-1 flex overflow-hidden">
           
           {/* Column 1: Chat Messages */}
@@ -1335,7 +1335,7 @@ export function NegotiationRoom({
             </div>
           </div>
 
-          {/* Column 3: Peggy AI Assistant */}
+          {/* Column 3: Peggy */}
           <div className="flex-1 flex flex-col bg-gradient-to-br from-primary/5 to-primary/10">
             <div className="p-4 border-b bg-background/80 backdrop-blur">
               <div className="flex items-center gap-3">
@@ -1343,7 +1343,7 @@ export function NegotiationRoom({
                   <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">Peggy AI Assistant</h3>
+                  <h3 className="font-semibold text-sm">Peggy</h3>
                   <p className="text-xs text-muted-foreground">Your deal negotiation advisor</p>
                 </div>
               </div>

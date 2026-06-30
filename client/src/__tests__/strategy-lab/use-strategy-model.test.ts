@@ -88,10 +88,10 @@ describe("useStrategyModel — read tier thresholds", () => {
     expect(result.current.read.lane).toBe("Investments / Value-add");
 
     setInputs(result, inputsForArv(108_000));
-    expect(result.current.read.lane).toBe("Strategy Review");
+    expect(result.current.read.lane).toBe("Property Read");
 
     setInputs(result, inputsForArv(100_000));
-    expect(result.current.read.lane).toBe("Strategy Review");
+    expect(result.current.read.lane).toBe("Property Read");
 
     setInputs(result, inputsForArv(99_000));
     expect(result.current.read.lane).toBe("Re-examine basis");

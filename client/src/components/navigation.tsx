@@ -369,7 +369,7 @@ export function Navigation() {
           <Link
             href="/"
             className="flex items-center gap-3 lg:gap-4 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm group"
-            aria-label="Pegasus DreamScapes home"
+            aria-label="Pegasus Dreamscapes home"
             data-testid="link-logo"
           >
             <img
@@ -396,7 +396,7 @@ export function Navigation() {
                   onLightSurface ? "text-[hsl(var(--ink))]" : "text-white"
                 }`}
               >
-                Pegasus DreamScapes
+                Pegasus Dreamscapes
               </span>
               <span
                 className={`text-[9px] lg:text-[10px] tracking-[0.32em] uppercase font-supporting mt-1 ${
@@ -410,7 +410,7 @@ export function Navigation() {
 
           {/* Desktop nav — 5 noun items + More dropdown */}
           <nav
-            className="hidden lg:flex items-center gap-0.5 xl:gap-1"
+            className="hidden min-[1340px]:flex items-center gap-0.5 xl:gap-1"
             aria-label="Primary navigation"
           >
             {NAV_ITEMS.map((item) => {
@@ -589,7 +589,7 @@ export function Navigation() {
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`lg:hidden p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
+                  className={`min-[1340px]:hidden p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
                     onLightSurface
                       ? "text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
                       : "text-white hover:bg-white/10"
@@ -614,11 +614,11 @@ export function Navigation() {
                     href="/"
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 rounded-sm"
-                    aria-label="Pegasus DreamScapes home"
+                    aria-label="Pegasus Dreamscapes home"
                   >
                     <img src={logoImage} alt="" aria-hidden="true" className="h-10 w-auto" />
                     <span className="font-display text-sm tracking-[0.18em] text-[hsl(var(--ink))]">
-                      Pegasus DreamScapes
+                      Pegasus Dreamscapes
                     </span>
                   </Link>
                 </div>

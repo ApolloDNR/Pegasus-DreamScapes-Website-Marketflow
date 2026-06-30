@@ -65,7 +65,7 @@ const FOLDER_COLORS = [
   { value: "blue", label: "Blue", class: "bg-blue-500" },
   { value: "green", label: "Green", class: "bg-green-500" },
   { value: "orange", label: "Orange", class: "bg-orange-500" },
-  { value: "purple", label: "Purple", class: "bg-purple-500" },
+  { value: "copper", label: "Copper", class: "bg-primary" },
   { value: "red", label: "Red", class: "bg-red-500" },
 ];
 

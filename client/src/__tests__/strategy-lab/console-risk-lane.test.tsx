@@ -35,8 +35,8 @@ function setSelect(label: string | RegExp, value: string) {
 const FLAG = {
   thinMargin: /Thin margin once carry and exit costs come out/,
   roughRepair: /Repair budget is a rough estimate, not a verified scope/,
-  tenant: /Tenant-occupied — possession and relocation may apply/,
-  probate: /Probate \/ estate — court timing and authority to sell/,
+  tenant: /Tenant-occupied: possession and relocation may apply/,
+  probate: /Probate \/ estate: court timing and authority to sell/,
   subjectTo: /Subject-to carries due-on-sale and disclosure exposure/,
 } as const;
 const NO_FLAGS = /No major flags on these inputs/;

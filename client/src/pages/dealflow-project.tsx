@@ -568,7 +568,7 @@ export default function DealflowProject() {
                       label="Investment Size Fit" 
                       value={4} 
                       max={5}
-                      color="bg-purple-500"
+                      color="bg-primary"
                       icon={<DollarSign className="w-4 h-4" />}
                       description="How well the minimum investment fits your capital allocation"
                     />

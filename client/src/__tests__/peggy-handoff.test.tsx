@@ -1,7 +1,7 @@
 /**
  * Peggy — handoff directive parsing + next-step action buttons (Task #179).
  *
- * PeggyAI embeds an inline [[HANDOFF]]{...}[[/HANDOFF]] directive in the
+ * Peggy embeds an inline [[HANDOFF]]{...}[[/HANDOFF]] directive in the
  * assistant stream to decide which next-step CTA to surface. `splitHandoff`
  * parses that directive and strips it from the visible prose; the component
  * then renders either "Open Strategy Lab" or "Start my Review" once streaming
@@ -103,13 +103,13 @@ function renderPeggy() {
 }
 
 async function sendMessage(text: string) {
-  fireEvent.change(screen.getByLabelText("Talk to PeggyAI"), {
+  fireEvent.change(screen.getByLabelText("Talk to Peggy"), {
     target: { value: text },
   });
   fireEvent.click(screen.getByRole("button", { name: "Send" }));
   // Streaming begins: the input is disabled until the reply resolves.
   await waitFor(() =>
-    expect(screen.getByLabelText("Talk to PeggyAI")).toBeDisabled(),
+    expect(screen.getByLabelText("Talk to Peggy")).toBeDisabled(),
   );
 }
 

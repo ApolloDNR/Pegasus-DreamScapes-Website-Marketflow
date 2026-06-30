@@ -152,7 +152,7 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
               trend={mockStats.averageTimeToClose < 5 ? "good" : "neutral"}
             />
             <StatCard
-              icon={<DollarSign className="w-5 h-5 text-purple-500" />}
+              icon={<DollarSign className="w-5 h-5 text-primary" />}
               label="Best Savings"
               value={`$${(mockStats.bestDealSaved / 1000).toFixed(0)}k`}
               subtext="on a single deal"

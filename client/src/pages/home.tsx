@@ -951,7 +951,7 @@ function DreamscaperStandardSection() {
     { title: "Stewardship over extraction", desc: "We protect long-term value: for owners, partners, and neighborhoods." },
     { title: "Honor over pressure", desc: "No urgency tactics, no pushed offers. The right path or no path." },
     { title: "Truth over easy promises", desc: "If we can't help, we say so, and route to who can." },
-    { title: "Human review over blind automation", desc: "Software supports the work. People still make the calls." },
+    { title: "Operator judgment over blind automation", desc: "Software supports the work. People still make the calls." },
   ];
 
   return (

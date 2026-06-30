@@ -193,7 +193,7 @@ export default function AdminPeggyConversationsPage() {
                           <AlertTriangle
                             className="w-4 h-4 text-destructive inline"
                             data-testid={`flag-human-${c.id}`}
-                            aria-label="Human review required"
+                            aria-label="Operator attention required"
                           />
                         )}
                       </td>

@@ -140,7 +140,7 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
         <StatCard
           title="Offers Submitted"
           value={displayStats.offersSubmitted.toString()}
-          icon={<FileText className="w-5 h-5 text-purple-500" />}
+          icon={<FileText className="w-5 h-5 text-primary" />}
           subtitle={`${displayStats.pendingOffers} pending`}
         />
         <StatCard
@@ -350,7 +350,7 @@ function ActivityItem({ activity }: { activity: DealActivity }) {
   const colors: Record<DealActivity["type"], string> = {
     viewed: "bg-gray-100 text-gray-600",
     saved: "bg-blue-100 text-blue-600",
-    offer: "bg-purple-100 text-purple-600",
+    offer: "bg-primary/10 text-primary",
     counter: "bg-amber-100 text-amber-600",
     accepted: "bg-green-100 text-green-600",
     message: "bg-cyan-100 text-cyan-600",
@@ -480,7 +480,7 @@ function PipelineOverview({ stats }: { stats: DashboardStats }) {
   const stages = [
     { name: "Viewed", count: stats.totalDealsViewed, color: "bg-gray-200" },
     { name: "Saved", count: stats.dealsSaved, color: "bg-blue-200" },
-    { name: "Offer Sent", count: stats.offersSubmitted, color: "bg-purple-200" },
+    { name: "Offer Sent", count: stats.offersSubmitted, color: "bg-primary/20" },
     { name: "Negotiating", count: stats.activeNegotiations, color: "bg-amber-200" },
     { name: "Pending", count: stats.pendingOffers, color: "bg-green-200" },
     { name: "Closed", count: stats.dealsWon, color: "bg-green-400" },

@@ -274,7 +274,7 @@ export default function DealflowCommunity() {
     const colors = [
       "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
       "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
-      "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
+      "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary",
       "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
       "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-400",
     ];

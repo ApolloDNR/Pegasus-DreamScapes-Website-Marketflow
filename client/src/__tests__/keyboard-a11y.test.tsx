@@ -385,7 +385,7 @@ describe("Tab order matches reading order (Task #143)", () => {
     ]);
   });
 
-  it("/connect: six routing buttons appear in DOM order with visible focus rings", () => {
+  it("/connect: eight routing buttons appear in DOM order with visible focus treatment", () => {
     const { container } = renderWithRouter(<ConnectPage />, "/connect");
     const connectLinks = Array.from(
       container.querySelectorAll<HTMLElement>("[data-testid^='link-connect-']"),
@@ -394,14 +394,19 @@ describe("Tab order matches reading order (Task #143)", () => {
       // are not RouteGrid routing buttons; they rely on the global
       // :focus-visible outline rather than an explicit focus-visible:ring.
       const id = el.getAttribute("data-testid") || "";
-      return id !== "link-connect-email" && id !== "link-connect-phone";
+      return (
+        id !== "link-connect-email" &&
+        id !== "link-connect-phone" &&
+        id !== "link-connect-submit" &&
+        !id.startsWith("link-connect-active-")
+      );
     });
-    expect(connectLinks).toHaveLength(6);
+    expect(connectLinks).toHaveLength(8);
     for (const link of connectLinks) {
       const cls = link.getAttribute("class") ?? "";
       expect(
-        /focus-visible:ring/.test(cls),
-        `connect routing button ${link.getAttribute("data-testid")} must carry a focus-visible:ring class`,
+        cls.includes("connect-lane-row"),
+        `connect routing button ${link.getAttribute("data-testid")} must use the lane-row focus treatment`,
       ).toBe(true);
     }
   });

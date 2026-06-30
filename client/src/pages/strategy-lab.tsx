@@ -672,7 +672,7 @@ export default function StrategyLabPage() {
   useSEO({
     title: "Strategy Lab",
     description:
-      "Run a property through the Pegasus lens. Lane fit, risk, and a recommended next step. Preliminary; human review required.",
+      "Run a property through the Pegasus lens. Lane fit, risk, and a recommended next step. Preliminary; written Property Read required before action.",
     image: "/og/strategy-lab.png",
   });
 
@@ -1315,11 +1315,11 @@ export default function StrategyLabPage() {
     setSubmitDialogOpen(true);
   }, [snapshot, ensureAuth, toast, fireTouchpoint]);
 
-  // Lab Mode panel — flips Peggy into Explain / Stress test / Prepare for review.
+  // Peggy panel - Explain / Stress test / Prepare for review.
   const openLabMode = useCallback(
     (mode: "explain" | "stress" | "prepare") => {
       if (!snapshot || !topLane) {
-        toast({ title: "Run the lab first", description: "Enter at least the asking price to use Peggy Lab Mode.", variant: "destructive" });
+        toast({ title: "Run the lab first", description: "Enter at least the asking price to use Peggy.", variant: "destructive" });
         return;
       }
       peggy.updateContext({ page: "strategy-lab", labMode: mode });
@@ -1414,76 +1414,177 @@ export default function StrategyLabPage() {
   const focusSensitivity = snapshot?.sensitivities.find(
     (s) => s.lane === focusLane?.lane,
   ) ?? snapshot?.sensitivities[0];
+  const heroTier = topLane ? tierRangeFor(topLane.lane) : null;
+  const heroPropertyLabel =
+    form.address ||
+    [form.city, form.state].filter(Boolean).join(", ") ||
+    "Address pending";
+  const heroReadStrength = topLane
+    ? topLane.confidence.score >= 70
+      ? "Strong"
+      : topLane.confidence.score >= 45
+        ? "Workable"
+        : "Thin"
+    : "Awaiting inputs";
+  const heroAssumptions = [
+    {
+      label: "Asking",
+      value: parseNum(form.askingPrice)
+        ? fmtDollars(parseNum(form.askingPrice)!)
+        : "Needed",
+    },
+    {
+      label: "Scope",
+      value: parseNum(form.rehabBudget)
+        ? fmtDollars(parseNum(form.rehabBudget)!)
+        : "Open",
+    },
+    {
+      label: "ARV",
+      value: parseNum(form.arvEstimate)
+        ? fmtDollars(parseNum(form.arvEstimate)!)
+        : "Open",
+    },
+  ];
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Mobile note — Quick Read works on mobile; Full Path is desktop-only */}
+      {/* Mobile note - the cockpit works on mobile; deeper controls are best on desktop. */}
       <div className="lg:hidden bg-background border-b border-border/40 px-6 py-3 flex items-center gap-2.5 mt-[76px]">
         <Info className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
         <p className="text-xs text-muted-foreground leading-snug">
-          The preliminary read works here.{" "}
-          <span className="text-foreground font-medium">The full Strategy Snapshot builder requires a larger screen.</span>
+          The cockpit works here.{" "}
+          <span className="text-foreground font-medium">Use desktop when you want comps, sensitivity, PDF controls, and the full assumption desk.</span>
         </p>
       </div>
       {/* Hero */}
-      <section className="border-b border-[hsl(var(--rule))]">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-10 pt-28 lg:pt-32 pb-10">
-          <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            Strategy Lab
+      <section className="strategy-lab-hero border-b border-[hsl(var(--rule))]" data-testid="strategy-lab-premium-hero">
+        <div className="strategy-lab-hero-shell max-w-[1320px] mx-auto px-6 lg:px-10 pt-28 lg:pt-32 pb-10">
+          <div className="strategy-lab-kicker text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+            <span aria-hidden="true" />
+            Pegasus Strategy Lab
           </div>
-          <div className="grid lg:grid-cols-12 gap-8 items-end">
-            <div className="lg:col-span-8 xl:col-span-7 min-w-0">
-              <h1 className="font-serif font-semibold tracking-[-0.02em] leading-[1.04]">
-                <span className="block text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl">Strategy Lab.</span>
-                <span className="block italic bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent text-2xl sm:text-3xl lg:text-4xl xl:text-[2.75rem] mt-2">
-                  One address in. Every angle out.
-                </span>
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="strategy-lab-hero-copy lg:col-span-6 min-w-0">
+              <h1 className="font-serif font-semibold leading-[1.0]">
+                <span className="block">One cockpit for the deal.</span>
               </h1>
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mt-5 max-w-2xl font-serif">
-                Run the property through the Pegasus lens.
+              <p className="strategy-lab-lede text-base sm:text-lg text-muted-foreground leading-relaxed mt-5 max-w-2xl font-serif">
+                Put the property, pressure, assumptions, lane fit, risk, and next move in one place. Change a number and the read changes with you.
               </p>
               <p
-                className="text-base sm:text-lg text-foreground leading-relaxed mt-3 max-w-2xl font-serif font-semibold"
+                className="strategy-lab-promise text-base sm:text-lg text-foreground leading-relaxed mt-3 max-w-2xl font-serif font-semibold"
                 data-testid="text-lab-five-step-promise"
               >
-                Start with a property. See which lanes fit. See where the risks are. See what the numbers say. Decide the next step.
+                Start with the address. Read the lane. Stress the assumptions. Decide whether it belongs in Pegasus review.
               </p>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mt-3 max-w-2xl font-serif italic">
-                Preliminary, transparent, and editable. Human review required before any offer or release.
+              <p className="strategy-lab-disclosure text-sm sm:text-base text-muted-foreground leading-relaxed mt-3 max-w-2xl font-serif italic">
+                Directional analysis only. Not a valuation, appraisal, offer, securities solicitation, or promise of return.
               </p>
             </div>
-            <div className="lg:col-span-4 xl:col-span-5 flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3 lg:items-end lg:justify-end">
+            <div className="strategy-lab-hero-visual lg:col-span-6 min-w-0">
+              <div className="strategy-lab-hero-board" aria-label="Live Strategy Lab cockpit preview">
+                <div className="strategy-lab-etching" aria-hidden="true">
+                  <svg viewBox="0 0 820 560" fill="none" preserveAspectRatio="xMidYMid slice">
+                    <path d="M90 410H730M132 115H690M164 116V410M658 116V410" />
+                    <path d="M205 178L410 84L615 178V410H205V178Z" />
+                    <path d="M262 410V250H366V410M454 410V250H558V410M250 205H570" />
+                    <path d="M92 410L134 474H686L728 410M164 116L128 82M658 116L694 82" />
+                    <circle cx="190" cy="178" r="36" />
+                    <circle cx="630" cy="178" r="36" />
+                    <circle cx="410" cy="84" r="30" />
+                    <path d="M115 492H706M150 520H670" />
+                    <path d="M110 146H52M110 214H72M110 282H52M110 350H72" />
+                    <path d="M710 146H768M710 214H748M710 282H768M710 350H748" />
+                  </svg>
+                </div>
+                <div className="strategy-lab-board-top">
+                  <div>
+                    <span>Live property read</span>
+                    <strong>{heroPropertyLabel}</strong>
+                  </div>
+                  <div className="strategy-lab-status-light">
+                    <i aria-hidden="true" />
+                    {snapshot ? `Engine v${snapshot.engineVersion}` : "Engine ready"}
+                  </div>
+                </div>
+                <div className="strategy-lab-board-grid">
+                  <div>
+                    <span>Lead lane</span>
+                    <strong>{topLane?.laneLabel ?? "Add a price"}</strong>
+                    <small>{topLane?.headline ?? "The cockpit opens once the first real inputs are in."}</small>
+                  </div>
+                  <div>
+                    <span>Read strength</span>
+                    <strong>{heroReadStrength}</strong>
+                    <small>Signal quality from the inputs, not a score for the property.</small>
+                  </div>
+                  <div>
+                    <span>Strategy range</span>
+                    <strong>{heroTier?.range ?? "Pending"}</strong>
+                    <small>{heroTier?.strategy ?? "Illustrative only after lane fit."}</small>
+                  </div>
+                </div>
+                <div className="strategy-lab-board-flow" data-testid="ribbon-how-it-works">
+                  {[
+                    ["01", "Situation"],
+                    ["02", "Basis"],
+                    ["03", "Lane fit"],
+                    ["04", "Next move"],
+                  ].map(([num, label]) => (
+                    <div key={num}>
+                      <span>{num}</span>
+                      <strong>{label}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="strategy-lab-board-memo">
+                  <div>
+                    <span>Current read</span>
+                    <p>{framedMemo.paragraph || "Enter the address and basis. The Lab will show where the deal is strong, where it is thin, and what needs a written Pegasus read before action."}</p>
+                  </div>
+                  <div className="strategy-lab-assumptions">
+                    {heroAssumptions.map((item) => (
+                      <div key={item.label}>
+                        <span>{item.label}</span>
+                        <strong>{item.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="strategy-lab-hero-actions lg:col-span-12 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
                   document
                     .getElementById("section-identity")
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="bg-[hsl(var(--copper))] text-primary-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(27_56%_44%)] transition-colors"
+                className="strategy-lab-primary-action bg-[hsl(var(--copper))] text-primary-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(27_56%_44%)] transition-colors inline-flex items-center justify-center gap-2"
                 data-testid="cta-start-analysis"
               >
-                Start an Analysis
+                Enter the Cockpit
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => {
                   setForm(EXAMPLE_STATE);
                   setExampleLoaded(true);
                 }}
-                className="border border-[hsl(var(--rule))] text-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(var(--ink)/0.04)] transition-colors"
+                className="strategy-lab-secondary-action border border-[hsl(var(--rule))] text-foreground px-6 py-3 text-sm font-supporting font-semibold tracking-wide hover:bg-[hsl(var(--ink)/0.04)] transition-colors"
                 data-testid="cta-example-snapshot"
               >
-                View Example Snapshot
+                Load Example Deal
               </button>
             </div>
           </div>
-          <p className="mt-6 text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary" data-testid="text-lab-free-badge">
-            Free · No account required · Results in seconds
+          <p className="strategy-lab-note mt-6 text-[11px] uppercase tracking-[0.24em] font-supporting font-semibold text-primary" data-testid="text-lab-free-badge">
+            Free orientation | no account to start | written read before action
           </p>
           <p className="text-xs text-muted-foreground mt-3 max-w-3xl leading-relaxed">
-            Preliminary analysis only. Human review required before any offer, strategy
-            release, or execution decision. Outputs are illustrative and do not constitute
-            an offer of guaranteed returns or principal protection.
+            Any offer, listing, Blueprint, or execution decision requires a separate written agreement.
           </p>
 
           {/* ── 3-tier funnel ribbon (intake-only, hidden in Full Path) ── */}
@@ -1493,29 +1594,29 @@ export default function StrategyLabPage() {
           >
             <div className="p-4 border-b sm:border-b-0 sm:border-r border-[hsl(var(--rule))]">
               <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">
-                01 · Free Preliminary Read
+                01 | Cockpit read
               </div>
-              <div className="text-sm font-semibold text-foreground mb-0.5">Run any address now</div>
+              <div className="text-sm font-semibold text-foreground mb-0.5">First pass from the core facts</div>
               <div className="text-xs text-muted-foreground leading-snug">
-                No account. Lane fit, verdict, headline math. {FREE_RUN_LIMIT} free runs before sign-in.
+                No account to start. Lane fit, pressure points, and headline assumptions. {FREE_RUN_LIMIT} free runs before sign-in.
               </div>
             </div>
             <div className="p-4 border-b sm:border-b-0 sm:border-r border-[hsl(var(--rule))]">
               <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-1">
-                02 · Strategy Snapshot Builder
+                02 | Assumption desk
               </div>
-              <div className="text-sm font-semibold text-foreground mb-0.5">Save · Share · PDF</div>
+              <div className="text-sm font-semibold text-foreground mb-0.5">Comps, risk, sensitivity, PDF</div>
               <div className="text-xs text-muted-foreground leading-snug">
-                Free with a Pegasus account. Scenarios, risk register, sensitivity, snapshot PDF.
+                Same deal, deeper controls. Save, share, export, and prepare the package for a written Pegasus read.
               </div>
             </div>
             <div className="p-4">
               <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-[hsl(var(--copper))] mb-1">
-                03 · Pegasus Deal Blueprint
+                03 | Deal Blueprint
               </div>
-              <div className="text-sm font-semibold text-foreground mb-0.5">Human-prepared memo</div>
+              <div className="text-sm font-semibold text-foreground mb-0.5">Written scope by review</div>
               <div className="text-xs text-muted-foreground leading-snug">
-                By review. Underwriting + structure + outreach scripts, written by the Pegasus team — scoped per property.
+                If the deal earns it, Pegasus scopes a written structure memo. No self-serve checkout and no automatic approval.
               </div>
             </div>
           </div>
@@ -1526,24 +1627,24 @@ export default function StrategyLabPage() {
               sticky sub-nav already serve as the map. */}
           <div
             className={`${mode === "full" ? "hidden" : ""} mt-4 flex flex-col sm:flex-row sm:items-stretch gap-0 sm:gap-0 border border-[hsl(var(--rule))] bg-card/40 divide-y sm:divide-y-0 sm:divide-x divide-[hsl(var(--rule))]`}
-            data-testid="ribbon-how-it-works"
-            aria-label="How the Strategy Lab works in three steps"
+            data-testid="ribbon-cockpit-views"
+            aria-label="How the Strategy Lab cockpit works"
           >
             {[
               {
                 num: "1",
-                title: "Enter the property",
-                desc: "Address + a few inputs. ~30 seconds.",
+                title: "Load the situation",
+                desc: "Address, status, pressure, basis.",
               },
               {
                 num: "2",
-                title: "See the read",
-                desc: "Lane fit, headline math, risks. Instant.",
+                title: "Tune the assumptions",
+                desc: "Scope, ARV, rent, debt, comps.",
               },
               {
                 num: "3",
-                title: "Decide the next step",
-                desc: "Save it, share it, or request a Blueprint.",
+                title: "Choose the clean move",
+                desc: "Submit, save, share, or pass.",
               },
             ].map((step) => (
               <div key={step.num} className="flex items-start gap-3 px-4 py-3 flex-1">
@@ -1569,14 +1670,14 @@ export default function StrategyLabPage() {
         <div className="brand-stripe" aria-hidden="true" />
       </section>
 
-      {/* Sticky sub-nav: mode toggle + section anchors + status */}
+      {/* Sticky sub-nav: cockpit view toggle + section anchors + status */}
       <div
-        className="sticky top-16 lg:top-20 z-30 border-b border-[hsl(var(--rule))] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        className="strategy-lab-viewbar sticky top-16 lg:top-20 z-30 border-b border-[hsl(var(--rule))] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         data-testid="strategy-lab-subnav"
       >
         <div className="max-w-[1320px] mx-auto px-6 lg:px-10 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4 flex-wrap">
-            <div className="inline-flex border border-[hsl(var(--rule))]" role="tablist" aria-label="Strategy Lab mode">
+            <div className="strategy-lab-view-toggle inline-flex border border-[hsl(var(--rule))]" role="tablist" aria-label="Strategy Lab cockpit view">
               <button
                 type="button"
                 role="tab"
@@ -1585,7 +1686,7 @@ export default function StrategyLabPage() {
                 className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold transition-colors ${mode === "quick" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
                 data-testid="mode-quick"
               >
-                Preliminary
+                Cockpit
               </button>
               <button
                 type="button"
@@ -1602,7 +1703,7 @@ export default function StrategyLabPage() {
                 className={`hidden lg:block px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "full" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
                 data-testid="mode-full"
               >
-                Full Snapshot
+                Assumption Desk
               </button>
               <button
                 type="button"
@@ -1612,7 +1713,7 @@ export default function StrategyLabPage() {
                 className={`px-4 py-2 text-xs uppercase tracking-[0.18em] font-supporting font-semibold border-l border-[hsl(var(--rule))] transition-colors ${mode === "tools" ? "bg-[hsl(var(--ink))] text-[hsl(var(--paper))]" : "text-muted-foreground hover:text-foreground"}`}
                 data-testid="mode-tools"
               >
-                Quick Tools
+                Calculators
               </button>
             </div>
             {mode === "full" && (
@@ -1663,8 +1764,8 @@ export default function StrategyLabPage() {
             )}
             <span className="hidden sm:inline">
               {snapshot
-                ? `Engine v${snapshot.engineVersion} · ${comps.length} comp${comps.length === 1 ? "" : "s"}`
-                : "Engine ready · awaiting inputs"}
+                ? `Engine v${snapshot.engineVersion} | ${comps.length} comp${comps.length === 1 ? "" : "s"}`
+                : "Engine ready | awaiting inputs"}
             </span>
           </div>
         </div>
@@ -1675,25 +1776,25 @@ export default function StrategyLabPage() {
 
       {/* ── Quick Read (one-screen) ───────────────────────────────────── */}
       {mode === "quick" && (
-        <main className="max-w-5xl mx-auto px-6 lg:px-10 py-8" data-testid="quick-read-layout">
-          <div className="grid gap-6 lg:grid-cols-2 items-start">
+        <main className="strategy-lab-cockpit max-w-6xl mx-auto px-6 lg:px-10 py-8" data-testid="quick-read-layout">
+          <div className="strategy-lab-cockpit-grid grid gap-0 lg:grid-cols-[0.95fr_1.05fr] items-start">
             {/* Compact 5-field form */}
             <section
-              className="border border-[hsl(var(--rule))] bg-background shadow-[0_1px_0_rgba(13,27,45,0.04),0_8px_24px_-12px_rgba(13,27,45,0.18)] p-6 lg:p-7 space-y-5"
+              className="strategy-lab-input-panel border border-[hsl(var(--rule))] bg-background p-6 lg:p-7 space-y-5"
               data-testid="quick-form"
             >
               <div className="pb-4 border-b border-[hsl(var(--rule))]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-px w-6 bg-primary/60" aria-hidden="true" />
                   <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary">
-                    Preliminary Read
+                    Cockpit Input
                   </div>
                 </div>
                 <h2 className="font-serif text-3xl font-semibold tracking-tight leading-tight">
-                  Five fields. One read.
+                  Start with the facts that change the deal.
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-                  The basics. Pegasus reads the most likely outcome lane and the headline number, live as you type.
+                  Address, basis, scope, exit, and rent. The first read updates live, then the Assumption Desk lets you go deeper.
                 </p>
               </div>
               <Field label="Address">
@@ -1758,7 +1859,7 @@ export default function StrategyLabPage() {
                 ))}
               </Field>
               <div className="pt-2 text-[11px] text-muted-foreground leading-snug">
-                Need scenarios, risks, sensitivity, or PDF export? Switch to the Strategy Snapshot Builder on the right.
+                Need comps, sensitivity, or PDF export? Open the Assumption Desk.
               </div>
 
               {/* Hidden defaults — now editable inline. The static fallbacks
@@ -1825,13 +1926,13 @@ export default function StrategyLabPage() {
                   <li className="flex justify-between gap-3"><span>Loan term</span><span className="tabular-nums text-foreground">30 yr fixed</span></li>
                 </ul>
                 <p className="text-[11px] text-muted-foreground leading-snug pt-2">
-                  Need to edit vacancy, tax, insurance, or comps? Switch to the <span className="font-semibold text-foreground">Strategy Snapshot Builder</span>.
+                  Need to edit vacancy, tax, insurance, or comps? Open the <span className="font-semibold text-foreground">Assumption Desk</span>.
                 </p>
               </details>
             </section>
 
             {/* Stripped 3-card verdict */}
-            <aside className="space-y-3 lg:sticky lg:top-24" data-testid="quick-verdict">
+            <aside className="strategy-lab-read-panel space-y-3 lg:sticky lg:top-24" data-testid="quick-verdict">
               {!snapshot || !topLane ? (
                 <div className="border border-dashed border-[hsl(var(--rule))] p-6 text-center">
                   <div className="text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">

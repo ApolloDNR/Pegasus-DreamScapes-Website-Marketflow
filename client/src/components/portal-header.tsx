@@ -58,7 +58,7 @@ export function PortalHeader({ currentPortal }: PortalHeaderProps) {
       href: "/dealflow/office",
       available: isWholesaler,
       badge: "Wholesaler",
-      color: "bg-purple-600",
+      color: "bg-primary",
     },
     {
       id: "buyer",

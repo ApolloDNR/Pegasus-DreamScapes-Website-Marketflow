@@ -83,7 +83,7 @@ const STANDALONE_DARK_HERO: string[] = [
 
 const STANDALONE_SOLID_NAV: string[] = [
   '/strategy-lab/classic',
-  // In-funnel destinations from /strategy-lab/classic on submit — keep them on
+  // In-funnel destinations from /strategy-lab/classic on submit - keep them on
   // the unified chrome so users don't drop to the legacy site mid-conversion.
   '/strategy-lab/submitted',
   '/strategy-lab/blueprint-confirmed',
@@ -121,11 +121,11 @@ export function isSolidNavUrl(path: string): boolean {
   return STANDALONE_SOLID_PREFIX.some((prefix) => p.startsWith(prefix));
 }
 
-// Top-level URL segments that resolve to a real route in <Router> (App.tsx) —
+// Top-level URL segments that resolve to a real route in <Router> (App.tsx) -
 // pegasus pages, standalone pages, functional/auth surfaces, and legacy
 // redirects. Any path whose first segment is NOT in this set falls through to
 // the catch-all NotFound (404) page. We use that to give the public 404 the
-// unified premium chrome (dark navy hero → transparent nav) instead of the
+// unified premium chrome (dark navy hero to transparent nav) instead of the
 // legacy global Navigation/Footer. Keep this in sync with the route table in
 // App.tsx when adding/removing a top-level public route.
 const KNOWN_TOP_SEGMENTS: Set<string> = new Set([

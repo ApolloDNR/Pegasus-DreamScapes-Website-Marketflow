@@ -6,7 +6,7 @@ import brandEmblem from '@/assets/brand/pegasus-emblem.png';
 export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
 
 /* ----------------------------------------------------------------
-   Brand mark — the official Pegasus Dreamscapes emblem (navy winged
+   Brand mark - the official Pegasus Dreamscapes emblem (navy winged
    Pegasus over the house roof), used as a transparent PNG so the real
    logo shows consistently across every public surface. On dark
    backgrounds (onDark) a soft glow keeps the navy elements legible
