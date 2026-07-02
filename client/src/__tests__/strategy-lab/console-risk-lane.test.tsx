@@ -180,7 +180,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Your role", "Owner / Seller");
     setSelect("Condition", "Distressed");
 
-    expect(laneButton().textContent).toContain("Send for a property review");
+    expect(laneButton().textContent).toContain("Request a Property Read");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("sellers");
   });
@@ -192,7 +192,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Your role", "Owner / Seller");
     setSelect("Condition", "Poor");
 
-    expect(laneButton().textContent).toContain("Send for a property review");
+    expect(laneButton().textContent).toContain("Request a Property Read");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("sellers");
   });
@@ -205,7 +205,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Condition", "Good");
     setSelect("Occupancy", "Probate / estate");
 
-    expect(laneButton().textContent).toContain("Send for a property review");
+    expect(laneButton().textContent).toContain("Request a Property Read");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("sellers");
   });
