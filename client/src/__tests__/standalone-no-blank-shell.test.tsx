@@ -138,6 +138,7 @@ const STANDALONE_URLS: string[] = [
   // in-page Quick Tools, so it is excluded here like the other redirects.
   "/marketflow/access",
   "/marketflow/buyboxes",
+  "/marketflow/deals",
 ];
 
 function renderRoute(routePath: string) {
