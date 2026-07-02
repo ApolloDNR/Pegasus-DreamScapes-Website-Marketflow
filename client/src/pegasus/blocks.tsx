@@ -214,21 +214,18 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               East Bay real estate operating company
             </div>
             <h1 className="font-serif-display max-w-[15ch] text-[clamp(3.25rem,6.8vw,7rem)] font-normal leading-[0.96] tracking-[0em] text-on-photo [text-wrap:balance]">
-              Read the property. Structure the path.
+              Read the property. <em className="hero-title-accent">Structure the path.</em>
             </h1>
             <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
             <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
               Pegasus Dreamscapes reviews the facts first: property, pressure, numbers, and duty. Then we name the responsible path: represent, acquire, structure, route, or pass with a clear reason.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <button type="button" onClick={() => go('submit')} className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+              <button type="button" onClick={() => go('submit')} className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
-              <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+              <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Strategy Lab <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </button>
-              <button type="button" onClick={openPeggy} className="link-underline hidden items-center gap-2.5 text-[var(--cream)]/76 transition-colors hover:text-[var(--cream)] pg-label !text-[10px] !tracking-[0.14em] sm:inline-flex">
-                Talk to Peggy
               </button>
             </div>
             <div className="hero-proof-strip" aria-label="Public compliance and operating notes">
@@ -1039,7 +1036,7 @@ export function NelsonProof({ go }: { go: Nav }) {
               <img
                 src={IMG('nelson/nelson-hero-1280.jpg')}
                 alt="4369 Nelson Drive, Richmond, finished exterior in delivered condition"
-                className="w-full h-full object-cover"
+                className="img-warm w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
               />
