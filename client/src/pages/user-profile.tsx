@@ -80,7 +80,7 @@ const RANK_TIERS = [
   { name: "Silver", minDeals: 5, minVolume: 100000, color: "bg-slate-400", textColor: "text-slate-900", icon: Trophy },
   { name: "Gold", minDeals: 15, minVolume: 500000, color: "bg-amber-400", textColor: "text-amber-900", icon: Crown },
   { name: "Platinum", minDeals: 50, minVolume: 2000000, color: "bg-cyan-200", textColor: "text-cyan-800", icon: Crown },
-  { name: "Diamond", minDeals: 100, minVolume: 10000000, color: "bg-violet-300", textColor: "text-violet-900", icon: Crown },
+  { name: "Diamond", minDeals: 100, minVolume: 10000000, color: "bg-amber-300", textColor: "text-amber-950", icon: Crown },
 ];
 
 const getRankTier = (totalDeals: number, totalVolume: number) => {
@@ -456,8 +456,8 @@ export default function UserProfile() {
                     </div>
                   </div>
                   <div className="p-3 rounded bg-background flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
-                      <MessageCircle className="w-5 h-5 text-purple-600" />
+                    <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium">{stats?.responseRate || "N/A"}</p>
@@ -542,8 +542,8 @@ export default function UserProfile() {
                         )}
                         {reputation.responseRate !== null && (
                           <div className="p-3 rounded bg-background flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
-                              <MessageCircle className="w-5 h-5 text-purple-600" />
+                            <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                              <MessageCircle className="w-5 h-5 text-primary" />
                             </div>
                             <div>
                               <p className="font-medium">{reputation.responseRate}%</p>

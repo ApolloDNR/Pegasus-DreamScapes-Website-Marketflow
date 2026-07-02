@@ -36,17 +36,17 @@ const HERO_SIGNALS = [
 ];
 
 const HERO_LANES = [
-  { key: 'list', title: 'List', desc: 'For clean listings where Apollo represents through KW East Bay.' },
-  { key: 'buy', title: 'Buy', desc: 'For as-is situations that fit the numbers and written terms.' },
-  { key: 'partner', title: 'Partner', desc: 'For deals where shared execution creates the cleaner outcome.' },
-  { key: 'route', title: 'Route', desc: 'For opportunities better matched to a vetted buyer or network lane.' },
+  { key: 'list', title: 'Represent', desc: 'For sellers and buyers when the right answer is licensed agency through Apollo at KW East Bay.' },
+  { key: 'buy', title: 'Acquire', desc: 'For as-is, time-sensitive, or complex properties when the numbers support written purchase terms.' },
+  { key: 'partner', title: 'Structure', desc: 'For JV, reposition, development, capital, or participation paths that need a disciplined plan.' },
+  { key: 'route', title: 'Route', desc: 'For opportunities better matched to a vetted buyer, referral partner, or private MarketFlow lane.' },
 ];
 
 const HERO_READ_ROWS = [
-  { label: 'Property facts', value: 'Condition, occupancy, debt, title, timeline' },
-  { label: 'Number read', value: 'Basis, scope, carry, exit, margin, risk' },
-  { label: 'Participation', value: 'Represent, acquire, partner, route, or pass' },
-  { label: 'Human step', value: 'Written review before terms or action' },
+  { label: 'Situation', value: 'Owner goal, pressure, condition, occupancy, and timing' },
+  { label: 'Numbers', value: 'Basis, scope, carry, exit cost, margin, and downside' },
+  { label: 'Lane', value: 'Represent, acquire, structure, route, or pass with context' },
+  { label: 'Terms', value: 'Written terms before agency, purchase, JV, or distribution' },
 ];
 
 function HeroWorkboard({ go }: { go: Nav }) {
@@ -72,8 +72,8 @@ function HeroWorkboard({ go }: { go: Nav }) {
       <div className="hero-workboard-inner">
         <div className="flex items-center justify-between gap-5 border-b border-[rgba(245,230,211,0.16)] pb-5">
           <div>
-            <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Private property read</div>
-            <div className="mt-2 font-serif-display text-2xl text-[var(--cream)]">Facts before pressure.</div>
+            <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Operating map</div>
+            <div className="mt-2 font-serif-display text-2xl text-[var(--cream)]">One property. The right lane.</div>
           </div>
           <BrandMark boxClassName="w-12 h-12" onDark />
         </div>
@@ -110,9 +110,9 @@ function HeroWorkboard({ go }: { go: Nav }) {
         </div>
 
         <div className="hero-review-note">
-          <span>No instant offer</span>
-          <span>No public marketplace promise</span>
-          <span>Licensed representation stays separate</span>
+          <span>No blind offer</span>
+          <span>No public securities offering</span>
+          <span>Agency through KW East Bay when applicable</span>
         </div>
 
         <button type="button" onClick={() => go('strategylab')} className="hero-workboard-link group">
@@ -178,7 +178,7 @@ export function LegacyHero({ go, theme, parallaxRef, openPeggy }:
                 Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </button>
               <button type="button" onClick={openPeggy} className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--cream)]/80 hover:text-[var(--cream)] inline-flex items-center gap-2.5 transition-colors">
-                Talk to PeggyAI
+                Talk to Peggy
               </button>
             </div>
           </div>
@@ -208,41 +208,32 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-0 hero-scrim-bottom" />
 
       <div className="relative mx-auto max-w-[1440px] px-6 pb-20 pt-32 text-[var(--cream)] lg:px-12 lg:pb-24 lg:pt-36">
-        <div className="grid min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-center gap-12 lg:grid-cols-12 xl:gap-16">
-          <div className="min-w-0 lg:col-span-6 xl:col-span-5">
+        <div className="flex min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-center">
+          <div className="min-w-0 max-w-[860px]">
             <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo !tracking-[0.22em]">
-              Deal Strategy &amp; Real Estate Execution | East Bay
+              East Bay real estate operating company
             </div>
-            <h1 className="font-serif-display max-w-[12ch] text-[clamp(2.9rem,5.8vw,6.25rem)] font-normal leading-[0.98] tracking-[0em] text-on-photo [text-wrap:balance]">
-              Complex property. <span className="block italic text-[var(--accent-bright)]">A clearer way out.</span>
+            <h1 className="font-serif-display max-w-[15ch] text-[clamp(3.25rem,6.8vw,7rem)] font-normal leading-[0.96] tracking-[0em] text-on-photo [text-wrap:balance]">
+              Read the property. <em className="hero-title-accent">Structure the path.</em>
             </h1>
             <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
             <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
-              Bring the property, the deal, or the stuck situation. Pegasus reads the facts, underwrites the numbers, and puts the next responsible move in plain language.
+              Pegasus Dreamscapes reviews the facts first: property, pressure, numbers, and duty. Then we name the responsible path: represent, acquire, structure, route, or pass with a clear reason.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <button type="button" onClick={() => go('submit')} className="btn-solid-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+              <button type="button" onClick={() => go('submit')} className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
-              <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[10px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+              <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Strategy Lab <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
-              <button type="button" onClick={openPeggy} className="link-underline inline-flex items-center gap-2.5 text-[var(--cream)]/76 transition-colors hover:text-[var(--cream)] pg-label !text-[10px] !tracking-[0.14em]">
-                Talk to Peggy
-              </button>
             </div>
-            <div className="hero-signal-rail" aria-label="Pegasus operating signals">
-              {HERO_SIGNALS.map((signal) => (
-                <div key={signal.label} className="hero-signal">
-                  <Ico name={signal.icon} className="h-4 w-4" />
-                  <span>{signal.label}</span>
-                </div>
-              ))}
+            <div className="hero-proof-strip" aria-label="Public compliance and operating notes">
+              <span>DRE #02333658</span>
+              <span>KW East Bay for representation</span>
+              <span>Equal Housing</span>
+              <span>No guaranteed offer or return</span>
             </div>
-          </div>
-
-          <div className="min-w-0 lg:col-span-6 xl:col-span-7">
-            <HeroWorkboard go={go} />
           </div>
         </div>
       </div>
@@ -270,7 +261,7 @@ export function LegacyHomeIntro() {
         </div>
         <div className="lg:col-span-8 reveal delay-100">
           <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-[-0.01em]">
-            We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. Our Development team <span className="text-[var(--accent)]">builds</span> it with licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> — underwriting, intake, and the marketplace — that hold every deal to the same read.
+            We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. Our Development team <span className="text-[var(--accent)]">builds</span> it with licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> that hold underwriting, intake, and the marketplace to the same read.
           </p>
         </div>
       </div>
@@ -279,37 +270,58 @@ export function LegacyHomeIntro() {
 }
 
 /* ----------------------------------------------------------------
-   How a deal moves — departments (Acquisitions → Development →
-   Dispositions → Asset Management) + two supporting pillars.
+   How a deal moves - departments (Acquisitions to Development to
+   Dispositions to Asset Management) + two supporting pillars.
    Shows structure, not headcount.
 ---------------------------------------------------------------- */
-export function HomeIntro() {
+export function HomeIntro({ go }: { go: Nav }) {
   return (
     <section className="home-intro-section border-t border-[rgba(245,230,211,0.12)] py-24 lg:py-32">
-      <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-6 lg:grid-cols-12 lg:px-12 xl:gap-16">
-        <div className="reveal lg:col-span-5">
-          <div className="pg-label text-[var(--accent)]">Who we serve</div>
-          <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
-          <h2 className="font-serif-display text-5xl leading-[1.02] tracking-[0em] text-[var(--text)] md:text-7xl [text-wrap:balance]">
-            One firm. Different duties for different people.
-          </h2>
-        </div>
-        <div className="reveal delay-100 lg:col-span-7">
-          <div className="home-lane-ledger">
-            {PARTICIPATION_LANES.map((lane, i) => (
-              <a key={lane.key} href={lane.href} className="home-lane-row group">
-                <span className="home-lane-num">{String(i + 1).padStart(2, '0')}</span>
-                <span>
-                  <span className="home-lane-title">{lane.title}</span>
-                  <span className="home-lane-desc">{lane.desc}</span>
-                </span>
-                <ArrowUpRight className="home-lane-arrow" />
-              </a>
-            ))}
+      <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
+        <div className="grid items-center gap-12 lg:grid-cols-12 xl:gap-16">
+          <div className="reveal lg:col-span-5">
+            <div className="pg-label text-[var(--accent)]">The operating map</div>
+            <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
+            <h2 className="font-serif-display text-5xl leading-[1.02] tracking-[0em] text-[var(--text)] md:text-7xl [text-wrap:balance]">
+              Property. Pressure. Numbers. Lane.
+            </h2>
+            <p className="mt-7 max-w-md text-[var(--muted)] leading-relaxed">
+              The public site should feel simple because the work behind it is disciplined. Pegasus separates the facts before terms, promises, or pressure enter the room.
+            </p>
           </div>
-          <p className="mt-8 max-w-2xl text-[var(--muted)] leading-relaxed">
-            Clean sellers can request representation through Apollo at Keller Williams Realty East Bay. Complex owners, buyers, deal finders, and partners enter through the Pegasus operating lanes. The duty changes by lane; the standard stays disciplined.
-          </p>
+          <div className="reveal delay-100 lg:col-span-7">
+            <HeroWorkboard go={go} />
+          </div>
+        </div>
+
+        <div className="mt-16 grid items-start gap-10 lg:mt-20 lg:grid-cols-12 lg:gap-16">
+          <div className="reveal lg:col-span-5">
+            <div className="pg-label text-[var(--accent)]">Start in the right lane</div>
+            <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
+            <h3 className="font-serif-display text-4xl leading-[1.05] tracking-[0em] text-[var(--text)] md:text-6xl [text-wrap:balance]">
+              One firm. Different duties. No one-size answer.
+            </h3>
+            <p className="mt-7 max-w-md text-[var(--muted)] leading-relaxed">
+              A ready listing, a distressed property, a buyer search, and a wholesale lead do not belong in the same script. The lane changes the duty.
+            </p>
+          </div>
+          <div className="reveal delay-100 lg:col-span-7">
+            <div className="home-lane-ledger">
+              {PARTICIPATION_LANES.map((lane, i) => (
+                <a key={lane.key} href={lane.href} className="home-lane-row group">
+                  <span className="home-lane-num">{String(i + 1).padStart(2, '0')}</span>
+                  <span>
+                    <span className="home-lane-title">{lane.title}</span>
+                    <span className="home-lane-desc">{lane.desc}</span>
+                  </span>
+                  <ArrowUpRight className="home-lane-arrow" />
+                </a>
+              ))}
+            </div>
+            <p className="mt-8 max-w-2xl text-[var(--muted)] leading-relaxed">
+              Sellers and buyers can request licensed representation through Apollo at Keller Williams Realty East Bay. Complex owners, deal finders, vendors, and partners enter Pegasus operating lanes. The role changes by lane; the standard stays disciplined.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -317,68 +329,62 @@ export function HomeIntro() {
 }
 
 export function HowADealMovesBlock() {
-  const last = DEPARTMENTS.length - 1;
   return (
-    <section className="relative py-24 lg:py-32 overflow-hidden bg-[var(--navy)] text-[var(--cream)]">
-      <ContourLines className="absolute inset-x-0 top-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.08] float-slow" />
-      <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead dark center eyebrow="How a deal moves"
-          title={<>From intake to a finished asset.</>}
-          copy="A property moves through Pegasus in order — Acquisitions reads it, Development builds it, Dispositions places it, and Asset Management runs what we hold. Two pillars support all four." />
-
-        {/* Desktop: horizontal department flow */}
-        <ol className="hidden lg:flex mt-4" aria-label="How a deal moves through Pegasus departments">
-          {DEPARTMENTS.map((d, i) => (
-            <li key={d.name} className="reveal relative flex-1 px-3" style={{ animationDelay: `${i * 80}ms` }}>
-              {i < last && (
-                <span aria-hidden="true"
-                  className="step-connector absolute top-[26px] left-[calc(50%+34px)] right-[calc(-50%+34px)] h-px bg-gradient-to-r from-[var(--accent-bright)]/45 to-[var(--accent-bright)]/12"
-                  style={{ animationDelay: `${i * 80 + 240}ms` }} />
-              )}
-              <div className="relative z-10 mb-6 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">
-                {d.stage}
+    <section className="operating-departments-section relative overflow-hidden bg-[var(--navy)] py-24 text-[var(--cream)] lg:py-32">
+      <img
+        src={IMG('nelson/nelson-exterior-1280.jpg')}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover opacity-[0.13]"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,14,24,0.98),rgba(5,14,24,0.9)_48%,rgba(5,14,24,0.96))]" />
+      <ContourLines className="absolute inset-x-0 bottom-0 h-[55%] w-full text-[var(--accent-2)] opacity-[0.08]" />
+      <div className="relative mx-auto max-w-[1320px] px-6 lg:px-12">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="reveal lg:col-span-5">
+            <div className="pg-label mb-6 text-[var(--accent-bright)]">Operating departments</div>
+            <h2 className="font-serif-display max-w-[10ch] text-5xl leading-[1.02] tracking-[0em] text-[var(--cream)] md:text-7xl [text-wrap:balance]">
+              Four departments. One standard.
+            </h2>
+            <p className="mt-7 max-w-md text-[rgba(245,230,211,0.7)] leading-relaxed">
+              Acquisitions reads the deal. Development proves the scope. Dispositions controls the exit. Asset Management protects what is held.
+            </p>
+            <div className="department-proof-card mt-10">
+              <BrandMark boxClassName="h-12 w-12 shrink-0" onDark />
+              <div>
+                <div className="pg-label !text-[8px] text-[var(--accent-bright)]">Public promise</div>
+                <p>Clear lane, written terms, and no pressure to force a deal that does not pencil.</p>
               </div>
-              <div className="flex items-center gap-2.5 mb-3">
-                <span className="text-[var(--accent-bright)]"><Ico name={d.icon} className="w-4 h-4" /></span>
-                <span className="font-serif-display text-xl text-[var(--cream)] leading-tight">{d.name}</span>
-              </div>
-              <p className="text-[rgba(239,231,218,0.6)] text-[0.84rem] leading-relaxed pr-6">{d.desc}</p>
-            </li>
-          ))}
-        </ol>
-
-        {/* Mobile: vertical spine */}
-        <ol className="lg:hidden relative mt-4">
-          <span aria-hidden="true" className="draw-on-view step-spine absolute left-[26px] top-4 bottom-4 w-px bg-gradient-to-b from-[var(--accent-bright)]/45 via-[var(--accent-bright)]/20 to-transparent" />
-          {DEPARTMENTS.map((d, i) => (
-            <li key={d.name} className="reveal relative flex gap-5 pb-8 last:pb-0" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="relative z-10 shrink-0 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">{d.stage}</div>
-              <div className="pt-1.5">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <span className="text-[var(--accent-bright)]"><Ico name={d.icon} className="w-4 h-4" /></span>
-                  <span className="font-serif-display text-xl text-[var(--cream)] leading-none">{d.name}</span>
-                </div>
-                <p className="text-[rgba(239,231,218,0.6)] text-[0.88rem] leading-relaxed">{d.desc}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        {/* Two supporting pillars */}
-        <div className="mt-14 pt-10 border-t border-[rgba(239,231,218,0.14)]">
-          <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6 text-center">Supported across every deal</div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {DEPT_PILLARS.map((p, i) => (
-              <div key={p.name} className="reveal rounded-[3px] border border-[rgba(239,231,218,0.18)] bg-[rgba(245,230,211,0.03)] p-6" style={{ animationDelay: `${i * 90}ms` }}>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[var(--accent-bright)]"><Ico name={p.icon} className="w-4 h-4" /></span>
-                  <span className="font-serif-display text-xl text-[var(--cream)]">{p.name}</span>
-                </div>
-                <p className="text-[rgba(239,231,218,0.62)] text-[0.85rem] leading-relaxed">{p.desc}</p>
-              </div>
-            ))}
+            </div>
           </div>
-          <p className="mt-8 text-center pg-label !text-[8px] !tracking-[0.22em] text-[rgba(245,230,211,0.4)]">Structure, not headcount</p>
+
+          <div className="reveal delay-100 lg:col-span-7">
+            <ol className="department-ledger" aria-label="Pegasus operating departments">
+              {DEPARTMENTS.map((d) => (
+                <li key={d.name} className="department-row">
+                  <span className="department-stage">{d.stage}</span>
+                  <span className="department-copy">
+                    <strong>{d.name}</strong>
+                    <span>{d.desc}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            <div className="department-support-rail">
+              {DEPT_PILLARS.map((p) => (
+                <div key={p.name}>
+                  <div className="flex items-center gap-2.5">
+                    <Ico name={p.icon} className="h-4 w-4 text-[var(--accent-bright)]" />
+                    <strong>{p.name}</strong>
+                  </div>
+                  <p>{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -386,28 +392,28 @@ export function HowADealMovesBlock() {
 }
 
 /* ----------------------------------------------------------------
-   Strategy Lab feature teaser — ranges only, route to the tool.
+   Strategy Lab feature teaser - ranges only, route to the tool.
 ---------------------------------------------------------------- */
 export function StrategyLabFeature({ go }: { go: Nav }) {
-  const SAMPLE: { k: string; v: string }[] = [
-    { k: 'All-in basis', v: '$420K – $470K' },
-    { k: 'After-repair value', v: '$610K – $660K' },
-    { k: 'Indicated spread', v: 'Mid-tier' },
+  const sample: { k: string; v: string }[] = [
+    { k: 'Basis range', v: '$420K to $470K' },
+    { k: 'Scope posture', v: 'Moderate value-add' },
+    { k: 'Lane fit', v: 'Acquire / JV / Pass' },
   ];
+
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LAB</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-6 reveal">
-          <div className="pg-label text-[var(--accent)] mb-5">Run it yourself · Strategy Lab</div>
+          <div className="pg-label text-[var(--accent)] mb-5">Strategy Lab cockpit</div>
           <h2 className="font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-[-0.01em] text-[var(--text)] mb-6">
-            Model the deal before you talk to anyone.
+            Model the deal before it becomes a decision.
           </h2>
           <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-xl">
-            Enter what you know. The Lab returns strategy-tier ranges, the lanes that could fit, and the risks to weigh — in minutes, at your own pace. It is a planning tool, not a valuation, appraisal, CMA, or BPO.
+            Enter what you know. The Lab returns directional ranges, lane fit, and the risk flags worth understanding before a deeper Pegasus read. It is planning support, not a valuation, appraisal, CMA, BPO, or offer.
           </p>
           <ul className="space-y-3.5 mb-10">
-            {['Strategy-tier ranges, not a single verdict', 'The lanes that could fit, and the risk behind each', 'A clear next step you can act on'].map((pt) => (
+            {['Basis, scope, value, carry, and exit-cost assumptions', 'Lane fit with risk flags instead of a single verdict', 'A cleaner next step before money or terms move'].map((pt) => (
               <li key={pt} className="flex gap-3.5 leading-relaxed text-[var(--text-2)]">
                 <Check className="w-4 h-4 mt-1 shrink-0 text-[var(--accent)]" strokeWidth={2} />
                 <span>{pt}</span>
@@ -422,15 +428,15 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
           <div className="peggy-shadow relative overflow-hidden rounded-sm bg-[var(--navy)] text-[var(--cream)] p-8 sm:p-10">
             <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.12] float-slow" />
             <div className="relative">
-              <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6">Example read · ranges only</div>
-              {SAMPLE.map((row) => (
+              <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-6">Cockpit preview / ranges only</div>
+              {sample.map((row) => (
                 <div key={row.k} className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(239,231,218,0.14)] last:border-b-0">
                   <span className="font-supporting text-[0.7rem] uppercase tracking-[0.18em] text-[rgba(245,230,211,0.55)]">{row.k}</span>
                   <span className="font-mono text-lg text-[var(--cream)]">{row.v}</span>
                 </div>
               ))}
               <p className="mt-6 text-[rgba(239,231,218,0.5)] text-[0.72rem] leading-relaxed">
-                Illustrative ranges only. Not a valuation, appraisal, CMA, or BPO of any specific property.
+                Illustrative ranges only. Not a valuation, appraisal, CMA, BPO, or offer for any specific property.
               </p>
             </div>
           </div>
@@ -612,7 +618,7 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
 }
 
 /* ----------------------------------------------------------------
-   Process steps — reusable numbered icon ribbon with a connecting spine
+   Process steps - reusable numbered icon ribbon with a connecting spine
    (used by Development "How we build" and Strategy Lab "How the Lab works")
 ---------------------------------------------------------------- */
 export type ProcessStep = { n: string; icon: LucideIcon; t: string; d: string };
@@ -685,11 +691,10 @@ export function EngineBlock({ go }: { go: Nav }) {
 }
 
 /* ----------------------------------------------------------------
-   Deal-read stepper — the eight engine reads, taken in order
+   Deal-read stepper - the eight engine reads, taken in order
    (horizontal rail on desktop, vertical spine on mobile)
 ---------------------------------------------------------------- */
 export function DealReadStepper({ go }: { go: Nav }) {
-  const last = ENGINE_INPUTS.length - 1;
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden bg-[var(--navy)] text-[var(--cream)]">
       <ContourLines className="absolute inset-x-0 top-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.08] float-slow" />
@@ -698,17 +703,12 @@ export function DealReadStepper({ go }: { go: Nav }) {
           title={<>How we read a deal.</>}
           copy="Eight reads, taken in order. Each one informs the next, and together they resolve to a single recommendation." />
 
-        {/* Desktop: horizontal stepper, scrolls if the viewport is narrow */}
-        <ol className="hidden lg:flex overflow-x-auto pb-4 -mx-2 px-2"
+        {/* Desktop: two-row grid so the full engine is visible without a clipped rail */}
+        <ol className="hidden lg:grid grid-cols-4 gap-x-8 gap-y-12"
           aria-label="The eight reads of the Deal Strategy engine">
           {ENGINE_INPUTS.map((inp, i) => (
-            <li key={inp.label} className="reveal relative shrink-0 w-[200px] px-3 text-center"
+            <li key={inp.label} className="reveal relative px-3 text-center"
               style={{ animationDelay: `${i * 70}ms` }}>
-              {i < last && (
-                <span aria-hidden="true"
-                  className="step-connector absolute top-[25px] h-px bg-gradient-to-r from-[var(--accent-bright)]/45 to-[var(--accent-bright)]/15"
-                  style={{ left: 'calc(50% + 30px)', right: 'calc(-50% + 30px)', animationDelay: `${i * 70 + 220}ms` }} />
-              )}
               <div className="relative z-10 mx-auto mb-5 flex items-center justify-center w-[52px] h-[52px] rounded-full border border-[var(--accent-bright)]/45 bg-[var(--navy)] font-serif-display text-lg text-[var(--accent-bright)]">
                 {String(i + 1).padStart(2, '0')}
               </div>
@@ -762,7 +762,7 @@ export function DealReadStepper({ go }: { go: Nav }) {
 }
 
 /* ----------------------------------------------------------------
-   Three doors — choose how to start
+   Three doors - choose how to start
 ---------------------------------------------------------------- */
 export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const run = (a: StartAction) => { if (a === 'peggy') openPeggy(); else go(a); };
@@ -836,9 +836,9 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
     <section className={`relative py-24 lg:py-32 overflow-hidden ${dark ? 'bg-[var(--navy)] text-[var(--cream)]' : ''}`}>
       {dark && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead dark={dark} eyebrow="MarketFlow · The marketplace"
-          title="Where deals, capital, and product move."
-          copy="Three lanes, one network. Deals flow in, capital matches up, and finished product lands with buyers, each one verified end to end." />
+        <SectionHead dark={dark} eyebrow="MarketFlow · Private routing"
+          title="Where reviewed opportunities move."
+          copy="Three lanes, one network. Deals come in, capital is matched to real projects, and finished product lands with buyers, each step reviewed before it moves." />
         <div className="reveal mb-12 lg:mb-14" aria-hidden="true">
           <div className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap">
             {['Deals flow in', 'Capital matches up', 'Product lands'].map((s, i) => (
@@ -858,10 +858,9 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
         </div>
         <div className="grid lg:grid-cols-3 gap-6">
           {MARKETFLOW.map((m, i) => (
-            <div key={m.key} className={`reveal flex flex-col h-full p-6 sm:p-8 lg:p-9 rounded-[3px] border ${dark ? 'border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)]' : 'surface-card'}`} style={{ animationDelay: `${i * 90}ms` }}>
-              <div className="flex items-center justify-between mb-7">
-                <div className="door-icon !mb-0"><Ico name={m.icon} className="w-5 h-5" /></div>
-                <span className={`font-serif-display text-2xl leading-none ${dark ? 'text-[var(--cream)]/25' : 'text-[var(--line)]'}`}>0{i + 1}</span>
+            <div key={m.key} className={`reveal flex flex-col h-full pt-8 border-t ${dark ? 'border-[rgba(239,231,218,0.22)]' : 'border-[var(--line)]'}`} style={{ animationDelay: `${i * 90}ms` }}>
+              <div className="mb-6">
+                <span className={`font-serif-display text-5xl leading-none ${dark ? 'text-[var(--cream)]/22' : 'text-[var(--line)]'}`}>0{i + 1}</span>
               </div>
               <div className={`pg-label !text-[9px] mb-3 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{m.tag}</div>
               <h3 className={`font-serif-display text-2xl mb-4 leading-tight ${dark ? 'text-[var(--cream)]' : 'text-[var(--text)]'}`}>{m.name}</h3>
@@ -903,7 +902,7 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
     <section className="relative py-24 lg:py-28 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="The Pegasus Ecosystem" title="Six parts. One deal flow."
-          copy="The same firm reads the deal, builds it, funds it, and brings it to market — so nothing gets handed off to a stranger or lost in translation. The read that starts a deal is the read that closes it." />
+          copy="The same firm reads the deal, builds it, funds it, and brings it to market, so nothing gets handed off to a stranger or lost in translation. The read that starts a deal is the read that closes it." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ECOSYSTEM.map((s, i) => {
             const clickable = !!s.route;
@@ -983,7 +982,7 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
 }
 
 /* ----------------------------------------------------------------
-   Proof — stats + Nelson Drive
+   Proof - stats + Nelson Drive
 ---------------------------------------------------------------- */
 export function ProofStats() {
   return (
@@ -1034,8 +1033,8 @@ export function NelsonProof({ go }: { go: Nav }) {
             <div className="peggy-shadow relative aspect-[4/3] overflow-hidden rounded-sm">
               <img
                 src={IMG('nelson/nelson-hero-1280.jpg')}
-                alt="4369 Nelson Drive, Richmond — finished exterior, delivered condition"
-                className="w-full h-full object-cover"
+                alt="4369 Nelson Drive, Richmond, finished exterior in delivered condition"
+                className="img-warm w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
               />
@@ -1051,7 +1050,7 @@ export function NelsonProof({ go }: { go: Nav }) {
 }
 
 /* ----------------------------------------------------------------
-   Doctrine — Dreamscaper Standard
+   Doctrine - Dreamscaper Standard
 ---------------------------------------------------------------- */
 export function DoctrineBlock({ dark = false }: { dark?: boolean }) {
   return (
@@ -1119,7 +1118,7 @@ export function FAQBlock({ items, eyebrow = 'Questions', title = 'Plainly answer
 }
 
 /* ----------------------------------------------------------------
-   Qualifier — honest fit
+   Qualifier - honest fit
 ---------------------------------------------------------------- */
 export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string[] }) {
   return (
@@ -1192,7 +1191,7 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto =
             <span className="text-[var(--muted)] text-[0.92rem]">Not sure which lane fits?</span>
             <button type="button" onClick={openPeggy}
               className="pg-label !text-[10px] text-[var(--accent)] inline-flex items-center gap-2 group hover:opacity-80 transition-opacity">
-              Talk it through with PeggyAI <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              Talk it through with Peggy <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         )}
@@ -1202,13 +1201,13 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto =
 }
 
 /* ----------------------------------------------------------------
-   Deal Finders extras — source protection, Buy Box, JV/disposition
+   Deal Finders extras - source protection, Buy Box, JV/disposition
 ---------------------------------------------------------------- */
 const BUYBOX = [
-  { label: 'Geography', value: 'East Bay focus — Contra Costa & Alameda counties' },
-  { label: 'Asset type', value: 'SFR, 2–4 unit, small multifamily, ADU-able lots' },
+  { label: 'Geography', value: 'East Bay focus: Contra Costa & Alameda counties' },
+  { label: 'Asset type', value: 'SFR, 2 to 4 unit, small multifamily, ADU-able lots' },
   { label: 'Price band', value: '~$400K to $1.5M all-in (flexible on the right deal)' },
-  { label: 'Condition', value: 'Cosmetic to full gut — distress is welcome' },
+  { label: 'Condition', value: 'Cosmetic to full gut. Distress is welcome.' },
   { label: 'The math', value: 'Room for a real margin after carry and exit, subject to underwriting' },
   { label: 'Title & terms', value: 'Clean path to a signed contract or assignable position' },
 ];
@@ -1221,8 +1220,8 @@ const PROTECTION = [
 
 const JV_PATHS = [
   { name: 'Direct buy', desc: 'We purchase as principal on agreed terms when the deal fits the Buy Box. Fast, certain, and clean.', cta: 'Send the deal', route: 'contact' as Route },
-  { name: 'Assignment', desc: 'Hold an assignable contract? Assign it to us for a spread agreed in writing up front. What we agree is what you get at close.', cta: 'Submit for review', route: 'contact' as Route },
-  { name: 'JV / disposition', desc: 'Bigger or more complex? We can partner on the project or place it through MarketFlow on documented JV terms, subject to review.', cta: 'Start a JV review', route: 'contact' as Route },
+  { name: 'Assignment', desc: 'Hold an assignable contract? Assign it to us for a spread agreed in writing up front. What we agree is what you get at close.', cta: 'Send assignment terms', route: 'contact' as Route },
+  { name: 'JV / disposition', desc: 'Bigger or more complex? We can partner on the project or place it through MarketFlow on documented JV terms after the facts are clear.', cta: 'Start JV terms', route: 'contact' as Route },
 ];
 
 export function DealFindersExtras({ go }: { go: Nav }) {
@@ -1274,7 +1273,7 @@ export function DealFindersExtras({ go }: { go: Nav }) {
 }
 
 /* ----------------------------------------------------------------
-   Secondary link strip — never a dead end
+   Secondary link strip - never a dead end
 ---------------------------------------------------------------- */
 export function NextStep({ go, label, route }: { go: Nav; label: string; route: Parameters<Nav>[0] }) {
   return (
@@ -1307,7 +1306,7 @@ export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Request a 
             {primaryLabel} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </button>
           <button type="button" onClick={openPeggy} className="btn-line-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-            <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to PeggyAI
+            <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to Peggy
           </button>
         </div>
       </div>

@@ -35,8 +35,8 @@ function setSelect(label: string | RegExp, value: string) {
 const FLAG = {
   thinMargin: /Thin margin once carry and exit costs come out/,
   roughRepair: /Repair budget is a rough estimate, not a verified scope/,
-  tenant: /Tenant-occupied — possession and relocation may apply/,
-  probate: /Probate \/ estate — court timing and authority to sell/,
+  tenant: /Tenant-occupied: possession and relocation may apply/,
+  probate: /Probate \/ estate: court timing and authority to sell/,
   subjectTo: /Subject-to carries due-on-sale and disclosure exposure/,
 } as const;
 const NO_FLAGS = /No major flags on these inputs/;
@@ -180,7 +180,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Your role", "Owner / Seller");
     setSelect("Condition", "Distressed");
 
-    expect(laneButton().textContent).toContain("Send for a property review");
+    expect(laneButton().textContent).toContain("Request a Property Read");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("sellers");
   });
@@ -192,7 +192,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Your role", "Owner / Seller");
     setSelect("Condition", "Poor");
 
-    expect(laneButton().textContent).toContain("Send for a property review");
+    expect(laneButton().textContent).toContain("Request a Property Read");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("sellers");
   });
@@ -205,7 +205,7 @@ describe("StrategyConsole — lane routing", () => {
     setSelect("Condition", "Good");
     setSelect("Occupancy", "Probate / estate");
 
-    expect(laneButton().textContent).toContain("Send for a property review");
+    expect(laneButton().textContent).toContain("Request a Property Read");
     fireEvent.click(laneButton());
     expect(go).toHaveBeenCalledWith("sellers");
   });

@@ -23,7 +23,7 @@ function SaveChatButton({ turns }: { turns: ChatTurn[] }) {
   const [saved, setSaved] = useState(false);
 
   const firstUser = turns.find((t) => t.role === 'user')?.content ?? '';
-  const title = firstUser ? firstUser.slice(0, 80) : 'PeggyAI conversation';
+  const title = firstUser ? firstUser.slice(0, 80) : 'Peggy conversation';
 
   const onClick = () => {
     if (saved) return;
@@ -215,19 +215,19 @@ export function Peggy({
   return (
     <>
       <button ref={fabRef} type="button" onClick={() => setOpen(!open)}
-        aria-label={open ? 'Close PeggyAI' : 'Talk to PeggyAI, the Pegasus intake concierge'}
+        aria-label={open ? 'Close Peggy' : 'Talk to Peggy, the Pegasus intake concierge'}
         aria-expanded={open} aria-controls={panelId}
         className={`peggy-fab ${open ? 'is-open' : ''}`}>
         {open ? <X className="w-5 h-5" strokeWidth={1.8} /> : <BrandMark boxClassName="w-8 h-8" onDark />}
-        {!open && <span className="peggy-fab-label">Talk to PeggyAI</span>}
+        {!open && <span className="peggy-fab-label">Talk to Peggy</span>}
       </button>
 
       <div id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
-        aria-label="PeggyAI, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
+        aria-label="Peggy, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
         <div className="peggy-head">
           <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
           <div className="leading-none">
-            <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
+            <div className="font-serif-display text-2xl text-[var(--cream)]">Peggy</div>
             <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Guided Intake Concierge</div>
             <div className="flex items-center gap-1.5 mt-1.5" data-testid="peggy-status">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" />
@@ -311,7 +311,7 @@ export function Peggy({
         </div>
 
         <form className="peggy-input" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
-          <input ref={inputRef} type="text" aria-label="Talk to PeggyAI" placeholder="Describe your deal..."
+          <input ref={inputRef} type="text" aria-label="Talk to Peggy" placeholder="Describe your deal..."
             value={draft} onChange={(e) => setDraft(e.target.value)} disabled={streaming} />
           <button type="submit" aria-label="Send" disabled={streaming || !draft.trim()}>
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}

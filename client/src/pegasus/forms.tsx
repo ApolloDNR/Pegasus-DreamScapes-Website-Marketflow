@@ -62,7 +62,7 @@ export const STRATEGYLAB_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'strategy-snapshot',
   heading: <>Get a <span className="italic text-[var(--accent-bright)]">Property Read.</span></>,
-  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for a human-written Property Read: a short, candid read returned within 48 hours.',
+  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for a written Property Read: a short, candid read returned within 48 hours.',
   submit: 'Request a Property Read',
   third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
   messageLabel: 'The situation',
@@ -121,7 +121,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  // The PeggyAI transcript travels with the captured lead so the human reading
+  // The Peggy transcript travels with the captured lead so the human reading
   // the submission has the full conversation as context.
   const transcript = handoff?.transcript ?? [];
   const source = strategy ? 'strategy-lab' : transcript.length > 0 ? 'peggy' : 'form';
@@ -184,7 +184,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
       {transcript.length > 0 && (
         <div className={`sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed ${onNavy ? 'bg-[rgba(239,231,218,0.08)] text-[var(--cream)]/80' : 'bg-[var(--accent)]/8 text-[var(--text-2)]'}`}>
           <ConciergeBell className={`w-4 h-4 mt-0.5 shrink-0 ${onNavy ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`} strokeWidth={1.7} />
-          <span>PeggyAI prefilled this from your conversation, and your full chat will travel with the submission. Edit anything before you send.</span>
+          <span>Peggy prefilled this from your conversation, and your full chat will travel with the submission. Edit anything before you send.</span>
         </div>
       )}
       <div className="sm:col-span-1">
@@ -278,7 +278,7 @@ export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', han
 }
 
 /* ----------------------------------------------------------------
-   Strategy Lab underwriting workshop → Instant Strategy Preview
+   Strategy Lab underwriting workshop to Instant Strategy Preview
 ---------------------------------------------------------------- */
 function fmtValue(v: number, format: 'usd' | 'pct' | 'months'): string {
   if (format === 'pct') return `${v}%`;
@@ -352,9 +352,9 @@ export function useStrategyModel(): StrategyModel {
     margin >= 15
       ? { label: 'Strong value-add candidate', note: 'After carry and exit, the deal still clears a real margin. This is the kind of situation our value-add lane is built for.', lane: 'Investments / Value-add', tier: 'strong' as const }
       : margin >= 8
-      ? { label: 'Workable, structure decides it', note: 'There is profit here, but the cushion is moderate once carry and selling costs come out. The terms and the timeline will carry it.', lane: 'Strategy Review', tier: 'workable' as const }
+      ? { label: 'Workable, structure decides it', note: 'There is profit here, but the cushion is moderate once carry and selling costs come out. The terms and the timeline will carry it.', lane: 'Property Read', tier: 'workable' as const }
       : margin >= 0
-      ? { label: 'Tight, proceed with discipline', note: 'The net margin is slim. It can still work with the right basis and a faster timeline, but the number alone will not make the deal.', lane: 'Strategy Review', tier: 'tight' as const }
+      ? { label: 'Tight, proceed with discipline', note: 'The net margin is slim. It can still work with the right basis and a faster timeline, but the number alone will not make the deal.', lane: 'Property Read', tier: 'tight' as const }
       : { label: 'Underwater on these inputs', note: 'As entered, total cost to deliver and sell exceeds net proceeds. We would re-examine the basis and the scope before anything else.', lane: 'Re-examine basis', tier: 'under' as const };
 
   const snapshot: StrategyPreview = {
@@ -385,7 +385,7 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
     { label: 'Value-add rehab', score: clampScore(42 + model.margin * 2.6), note: 'Best when margin and scope still hold after carry.' },
     { label: 'As-is acquisition', score: clampScore(52 + (model.seventy - model.acq) / 12000), note: 'Depends on basis, access, title, and timeline.' },
     { label: 'Retail listing', score: clampScore(model.margin < 8 ? 74 : 46), note: 'Cleaner when the property is ready or seller equity matters most.' },
-    { label: 'Blueprint review', score: clampScore(model.margin < 10 ? 82 : 58), note: 'Useful when the deal needs scope, vendors, capital stack, and timeline.' },
+    { label: 'Blueprint read', score: clampScore(model.margin < 10 ? 82 : 58), note: 'Useful when the deal needs scope, vendors, capital stack, and timeline.' },
   ];
   const strongestLane = laneFit.reduce((best, lane) => (lane.score > best.score ? lane : best), laneFit[0]);
   const riskNotes = [
@@ -397,31 +397,31 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
     { num: '01', label: 'Situation', note: 'Address, condition, timing, and pressure.' },
     { num: '02', label: 'Basis', note: 'Acquisition, scope, carry, and exit cost.' },
     { num: '03', label: 'Lane', note: 'List, buy, partner, route, or pass.' },
-    { num: '04', label: 'Review', note: 'A human read before any decision.' },
+    { num: '04', label: 'Read', note: 'A written Property Read before any decision.' },
   ];
 
   return (
-    <section className="strategy-command-section" data-testid="strategy-lab-premium-hero">
+    <section className="strategy-command-section strategy-cockpit-hero" data-testid="strategy-lab-premium-hero">
       <div className="strategy-command-shell mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
         <div className="min-w-0 lg:col-span-5">
           <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
-          <h1 className="strategy-command-title mt-5 max-w-[11ch] font-serif-display text-[clamp(3.35rem,6vw,6.65rem)] leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
-            Read the deal before you commit.
+          <h1 className="strategy-command-title mt-5 max-w-[10ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
+            The deal cockpit.
           </h1>
           <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
-            Put the property through the same first-pass questions an operator asks: what is the situation, what are the numbers, what lane fits, and what needs a human review before anyone moves.
+            A private underwriting room for the facts, assumptions, lane fit, risk flags, and next clean move. It guides the read without pretending to issue an offer.
           </p>
           <div className="strategy-command-note">
             <span>Private orientation</span>
-            <span>No automated offer</span>
-            <span>No valuation or appraisal</span>
+            <span>No blind offer</span>
+            <span>Written read before action</span>
           </div>
           <div className="strategy-command-actions">
             <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Run the Model <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              Enter the Cockpit <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
             <button type="button" onClick={() => go('submit')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Submit for Property Read <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              Send to Pegasus <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
           <div className="strategy-proof-rail" aria-label="Strategy Lab read sequence">
@@ -484,7 +484,7 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
               {[
                 { key: 'spread' as const, label: 'Spread', icon: Calculator },
                 { key: 'lanes' as const, label: 'Lanes', icon: RouteIcon },
-                { key: 'review' as const, label: 'Review', icon: FileText },
+                { key: 'review' as const, label: 'Read', icon: FileText },
               ].map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -547,7 +547,7 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
               {active === 'review' && (
                 <>
                   <div className="strategy-panel-head">
-                    <span>Human review trigger</span>
+                    <span>Written read trigger</span>
                     <strong>Property Read</strong>
                   </div>
                   <ul className="strategy-risk-list">
@@ -567,7 +567,7 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
             <div className="strategy-command-foot">
               <span>Orientation only</span>
               <span>No offer. No valuation.</span>
-              <span>Human review before action.</span>
+              <span>Written read before action.</span>
             </div>
           </div>
         </div>
@@ -589,7 +589,7 @@ function WaterfallRow({ label, value, sign, strong = false }:
 }
 
 /* ----------------------------------------------------------------
-   Strategy Lab · Property console (qualitative inputs + Fit Score)
+   Strategy Lab · Live Deal Cockpit (qualitative inputs + Fit Score)
    Front-end only. Example autofill seeds the shared underwriting model.
 ---------------------------------------------------------------- */
 const SAMPLE_PROPERTIES = [
@@ -604,7 +604,7 @@ const SEL = {
   occ: ['Owner-occupied', 'Tenant-occupied', 'Vacant', 'Probate / estate'],
   role: ['Owner / Seller', 'Buyer / Investor', 'Deal Finder / Wholesaler', 'Capital Partner', 'Agent / Referral'],
   goal: ['Sell fast', 'Maximize value', 'Buy / acquire', 'Understand options', 'Find JV / capital partner'],
-  exit: ['Retail Listing', 'Value-Add Rehab → Retail', 'ADU Addition', 'Hold / Rent', 'As-Is Acquisition', 'JV / Partner', 'MarketFlow Disposition'],
+  exit: ['Retail Listing', 'Value-Add Rehab to Retail', 'ADU Addition', 'Hold / Rent', 'As-Is Acquisition', 'JV / Partner', 'MarketFlow Disposition'],
   fin: ['All cash', 'Conventional financing', 'Hard money / bridge', 'Subject-to existing loan', 'Seller financing'],
   motiv: ['Just curious', 'Open to the right offer', 'Motivated', 'Time-sensitive / urgent'],
   repairConf: ['Rough estimate', 'Contractor walk-through done', 'Detailed bid in hand', 'Unknown / sight unseen'],
@@ -672,7 +672,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   const goalBonus = goal === 'Maximize value' ? 7 : goal === 'Sell fast' ? 5 : 3;
   const motivBonus = motiv === 'Time-sensitive / urgent' ? 12 : motiv === 'Motivated' ? 8 : motiv === 'Open to the right offer' ? 4 : 1;
   const fit = Math.round(Math.max(8, Math.min(98, marginScore + condBonus + occBonus + goalBonus + motivBonus)));
-  const fitBand = fit >= 75 ? 'Strong fit' : fit >= 55 ? 'Worth a review' : fit >= 35 ? 'Possible, needs work' : 'Likely not a fit';
+  const fitBand = fit >= 75 ? 'Strong fit' : fit >= 55 ? 'Worth a read' : fit >= 35 ? 'Possible, needs work' : 'Likely not a fit';
 
   // Confidence reflects how complete the inputs are, not how good the deal is.
   // The more the visitor tells us, the more we trust the preview.
@@ -687,29 +687,29 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
   ].filter(Boolean).length;
   const confidence = inputsFilled >= 6 ? 'High' : inputsFilled >= 3 ? 'Medium' : 'Low';
 
-  // Illustrative strategy-tier range for the likely exit — never a computed
+  // Illustrative strategy-tier range for the likely exit - never a computed
   // number or verdict on the visitor's specific property.
   const tier = tierRangeFor(exit);
   const exitDetail =
-    exit === 'Value-Add Rehab → Retail' ? 'Value-add rehab to retail — basis plus scope, then sold on the open market after the lift.'
-    : exit === 'ADU Addition' ? 'ADU addition — added unit value and rent; plan for permits, timeline, and feasibility.'
-    : exit === 'Hold / Rent' ? 'Hold and rent — plan for rent coverage and a stabilized debt position.'
-    : exit === 'As-Is Acquisition' ? 'As-is acquisition — bought at a basis that works without a full renovation.'
-    : exit === 'JV / Partner' ? 'JV / partner — structured with a partner; a written agreement governs the split.'
-    : exit === 'MarketFlow Disposition' ? 'MarketFlow disposition — placed through the MarketFlow network to a vetted buyer.'
-    : 'Retail listing on the open market — net proceeds shown after exit costs.';
+    exit === 'Value-Add Rehab to Retail' ? 'Value-add rehab to retail: basis plus scope, then sold on the open market after the lift.'
+    : exit === 'ADU Addition' ? 'ADU addition: added unit value and rent, with permits, timeline, and feasibility reviewed first.'
+    : exit === 'Hold / Rent' ? 'Hold and rent: plan for rent coverage and a stabilized debt position.'
+    : exit === 'As-Is Acquisition' ? 'As-is acquisition: bought at a basis that works without a full renovation.'
+    : exit === 'JV / Partner' ? 'JV / partner: structured with a partner under a written agreement that governs the split.'
+    : exit === 'MarketFlow Disposition' ? 'MarketFlow disposition: placed through the MarketFlow network to a vetted buyer.'
+    : 'Retail listing on the open market with net proceeds shown after exit costs.';
   const riskFlags: string[] = [
     ...(margin < 8 ? ['Thin margin once carry and exit costs come out'] : []),
     ...(repairConf === 'Unknown / sight unseen' || repairConf === 'Rough estimate' ? ['Repair budget is a rough estimate, not a verified scope'] : []),
-    ...(occ === 'Tenant-occupied' ? ['Tenant-occupied — possession and relocation may apply'] : []),
-    ...(occ === 'Probate / estate' ? ['Probate / estate — court timing and authority to sell to confirm'] : []),
+    ...(occ === 'Tenant-occupied' ? ['Tenant-occupied: possession and relocation may apply'] : []),
+    ...(occ === 'Probate / estate' ? ['Probate / estate: court timing and authority to sell to confirm'] : []),
     ...(fin === 'Subject-to existing loan' ? ['Subject-to carries due-on-sale and disclosure exposure'] : []),
   ];
 
   const lane: { label: string; route: Parameters<Nav>[0] } =
     role === 'Owner / Seller'
       ? (cond === 'Distressed' || cond === 'Poor' || occ === 'Probate / estate'
-        ? { label: 'Send for a property review', route: 'sellers' }
+        ? { label: 'Request a Property Read', route: 'sellers' }
         : { label: 'See seller representation', route: 'apollo' })
       : role === 'Deal Finder / Wholesaler'
       ? { label: 'Submit the deal to Deal Finders', route: 'dealfinders' }
@@ -720,11 +720,11 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
       : { label: 'See the Buyers lane', route: 'buyers' };
 
   return (
-    <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-b border-[var(--line)]">
+    <section id="strategy-console" className="strategy-console-section scroll-mt-24 py-16 lg:py-20 bg-[var(--bg)] border-y border-[var(--line)] text-[var(--text)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Strategy Lab · Property console"
-          title={<>Start with the property,<br />get a read on the fit.</>}
-          copy="Tell us about the property and what you want to do. We will frame a directional Property Fit Score and point you to the lane that fits. This is orientation only, not an offer or an underwrite." />
+        <SectionHead eyebrow="Strategy Lab cockpit"
+          title={<>One cockpit for the <em className="hero-title-accent">situation, numbers, and lane.</em></>}
+          copy="Load the property once, sharpen the assumptions, and watch the read move in place. The point is orientation before anything is sent to Pegasus." />
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           <div className="lg:col-span-7 reveal">
             <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-7">
@@ -752,7 +752,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
             </div>
 
             <div className="mt-8">
-              <div className="pg-label !text-[9px] !tracking-[0.18em] text-[var(--accent)] mb-4">Property details · optional, sharpens the read</div>
+              <div className="pg-label !text-[9px] !tracking-[0.18em] text-[var(--accent)] mb-4">Property details - optional, sharpens the read</div>
               <div className="grid sm:grid-cols-2 gap-5">
                 <ConsoleInput label="ZIP / neighborhood" value={zip} onChange={setZip} placeholder="94521 or area" testid="input-console-zip" />
                 <ConsoleSelect label="Timeline" value={timeline} opts={SEL.timeline} onChange={setTimeline} />
@@ -764,12 +764,12 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
             </div>
 
             <div className="mt-8 surface-card p-6" data-testid="card-console-tier-range">
-              <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">Strategy-tier range · {tier.strategy}</div>
+              <div className="pg-label !text-[8px] text-[var(--accent)] mb-2">Planning depth - {tier.strategy}</div>
               <div className="font-serif-display text-3xl text-[var(--text)] leading-none mb-2" data-testid="text-console-tier-range">{tier.range}</div>
-              <p className="text-[0.84rem] text-[var(--muted)] leading-relaxed">Illustrative — {tier.basis}. Not specific to this property.</p>
+              <p className="text-[0.84rem] text-[var(--muted)] leading-relaxed">Illustrative. {tier.basis}. Not specific to this property.</p>
             </div>
             <p className="mt-4 text-[0.78rem] text-[var(--muted)]">
-              {NOT_A_VALUATION_DISCLOSURE} Adjust the underwriting workshop below to explore your own assumptions; a written Property Read returns a property-specific answer.
+              {NOT_A_VALUATION_DISCLOSURE} Adjust the underwriting instruments below to explore your own assumptions; a written Property Read returns a property-specific answer.
             </p>
           </div>
 
@@ -794,7 +794,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                     : 'text-[var(--cream)]/60 border-[var(--cream)]/20'}`}>{confidence}</span>
                 </div>
                 <div className="h-2 rounded-full bg-[rgba(239,231,218,0.14)] overflow-hidden mb-7">
-                  <div className="h-full rounded-full bg-[var(--accent-bright)] transition-[width] duration-700" style={{ width: `${fit}%` }} />
+                  <div className="h-full w-full origin-left rounded-full bg-[var(--accent-bright)] transition-transform duration-700" style={{ transform: `scaleX(${fit / 100})` }} />
                 </div>
                 <p className="text-[var(--cream)]/70 text-[0.9rem] leading-relaxed mb-6">
                   {read.note} This is a directional fit signal, not a valuation or an offer. A written Property Read returns the property-specific path.
@@ -862,12 +862,12 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
   ] as const;
 
   return (
-    <section className="relative py-24 lg:py-28 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LAB</div>
+    <section className="strategy-workshop-section strategy-workshop-continuation relative pb-16 lg:pb-20 overflow-hidden bg-[var(--bg)] text-[var(--text)]">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Strategy Lab · Underwriting workshop"
-          title={<>Underwrite the deal,<br />before you make the offer.</>}
-          copy="Set the basis, the scope, and the exit assumptions. The Instant Strategy Preview frames the strategy your assumptions point to and the illustrative range it tends to fall in. Directional orientation, not an underwrite or a valuation." />
+        <div className="strategy-continuation-head">
+          <span>Underwriting levers</span>
+          <p>Same cockpit. Move basis, scope, value, carry, and exit assumptions, then watch the lane and written-read path adjust in place.</p>
+        </div>
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <div className="lg:col-span-6 reveal">
             <div className="pg-label !text-[9px] text-[var(--accent)] mb-5">Basis &amp; scope</div>
@@ -885,25 +885,25 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
               <div className="relative">
                 <div className="flex items-center gap-2.5 mb-6">
                   <BrandMark boxClassName="w-7 h-7" onDark />
-                  <div>
+                  <div className="strategy-preview-heading">
                     <div className="pg-label !text-[9px] text-[var(--accent-bright)]">Instant Strategy Preview</div>
-                    <div className="pg-label !text-[7px] !tracking-[0.18em] text-[var(--cream)]/45 mt-1">Preliminary · Automated · Subject to Human Review</div>
+                    <div className="pg-label !text-[7px] !tracking-[0.18em] text-[var(--cream)]/45 mt-1">Preliminary / Directional / Written read required</div>
                   </div>
                 </div>
                 <WaterfallRow label="Acquisition basis" value={usd0(acq)} />
                 <WaterfallRow label="Value-add budget" value={usd0(rehab)} sign="+" />
-                <WaterfallRow label={`Carry · ${holdMonths} mo`} value={usd0(carry)} sign="+" />
+                <WaterfallRow label={`Carry - ${holdMonths} mo`} value={usd0(carry)} sign="+" />
                 <WaterfallRow label="Exit costs" value={usd0(exitCosts)} sign="+" />
                 <WaterfallRow label="Total cost to deliver" value={usd0(totalCost)} strong />
                 <div className="border-t border-[rgba(239,231,218,0.16)] pt-7 mt-3 mb-6">
-                  <div className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/55 mb-2">Strategy-tier range · {tier.strategy}</div>
+                  <div className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/55 mb-2">Planning depth - {tier.strategy}</div>
                   <div className="font-serif-display text-[2.4rem] sm:text-[3rem] leading-none text-[var(--accent-bright)] mb-3" data-testid="text-calc-tier-range">{tier.range}</div>
-                  <p className="text-[var(--cream)]/70 text-[0.85rem] leading-relaxed">Illustrative — {tier.basis}. The waterfall above reflects your own assumptions, not a value we assign to the property.</p>
+                  <p className="text-[var(--cream)]/70 text-[0.85rem] leading-relaxed">Illustrative. {tier.basis}. The waterfall above reflects your own assumptions, not a value we assign to the property.</p>
                 </div>
                 <p className="text-[var(--cream)]/50 text-[0.72rem] leading-relaxed mb-6">{NOT_A_VALUATION_DISCLOSURE}</p>
                 <div className="border-t border-[rgba(239,231,218,0.16)] pt-6 mb-6">
                   <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent-bright)] mb-3">Adjust assumptions</div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {ASSUMPTIONS.map((a) => (
                       <div key={a.label} className="rounded-[3px] bg-[rgba(239,231,218,0.06)] border border-[rgba(239,231,218,0.14)] px-3 py-2.5">
                         <label className="pg-label !text-[7px] !tracking-[0.12em] text-[var(--cream)]/55 block mb-1">{a.label}</label>
@@ -928,7 +928,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                             active
                               ? 'bg-[var(--accent-bright)] text-[var(--navy)] border-[var(--accent-bright)]'
                               : 'text-[var(--cream)]/60 border-[rgba(239,231,218,0.2)]'}`}>
-                          {l}{active && ' ·'}
+                          {l}{active && ' active'}
                         </span>
                       );
                     })}
@@ -945,7 +945,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                       Submit for a Property Read <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <SaveStrategyButton snapshot={model.snapshot}
-                      title={`${tier.strategy} · ${tier.range}`} />
+                      title={`${tier.strategy} - ${tier.range}`} />
                   </div>
                 </div>
               </div>
@@ -955,10 +955,10 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
         <div className="mt-10 max-w-2xl rounded-[3px] border border-[var(--line)] bg-[var(--bg-2)] p-6" data-testid="text-strategy-disclaimer">
           <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-3">Disclaimer</div>
           <p className="text-[0.85rem] leading-relaxed text-[var(--text-2)]">
-            Strategy Lab outputs are preliminary and automated. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to human review, market conditions, property condition, title, occupancy, and written agreements.
+            Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.
           </p>
           <p className="mt-3 text-[0.78rem] leading-relaxed text-[var(--muted)]">
-            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Every real read is done by a person.
+            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Every real read is handled by Pegasus in writing.
           </p>
         </div>
       </div>
@@ -967,7 +967,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
 }
 
 /* ----------------------------------------------------------------
-   Strategy Lab · Tier strip — the three levels of depth, clearly
+   Strategy Lab - Tier strip - the three levels of depth, clearly
    priced and routed. Front-end only; routes to the canonical /submit.
 ---------------------------------------------------------------- */
 export function StrategyTierStrip() {
@@ -978,27 +978,27 @@ export function StrategyTierStrip() {
   };
   const tiers = [
     {
-      key: 'preview', name: 'Instant Strategy Preview', price: 'Free · Automated',
-      desc: 'Run the numbers above for a directional read on strategy-tier ranges, lanes, and risk flags — instantly, no contact needed.',
+      key: 'preview', name: 'Instant Strategy Preview', price: 'Self-guided',
+      desc: 'Run the numbers above for a directional read on strategy-tier ranges, lanes, and risk flags before you submit anything.',
       cta: 'You are using it above', action: null as null | (() => void), emphasis: false,
     },
     {
-      key: 'snapshot', name: 'Property Read', price: 'Free · Human-Reviewed',
-      desc: 'Send the situation and Acquisitions returns a short, candid written read — within 48 hours.',
+      key: 'snapshot', name: 'Property Read', price: 'Included / Written Read',
+      desc: 'Send the situation and Acquisitions returns a short, candid written read within 48 hours.',
       cta: 'Request a Property Read', action: () => goSubmit(), emphasis: true,
     },
     {
       key: 'blueprint', name: 'Deal Blueprint', price: 'By Review',
       desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Scoped after a Property Read, not bought off the shelf.',
-      cta: 'Request Blueprint Review', action: () => goSubmit('blueprint'), emphasis: false,
+      cta: 'Request Blueprint Read', action: () => goSubmit('blueprint'), emphasis: false,
     },
   ];
   return (
     <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-b border-[var(--line)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Strategy Lab · Levels of depth"
+        <SectionHead eyebrow="Strategy Lab - Planning depth"
           title={<>Go as far as the deal deserves.</>}
-          copy="Three tiers, increasing depth. Start free and self-serve, escalate to a human-written read, and request Blueprint review when the deal is worth a plan." />
+          copy="The cockpit starts with a directional read, then escalates only when the property earns more attention: written Property Read first, Blueprint Read only when the deal needs a full plan." />
         <div className="grid md:grid-cols-3 gap-5" data-testid="strategy-tier-strip">
           {tiers.map((t) => (
             <div key={t.key}

@@ -48,7 +48,7 @@ const typeColors: Record<string, string> = {
   success: "text-green-500 bg-green-500/10",
   warning: "text-amber-500 bg-amber-500/10",
   error: "text-red-500 bg-red-500/10",
-  message: "text-purple-500 bg-purple-500/10",
+  message: "text-primary bg-primary/10",
   deal_update: "text-emerald-500 bg-emerald-500/10",
   milestone: "text-primary bg-primary/10",
   offer: "text-amber-600 bg-amber-500/10",

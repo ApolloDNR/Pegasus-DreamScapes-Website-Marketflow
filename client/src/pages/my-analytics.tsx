@@ -97,7 +97,7 @@ export default function MyAnalyticsPage() {
             </TabsTrigger>
             <TabsTrigger value="ai-picks" className="gap-2" data-testid="tab-ai-picks">
               <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">AI Picks</span>
+              <span className="hidden sm:inline">Curated Picks</span>
             </TabsTrigger>
             <TabsTrigger value="watchlists" className="gap-2" data-testid="tab-watchlists">
               <Users className="w-4 h-4" />

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
 import { useSEO } from "@/hooks/use-seo";
 import { trackCtaClick } from "@/lib/analytics";
-import { BrandMark, IMG } from "@/pegasus/primitives";
+import { IMG } from "@/pegasus/primitives";
 import {
+  ArrowRight,
   Banknote,
   Building2,
   Hammer,
@@ -16,192 +16,271 @@ import {
   Network,
   Phone,
   Search,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type ConnectLane = {
   id: string;
   href: string;
-  eyebrow: string;
+  audience: string;
+  routeCode: string;
   label: string;
-  sub: string;
+  short: string;
   detail: string;
-  proof: string;
+  nextStep: string;
+  standard: string;
   cta: string;
   icon: LucideIcon;
 };
 
 const LANES: ConnectLane[] = [
   {
-    id: "complex-owner",
+    id: "property-situation",
     href: "/submit?intent=property",
-    eyebrow: "Distressed or complex owner",
-    label: "I have a property situation",
-    sub: "Inherited, occupied, dated, stuck, or under pressure.",
+    audience: "Property owner",
+    routeCode: "PROPERTY READ",
+    label: "I need to sell or solve a property situation",
+    short: "Distress, inherited property, repairs, vacancy, pressure, or a sale that is not simple.",
     detail:
-      "Pegasus reviews the situation, runs the numbers, and routes the cleanest path: buy, partner, list, refer, or pass with a reason.",
-    proof: "No guaranteed offer. No pressure. Real review first.",
-    cta: "Submit the property",
+      "Start here when the property needs structure before it needs a sales pitch. Pegasus looks at the property, the pressure, and the possible paths: represent, sell, partner, develop, route, or pass with a clear reason.",
+    nextStep: "Send the address, condition, timeline, and the truth of the situation.",
+    standard: "No blind offers. No pressure. No promise of a result before the facts are known.",
+    cta: "Send the property",
     icon: Building2,
   },
   {
-    id: "listing-seller",
+    id: "representation",
     href: "/work-with-apollo",
-    eyebrow: "Ready seller",
-    label: "I want listing representation",
-    sub: "Move-in-ready or traditional sale, represented through KW East Bay.",
+    audience: "Seller or buyer",
+    routeCode: "AGENCY LANE",
+    label: "I want Apollo to represent me",
+    short: "Listing representation, buyer representation, pricing, negotiation, and closing discipline.",
     detail:
-      "When agency is the right lane, Apollo can represent sellers through Keller Williams Realty East Bay with pricing, prep, launch, negotiation, and closing discipline.",
-    proof: "Licensed real estate services are separate from Pegasus property strategy.",
+      "Use this lane when the right answer is licensed representation. Apollo can represent sellers and buyers through Keller Williams Realty East Bay when agency is the proper path.",
+    nextStep: "Review the representation page before any agency conversation begins.",
+    standard: "Pegasus strategy and licensed real estate representation stay clearly separated.",
     cta: "See representation",
     icon: KeyRound,
   },
   {
-    id: "buyer",
+    id: "buyer-investor",
     href: "/buyers",
-    eyebrow: "Buyer or investor buyer",
-    label: "I want an investor-minded agent",
-    sub: "Buy-box discipline, diligence, and offer strategy.",
+    audience: "Buyer",
+    routeCode: "BUYER READ",
+    label: "I am buying or investing",
+    short: "Investor-minded search, buy-box discipline, diligence, and offer strategy.",
     detail:
-      "Apollo can represent buyers through Keller Williams Realty East Bay when agency is the right lane, with underwriting logic behind the search and offer process.",
-    proof: "Useful for first deals, value-add purchases, and long-term operators.",
-    cta: "Explore buyer lane",
+      "For buyers who want more than showings. This lane is for people who want an operator's lens on value, risk, repairs, rent, resale, and offer structure.",
+    nextStep: "Share the target area, budget, and the kind of risk you are willing to take.",
+    standard: "Useful for first purchases, value-add buyers, and long-term operators.",
+    cta: "Open buyer lane",
     icon: Search,
   },
   {
     id: "deal-finder",
     href: "/dealfinders",
-    eyebrow: "Wholesaler or deal finder",
+    audience: "Wholesaler or finder",
+    routeCode: "DEAL FINDER",
     label: "I have a deal or lead",
-    sub: "Bring the opportunity, protect your lane, get a straight answer.",
+    short: "Bring the opportunity. Keep the relationship clean. Get a straight answer.",
     detail:
-      "If it fits the Pegasus buy box, we can buy. If the cleaner move is a vetted buyer, we can discuss JV or network routing under written terms.",
-    proof: "We do not build trust by taking someone's lead around them.",
+      "If the deal fits the Pegasus buy box, Pegasus can buy. If another buyer is the cleaner move, we can discuss a JV or network path under written terms.",
+    nextStep: "Submit the deal once there is enough context to protect the source and the path.",
+    standard: "We do not build trust by taking someone's lead around them.",
     cta: "Bring the deal",
     icon: Handshake,
   },
   {
-    id: "development",
+    id: "build",
     href: "/development",
-    eyebrow: "Build or reposition",
-    label: "I want to build or renovate",
-    sub: "ADU, value-add, scope control, and finished-product thinking.",
+    audience: "Build or reposition",
+    routeCode: "DEVELOPMENT",
+    label: "I want to build, renovate, or reposition",
+    short: "ADU, value-add, scope, budget logic, timeline control, and finished-product thinking.",
     detail:
-      "Pegasus Development turns a property plan into scoped work, budget logic, timeline discipline, and a finished asset strategy.",
-    proof: "Renovation and development are handled as operating work, not decoration.",
+      "This lane is for properties where the work itself creates the value. Pegasus Development thinks through scope, cost, timeline, and the finished asset before work begins.",
+    nextStep: "Bring the site, scope, rough budget, and the finished asset you are trying to create.",
+    standard: "Development is treated as operating work, not decoration.",
     cta: "See development",
     icon: Hammer,
   },
   {
     id: "capital",
     href: "/capital",
-    eyebrow: "Capital partner",
-    label: "I am exploring capital partnership",
-    sub: "Specific projects, private review, no public investment offering.",
+    audience: "Capital partner",
+    routeCode: "CAPITAL",
+    label: "I am exploring a capital relationship",
+    short: "Private, project-specific conversations only. No public investment offering.",
     detail:
-      "Capital conversations are private, project-specific, and suitability-reviewed. This site does not offer securities or guaranteed returns.",
-    proof: "Defined terms, real risk language, and no blind-pool promise.",
+      "Capital conversations are handled privately and tied to specific projects, terms, risk, and suitability. This website does not offer securities or guaranteed returns.",
+    nextStep: "Start with a private conversation tied to a specific project or mandate.",
+    standard: "No blind pool promise. No guaranteed return language.",
     cta: "Open capital page",
     icon: Banknote,
   },
   {
     id: "vendor",
     href: "/vendor-network",
-    eyebrow: "Vendor or operator",
+    audience: "Vendor or operator",
+    routeCode: "OPERATOR NETWORK",
     label: "I want to work with Pegasus",
-    sub: "Contractors, lenders, agents, trades, and operators.",
+    short: "Contractors, trades, lenders, agents, inspectors, and reliable operators.",
     detail:
-      "The vendor lane is for people who can help active property work move cleanly: reliable scope, clean communication, and repeatable execution.",
-    proof: "Good operators get routed to real work when the fit is right.",
+      "The vendor lane is for people who can help active property work move cleanly. Reliable scope, clean communication, and repeatable execution matter here.",
+    nextStep: "Share the trade, market, capacity, and proof of reliable work.",
+    standard: "Good operators get routed to real work when the fit is right.",
     cta: "Apply to network",
     icon: Network,
   },
   {
-    id: "question",
+    id: "not-sure",
     href: "/contact",
-    eyebrow: "Direct question",
-    label: "I need to talk through the situation",
-    sub: "Send the note, make the call, or let Peggy frame the intake.",
+    audience: "Not sure yet",
+    routeCode: "PLAIN NOTE",
+    label: "I need to explain it in plain English",
+    short: "If the lane is not obvious, start with the situation.",
     detail:
-      "If the lane is not obvious yet, start with the situation. Pegasus will route the conversation instead of forcing you through the wrong form.",
-    proof: "Plain language is enough to begin.",
+      "A property problem does not always arrive neatly labeled. Send the note, make the call, or use Peggy to frame the intake before you choose a lane.",
+    nextStep: "Write the situation in plain English. The lane can be named after the facts are clear.",
+    standard: "Plain language is enough to begin.",
     cta: "Send a note",
     icon: MessageSquare,
   },
 ];
 
+const PRIMARY_LANES = LANES.slice(0, 4);
+
+const ROUTING_STANDARDS = [
+  "Private first read",
+  "No blind offer",
+  "Agency stays separate",
+  "Plain answer if it is not a fit",
+];
+
+function RouteIllustration() {
+  return (
+    <svg
+      className="connect-route-illustration"
+      viewBox="0 0 560 260"
+      role="img"
+      aria-label="Pegasus routing linework from property situation to the right path"
+    >
+      <path className="connect-svg-muted" d="M62 214H498" />
+      <path className="connect-svg-muted" d="M102 186H458" />
+      <path className="connect-svg-muted" d="M146 78L280 28L414 78" />
+      <path className="connect-svg-copper" d="M118 116L280 82L442 116" />
+      <path className="connect-svg-soft" d="M146 142L280 116L414 142" />
+      <path className="connect-svg-soft" d="M180 184V128" />
+      <path className="connect-svg-soft" d="M280 184V104" />
+      <path className="connect-svg-soft" d="M380 184V128" />
+      <circle className="connect-svg-node" cx="118" cy="116" r="5" />
+      <circle className="connect-svg-node" cx="280" cy="82" r="5" />
+      <circle className="connect-svg-node" cx="442" cy="116" r="5" />
+      <path className="connect-svg-copper" d="M84 226C150 210 190 210 250 226C316 244 360 244 476 216" />
+    </svg>
+  );
+}
+
 function ContactRail() {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="connect-contact-rail">
       <a
         href="tel:+19257448525"
-        className="inline-flex items-center gap-2.5 rounded-sm border border-white/[0.18] bg-white/[0.06] px-4 py-3 text-sm text-white/90 transition-colors hover:border-[#C87A3A]/70 hover:bg-[#C87A3A]/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A3A]"
         data-testid="link-connect-phone"
         onClick={() => trackCtaClick("connect", "Phone tap", "tel:+19257448525")}
       >
-        <Phone className="h-3.5 w-3.5 text-[#D9965D]" aria-hidden="true" />
-        <span className="font-medium">925-744-8525</span>
+        <Phone className="h-4 w-4" aria-hidden="true" />
+        <span>925-744-8525</span>
       </a>
       <a
         href="mailto:apollo@pegasusdreamscapes.com"
-        className="inline-flex items-center gap-2.5 rounded-sm border border-white/[0.18] bg-white/[0.06] px-4 py-3 text-sm text-white/90 transition-colors hover:border-[#C87A3A]/70 hover:bg-[#C87A3A]/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A3A]"
         data-testid="link-connect-email"
         onClick={() => trackCtaClick("connect", "Email tap", "mailto:apollo@pegasusdreamscapes.com")}
       >
-        <Mail className="h-3.5 w-3.5 text-[#D9965D]" aria-hidden="true" />
-        <span className="font-medium">apollo@pegasusdreamscapes.com</span>
+        <Mail className="h-4 w-4" aria-hidden="true" />
+        <span>apollo@pegasusdreamscapes.com</span>
       </a>
-      <span className="inline-flex items-center gap-2.5 rounded-sm border border-white/[0.14] px-4 py-3 text-sm text-white/[0.68]">
-        <MapPin className="h-3.5 w-3.5 text-[#D9965D]" aria-hidden="true" />
-        <span>East Bay, CA</span>
+      <span>
+        <MapPin className="h-4 w-4" aria-hidden="true" />
+        East Bay, CA
       </span>
     </div>
   );
 }
 
-function LanePreview({ lane }: { lane: ConnectLane }) {
+function LaneButton({
+  lane,
+  active,
+  onSelect,
+}: {
+  lane: ConnectLane;
+  active: boolean;
+  onSelect: (lane: ConnectLane) => void;
+}) {
   const Icon = lane.icon;
 
   return (
-    <motion.aside
-      key={lane.id}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28 }}
-      className="relative overflow-hidden rounded-md border border-white/[0.14] bg-[#0B1725]/[0.82] p-5 shadow-2xl shadow-black/30 backdrop-blur"
-      data-testid="connect-lane-preview"
+    <button
+      type="button"
+      className={active ? "connect-lane-button is-active" : "connect-lane-button"}
+      aria-pressed={active}
+      onClick={() => onSelect(lane)}
+      onMouseEnter={() => onSelect(lane)}
+      data-testid={`button-connect-lane-${lane.id}`}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D9965D]/80 to-transparent" aria-hidden="true" />
-      <div className="flex items-start justify-between gap-5 border-b border-white/10 pb-5">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D9965D]">{lane.eyebrow}</p>
-          <h2 className="mt-3 break-words font-serif text-3xl leading-tight text-[#F5E6D3]">{lane.label}</h2>
-        </div>
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-[#D9965D]/40 bg-[#C87A3A]/[0.12] text-[#D9965D]">
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-      </div>
-      <p className="mt-5 text-sm leading-7 text-white/[0.72]">{lane.detail}</p>
-      <div className="mt-5 rounded-sm border border-white/10 bg-white/[0.04] p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/[0.44]">Standard</p>
-        <p className="mt-2 text-sm leading-6 text-white/[0.72]">{lane.proof}</p>
-      </div>
-      <Link
-        href={lane.href}
-        onClick={() => trackCtaClick("connect", lane.cta, lane.href)}
-        className="group mt-5 inline-flex w-full items-center justify-between rounded-sm bg-[#C87A3A] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-[#D9965D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9965D]"
-        data-testid={`link-connect-preview-${lane.id}`}
-      >
-        {lane.cta}
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-      </Link>
-    </motion.aside>
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      <span>{lane.audience}</span>
+    </button>
   );
 }
 
-function GreetingHero({
+function ActiveLanePanel({ lane }: { lane: ConnectLane }) {
+  const Icon = lane.icon;
+
+  return (
+    <aside className="connect-panel" data-testid="connect-active-lane">
+      <div className="connect-panel-kicker">
+        <span>{lane.routeCode}</span>
+        <small>Route card</small>
+      </div>
+      <div className="connect-panel-head">
+        <div>
+          <p>Best starting point</p>
+          <h2>{lane.label}</h2>
+        </div>
+        <span>
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+      </div>
+
+      <RouteIllustration />
+
+      <p className="connect-panel-detail">{lane.detail}</p>
+
+      <div className="connect-panel-next">
+        <small>Next move</small>
+        <p>{lane.nextStep}</p>
+      </div>
+
+      <div className="connect-panel-standard">
+        <small>Standard</small>
+        <p>{lane.standard}</p>
+      </div>
+
+      <Link
+        href={lane.href}
+        onClick={() => trackCtaClick("connect", lane.cta, lane.href)}
+        className="connect-panel-cta"
+        data-testid={`link-connect-active-${lane.id}`}
+      >
+        {lane.cta}
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    </aside>
+  );
+}
+
+function Hero({
   activeLane,
   setActiveLane,
 }: {
@@ -209,93 +288,70 @@ function GreetingHero({
   setActiveLane: (lane: ConnectLane) => void;
 }) {
   return (
-    <section className="relative min-h-[760px] overflow-hidden bg-[#07111D] text-[#F5E6D3]">
+    <section className="connect-hero" data-testid="section-connect-hero">
       <img
         src={IMG("hero/luxury-home-1920.jpg")}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover opacity-[0.52]"
+        className="connect-hero-image"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,17,29,0.98)_0%,rgba(7,17,29,0.86)_34%,rgba(7,17,29,0.52)_70%,rgba(7,17,29,0.78)_100%)]" aria-hidden="true" />
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#07111D] to-transparent" aria-hidden="true" />
+      <div className="connect-hero-shade" aria-hidden="true" />
 
-      <div className="relative mx-auto grid max-w-[1400px] min-w-0 gap-12 px-6 pb-20 pt-32 lg:grid-cols-12 lg:px-12 lg:pb-24 lg:pt-40">
-        <motion.div
-          className="min-w-0 lg:col-span-7"
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-        >
-          <div className="mb-8 flex items-center gap-4">
-            <BrandMark boxClassName="h-14 w-14" onDark />
-            <div>
-              <p className="font-serif text-2xl leading-none tracking-[0.06em] text-[#F5E6D3]">Pegasus Dreamscapes</p>
-              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#D9965D]">Dream it. Build it. Live it.</p>
-            </div>
-          </div>
-
-          <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.32em] text-[#D9965D]">
-            One front door | East Bay real estate execution
-          </p>
-          <h1 className="max-w-[10ch] font-serif text-[clamp(2.35rem,10.2vw,7.4rem)] leading-[0.98] text-[#F5E6D3] sm:max-w-4xl">
-            Start with the situation. Pegasus routes the path.
-          </h1>
-          <p className="mt-7 max-w-2xl text-base leading-8 text-white/[0.76] md:text-lg">
-            Sellers, buyers, deal finders, vendors, and capital partners all enter through the same standard: a serious review, real underwriting, and a next step that makes sense for the property and the people involved.
+      <div className="connect-shell connect-hero-grid">
+        <div className="connect-hero-copy">
+          <p className="connect-eyebrow">Private QR front door</p>
+          <h1>The right door, before the wrong conversation.</h1>
+          <p className="connect-lead">
+            Use this card page to choose the correct Pegasus lane: property intake, Apollo representation, buyer strategy, deal finder or JV, development, capital, vendor work, or a direct note.
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-4">
+          <div className="connect-actions">
             <Link
               href="/submit?intent=property"
-              onClick={() => trackCtaClick("connect", "Submit a property", "/submit?intent=property")}
-              className="group inline-flex items-center gap-3 rounded-sm bg-[#C87A3A] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-[#D9965D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9965D]"
-              data-testid="link-submit-property"
+              onClick={() => trackCtaClick("connect", "Send a property", "/submit?intent=property")}
+              className="connect-primary"
+              data-testid="link-connect-submit"
             >
-              Submit a property
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              Send a property
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link
-              href="/strategy-lab"
-              onClick={() => trackCtaClick("connect", "Strategy Lab", "/strategy-lab")}
-              className="group inline-flex items-center gap-3 rounded-sm border border-white/20 bg-white/[0.04] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:border-[#D9965D]/70 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9965D]"
+              href="/work-with-apollo"
+              onClick={() => trackCtaClick("connect", "Work with Apollo", "/work-with-apollo")}
+              className="connect-secondary"
             >
-              Strategy Lab
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              Work with Apollo
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
 
-          <div className="mt-7">
-            <ContactRail />
-          </div>
+          <ContactRail />
 
-          <div className="mt-10 grid max-w-3xl grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Quick lane selector">
-            {LANES.slice(0, 4).map((lane) => (
-              <button
-                key={lane.id}
-                type="button"
-                aria-pressed={activeLane.id === lane.id}
-                onClick={() => setActiveLane(lane)}
-                className={`rounded-sm border px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
-                  activeLane.id === lane.id
-                    ? "border-[#D9965D] bg-[#C87A3A]/[0.18] text-[#F5E6D3]"
-                    : "border-white/[0.14] bg-white/[0.04] text-white/[0.58] hover:border-[#D9965D]/60 hover:text-white/[0.86]"
-                }`}
-              >
-                {lane.eyebrow}
-              </button>
+          <div className="connect-proof-row" aria-label="Pegasus routing standards">
+            {ROUTING_STANDARDS.map((standard) => (
+              <span key={standard}>{standard}</span>
             ))}
           </div>
-        </motion.div>
 
-        <div className="min-w-0 lg:col-span-5 lg:self-end">
-          <LanePreview lane={activeLane} />
+          <div className="connect-quick-lanes" aria-label="Choose a primary lane">
+            {PRIMARY_LANES.map((lane) => (
+              <LaneButton
+                key={lane.id}
+                lane={lane}
+                active={activeLane.id === lane.id}
+                onSelect={setActiveLane}
+              />
+            ))}
+          </div>
         </div>
+
+        <ActiveLanePanel lane={activeLane} />
       </div>
     </section>
   );
 }
 
-function RouteGrid({
+function LaneDirectory({
   activeLane,
   setActiveLane,
 }: {
@@ -303,61 +359,40 @@ function RouteGrid({
   setActiveLane: (lane: ConnectLane) => void;
 }) {
   return (
-    <section className="bg-[#07111D] pb-20 text-[#F5E6D3] lg:pb-28">
-      <div className="mx-auto max-w-[1400px] px-6 lg:px-12">
-        <motion.div
-          className="mb-10 grid gap-6 border-t border-white/10 pt-12 lg:grid-cols-12"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="lg:col-span-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#D9965D]">What brought you here?</p>
-            <h2 className="mt-5 font-serif text-4xl leading-tight text-[#F5E6D3] md:text-5xl">
-              Pick the lane. The site should not make you guess.
-            </h2>
-          </div>
-          <p className="max-w-2xl text-sm leading-7 text-white/[0.66] lg:col-span-7 lg:pt-9">
-            Each lane sends the right signal into Pegasus intake. Complex owners go to review, clean listings go to representation, buyers get agency guidance, and deal finders get a protected conversation around purchase or JV fit.
+    <section className="connect-directory" data-testid="section-connect-directory">
+      <div className="connect-shell">
+        <div className="connect-section-head">
+          <p className="connect-eyebrow">Routing ledger</p>
+          <h2>Every serious conversation starts in the correct lane.</h2>
+          <p>
+            Pick the door that matches the work. If the situation is messy, start with property intake or send a plain note. Pegasus can name the lane after the facts are clear.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {LANES.map((lane, idx) => {
+        <div className="connect-lane-list">
+          {LANES.map((lane) => {
             const Icon = lane.icon;
-            const active = activeLane.id === lane.id;
+            const active = lane.id === activeLane.id;
             return (
-              <motion.div
+              <Link
                 key={lane.id}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.04 * idx }}
+                href={lane.href}
+                onMouseEnter={() => setActiveLane(lane)}
+                onFocus={() => setActiveLane(lane)}
+                onClick={() => trackCtaClick("connect", lane.label, lane.href)}
+                className={active ? "connect-lane-row is-active" : "connect-lane-row"}
+                data-testid={`link-connect-${lane.id}`}
               >
-                <Link
-                  href={lane.href}
-                  onMouseEnter={() => setActiveLane(lane)}
-                  onFocus={() => setActiveLane(lane)}
-                  onClick={() => trackCtaClick("connect", lane.label, lane.href)}
-                  className={`group block min-h-[188px] rounded-md border p-5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9965D] ${
-                    active
-                      ? "border-[#D9965D]/70 bg-[#C87A3A]/[0.13] shadow-xl shadow-black/20"
-                      : "border-white/10 bg-white/[0.035] hover:border-[#D9965D]/50 hover:bg-white/[0.055]"
-                  }`}
-                  data-testid={`link-connect-${lane.id}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-[#D9965D]/35 bg-[#C87A3A]/[0.12] text-[#D9965D]">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <ArrowRight className="mt-1 h-4 w-4 text-white/30 transition-all group-hover:translate-x-1 group-hover:text-[#D9965D]" aria-hidden="true" />
-                  </div>
-                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9965D]">{lane.eyebrow}</p>
-                  <h3 className="mt-3 font-serif text-2xl leading-tight text-[#F5E6D3]">{lane.label}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/[0.62]">{lane.sub}</p>
-                </Link>
-              </motion.div>
+                <span className="connect-row-icon">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="connect-row-main">
+                  <small>{lane.audience}</small>
+                  <strong>{lane.label}</strong>
+                </span>
+                <span className="connect-row-copy">{lane.short}</span>
+                <ArrowRight className="connect-row-arrow h-4 w-4" aria-hidden="true" />
+              </Link>
             );
           })}
         </div>
@@ -366,53 +401,28 @@ function RouteGrid({
   );
 }
 
-function PeggyPresenceCard() {
+function StandardsBand() {
   return (
-    <section className="bg-[#F4F0E8] py-20 text-[#1A2332] lg:py-28">
-      <div className="mx-auto grid max-w-[1200px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
-        <motion.div
-          className="lg:col-span-5"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#C87A3A]">PeggyAI intake</p>
-          <h2 className="mt-5 font-serif text-4xl leading-tight md:text-5xl">A smarter first conversation.</h2>
-          <p className="mt-5 max-w-lg text-sm leading-7 text-[#5A5147]">
-            Peggy is the intake concierge. She helps frame the situation, asks cleaner questions, and routes the handoff. Peggy does not approve deals, make offers, or give legal, tax, lending, or investment advice.
+    <section className="connect-standards" data-testid="section-connect-standards">
+      <div className="connect-shell connect-standards-grid">
+        <div>
+          <p className="connect-eyebrow">Pegasus standard</p>
+          <h2>The public page keeps the boundaries clear.</h2>
+        </div>
+        <div className="connect-standards-copy">
+          <p>
+            Pegasus Dreamscapes is an East Bay real estate operating company. It can read property situations, development paths, JV opportunities, buyer needs, and operator relationships.
           </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.08 }}
-          className="rounded-md border border-[#D7C7AF] bg-white p-5 shadow-xl shadow-[#1A2332]/[0.08] lg:col-span-7"
-          data-testid="card-peggy-presence"
-        >
-          <div className="flex items-center gap-3 border-b border-[#E2D6BF] pb-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C87A3A] text-white">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="font-serif text-xl">Peggy with Pegasus Dreamscapes</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8A755E]">Early access | intake only</p>
-            </div>
-          </div>
-          <div className="grid gap-3 pt-5 sm:grid-cols-3">
-            {[
-              "What is the property address and current condition?",
-              "Are you trying to sell, list, buy, partner, or understand options?",
-              "What deadline, pressure, or outcome matters most?",
-            ].map((line) => (
-              <div key={line} className="rounded-sm border border-[#E2D6BF] bg-[#F9F6F0] p-4">
-                <p className="text-sm leading-6 text-[#4E463D]">{line}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+          <p>
+            Licensed representation is handled by Apollo Duran through Keller Williams Realty East Bay when agency is the right path. This site is not an offer to buy property, sell securities, promise returns, give legal advice, or give a valuation.
+          </p>
+        </div>
+        <div className="connect-standard-tags" aria-label="Compliance and trust standards">
+          <span>DRE #02333658</span>
+          <span>KW East Bay for representation</span>
+          <span>Equal Housing</span>
+          <span>No public securities offering</span>
+        </div>
       </div>
     </section>
   );
@@ -424,15 +434,15 @@ export default function ConnectPage() {
   useSEO({
     title: "Connect",
     description:
-      "Tell Pegasus Dreamscapes what you're working with: property, listing, buyer representation, deal finder opportunity, capital, vendor work, or a direct question.",
+      "Choose the right Pegasus Dreamscapes starting point: property intake, representation, buyer strategy, deal finder path, development, capital, vendor work, or a direct note.",
     image: "/og/about.png",
   });
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#07111D]">
-      <GreetingHero activeLane={activeLane} setActiveLane={setActiveLane} />
-      <RouteGrid activeLane={activeLane} setActiveLane={setActiveLane} />
-      <PeggyPresenceCard />
+    <div className="connect-premium">
+      <Hero activeLane={activeLane} setActiveLane={setActiveLane} />
+      <LaneDirectory activeLane={activeLane} setActiveLane={setActiveLane} />
+      <StandardsBand />
     </div>
   );
 }

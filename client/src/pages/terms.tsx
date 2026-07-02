@@ -4,7 +4,7 @@ import { Mail, Scale, FileText, Shield, AlertCircle, Users, Briefcase, MessageSq
 
 const SECTIONS = [
   { id: "agreement", label: "Agreement", icon: FileText, title: "By using the site, you agree to these terms.", kicker: "Agreement" },
-  { id: "what-we-do", label: "What we do", icon: Briefcase, title: "Strategy-first real estate. Not a public marketplace.", kicker: "What we do" },
+  { id: "what-we-do", label: "What we do", icon: Briefcase, title: "Strategy-first real estate. Not a public investment platform.", kicker: "What we do" },
   { id: "submissions", label: "Submissions", icon: Users, title: "Every submission gets a serious read. Not every submission gets an offer.", kicker: "Property submissions" },
   { id: "no-offer", label: "No offer", icon: AlertCircle, title: "Nothing here is an offer of guaranteed returns or principal protected investment products.", kicker: "Not a securities offer" },
   { id: "your-conduct", label: "Your conduct", icon: Shield, title: "Submit honest information. Don't try to break the site.", kicker: "Your conduct" },
@@ -17,7 +17,7 @@ export default function Terms() {
   useSEO({
     title: "Terms of Service",
     description:
-      "Terms of service for Pegasus DreamScapes Corp.: the public website, Strategy Review intake, and MarketFlow access.",
+      "Terms of service for Pegasus Dreamscapes Corp.: the public website, Strategy Review intake, and MarketFlow access.",
     image: "/og/default.png",
   });
 
@@ -42,7 +42,7 @@ export default function Terms() {
             </span>
           </h1>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
-            By using the Pegasus DreamScapes website, you agree to the terms on this page. They cover what the site is, what it isn't, and how we work together.
+            By using the Pegasus Dreamscapes website, you agree to the terms on this page. They cover what the site is, what it isn't, and how we work together.
           </p>
         </div>
       </section>
@@ -73,13 +73,13 @@ export default function Terms() {
           <div className="grid lg:grid-cols-2 gap-x-12 gap-y-14">
             <LegalBlock id="agreement" idx={0} icon={SECTIONS[0].icon} kicker={SECTIONS[0].kicker} title={SECTIONS[0].title}>
               <p>
-                These Terms of Service form a binding agreement between you and Pegasus DreamScapes Corp. when you access pegasusdreamscapes.com or submit a property, request, or message through it. If you do not agree, do not use the site.
+                These Terms of Service form a binding agreement between you and Pegasus Dreamscapes Corp. when you access pegasusdreamscapes.com or submit a property, request, or message through it. If you do not agree, do not use the site.
               </p>
             </LegalBlock>
 
             <LegalBlock id="what-we-do" idx={1} icon={SECTIONS[1].icon} kicker={SECTIONS[1].kicker} title={SECTIONS[1].title}>
               <p>
-                Pegasus DreamScapes Corp. is a strategy-first real estate operating company in the East Bay. We acquire, joint-venture, refer, and list real property across acquisition, value-add, ADU, and creative-finance lanes. We do not operate a public investment marketplace.
+                Pegasus Dreamscapes Corp. is a strategy-first real estate operating company in the East Bay. We acquire, joint-venture, refer, and list real property across acquisition, value-add, ADU, and creative-finance lanes. We do not operate a public investment marketplace or securities platform.
               </p>
               <p>
                 Paolo "Apollo" Duran is a licensed California real estate agent (DRE #02333658) with Keller Williams East Bay. Each office is independently owned and operated.
@@ -115,7 +115,7 @@ export default function Terms() {
 
             <LegalBlock id="content" idx={5} icon={SECTIONS[5].icon} kicker={SECTIONS[5].kicker} title={SECTIONS[5].title}>
               <p>
-                The site, its content, the Pegasus name, brand, and operating frameworks belong to Pegasus DreamScapes Corp. You may read and share public pages with attribution. You may not copy or republish the site or its frameworks for commercial use without written permission.
+                The site, its content, the Pegasus name, brand, and operating frameworks belong to Pegasus Dreamscapes Corp. You may read and share public pages with attribution. You may not copy or republish the site or its frameworks for commercial use without written permission.
               </p>
               <p>
                 You keep ownership of any property, photo, or information you submit. By submitting it, you grant us a non-exclusive license to use it to do the work you asked us to do (review, route, and respond), and to keep operating records of that work.
@@ -127,7 +127,7 @@ export default function Terms() {
                 The site, the Strategy Lab tools, the Strategy Library, and any calculator output are provided as-is, for general informational and educational use. They are not legal, tax, accounting, or investment advice for your specific situation. Before acting on anything you read or model here, consult licensed professionals who know your facts and jurisdiction.
               </p>
               <p>
-                To the maximum extent permitted by law, Pegasus DreamScapes Corp. is not liable for indirect, incidental, special, or consequential damages arising from your use of the site. Our total liability to you for any claim related to the site is limited to one hundred dollars (US $100).
+                To the maximum extent permitted by law, Pegasus Dreamscapes Corp. is not liable for indirect, incidental, special, or consequential damages arising from your use of the site. Our total liability to you for any claim related to the site is limited to one hundred dollars (US $100).
               </p>
             </LegalBlock>
 

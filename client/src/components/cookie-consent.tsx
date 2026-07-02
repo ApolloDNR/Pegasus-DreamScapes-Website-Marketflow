@@ -32,6 +32,11 @@ export function CookieConsent() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("pg-cookie-visible", visible);
+    return () => document.body.classList.remove("pg-cookie-visible");
+  }, [visible]);
+
   if (!visible) return null;
 
   const persist = (next: Pick<ConsentState, "analytics" | "marketing">) => {
@@ -48,24 +53,24 @@ export function CookieConsent() {
         className="fixed inset-x-0 bottom-0 z-[60] px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-none"
         data-testid="cookie-consent-banner"
       >
-        <div className="pointer-events-auto mx-auto max-w-2xl rounded-md border border-border bg-card shadow-md">
+        <div className="pg-cookie-panel pointer-events-auto mx-auto max-w-2xl rounded-md border border-border bg-card shadow-md">
           <div className="p-5 sm:p-6 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p
                   id="cookie-consent-title"
-                  className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2"
+                  className="pg-cookie-title text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2"
                 >
                   Cookie preferences
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="pg-cookie-copy text-sm text-muted-foreground leading-relaxed">
                   Analytics and marketing cookies are off until you opt in.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowDetails(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="pg-cookie-close text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Close cookie preferences"
                 data-testid="button-cookie-close-details"
               >
@@ -108,7 +113,7 @@ export function CookieConsent() {
               </Button>
               <Button
                 size="sm"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="pg-cookie-btn-solid bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => persist({ analytics, marketing })}
                 data-testid="button-cookie-save"
               >
@@ -129,17 +134,17 @@ export function CookieConsent() {
       className="fixed inset-x-0 bottom-0 z-[60] pointer-events-none"
       data-testid="cookie-consent-banner"
     >
-      <div className="pointer-events-auto bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.25)]">
+      <div className="pg-cookie-bar pointer-events-auto bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.25)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <p
             id="cookie-consent-title"
-            className="text-xs sm:text-sm text-foreground leading-snug flex-1"
+            className="pg-cookie-copy text-xs sm:text-sm text-foreground leading-snug flex-1"
           >
             <span className="hidden sm:inline">We use essential cookies to run this site. </span>
             Analytics and marketing are off until you opt in.{" "}
             <a
               href="/privacy"
-              className="underline hover:text-primary transition-colors"
+              className="pg-cookie-link underline hover:text-primary transition-colors"
               data-testid="link-cookie-privacy"
             >
               Privacy
@@ -150,7 +155,7 @@ export function CookieConsent() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-3 text-xs"
+              className="pg-cookie-btn h-8 px-3 text-xs"
               onClick={() => setShowDetails(true)}
               data-testid="button-cookie-customize"
             >
@@ -159,7 +164,7 @@ export function CookieConsent() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-3 text-xs"
+              className="pg-cookie-btn pg-cookie-btn-outline h-8 px-3 text-xs"
               onClick={() => persist({ analytics: false, marketing: false })}
               data-testid="button-cookie-reject"
             >
@@ -167,7 +172,7 @@ export function CookieConsent() {
             </Button>
             <Button
               size="sm"
-              className="h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="pg-cookie-btn-solid h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => persist({ analytics: true, marketing: true })}
               data-testid="button-cookie-accept-all"
             >

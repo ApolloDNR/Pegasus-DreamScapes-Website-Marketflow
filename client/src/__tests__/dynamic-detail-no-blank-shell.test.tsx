@@ -201,7 +201,7 @@ const SNAPSHOT = {
     memo: {
       paragraph:
         "This is the decision memo paragraph that confirms the snapshot share page renders substantive content for the recipient.",
-      nextStep: "Submit this property for a full human review.",
+      nextStep: "Submit this property for a full Pegasus read.",
     },
   },
   createdAt: new Date("2025-09-01").toISOString(),

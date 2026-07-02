@@ -46,7 +46,7 @@ function emit() {
 }
 
 // useSyncExternalStore requires getSnapshot to return a STABLE reference when
-// nothing changed — otherwise React sees a new value on every render and loops
+// nothing changed - otherwise React sees a new value on every render and loops
 // ("Maximum update depth exceeded"). Cache the parsed array per key and only
 // produce a new reference when the underlying localStorage string changes.
 const EMPTY: readonly never[] = Object.freeze([]);
@@ -77,7 +77,7 @@ function write<T>(key: string, value: T[]) {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    /* storage full or unavailable — fail silently */
+    /* storage full or unavailable - fail silently */
   }
   emit();
 }

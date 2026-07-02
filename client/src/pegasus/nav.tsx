@@ -50,17 +50,25 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
   return (
     <>
     <nav className="fixed top-0 inset-x-0 z-40">
-      <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'bg-[var(--bg)]/95 backdrop-blur-md border-b border-[var(--line)]'}`} />
+      <div
+        className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${
+          menuOpen
+            ? 'bg-[var(--bg-2)]'
+            : overHero
+              ? 'hero-scrim-top'
+              : 'bg-[var(--bg)] border-b border-[var(--line)] shadow-[0_18px_44px_-36px_rgba(13,27,44,0.44)]'
+        }`}
+      />
       <div className={`relative max-w-[1320px] mx-auto px-6 lg:px-12 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
-        <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5">
-          <BrandMark boxClassName="w-12 h-12" onDark={overHero || theme === 'dark'} />
-          <div className="hidden sm:flex flex-col leading-none text-left">
-            <span className="font-serif-display text-[22px] tracking-[0.06em] leading-none">Pegasus Dreamscapes</span>
-            <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
+        <button type="button" onClick={() => go('home')} className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />
+          <div className="hidden min-[360px]:flex flex-col leading-none text-left min-w-0">
+            <span className="font-serif-display text-[16px] sm:text-[22px] tracking-[0.04em] sm:tracking-[0.06em] leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
+            <span className="pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
           </div>
         </button>
 
-        <div ref={navRef} className="hidden lg:flex items-center gap-7 pg-label !text-[10px] !tracking-[0.2em]">
+        <div ref={navRef} className="hidden min-[1340px]:flex items-center gap-5 min-[1500px]:gap-7 pg-label !text-[10px] !tracking-[0.2em]">
           {NAV_GROUPS.map((group, gi) => (
             <div key={group.label} className="nav-group"
               onMouseEnter={() => setOpenGroup(gi)}
@@ -70,7 +78,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
                 aria-expanded={openGroup === gi}
                 aria-controls={`nav-dd-${gi}`}
                 onClick={() => setOpenGroup((g) => (g === gi ? null : gi))}
-                className={`inline-flex items-center gap-1.5 transition-opacity hover:opacity-100 ${openGroup === gi ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
+                className={`inline-flex min-h-11 items-center gap-1.5 px-1.5 transition-opacity hover:opacity-100 ${openGroup === gi ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
                 {group.label}
                 <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${openGroup === gi ? 'rotate-180' : ''}`} strokeWidth={2} />
               </button>
@@ -90,8 +98,12 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
             </div>
           ))}
           <button type="button" onClick={() => go('about')}
-            className={`transition-opacity hover:opacity-100 ${route === 'about' ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
+            className={`inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${route === 'about' ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
             About
+          </button>
+          <button type="button" onClick={() => go('peggy')}
+            className={`inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${route === 'peggy' ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
+            Talk to Peggy
           </button>
         </div>
 
@@ -103,7 +115,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
           </button>
           <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
             aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }}
-            className="lg:hidden relative z-10 -mr-1 p-1">
+            className="min-[1340px]:hidden relative z-10 -mr-2 p-2.5">
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -112,7 +124,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
 
       <div id="mobile-menu" aria-hidden={!menuOpen} {...(!menuOpen ? { inert: '' } : {})}
         style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
-        className={`lg:hidden fixed inset-0 z-30 bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        className={`min-[1340px]:hidden fixed inset-0 z-30 bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3">
             <button type="button" onClick={() => { setMenuOpen(false); go('submit'); }}
@@ -153,6 +165,12 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
               <button type="button" className="nav-m-acc-trigger w-full"
                 onClick={() => { setMenuOpen(false); go('about'); }}>
                 About
+              </button>
+            </div>
+            <div className="nav-m-acc">
+              <button type="button" className="nav-m-acc-trigger w-full"
+                onClick={() => { setMenuOpen(false); go('peggy'); }}>
+                Talk to Peggy
               </button>
             </div>
           </div>

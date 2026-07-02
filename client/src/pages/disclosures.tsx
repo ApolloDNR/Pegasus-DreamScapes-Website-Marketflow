@@ -133,13 +133,13 @@ export default function Disclosures() {
               testId="disclosure-peggy"
             >
               <p>
-                Peggy is an AI-powered strategy assistant trained on the Pegasus operating philosophy. Peggy can route you to the right lane, summarize structural options, and help you start a Strategy Review. Peggy cannot give legal, tax, or investment advice; cannot quote a specific offer; and cannot guarantee an outcome.
+                Peggy is a conversational assistant trained on the Pegasus operating philosophy. Peggy can route you to the right lane, summarize structural options, and help you start a Strategy Read. Peggy cannot give legal, tax, or investment advice; cannot quote a specific offer; and cannot guarantee an outcome.
               </p>
               <p>
-                Decisions on offers, structures, and capital relationships are always made by Pegasus operators, not by the AI. Peggy responses are conversational guidance, not contractual representations of the company.
+                Decisions on offers, structures, and capital relationships are always made by Pegasus operators. Peggy responses are conversational guidance, not contractual representations of the company.
               </p>
               <p>
-                Peggy enforces four hard refusal categories, on every channel (chat, phone, ecosystem apps): (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Triggering any of these routes the conversation immediately to Apollo for direct human review.
+                Peggy enforces four hard refusal categories, on every channel (chat, phone, ecosystem apps): (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Triggering any of these routes moves the conversation to Apollo for a direct written read.
               </p>
             </DisclosureBlock>
           </ScrollReveal>

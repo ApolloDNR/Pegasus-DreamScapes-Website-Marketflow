@@ -39,7 +39,7 @@ export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
 ];
 
 /* ================================================================
-   THREE DOORS — how to start
+   THREE DOORS - how to start
    ================================================================ */
 export const DOORS3: {
   key: string;
@@ -74,10 +74,10 @@ export const DOORS3: {
   {
     key: 'peggy',
     kicker: 'Ask in plain language',
-    title: 'Talk to PeggyAI',
+    title: 'Talk to Peggy',
     desc: 'Describe the deal in your own words. Peggy asks the right questions, frames the options, and routes you to the right lane.',
     best: 'Best when you are not sure where you fit yet.',
-    cta: 'Talk to PeggyAI',
+    cta: 'Talk to Peggy',
     action: 'peggy',
     icon: 'sparkles',
   },
@@ -121,10 +121,10 @@ export const PILLARS3: Pillar[] = [
     eyebrow: 'Pillar 03',
     tag: 'Systems',
     title: <>The tools that carry<br />the read forward</>,
-    lead: 'Strategy Lab models the numbers before you commit. PeggyAI reads the deal and routes it. MarketFlow connects sellers, finders, capital partners, and operators to the same reviewed inventory.',
+    lead: 'Strategy Lab models the numbers before you commit. Peggy guides the intake and routes it. MarketFlow connects sellers, finders, capital partners, and operators through the same reviewed network.',
     points: [
       'Tools that underwrite and route deals',
-      'A marketplace that moves deals and capital',
+      'A private network that routes deals and capital',
       'Consistent underwriting from first read to exit',
     ],
     img: 'pegasus-architecture.png',
@@ -154,7 +154,7 @@ export const ENGINE_OUTPUT = {
 };
 
 /* ================================================================
-   HOW A DEAL MOVES — departments + two supporting pillars.
+   HOW A DEAL MOVES - departments + two supporting pillars.
    Shows structure, not headcount.
    ================================================================ */
 export const DEPARTMENTS: { stage: string; name: string; desc: string; icon: string }[] = [
@@ -165,7 +165,7 @@ export const DEPARTMENTS: { stage: string; name: string; desc: string; icon: str
 ];
 
 export const DEPT_PILLARS: { name: string; desc: string; icon: string }[] = [
-  { name: 'Capital & Investor Relations', desc: 'Matches capital partners to specific projects on defined terms — never a blind pool.', icon: 'layers' },
+  { name: 'Capital & Investor Relations', desc: 'Matches capital partners to specific projects on defined terms. Never a blind pool.', icon: 'layers' },
   { name: 'Finance & Legal', desc: 'Keeps the numbers, contracts, and disclosures straight from first read through exit.', icon: 'shield' },
 ];
 
@@ -185,7 +185,7 @@ export const PRODUCTS: {
     step: '01',
     name: 'Strategy Lab',
     kind: 'Free · Self-serve',
-    desc: 'A free underwriting console you run yourself. Enter the property and the numbers and it returns strategy-tier ranges, the lanes that could fit, and the risks to weigh — instantly.',
+    desc: 'A free underwriting console you run yourself. Enter the property and the numbers, then review strategy-tier ranges, the lanes that could fit, and the risks to weigh instantly.',
     cta: 'Open Strategy Lab',
     action: 'strategylab',
   },
@@ -193,7 +193,7 @@ export const PRODUCTS: {
     step: '02',
     name: 'Property Read',
     kind: 'Free · Written',
-    desc: 'Submit a property and Acquisitions returns a short, candid written read of the path and the risk — within 48 hours.',
+    desc: 'Submit a property and Acquisitions returns a short, candid written read of the path and the risk within 48 hours.',
     cta: 'Request a Property Read',
     action: 'contact',
   },
@@ -208,7 +208,7 @@ export const PRODUCTS: {
 ];
 
 /* ================================================================
-   MARKETFLOW — three lanes
+   MARKETFLOW - three lanes
    ================================================================ */
 export const MARKETFLOW: {
   key: string;
@@ -249,7 +249,7 @@ export const MARKETFLOW: {
 ];
 
 /* ================================================================
-   ECOSYSTEM — six surfaces
+   ECOSYSTEM - six surfaces
    ================================================================ */
 export const ECOSYSTEM: {
   key: string;
@@ -261,9 +261,9 @@ export const ECOSYSTEM: {
   route?: Route;
 }[] = [
   { key: 'hq', name: 'Pegasus HQ', role: 'The strategy firm', desc: 'Where deals are read, underwritten, and turned into a plan. The underwriting standard every other part follows.', icon: 'compass', status: 'Operating', route: 'contact' },
-  { key: 'peggy', name: 'PeggyAI', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Early access', route: 'peggy' },
+  { key: 'peggy', name: 'Peggy', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Early access', route: 'peggy' },
   { key: 'lab', name: 'Strategy Lab', role: 'The underwriting tool', desc: 'Self-serve modeling that returns an Instant Strategy Preview on any deal.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
-  { key: 'marketflow', name: 'MarketFlow', role: 'The marketplace', desc: 'Three lanes that move deals, match capital, and place finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
+  { key: 'marketflow', name: 'MarketFlow', role: 'The private routing layer', desc: 'Three reviewed lanes for opportunities, capital, and finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
   { key: 'capstack', name: 'CapStack', role: 'The capital layer', desc: 'How funding is structured and matched to projects, on defined terms.', icon: 'layers', status: 'Building', route: 'capital' },
   { key: 'buildforge', name: 'BuildForge', role: 'The build layer', desc: 'Licensed contractors, engaged under project-specific agreements, turning scope, budget, and draw schedule into delivered product.', icon: 'hammer', status: 'Operating', route: 'development' },
 ];
@@ -294,7 +294,7 @@ export const DEV_TEAM: { t: string; d: string }[] = [
 export const FAQ_HOME: FaqItem[] = [
   {
     q: 'What does Pegasus actually do?',
-    a: 'Three things that feed each other: we invest in and reposition real property, Apollo and the build team renovate it to a finished, move-in-ready result, and we run the systems (Strategy Lab, PeggyAI, and MarketFlow) that run every deal through the same underwriting.',
+    a: 'Three things that feed each other: we invest in and reposition real property, Apollo and the build team renovate it to a finished, move-in-ready result, and we run the systems (Strategy Lab, Peggy, and MarketFlow) that run every deal through the same underwriting.',
   },
   {
     q: 'I just have one property. Is that too small?',
@@ -305,8 +305,8 @@ export const FAQ_HOME: FaqItem[] = [
     a: 'No. We never promise a return. Capital partners participate project by project on defined terms, with the work, the timeline, and the risk laid out plainly before anyone commits.',
   },
   {
-    q: 'What is the difference between the Strategy Lab and a Strategy Review?',
-    a: 'The Strategy Lab is a self-serve tool that returns an Instant Strategy Preview: directional, automated numbers. A Strategy Review is our team reading your specific deal and writing back a path forward.',
+    q: 'What is the difference between Strategy Lab and a Property Read?',
+    a: 'Strategy Lab is the cockpit you can use right away. It helps you model assumptions and see possible lanes. A Property Read is Pegasus looking at the actual situation and writing back a clear next step.',
   },
   {
     q: 'Where do you operate?',
@@ -349,16 +349,16 @@ export const NELSON = {
    HOMEPAGE LANE CARDS (Choose Your Lane)
    ================================================================ */
 export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: string; cta: string }[] = [
-  { key: 'sellers', title: 'I need to sell a complex or stuck property', desc: 'Distressed, inherited, occupied, or stalled — get a plain read and a real route, or a clean listing with Apollo.', icon: 'home', cta: 'Start a property review' },
+  { key: 'sellers', title: 'I need to sell a complex or stuck property', desc: 'Distressed, inherited, occupied, or stalled. Get a plain read and a real route, or a clean listing with Apollo.', icon: 'home', cta: 'Start a property review' },
   { key: 'buyers', title: 'I want to buy with an investor’s read', desc: 'Buy a finished home or buy into a deal, underwritten on real numbers before you commit.', icon: 'key', cta: 'See how buyers work with us' },
   { key: 'dealfinders', title: 'I have a deal to move', desc: 'Bring it once. Get a straight answer, written terms, and one buyer who actually closes.', icon: 'search', cta: 'Submit a deal' },
   { key: 'capital', title: 'I want to back specific deals', desc: 'Fund named projects on defined terms, with the risk and the downside laid out plainly. No blind pools.', icon: 'layers', cta: 'See how capital partners work' },
-  { key: 'operators', title: 'I build or service the work', desc: 'GCs, subs, agents, and title — join our bench and get matched to projects that fit your work.', icon: 'hammer', cta: 'Join the build bench' },
+  { key: 'operators', title: 'I build or service the work', desc: 'GCs, subs, agents, and title partners join our bench and get matched to projects that fit their work.', icon: 'hammer', cta: 'Join the build bench' },
   { key: 'referral', title: 'I want to refer someone', desc: 'Send one name. We handle the relationship and put any referral fee in writing before anything moves.', icon: 'handshake', cta: 'Refer a contact' },
 ];
 
 /* ================================================================
-   PEGGY — suggested prompts
+   PEGGY - suggested prompts
    ================================================================ */
 export const PARTICIPATION_LANES: {
   key: string;
@@ -418,7 +418,7 @@ export const PEGGY_CHIPS: string[] = [
 
 /* Role-aware starter chips. Peggy opens by asking who she is helping, then
    shows prompts tuned to that role, plus follow-up chips that persist through
-   the conversation for that path. Draft routing only — no real AI. */
+   the conversation for that path. Draft routing only - no real AI. */
 export const PEGGY_ROLES: { role: string; label: string; chips: string[]; followups: string[] }[] = [
   {
     role: 'seller', label: 'I want to sell a property',
@@ -521,14 +521,14 @@ export const PEGGY_FOLLOWUPS: string[] = [
   'I would rather talk to a person',
 ];
 
-export const PEGGY_SLA = 'PeggyAI replies in the moment. For anything that needs the team, we respond within 48 hours.';
+export const PEGGY_SLA = 'Peggy replies in the moment. For anything that needs the team, we respond within 48 hours.';
 
 /* Honest launch status. Peggy is live for intake and orientation but still being
    widened, so every surface that shows the widget states it plainly (replit.md
-   launch checklist: "PeggyAI shown with honest status wherever surfaced"). */
+   launch checklist: "Peggy shown with honest status wherever surfaced"). */
 export const PEGGY_STATUS = 'Early access · in training';
 
-/* Compliance note shown in the panel footer. Peggy is intake only — she never
+/* Compliance note shown in the panel footer. Peggy is intake only - she never
    approves, prices, or advises. Publishing the guardrail is the credibility move. */
 export const PEGGY_COMPLIANCE = 'Peggy is an AI intake assistant. She does not approve deals, make offers, or provide legal, tax, lending, or investment advice.';
 
@@ -590,7 +590,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     faqAnchor: 'submitting-a-property',
     faq: [
       { q: 'Will you actually buy it, or just list it?', a: 'Both are on the table. We can buy directly, or, if it serves you better, reposition and sell it for more. The Review tells you which path wins for you.' },
-      { q: 'What condition does it need to be in?', a: 'Any. Distressed, dated, occupied, or mid-project. Condition changes which path makes sense — a listing, an as-is purchase, or a reposition — but it never rules you out.' },
+      { q: 'What condition does it need to be in?', a: 'Any. Distressed, dated, occupied, or mid-project. Condition changes which path makes sense. A listing, an as-is purchase, or a reposition can all fit.' },
       { q: 'How fast can you close?', a: 'When speed is the priority, we structure for a fast, certain close. We will give you a real timeline up front, not a moving target.' },
     ],
     form: {
@@ -622,7 +622,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     ],
     splits: buyerSplits,
     rich: ['marketflow', 'faq'],
-    quote: 'A delivered product, not a project left open — that is what a buyer gets from us.',
+    quote: 'A delivered product, not a project left open. That is what a buyer gets from us.',
     forYou: [
       'You want an investor-minded agent representing you on the buy side',
       'You want buy-box discipline, diligence, and a real read on value before you offer',
@@ -635,7 +635,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'See the work in MarketFlow', route: 'marketflow' },
     faqAnchor: 'working-with-pegasus',
     faq: [
-      { q: 'How do I see what is available?', a: 'Start a Review or talk to PeggyAI and tell us what you are looking for. Network buyers get first look before inventory reaches the open market.' },
+      { q: 'How do I see what is available?', a: 'Start a Review or talk to Peggy and tell us what you are looking for. Network buyers get first look before inventory reaches the open market.' },
       { q: 'What does "buy into the deal" mean?', a: 'On select projects you can participate as a capital partner rather than an end buyer, funding the project on defined terms. We will route you to the Capital Partners lane if that fits.' },
     ],
     form: {
@@ -789,11 +789,11 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     image: 'nelson/nelson-exterior-1280.jpg',
     layout: 'timeline',
     pointsLabel: 'How it works',
-    lead: 'For agents, attorneys, advisors, and contractors who know an owner, buyer, seller, or deal source that needs a better path. The terms — referral fee, JV split, or compensation — are documented in writing before we engage anyone you send.',
+    lead: 'For agents, attorneys, advisors, and contractors who know an owner, buyer, seller, or deal source that needs a better path. Referral fees, JV splits, or compensation terms are documented in writing before we engage anyone you send.',
     points: [
       { t: 'Written terms before engagement', d: 'Where permitted by applicable licensing rules, the referral fee or JV split is agreed and documented before we make contact with anyone you send. What we agree is what you receive at close.' },
       { t: 'Your relationship stays intact', d: 'You keep the professional relationship. We solve the property or deal problem and hand it back to you cleanly.' },
-      { t: 'An honest read', d: 'Your contact gets a straight read on their situation — including a clear "no" when that is the honest answer. Your reputation is safe.' },
+      { t: 'An honest read', d: 'Your contact gets a straight read on their situation, including a clear "no" when that is the honest answer. Your reputation is safe.' },
       { t: 'You stay informed', d: 'We keep you in the loop through the process, not just at the end.' },
     ],
     rich: ['faq'],
@@ -802,7 +802,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     forYou: [
       'You are an agent, attorney, advisor, contractor, or trusted professional',
       'You encounter property owners, buyers, operators, or deal sources outside your own lane',
-      'You want your contacts handled honestly — with written terms before anyone is engaged',
+      'You want your contacts handled honestly, with written terms before anyone is engaged',
     ],
     notFit: [
       'You are looking to sell lead lists rather than refer real people in real situations',
@@ -811,7 +811,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'Understand our standard', route: 'about' },
     faqAnchor: 'working-with-pegasus',
     faq: [
-      { q: 'How are referrals compensated?', a: 'In writing, before we engage your contact, and only where permitted by applicable licensing and compensation rules. The referral fee or JV split is agreed and documented first — then we proceed. What we agree is what you receive.' },
+      { q: 'How are referrals compensated?', a: 'In writing, before we engage your contact, and only where permitted by applicable licensing and compensation rules. The referral fee or JV split is agreed and documented first. Then we proceed. What we agree is what you receive.' },
       { q: 'What types of professionals refer to Pegasus?', a: 'Estate attorneys, real estate agents with clients outside their lane, financial advisors, contractors, CPAs, and others who encounter property situations they cannot fully service themselves.' },
       { q: 'What happens to my contact?', a: 'They get the same honest review anyone receives. If there is a path, we lay it out. If there is not, we say so plainly. Either way, your relationship with them is protected.' },
     ],

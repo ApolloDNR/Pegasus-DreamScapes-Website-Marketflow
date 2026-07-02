@@ -147,8 +147,8 @@ function MyDealsContent() {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/10">
-                  <DollarSign className="w-5 h-5 text-purple-500" />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <DollarSign className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-2xl font-semibold">{capitalCount}</p>
@@ -383,8 +383,8 @@ function CapitalProjectCard({ project }: { project: CapitalProject }) {
           <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/10 flex-shrink-0">
-                  <DollarSign className="w-5 h-5 text-purple-500" />
+                <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                  <DollarSign className="w-5 h-5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-medium truncate">{project.title}</h3>

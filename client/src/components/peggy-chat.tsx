@@ -299,7 +299,7 @@ export function PeggyChatBubble() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold text-sm">Peggy · Strategy Assistant</h3>
+              <h3 className="font-semibold text-sm">Peggy</h3>
               <p className="text-xs text-muted-foreground">Pegasus DreamScapes intake & routing</p>
             </div>
           </div>

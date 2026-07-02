@@ -133,9 +133,9 @@ const INVESTMENT_TRANCHES = [
     label: "Staged Deployment",
     icon: Layers,
     description: "Deploy capital in scheduled phases",
-    color: "text-purple-600",
-    bgColor: "bg-purple-500/10",
-    borderColor: "border-purple-500/30",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+    borderColor: "border-primary/30",
   },
 ];
 
@@ -239,7 +239,7 @@ export function CapitalRaiseInvestmentStudio({
     const welcomeMessage: ChatMessage = {
       id: "welcome",
       sender: "peggy",
-      senderName: "Peggy AI",
+      senderName: "Peggy",
       message: `Welcome to ${project.title}! This is a ${structureLabel} opportunity seeking ${formatCurrency(fundingGoal)} total capital. The operator is offering ${project.projectedReturn || project.askingInterestRate || "attractive returns"}. I'll help you structure your investment optimally.`,
       timestamp: new Date(),
       isAI: true,
@@ -322,7 +322,7 @@ export function CapitalRaiseInvestmentStudio({
     return {
       id: Date.now().toString(),
       sender: "peggy",
-      senderName: "Peggy AI",
+      senderName: "Peggy",
       message: response,
       timestamp: new Date(),
       isAI: true,
@@ -1006,7 +1006,7 @@ export function CapitalRaiseInvestmentStudio({
                   </DialogTitle>
                   <DialogDescription>{project.title} - {project.location}</DialogDescription>
                 </div>
-                <Badge variant="outline" className={project.structure === "DEBT" ? "border-blue-500/50 text-blue-600" : project.structure === "EQUITY" ? "border-purple-500/50 text-purple-600" : "border-amber-500/50 text-amber-600"}>
+                <Badge variant="outline" className={project.structure === "DEBT" ? "border-blue-500/50 text-blue-600" : project.structure === "EQUITY" ? "border-primary/50 text-primary" : "border-amber-500/50 text-amber-600"}>
                   {project.structure}
                 </Badge>
               </div>
@@ -1101,7 +1101,7 @@ export function CapitalRaiseInvestmentStudio({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">Peggy AI</h3>
+                  <h3 className="font-semibold">Peggy</h3>
                   <p className="text-xs text-muted-foreground">Investment Advisor</p>
                 </div>
                 <Badge variant="secondary" className="ml-auto text-[10px]">

@@ -119,7 +119,7 @@ export function CapitalStackBreakdown({ project }: { project: CapitalProject }) 
   const stackItems = [
     { label: "Purchase Price", value: capitalStack.purchasePrice, icon: Home, color: "bg-blue-500" },
     { label: "Rehab / Construction", value: capitalStack.rehabBudget, icon: Hammer, color: "bg-amber-500" },
-    { label: "Soft Costs & Fees", value: capitalStack.softCosts, icon: FileText, color: "bg-purple-500" },
+    { label: "Soft Costs & Fees", value: capitalStack.softCosts, icon: FileText, color: "bg-primary" },
     { label: "Contingency", value: capitalStack.contingency, icon: Shield, color: "bg-gray-500" },
   ].filter(item => item.value > 0);
 
@@ -544,7 +544,7 @@ export function InvestorBreakdownTable({ project, commitments = [] }: { project:
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Users className="w-5 h-5 text-purple-600" />
+          <Users className="w-5 h-5 text-primary" />
           Investor Return Breakdown
         </CardTitle>
         <CardDescription>

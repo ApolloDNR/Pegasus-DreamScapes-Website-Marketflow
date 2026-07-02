@@ -230,7 +230,7 @@ export default function SnapshotPropertyPage() {
         <section className="bg-[hsl(var(--cream))] border border-[hsl(var(--rule))] p-6 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" data-testid="section-cta">
           <div>
             <div className="text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold text-primary mb-1">Want a deeper read?</div>
-            <div className="font-serif text-2xl font-semibold">Submit this property for human review.</div>
+            <div className="font-serif text-2xl font-semibold">Submit this property for a written Property Read.</div>
             <p className="text-sm text-muted-foreground mt-1">Every property gets a serious review. Not every property gets an offer.</p>
           </div>
           <div className="flex gap-2">

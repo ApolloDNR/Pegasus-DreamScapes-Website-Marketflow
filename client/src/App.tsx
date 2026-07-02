@@ -362,7 +362,7 @@ function PageRouteTransition() {
 }
 
 // The Pegasus prototype shell (PegasusSite) is fully self-contained: it
-// renders its own nav, footer, and PeggyAI dock scoped under `.pg-root`.
+// renders its own nav, footer, and Peggy dock scoped under `.pg-root`.
 // On those URLs we suppress the legacy global chrome so the page is not
 // double-framed; every other (functional) surface keeps the global chrome.
 function AppShell() {

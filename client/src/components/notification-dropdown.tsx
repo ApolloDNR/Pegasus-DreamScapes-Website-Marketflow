@@ -59,7 +59,7 @@ function getNotificationIconColor(type: string) {
     case "match":
       return "bg-primary/10 text-primary";
     case "message":
-      return "bg-purple-500/10 text-purple-600";
+      return "bg-primary/10 text-primary";
     case "announcement":
       return "bg-orange-500/10 text-orange-600";
     default:

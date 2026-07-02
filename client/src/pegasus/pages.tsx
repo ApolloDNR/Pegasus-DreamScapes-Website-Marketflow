@@ -13,7 +13,7 @@ import {
   SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock,
 } from './blocks';
 import {
-  LeadSection, StrategyCalculator, StrategyCommandBoard, StrategyConsole, StrategyTierStrip, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
+  LeadSection, StrategyCalculator, StrategyCommandBoard, StrategyConsole, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
 } from './forms';
 
 const INVESTMENTS = PILLARS3[0];
@@ -67,11 +67,10 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
   return (
     <>
       <Hero go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />
-      <HomeIntro />
+      <HomeIntro go={go} />
       <HowADealMovesBlock />
       <StrategyLabFeature go={go} />
       <NelsonProof go={go} />
-      <ApolloBlock go={go} portrait={false} />
       <MarketFlowBlock go={go} dark />
       <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="/faq" />
       <CTABand go={go} openPeggy={openPeggy} primaryAction="submit" primaryLabel="Submit a Property"
@@ -197,11 +196,11 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
 export function DealStrategyPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   return (
     <>
-      <PageHero eyebrow="What we do · The engine"
+      <PageHero eyebrow="Deal Strategy"
         title={<>Deal <span className="italic text-[var(--accent-bright)]">Strategy.</span></>}
         image={IMG('pegasus-aerial.png')}
         scrimTop
-        lead="Where every Pegasus relationship starts. We read the property and the numbers once, properly, then show you the route forward: the lane that genuinely fits the deal and the person in front of it." />
+        lead="A property is not a product. It is a situation with constraints, pressure, numbers, duty, and timing. Pegasus reads those parts before naming the path." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-5 reveal">
@@ -215,14 +214,14 @@ export function DealStrategyPage({ go, openPeggy }: { go: Nav; openPeggy: () => 
               We never lead with the lane.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-5 max-w-xl">
-              Most operators have one product and try to fit every situation into it. We do the opposite. We read the situation first (the property, the numbers, the person and their constraints) and only then design the route.
+              Most real estate conversations start with the thing someone wants to sell: a listing, an offer, a loan, a JV, a contractor, or a buyer. Pegasus starts with the read.
             </p>
             <p className="text-[var(--muted)] leading-relaxed max-w-xl">
-              Sometimes that route is a fast sale. Sometimes a value-add reposition, a ground-up build, or a capital partnership. Sometimes the honest answer is that there is no deal, and we will tell you that too.
+              Sometimes the responsible path is representation. Sometimes it is acquisition, value-add repositioning, development, MarketFlow routing, or a documented JV. Sometimes the honest answer is that Pegasus should pass.
             </p>
             <button type="button" onClick={() => go('submit')} data-testid="button-deal-strategy-submit"
               className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-              Submit a Deal <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              Start a Property Read <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </div>
@@ -272,13 +271,6 @@ function BuildProcessBlock() {
   );
 }
 
-const LAB_STEPS = [
-  { n: '01', icon: Compass, t: 'Describe the property', d: 'Location, property type, condition, occupancy, your role, and your goal. The console returns a Property Fit Score and flags the right lane before you touch a number.' },
-  { n: '02', icon: Calculator, t: 'Underwrite the spread', d: 'Set acquisition basis, rehab scope, hold costs, and exit strategy. The Instant Strategy Preview models carry costs, selling costs, and live margin in real time.' },
-  { n: '03', icon: Ruler, t: 'Get a written Property Read', d: 'Hand the situation to the team. A short, candid written read of the path and the risk — not a form letter, back within 48 hours.' },
-  { n: '04', icon: Landmark, t: 'Request Blueprint review', d: 'For deals that earn a deeper plan after a Property Read: scope, capital stack, construction approach, exit, and risk in one reviewed engagement.' },
-];
-
 export function DevelopmentPage({ go }: { go: Nav }) {
   return (
     <>
@@ -289,7 +281,7 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <section className="py-24 lg:py-28">
         <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
           <p className="text-[var(--muted)] leading-relaxed text-lg">
-            Pegasus works with former GCs, project managers, and trades who have run real jobsites. We take on a small number of builds at a time and scope each one before committing — the budget, the draw schedule, and the finish spec in writing first. Bring a property or a site and we'll walk the scope with you.
+            Pegasus works with former GCs, project managers, and trades who have run real jobsites. We take on a small number of builds at a time and scope each one before committing. The budget, draw schedule, and finish spec go in writing first. Bring a property or a site and we'll walk the scope with you.
           </p>
           <button type="button" onClick={() => go('connect')} data-testid="button-development-connect"
             className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
@@ -314,7 +306,7 @@ export function CapitalPage({ go }: { go: Nav }) {
       <section className="py-24 lg:py-28">
         <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
           <p className="text-[var(--muted)] leading-relaxed text-lg mb-6">
-            Capital partnerships are arranged privately, one project at a time, through direct conversation — never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, start a conversation.
+            Capital partnerships are arranged privately, one project at a time, through direct conversation. Never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, start a conversation.
           </p>
           <p className="text-[var(--text-2)] text-[0.95rem] leading-relaxed mb-9" data-testid="text-capital-securities">
             No securities are offered through this website.
@@ -337,12 +329,7 @@ export function CapitalPage({ go }: { go: Nav }) {
 /* ================================================================
    STRATEGY LAB
    ================================================================ */
-const LAB_OUTPUTS = [
-  { label: 'All-in basis', hint: 'Calculated after your acquisition, repair, carry, and exit assumptions are entered.' },
-  { label: 'Spread logic', hint: 'The Lab compares your estimated basis against projected delivered value, then flags whether the spread looks strong, thin, or incomplete.' },
-  { label: 'Lane fit', hint: 'Possible lanes include Retail Listing, Value-Add Rehab, ADU / Development Screen, Partner / JV Review, MarketFlow Disposition, or Deal Blueprint.' },
-  { label: 'Recommended next step', hint: 'Request a written Property Read when the numbers, condition, title, occupancy, and timeline need a closer review.' },
-];
+const LAB_OUTPUTS: Array<{ label: string; hint: string }> = [];
 
 function LabPreview() {
   return (
@@ -352,10 +339,10 @@ function LabPreview() {
           <div className="lg:col-span-4 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">What you’ll model</div>
             <h2 className="font-serif-display text-4xl md:text-[2.6rem] leading-[1.08] tracking-[-0.01em] text-[var(--text)] mb-5">
-              Put one property in.<br />Read four things out.
+              One cockpit in.<br />One clear read out.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed max-w-md">
-              This is the framework the Lab works through. Enter the property and the numbers in the console below and it generates your read after your input. Directional orientation only, not an offer or an underwrite.
+              The Strategy Lab now works as one cockpit: property signals, underwriting assumptions, lane fit, and next step in the same flow. Directional orientation only, not an offer or an underwrite.
             </p>
           </div>
           <div className="lg:col-span-8 grid sm:grid-cols-2 gap-5">
@@ -378,15 +365,10 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
   return (
     <>
       <StrategyCommandBoard go={go} model={model} />
-      <ProcessSteps eyebrow="How the Lab works" title="From a property to a plan."
-        copy="Four steps, increasing depth. Start self-serve, go as far as the deal deserves, and hand it to a person whenever you want."
-        steps={LAB_STEPS} />
-      <LabPreview />
-      <div id="strategy-console" className="scroll-mt-24">
+      <div className="strategy-cockpit-flow">
         <StrategyConsole go={go} model={model} />
+        <StrategyCalculator go={go} model={model} />
       </div>
-      <StrategyCalculator go={go} model={model} />
-      <StrategyTierStrip />
       <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Property Read" tone="navy" strategy={model.snapshot} />
     </>
   );
@@ -398,7 +380,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
 const MARKETFLOW_ACCESS = [
   { num: '01', title: 'Apply', desc: 'Tell us how you operate and where your capital or capacity sits. One short request, no obligation.' },
   { num: '02', title: 'We review fit', desc: 'Our team reviews every request for fit. We would rather add fewer partners and actually service them.' },
-  { num: '03', title: 'You are introduced', desc: 'Approved members are onboarded to reviewed dealflow and the operators behind it, as opportunities match.' },
+  { num: '03', title: 'You are introduced', desc: 'Approved members are onboarded to reviewed opportunities and the operators behind them, as fit appears.' },
 ];
 
 export function MarketFlowPage({ go }: { go: Nav }) {
@@ -407,13 +389,13 @@ export function MarketFlowPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
         image={IMG('pegasus-casestudy.png')}
         scrimTop
-        lead="A private, vetted network — not an open marketplace. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and our team reviews every fit." />
+        lead="A private, vetted network. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and our team reviews every fit." />
       <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="A look inside"
             title="What members see."
-            copy="A product preview of the records approved members use. No live deal inventory is published here; dealflow, profiles, and introductions only appear after reviewed access." />
+            copy="A product preview of the records approved members use. No live deal inventory is published here; opportunities, profiles, and introductions only appear after reviewed access." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {MARKETFLOW_PREVIEW.map((c, i) => (
               <div key={c.title} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
@@ -479,7 +461,7 @@ function RepLane({ rep }: { rep: { label: string; desc: string; points: string[]
   );
 }
 
-// Step 7 — visible sell/buy/situation/deal selector shown before the inline
+// Step 7 - visible sell/buy/situation/deal selector shown before the inline
 // representation lead form. "Sell"/"Buy" scroll to the form (Apollo's two
 // roleOptions); "complex situation"/"deal" route to the canonical /submit
 // intake with a valid ?intent= so nothing falls back to a default.
@@ -579,7 +561,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="Representation lanes" title="Sell or buy, represented."
-            copy="Seller representation or buyer representation — Apollo represents sellers and buyers through Keller Williams Realty East Bay, with an investor's read on every transaction." />
+            copy="Seller representation or buyer representation. Apollo represents sellers and buyers through Keller Williams Realty East Bay, with an investor's read on every transaction." />
           <div className="grid md:grid-cols-2 gap-6 lg:gap-8 mb-12 items-stretch">
             <RepLane rep={APOLLO_REP.seller} />
             <RepLane rep={APOLLO_REP.buyer} />
@@ -635,9 +617,9 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
   return (
     <>
       <PageHero eyebrow="Systems · The front door · Early access"
-        title={<>Meet <span className="italic text-[var(--accent-bright)]">PeggyAI.</span></>}
+        title={<>Meet <span className="italic text-[var(--accent-bright)]">Peggy.</span></>}
         image={IMG('pegasus-interior-v2.png')}
-        lead="Describe a deal or a situation in plain language. Peggy asks the right questions, frames the options, and points you to the lane that fits — then hands you to a person the moment a deal needs a licensed read. In active training: live now for intake and orientation." />
+        lead="Describe a deal or a situation in plain language. Peggy asks the right questions, frames the options, and points you to the lane that fits. She hands you to a person the moment a deal needs a licensed read. In active training: live now for intake and orientation." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-5 reveal">
@@ -646,7 +628,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
               The fastest way to find your lane.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-md">
-              Not sure where you fit? Start here. Peggy takes a deal or a situation in your own words and points you to the right next step: a review, the Strategy Lab, or the right audience lane. She is in active training, so today she is live for intake and orientation while we keep widening what she can do — and she hands you to a person the moment a deal needs a licensed read.
+              Not sure where you fit? Start here. Peggy takes a deal or a situation in your own words and points you to the right next step: a review, the Strategy Lab, or the right audience lane. She is in active training, so today she is live for intake and orientation while we keep widening what she can do. She hands you to a person the moment a deal needs a licensed read.
             </p>
             <ul className="space-y-4 mb-10">
               {['Open any time, no form to fill first', 'Plain language in, clear direction out', 'Hands you to a person when it matters'].map((t) => (
@@ -656,7 +638,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
               ))}
             </ul>
             <button type="button" onClick={() => openPeggy()} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Open PeggyAI
+              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Open Peggy
             </button>
           </div>
           <div className="lg:col-span-7 reveal delay-100">
@@ -666,7 +648,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
                 <div className="flex items-center gap-3 mb-7">
                   <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
                   <div className="leading-none">
-                    <div className="font-serif-display text-2xl text-[var(--cream)]">PeggyAI</div>
+                    <div className="font-serif-display text-2xl text-[var(--cream)]">Peggy</div>
                     <div className="flex items-center gap-2.5 mt-2">
                       <span className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)]">Pegasus intake concierge</span>
                       <span className="inline-flex items-center gap-1.5 pg-label !text-[7px] !tracking-[0.16em] px-2 py-0.5 rounded-full border border-[var(--accent-bright)]/40 text-[var(--accent-bright)]" data-testid="badge-peggy-status">
@@ -689,7 +671,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
                 </div>
                 <form className="peggy-input !relative !rounded-[3px]" onSubmit={(e) => { e.preventDefault(); openPeggy(); }}>
                   <input type="text" aria-label="Describe your deal" placeholder="Describe your deal..." />
-                  <button type="submit" aria-label="Open PeggyAI"><Send className="w-4 h-4" strokeWidth={1.7} /></button>
+                  <button type="submit" aria-label="Open Peggy"><Send className="w-4 h-4" strokeWidth={1.7} /></button>
                 </form>
                 <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/40 mt-4 text-center">{PEGGY_SLA}</div>
               </div>
@@ -785,7 +767,7 @@ export function Footer({ go }: { go: Nav }) {
   return (
     <footer className="bg-[var(--navy)] text-[var(--cream)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-20">
-        <div className="grid grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
           <div className="col-span-2 md:col-span-4">
             <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
               <BrandMark boxClassName="w-12 h-12" onDark />
@@ -812,7 +794,7 @@ export function Footer({ go }: { go: Nav }) {
           </FooterCol>
 
           <FooterCol title="Contact">
-            <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline">apollo@pegasusdreamscapes.com</a></li>
+            <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
             <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
             <li>East Bay · CA</li>
           </FooterCol>
@@ -825,7 +807,7 @@ export function Footer({ go }: { go: Nav }) {
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
           <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus Dreamscapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay — each office independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
+            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus Dreamscapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay. Each office is independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
             <span>© {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.</span>

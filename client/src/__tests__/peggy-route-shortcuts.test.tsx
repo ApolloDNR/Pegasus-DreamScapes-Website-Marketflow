@@ -1,7 +1,7 @@
 /**
  * Peggy — persistent route shortcuts guard (Task #176).
  *
- * The PeggyAI concierge surfaces an "Or go straight to" strip of route
+ * The Peggy concierge surfaces an "Or go straight to" strip of route
  * shortcuts that are always present (regardless of conversation state):
  * Strategy Lab / Submit a Property / Represent With Apollo / MarketFlow.
  * Each shortcut must fire its handler and close the panel.

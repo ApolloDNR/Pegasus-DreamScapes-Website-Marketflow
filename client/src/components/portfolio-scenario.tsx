@@ -492,7 +492,7 @@ function ScenarioResults({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 mb-2">
-            <PieChart className="w-5 h-5 text-purple-600" />
+            <PieChart className="w-5 h-5 text-primary" />
             <span className="text-sm text-muted-foreground">Cash on Cash</span>
           </div>
           <p className="text-3xl font-bold">{result.cashOnCash}%</p>

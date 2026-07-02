@@ -976,7 +976,7 @@ export default function MarketflowOfferStudioPage() {
 }
 
 // =====================================================
-// Peggy AI advisor pane (right-rail full height)
+// Peggy advisor pane (right-rail full height)
 // =====================================================
 interface AdvisorProps {
   dealInfo: { propertyAddress: string; askingPrice: number; arv?: number; lane: Lane };

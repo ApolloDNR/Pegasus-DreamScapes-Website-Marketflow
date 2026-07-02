@@ -21,7 +21,16 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
 import { SuccessView } from "@/components/success-view";
-import { Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Compass,
+  Handshake,
+  KeyRound,
+  Loader2,
+  PenLine,
+  ShieldCheck,
+} from "lucide-react";
 
 // Empire Doctrine v1.0.1 — canonical submission page.
 // Three groups: Property / Situation / Contact.
@@ -61,8 +70,60 @@ const INTENT_LABELS: Record<SubmitFormValues["intent"], string> = {
   adu: "ADU or value-add scope",
   "deal-jv": "Wholesale deal or JV opportunity",
   explore: "Exploring options",
-  blueprint: "Request a Deal Blueprint (by review)",
+  blueprint: "Request a Deal Blueprint",
 };
+
+const TIMELINE_LABELS: Record<SubmitFormValues["timeline"], string> = {
+  asap: "As soon as possible",
+  "30-60": "Next 30 to 60 days",
+  "60-90": "Next 60 to 90 days",
+  exploratory: "Exploring options",
+};
+
+const PROPERTY_TYPE_LABELS: Record<SubmitFormValues["propertyType"], string> = {
+  sfr: "Single-family",
+  duplex: "Duplex / triplex",
+  multifamily: "Multifamily",
+  land: "Land / lot",
+  mixed: "Mixed-use",
+  other: "Other",
+};
+
+const CONDITION_LABELS: Record<SubmitFormValues["condition"], string> = {
+  turnkey: "Turnkey",
+  light: "Light cosmetic",
+  moderate: "Moderate rehab",
+  heavy: "Heavy rehab",
+  teardown: "Teardown",
+  unknown: "Not sure",
+};
+
+const TRUST_MARKERS = [
+  "Listing or acquisition lane",
+  "JV and wholesale welcome",
+  "No blind offers",
+  "DRE #02333658",
+  "Equal Housing",
+];
+
+const INTAKE_POINTS = [
+  "The property facts: address, condition, ownership context, and anything unusual.",
+  "The pressure point: repairs, debt, vacancy, inheritance, partner friction, timing, or a clean listing question.",
+  "The path you want considered: representation, direct sale, JV, buyer match, development scope, MarketFlow, or Blueprint.",
+];
+
+const PARTICIPATION_LANES = [
+  { icon: KeyRound, label: "Sell", copy: "Direct acquisition or a clean sale path." },
+  { icon: PenLine, label: "List", copy: "Traditional representation when the property belongs on market." },
+  { icon: Handshake, label: "JV", copy: "Wholesale, deal finder, or partner-led opportunity." },
+  { icon: Building2, label: "Build", copy: "Value-add, ADU, development, or repositioning scope." },
+];
+
+const DOCKET_STEPS = [
+  { index: "01", label: "Facts", copy: "Address, type, condition, and timing." },
+  { index: "02", label: "Pressure", copy: "What needs to be solved and why now." },
+  { index: "03", label: "Path", copy: "Represent, sell, JV, build, route, or pass." },
+];
 
 function useInitialIntent(): SubmitFormValues["intent"] {
   if (typeof window === "undefined") return "property";
@@ -85,7 +146,7 @@ export default function SubmitPage() {
   useSEO({
     title: "Submit a Property",
     description:
-      "Submit a property to Pegasus Dreamscapes. Every property gets a path. Our team reviews every serious submission. No pressure.",
+      "Submit a property to Pegasus Dreamscapes for acquisition, listing, JV, development, routing, or strategy intake. No blind offers and no pressure.",
     image: "/og/submit.png",
   });
 
@@ -175,81 +236,207 @@ export default function SubmitPage() {
     },
   });
 
-  const watchedValues = form.watch([
-    "propertyAddress",
-    "propertyType",
-    "condition",
-    "intent",
-    "timeline",
-    "situation",
-    "name",
-    "email",
-    "phone",
-  ]);
+  const propertyAddress = form.watch("propertyAddress");
+  const propertyType = form.watch("propertyType");
+  const condition = form.watch("condition");
+  const intent = form.watch("intent");
+  const timeline = form.watch("timeline");
+  const situation = form.watch("situation");
+  const contactName = form.watch("name");
+  const contactEmail = form.watch("email");
+  const contactPhone = form.watch("phone");
+  const situationLength = situation?.length ?? 0;
   const progressSteps = [
-    { label: "Property", complete: !!(watchedValues[0] && watchedValues[1] && watchedValues[2]) },
-    { label: "Situation", complete: !!(watchedValues[3] && watchedValues[4] && (watchedValues[5]?.length ?? 0) >= 20) },
-    { label: "Contact", complete: !!(watchedValues[6] && watchedValues[7] && watchedValues[8]) },
+    { label: "Property", complete: (propertyAddress || "").trim().length >= 5 },
+    { label: "Situation", complete: situationLength >= 20 },
+    {
+      label: "Contact",
+      complete:
+        (contactName || "").trim().length >= 2 &&
+        (contactEmail || "").includes("@") &&
+        (contactPhone || "").trim().length >= 7,
+    },
   ];
+  const docketCompleteness = [
+    progressSteps[0].complete,
+    progressSteps[1].complete,
+    (contactName || "").trim().length >= 2,
+    (contactEmail || "").includes("@"),
+    (contactPhone || "").trim().length >= 7,
+  ].filter(Boolean).length;
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background pt-28 pb-20">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12">
-          <SuccessView
-            formType="submit"
-            referenceTag={form.getValues("intent")}
-            onAddAnother={() => {
-              form.reset({
-                propertyAddress: "",
-                propertyType: "sfr",
-                condition: "moderate",
-                intent: initialIntent,
-                timeline: "exploratory",
-                situation: "",
-                name: "",
-                email: "",
-                phone: "",
-                hp_company: "",
-                consent: undefined as unknown as true,
-              });
-              formMountedAt.current = Date.now();
-              setSubmitted(false);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
+      <div className="submit-premium min-h-screen pt-28 pb-20">
+        <div className="submit-shell">
+          <div className="submit-success-shell">
+            <SuccessView
+              formType="submit"
+              referenceTag={form.getValues("intent")}
+              onAddAnother={() => {
+                form.reset({
+                  propertyAddress: "",
+                  propertyType: "sfr",
+                  condition: "moderate",
+                  intent: initialIntent,
+                  timeline: "exploratory",
+                  situation: "",
+                  name: "",
+                  email: "",
+                  phone: "",
+                  hp_company: "",
+                  consent: undefined as unknown as true,
+                });
+                formMountedAt.current = Date.now();
+                setSubmitted(false);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pt-24">
-      <section className="bg-[hsl(var(--charcoal))] text-cream">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12 py-16">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-            Submit a Property
-          </p>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-white leading-tight mb-6">
-            Bring us the situation.
-          </h1>
-          <p className="font-serif text-xl text-white/85 italic leading-snug max-w-2xl">
-            Our team reviews every serious submission. You will get a real answer.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-white/10" data-testid="submit-trust-row">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-supporting font-semibold">Licensed</span>
-            <span className="text-white/30 text-xs">·</span>
-            <span className="text-xs text-white/60">DRE #02333658 · Keller Williams East Bay</span>
+    <div className="submit-premium min-h-screen pt-24">
+      <section className="submit-hero" data-testid="section-submit-hero">
+        <div className="submit-shell submit-hero-grid">
+          <div className="submit-hero-copy">
+            <p className="submit-eyebrow">Pegasus Property Intake</p>
+            <h1>
+              Send the facts.
+              <span> Get the right path.</span>
+            </h1>
+            <p className="submit-lead">
+              Address, condition, pressure, and goal. Pegasus uses the first read to decide whether the right next conversation is representation, acquisition, JV, development, routing, Blueprint, or a clear pass. Intake only. No blind offer.
+            </p>
+            <div className="submit-hero-actions">
+              <a href="#submit-intake" className="submit-primary-link">
+                Submit for a Property Read
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+              <a href="/strategy-lab" className="submit-secondary-link">
+                Open Strategy Lab
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+            <div className="submit-trust-row" data-testid="submit-trust-row">
+              {TRUST_MARKERS.map((marker) => (
+                <span key={marker}>{marker}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="submit-review-desk" aria-label="Pegasus property path note">
+            <div className="submit-desk-topline">
+              <span>Pegasus intake docket</span>
+              <strong>Confidential first read</strong>
+            </div>
+            <div className="submit-desk-visual" aria-hidden="true">
+              <div className="submit-property-frame">
+                <span className="submit-roofline" />
+                <span className="submit-column submit-column-one" />
+                <span className="submit-column submit-column-two" />
+                <span className="submit-column submit-column-three" />
+                <span className="submit-foundation" />
+              </div>
+              <div className="submit-lane-strip">
+                {PARTICIPATION_LANES.map(({ icon: Icon, label }) => (
+                  <span key={label}>
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="submit-desk-sequence" aria-label="Pegasus intake read sequence">
+              {DOCKET_STEPS.map((step) => (
+                <div key={step.index}>
+                  <span>{step.index}</span>
+                  <strong>{step.label}</strong>
+                  <small>{step.copy}</small>
+                </div>
+              ))}
+            </div>
+            <div className="submit-docket-grid">
+              <div>
+                <span>Address</span>
+                <strong>{propertyAddress || "Address pending"}</strong>
+              </div>
+              <div>
+                <span>Starting lane</span>
+                <strong>{INTENT_LABELS[intent]}</strong>
+              </div>
+              <div>
+                <span>Property</span>
+                <strong>{PROPERTY_TYPE_LABELS[propertyType]} / {CONDITION_LABELS[condition]}</strong>
+              </div>
+              <div>
+                <span>Timeline</span>
+                <strong>{TIMELINE_LABELS[timeline]}</strong>
+              </div>
+            </div>
+            <div className="submit-desk-footer">
+              <div>
+                <span>Docket ready</span>
+                <strong>{docketCompleteness} / 5</strong>
+              </div>
+              <p>Intake only. Any offer, listing, JV, or Blueprint requires a separate written agreement.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <HowItWorksSection />
+      <section id="submit-intake" className="submit-form-section" data-testid="section-submit-form">
+        <div className="submit-shell submit-form-layout">
+          <aside className="submit-intake-brief">
+            <p className="submit-eyebrow">What to include</p>
+            <h2>Start with the truth of the situation.</h2>
+            <p>
+              Short is fine. Specific is better. Pegasus needs enough context to decide which path deserves attention and which path should be left alone.
+            </p>
+            <ul>
+              {INTAKE_POINTS.map((point) => (
+                <li key={point}>
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </aside>
 
-      <section className="max-w-3xl mx-auto px-6 lg:px-12 py-16">
-        <SubmitProgress steps={progressSteps} />
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-12">
+          <div className="submit-form-card">
+            <div className="submit-form-heading">
+              <span>
+                <Compass className="h-5 w-5" aria-hidden="true" />
+                Intake docket
+              </span>
+              <p>Property, situation, contact. Three minutes if the facts are ready.</p>
+            </div>
+            <div className="submit-progress" aria-label="Submit property progress">
+              <ol>
+                {progressSteps.map((step, index) => {
+                  const isLast = index === progressSteps.length - 1;
+                  return (
+                    <li key={step.label} className={isLast ? "is-last" : undefined}>
+                      <div className="submit-progress-node">
+                        <span className={step.complete ? "is-complete" : undefined}>{index + 1}</span>
+                        <strong className={step.complete ? "is-complete" : undefined}>{step.label}</strong>
+                      </div>
+                      {!isLast && (
+                        <i
+                          className={`submit-progress-line${step.complete ? " is-complete" : ""}`}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="submit-form">
             {/* Honeypot — hidden field. Real users never see or fill it. */}
             <div className="hidden" aria-hidden="true">
               <label>
@@ -263,7 +450,7 @@ export default function SubmitPage() {
               </label>
             </div>
 
-            <FormGroup title="Property" subtitle="Where is the property?">
+            <FormGroup step="01" title="Property" subtitle="Where is the property?">
               <FormField
                 control={form.control}
                 name="propertyAddress"
@@ -271,13 +458,18 @@ export default function SubmitPage() {
                   <FormItem>
                     <FormLabel>Property address</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="123 Example Dr, Richmond, CA" data-testid="input-submit-address" />
+                      <Input
+                        {...field}
+                        className="submit-input"
+                        placeholder="123 Example Dr, Richmond, CA"
+                        data-testid="input-submit-address"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="grid sm:grid-cols-2 gap-5">
+              <div className="submit-field-grid">
                 <FormField
                   control={form.control}
                   name="propertyType"
@@ -286,11 +478,11 @@ export default function SubmitPage() {
                       <FormLabel>Property type</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-submit-type">
+                          <SelectTrigger className="submit-select" data-testid="select-submit-type">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="submit-select-content">
                           <SelectItem value="sfr">Single-family residence</SelectItem>
                           <SelectItem value="duplex">Duplex / triplex</SelectItem>
                           <SelectItem value="multifamily">Multifamily (4+)</SelectItem>
@@ -311,11 +503,11 @@ export default function SubmitPage() {
                       <FormLabel>Condition</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-submit-condition">
+                          <SelectTrigger className="submit-select" data-testid="select-submit-condition">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="submit-select-content">
                           <SelectItem value="turnkey">Turnkey</SelectItem>
                           <SelectItem value="light">Light cosmetic</SelectItem>
                           <SelectItem value="moderate">Moderate rehab</SelectItem>
@@ -331,8 +523,8 @@ export default function SubmitPage() {
               </div>
             </FormGroup>
 
-            <FormGroup title="Situation" subtitle="What is going on?">
-              <div className="grid sm:grid-cols-2 gap-5">
+            <FormGroup step="02" title="Situation" subtitle="What needs to be solved?">
+              <div className="submit-field-grid">
                 <FormField
                   control={form.control}
                   name="intent"
@@ -341,11 +533,11 @@ export default function SubmitPage() {
                       <FormLabel>What brought you here?</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-submit-intent">
+                          <SelectTrigger className="submit-select" data-testid="select-submit-intent">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="submit-select-content">
                           {Object.entries(INTENT_LABELS).map(([k, v]) => (
                             <SelectItem key={k} value={k}>{v}</SelectItem>
                           ))}
@@ -363,14 +555,14 @@ export default function SubmitPage() {
                       <FormLabel>Timeline</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-submit-timeline">
+                          <SelectTrigger className="submit-select" data-testid="select-submit-timeline">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="submit-select-content">
                           <SelectItem value="asap">As soon as possible</SelectItem>
-                          <SelectItem value="30-60">Next 30–60 days</SelectItem>
-                          <SelectItem value="60-90">Next 60–90 days</SelectItem>
+                          <SelectItem value="30-60">Next 30 to 60 days</SelectItem>
+                          <SelectItem value="60-90">Next 60 to 90 days</SelectItem>
                           <SelectItem value="exploratory">Exploring options</SelectItem>
                         </SelectContent>
                       </Select>
@@ -388,8 +580,9 @@ export default function SubmitPage() {
                     <FormControl>
                       <Textarea
                         {...field}
-                        rows={5}
-                        placeholder="Owner-occupant, distressed sale, deferred maintenance, partnership dispute, capital constraint. Whatever you know. The more context, the sharper the review."
+                        className="submit-textarea"
+                        rows={6}
+                        placeholder="Owner-occupant, distressed sale, deferred maintenance, partnership issue, capital constraint, listing question, wholesale lead, or value-add scope. Plain facts are best."
                         data-testid="textarea-submit-situation"
                       />
                     </FormControl>
@@ -399,7 +592,7 @@ export default function SubmitPage() {
               />
             </FormGroup>
 
-            <FormGroup title="Contact" subtitle="How do we reach you?">
+            <FormGroup step="03" title="Contact" subtitle="Who should Pegasus follow up with?">
               <FormField
                 control={form.control}
                 name="name"
@@ -407,13 +600,13 @@ export default function SubmitPage() {
                   <FormItem>
                     <FormLabel>Full name</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-submit-name" />
+                      <Input {...field} className="submit-input" data-testid="input-submit-name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="grid sm:grid-cols-2 gap-5">
+              <div className="submit-field-grid">
                 <FormField
                   control={form.control}
                   name="email"
@@ -421,7 +614,7 @@ export default function SubmitPage() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" {...field} data-testid="input-submit-email" />
+                        <Input type="email" {...field} className="submit-input" data-testid="input-submit-email" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -434,7 +627,7 @@ export default function SubmitPage() {
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input type="tel" {...field} data-testid="input-submit-phone" />
+                        <Input type="tel" {...field} className="submit-input" data-testid="input-submit-phone" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -446,7 +639,7 @@ export default function SubmitPage() {
                 control={form.control}
                 name="consent"
                 render={({ field }) => (
-                  <FormItem className="flex items-start gap-3 rounded-md border border-border bg-card p-4">
+                  <FormItem className="submit-consent">
                     <FormControl>
                       <Checkbox
                         checked={field.value === true}
@@ -454,11 +647,11 @@ export default function SubmitPage() {
                         data-testid="checkbox-submit-consent"
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-snug">
-                      <FormLabel className="text-sm font-normal text-foreground">
-                        I understand Pegasus Dreamscapes will review this submission and may
+                    <div className="submit-consent-copy">
+                      <FormLabel>
+                        I understand Pegasus Dreamscapes may
                         contact me by phone, text, or email about the property. I understand the
-                        review is preliminary, is not an offer, and does not commit Pegasus or me
+                        submission is intake only, is not an offer, valuation, appraisal, or CMA, and does not commit Pegasus or me
                         to a transaction. I can withdraw at any time.
                       </FormLabel>
                       <FormMessage />
@@ -468,69 +661,34 @@ export default function SubmitPage() {
               />
             </FormGroup>
 
-            <Button
-              type="submit"
-              size="lg"
-              disabled={mutation.isPending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm w-full sm:w-auto"
-              data-testid="button-submit-submit"
-            >
-              {mutation.isPending ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting…</>
-              ) : (
-                "Submit for Review"
-              )}
-            </Button>
+            <div className="submit-actions-row">
+              <Button
+                type="submit"
+                size="lg"
+                disabled={mutation.isPending}
+                className="submit-submit-button"
+                data-testid="button-submit-submit"
+              >
+                {mutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Submitting</>
+                ) : (
+                  <>
+                    Submit for a Property Read
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </>
+                )}
+              </Button>
+              <p className="submit-submit-note">
+                Pegasus uses this to determine the right next conversation. This is not an offer, valuation, appraisal, or commitment to transact.
+              </p>
+            </div>
           </form>
-        </Form>
+            </Form>
+          </div>
+        </div>
       </section>
-    </div>
-  );
-}
 
-function SubmitProgress({ steps }: { steps: { label: string; complete: boolean }[] }) {
-  return (
-    <div className="mb-12" data-testid="submit-progress">
-      <ol className="flex items-center">
-        {steps.map((step, i) => {
-          const isLast = i === steps.length - 1;
-          return (
-            <li
-              key={step.label}
-              className={`flex items-center ${isLast ? "" : "flex-1"}`}
-              data-testid={`submit-progress-step-${i}`}
-            >
-              <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <span
-                  className={`flex items-center justify-center w-7 h-7 rounded-full border text-[11px] font-supporting font-semibold transition-colors ${
-                    step.complete
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "bg-transparent border-border text-muted-foreground"
-                  }`}
-                  aria-hidden="true"
-                >
-                  {i + 1}
-                </span>
-                <span
-                  className={`text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold transition-colors ${
-                    step.complete ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-              {!isLast && (
-                <span
-                  className={`h-px flex-1 mx-3 -mt-6 transition-colors ${
-                    step.complete ? "bg-primary" : "bg-border/60"
-                  }`}
-                  aria-hidden="true"
-                />
-              )}
-            </li>
-          );
-        })}
-      </ol>
+      <HowItWorksSection />
     </div>
   );
 }
@@ -539,46 +697,44 @@ function HowItWorksSection() {
   const steps = [
     {
       index: "01",
-      label: "Submit",
-      desc: "Fill out the structured intake. Property, situation, contact. Takes about 3 minutes.",
+      label: "Pegasus reads the facts",
+      desc: "Address, condition, timeline, ownership context, and the pressure that needs a real path.",
     },
     {
       index: "02",
-      label: "Review",
-      desc: "Acquisitions reads your submission and pulls comps within 48 hours.",
+      label: "The path gets named",
+      desc: "Representation, acquisition, JV, buyer match, development scope, referral, MarketFlow, Blueprint, or pass.",
     },
     {
       index: "03",
-      label: "Path",
-      desc: "You get a structural read. Which lane fits, what the numbers say, what happens next.",
+      label: "The next step is specific",
+      desc: "If the property fits, the follow-up is about the actual path, not a generic sales call.",
     },
     {
       index: "04",
-      label: "Outcome",
-      desc: "Offer, JV structure, referral, or a straight answer. Every submission gets a real response.",
+      label: "No forced fit",
+      desc: "If the structure does not work, Pegasus says that plainly. No blind offer and no pressure game.",
     },
   ];
 
   return (
-    <section className="border-t border-border/30 bg-card py-14 lg:py-16" data-testid="section-how-it-works">
-      <div className="max-w-4xl mx-auto px-6 lg:px-12">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
-          How it works
-        </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0 border border-border/40">
+    <section className="submit-review-band" data-testid="section-how-it-works">
+      <div className="submit-shell">
+        <div className="submit-review-heading">
+          <p className="submit-eyebrow">What happens next</p>
+          <h2>The intake should reduce confusion, not create pressure.</h2>
+        </div>
+        <div className="submit-review-grid">
           {steps.map((step, i) => (
             <div
               key={step.index}
-              className={`p-6 ${i < steps.length - 1 ? "border-b sm:border-b-0 sm:border-r lg:border-b-0 lg:border-r border-border/40" : ""}`}
+              className="submit-review-step"
               data-testid={`how-step-${i}`}
             >
-              <div className="flex items-baseline gap-2 mb-3">
-                <span className="font-supporting text-[10px] tracking-[0.28em] text-primary/70 font-semibold tabular-nums">
-                  {step.index}
-                </span>
-              </div>
-              <p className="font-serif text-xl font-semibold text-foreground mb-2">{step.label}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+              <span>{step.index}</span>
+              <p>{step.label}</p>
+              <small>{step.desc}</small>
+              {i < steps.length - 1 && <i aria-hidden="true" />}
             </div>
           ))}
         </div>
@@ -588,21 +744,24 @@ function HowItWorksSection() {
 }
 
 function FormGroup({
+  step,
   title,
   subtitle,
   children,
 }: {
+  step: string;
   title: string;
   subtitle: string;
   children: React.ReactNode;
 }) {
   return (
-    <fieldset className="space-y-5">
-      <legend className="mb-2">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-1">
-          {title}
+    <fieldset className="submit-fieldset">
+      <legend className="submit-legend">
+        <span>{step}</span>
+        <p>
+          <small>{title}</small>
+          <strong>{subtitle}</strong>
         </p>
-        <p className="font-serif text-2xl text-foreground">{subtitle}</p>
       </legend>
       {children}
     </fieldset>

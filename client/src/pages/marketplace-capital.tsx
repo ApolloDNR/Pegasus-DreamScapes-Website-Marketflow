@@ -284,7 +284,7 @@ function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: 
       case "DEBT":
         return "bg-blue-500/10 text-blue-600 border-blue-500/30";
       case "HYBRID":
-        return "bg-purple-500/10 text-purple-600 border-purple-500/30";
+        return "bg-primary/10 text-primary border-primary/30";
       default:
         return "bg-muted text-muted-foreground";
     }

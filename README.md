@@ -17,6 +17,15 @@ See `.env.example` for the complete deployment-ready variable list.
 - Build: `npm run build`
 - Production start: `npm run start`
 
+## Final design and launch handoff
+Before any visual redesign, Replit pass, or final launch QA, read:
+
+- `docs/design/final-design-lock.md`
+- `docs/design/visual-implementation-handoff.md`
+- `docs/qa/final-launch-gate.md`
+
+These docs freeze the Pegasus public-site direction, define what visual tools may and may not change, and set the route-by-route launch gate.
+
 ## Deployment notes
 - Configure all production environment variables.
 - Configure Supabase Auth Site URL and allowed redirect URLs for your production domain.

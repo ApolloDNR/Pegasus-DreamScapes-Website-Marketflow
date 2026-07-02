@@ -683,7 +683,7 @@ export function BreakdownChart({ items, title }: { items: BreakdownItemProps[]; 
     "bg-blue-500",
     "bg-green-500",
     "bg-amber-500",
-    "bg-purple-500",
+    "bg-primary",
     "bg-rose-500",
     "bg-cyan-500",
     "bg-orange-500",

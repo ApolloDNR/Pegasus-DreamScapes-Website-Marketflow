@@ -1509,7 +1509,7 @@ function RightReadPanel({
         </div>
       </div>
 
-      {/* Peggy Lab Mode (preserved) */}
+      {/* Peggy assist controls. */}
       <div
         className="rounded-sm p-4"
         style={{
@@ -1522,7 +1522,7 @@ function RightReadPanel({
           className="text-[10px] tracking-[0.22em] uppercase font-semibold mb-2"
           style={{ fontFamily: FONT_SUP, color: NAVY }}
         >
-          Peggy Lab Mode
+          Peggy
         </div>
         <div className="grid grid-cols-1 gap-2">
           {(["explain", "stress", "prepare"] as const).map((m) => (
@@ -1645,8 +1645,8 @@ function RightReadPanel({
           }}
         >
           <div className="text-[10px] italic" style={{ fontFamily: FONT_SERIF }}>
-            Preliminary. Human review required before any offer, strategy
-            release, or execution decision.
+            Directional. A written Pegasus read is required before any offer,
+            strategy release, or execution decision.
           </div>
         </div>
       </div>

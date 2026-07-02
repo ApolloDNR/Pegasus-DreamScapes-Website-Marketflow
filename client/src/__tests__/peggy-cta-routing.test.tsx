@@ -106,7 +106,7 @@ function renderLanding(routePath = "/") {
 // open dialog panel element.
 function openPeggy(container: HTMLElement): HTMLElement {
   const fab = container.querySelector<HTMLButtonElement>(
-    'button[aria-label^="Talk to PeggyAI"]',
+    'button[aria-label^="Talk to Peggy"]',
   );
   expect(fab, "Peggy launcher (FAB) not found").toBeTruthy();
   fireEvent.click(fab!);
@@ -214,7 +214,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     actionLabel: string,
   ): Promise<HTMLButtonElement> {
     const input = panel.querySelector<HTMLInputElement>(
-      'input[aria-label="Talk to PeggyAI"]',
+      'input[aria-label="Talk to Peggy"]',
     );
     expect(input, "Peggy input not found").toBeTruthy();
     fireEvent.change(input!, { target: { value: "I have a property to weigh" } });
@@ -282,7 +282,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     const panel = openPeggy(container);
 
     const input = panel.querySelector<HTMLInputElement>(
-      'input[aria-label="Talk to PeggyAI"]',
+      'input[aria-label="Talk to Peggy"]',
     );
     fireEvent.change(input!, { target: { value: "help" } });
     fireEvent.click(panel.querySelector<HTMLButtonElement>('button[aria-label="Send"]')!);

@@ -417,7 +417,7 @@ export default function NelsonDrPage() {
                 className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white text-[12px] uppercase tracking-[0.18em] font-semibold px-7 h-12 rounded-sm w-full sm:w-auto"
                 data-testid="button-nelson-peggy"
               >
-                Talk to PeggyAI
+                Talk to Peggy
               </Button>
             </Link>
           </div>
@@ -723,7 +723,7 @@ export default function NelsonDrPage() {
                   className="text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm w-full sm:w-auto"
                   data-testid="button-nelson-peggy-footer"
                 >
-                  Talk to PeggyAI
+                  Talk to Peggy
                 </Button>
               </Link>
             </div>

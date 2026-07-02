@@ -229,7 +229,7 @@ function QuickTools() {
     },
     {
       icon: GraduationCap,
-      title: "Ask Peggy AI",
+      title: "Ask Peggy",
       description: "Get answers to your real estate investing questions",
       href: "/peggy",
       internal: true,

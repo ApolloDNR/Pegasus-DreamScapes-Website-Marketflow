@@ -632,7 +632,7 @@ export function PeggyDock() {
                       Pegasus DreamScapes
                     </p>
                     <h3 className="font-serif text-base font-semibold leading-none tracking-tight">
-                      Peggy <span className="text-muted-foreground font-normal">·</span> Strategy Assistant
+                      Peggy
                     </h3>
                   </div>
                 </div>
@@ -807,7 +807,7 @@ export function PeggyDock() {
                 </form>
                 
                 <p className="text-[10px] text-muted-foreground/80 text-center mt-3 font-supporting tracking-wide">
-                  Peggy is an AI assistant. Strategy reads, not legal or financial advice.
+                  Peggy uses AI for intake. Strategy reads, not legal or financial advice.
                 </p>
               </div>
             </Card>

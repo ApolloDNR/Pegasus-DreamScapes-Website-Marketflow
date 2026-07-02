@@ -153,7 +153,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   }
 
   const getUserRole = () => {
-    if (isAdmin || isDreamscaper) return { name: "Dreamscaper", color: "text-purple-500", bgColor: "bg-purple-500/10" };
+    if (isAdmin || isDreamscaper) return { name: "Dreamscaper", color: "text-primary", bgColor: "bg-primary/10" };
     if (isInvestor) return { name: "Investor", color: "text-green-500", bgColor: "bg-green-500/10" };
     if (isWholesaler) return { name: "Wholesaler", color: "text-blue-500", bgColor: "bg-blue-500/10" };
     if (isBuyer) return { name: "Buyer", color: "text-amber-500", bgColor: "bg-amber-500/10" };
@@ -172,7 +172,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   const toolItems = [
     { path: "/strategy-lab", label: "Strategy Lab", icon: BarChart3 },
     { path: "/resources", label: "Resources", icon: Building2 },
-    { path: "#peggy", label: "Peggy AI", icon: Sparkles, isPeggy: true },
+    { path: "#peggy", label: "Peggy", icon: Sparkles, isPeggy: true },
   ];
 
   const quickStats: QuickStat[] = [
@@ -194,7 +194,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
 
   const getUserRoles = () => {
     const roles = [];
-    if (isAdmin || isDreamscaper) roles.push({ name: "Dreamscaper", color: "bg-purple-500" });
+    if (isAdmin || isDreamscaper) roles.push({ name: "Dreamscaper", color: "bg-primary" });
     if (isInvestor) roles.push({ name: "Investor", color: "bg-blue-500" });
     if (isWholesaler) roles.push({ name: "Wholesaler", color: "bg-green-500" });
     if (isBuyer) roles.push({ name: "Buyer", color: "bg-amber-500" });

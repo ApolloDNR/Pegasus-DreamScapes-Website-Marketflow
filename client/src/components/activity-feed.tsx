@@ -49,7 +49,7 @@ const activityColors: Record<string, string> = {
   view: "text-blue-500 bg-blue-500/10",
   save: "text-amber-500 bg-amber-500/10",
   offer: "text-green-500 bg-green-500/10",
-  message: "text-purple-500 bg-purple-500/10",
+  message: "text-primary bg-primary/10",
   jv_request: "text-primary bg-primary/10",
   document: "text-slate-500 bg-slate-500/10",
   analysis: "text-emerald-500 bg-emerald-500/10",

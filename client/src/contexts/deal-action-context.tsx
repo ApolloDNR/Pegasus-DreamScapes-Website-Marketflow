@@ -1569,7 +1569,7 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
               project?.structure === "DEBT" 
                 ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
                 : project?.structure === "HYBRID"
-                  ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                  ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
                   : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
             }`} data-testid="badge-structure-type">
               {project?.structure || "EQUITY"}
@@ -1626,8 +1626,8 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
           )}
           
           {project?.structure === "HYBRID" && (
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800 space-y-2">
-              <div className="text-xs font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide">Hybrid Investment Terms</div>
+            <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/25 dark:border-primary/30 space-y-2">
+              <div className="text-xs font-medium text-primary uppercase tracking-wide">Hybrid Investment Terms</div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-muted-foreground">Debt Portion:</span>

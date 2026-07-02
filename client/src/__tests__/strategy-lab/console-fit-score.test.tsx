@@ -142,7 +142,7 @@ describe("StrategyConsole — Property Fit Score derivation", () => {
       score >= 75
         ? "Strong fit"
         : score >= 55
-        ? "Worth a review"
+        ? "Worth a read"
         : score >= 35
         ? "Possible, needs work"
         : "Likely not a fit";

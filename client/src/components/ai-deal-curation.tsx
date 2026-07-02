@@ -73,7 +73,7 @@ export function AIDealCuration({
         <CardContent className="p-6 text-center">
           <Brain className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">
-            Sign in to get AI-powered deal recommendations tailored to your preferences
+            Sign in to get curated deal recommendations tailored to your preferences
           </p>
         </CardContent>
       </Card>
@@ -86,7 +86,7 @@ export function AIDealCuration({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-500" />
-            AI Picks for You
+            Curated Picks for You
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -111,7 +111,7 @@ export function AIDealCuration({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-500" />
-            AI Picks for You
+            Curated Picks for You
           </CardTitle>
           <div className="flex gap-2">
             <Button 
@@ -196,7 +196,7 @@ function CuratedDealCard({
       </div>
 
       <div className="flex items-center gap-2 mb-3">
-        <Brain className="w-4 h-4 text-purple-500" />
+        <Brain className="w-4 h-4 text-primary" />
         <p className="text-sm text-muted-foreground flex-1">{deal.aiReason}</p>
       </div>
 

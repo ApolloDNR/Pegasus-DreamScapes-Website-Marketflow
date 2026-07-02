@@ -30,7 +30,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
           Blueprint request received.
         </h1>
         <p className="text-base text-cream/78 leading-relaxed mb-10">
-          Thank you. Your Blueprint request is ready for human review
+          Thank you. Your Blueprint request is ready for a written Pegasus read
           {referenceId ? <> (reference <span className="font-mono text-cream" data-testid="text-request-id">#{referenceId}</span>)</> : null}.
           This is not an order confirmation, payment receipt, or offer. Pegasus
           reviews the property first, then confirms fit, scope, fee, and next
