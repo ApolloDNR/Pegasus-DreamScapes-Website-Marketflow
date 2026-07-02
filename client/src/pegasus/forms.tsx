@@ -723,7 +723,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
     <section id="strategy-console" className="strategy-console-section scroll-mt-24 py-16 lg:py-20 bg-[var(--bg)] border-y border-[var(--line)] text-[var(--text)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Strategy Lab cockpit"
-          title={<>One cockpit for the situation, numbers, and lane.</>}
+          title={<>One cockpit for the <em className="hero-title-accent">situation, numbers, and lane.</em></>}
           copy="Load the property once, sharpen the assumptions, and watch the read move in place. The point is orientation before anything is sent to Pegasus." />
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           <div className="lg:col-span-7 reveal">

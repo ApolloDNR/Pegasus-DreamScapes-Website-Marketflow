@@ -1174,14 +1174,14 @@ body.pg-menu-open { overflow: hidden; }
   position: absolute;
   inset: -4% -3%;
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.28;
   pointer-events: none;
 }
 
 .strategy-etching svg {
   width: 100%;
   height: 100%;
-  stroke: rgba(212, 135, 46, 0.25);
+  stroke: rgba(212, 135, 46, 0.18);
   stroke-width: 1.08;
   vector-effect: non-scaling-stroke;
 }
@@ -1310,10 +1310,10 @@ body.pg-menu-open { overflow: hidden; }
   gap: 0.55rem;
   min-width: 0;
   min-height: 3.2rem;
-  color: rgba(245, 230, 211, 0.62);
+  color: rgba(245, 230, 211, 0.78);
   background: rgba(7, 17, 29, 0.62);
   font-family: var(--pg-font-label);
-  font-size: 0.64rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition:
