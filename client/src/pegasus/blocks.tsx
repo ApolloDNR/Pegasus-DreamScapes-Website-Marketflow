@@ -365,7 +365,6 @@ export function HowADealMovesBlock() {
               {DEPARTMENTS.map((d) => (
                 <li key={d.name} className="department-row">
                   <span className="department-stage">{d.stage}</span>
-                  <span className="department-icon" aria-hidden="true"><Ico name={d.icon} className="h-4 w-4" /></span>
                   <span className="department-copy">
                     <strong>{d.name}</strong>
                     <span>{d.desc}</span>
@@ -859,10 +858,9 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
         </div>
         <div className="grid lg:grid-cols-3 gap-6">
           {MARKETFLOW.map((m, i) => (
-            <div key={m.key} className={`reveal flex flex-col h-full p-6 sm:p-8 lg:p-9 rounded-[3px] border ${dark ? 'border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)]' : 'surface-card'}`} style={{ animationDelay: `${i * 90}ms` }}>
-              <div className="flex items-center justify-between mb-7">
-                <div className="door-icon !mb-0"><Ico name={m.icon} className="w-5 h-5" /></div>
-                <span className={`font-serif-display text-2xl leading-none ${dark ? 'text-[var(--cream)]/25' : 'text-[var(--line)]'}`}>0{i + 1}</span>
+            <div key={m.key} className={`reveal flex flex-col h-full pt-8 border-t ${dark ? 'border-[rgba(239,231,218,0.22)]' : 'border-[var(--line)]'}`} style={{ animationDelay: `${i * 90}ms` }}>
+              <div className="mb-6">
+                <span className={`font-serif-display text-5xl leading-none ${dark ? 'text-[var(--cream)]/22' : 'text-[var(--line)]'}`}>0{i + 1}</span>
               </div>
               <div className={`pg-label !text-[9px] mb-3 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{m.tag}</div>
               <h3 className={`font-serif-display text-2xl mb-4 leading-tight ${dark ? 'text-[var(--cream)]' : 'text-[var(--text)]'}`}>{m.name}</h3>

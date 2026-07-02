@@ -858,28 +858,23 @@ body.pg-menu-open { overflow: hidden; }
 
 .department-row {
   display: grid;
-  grid-template-columns: 3.5rem 2rem minmax(0, 1fr);
-  gap: 1.15rem;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 1.4rem;
   align-items: start;
-  min-height: 7rem;
-  padding: 1.45rem 0;
+  min-height: 7.5rem;
+  padding: 1.7rem 0;
   border-bottom: 1px solid rgba(245, 230, 211, 0.12);
 }
 
 .department-stage {
-  color: var(--accent-bright);
+  color: rgba(245, 230, 211, 0.26);
   font-family: var(--pg-font-display);
-  font-size: 2rem;
-  line-height: 0.95;
+  font-size: 3.4rem;
+  line-height: 0.9;
+  transition: color 0.5s ease;
 }
 
-.department-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid rgba(212, 135, 46, 0.42);
+.department-row:hover .department-stage {
   color: var(--accent-bright);
 }
 
