@@ -47,6 +47,7 @@ jobs:
             echo "frames already extracted"; exit 0
           fi
           mkdir -p "$fdir"
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
           ffmpeg -hide_banner -loglevel error -y -i "$dir/passage-walk.mp4" \
             -vf "fps=8,scale=1152:-2" -c:v libwebp -q:v 62 "$fdir/f-%03d.webp"
           echo "extracted $(ls -1 "$fdir" | wc -l) frames"; du -sh "$fdir"
