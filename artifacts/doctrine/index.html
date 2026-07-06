@@ -128,6 +128,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:18px;
   padding:24px clamp(22px,4.5vw,60px);transition:padding .45s ease,background .45s ease,box-shadow .45s ease}
 .nav.tight{padding-top:12px;padding-bottom:12px;background:var(--nav-bg);box-shadow:0 1px 0 var(--base-rule)}
+/* over the hero photo (only place the loose nav ever sits) stay cream */
+.nav:not(.tight){color:var(--cream)}
+.nav:not(.tight) .theme-btn,.nav:not(.tight) .nav-cta{border-color:rgba(216,210,195,.34)}
 .brand{display:flex;flex-direction:column;line-height:1.15}
 .brand .b-name{font-family:var(--carved);font-weight:600;font-size:.92rem;letter-spacing:.28em}
 .brand .b-tag{font-family:var(--carved);font-weight:500;font-size:.52rem;letter-spacing:.46em;opacity:.55;margin-top:4px}
@@ -252,7 +255,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .read .r-num{font-family:var(--carved);font-weight:600;font-size:.66rem;letter-spacing:.3em;color:var(--inkp-faint)}
 .read h3{font-size:1.2rem;margin:.6em 0 .4em;color:var(--inkp)}
 .read p{font-size:.85rem;line-height:1.7;color:var(--inkp-dim)}
-.read.lane{background:var(--mid-2);grid-column:span 2}
+.read.lane{background:var(--mid-2)}
 .read.lane .r-num{color:var(--gold)}
 .read.lane h3{color:var(--cream);font-style:italic;font-weight:500}
 .read.lane p{color:var(--cream-dim)}
@@ -350,10 +353,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .cs-hint{font-family:var(--carved);font-size:.6rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cream-faint)}
 
 /* ---------- strategy lab ---------- */
-.lab{background:var(--base-bg)}
+.lab-sec{background:var(--base-bg)}
 .lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(36px,6vw,96px);align-items:start}
 .lab-grid>*{min-width:0}
-.lab .lede{margin-bottom:30px}
+.lab-sec .lede{margin-bottom:30px}
 .ladder{list-style:none;border-top:1px solid var(--base-rule);counter-reset:rung}
 .ladder li{display:grid;grid-template-columns:70px minmax(0,1fr);gap:18px;padding:20px 0;border-bottom:1px solid var(--base-rule);align-items:baseline}
 .ladder .rung-n{font-family:var(--carved);font-weight:600;font-size:.7rem;letter-spacing:.3em;color:var(--base-faint)}
@@ -893,7 +896,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 </section>
 
 <!-- ============ STRATEGY LAB ============ -->
-<section class="section lab" id="lab">
+<section class="section lab-sec" id="lab">
   <div class="shell">
     <div class="lab-grid">
       <div class="reveal">
