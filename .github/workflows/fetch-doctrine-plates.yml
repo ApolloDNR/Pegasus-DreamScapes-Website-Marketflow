@@ -35,12 +35,13 @@ jobs:
           fetch hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp bay.webp
           fetch hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp stone.webp
           fetch hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2_min.webp doorway.webp
-          # day plates (same architecture, morning light)
-          fetch hf_20260706_154221_f743f896-153d-4ee9-acc8-cfae5a638d42_min.webp temple-day.webp
-          fetch hf_20260706_154238_ef99df86-5fc2-4677-9306-eb17e23c8fb4_min.webp corridor-day.webp
+          # day plates
           fetch hf_20260706_154243_68efe569-aa30-48c0-9d9f-639dc3bf6744_min.webp bay-day.webp
           fetch hf_20260706_154246_c1534da8-70fe-45c3-89aa-c7c87e24b085_min.webp stone-day.webp
-          fetch hf_20260706_154241_1a78f2e3-e59c-48e4-996b-5311e652a85c_min.webp doorway-day.webp
+          # living-community plates (day)
+          fetch hf_20260706_204200_865e834f-033a-47b3-be26-51877f8a98e3_min.webp hero-day.webp
+          fetch hf_20260706_204202_67799cc6-5b95-49b0-8ebe-4bfde4484dce_min.webp veranda-day.webp
+          fetch hf_20260706_204204_4f753dff-3382-4f17-b55d-8f696e7e61e1_min.webp portico-day.webp
           # walk footage: 720p ambient + 2K masters for frame extraction
           fetch hf_20260706_063350_f1c73b33-552b-4618-a6f9-86141d3ae04f.mp4 passage-walk.mp4
           fetch hf_20260706_154300_f02d662e-0904-432a-993f-04d3e709b2f1.mp4 walk-night-2k.mp4
