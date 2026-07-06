@@ -1,0 +1,46 @@
+name: Fetch doctrine plates
+
+# Vendors the generated doctrine imagery into the repo so the reference
+# build serves local, self-hosted assets instead of a generation CDN.
+# Runs only on manual dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      extra:
+        description: "Extra assets to fetch, one 'url|filename' pair per line"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch assets
+        env:
+          EXTRA: ${{ inputs.extra }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/doctrine/plates
+          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
+          fetch() { curl -fsSL --retry 3 "$1" -o "artifacts/doctrine/plates/$2"; echo "fetched $2"; }
+          fetch "$base/hf_20260706_045424_e13964d0-cbce-4152-90ec-a0e232af646d_min.webp" corridor.webp
+          fetch "$base/hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp" bay.webp
+          fetch "$base/hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp" stone.webp
+          fetch "$base/hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2_min.webp" doorway.webp
+          fetch "$base/hf_20260706_045438_4a1df506-682f-4d45-bb06-1ec6a3fab073_min.webp" chamber.webp
+          while IFS='|' read -r u p; do
+            [ -z "$u" ] && continue
+            fetch "$u" "$p"
+          done <<< "$EXTRA"
+          ls -la artifacts/doctrine/plates
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add artifacts/doctrine/plates
+          git commit -m "Vendor doctrine plates fetched by CI" || echo "nothing to commit"
+          git push
