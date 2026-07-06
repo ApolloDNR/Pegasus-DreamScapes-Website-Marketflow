@@ -36,7 +36,20 @@ jobs:
           fetch hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2_min.webp doorway.webp
           fetch hf_20260706_045438_4a1df506-682f-4d45-bb06-1ec6a3fab073_min.webp chamber.webp
           fetch hf_20260706_063350_f1c73b33-552b-4618-a6f9-86141d3ae04f.mp4 passage-walk.mp4
+          fetch hf_20260706_093338_03aac913-d4c5-4798-86ed-4e64b7ef9ad9_min.webp dusk.webp
           ls -la "$dir"
+      - name: Extract walk frames
+        run: |
+          set -euo pipefail
+          dir=artifacts/doctrine/plates
+          fdir="$dir/walk"
+          if [ -d "$fdir" ] && [ "$(ls -1 "$fdir" 2>/dev/null | wc -l)" -ge 60 ]; then
+            echo "frames already extracted"; exit 0
+          fi
+          mkdir -p "$fdir"
+          ffmpeg -hide_banner -loglevel error -y -i "$dir/passage-walk.mp4" \
+            -vf "fps=8,scale=1152:-2" -c:v libwebp -q:v 62 "$fdir/f-%03d.webp"
+          echo "extracted $(ls -1 "$fdir" | wc -l) frames"; du -sh "$fdir"
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
