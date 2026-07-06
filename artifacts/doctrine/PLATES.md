@@ -1,53 +1,35 @@
-# Doctrine v6 — Plate Manifest
+# Doctrine Plates — Day/Night Pair Manifest (v9)
 
-The five Higgsfield plates wired into `index.html`. All are **atmosphere-only** per the
-locked media policy: generated imagery may set mood (marble, light, architecture, landscape);
-it may never depict a property, a person, or anything a seller could mistake for Pegasus work.
-Case evidence (Nelson Dr, etc.) uses real licensed photography only.
+One classical world, photographed twice: every plate exists as a **night** and a **day**
+version of the *same architecture* (day versions generated with the night plate as the
+reference image, so the building never changes — only the light). The site's theme toggle
+swaps the entire visual world. All plates are 2K; generated imagery is atmosphere-only
+per the locked media policy; case evidence (Nelson Drive) is real photography.
 
-Every slot in `index.html` paints a hand-drawn SVG fallback beneath its plate, so the page
-degrades cleanly if an image is ever unreachable. Plates are graded in CSS
-(`saturate(.74) contrast(1.07) brightness(.9)` + midnight tint + global grain) — do not
-bake grading into replacement renders.
+| Pair | Night job | Day job | Used in |
+|---|---|---|---|
+| The Temple | `670bdc4c-b2f3-4c06-9dbd-63c1db909763` | `f743f896-153d-4ee9-acc8-cfae5a638d42` | Hero |
+| The Colonnade | `e13964d0` (2K up of `c7898eff`) | `ef99df86-5fc2-4677-9306-eb17e23c8fb4` | "Door is open" chapter |
+| The Doorway | `f9edcb0b-5118-4096-b256-3161c0f1b0c2` | `1a78f2e3-e59c-48e4-996b-5311e652a85c` | Who We Serve |
+| The East Bay | `04b667fd-09a2-44fc-bffc-3b0121041527` | `68efe569-aa30-48c0-9d9f-639dc3bf6744` | Operator |
+| The Carved Record | `064bcda5-bc72-4f74-a86a-d5a1a9ecaf85` | `c1534da8-70fe-45c3-89aa-c7c87e24b085` | Nelson Ledger slab |
 
-| Plate | Role in page | Job ID | Model | Size |
-|---|---|---|---|---|
-| PL. I — The Lit Doorway | Two Paths · For Owners | `f9edcb0b-5118-4096-b256-3161c0f1b0c2` | nano_banana_flash | 896×1200 |
-| PL. II — The Inner Chamber | Two Paths · For Capital | `4a1df506-682f-4d45-bb06-1ec6a3fab073` | nano_banana_flash | 896×1200 |
-| PL. III — The Passage, Lit | "The door is open." chapter | `e13964d0-cbce-4152-90ec-a0e232af646d` (2K upscale of `c7898eff-8298-4c3b-819e-387ca0ad1deb`) | bytedance_image_upscale | 3856×2160 |
-| PL. IV — The East Bay, at Night | Operator background | `04b667fd-09a2-44fc-bffc-3b0121041527` | nano_banana_2 | 2752×1536 |
-| PL. V — The Carved Record | Ledger slab surface | `064bcda5-bc72-4f74-a86a-d5a1a9ecaf85` | nano_banana_2 | 2752×1536 |
+## The Passage footage (scroll-scrubbed)
 
-## Files
+Two Seedance 2.0 walks through the same colonnade, both upscaled to 2K
+(ByteDance video upscale, aigc preset) before frame extraction, so the
+scrub is sharp — frames are cut at 1600px wide, 6 fps (48 frames per set):
 
-All assets are vendored in `plates/` by the `fetch-doctrine-plates` workflow
-(GitHub runners fetch the CDN; this session's container cannot). The page
-references the local files — no generation-CDN dependency remains at runtime.
+- Night walk: `f1c73b33-552b-4618-a6f9-86141d3ae04f` → 2K master `f02d662e-0904-432a-993f-04d3e709b2f1` → `plates/walk-night/`
+- Day walk: `7d243ed9-3fa1-4887-9d50-7b0f1df4ee95` (start frame = day colonnade) → 2K master `608c1245-b5db-4d2c-b2bb-378a8681b7ad` → `plates/walk-day/`
+- `plates/passage-walk.mp4` (720p night walk) remains as the ambient chapter video.
 
-- `plates/hero-temple.webp` — PL. 0, hero base (job `670bdc4c-b2f3-4c06-9dbd-63c1db909763`, 2752×1536)
-- `plates/passage-walk.mp4` — Seedance 2.0 ambient walk, chapter band (job `f1c73b33-552b-4618-a6f9-86141d3ae04f`, 8s 720p, plays muted/looped, image fallback)
-
-## Source URLs
-
+All fetching and extraction is done by `.github/workflows/fetch-doctrine-plates.yml`
+on push (GitHub runners fetch the generation CDN; this build container cannot).
 CDN base: `https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/`
 
-- PL. I  — `hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2.png` (`_min.webp` in page)
-- PL. II — `hf_20260706_045438_4a1df506-682f-4d45-bb06-1ec6a3fab073.png` (`_min.webp` in page)
-- PL. III — `hf_20260706_045424_e13964d0-cbce-4152-90ec-a0e232af646d.png` (`_min.webp` in page)
-- PL. IV — `hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527.png` (`_min.webp` in page)
-- PL. V — `hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85.png` (`_min.webp` in page)
+## Standing placeholders
 
-## Integration note
-
-Before production launch, download the raw PNGs, convert to self-hosted WebP/AVIF
-(~1600w for full-bleed, ~900w for panels), and swap the CDN URLs for local paths —
-do not ship a marketing site pointing at a generation CDN. The build container's
-egress policy blocked `d8j0ntlcm91z4.cloudfront.net`, which is why the files are
-referenced by URL here rather than committed.
-
-## Standing placeholders in index.html (dashed underlines)
-
-- Ledger figures — swap for actuals from closing statements (Nelson Dr, assignment).
-- DRE entity name + KW corporate license number — pending Phil.
-- KW lane copy/placement — pending Phil sign-off per Lock 19.
+- KW corporate license number — pending.
 - Intake form is front-end gated (nothing transmitted) until the RLS hotfix clears.
+- Nelson Drive figures are real, from the closing statement and project records, rounded.

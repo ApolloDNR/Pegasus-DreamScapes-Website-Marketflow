@@ -2,8 +2,8 @@ name: Fetch doctrine plates
 
 # Vendors the generated doctrine imagery into the repo so the reference
 # build serves local, self-hosted assets instead of a generation CDN.
-# Runs on push to the doctrine branch; no-ops once the plates exist.
-# (The commit it makes uses GITHUB_TOKEN, which cannot re-trigger this
+# Runs on push to the doctrine branch; no-ops once everything exists.
+# (Its own commit uses GITHUB_TOKEN, which cannot re-trigger this
 # workflow, so there is no recursion.)
 on:
   push:
@@ -29,32 +29,49 @@ jobs:
             if [ -s "$dir/$2" ]; then echo "have $2"; else
               curl -fsSL --retry 3 "$base/$1" -o "$dir/$2"; echo "fetched $2"; fi
           }
+          # night plates
           fetch hf_20260706_062416_670bdc4c-b2f3-4c06-9dbd-63c1db909763_min.webp hero-temple.webp
           fetch hf_20260706_045424_e13964d0-cbce-4152-90ec-a0e232af646d_min.webp corridor.webp
           fetch hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp bay.webp
           fetch hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp stone.webp
           fetch hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2_min.webp doorway.webp
-          fetch hf_20260706_045438_4a1df506-682f-4d45-bb06-1ec6a3fab073_min.webp chamber.webp
+          # day plates (same architecture, morning light)
+          fetch hf_20260706_154221_f743f896-153d-4ee9-acc8-cfae5a638d42_min.webp temple-day.webp
+          fetch hf_20260706_154238_ef99df86-5fc2-4677-9306-eb17e23c8fb4_min.webp corridor-day.webp
+          fetch hf_20260706_154243_68efe569-aa30-48c0-9d9f-639dc3bf6744_min.webp bay-day.webp
+          fetch hf_20260706_154246_c1534da8-70fe-45c3-89aa-c7c87e24b085_min.webp stone-day.webp
+          fetch hf_20260706_154241_1a78f2e3-e59c-48e4-996b-5311e652a85c_min.webp doorway-day.webp
+          # walk footage: 720p ambient + 2K masters for frame extraction
           fetch hf_20260706_063350_f1c73b33-552b-4618-a6f9-86141d3ae04f.mp4 passage-walk.mp4
-          fetch hf_20260706_093338_03aac913-d4c5-4798-86ed-4e64b7ef9ad9_min.webp dusk.webp
+          fetch hf_20260706_154300_f02d662e-0904-432a-993f-04d3e709b2f1.mp4 walk-night-2k.mp4
+          fetch hf_20260706_160221_608c1245-b5db-4d2c-b2bb-378a8681b7ad.mp4 walk-day-2k.mp4
           ls -la "$dir"
       - name: Extract walk frames
         run: |
           set -euo pipefail
           dir=artifacts/doctrine/plates
-          fdir="$dir/walk"
-          if [ -d "$fdir" ] && [ "$(ls -1 "$fdir" 2>/dev/null | wc -l)" -ge 60 ]; then
-            echo "frames already extracted"; exit 0
-          fi
-          mkdir -p "$fdir"
+          need_ffmpeg=0
+          for theme in night day; do
+            [ -d "$dir/walk-$theme" ] && [ "$(ls -1 "$dir/walk-$theme" 2>/dev/null | wc -l)" -ge 40 ] || need_ffmpeg=1
+          done
+          [ "$need_ffmpeg" = 0 ] && { echo "frames already extracted"; exit 0; }
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
-          ffmpeg -hide_banner -loglevel error -y -i "$dir/passage-walk.mp4" \
-            -vf "fps=8,scale=1152:-2" -c:v libwebp -q:v 62 "$fdir/f-%03d.webp"
-          echo "extracted $(ls -1 "$fdir" | wc -l) frames"; du -sh "$fdir"
+          for theme in night day; do
+            fdir="$dir/walk-$theme"
+            if [ -d "$fdir" ] && [ "$(ls -1 "$fdir" 2>/dev/null | wc -l)" -ge 40 ]; then
+              echo "have $theme frames"; continue
+            fi
+            mkdir -p "$fdir"
+            ffmpeg -hide_banner -loglevel error -y -i "$dir/walk-$theme-2k.mp4" \
+              -vf "fps=6,scale=1600:-2" -c:v libwebp -q:v 70 "$fdir/f-%03d.webp"
+            echo "extracted $(ls -1 "$fdir" | wc -l) $theme frames"; du -sh "$fdir"
+          done
+          # the 2K masters stay on the CDN; don't commit ~50MB of mp4
+          rm -f "$dir/walk-night-2k.mp4" "$dir/walk-day-2k.mp4"
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add artifacts/doctrine/plates
-          git commit -m "Vendor doctrine plates fetched by CI" || echo "nothing to commit"
+          git commit -m "Vendor day/night doctrine plates and 2K walk frames" || echo "nothing to commit"
           git push
