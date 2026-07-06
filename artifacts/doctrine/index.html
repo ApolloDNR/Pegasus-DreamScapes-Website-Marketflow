@@ -47,6 +47,7 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
+html.js{scroll-behavior:auto} /* the scroll engine owns motion when JS runs */
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 body{
   background:var(--ink);color:var(--cream);
@@ -131,6 +132,11 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .hero{position:relative;min-height:100vh;min-height:100svh;overflow:hidden;display:flex;align-items:flex-end;
   padding:0 clamp(22px,6vw,88px) clamp(64px,10vh,120px)}
 .hero-stars{position:absolute;inset:0;z-index:0}
+.hero-plate{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.hero-plate img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s ease;
+  filter:saturate(.78) contrast(1.06) brightness(.86);transform:scale(1.08);will-change:transform}
+.hero-photo .hero-plate img{opacity:1}
+.hero-plate .p-tint{position:absolute;inset:0;background:rgba(12,16,23,.34)}
 .hero-art{position:absolute;inset:0;z-index:1;pointer-events:none}
 .hero-art svg{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:max(1600px,118vw);height:auto}
 .hero-vignette{position:absolute;inset:0;z-index:3;pointer-events:none;
@@ -169,6 +175,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .js .loaded .mon-halo .halo-step{opacity:1}
 .js .loaded .mon-halo .h1{transition-delay:.5s}.js .loaded .mon-halo .h2{transition-delay:.72s}
 .js .loaded .mon-halo .h3{transition-delay:.94s}.js .loaded .mon-halo .h4{transition-delay:1.16s}
+/* once the photographic plate lands, the drawn monument yields to it */
+.js .loaded.hero-photo .mon-temple{opacity:0}
+.js .loaded.hero-photo .mon-halo .halo-step{opacity:0;transition-delay:0s}
+.js .hero-photo .shaft{animation:none;opacity:0}
 .copper-light{stroke:var(--copper)}
 .js .copper-light{animation:shimmer 6.5s ease-in-out infinite}
 @keyframes shimmer{0%,100%{stroke-opacity:.9}50%{stroke-opacity:.38}}
@@ -307,6 +317,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .chapter{position:relative;min-height:92vh;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center}
 .chapter .plate{position:absolute;inset:-12% 0}
 .chapter .plate .tint{background:rgba(12,16,23,.5)}
+.chapter .plate video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+  transition:opacity 1.4s ease;filter:saturate(.78) contrast(1.06) brightness(.9)}
+.chapter .plate video.live{opacity:1}
 .ch-in{position:relative;z-index:2;padding:120px 24px}
 .chapter h2{font-size:clamp(3rem,8vw,7rem);font-weight:700}
 .chapter .plate-no{display:block;margin-bottom:26px}
@@ -387,6 +400,12 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
   .passage{height:380vh}
   .scroll-cue{display:none}
 }
+/* touch devices: lighter ambient load, shorter pinned runs */
+.perf-lite .grain{animation:none}
+@media (pointer:coarse){
+  .statement{height:190vh}
+  .passage{height:330vh}
+}
 /* reduced motion */
 @media (prefers-reduced-motion:reduce){
   .js .grain,.js .marquee .track,.js .copper-light,.js .fog-a,.js .fog-b,.js .shaft,.js .scroll-cue .sc-line::after{animation:none}
@@ -447,6 +466,11 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 <!-- ============ HERO ============ -->
 <section class="hero" id="hero">
   <canvas class="hero-stars" id="stars" aria-hidden="true"></canvas>
+
+  <div class="hero-plate" aria-hidden="true">
+    <img id="heroImg" src="plates/hero-temple.webp" alt="" decoding="async">
+    <div class="p-tint"></div>
+  </div>
 
   <div class="hero-art" aria-hidden="true">
     <svg class="mon" viewBox="0 0 1600 900" fill="none" preserveAspectRatio="xMidYMax slice">
@@ -625,7 +649,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
           </g>
           <polygon points="0,0 340,0 0,300" fill="#C87A3A" opacity="0.05"/>
         </svg>
-        <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp" alt="" loading="lazy" decoding="async">
+        <img src="plates/stone.webp" alt="" loading="lazy" decoding="async">
         <div class="tint"></div>
       </div>
       <div class="slab-in">
@@ -695,7 +719,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
             <polygon points="264,800 120,800 190,740 264,700" fill="#C87A3A" opacity="0.14"/>
             <path d="M100,800 h400 M130,760 h340 M160,724 h280" stroke="#0E1420" stroke-width="8"/>
           </svg>
-          <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2_min.webp" alt="A classical stone doorway at night, lamplight spilling through the open door onto marble steps." loading="lazy" decoding="async">
+          <img src="plates/doorway.webp" alt="A classical stone doorway at night, lamplight spilling through the open door onto marble steps." loading="lazy" decoding="async">
           <div class="tint"></div>
         </div>
         <div class="dc-body">
@@ -722,7 +746,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
             <rect x="352" y="492" width="100" height="6" fill="#D8D2C3" opacity="0.14"/>
             <circle cx="470" cy="512" r="9" fill="#C87A3A" opacity="0.5"/>
           </svg>
-          <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260706_045438_4a1df506-682f-4d45-bb06-1ec6a3fab073_min.webp" alt="A stone chamber at night with a single lamp burning beside a closed folio and wax seal." loading="lazy" decoding="async">
+          <img src="plates/chamber.webp" alt="A stone chamber at night with a single lamp burning beside a closed folio and wax seal." loading="lazy" decoding="async">
           <div class="tint"></div>
         </div>
         <div class="dc-body">
@@ -760,7 +784,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
       </g>
       <path d="M1160,760 h40 M1150,780 h60 M1140,800 h80" stroke="#D8D2C3" opacity="0.14"/>
     </svg>
-    <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp" alt="" loading="lazy" decoding="async">
+    <img src="plates/bay.webp" alt="" loading="lazy" decoding="async">
     <div class="tint"></div>
   </div>
   <div class="shell op-in">
@@ -799,7 +823,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
       <rect x="760" y="330" width="80" height="330" fill="#E8B77D" opacity="0.45"/>
       <polygon points="560,900 720,660 880,660 1040,900" fill="#C87A3A" opacity="0.08"/>
     </svg>
-    <img id="chapterImg" src="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260706_045424_e13964d0-cbce-4152-90ec-a0e232af646d_min.webp" alt="A monumental colonnade at night with a doorway glowing warm at its end." loading="lazy" decoding="async">
+    <img id="chapterImg" src="plates/corridor.webp" alt="A monumental colonnade at night with a doorway glowing warm at its end." loading="lazy" decoding="async">
+    <video id="chVideo" muted loop playsinline preload="metadata" poster="plates/corridor.webp" aria-hidden="true">
+      <source src="plates/passage-walk.mp4" type="video/mp4">
+    </video>
     <div class="tint"></div>
   </div>
   <div class="ch-in reveal">
@@ -911,6 +938,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 var docEl=document.documentElement,body=document.body;
 var reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 if(reduceMotion)docEl.classList.add("static-motion");
+var coarse=window.matchMedia("(pointer: coarse)").matches;
+if(coarse)docEl.classList.add("perf-lite");
+var DPR=Math.min(window.devicePixelRatio||1,coarse?1.5:2);
 
 /* ---------- build hero columns ---------- */
 (function(){
@@ -935,28 +965,50 @@ if(reduceMotion)docEl.classList.add("static-motion");
     col.appendChild(kiss);
     g.appendChild(col);
   });
+  /* soften filters on coarse pointers: SVG blur is expensive there */
+  if(coarse){
+    var fg=document.querySelector('.hero-art g[filter="url(#soft)"]');
+    if(fg)fg.removeAttribute("filter");
+  }
 })();
 
 /* ---------- preloader ---------- */
 var loadedFired=false;
-function fireLoaded(){if(loadedFired)return;loadedFired=true;body.classList.add("loaded");}
+function fireLoaded(){if(loadedFired)return;loadedFired=true;body.classList.add("loaded");measure();}
 window.addEventListener("load",function(){setTimeout(fireLoaded,reduceMotion?0:650);});
 setTimeout(fireLoaded,2600);
 
 /* ---------- plate image loading ---------- */
-Array.prototype.forEach.call(document.querySelectorAll(".plate img"),function(img){
-  function on(){img.classList.add("on");}
+Array.prototype.forEach.call(document.querySelectorAll(".plate img,.hero-plate img"),function(img){
+  function on(){img.classList.add("on");if(img.id==="heroImg")body.classList.add("hero-photo");}
   if(img.complete&&img.naturalWidth>0)on();
   else{img.addEventListener("load",on);img.addEventListener("error",function(){img.remove();});}
 });
 
+/* ---------- ambient walk video (chapter) ---------- */
+var chVideo=document.getElementById("chVideo");
+if(chVideo){
+  if(reduceMotion){chVideo.remove();chVideo=null;}
+  else{
+    chVideo.addEventListener("error",function(){if(chVideo){chVideo.remove();chVideo=null;}},true);
+    chVideo.addEventListener("playing",function(){chVideo.classList.add("live");});
+    var vIO=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(!chVideo)return;
+        if(e.isIntersecting){chVideo.muted=true;var p=chVideo.play();if(p&&p.catch)p.catch(function(){});}
+        else chVideo.pause();
+      });
+    },{threshold:.12});
+    vIO.observe(chVideo);
+  }
+}
+
 /* ---------- stars ---------- */
 var starCvs=document.getElementById("stars"),starCtx=starCvs.getContext("2d"),stars=[],heroEl=document.getElementById("hero");
 function starResize(){
-  var d=Math.min(window.devicePixelRatio||1,2);
-  starCvs.width=heroEl.offsetWidth*d;starCvs.height=heroEl.offsetHeight*d;
-  starCtx.setTransform(d,0,0,d,0,0);
-  stars=[];var n=Math.floor(heroEl.offsetWidth/9);
+  starCvs.width=heroEl.offsetWidth*DPR;starCvs.height=heroEl.offsetHeight*DPR;
+  starCtx.setTransform(DPR,0,0,DPR,0,0);
+  stars=[];var n=Math.floor(heroEl.offsetWidth/(coarse?14:9));
   for(var i=0;i<n;i++)stars.push({x:Math.random()*heroEl.offsetWidth,y:Math.random()*heroEl.offsetHeight*.72,
     r:Math.random()*1.15+.3,p:Math.random()*Math.PI*2,s:.4+Math.random()*.9});
 }
@@ -974,10 +1026,10 @@ starResize();
 var pSection=document.getElementById("passage"),pCvs=document.getElementById("pcanvas"),pCtx=pCvs.getContext("2d");
 var pW=0,pH=0,pProg=0,pStars=[];
 function pResize(){
-  var d=Math.min(window.devicePixelRatio||1,2);
   pW=pCvs.offsetWidth;pH=pCvs.offsetHeight;
-  pCvs.width=pW*d;pCvs.height=pH*d;pCtx.setTransform(d,0,0,d,0,0);
-  pStars=[];for(var i=0;i<70;i++)pStars.push({x:Math.random(),y:Math.random()*.4,r:Math.random()+.3,p:Math.random()*6.28});
+  pCvs.width=pW*DPR;pCvs.height=pH*DPR;pCtx.setTransform(DPR,0,0,DPR,0,0);
+  pStars=[];var n=coarse?44:70;
+  for(var i=0;i<n;i++)pStars.push({x:Math.random(),y:Math.random()*.4,r:Math.random()+.3,p:Math.random()*6.28});
 }
 function mix(c1,c2,t){return[c1[0]+(c2[0]-c1[0])*t|0,c1[1]+(c2[1]-c1[1])*t|0,c1[2]+(c2[2]-c1[2])*t|0];}
 function rgb(c,a){return"rgba("+c[0]+","+c[1]+","+c[2]+","+(a==null?1:a)+")";}
@@ -1000,7 +1052,6 @@ function pDraw(t){
   gl.addColorStop(0,rgb(C_COPPER,.5*bright));gl.addColorStop(1,rgb(C_COPPER,0));
   pCtx.fillStyle=gl;pCtx.fillRect(0,0,pW,pH);
   /* floor */
-  pCtx.fillStyle=rgb([13,17,26]);pCtx.fillRect(0,cy+170*f/(gap*pairs*4),pW,pH);
   var floorGrad=pCtx.createLinearGradient(0,cy,0,pH);
   floorGrad.addColorStop(0,rgb([16,21,31],1));floorGrad.addColorStop(1,rgb([8,10,16],1));
   pCtx.fillStyle=floorGrad;pCtx.fillRect(0,cy,pW,pH);
@@ -1048,7 +1099,7 @@ function pDraw(t){
     });
   }
   /* drifting fog band */
-  if(!reduceMotion){
+  if(!reduceMotion&&!coarse){
     var fx=(t*.012)%(pW*2)-pW*.5;
     var fog1=pCtx.createRadialGradient(fx,cy+40,10,fx,cy+40,pW*.55);
     fog1.addColorStop(0,rgb(C_EDGE,.045));fog1.addColorStop(1,rgb(C_EDGE,0));
@@ -1075,59 +1126,124 @@ function passageUI(){
   pArrive.classList.toggle("on",pProg>=.9);
 }
 
-/* ---------- scroll engine ---------- */
+/* ============================================================
+   SCROLL ENGINE
+   Fine pointers: wheel inertia — the page itself glides.
+   Coarse pointers: native momentum, driven visuals are lerped.
+   Section metrics are cached; nothing measures inside the loop.
+   ============================================================ */
 var progressBar=document.getElementById("progressBar"),nav=document.getElementById("nav");
 var arail=document.getElementById("arail"),arows=document.getElementById("arows");
 var statement=document.querySelector(".statement");
+var chapterImg=document.getElementById("chapterImg"),chapterSec=document.getElementById("door");
+var heroPlateImg=document.getElementById("heroImg");
 var guardWords=(function(){
   var g=document.getElementById("guard"),words=g.textContent.split(/\s+/).filter(Boolean);
   g.textContent="";
-  return words.map(function(w,i){
+  return words.map(function(w){
     var s=document.createElement("span");s.className="w";s.textContent=w;
     g.appendChild(s);g.appendChild(document.createTextNode(" "));return s;});
 })();
 var heroLayers=Array.prototype.slice.call(document.querySelectorAll(".hero-art [data-px]"));
-var chapterImg=document.getElementById("chapterImg"),chapterSec=document.getElementById("door");
+
+var M={};
+function topOf(el){return el.getBoundingClientRect().top+window.scrollY;}
+function measure(){
+  M.vh=window.innerHeight;
+  M.max=docEl.scrollHeight-M.vh;
+  M.hero=heroEl.offsetHeight;
+  M.stTop=topOf(statement);M.stH=statement.offsetHeight;
+  M.arTop=topOf(arows);M.arH=arows.offsetHeight;
+  M.pTop=topOf(pSection);M.pH=pSection.offsetHeight;
+  M.chTop=topOf(chapterSec);M.chH=chapterSec.offsetHeight;
+}
+measure();
+function clamp01(v){return v<0?0:v>1?1:v;}
+
+var wheelOn=!coarse&&!reduceMotion&&window.matchMedia("(pointer: fine)").matches;
+var targetY=window.scrollY,smoothY=targetY,engineHop=false;
+
+if(wheelOn){
+  window.addEventListener("wheel",function(e){
+    if(e.ctrlKey||e.metaKey)return;               /* pinch zoom */
+    if(e.target&&e.target.closest("textarea,select"))return;
+    e.preventDefault();
+    var d=e.deltaY;
+    if(e.deltaMode===1)d*=16;else if(e.deltaMode===2)d*=M.vh;
+    targetY=Math.max(0,Math.min(targetY+d,M.max));
+  },{passive:false});
+}
+window.addEventListener("scroll",function(){
+  if(engineHop){engineHop=false;return;}
+  /* scrollbar drag, keyboard, touch, hash jump: accept it as truth */
+  targetY=window.scrollY;
+  if(wheelOn)smoothY=targetY;
+},{passive:true});
+
+/* anchor glides ride the engine */
+document.addEventListener("click",function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="#"]');
+  if(!a)return;
+  var el=document.getElementById(a.getAttribute("href").slice(1));
+  if(!el)return;
+  e.preventDefault();
+  var to=Math.max(0,Math.min(topOf(el),M.max));
+  if(wheelOn)targetY=to;
+  else window.scrollTo({top:to,behavior:reduceMotion?"auto":"smooth"});
+});
 
 var lastT=0;
 function frame(t){
-  var y=window.scrollY||window.pageYOffset;
-  var docH=docEl.scrollHeight-window.innerHeight;
-  progressBar.style.transform="scaleX("+(docH>0?y/docH:0)+")";
+  var dt=Math.min(t-lastT||16.7,50);lastT=t;
+  var y;
+  if(reduceMotion){
+    y=smoothY=targetY=window.scrollY;
+  }else if(wheelOn){
+    var k=1-Math.pow(.86,dt/16.7);
+    var ny=smoothY+(targetY-smoothY)*k;
+    if(Math.abs(targetY-ny)<.4)ny=targetY;
+    if(Math.round(ny)!==window.scrollY){engineHop=true;window.scrollTo(0,ny);}
+    smoothY=ny;y=ny;
+  }else{
+    var k2=1-Math.pow(.8,dt/16.7);
+    smoothY+=(window.scrollY-smoothY)*k2;
+    if(Math.abs(window.scrollY-smoothY)<.3)smoothY=window.scrollY;
+    y=smoothY;
+  }
+  progressBar.style.transform="scaleX("+(M.max>0?clamp01(y/M.max):0)+")";
   nav.classList.toggle("tight",y>60);
   /* hero parallax + stars */
-  var hh=heroEl.offsetHeight;
-  if(y<hh){
-    if(!reduceMotion)heroLayers.forEach(function(l){
-      l.style.transform="translateY("+(y*parseFloat(l.getAttribute("data-px")))+"px)";});
-    starDraw(t);
+  if(y<M.hero){
+    if(!reduceMotion){
+      heroLayers.forEach(function(l){
+        l.style.transform="translateY("+(y*parseFloat(l.getAttribute("data-px")))+"px)";});
+      if(heroPlateImg)heroPlateImg.style.transform="translateY("+(y*.12)+"px) scale(1.08)";
+    }
+    /* the photographic plate owns the sky once it lands */
+    if(!body.classList.contains("hero-photo"))starDraw(t);
   }
   /* statement word lighting */
-  var sr=statement.getBoundingClientRect();
-  if(sr.top<window.innerHeight&&sr.bottom>0){
-    var sp=Math.min(Math.max(-sr.top/(sr.height-window.innerHeight),0),1);
+  if(y>M.stTop-M.vh&&y<M.stTop+M.stH){
+    var sp=clamp01((y-M.stTop)/(M.stH-M.vh));
     var lit=reduceMotion?guardWords.length:Math.floor(sp*guardWords.length*1.25);
     guardWords.forEach(function(w,i){w.classList.toggle("lit",i<lit);});
   }
   /* approach rail */
-  var ar=arows.getBoundingClientRect();
-  if(ar.top<window.innerHeight&&ar.bottom>0){
-    var ap=Math.min(Math.max((window.innerHeight*.78-ar.top)/ar.height,0),1);
-    arail.style.transform="scaleY("+ap+")";
+  if(y>M.arTop-M.vh&&y<M.arTop+M.arH){
+    arail.style.transform="scaleY("+clamp01((y+M.vh*.78-M.arTop)/M.arH)+")";
   }
   /* passage */
-  var pr=pSection.getBoundingClientRect();
-  if(pr.top<window.innerHeight&&pr.bottom>0){
-    pProg=reduceMotion?.42:Math.min(Math.max(-pr.top/(pr.height-window.innerHeight),0),1);
+  if(y>M.pTop-M.vh&&y<M.pTop+M.pH){
+    pProg=reduceMotion?.42:clamp01((y-M.pTop)/(M.pH-M.vh));
     pDraw(t);passageUI();
   }
   /* chapter parallax */
-  var cr=chapterSec.getBoundingClientRect();
-  if(cr.top<window.innerHeight&&cr.bottom>0&&!reduceMotion&&chapterImg){
-    var cp=(window.innerHeight-cr.top)/(window.innerHeight+cr.height);
-    chapterImg.style.transform="translateY("+((cp-.5)*12)+"%) scale(1.06)";
+  if(chapterImg&&!reduceMotion&&y>M.chTop-M.vh&&y<M.chTop+M.chH){
+    var cp=(y+M.vh-M.chTop)/(M.vh+M.chH);
+    var ctf="translateY("+((cp-.5)*12)+"%) scale(1.06)";
+    chapterImg.style.transform=ctf;
+    if(chVideo)chVideo.style.transform=ctf;
   }
-  lastT=t;
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1201,7 +1317,7 @@ document.getElementById("intake").addEventListener("submit",function(ev){
 /* ---------- resize ---------- */
 var rTO;
 window.addEventListener("resize",function(){
-  clearTimeout(rTO);rTO=setTimeout(function(){starResize();pResize();pDraw(lastT);},160);
+  clearTimeout(rTO);rTO=setTimeout(function(){starResize();pResize();measure();pDraw(lastT);},160);
 });
 })();
 </script>

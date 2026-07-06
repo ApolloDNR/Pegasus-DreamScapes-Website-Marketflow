@@ -18,7 +18,16 @@ bake grading into replacement renders.
 | PL. IV — The East Bay, at Night | Operator background | `04b667fd-09a2-44fc-bffc-3b0121041527` | nano_banana_2 | 2752×1536 |
 | PL. V — The Carved Record | Ledger slab surface | `064bcda5-bc72-4f74-a86a-d5a1a9ecaf85` | nano_banana_2 | 2752×1536 |
 
-## URLs
+## Files
+
+All assets are vendored in `plates/` by the `fetch-doctrine-plates` workflow
+(GitHub runners fetch the CDN; this session's container cannot). The page
+references the local files — no generation-CDN dependency remains at runtime.
+
+- `plates/hero-temple.webp` — PL. 0, hero base (job `670bdc4c-b2f3-4c06-9dbd-63c1db909763`, 2752×1536)
+- `plates/passage-walk.mp4` — Seedance 2.0 ambient walk, chapter band (job `f1c73b33-552b-4618-a6f9-86141d3ae04f`, 8s 720p, plays muted/looped, image fallback)
+
+## Source URLs
 
 CDN base: `https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/`
 
