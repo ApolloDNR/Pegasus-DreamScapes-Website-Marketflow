@@ -203,7 +203,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .js .hero h1 .line>span{transform:translateY(112%);transition:transform 1.15s cubic-bezier(.22,1,.36,1)}
 .js .loaded .hero h1 .l1>span{transform:translateY(0);transition-delay:.55s}
 .js .loaded .hero h1 .l2>span{transform:translateY(0);transition-delay:.78s}
-.hero h1 .l2>span{font-style:italic;font-weight:500;color:var(--gold)}
+.hero h1 .l2>span{font-style:italic;font-weight:500;color:var(--gold);font-size:.48em;line-height:1.3;padding-top:.2em}
 .hero-sub{font-size:clamp(1rem,1.55vw,1.28rem);color:var(--cream-dim);max-width:32em;line-height:1.75}
 .js .hero-sub,.js .hero-ctas,.js .hero .kicker,.js .hero-micro{opacity:0;transform:translateY(18px);transition:opacity .9s ease,transform .9s cubic-bezier(.22,1,.36,1)}
 .js .loaded .hero .kicker{opacity:1;transform:none;transition-delay:.4s}
@@ -382,6 +382,29 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .case-scroll figure{flex:0 0 auto;width:clamp(240px,26vw,340px);scroll-snap-align:start;margin:0}
 .case-scroll img{width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid var(--cine-rule);background:var(--cine-bg)}
 .cs-hint{font-family:var(--carved);font-size:.6rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cine-faint)}
+
+
+/* what we do today cards */
+.cards5{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));border-top:1px solid var(--rule-paper);border-left:1px solid var(--rule-paper)}
+.tcard{padding:clamp(26px,3.4vh,42px) clamp(18px,2vw,32px);border-right:1px solid var(--rule-paper);border-bottom:1px solid var(--rule-paper);min-width:0}
+.tcard .p-num{font-family:var(--carved);font-weight:600;font-size:.66rem;letter-spacing:.32em;color:var(--inkp-faint)}
+.tcard h3{font-size:1.25rem;margin:.7em 0 .45em;color:var(--inkp)}
+.tcard p{font-size:.88rem;line-height:1.75;color:var(--inkp-dim)}
+/* standard pillars */
+.std-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule-paper);border-left:1px solid var(--rule-paper)}
+.std-grid .read{border-right:1px solid var(--rule-paper)}
+/* elements grid */
+.el-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,20px)}
+.el{margin:0;min-width:0}
+.el img{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--cine-rule);background:var(--cine-bg-2)}
+.el figcaption{font-family:var(--carved);font-weight:500;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--cine-faint);padding-top:10px}
+/* built for becoming */
+.become-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(14px,1.8vw,26px)}
+.bcard{border:1px solid var(--base-rule);padding:clamp(24px,3vh,38px) clamp(18px,2vw,30px);min-width:0}
+.bcard .p-num{font-family:var(--carved);font-weight:600;font-size:.78rem;letter-spacing:.34em;color:var(--base-accent)}
+.bcard p{margin-top:14px;font-size:.88rem;line-height:1.75;color:var(--base-dim)}
+@media (max-width:1080px){.std-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.el-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.become-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.become-grid{grid-template-columns:1fr}}
 
 /* ---------- vision (the dreamscape) ---------- */
 .vision{background:var(--cine-bg);color:var(--cine-fg);overflow:hidden}
@@ -562,7 +585,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <div class="veil" aria-hidden="true">
   <div class="v-mark">PEGASUS DREAMSCAPES</div>
   <div class="v-rule"></div>
-  <div class="v-sub">DEAL STRATEGY · EAST BAY</div>
+  <div class="v-sub">A HIGHER STANDARD OF LIVING</div>
 </div>
 
 <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
@@ -571,15 +594,15 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <header class="nav" id="nav">
   <a class="brand" href="#top" aria-label="Pegasus DreamScapes — home">
     <span class="b-name">PEGASUS DREAMSCAPES</span>
-    <span class="b-tag">DEAL STRATEGY</span>
+    <span class="b-tag">REAL ESTATE · VISION</span>
   </a>
   <nav aria-label="Primary">
     <ul class="nav-links">
-      <li><a href="#pillars">What We Do</a></li>
-      <li><a href="#passage">The Passage</a></li>
-      <li><a href="#serve">Who We Serve</a></li>
-      <li><a href="#nelson">Nelson Drive</a></li>
-      <li><a href="#start">Start</a></li>
+      <li><a href="#today">Company</a></li>
+      <li><a href="#standard">Standard</a></li>
+      <li><a href="#nelson">Opportunities</a></li>
+      <li><a href="#vision">Vision</a></li>
+      <li><a href="#start">Contact</a></li>
     </ul>
   </nav>
   <div class="nav-right">
@@ -587,19 +610,18 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
       <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
     </button>
-    <a class="nav-cta" href="#start">Submit a Property</a>
+    <a class="nav-cta" href="#start">Work With Pegasus</a>
     <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
   </div>
 </header>
 
 <nav class="m-menu" id="mmenu" aria-label="Mobile">
   <span class="plate-no">PEGASUS DREAMSCAPES</span>
-  <a href="#pillars">What We Do</a>
-  <a href="#passage">The Passage</a>
-  <a href="#serve">Who We Serve</a>
-  <a href="#nelson">Nelson Drive</a>
-  <a href="#lab">Strategy Lab</a>
-  <a href="#start">Start</a>
+  <a href="#today">Company</a>
+  <a href="#standard">The Pegasus Standard</a>
+  <a href="#nelson">Opportunities</a>
+  <a href="#vision">Dreamscapes Vision</a>
+  <a href="#start">Contact</a>
 </nav>
 
 <main id="top">
@@ -659,17 +681,17 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <div class="hero-vignette" aria-hidden="true"></div>
 
   <div class="hero-inner">
-    <p class="kicker"><span class="k-rule"></span>DEAL STRATEGY &amp; REAL ESTATE EXECUTION · EAST BAY</p>
+    <p class="kicker"><span class="k-rule"></span>AN OPERATING REAL ESTATE COMPANY · EAST BAY, CALIFORNIA</p>
     <h1>
-      <span class="line l1"><span>Complex property.</span></span>
-      <span class="line l2"><span>Structured opportunity.</span></span>
+      <span class="line l1"><span>Pegasus Dreamscapes.</span></span>
+      <span class="line l2"><span>Real estate for a higher standard of living.</span></span>
     </h1>
-    <p class="hero-sub">A real estate investment, development, and systems company. We read the situation, underwrite the numbers, and tell you what the deal actually is.</p>
+    <p class="hero-sub">An operating real estate company guided by a long-term vision for classical, walkable, elevated residential communities.</p>
     <div class="hero-ctas">
-      <a class="btn btn-copper" href="#start">Submit a Property</a>
-      <a class="btn btn-ghost" href="#serve">Find Your Lane</a>
+      <a class="btn btn-copper" href="#start">Work With Pegasus</a>
+      <a class="btn btn-ghost" href="#vision">Explore the Dreamscapes Vision</a>
     </div>
-    <p class="hero-micro">EAST BAY · OFF-MARKET &amp; VALUE-ADD · APOLLO DURAN · DRE #02333658</p>
+    <p class="hero-micro">OPERATING NOW · EAST BAY, CALIFORNIA · APOLLO DURAN · DRE #02333658</p>
   </div>
 
   <div class="scroll-cue" aria-hidden="true">
@@ -681,8 +703,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <!-- ============ MARQUEE ============ -->
 <div class="marquee" aria-hidden="true">
   <div class="track">
-    <span>Read the situation · Underwrite the numbers · Tell the truth ·&nbsp;</span>
-    <span>Read the situation · Underwrite the numbers · Tell the truth ·&nbsp;</span>
+    <span>Operating today · Building toward a higher standard of living ·&nbsp;</span>
+    <span>Operating today · Building toward a higher standard of living ·&nbsp;</span>
   </div>
 </div>
 
@@ -690,64 +712,69 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="statement" id="thesis" aria-label="The thesis">
   <div class="st-sticky">
     <div class="shell">
-      <p class="kicker"><span class="k-rule"></span>THE THESIS</p>
-      <p class="guard" id="guard">We never lead with the lane. Most operators have one product and try to fit every situation into it. We do the opposite — we read the situation first: the property, the numbers, the person and their constraints. Only then do we design the route. And when the honest answer is that there is no deal, we will tell you that too.</p>
+      <p class="kicker"><span class="k-rule"></span>THE MISSION</p>
+      <p class="guard" id="guard">We pursue real estate opportunities today while developing a future standard for communities shaped by beauty, walkability, wellness, education, family, and timeless architecture. The vision is not a side project — it is the reason the company exists.</p>
     </div>
   </div>
 </section>
 
-<!-- ============ WHAT WE DO ============ -->
-<section class="section on-paper" id="pillars">
+<!-- ============ WHAT WE DO TODAY ============ -->
+<section class="section on-paper" id="today">
   <div class="shell">
     <div class="pillars-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>WHAT WE DO</p>
-        <h2 class="h2">Three pillars.<br>One <span class="em">engine.</span></h2>
+        <p class="kicker"><span class="k-rule"></span>WHAT WE DO TODAY</p>
+        <h2 class="h2">Real estate,<br>guided by <span class="em">vision.</span></h2>
       </div>
-      <p class="lede reveal">Every relationship starts with the same read. What happens next depends on the deal — not on our pipeline.</p>
+      <p class="lede reveal">Pegasus Dreamscapes is an operating real estate company built around a long-term vision for elevated residential living. This is the work happening now.</p>
     </div>
-    <div class="pillar-grid">
-      <article class="pillar reveal">
-        <span class="p-num">PILLAR 01</span>
-        <h3>Deal Strategy</h3>
-        <p>Where every Pegasus relationship starts. We read the property and the numbers once, properly, then show you the route forward: the lane that genuinely fits the deal and the person in front of it.</p>
-        <a class="tlink" href="#start">Start a review</a>
+    <div class="cards5">
+      <article class="tcard reveal">
+        <span class="p-num">01</span>
+        <h3>Real Estate Opportunities</h3>
+        <p>Strategic property opportunities for buyers, sellers, investors, and partners across the East Bay.</p>
       </article>
-      <article class="pillar reveal">
-        <span class="p-num">PILLAR 02</span>
-        <h3>Development</h3>
-        <p>We build the finished product. Former GCs, project managers, and trades who have run real jobsites scope every renovation and ground-up build to a real budget and draw schedule — delivered finished, not left half-open.</p>
-        <a class="tlink" href="#nelson">See the proof</a>
+      <article class="tcard reveal">
+        <span class="p-num">02</span>
+        <h3>Acquisitions &amp; Development Strategy</h3>
+        <p>Identifying properties, land, and assets with long-term potential — read once, properly, before anything moves.</p>
       </article>
-      <article class="pillar reveal">
-        <span class="p-num">PILLAR 03</span>
-        <h3>Capital</h3>
-        <p>Put capital to work with eyes open. No pooled funds, no promised returns — specific projects, underwritten deal by deal, with the work, the timeline, and the risk laid out before you decide.</p>
-        <a class="tlink" href="#serve">See the lane</a>
+      <article class="tcard reveal">
+        <span class="p-num">03</span>
+        <h3>Property Marketing</h3>
+        <p>Presenting real estate with elevated visuals, storytelling, and premium positioning.</p>
+      </article>
+      <article class="tcard reveal">
+        <span class="p-num">04</span>
+        <h3>Investment Partnerships</h3>
+        <p>Relationships with capital partners, landowners, and builders — project by project, terms in writing, risk in plain sight.</p>
+      </article>
+      <article class="tcard reveal">
+        <span class="p-num">05</span>
+        <h3>Future Community Development</h3>
+        <p>Every deal compounds toward the Dreamscapes vision: elevated, classical, walkable residential communities.</p>
       </article>
     </div>
   </div>
 </section>
 
-<!-- ============ THE ENGINE ============ -->
-<section class="section on-paper engine" id="engine">
+<!-- ============ THE PEGASUS STANDARD ============ -->
+<section class="section on-paper engine" id="standard">
   <div class="shell">
     <div class="pillars-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE ENGINE</p>
-        <h2 class="h2">How we read a deal.</h2>
+        <p class="kicker"><span class="k-rule"></span>THE PEGASUS STANDARD</p>
+        <h2 class="h2">More than <span class="em">transactions.</span></h2>
       </div>
-      <p class="lede reveal">Eight reads, taken in order. Each one informs the next, and together they resolve to a single recommendation.</p>
+      <p class="lede reveal">Pegasus Dreamscapes believes real estate should shape how people live — not only where they live. Our standard is built around beauty, order, health, family, learning, community, and legacy.</p>
     </div>
-    <div class="engine-grid reveal">
-      <div class="read"><span class="r-num">01</span><h3>Situation</h3><p>Probate, divorce, distress, tired rental, or a clean sale.</p></div>
-      <div class="read"><span class="r-num">02</span><h3>Property</h3><p>Condition, location, and what it could become.</p></div>
-      <div class="read"><span class="r-num">03</span><h3>Motivation</h3><p>Speed, price, or certainty — what actually matters to you.</p></div>
-      <div class="read"><span class="r-num">04</span><h3>Numbers</h3><p>All-in cost, after-repair value, and the spread.</p></div>
-      <div class="read"><span class="r-num">05</span><h3>Capital</h3><p>Who funds it, on what terms, and at what risk.</p></div>
-      <div class="read"><span class="r-num">06</span><h3>Construction</h3><p>Scope, budget, and the timeline to deliver.</p></div>
-      <div class="read"><span class="r-num">07</span><h3>Exit</h3><p>Sell, hold, refinance, or trade — decided up front.</p></div>
-      <div class="read lane"><span class="r-num">RESOLVES TO</span><h3>The recommended lane.</h3><p>Every input resolves to one clear next step: the lane that fits the deal and the person in front of it.</p></div>
+    <div class="std-grid reveal">
+      <div class="read"><span class="r-num">I</span><h3>Beauty</h3><p>Classical architecture and timeless design, held to a written finish standard.</p></div>
+      <div class="read"><span class="r-num">II</span><h3>Walkability</h3><p>Streets and lanes made for people first — gardens, fountains, shade.</p></div>
+      <div class="read"><span class="r-num">III</span><h3>Wellness</h3><p>Environments that support health: movement, nature, calm.</p></div>
+      <div class="read"><span class="r-num">IV</span><h3>Education</h3><p>Learning built into the fabric — classical education, craft, mentorship.</p></div>
+      <div class="read"><span class="r-num">V</span><h3>Community</h3><p>Family, belonging, trust, and civic life by design.</p></div>
+      <div class="read"><span class="r-num">VI</span><h3>Legacy</h3><p>Property value and craftsmanship that compound across generations.</p></div>
     </div>
   </div>
 </section>
@@ -781,87 +808,12 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   </div>
 </section>
 
-<!-- ============ WHO WE SERVE ============ -->
-<section class="section serve on-paper" id="serve">
-  <div class="shell">
-    <div class="serve-grid">
-      <div class="serve-side reveal">
-        <p class="kicker"><span class="k-rule"></span>WHO WE SERVE</p>
-        <h2 class="h2">Five doors.<br>No wrong one.</h2>
-        <p class="lede">Every lane gets the same discipline: a real read, honest numbers, and terms on paper.</p>
-        <div class="plate" aria-hidden="true">
-          <svg class="fallback" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <rect width="600" height="800" fill="#1A2332"/>
-            <rect x="180" y="180" width="240" height="620" fill="#090D14"/>
-            <path d="M180,180 a120,120 0 0 1 240,0" fill="#090D14"/>
-            <path d="M172,800 V180 a128,128 0 0 1 256,0 V800" fill="none" stroke="#D8D2C3" stroke-opacity="0.22" stroke-width="3"/>
-            <rect x="264" y="290" width="72" height="510" fill="#C87A3A" opacity="0.65"/>
-            <rect x="284" y="290" width="32" height="510" fill="#E8B77D" opacity="0.6"/>
-          </svg>
-          <img class="tp night" src="plates/portico-night.webp" alt="" loading="lazy" decoding="async">
-          <img class="tp day" src="plates/portico-day.webp" alt="" loading="lazy" decoding="async">
-          <div class="tint"></div>
-        </div>
-      </div>
-      <div>
-        <div class="serve-rows" id="srows">
-          <div class="s-rail" aria-hidden="true"><i id="srail"></i></div>
-          <div class="s-row reveal">
-            <span class="a-num">01</span>
-            <div>
-              <h3>Sellers &amp; Owners</h3>
-              <p>A property you need resolved — probate, tenants, condition, timeline. As-is, in writing, with a real path forward even when that path is a referral.</p>
-            </div>
-            <a class="tlink" href="#start" data-lane="Owner or seller">Submit your property</a>
-          </div>
-          <div class="s-row reveal">
-            <span class="a-num">02</span>
-            <div>
-              <h3>Deal Finders &amp; Wholesalers</h3>
-              <p>Bring a deal we can acquire or JV. A real buyer with quick reads and honest numbers — and your fee protected in writing, every time.</p>
-            </div>
-            <a class="tlink" href="#start" data-lane="Deal finder or wholesaler">Bring a deal</a>
-          </div>
-          <div class="s-row reveal">
-            <span class="a-num">03</span>
-            <div>
-              <h3>Buyers</h3>
-              <p>Wholesale contracts and finished, permitted projects like Nelson Drive. Tell us your buy box and we will show you what actually fits it.</p>
-            </div>
-            <a class="tlink" href="#start" data-lane="Buyer">Join the buyer list</a>
-          </div>
-          <div class="s-row reveal">
-            <span class="a-num">04</span>
-            <div>
-              <h3>Capital Partners</h3>
-              <p>Project by project, defined terms, underwriting you can read, risk in plain sight. No pooled funds and no promised returns — ever.</p>
-            </div>
-            <a class="tlink" href="#start" data-lane="Capital partner">Open a conversation</a>
-          </div>
-          <div class="s-row reveal">
-            <span class="a-num">05</span>
-            <div>
-              <h3>Operators &amp; Vendors</h3>
-              <p>GCs, trades, agents, and services. We build with a bench, not a single hire — scoped budgets, real draw schedules, and repeat work for people who deliver.</p>
-            </div>
-            <a class="tlink" href="#start" data-lane="Operator or vendor">Join the bench</a>
-          </div>
-        </div>
-        <div class="kw-lane reveal">
-          <p class="kicker"><span class="k-rule"></span>LICENSED REPRESENTATION</p>
-          <p>Ready to sell at market instead? That work runs through Paolo "Apollo" Duran, California real estate salesperson, DRE #02333658, with Keller Williams East Bay — <span class="pending">KW corporate license number pending</span>. Brokerage activity and Pegasus operating activity are kept separate, on paper, always.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ============ NELSON DRIVE ============ -->
 <section class="section nelson" id="nelson">
   <div class="shell">
     <div class="nelson-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE LEDGER · CASE 01 · EL SOBRANTE, CA</p>
+        <p class="kicker"><span class="k-rule"></span>OPPORTUNITIES &amp; PROJECTS · CASE 01 · EL SOBRANTE, CA</p>
         <h2 class="h2">Nelson Drive.<br>Bought a 3/2. Sold a <span class="em">4/3.</span></h2>
       </div>
       <p class="lede reveal">A dated ranch with an underused sunroom. The plan was simple to say and hard to do: turn the dead space into a real bedroom and bathroom, gut the rest to retail, and sell to an owner-occupant.</p>
@@ -945,55 +897,63 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   </div>
 </section>
 
-<!-- ============ THE DREAMSCAPE (VISION) ============ -->
+<!-- ============ THE DREAMSCAPES VISION ============ -->
 <section class="section vision" id="vision">
   <div class="shell">
     <div class="vision-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE DREAMSCAPE · WHERE THIS GOES</p>
-        <h2 class="h2">The long game: communities <span class="em">built on craftsmanship.</span></h2>
+        <p class="kicker"><span class="k-rule"></span>THE DREAMSCAPES VISION</p>
+        <h2 class="h2">The future we are <span class="em">building toward.</span></h2>
       </div>
-      <p class="lede reveal">Every property we elevate funds the longer arc — whole neighborhoods in the classical tradition: white columns and green squares, real amenities, education and craft traditions worth keeping alive. This is the world Pegasus is building toward.</p>
+      <p class="lede reveal">Our long-term vision is to develop private, walkable residential communities inspired by classical architecture, estate neighborhoods, civic beauty, wellness, education, and a more intentional way of life.</p>
     </div>
-    <div class="vision-scroll reveal" aria-label="DreamScapes vision renders">
+    <div class="vision-scroll reveal" aria-label="Dreamscapes vision renders">
       <figure>
-        <img src="vision/aerial.webp" alt="Concept render: an aerial view of a neoclassical community across green hills at golden hour." loading="lazy" decoding="async">
-        <figcaption><span>I — THE HILLS</span><span>CONCEPT RENDER</span></figcaption>
+        <img src="vision/aerial.webp" alt="Conceptual vision render: an aerial view of a classical community across green hills at golden hour." loading="lazy" decoding="async">
+        <figcaption><span>THE HILLS</span><span>CONCEPTUAL VISION IMAGERY</span></figcaption>
       </figure>
       <figure>
-        <img src="vision/gate.webp" alt="Concept render: the gated marble entry of the community, fountain roundabout and cypress trees." loading="lazy" decoding="async">
-        <figcaption><span>II — THE GATE</span><span>CONCEPT RENDER</span></figcaption>
+        <img src="vision/boulevard.webp" alt="Conceptual vision render: a lantern-lit boulevard of columned villas at dusk." loading="lazy" decoding="async">
+        <figcaption><span>THE BOULEVARD</span><span>CONCEPTUAL VISION IMAGERY</span></figcaption>
       </figure>
       <figure>
-        <img src="vision/boulevard.webp" alt="Concept render: a lantern-lit boulevard of columned homes at dusk." loading="lazy" decoding="async">
-        <figcaption><span>III — THE BOULEVARD</span><span>CONCEPT RENDER</span></figcaption>
+        <img src="vision/lanes.webp" alt="Conceptual vision render: a walkable garden lane with olive trees and a stone fountain." loading="lazy" decoding="async">
+        <figcaption><span>GARDEN LANES</span><span>CONCEPTUAL VISION IMAGERY</span></figcaption>
       </figure>
     </div>
-    <p class="vision-note">Concept renders of the DreamScapes vision — a direction, not a current or offered project. The road there runs through disciplined deals like Nelson Drive above. <a class="tlink" href="#start" data-lane="Capital partner">Be part of the long game</a></p>
+    <p class="vision-note">Conceptual vision imagery. Long-term development direction — not a current or offered project. The road there runs through disciplined work like Nelson Drive above.</p>
+
+    <div class="elements reveal">
+      <p class="kicker" style="margin:clamp(44px,7vh,72px) 0 26px"><span class="k-rule"></span>FUTURE COMMUNITY ELEMENTS</p>
+      <div class="el-grid">
+        <figure class="el"><img src="plates/hero-day.webp" alt="" loading="lazy" decoding="async"><figcaption>Grand Arrival</figcaption></figure>
+        <figure class="el"><img src="vision/estates.webp" alt="" loading="lazy" decoding="async"><figcaption>Estate Neighborhoods</figcaption></figure>
+        <figure class="el"><img src="vision/lanes.webp" alt="" loading="lazy" decoding="async"><figcaption>Garden Lanes</figcaption></figure>
+        <figure class="el"><img src="plates/veranda-day.webp" alt="" loading="lazy" decoding="async"><figcaption>Private Commons</figcaption></figure>
+        <figure class="el"><img src="vision/forum.webp" alt="" loading="lazy" decoding="async"><figcaption>Civic Forum</figcaption></figure>
+        <figure class="el"><img src="vision/academy.webp" alt="" loading="lazy" decoding="async"><figcaption>Academy &amp; Wellness</figcaption></figure>
+        <figure class="el"><img src="vision/water.webp" alt="" loading="lazy" decoding="async"><figcaption>Water Gardens</figcaption></figure>
+        <figure class="el"><img src="vision/infra.webp" alt="" loading="lazy" decoding="async"><figcaption>Smart Infrastructure</figcaption></figure>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ============ STRATEGY LAB ============ -->
-<section class="section lab-sec" id="lab">
+<!-- ============ BUILT FOR BECOMING ============ -->
+<section class="section lab-sec" id="becoming">
   <div class="shell">
-    <div class="lab-grid">
+    <div class="pillars-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE PRODUCT LADDER</p>
-        <h2 class="h2">Run the numbers <span class="em">yourself.</span></h2>
-        <p class="lede">Five steps, from a free model you run on your own to a full written plan. Each one stands alone — you go only as far as the deal needs.</p>
-        <div class="lab-ctas">
-          <a class="btn btn-copper" href="/strategy-lab">Open the Strategy Lab</a>
-          <a class="btn btn-line" href="/peggy">Talk to PeggyAI</a>
-        </div>
-        <p class="c-note">Directional, never a valuation or an offer. PeggyAI is an AI assistant for intake and orientation — a person makes every decision.</p>
+        <p class="kicker"><span class="k-rule"></span>THE LIFESTYLE MODEL</p>
+        <h2 class="h2">Built for <span class="em">becoming.</span></h2>
       </div>
-      <ol class="ladder reveal">
-        <li><span class="rung-n">01 · SELF-SERVE</span><div><h4>Strategy Lab</h4><p>A free underwriting console you run yourself. Enter the property and the numbers; it returns a read in real time.</p></div></li>
-        <li><span class="rung-n">02 · INSTANT</span><div><h4>Instant Strategy Preview</h4><p>All-in, spread, margin, and a suggested lane. Directional, not an underwrite.</p></div></li>
-        <li><span class="rung-n">03 · HUMAN</span><div><h4>Strategy Review</h4><p>Hand the deal to a person. We ask the questions the form cannot and read the situation, not just the numbers.</p></div></li>
-        <li><span class="rung-n">04 · WRITTEN</span><div><h4>Strategy Snapshot</h4><p>A short, human assessment of the path — what the property is, what it could become, how we would approach it.</p></div></li>
-        <li><span class="rung-n">05 · BY REVIEW</span><div><h4>Deal Blueprint</h4><p>For deals that earn a full plan: scope, capital stack, construction approach, exit, and risk — commissioned by engagement.</p></div></li>
-      </ol>
+      <p class="lede reveal">The Dreamscapes vision is built around the belief that environment shapes identity — communities that support discipline, learning, health, family, leadership, and shared standards.</p>
+    </div>
+    <div class="become-grid">
+      <div class="bcard reveal"><span class="p-num">MIND</span><p>Classical learning, philosophy, business, mentorship.</p></div>
+      <div class="bcard reveal"><span class="p-num">BODY</span><p>Wellness, movement, training, nutrition, outdoor life.</p></div>
+      <div class="bcard reveal"><span class="p-num">CHARACTER</span><p>Discipline, leadership, responsibility, service.</p></div>
+      <div class="bcard reveal"><span class="p-num">COMMUNITY</span><p>Family, belonging, trust, civic life.</p></div>
     </div>
   </div>
 </section>
@@ -1076,33 +1036,27 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section start" id="start">
   <div class="shell">
     <div class="reveal">
-      <p class="kicker"><span class="k-rule"></span>GETTING STARTED</p>
-      <h2 class="h2">Three ways in. <span class="em">No wrong door.</span></h2>
+      <p class="kicker"><span class="k-rule"></span>CONTACT</p>
+      <h2 class="h2">Build with <span class="em">Pegasus.</span></h2>
     </div>
     <div class="ways">
       <div class="way-card reveal">
-        <p class="kicker"><span class="k-rule"></span>TALK TO A PERSON</p>
-        <h3>Request a Property Review</h3>
-        <p>Tell us about the property or the situation below. A person reads it and comes back with a clear, written path forward. Best when you have a specific property, a deadline, or a decision to make.</p>
-        <a class="tlink" href="#intake">Use the form below</a>
+        <p class="kicker"><span class="k-rule"></span>THE BUSINESS</p>
+        <h3>Real Estate Inquiry</h3>
+        <p>A property, a deal, a partnership, or representation. A person reads every submission and responds within two business days. You can also run your own numbers in the <a href="/strategy-lab" style="text-decoration:underline">Strategy Lab</a> or talk to <a href="/peggy" style="text-decoration:underline">PeggyAI</a> first.</p>
+        <a class="tlink" href="#intake" data-lane="">Start an inquiry</a>
       </div>
       <div class="way-card reveal">
-        <p class="kicker"><span class="k-rule"></span>RUN THE NUMBERS</p>
-        <h3>Open the Strategy Lab</h3>
-        <p>Model a deal in minutes: the all-in, the spread, and the recommended lane, before you ever talk to anyone. Best when you want to move privately at your own pace.</p>
-        <a class="tlink" href="/strategy-lab">Open Strategy Lab</a>
-      </div>
-      <div class="way-card reveal">
-        <p class="kicker"><span class="k-rule"></span>ASK IN PLAIN LANGUAGE</p>
-        <h3>Talk to PeggyAI</h3>
-        <p>Describe the deal in your own words. Peggy asks the right questions, frames the options, and routes you to the right lane. Best when you are not sure where you fit yet.</p>
-        <a class="tlink" href="/peggy">Talk to PeggyAI</a>
+        <p class="kicker"><span class="k-rule"></span>THE VISION</p>
+        <h3>Join the Vision List</h3>
+        <p>For future residents, landowners, builders, architects, and partners aligned with the Pegasus Standard — be first to hear as the Dreamscapes vision takes ground.</p>
+        <a class="tlink" href="#intake" data-lane="Future resident">Join the list</a>
       </div>
     </div>
     <div class="c-grid" id="intake-anchor">
       <div class="reveal">
-        <h2 class="h2" style="font-size:clamp(1.8rem,3.4vw,2.8rem)">Start a Property Review.</h2>
-        <p class="lede">Off-market, inherited, distressed, or simply complicated? Send it over. A person reads every submission and returns a clear, written path forward — usually within two business days.</p>
+        <h2 class="h2" style="font-size:clamp(1.8rem,3.4vw,2.8rem)">Start the conversation.</h2>
+        <p class="lede">Whether you are a property owner, investor, buyer, landowner, builder, architect, or future resident, Pegasus Dreamscapes is building toward a higher standard of real estate.</p>
         <ul class="c-direct">
           <li><span class="f-k">Email</span><span>apollo@pegasusdreamscapes.com</span></li>
           <li><span class="f-k">Phone</span><span>925-744-8525</span></li>
@@ -1118,16 +1072,18 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
         <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
         <div class="f-row">
           <div class="field">
-            <label for="f-lane">I am a…</label>
+            <label for="f-lane">Interest type</label>
             <select id="f-lane" name="lane">
               <option value="">Select one</option>
-              <option>Owner or seller</option>
-              <option>Deal finder or wholesaler</option>
               <option>Buyer</option>
-              <option>Capital partner</option>
-              <option>Operator or vendor</option>
-              <option>Agent or referral partner</option>
-              <option>Other / not sure yet</option>
+              <option>Seller</option>
+              <option>Investor</option>
+              <option>Landowner</option>
+              <option>Builder</option>
+              <option>Architect</option>
+              <option>Deal finder or wholesaler</option>
+              <option>Future resident</option>
+              <option>Other</option>
             </select>
           </div>
           <div class="field">
@@ -1147,7 +1103,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
           <input type="checkbox" id="f-consent" name="consent" required>
           <label for="f-consent">I agree to be contacted by Pegasus DreamScapes by phone, text message, or email about my inquiry. Message and data rates may apply. Consent is not a condition of any purchase, and I can opt out at any time.</label>
         </div>
-        <button class="btn submit" type="submit">Request My Review</button>
+        <button class="btn submit" type="submit">Send Inquiry</button>
         <p class="form-status" id="formStatus" role="status">Not sent — and that is deliberate. Intake goes live once our secure pipeline clears final review; nothing you typed was transmitted or stored. Reach us directly at apollo@pegasusdreamscapes.com or 925-744-8525.</p>
       </form>
     </div>
@@ -1166,7 +1122,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
     </svg>
     <div class="f-brand">
       <div class="b-name">PEGASUS DREAMSCAPES</div>
-      <div class="b-tag">DEAL STRATEGY · EAST BAY</div>
+      <div class="b-tag">REAL ESTATE FOR A HIGHER STANDARD OF LIVING</div>
       <ul class="creed">
         <li>Clarity over confusion.</li>
         <li>Discipline over hype.</li>
@@ -1177,19 +1133,18 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       </ul>
     </div>
     <ul class="f-links">
-      <li><a href="#pillars">What We Do</a></li>
-      <li><a href="#serve">Who We Serve</a></li>
-      <li><a href="#nelson">Nelson Drive</a></li>
-      <li><a href="#vision">The DreamScape</a></li>
-      <li><a href="#lab">Strategy Lab</a></li>
-      <li><a href="#start">Start a Review</a></li>
+      <li><a href="#today">Company</a></li>
+      <li><a href="#standard">The Pegasus Standard</a></li>
+      <li><a href="#nelson">Opportunities</a></li>
+      <li><a href="#vision">Dreamscapes Vision</a></li>
+      <li><a href="#start">Contact</a></li>
       <li><a href="mailto:apollo@pegasusdreamscapes.com">apollo@pegasusdreamscapes.com</a></li>
       <li><a href="tel:+19257448525">925-744-8525</a></li>
     </ul>
   </div>
   <div class="f-compliance">
-    <p>Pegasus DreamScapes Corp. is a real estate operating company. It is not a brokerage. Licensed real estate activity is performed by Paolo "Apollo" Duran, California real estate salesperson, DRE #02333658, with Keller Williams East Bay — <span class="pending">KW corporate license number pending</span>. Brokerage activity and Pegasus operating activity are separated in role, record, and compensation.</p>
-    <p>Nothing on this site is an offer of securities, an offer to buy or sell real property, a promise of returns, or a valuation. Capital relationships are private and by review only. Nelson Drive figures are from the closing statement and project records, rounded. PeggyAI is an AI assistant used for intake and orientation; a person reads every submission.</p>
+    <p>Pegasus Dreamscapes is an operating real estate company building toward a higher standard of living. It is not a brokerage. Licensed real estate activity is performed by Paolo "Apollo" Duran, California real estate salesperson, DRE #02333658, with Keller Williams East Bay — <span class="pending">KW corporate license number pending</span>. Brokerage activity and Pegasus operating activity are separated in role, record, and compensation.</p>
+    <p>Nothing on this site is an offer of securities, an offer to buy or sell real property, a promise of returns, or a valuation. Capital relationships are private and by review only. Dreamscapes vision imagery is conceptual and represents long-term development direction, not a current or offered project. Nelson Drive figures are from the closing statement and project records, rounded. PeggyAI is an AI assistant used for intake and orientation; a person reads every submission.</p>
     <p>NAR · CAR · Equal Housing Opportunity</p>
   </div>
   <div class="f-legal">
@@ -1472,7 +1427,7 @@ function measure(){
   M.max=docEl.scrollHeight-M.vh;
   M.hero=heroEl.offsetHeight;
   M.stTop=topOf(statement);M.stH=statement.offsetHeight;
-  M.srTop=topOf(srows);M.srH=srows.offsetHeight;
+  if(srows){M.srTop=topOf(srows);M.srH=srows.offsetHeight;}
   M.pTop=topOf(pSection);M.pH=pSection.offsetHeight;
   M.chTop=topOf(chapterSec);M.chH=chapterSec.offsetHeight;
 }
@@ -1548,8 +1503,8 @@ function frame(t){
     var lit=reduceMotion?guardWords.length:Math.floor(sp*guardWords.length*1.25);
     guardWords.forEach(function(w,i){w.classList.toggle("lit",i<lit);});
   }
-  /* serve rail */
-  if(y>M.srTop-M.vh&&y<M.srTop+M.srH){
+  /* serve rail (optional section) */
+  if(srows&&y>M.srTop-M.vh&&y<M.srTop+M.srH){
     srail.style.transform="scaleY("+clamp01((y+M.vh*.78-M.srTop)/M.srH)+")";
   }
   /* passage — start frame preload one viewport out (active theme first) */
@@ -1604,7 +1559,7 @@ var cntIO=new IntersectionObserver(function(entries){
 Array.prototype.forEach.call(document.querySelectorAll(".count"),function(el){cntIO.observe(el);});
 
 /* ---------- scrollspy ---------- */
-var spyIds=["pillars","passage","serve","nelson","start"];
+var spyIds=["today","standard","nelson","vision","start"];
 var spyLinks={};
 Array.prototype.forEach.call(document.querySelectorAll('.nav-links a'),function(a){
   spyLinks[a.getAttribute("href").slice(1)]=a;});
