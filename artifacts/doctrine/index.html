@@ -422,6 +422,23 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .vision .tlink{color:var(--cine-fg)}
 @media (max-width:1080px){.vision-head{grid-template-columns:1fr;align-items:start}}
 
+
+/* nelson cinematic case tour (fine pointers) */
+.tour{position:relative;height:520vh}
+.t-sticky{position:sticky;top:0;height:100vh;height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden}
+.t-stage{position:relative;height:min(74vh,74svh);aspect-ratio:4/5;margin:0}
+.t-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:1px solid var(--cine-rule);opacity:0;transition:opacity .45s ease,transform .8s ease;background:var(--cine-bg)}
+.t-stage img.live{opacity:1}
+.t-meter{display:flex;align-items:center;gap:18px;width:min(620px,86vw)}
+.t-label{font-family:var(--carved);font-weight:600;font-size:.62rem;letter-spacing:.36em;text-transform:uppercase;color:var(--cine-fg);white-space:nowrap;min-width:11em}
+.t-track{flex:1;height:2px;background:var(--cine-rule);position:relative}
+.t-track i{position:absolute;left:0;top:0;bottom:0;background:var(--fig-copper);width:0}
+.t-count{font-family:var(--carved);font-size:.62rem;letter-spacing:.3em;color:var(--cine-faint);font-variant-numeric:tabular-nums}
+.t-hint{font-family:var(--carved);font-size:.56rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cine-faint)}
+@media (pointer:coarse){.tour{display:none}}
+@media (prefers-reduced-motion:reduce){.tour{display:none}}
+@media (pointer:fine) and (prefers-reduced-motion:no-preference){.case-strip{display:none}}
+
 /* ---------- strategy lab ---------- */
 .lab-sec{background:var(--base-bg)}
 .lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(36px,6vw,96px);align-items:start}
@@ -867,6 +884,21 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       </div>
     </div>
 
+    <div class="tour" id="tour" aria-label="Nelson Drive case file — scroll tour">
+      <div class="t-sticky">
+        <figure class="t-stage">
+          <img id="tourA" class="live" src="nelson/slide-01.webp" alt="Nelson Drive case file page" decoding="async">
+          <img id="tourB" src="nelson/slide-02.webp" alt="" decoding="async" aria-hidden="true">
+        </figure>
+        <div class="t-meter" aria-hidden="true">
+          <span class="t-label" id="tourLabel">THE FILE</span>
+          <span class="t-track"><i id="tourBar"></i></span>
+          <span class="t-count" id="tourCount">01 / 18</span>
+        </div>
+        <p class="t-hint" aria-hidden="true">SCROLL — THE CASE FILE, PAGE BY PAGE · REAL PHOTOGRAPHY</p>
+      </div>
+    </div>
+
     <div class="case-strip reveal">
       <div class="cs-head">
         <h3 style="font-size:clamp(1.3rem,2.2vw,1.8rem)">The case file, page by page.</h3>
@@ -909,6 +941,10 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
     </div>
     <div class="vision-scroll reveal" aria-label="Dreamscapes vision renders">
       <figure>
+        <img src="vision/gate.webp" alt="Conceptual vision render: the gated marble arrival with statue niches and fountain roundabout." loading="lazy" decoding="async">
+        <figcaption><span>THE ARRIVAL</span><span>CONCEPTUAL VISION IMAGERY</span></figcaption>
+      </figure>
+      <figure>
         <img src="vision/aerial.webp" alt="Conceptual vision render: an aerial view of a classical community across green hills at golden hour." loading="lazy" decoding="async">
         <figcaption><span>THE HILLS</span><span>CONCEPTUAL VISION IMAGERY</span></figcaption>
       </figure>
@@ -926,7 +962,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
     <div class="elements reveal">
       <p class="kicker" style="margin:clamp(44px,7vh,72px) 0 26px"><span class="k-rule"></span>FUTURE COMMUNITY ELEMENTS</p>
       <div class="el-grid">
-        <figure class="el"><img src="plates/hero-day.webp" alt="" loading="lazy" decoding="async"><figcaption>Grand Arrival</figcaption></figure>
+        <figure class="el"><img src="vision/gate.webp" alt="" loading="lazy" decoding="async"><figcaption>Grand Arrival</figcaption></figure>
         <figure class="el"><img src="vision/estates.webp" alt="" loading="lazy" decoding="async"><figcaption>Estate Neighborhoods</figcaption></figure>
         <figure class="el"><img src="vision/lanes.webp" alt="" loading="lazy" decoding="async"><figcaption>Garden Lanes</figcaption></figure>
         <figure class="el"><img src="plates/veranda-day.webp" alt="" loading="lazy" decoding="async"><figcaption>Private Commons</figcaption></figure>
@@ -1420,6 +1456,27 @@ var guardWords=(function(){
 var heroLayers=Array.prototype.slice.call(document.querySelectorAll(".hero-art [data-px]"));
 var heroPlateImgs=Array.prototype.slice.call(document.querySelectorAll(".hero-plate img"));
 
+/* nelson case tour */
+var tourEl=document.getElementById("tour"),tourA=document.getElementById("tourA"),tourB=document.getElementById("tourB");
+var tourLabel=document.getElementById("tourLabel"),tourBar=document.getElementById("tourBar"),tourCount=document.getElementById("tourCount");
+var TOUR_N=18,tourLabels=["THE FILE","THE THESIS","BY THE NUMBERS","THE OPERATOR","CURB APPEAL","THE KITCHEN","LIVING ROOM","PRIMARY SUITE","PRIMARY BATH","BATH, IN DETAIL","SECOND SUITE","SECOND BATH","HALL BATH","HOME OFFICE","LAUNDRY","THE PLAN: 3/2 \u2192 4/3","THE MARGIN","LET\u2019S TALK"];
+var tourIdx=-1,tourFrontA=true,tourImgs=[],tourWarm=false;
+function tourSrc(i){return "nelson/slide-"+("0"+(i+1)).slice(-2)+".webp";}
+function warmTour(){
+  if(tourWarm||!tourEl)return;tourWarm=true;
+  for(var i=0;i<TOUR_N;i++){var im=new Image();im.src=tourSrc(i);tourImgs.push(im);}
+}
+function tourGo(i){
+  if(!tourEl||i===tourIdx)return;
+  tourIdx=i;
+  var front=tourFrontA?tourA:tourB, back=tourFrontA?tourB:tourA;
+  back.src=tourSrc(i);
+  back.classList.add("live");front.classList.remove("live");
+  tourFrontA=!tourFrontA;
+  tourLabel.textContent=tourLabels[i]||"";
+  tourBar.style.width=(100*(i+1)/TOUR_N)+"%";
+  tourCount.textContent=("0"+(i+1)).slice(-2)+" / "+TOUR_N;
+}
 var M={};
 function topOf(el){return el.getBoundingClientRect().top+window.scrollY;}
 function measure(){
@@ -1430,6 +1487,7 @@ function measure(){
   if(srows){M.srTop=topOf(srows);M.srH=srows.offsetHeight;}
   M.pTop=topOf(pSection);M.pH=pSection.offsetHeight;
   M.chTop=topOf(chapterSec);M.chH=chapterSec.offsetHeight;
+  if(tourEl){M.tTop=topOf(tourEl);M.tH=tourEl.offsetHeight;}
 }
 measure();
 function clamp01(v){return v<0?0:v>1?1:v;}
@@ -1512,6 +1570,14 @@ function frame(t){
   if(y>M.pTop-M.vh&&y<M.pTop+M.pH){
     pProg=reduceMotion?.42:clamp01((y-M.pTop)/(M.pH-M.vh));
     pDraw(t);passageUI();
+  }
+  /* nelson tour */
+  if(tourEl){
+    if(y>M.tTop-M.vh*1.5)warmTour();
+    if(y>M.tTop-M.vh&&y<M.tTop+M.tH){
+      var tp=clamp01((y-M.tTop)/(M.tH-M.vh));
+      tourGo(Math.min(TOUR_N-1,Math.floor(tp*TOUR_N)));
+    }
   }
   /* chapter parallax */
   if(chapterImg&&!reduceMotion&&y>M.chTop-M.vh&&y<M.chTop+M.chH){

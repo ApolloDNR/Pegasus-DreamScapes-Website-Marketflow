@@ -29,8 +29,9 @@ jobs:
             if [ -s "$dir/$2" ]; then echo "have $2"; else
               curl -fsSL --retry 3 "$base/$1" -o "$dir/$2"; echo "fetched $2"; fi
           }
-          # hero pair: the gated arrival (day = Scenario master, night = matched dusk)
-          fetch hf_20260707_070908_69d3a072-1ef2-4151-870c-e141f696c318_min.webp hero-night.webp
+          # hero pair: the villa street, realistic estate photography (day/night)
+          fetch hf_20260706_204200_865e834f-033a-47b3-be26-51877f8a98e3_min.webp hero-day.webp
+          fetch hf_20260706_204451_ad33bd4d-2627-45a0-a3ed-9c72585762e2_min.webp hero-night.webp
           fetch hf_20260706_204202_67799cc6-5b95-49b0-8ebe-4bfde4484dce_min.webp veranda-day.webp
           fetch hf_20260706_204454_9e479f59-012d-4441-b071-8c940016c6c2_min.webp veranda-night.webp
           # east bay + carved record pairs
@@ -51,9 +52,6 @@ jobs:
           vfetch "https://cdn.cloud.scenario.com/assets-transform/asset_kse575VzmxsRcRTMpgTPwrur?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfa3NlNTc1VnpteHNSY1JUTXBnVFB3cnVyP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=UVYklkOwx1tz3YPaMr2B-EwOeRrjU0dZ0~AZv-5pA1tmLNwkb3vsILn0GGj2AkmkbJa4Q~SuNf4dg09JYVdVIY4Oheh09ovT8CDn4OObTZdw-7VaBwReXMY-zu6CoWVUO7-uDKfokUOaV4pGFib5Sx6lq~kQ2YEpJgrUdQUmA4Isz7PVsRl5Vai6kwXovhK9mB-3kZax4WfXFYQNpdpDytaRVlwiFUNGjH8TjO9~G4MGQe4BFFbytYkOO89PpKnOHSu3tQq2EkZBSNypyztXOe7dStmc0ouDxW8AT9dd1EjrqSYa99FJyl-8nCQfLc8PaVO1GO20XneD4~zrIjnweQ__" aerial.webp
           vfetch "https://cdn.cloud.scenario.com/assets-transform/asset_2a3t5WdJm32LLssrPakVkuvA?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfMmEzdDVXZEptMzJMTHNzclBha1ZrdXZBP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=FUKyWnv52kF2XKMifjbjDW60Vz--x33CRXBHm-WExnTmNr-pPjU2Tnsk3kdMLKRR1NwaP-fWMbPfWTnLPNMMelxLoyt24eMWTrRhxImjbiQnNu1Vs-26HU1i~q42J5XXRHFLvcgamlsl6LwtJEOPgIYsJfrC8xJ7i29UBl-kC5PDIDQNlXQ4oyho8u-zsOIj-fAAKjRCiw1KycFAcsNlwvd~3X3Xya4A78Ge9I1B2GeP-H~~no~HOMxrVniebZDYM413OJJlOxKRFSXOrIvdqqnkBw1TFznOmmATTUnp7RNOafdmm~3U3G-WDbMJhzvYzAZ8Dk4X~93QwDdINJmR3A__" gate.webp
           vfetch "https://cdn.cloud.scenario.com/assets-transform/asset_Eh1bnHxYNqnGALraJXKehs3j?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfRWgxYm5IeFlOcW5HQUxyYUpYS2VoczNqP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=XiDa6sC8GMbo-d6XRGthEdp2Cdha~GFUu~ZR1iIXrl6t79gXWHkB5CB2rSkvXVhfirhrYWAN7KuyygeyGJjI1-1c1Bg5NqteEMq2VtfwtigS8BEkJGMD~bbeyePmZnrmxmXIaLDtKuFcU85KfB8H1YAZqpsiR4QC1DxQwmz6JnZQh6YlZQ9iAINrupDrVHP4TY3lPw5xWZ2vuUFnYgYtr8ZeGbmoUT-WPATmE7WL9iD8pO1NrET5ZIWtz6LpD3RYigefBoUwWxRztJgkOp9qoJAc8NsbJ2-LrlF0iSGW5tsmlFWItO8zWmVgtqI2DNmOyQWswqEcG6m8MIdIBFVEqQ__" boulevard.webp
-          if [ ! -s "$dir/hero-day.webp" ]; then
-            curl -fsSL --retry 3 "https://cdn.cloud.scenario.com/assets-transform/asset_2a3t5WdJm32LLssrPakVkuvA?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfMmEzdDVXZEptMzJMTHNzclBha1ZrdXZBP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=FUKyWnv52kF2XKMifjbjDW60Vz--x33CRXBHm-WExnTmNr-pPjU2Tnsk3kdMLKRR1NwaP-fWMbPfWTnLPNMMelxLoyt24eMWTrRhxImjbiQnNu1Vs-26HU1i~q42J5XXRHFLvcgamlsl6LwtJEOPgIYsJfrC8xJ7i29UBl-kC5PDIDQNlXQ4oyho8u-zsOIj-fAAKjRCiw1KycFAcsNlwvd~3X3Xya4A78Ge9I1B2GeP-H~~no~HOMxrVniebZDYM413OJJlOxKRFSXOrIvdqqnkBw1TFznOmmATTUnp7RNOafdmm~3U3G-WDbMJhzvYzAZ8Dk4X~93QwDdINJmR3A__" -o "$dir/hero-day.webp"; echo "fetched hero-day.webp"
-          fi
           # dreamscapes element tiles
           vfetch "$base/hf_20260706_204200_865e834f-033a-47b3-be26-51877f8a98e3_min.webp" estates.webp
           vfetch "$base/hf_20260707_070910_d9f0124f-46ca-4e10-b290-35149748d2c8_min.webp" lanes.webp
