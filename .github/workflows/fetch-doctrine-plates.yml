@@ -29,23 +29,31 @@ jobs:
             if [ -s "$dir/$2" ]; then echo "have $2"; else
               curl -fsSL --retry 3 "$base/$1" -o "$dir/$2"; echo "fetched $2"; fi
           }
-          # night plates
-          fetch hf_20260706_062416_670bdc4c-b2f3-4c06-9dbd-63c1db909763_min.webp hero-temple.webp
-          fetch hf_20260706_045424_e13964d0-cbce-4152-90ec-a0e232af646d_min.webp corridor.webp
-          fetch hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp bay.webp
-          fetch hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp stone.webp
-          fetch hf_20260706_045434_f9edcb0b-5118-4096-b256-3161c0f1b0c2_min.webp doorway.webp
-          # day plates
-          fetch hf_20260706_154243_68efe569-aa30-48c0-9d9f-639dc3bf6744_min.webp bay-day.webp
-          fetch hf_20260706_154246_c1534da8-70fe-45c3-89aa-c7c87e24b085_min.webp stone-day.webp
-          # living-community plates (day)
+          # community pairs (same architecture, day/night)
           fetch hf_20260706_204200_865e834f-033a-47b3-be26-51877f8a98e3_min.webp hero-day.webp
+          fetch hf_20260706_204451_ad33bd4d-2627-45a0-a3ed-9c72585762e2_min.webp hero-night.webp
           fetch hf_20260706_204202_67799cc6-5b95-49b0-8ebe-4bfde4484dce_min.webp veranda-day.webp
+          fetch hf_20260706_204454_9e479f59-012d-4441-b071-8c940016c6c2_min.webp veranda-night.webp
           fetch hf_20260706_204204_4f753dff-3382-4f17-b55d-8f696e7e61e1_min.webp portico-day.webp
-          # walk footage: 720p ambient + 2K masters for frame extraction
-          fetch hf_20260706_063350_f1c73b33-552b-4618-a6f9-86141d3ae04f.mp4 passage-walk.mp4
-          fetch hf_20260706_154300_f02d662e-0904-432a-993f-04d3e709b2f1.mp4 walk-night-2k.mp4
-          fetch hf_20260706_160221_608c1245-b5db-4d2c-b2bb-378a8681b7ad.mp4 walk-day-2k.mp4
+          fetch hf_20260706_204457_68fc1fa8-15d4-47ed-9e75-60244b811f97_min.webp portico-night.webp
+          # east bay + carved record pairs
+          fetch hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp bay.webp
+          fetch hf_20260706_154243_68efe569-aa30-48c0-9d9f-639dc3bf6744_min.webp bay-day.webp
+          fetch hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp stone.webp
+          fetch hf_20260706_154246_c1534da8-70fe-45c3-89aa-c7c87e24b085_min.webp stone-day.webp
+          # veranda walk footage: 720p ambient + 2K masters
+          fetch hf_20260707_042646_3bd7c190-7503-4158-88bb-ebeb02f6e155.mp4 passage-walk.mp4
+          fetch hf_20260707_043046_a5a7f8e2-cccf-4849-8596-14bce0f8eb85.mp4 walk-night-2k.mp4
+          fetch hf_20260707_042652_9274f0a4-8e7e-4631-8174-378cb49a1bd0.mp4 walk-day-2k.mp4
+          # DreamScapes vision renders (Scenario, signed URLs)
+          vfetch() {
+            if [ -s "artifacts/doctrine/vision/$2" ]; then echo "have $2"; else
+              curl -fsSL --retry 3 "$1" -o "artifacts/doctrine/vision/$2"; echo "fetched $2"; fi
+          }
+          mkdir -p artifacts/doctrine/vision
+          vfetch "https://cdn.cloud.scenario.com/assets-transform/asset_kse575VzmxsRcRTMpgTPwrur?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfa3NlNTc1VnpteHNSY1JUTXBnVFB3cnVyP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=UVYklkOwx1tz3YPaMr2B-EwOeRrjU0dZ0~AZv-5pA1tmLNwkb3vsILn0GGj2AkmkbJa4Q~SuNf4dg09JYVdVIY4Oheh09ovT8CDn4OObTZdw-7VaBwReXMY-zu6CoWVUO7-uDKfokUOaV4pGFib5Sx6lq~kQ2YEpJgrUdQUmA4Isz7PVsRl5Vai6kwXovhK9mB-3kZax4WfXFYQNpdpDytaRVlwiFUNGjH8TjO9~G4MGQe4BFFbytYkOO89PpKnOHSu3tQq2EkZBSNypyztXOe7dStmc0ouDxW8AT9dd1EjrqSYa99FJyl-8nCQfLc8PaVO1GO20XneD4~zrIjnweQ__" aerial.webp
+          vfetch "https://cdn.cloud.scenario.com/assets-transform/asset_2a3t5WdJm32LLssrPakVkuvA?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfMmEzdDVXZEptMzJMTHNzclBha1ZrdXZBP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=FUKyWnv52kF2XKMifjbjDW60Vz--x33CRXBHm-WExnTmNr-pPjU2Tnsk3kdMLKRR1NwaP-fWMbPfWTnLPNMMelxLoyt24eMWTrRhxImjbiQnNu1Vs-26HU1i~q42J5XXRHFLvcgamlsl6LwtJEOPgIYsJfrC8xJ7i29UBl-kC5PDIDQNlXQ4oyho8u-zsOIj-fAAKjRCiw1KycFAcsNlwvd~3X3Xya4A78Ge9I1B2GeP-H~~no~HOMxrVniebZDYM413OJJlOxKRFSXOrIvdqqnkBw1TFznOmmATTUnp7RNOafdmm~3U3G-WDbMJhzvYzAZ8Dk4X~93QwDdINJmR3A__" gate.webp
+          vfetch "https://cdn.cloud.scenario.com/assets-transform/asset_Eh1bnHxYNqnGALraJXKehs3j?p=100&format=webp&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uY2xvdWQuc2NlbmFyaW8uY29tL2Fzc2V0cy10cmFuc2Zvcm0vYXNzZXRfRWgxYm5IeFlOcW5HQUxyYUpYS2VoczNqP3A9MTAwJmZvcm1hdD13ZWJwKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc4NDA3MzU5OX19fV19&Key-Pair-Id=K36FIAB9LE2OLR&Signature=XiDa6sC8GMbo-d6XRGthEdp2Cdha~GFUu~ZR1iIXrl6t79gXWHkB5CB2rSkvXVhfirhrYWAN7KuyygeyGJjI1-1c1Bg5NqteEMq2VtfwtigS8BEkJGMD~bbeyePmZnrmxmXIaLDtKuFcU85KfB8H1YAZqpsiR4QC1DxQwmz6JnZQh6YlZQ9iAINrupDrVHP4TY3lPw5xWZ2vuUFnYgYtr8ZeGbmoUT-WPATmE7WL9iD8pO1NrET5ZIWtz6LpD3RYigefBoUwWxRztJgkOp9qoJAc8NsbJ2-LrlF0iSGW5tsmlFWItO8zWmVgtqI2DNmOyQWswqEcG6m8MIdIBFVEqQ__" boulevard.webp
           ls -la "$dir"
       - name: Extract walk frames
         run: |
@@ -73,6 +81,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add artifacts/doctrine/plates
+          git add artifacts/doctrine/plates artifacts/doctrine/vision
           git commit -m "Vendor day/night doctrine plates and 2K walk frames" || echo "nothing to commit"
           git push

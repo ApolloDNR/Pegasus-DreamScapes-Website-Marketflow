@@ -383,6 +383,22 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .case-scroll img{width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid var(--cine-rule);background:var(--cine-bg)}
 .cs-hint{font-family:var(--carved);font-size:.6rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cine-faint)}
 
+/* ---------- vision (the dreamscape) ---------- */
+.vision{background:var(--cine-bg);color:var(--cine-fg);overflow:hidden}
+.vision-head{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:end;margin-bottom:clamp(44px,6vh,72px)}
+.vision-head>*{min-width:0}
+.vision-scroll{display:flex;gap:clamp(16px,2vw,28px);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:20px;
+  scrollbar-width:thin;scrollbar-color:var(--cine-faint) transparent;-webkit-overflow-scrolling:touch}
+.vision-scroll::-webkit-scrollbar{height:4px}
+.vision-scroll::-webkit-scrollbar-thumb{background:var(--cine-faint)}
+.vision-scroll figure{flex:0 0 auto;width:clamp(300px,74vw,1080px);scroll-snap-align:center;margin:0;position:relative}
+.vision-scroll img{width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--cine-rule);background:var(--cine-bg-2)}
+.vision-scroll figcaption{display:flex;justify-content:space-between;gap:16px;padding-top:14px;font-family:var(--carved);
+  font-size:.6rem;letter-spacing:.34em;text-transform:uppercase;color:var(--cine-faint)}
+.vision-note{margin-top:22px;font-size:.8rem;color:var(--cine-faint);line-height:1.8;max-width:52em}
+.vision .tlink{color:var(--cine-fg)}
+@media (max-width:1080px){.vision-head{grid-template-columns:1fr;align-items:start}}
+
 /* ---------- strategy lab ---------- */
 .lab-sec{background:var(--base-bg)}
 .lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(36px,6vw,96px);align-items:start}
@@ -593,8 +609,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <canvas class="hero-stars" id="stars" aria-hidden="true"></canvas>
 
   <div class="hero-plate" aria-hidden="true">
-    <img class="tp night" src="plates/hero-temple.webp" alt="" decoding="async" fetchpriority="high">
-    <img class="tp day" src="plates/temple-day.webp" alt="" decoding="async" fetchpriority="high">
+    <img class="tp night" src="plates/hero-night.webp" alt="" decoding="async" fetchpriority="high">
+    <img class="tp day" src="plates/hero-day.webp" alt="" decoding="async" fetchpriority="high">
     <div class="p-tint"></div>
   </div>
 
@@ -782,8 +798,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
             <rect x="264" y="290" width="72" height="510" fill="#C87A3A" opacity="0.65"/>
             <rect x="284" y="290" width="32" height="510" fill="#E8B77D" opacity="0.6"/>
           </svg>
-          <img class="tp night" src="plates/doorway.webp" alt="" loading="lazy" decoding="async">
-          <img class="tp day" src="plates/doorway-day.webp" alt="" loading="lazy" decoding="async">
+          <img class="tp night" src="plates/portico-night.webp" alt="" loading="lazy" decoding="async">
+          <img class="tp day" src="plates/portico-day.webp" alt="" loading="lazy" decoding="async">
           <div class="tint"></div>
         </div>
       </div>
@@ -929,6 +945,34 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   </div>
 </section>
 
+<!-- ============ THE DREAMSCAPE (VISION) ============ -->
+<section class="section vision" id="vision">
+  <div class="shell">
+    <div class="vision-head">
+      <div class="reveal">
+        <p class="kicker"><span class="k-rule"></span>THE DREAMSCAPE · WHERE THIS GOES</p>
+        <h2 class="h2">The long game: communities <span class="em">built on craftsmanship.</span></h2>
+      </div>
+      <p class="lede reveal">Every property we elevate funds the longer arc — whole neighborhoods in the classical tradition: white columns and green squares, real amenities, education and craft traditions worth keeping alive. This is the world Pegasus is building toward.</p>
+    </div>
+    <div class="vision-scroll reveal" aria-label="DreamScapes vision renders">
+      <figure>
+        <img src="vision/aerial.webp" alt="Concept render: an aerial view of a neoclassical community across green hills at golden hour." loading="lazy" decoding="async">
+        <figcaption><span>I — THE HILLS</span><span>CONCEPT RENDER</span></figcaption>
+      </figure>
+      <figure>
+        <img src="vision/gate.webp" alt="Concept render: the gated marble entry of the community, fountain roundabout and cypress trees." loading="lazy" decoding="async">
+        <figcaption><span>II — THE GATE</span><span>CONCEPT RENDER</span></figcaption>
+      </figure>
+      <figure>
+        <img src="vision/boulevard.webp" alt="Concept render: a lantern-lit boulevard of columned homes at dusk." loading="lazy" decoding="async">
+        <figcaption><span>III — THE BOULEVARD</span><span>CONCEPT RENDER</span></figcaption>
+      </figure>
+    </div>
+    <p class="vision-note">Concept renders of the DreamScapes vision — a direction, not a current or offered project. The road there runs through disciplined deals like Nelson Drive above. <a class="tlink" href="#start" data-lane="Capital partner">Be part of the long game</a></p>
+  </div>
+</section>
+
 <!-- ============ STRATEGY LAB ============ -->
 <section class="section lab-sec" id="lab">
   <div class="shell">
@@ -986,6 +1030,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
           <li><span class="f-k">Ground</span><span class="f-v">East Bay — Contra Costa &amp; Alameda County</span></li>
           <li><span class="f-k">Method</span><span class="f-v">Written read · chosen lane · terms · reviewed execution</span></li>
           <li><span class="f-k">Response</span><span class="f-v">A person reads every submission — within two business days</span></li>
+          <li><span class="f-k">The long game</span><span class="f-v">Communities built on craftsmanship — classical architecture, elevated neighborhoods</span></li>
         </ul>
       </div>
     </div>
@@ -1013,9 +1058,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       <rect x="760" y="330" width="80" height="330" fill="#E8B77D" opacity="0.45"/>
       <polygon points="560,900 720,660 880,660 1040,900" fill="#C87A3A" opacity="0.08"/>
     </svg>
-    <img id="chapterImg" class="tp night" src="plates/corridor.webp" alt="A monumental colonnade at night with a doorway glowing warm at its end." loading="lazy" decoding="async">
-    <img id="chapterImgDay" class="tp day" src="plates/corridor-day.webp" alt="The same colonnade at bright morning, sunlight streaming between the columns." loading="lazy" decoding="async">
-    <video id="chVideo" muted loop playsinline preload="metadata" poster="plates/corridor.webp" aria-hidden="true">
+    <img id="chapterImg" class="tp night" src="plates/veranda-night.webp" alt="A white-columned veranda at dusk, porch lanterns glowing, garden square beyond." loading="lazy" decoding="async">
+    <img id="chapterImgDay" class="tp day" src="plates/veranda-day.webp" alt="The same veranda at golden morning, sun on the white columns and the green square beyond." loading="lazy" decoding="async">
+    <video id="chVideo" muted loop playsinline preload="metadata" poster="plates/veranda-night.webp" aria-hidden="true">
       <source src="plates/passage-walk.mp4" type="video/mp4">
     </video>
     <div class="tint"></div>
@@ -1135,6 +1180,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       <li><a href="#pillars">What We Do</a></li>
       <li><a href="#serve">Who We Serve</a></li>
       <li><a href="#nelson">Nelson Drive</a></li>
+      <li><a href="#vision">The DreamScape</a></li>
       <li><a href="#lab">Strategy Lab</a></li>
       <li><a href="#start">Start a Review</a></li>
       <li><a href="mailto:apollo@pegasusdreamscapes.com">apollo@pegasusdreamscapes.com</a></li>
