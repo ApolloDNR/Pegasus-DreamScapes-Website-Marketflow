@@ -15,19 +15,19 @@ generated plates 2K (2752×1536).
 | The Estate at Golden Hour (`estate-sunset`, single) | `313b963b` | — | Signature Gallery + social card |
 | The Sunset Gate (`gate-sunset`, single) | `b3970b92` | — | Studio mock gallery |
 | The Estate Street (villa street, retired from hero) | `865e834f` | `ad33bd4d` | — held in `plates/` |
-| The Veranda (columns + garden square) | `67799cc6` | `9e479f59` | Lane card 01 · Studio mockups · Villa Aurelia · Door chapter |
+| The Loggia (colonnade over the fountain garden) | `19646bf7` | `02173e09` | Lane card 01 · Studio mockups · Villa Aurelia · Private Commons · Door chapter |
 | The Columns (Corinthian macro detail) | `eed249dd` | `6d791a90` | Pegasus Standard strip |
 | The Carved Record (stone) | `c1534da8` | `064bcda5` | Lane card 03 · Nelson ledger slab |
 | The East Bay (aerial) | `68efe569` | `04b667fd` | Operator |
 
 ## The Passage footage (scroll-scrubbed)
 
-Two Seedance 2.0 dollies along the same veranda, upscaled to 2K before
-extraction (frames at 1600px, 6 fps, 48/set):
+Two Seedance 2.0 dollies along the loggia colonnade of the sunset world,
+upscaled to 2K before extraction (frames at 1600px, 6 fps, 48/set):
 
-- Day walk `7d481b97` → 2K master `9274f0a4` → `plates/walk-day/`
-- Night walk `3bd7c190` → 2K master `a5a7f8e2` → `plates/walk-night/`
-- `plates/passage-walk.mp4` = night veranda walk 720p (ambient chapter video)
+- Day walk `d2b12cdc` → 2K master → `plates/walk2-day/`
+- Night walk `4b37f230` → 2K master → `plates/walk2-night/`
+- `plates/colonnade-walk.mp4` = night loggia walk 720p (ambient door-chapter video)
 - Hero ambient dolly (v15): Seedance `b1a6cc62` → 2K upscale `271a05e3` →
   CI-transcoded `plates/hero-loop.mp4` (1920px h264, light-theme hero only)
 

@@ -32,8 +32,9 @@ jobs:
           # hero pair: the villa street, realistic estate photography (day/night)
           fetch hf_20260706_204200_865e834f-033a-47b3-be26-51877f8a98e3_min.webp hero-day.webp
           fetch hf_20260706_204451_ad33bd4d-2627-45a0-a3ed-9c72585762e2_min.webp hero-night.webp
-          fetch hf_20260706_204202_67799cc6-5b95-49b0-8ebe-4bfde4484dce_min.webp veranda-day.webp
-          fetch hf_20260706_204454_9e479f59-012d-4441-b071-8c940016c6c2_min.webp veranda-night.webp
+          # the loggia pair (v16, replaces the veranda across the site)
+          fetch hf_20260708_151606_19646bf7-a6cc-46c0-a36d-d4f7551916f6_min.webp loggia-day.webp
+          fetch hf_20260708_151721_02173e09-6ddc-4247-a632-3b2284882dd3_min.webp loggia-night.webp
           # east bay + carved record pairs
           fetch hf_20260706_040841_04b667fd-09a2-44fc-bffc-3b0121041527_min.webp bay.webp
           fetch hf_20260706_154243_68efe569-aa30-48c0-9d9f-639dc3bf6744_min.webp bay-day.webp

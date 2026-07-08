@@ -1,12 +1,18 @@
-# PEGASUS DREAMSCAPES — MASTER ART DIRECTION (v13, binding)
+# PEGASUS DREAMSCAPES — MASTER ART DIRECTION (v16, binding)
 
-**v13 rebalance:** realistic estate photography (the villa-street world) anchors
-every operating section — hero, four lanes, studio mockups, signature gallery.
-The marble master-plan renders below appear ONLY in the labeled Dreamscapes
-Vision chapter and concept tiles. New shots must reference the villa-street
-hero (`865e834f`) for the realistic world, or an existing vision render for
-the concept world.
+**v16 world:** every generated asset on the site now lives in ONE place at ONE
+hour — **the sunset boulevard world** (hero anchor job `56060a6a`, derived from
+the founder's vision-boulevard render). True classical marble architecture —
+Corinthian villas, the domed rotunda, gated arrivals, garden loggias — shot as
+photorealistic luxury real-estate photography at golden sunset (light theme)
+with a chained blue-hour night sibling (dark theme). No American Greek Revival
+clapboard, no suburbia, no fantasy-palace scale. New shots MUST reference
+`56060a6a` (or a plate chained from it) so the architecture never drifts.
 
+Current first-class plates: hero pair `56060a6a`/`96a9fd67`, loggia pair
+`19646bf7`/`02173e09`, columns macro pair `eed249dd`/`6d791a90`, estate-sunset
+`313b963b`, gate-sunset `b3970b92`. Motion: hero dolly `b1a6cc62` (2K `271a05e3`),
+loggia walks day `d2b12cdc` / night `4b37f230`.
 
 Every generated asset on this site depicts **one place**: THE PEGASUS DREAMSCAPE —
 a master-planned classical community draped across green Northern California hills.
