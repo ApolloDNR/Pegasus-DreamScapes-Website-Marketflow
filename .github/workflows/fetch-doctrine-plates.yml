@@ -59,6 +59,9 @@ jobs:
           if [ ! -d "$dir/walk2-night" ]; then
             fetch hf_20260708_152351_8d8c4ae0-3f23-4cce-a62b-ebc6be004048.mp4 walk2-night-2k.mp4
           fi
+          if [ ! -d "$dir/walk2-day" ]; then
+            fetch hf_20260708_152859_a4e70dfd-b6b6-47e2-b3f7-77ba2319aca3.mp4 walk2-day-2k.mp4
+          fi
           # DreamScapes vision renders (Scenario, signed URLs)
           vfetch() {
             if [ -s "artifacts/doctrine/vision/$2" ]; then echo "have $2"; else
