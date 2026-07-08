@@ -751,6 +751,67 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.08}
 .vision-close{font-family:var(--serif);font-weight:500;font-style:italic;font-size:clamp(1.25rem,2.4vw,1.9rem);line-height:1.5;color:var(--cine-fg);max-width:30em;margin-top:clamp(40px,6vh,64px)}
 .vision-close .em{color:var(--gold)}
 
+/* ============================================================
+   v15 — NARRATIVE ACTS, CHAPTER RAIL, ROUTES, MOTION POLISH
+   ============================================================ */
+/* act numeral watermarks */
+.pillars-head,.studio-head,.vision-head,.nelson-head{position:relative}
+.act-no{position:absolute;right:0;top:-.3em;z-index:0;font-family:var(--serif);font-weight:700;
+  font-size:clamp(5rem,11vw,9rem);line-height:1;color:transparent;-webkit-text-stroke:1.2px currentColor;
+  opacity:.13;pointer-events:none;user-select:none}
+
+/* chapter rail (left, fine pointers, wide screens) */
+.rail{position:fixed;left:clamp(10px,1.4vw,24px);top:50%;transform:translateY(-50%);z-index:150;
+  display:none;flex-direction:column;gap:15px;mix-blend-mode:difference;color:#EDE9DE}
+@media (min-width:1200px) and (pointer:fine){.js .rail{display:flex}}
+.rail a{display:flex;align-items:center;gap:10px;opacity:.42;transition:opacity .3s}
+.rail a::before{content:attr(data-act);font-family:var(--carved);font-weight:600;font-size:.5rem;letter-spacing:.1em;width:2em;text-align:right}
+.rail a i{width:7px;height:7px;border:1px solid currentColor;transform:rotate(45deg);flex:none;transition:background .3s}
+.rail a span{font-family:var(--carved);font-weight:500;font-size:.54rem;letter-spacing:.3em;text-transform:uppercase;
+  white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .3s,transform .3s}
+.rail a:hover,.rail a.active{opacity:1}
+.rail a:hover span,.rail a.active span{opacity:1;transform:none}
+.rail a.active i{background:currentColor}
+
+/* continue-to-next-act links */
+.next-act{display:flex;justify-content:flex-end;margin-top:clamp(30px,4.5vh,52px)}
+.next-act a{display:inline-flex;align-items:baseline;gap:14px;font-family:var(--carved);font-weight:600;
+  font-size:.62rem;letter-spacing:.32em;text-transform:uppercase;color:inherit;opacity:.55;transition:opacity .3s,gap .3s}
+.next-act a::after{content:"⟶";font-family:var(--sans);letter-spacing:0;font-size:1rem;line-height:1}
+.next-act a:hover{opacity:1;gap:22px}
+
+/* routing chip on the form */
+.lane-chip{display:flex;align-items:center;gap:14px;margin:26px 0 0;padding:10px 16px;
+  border:1px solid var(--base-accent);width:max-content;max-width:100%;font-size:.82rem;color:var(--base-fg)}
+.lane-chip .k{font-family:var(--carved);font-weight:600;font-size:.54rem;letter-spacing:.32em;color:var(--base-accent);flex:none}
+.lane-chip b{font-weight:600;min-width:0}
+.lane-chip button{background:none;border:0;color:inherit;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;opacity:.6;transition:opacity .3s}
+.lane-chip button:hover{opacity:1}
+
+/* CTA sheen + magnetic travel */
+.btn{position:relative;overflow:hidden;transition:background .3s,color .3s,border-color .3s,transform .3s cubic-bezier(.22,1,.36,1)}
+.btn::after{content:"";position:absolute;top:0;bottom:0;left:-70%;width:44%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-18deg);transition:left .7s ease}
+.btn:hover::after{left:135%}
+.tlink2{transition:background .3s,color .3s,border-color .3s,transform .3s cubic-bezier(.22,1,.36,1)}
+
+/* living hero: ken burns + ambient dolly footage (light theme) */
+.kb{position:absolute;inset:0;will-change:transform}
+.js .hero-photo .kb{animation:kb 38s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.055) translateX(-.8%)}}
+.hero-plate video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.4s ease;filter:var(--plate-grade)}
+.hero-plate video.live{opacity:1}
+:root[data-theme="dark"] .hero-plate video{display:none}
+
+/* mobile menu act numerals */
+.m-menu a .mn{font-family:var(--carved);font-weight:600;font-size:.55em;letter-spacing:.26em;color:var(--copper);margin-right:16px}
+
+@media (prefers-reduced-motion:reduce){
+  .js .hero-photo .kb{animation:none}
+  .rail a span,.next-act a{transition:none}
+  .btn::after{display:none}
+}
+
 /* v13 responsive for new components */
 @media (max-width:1080px){
   .lane-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -878,13 +939,25 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 </header>
 
 <nav class="m-menu" id="mmenu" aria-label="Mobile">
-  <span class="plate-no">PEGASUS DREAMSCAPES</span>
-  <a href="#lanes">The Four Lanes</a>
-  <a href="#studio">Marketing Studio</a>
-  <a href="#represent">Representation</a>
-  <a href="#acquire">Acquisitions</a>
-  <a href="#vision">Dreamscapes Vision</a>
-  <a href="#start">Contact</a>
+  <span class="plate-no">PEGASUS DREAMSCAPES · IN EIGHT ACTS</span>
+  <a href="#lanes"><span class="mn">II</span>The Four Lanes</a>
+  <a href="#studio"><span class="mn">III</span>Marketing Studio</a>
+  <a href="#represent"><span class="mn">IV</span>Representation</a>
+  <a href="#acquire"><span class="mn">V</span>Acquisitions</a>
+  <a href="#standard"><span class="mn">VI</span>The Standard</a>
+  <a href="#vision"><span class="mn">VII</span>Dreamscapes Vision</a>
+  <a href="#start"><span class="mn">VIII</span>Contact</a>
+</nav>
+
+<nav class="rail" id="rail" aria-label="Chapters">
+  <a href="#thesis" data-act="I"><i></i><span>The Thesis</span></a>
+  <a href="#lanes" data-act="II"><i></i><span>The Company</span></a>
+  <a href="#studio" data-act="III"><i></i><span>The Studio</span></a>
+  <a href="#represent" data-act="IV"><i></i><span>Representation</span></a>
+  <a href="#acquire" data-act="V"><i></i><span>The Hunt</span></a>
+  <a href="#standard" data-act="VI"><i></i><span>The Standard</span></a>
+  <a href="#vision" data-act="VII"><i></i><span>The Vision</span></a>
+  <a href="#start" data-act="VIII"><i></i><span>Build With Us</span></a>
 </nav>
 
 <main id="top">
@@ -894,8 +967,13 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <canvas class="hero-stars" id="stars" aria-hidden="true"></canvas>
 
   <div class="hero-plate" aria-hidden="true">
-    <img class="tp night" src="plates/hero2-night.webp" alt="" decoding="async" fetchpriority="high">
-    <img class="tp day" src="plates/hero2-day.webp" alt="" decoding="async" fetchpriority="high">
+    <div class="kb">
+      <img class="tp night" src="plates/hero2-night.webp" alt="" decoding="async" fetchpriority="high">
+      <img class="tp day" src="plates/hero2-day.webp" alt="" decoding="async" fetchpriority="high">
+    </div>
+    <video id="heroVideo" muted loop playsinline preload="metadata" aria-hidden="true">
+      <source src="plates/hero-loop.mp4" type="video/mp4">
+    </video>
     <div class="p-tint"></div>
   </div>
 
@@ -976,7 +1054,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="statement" id="thesis" aria-label="The thesis">
   <div class="st-sticky">
     <div class="shell">
-      <p class="kicker"><span class="k-rule"></span>THE MISSION</p>
+      <p class="kicker"><span class="k-rule"></span>ACT I — THE THESIS</p>
       <p class="guard" id="guard">Pegasus Dreamscapes is a real estate company built around a higher standard of living — operating today across representation, property marketing, and acquisitions, while building toward classical, walkable, elevated residential communities. The vision is not a side project. It is the reason the company exists.</p>
     </div>
   </div>
@@ -986,8 +1064,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section on-paper" id="lanes">
   <div class="shell">
     <div class="pillars-head">
+      <span class="act-no" aria-hidden="true">II</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE COMPANY</p>
+        <p class="kicker"><span class="k-rule"></span>ACT II — THE COMPANY</p>
         <h2 class="h2">One company.<br>Four real estate <span class="em">lanes.</span></h2>
       </div>
       <p class="lede reveal">Pegasus Dreamscapes operates in the real estate market today — four connected lanes, one standard, one long-term vision.</p>
@@ -1028,7 +1107,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       </article>
       <article class="lane-card reveal">
         <figure class="lc-media" aria-hidden="true">
-          <img src="vision/estates.webp" alt="" loading="lazy" decoding="async">
+          <img src="plates/gate-sunset.webp" alt="" loading="lazy" decoding="async">
         </figure>
         <span class="p-num">04 · THE LONG GAME</span>
         <h3>Dreamscapes Development Vision</h3>
@@ -1037,6 +1116,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       </article>
     </div>
     <p class="lanes-law reveal">Real estate brokerage representation is provided through Keller Williams, subject to applicable brokerage, licensing, and representation requirements. Pegasus Dreamscapes may provide property marketing, investment, acquisition, and development-related services. Brokerage representation is provided only through Keller Williams where applicable.</p>
+    <p class="next-act reveal"><a href="#studio">Act III — Enter the Studio</a></p>
   </div>
 </section>
 
@@ -1044,8 +1124,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section studio" id="studio">
   <div class="shell">
     <div class="studio-head">
+      <span class="act-no" aria-hidden="true">III</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>LANE 02 · THE PROPERTY MARKETING STUDIO</p>
+        <p class="kicker"><span class="k-rule"></span>ACT III — THE STUDIO · LANE 02</p>
         <h2 class="h2">Property marketing that feels like a <span class="em">film.</span></h2>
       </div>
       <p class="lede reveal">Pegasus Dreamscapes creates cinematic digital experiences for properties — transforming listings, developments, rentals, and investment opportunities into premium online presentations.</p>
@@ -1132,6 +1213,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       <a class="btn btn-copper" href="#start" data-lane="Property Marketing Website">Build a Property Website</a>
       <span class="note">For property owners, builders, developers, agents, and investors. The site you are reading is the studio's own work.</span>
     </div>
+    <p class="next-act reveal"><a href="#represent">Act IV — Representation, routed right</a></p>
   </div>
 </section>
 
@@ -1139,8 +1221,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section on-paper" id="represent">
   <div class="shell">
     <div class="pillars-head">
+      <span class="act-no" aria-hidden="true">IV</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>LANE 01 · REPRESENTATION</p>
+        <p class="kicker"><span class="k-rule"></span>ACT IV — REPRESENTATION · LANE 01</p>
         <h2 class="h2">Real estate representation,<br>routed <span class="em">correctly.</span></h2>
       </div>
       <p class="lede reveal">When a buyer or seller needs licensed real estate representation, Pegasus Dreamscapes routes that service through Keller Williams. The Pegasus brand creates the standard, strategy, and marketing experience — while representation is handled through the proper brokerage channel.</p>
@@ -1182,6 +1265,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       <a class="btn btn-ink" href="#start" data-lane="Representation through Keller Williams">Start a Real Estate Conversation</a>
       <span class="lanes-law" style="margin:0;max-width:34em">No agency relationship is created by this website. Representation is established in writing through the appropriate brokerage channel.</span>
     </div>
+    <p class="next-act reveal"><a href="#acquire">Act V — What we hunt for</a></p>
   </div>
 </section>
 
@@ -1191,7 +1275,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
     <canvas id="pcanvas" aria-hidden="true"></canvas>
     <div class="p-shade" aria-hidden="true"></div>
     <div class="p-title" id="ptitle">
-      <p class="kicker"><span class="k-rule"></span>THE PASSAGE</p>
+      <p class="kicker"><span class="k-rule"></span>ACT V — THE PASSAGE</p>
       <h2 class="h2">Walk the process.</h2>
       <span class="p-hint">Scroll to walk</span>
     </div>
@@ -1218,8 +1302,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section on-paper engine" id="acquire">
   <div class="shell">
     <div class="pillars-head">
+      <span class="act-no" aria-hidden="true">V</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>LANE 03 · ACQUISITIONS &amp; DEVELOPMENT-MINDED OPPORTUNITIES</p>
+        <p class="kicker"><span class="k-rule"></span>ACT V — ACQUISITIONS · LANE 03</p>
         <h2 class="h2">We look at real estate <span class="em">differently.</span></h2>
       </div>
       <p class="lede reveal">Pegasus Dreamscapes evaluates properties not only as transactions, but as opportunities for repositioning, investment, development, and long-term value creation.</p>
@@ -1247,7 +1332,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <div class="shell">
     <div class="nelson-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>ACQUISITIONS, PROVEN · CASE 01 · EL SOBRANTE, CA</p>
+        <p class="kicker"><span class="k-rule"></span>ACT V — THE PROOF · CASE 01 · EL SOBRANTE, CA</p>
         <h2 class="h2">Nelson Drive.<br>Bought a 3/2. Sold a <span class="em">4/3.</span></h2>
       </div>
       <p class="lede reveal">A dated ranch with an underused sunroom. The plan was simple to say and hard to do: turn the dead space into a real bedroom and bathroom, gut the rest to retail, and sell to an owner-occupant.</p>
@@ -1343,6 +1428,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       </div>
       <p class="l-note" style="margin-top:16px">Real photography from the project record. <a class="tlink" style="color:var(--cream)" href="#start">Have a property with hidden upside? Let's talk</a></p>
     </div>
+    <p class="next-act reveal"><a href="#standard">Act VI — The Standard behind it</a></p>
   </div>
 </section>
 
@@ -1350,8 +1436,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section on-paper" id="standard">
   <div class="shell">
     <div class="pillars-head">
+      <span class="act-no" aria-hidden="true">VI</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE PEGASUS STANDARD</p>
+        <p class="kicker"><span class="k-rule"></span>ACT VI — THE PEGASUS STANDARD</p>
         <h2 class="h2">More than real <span class="em">estate.</span></h2>
       </div>
       <p class="lede reveal">Pegasus Dreamscapes is built on the belief that environment shapes ambition, identity, family, and legacy. Real estate should not only shelter life — it should elevate it.</p>
@@ -1395,8 +1482,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section vision" id="vision">
   <div class="shell">
     <div class="vision-head">
+      <span class="act-no" aria-hidden="true">VII</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE DREAMSCAPES VISION</p>
+        <p class="kicker"><span class="k-rule"></span>ACT VII — THE DREAMSCAPES VISION</p>
         <h2 class="h2">The future we are <span class="em">building toward.</span></h2>
       </div>
       <p class="lede reveal">The long-term Dreamscapes vision imagines private, walkable residential communities inspired by classical architecture, serene landscapes, estate neighborhoods, civic spaces, wellness, education, and a more intentional way of life.</p>
@@ -1425,7 +1513,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
       <p class="kicker" style="margin:clamp(44px,7vh,72px) 0 26px"><span class="k-rule"></span>FUTURE COMMUNITY ELEMENTS</p>
       <div class="el-grid">
         <figure class="el"><img src="vision/gate.webp" alt="" loading="lazy" decoding="async"><figcaption>Grand Arrival</figcaption></figure>
-        <figure class="el"><img src="vision/estates.webp" alt="" loading="lazy" decoding="async"><figcaption>Estate Neighborhoods</figcaption></figure>
+        <figure class="el"><img src="plates/hero2-day.webp" alt="" loading="lazy" decoding="async"><figcaption>Estate Neighborhoods</figcaption></figure>
         <figure class="el"><img src="vision/lanes.webp" alt="" loading="lazy" decoding="async"><figcaption>Garden Lanes</figcaption></figure>
         <figure class="el"><img src="plates/veranda-day.webp" alt="" loading="lazy" decoding="async"><figcaption>Private Commons</figcaption></figure>
         <figure class="el"><img src="vision/forum.webp" alt="" loading="lazy" decoding="async"><figcaption>Civic Forum</figcaption></figure>
@@ -1443,7 +1531,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <div class="shell">
     <div class="pillars-head">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>SIGNATURE GALLERY · ONE BRAND WORLD</p>
+        <p class="kicker"><span class="k-rule"></span>ACT VII — SIGNATURE GALLERY · ONE BRAND WORLD</p>
         <h2 class="h2">Columns. Stone. Gardens. <span class="em">Legacy.</span></h2>
       </div>
       <p class="lede reveal">Real photography, working product, and clearly labeled concept imagery — one coherent world, not a random gallery.</p>
@@ -1482,7 +1570,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
         <figcaption><span>THE FUTURE COMMUNITY</span><span>CONCEPT</span></figcaption>
       </figure>
     </div>
-    <p class="gal-note">Estate street imagery is the brand's visual anchor. Concept tiles communicate long-term design direction and do not represent current available properties. Nelson Drive photography above is real and unretouched.</p>
+    <p class="gal-note">Estate imagery is the brand's visual anchor. Concept tiles communicate long-term design direction and do not represent current available properties. Nelson Drive photography above is real and unretouched.</p>
+    <p class="next-act reveal"><a href="#aurelia">Act VIII — The Marketing Standard</a></p>
   </div>
 </section>
 
@@ -1490,8 +1579,9 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section on-paper" id="aurelia">
   <div class="shell">
     <div class="pillars-head">
+      <span class="act-no" aria-hidden="true">VIII</span>
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE PEGASUS MARKETING STANDARD · SAMPLE</p>
+        <p class="kicker"><span class="k-rule"></span>ACT VIII — THE MARKETING STANDARD · SAMPLE</p>
         <h2 class="h2">Villa Aurelia —<br>a concept property <span class="em">campaign.</span></h2>
       </div>
       <p class="lede reveal">One sample campaign, end to end: a cinematic single-property website, launch visuals, story-led listing copy, and a lead-capture flow — the standard the studio builds for owners, builders, agents, developers, and investors.</p>
@@ -1513,6 +1603,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
         </ul>
         <p class="aur-note">Sample property marketing concept. Villa Aurelia is a fictional property used to demonstrate the service — imagery is concept rendering, not a current listing.</p>
         <a class="tlink" href="#start" data-lane="Property Marketing Website">Build this for your property</a>
+        <p class="next-act" style="justify-content:flex-start"><a href="#start">Final act — Build with Pegasus</a></p>
       </div>
       <div class="aur-social reveal" aria-hidden="true">
         <figure class="soc-card s1">
@@ -1557,7 +1648,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <div class="shell op-in">
     <div class="op-grid">
       <div class="reveal">
-        <p class="kicker"><span class="k-rule"></span>THE OPERATOR</p>
+        <p class="kicker"><span class="k-rule"></span>ACT VIII — THE OPERATOR</p>
         <h2 class="h2">Run by its principal,<br>not a <span class="em">pipeline.</span></h2>
         <p class="lede">Every submission is read by the operator who answers for the outcome. The East Bay is home ground — Contra Costa and Alameda County, the corridor we can drive in an afternoon. Distance is risk. We do not carry it.</p>
       </div>
@@ -1614,7 +1705,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
 <section class="section start" id="start">
   <div class="shell">
     <div class="reveal">
-      <p class="kicker"><span class="k-rule"></span>CONTACT</p>
+      <p class="kicker"><span class="k-rule"></span>ACT VIII — BUILD WITH PEGASUS</p>
       <h2 class="h2">Build with <span class="em">Pegasus.</span></h2>
     </div>
     <div class="ways">
@@ -1649,6 +1740,10 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
         <p class="c-note">No valuation or offer is promised. Complex, ugly, stuck, or half-inherited is exactly the work we take seriously.</p>
       </div>
       <form class="form reveal" id="intake" novalidate>
+        <div class="lane-chip" id="laneChip" hidden>
+          <span class="k">ROUTING</span><b id="laneChipVal"></b>
+          <button type="button" id="laneChipX" aria-label="Clear routing selection">×</button>
+        </div>
         <div class="f-row">
           <div class="field"><label for="f-name">Full name</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
           <div class="field"><label for="f-phone">Phone</label><input id="f-phone" name="phone" type="tel" autocomplete="tel"></div>
@@ -1726,7 +1821,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){document.documen
   <div class="f-legal">
     <span>© 2026 Pegasus Dreamscapes</span>
     <span>East Bay · California</span>
-    <span>Reference build v13</span>
+    <span>Reference build v15</span>
   </div>
 </footer>
 
@@ -1806,6 +1901,24 @@ if(chVideo){
       });
     },{threshold:.12});
     vIO.observe(chVideo);
+  }
+}
+
+/* ---------- ambient hero footage (light theme) ---------- */
+var heroVideo=document.getElementById("heroVideo");
+if(heroVideo){
+  if(reduceMotion){heroVideo.remove();heroVideo=null;}
+  else{
+    heroVideo.addEventListener("error",function(){if(heroVideo){heroVideo.remove();heroVideo=null;}},true);
+    heroVideo.addEventListener("playing",function(){heroVideo.classList.add("live");});
+    var hvIO=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(!heroVideo)return;
+        if(e.isIntersecting&&themeName()==="day"){heroVideo.muted=true;var p=heroVideo.play();if(p&&p.catch)p.catch(function(){});}
+        else heroVideo.pause();
+      });
+    },{threshold:.1});
+    hvIO.observe(heroVideo);
   }
 }
 
@@ -1985,6 +2098,10 @@ function onThemeChange(){
     if(t==="day")chVideo.pause();
     else{chVideo.muted=true;var p=chVideo.play();if(p&&p.catch)p.catch(function(){});}
   }
+  if(heroVideo){
+    if(t==="night")heroVideo.pause();
+    else{heroVideo.muted=true;var p2=heroVideo.play();if(p2&&p2.catch)p2.catch(function(){});}
+  }
 }
 var guardWords=(function(){
   var g=document.getElementById("guard"),words=g.textContent.split(/\s+/).filter(Boolean);
@@ -2048,6 +2165,13 @@ function measure(){
 measure();
 function clamp01(v){return v<0?0:v>1?1:v;}
 
+/* deep link: land on the hashed act after layout settles */
+(function(){
+  var h=location.hash.slice(1);if(!h)return;
+  var el=document.getElementById(h);if(!el)return;
+  window.scrollTo(0,Math.max(0,Math.min(topOf(el),M.max)));
+})();
+
 var wheelOn=!coarse&&!reduceMotion&&window.matchMedia("(pointer: fine)").matches;
 var targetY=window.scrollY,smoothY=targetY,engineHop=false;
 
@@ -2067,6 +2191,18 @@ window.addEventListener("scroll",function(){
   if(wheelOn)smoothY=targetY;
 },{passive:true});
 
+/* ---------- routing chip (form lane state) ---------- */
+var laneSel=document.getElementById("f-lane"),laneChip=document.getElementById("laneChip"),
+    laneChipVal=document.getElementById("laneChipVal"),laneChipX=document.getElementById("laneChipX");
+function updateChip(){
+  if(!laneChip||!laneSel)return;
+  var v=laneSel.value;
+  laneChip.hidden=!v;
+  if(v)laneChipVal.textContent=v;
+}
+if(laneSel)laneSel.addEventListener("change",updateChip);
+if(laneChipX)laneChipX.addEventListener("click",function(){laneSel.value="";updateChip();});
+
 /* anchor glides + lane preselect */
 document.addEventListener("click",function(e){
   var a=e.target.closest&&e.target.closest('a[href^="#"]');
@@ -2075,11 +2211,22 @@ document.addEventListener("click",function(e){
   if(!el)return;
   e.preventDefault();
   var lane=a.getAttribute("data-lane");
-  if(lane){var sel=document.getElementById("f-lane");if(sel)sel.value=lane;}
+  if(lane&&laneSel){laneSel.value=lane;updateChip();}
   var to=Math.max(0,Math.min(topOf(el),M.max));
   if(wheelOn)targetY=to;
   else window.scrollTo({top:to,behavior:reduceMotion?"auto":"smooth"});
 });
+
+/* magnetic primary CTAs (fine pointers) */
+if(cdot){
+  Array.prototype.forEach.call(document.querySelectorAll(".btn,.tlink2"),function(b){
+    b.addEventListener("pointermove",function(e){
+      var r=b.getBoundingClientRect();
+      b.style.transform="translate("+((e.clientX-r.left-r.width/2)*.12).toFixed(1)+"px,"+((e.clientY-r.top-r.height/2)*.22).toFixed(1)+"px)";
+    });
+    b.addEventListener("pointerleave",function(){b.style.transform="";});
+  });
+}
 
 var lastT=0;
 function frame(t){
@@ -2181,18 +2328,22 @@ var cntIO=new IntersectionObserver(function(entries){
 },{threshold:.6});
 Array.prototype.forEach.call(document.querySelectorAll(".count"),function(el){cntIO.observe(el);});
 
-/* ---------- scrollspy ---------- */
-var spyIds=["lanes","studio","represent","acquire","vision","start"];
-var spyLinks={};
+/* ---------- scrollspy + chapter rail + hash routes ---------- */
+var spyIds=["thesis","lanes","studio","represent","acquire","standard","vision","start"];
+var spyLinks={},railLinks={};
 Array.prototype.forEach.call(document.querySelectorAll('.nav-links a'),function(a){
   spyLinks[a.getAttribute("href").slice(1)]=a;});
+Array.prototype.forEach.call(document.querySelectorAll('#rail a'),function(a){
+  railLinks[a.getAttribute("href").slice(1)]=a;});
 var spyIO=new IntersectionObserver(function(entries){
   entries.forEach(function(e){
-    var a=spyLinks[e.target.id];if(!a)return;
-    if(e.isIntersecting){
-      Object.keys(spyLinks).forEach(function(k){spyLinks[k].classList.remove("active");});
-      a.classList.add("active");
-    }
+    if(!e.isIntersecting)return;
+    var id=e.target.id;
+    Object.keys(spyLinks).forEach(function(k){spyLinks[k].classList.remove("active");});
+    Object.keys(railLinks).forEach(function(k){railLinks[k].classList.remove("active");});
+    if(spyLinks[id])spyLinks[id].classList.add("active");
+    if(railLinks[id])railLinks[id].classList.add("active");
+    try{history.replaceState(null,"","#"+id);}catch(err){}
   });
 },{rootMargin:"-42% 0px -52% 0px"});
 spyIds.forEach(function(id){var el=document.getElementById(id);if(el)spyIO.observe(el);});

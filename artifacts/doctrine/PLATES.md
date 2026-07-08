@@ -28,6 +28,8 @@ extraction (frames at 1600px, 6 fps, 48/set):
 - Day walk `7d481b97` → 2K master `9274f0a4` → `plates/walk-day/`
 - Night walk `3bd7c190` → 2K master `a5a7f8e2` → `plates/walk-night/`
 - `plates/passage-walk.mp4` = night veranda walk 720p (ambient chapter video)
+- Hero ambient dolly (v15): Seedance `b1a6cc62` → 2K upscale `271a05e3` →
+  CI-transcoded `plates/hero-loop.mp4` (1920px h264, light-theme hero only)
 
 ## Dreamscapes vision renders (`vision/`) — always labeled conceptual
 

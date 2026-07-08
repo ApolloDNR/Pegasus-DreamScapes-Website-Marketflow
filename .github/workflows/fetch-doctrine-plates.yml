@@ -47,6 +47,11 @@ jobs:
           fetch hf_20260708_030922_96a9fd67-da9b-4b6e-b0ec-f67fa6a30139_min.webp hero2-night.webp
           fetch hf_20260708_030546_313b963b-284e-4338-9fe8-a41ed0819908_min.webp estate-sunset.webp
           fetch hf_20260708_030555_b3970b92-73a8-4e94-b22e-62a2ab6f3fa8_min.webp gate-sunset.webp
+          # hero ambient dolly (v15): 2K master, transcoded to hero-loop.mp4 below
+          if [ -s "$dir/hero-loop.mp4" ]; then echo "have hero-loop.mp4"; else
+            curl -fsSL --retry 3 "$base/hf_20260708_035205_271a05e3-d4bf-455c-b162-4e87996df567.mp4" -o "$dir/hero-loop-2k.mp4"
+            echo "fetched hero-loop-2k.mp4"
+          fi
           # veranda walk footage: 720p ambient + 2K masters
           fetch hf_20260707_042646_3bd7c190-7503-4158-88bb-ebeb02f6e155.mp4 passage-walk.mp4
           fetch hf_20260707_043046_a5a7f8e2-cccf-4849-8596-14bce0f8eb85.mp4 walk-night-2k.mp4
@@ -68,7 +73,7 @@ jobs:
           vfetch "$base/hf_20260707_070918_1bfb2f7a-a653-4c9c-a582-e9f0178df30a_min.webp" water.webp
           vfetch "$base/hf_20260707_070921_58be642a-c84f-4453-8b57-64ab2b91a47d_min.webp" infra.webp
           ls -la "$dir"
-      - name: Extract walk frames
+      - name: Extract walk frames + transcode hero loop
         run: |
           set -euo pipefail
           dir=artifacts/doctrine/plates
@@ -76,7 +81,8 @@ jobs:
           for theme in night day; do
             [ -d "$dir/walk-$theme" ] && [ "$(ls -1 "$dir/walk-$theme" 2>/dev/null | wc -l)" -ge 40 ] || need_ffmpeg=1
           done
-          [ "$need_ffmpeg" = 0 ] && { echo "frames already extracted"; exit 0; }
+          [ -s "$dir/hero-loop.mp4" ] || [ ! -s "$dir/hero-loop-2k.mp4" ] || need_ffmpeg=1
+          [ "$need_ffmpeg" = 0 ] && { echo "frames extracted and hero loop present"; exit 0; }
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
           for theme in night day; do
             fdir="$dir/walk-$theme"
@@ -88,8 +94,14 @@ jobs:
               -vf "fps=6,scale=1600:-2" -c:v libwebp -q:v 70 "$fdir/f-%03d.webp"
             echo "extracted $(ls -1 "$fdir" | wc -l) $theme frames"; du -sh "$fdir"
           done
+          # hero ambient loop: 2K master -> web-compressed 1920px h264
+          if [ ! -s "$dir/hero-loop.mp4" ] && [ -s "$dir/hero-loop-2k.mp4" ]; then
+            ffmpeg -hide_banner -loglevel error -y -i "$dir/hero-loop-2k.mp4" \
+              -vf "scale=1920:-2" -c:v libx264 -preset slow -crf 25 -movflags +faststart -an "$dir/hero-loop.mp4"
+            echo "hero loop: $(du -h "$dir/hero-loop.mp4" | cut -f1)"
+          fi
           # the 2K masters stay on the CDN; don't commit ~50MB of mp4
-          rm -f "$dir/walk-night-2k.mp4" "$dir/walk-day-2k.mp4"
+          rm -f "$dir/walk-night-2k.mp4" "$dir/walk-day-2k.mp4" "$dir/hero-loop-2k.mp4"
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
