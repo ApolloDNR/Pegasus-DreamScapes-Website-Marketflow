@@ -11,7 +11,10 @@ generated plates 2K (2752×1536).
 
 | Pair | Day job | Night job | Used in |
 |---|---|---|---|
-| The Estate Street (villa street, realistic) | `865e834f` | `ad33bd4d` | Hero + Signature Gallery |
+| The Boulevard at Sunset (classical villas, rotunda) | `56060a6a` | `96a9fd67` | Hero (v14) |
+| The Estate at Golden Hour (`estate-sunset`, single) | `313b963b` | — | Signature Gallery + social card |
+| The Sunset Gate (`gate-sunset`, single) | `b3970b92` | — | Studio mock gallery |
+| The Estate Street (villa street, retired from hero) | `865e834f` | `ad33bd4d` | — held in `plates/` |
 | The Veranda (columns + garden square) | `67799cc6` | `9e479f59` | Lane card 01 · Studio mockups · Villa Aurelia · Door chapter |
 | The Columns (Corinthian macro detail) | `eed249dd` | `6d791a90` | Pegasus Standard strip |
 | The Carved Record (stone) | `c1534da8` | `064bcda5` | Lane card 03 · Nelson ledger slab |
