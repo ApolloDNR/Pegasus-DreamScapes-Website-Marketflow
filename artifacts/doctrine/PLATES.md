@@ -1,4 +1,12 @@
-# Doctrine Plates — Asset Manifest (v13)
+# Doctrine Plates — Asset Manifest
+
+**v17 (business build, current):** the operating site uses only grounded
+imagery — the East Bay aerial pair (hero + founder), the carved-stone pair,
+and real Nelson Drive photography (lane cards, sample listing-site mockup).
+Concept renders appear ONLY in the labeled "Long Game" section. The Passage
+runs on the drawn colonnade, no footage. All cinematic/sunset plates below
+remain vendored for the preserved vision build (`vision/dreamscapes-v16`).
+
 
 The brand world: realistic classical-estate photography carries the operating
 sections; marble concept renders live only in the labeled Dreamscapes Vision
