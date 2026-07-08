@@ -39,6 +39,9 @@ jobs:
           fetch hf_20260706_154243_68efe569-aa30-48c0-9d9f-639dc3bf6744_min.webp bay-day.webp
           fetch hf_20260706_040849_064bcda5-bc72-4f74-a86a-d5a1a9ecaf85_min.webp stone.webp
           fetch hf_20260706_154246_c1534da8-70fe-45c3-89aa-c7c87e24b085_min.webp stone-day.webp
+          # corinthian columns macro pair (v13, Pegasus Standard strip)
+          fetch hf_20260707_214454_eed249dd-dc55-4a1e-9b34-e481df3ab0ca_min.webp columns-day.webp
+          fetch hf_20260707_215318_6d791a90-ca48-4c8d-a8eb-b2428d92f5e0_min.webp columns-night.webp
           # veranda walk footage: 720p ambient + 2K masters
           fetch hf_20260707_042646_3bd7c190-7503-4158-88bb-ebeb02f6e155.mp4 passage-walk.mp4
           fetch hf_20260707_043046_a5a7f8e2-cccf-4849-8596-14bce0f8eb85.mp4 walk-night-2k.mp4

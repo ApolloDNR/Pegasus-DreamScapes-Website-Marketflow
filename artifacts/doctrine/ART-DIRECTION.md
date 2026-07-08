@@ -1,4 +1,12 @@
-# PEGASUS DREAMSCAPES — MASTER ART DIRECTION (v11, binding)
+# PEGASUS DREAMSCAPES — MASTER ART DIRECTION (v13, binding)
+
+**v13 rebalance:** realistic estate photography (the villa-street world) anchors
+every operating section — hero, four lanes, studio mockups, signature gallery.
+The marble master-plan renders below appear ONLY in the labeled Dreamscapes
+Vision chapter and concept tiles. New shots must reference the villa-street
+hero (`865e834f`) for the realistic world, or an existing vision render for
+the concept world.
+
 
 Every generated asset on this site depicts **one place**: THE PEGASUS DREAMSCAPE —
 a master-planned classical community draped across green Northern California hills.
