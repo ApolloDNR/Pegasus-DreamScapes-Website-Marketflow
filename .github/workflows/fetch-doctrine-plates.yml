@@ -53,10 +53,10 @@ jobs:
             curl -fsSL --retry 3 "$base/hf_20260708_035205_271a05e3-d4bf-455c-b162-4e87996df567.mp4" -o "$dir/hero-loop-2k.mp4"
             echo "fetched hero-loop-2k.mp4"
           fi
-          # veranda walk footage: 720p ambient + 2K masters
-          fetch hf_20260707_042646_3bd7c190-7503-4158-88bb-ebeb02f6e155.mp4 passage-walk.mp4
-          fetch hf_20260707_043046_a5a7f8e2-cccf-4849-8596-14bce0f8eb85.mp4 walk-night-2k.mp4
-          fetch hf_20260707_042652_9274f0a4-8e7e-4631-8174-378cb49a1bd0.mp4 walk-day-2k.mp4
+          # loggia walk footage (v16): night 720p ambient + 2K masters for frame extraction
+          fetch hf_20260708_151815_4b37f230-3a12-4758-a163-bf51385f1014.mp4 colonnade-walk.mp4
+          # 2K walk masters fetched only while their frame sets are missing
+          # (URLs appended once the upscales complete)
           # DreamScapes vision renders (Scenario, signed URLs)
           vfetch() {
             if [ -s "artifacts/doctrine/vision/$2" ]; then echo "have $2"; else
@@ -80,18 +80,21 @@ jobs:
           dir=artifacts/doctrine/plates
           need_ffmpeg=0
           for theme in night day; do
-            [ -d "$dir/walk-$theme" ] && [ "$(ls -1 "$dir/walk-$theme" 2>/dev/null | wc -l)" -ge 40 ] || need_ffmpeg=1
+            [ -d "$dir/walk2-$theme" ] && [ "$(ls -1 "$dir/walk2-$theme" 2>/dev/null | wc -l)" -ge 40 ] || need_ffmpeg=1
           done
           [ -s "$dir/hero-loop.mp4" ] || [ ! -s "$dir/hero-loop-2k.mp4" ] || need_ffmpeg=1
           [ "$need_ffmpeg" = 0 ] && { echo "frames extracted and hero loop present"; exit 0; }
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
           for theme in night day; do
-            fdir="$dir/walk-$theme"
+            fdir="$dir/walk2-$theme"
             if [ -d "$fdir" ] && [ "$(ls -1 "$fdir" 2>/dev/null | wc -l)" -ge 40 ]; then
               echo "have $theme frames"; continue
             fi
+            if [ ! -s "$dir/walk2-$theme-2k.mp4" ]; then
+              echo "no 2K master for $theme yet — skipping"; continue
+            fi
             mkdir -p "$fdir"
-            ffmpeg -hide_banner -loglevel error -y -i "$dir/walk-$theme-2k.mp4" \
+            ffmpeg -hide_banner -loglevel error -y -i "$dir/walk2-$theme-2k.mp4" \
               -vf "fps=6,scale=1600:-2" -c:v libwebp -q:v 70 "$fdir/f-%03d.webp"
             echo "extracted $(ls -1 "$fdir" | wc -l) $theme frames"; du -sh "$fdir"
           done
@@ -102,7 +105,7 @@ jobs:
             echo "hero loop: $(du -h "$dir/hero-loop.mp4" | cut -f1)"
           fi
           # the 2K masters stay on the CDN; don't commit ~50MB of mp4
-          rm -f "$dir/walk-night-2k.mp4" "$dir/walk-day-2k.mp4" "$dir/hero-loop-2k.mp4"
+          rm -f "$dir/walk2-night-2k.mp4" "$dir/walk2-day-2k.mp4" "$dir/hero-loop-2k.mp4"
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
