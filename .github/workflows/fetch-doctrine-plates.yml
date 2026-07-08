@@ -42,6 +42,10 @@ jobs:
           # corinthian columns macro pair (v13, Pegasus Standard strip)
           fetch hf_20260707_214454_eed249dd-dc55-4a1e-9b34-e481df3ab0ca_min.webp columns-day.webp
           fetch hf_20260707_215318_6d791a90-ca48-4c8d-a8eb-b2428d92f5e0_min.webp columns-night.webp
+          # sunset hero candidates (v14 hero selection)
+          fetch hf_20260708_030546_313b963b-284e-4338-9fe8-a41ed0819908_min.webp cand-villa.webp
+          fetch hf_20260708_030555_b3970b92-73a8-4e94-b22e-62a2ab6f3fa8_min.webp cand-gate.webp
+          fetch hf_20260708_030605_56060a6a-7f55-4824-adc9-4c6f4b7c279b_min.webp cand-boulevard.webp
           # veranda walk footage: 720p ambient + 2K masters
           fetch hf_20260707_042646_3bd7c190-7503-4158-88bb-ebeb02f6e155.mp4 passage-walk.mp4
           fetch hf_20260707_043046_a5a7f8e2-cccf-4849-8596-14bce0f8eb85.mp4 walk-night-2k.mp4
