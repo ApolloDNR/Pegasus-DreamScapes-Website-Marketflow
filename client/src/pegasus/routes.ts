@@ -82,6 +82,9 @@ const STANDALONE_DARK_HERO: string[] = [
 ];
 
 const STANDALONE_SOLID_NAV: string[] = [
+  // Public Website v1 (issue #22): the multi-step intake desk has a light
+  // top section, so it wears the solid nav.
+  '/submit-property',
   '/strategy-lab/classic',
   // In-funnel destinations from /strategy-lab/classic on submit - keep them on
   // the unified chrome so users don't drop to the legacy site mid-conversion.
@@ -141,7 +144,7 @@ const KNOWN_TOP_SEGMENTS: Set<string> = new Set([
   'login', 'signup', 'admin', 'snapshot', 'dashboard', 'dealflow',
   'offer-studio', 'profile',
   // Legacy redirect entry points (App.tsx legacyRedirects)
-  'sell', 'submit-deal', 'submit-property', 'services', 'resources', 'buy',
+  'sell', 'submit-deal', 'services', 'resources', 'buy',
   'partner', 'invest', 'calculators', 'education', 'wholesale', 'hq', 'portal',
   'community', 'marketplace',
 ]);

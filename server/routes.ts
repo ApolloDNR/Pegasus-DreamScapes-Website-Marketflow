@@ -231,7 +231,7 @@ export async function registerRoutes(
   const LEGACY_REDIRECTS: Array<[string, string]> = [
     ['/sell', '/submit?intent=sell'],
     ['/submit-deal', '/submit?intent=deal-jv'],
-    ['/submit-property', '/submit?intent=property'],
+    // Public Website v1 (issue #22): /submit-property reinstated as canonical.
     ['/services', '/development'],
     ['/resources', '/library'],
     ['/invest', '/capital'],

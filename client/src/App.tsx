@@ -98,6 +98,7 @@ const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
 const SubmitPage = lazy(() => import("@/pages/submit"));
+const SubmitPropertyPage = lazy(() => import("@/pages/submit-property"));
 const CapitalPage = lazy(() => import("@/pages/capital"));
 const ConnectPage = lazy(() => import("@/pages/connect"));
 const NelsonDrPage = lazy(() => import("@/pages/project-nelson-dr"));
@@ -150,7 +151,8 @@ export const legacyRedirects: [string, string][] = [
   // Server-side 301s / 410s are authoritative for direct HTTP hits.
   ["/sell", "/submit?intent=sell"],
   ["/submit-deal", "/submit?intent=deal-jv"],
-  ["/submit-property", "/submit?intent=property"],
+  // Public Website v1 (issue #22): /submit-property is reinstated as the
+  // canonical multi-step intake desk — no longer a legacy redirect.
   ["/services", "/development"],
   ["/resources", "/library"],
   ["/buy", "/marketflow"],
@@ -219,6 +221,8 @@ export function Router() {
       <Route path="/development" component={Development} />
       {/* Empire Doctrine v1.0.1 — canonical submission route. */}
       <Route path="/submit" component={SubmitPage} />
+      {/* Public Website v1 (issue #22): primary conversion flow */}
+      <Route path="/submit-property" component={SubmitPropertyPage} />
       <Route path="/capital" component={CapitalPage} />
       <Route path="/connect" component={ConnectPage} />
       <Route path="/projects" component={Projects} />

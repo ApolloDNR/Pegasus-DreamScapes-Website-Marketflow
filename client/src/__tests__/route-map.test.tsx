@@ -103,10 +103,10 @@ describe("Route map (Website Brief v1.0 §1)", () => {
   ];
 
   // Retired routes that MUST exit via either a 301 redirect or a 410 Gone.
+  // Public Website v1 (issue #22): /submit-property is canonical again.
   const RETIRED_ROUTES = [
     "/sell",
     "/submit-deal",
-    "/submit-property",
     "/services",
     "/resources",
     "/invest",
@@ -155,7 +155,6 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     const FUNNEL_FROMS = [
       "/sell",
       "/submit-deal",
-      "/submit-property",
       "/services",
       "/resources",
       "/invest",
