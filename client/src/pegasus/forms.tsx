@@ -423,18 +423,22 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
     <section className="strategy-command-section strategy-cockpit-hero" data-testid="strategy-lab-premium-hero">
       <div className="strategy-command-shell mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
         <div className="min-w-0 lg:col-span-5">
+          {/* COPY_DECK §11 locked hero + PRD §11.4 disclaimer (issue #22) */}
           <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
-          <h1 className="strategy-command-title mt-5 max-w-[10ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
-            The deal cockpit.
+          <h1 className="strategy-command-title mt-5 max-w-[14ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
+            Model the property before you make the move.
           </h1>
           <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
-            A private underwriting room for the facts, assumptions, lane fit, risk flags, and next clean move. It guides the read without pretending to issue an offer.
+            Strategy Lab is an early Pegasus tool for turning property assumptions into possible paths. It gives a directional preview, then lets you request a human review.
           </p>
           <div className="strategy-command-note">
             <span>Private orientation</span>
             <span>No blind offer</span>
             <span>Written read before action</span>
           </div>
+          <p className="mt-5 max-w-xl text-[0.78rem] leading-relaxed text-[rgba(245,230,211,0.5)]">
+            Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice, lending commitment, or investment recommendation.
+          </p>
           <div className="strategy-command-actions">
             <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
               Enter the Cockpit <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />

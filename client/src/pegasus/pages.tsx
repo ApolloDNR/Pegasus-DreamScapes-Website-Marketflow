@@ -56,8 +56,10 @@ const APOLLO_REP = {
   },
 };
 
+// PRD §7.11 required copy (issue #22), locked verbatim, plus the page-level
+// no-agreement clarifier.
 const APOLLO_DISCLOSURE =
-  'Paolo “Apollo” Duran · Licensed California real estate salesperson · DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus Dreamscapes is not a licensed brokerage; agency representation is provided through Keller Williams Realty East Bay. This page is not a listing or buyer-representation agreement.';
+  'Paolo “Apollo” Duran · Licensed California real estate salesperson · CA DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation, when applicable, is provided by Paolo “Apollo” Duran through Keller Williams East Bay. No agency relationship is created without a written agreement. This page is not a listing or buyer-representation agreement.';
 
 /* ================================================================
    HOME
@@ -391,10 +393,12 @@ const MARKETFLOW_ACCESS = [
 export function MarketFlowPage({ go }: { go: Nav }) {
   return (
     <>
-      <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
+      {/* COPY_DECK §12 locked hero (issue #22) */}
+      <PageHero eyebrow="Systems · MarketFlow"
+        title={<>A private network for <span className="italic text-[var(--accent-bright)]">reviewed opportunities.</span></>}
         image={IMG('pegasus-casestudy.png')}
         scrimTop
-        lead="A private, vetted network. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and our team reviews every fit." />
+        lead="MarketFlow connects buyers, investors, deal finders, capital partners, vendors, and operators around reviewed Pegasus opportunities. Access is reviewed, not open." />
       <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -558,10 +562,11 @@ function ApolloSelector() {
 export function WorkWithApolloPage({ go }: { go: Nav }) {
   return (
     <>
-      <PageHero eyebrow="What we do · Representation"
-        title={<>Represent with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
+      {/* PRD §7.11 / COPY_DECK §13 locked hero (issue #22) */}
+      <PageHero eyebrow="Work With Apollo"
+        title={<>Founder-led strategy. <span className="italic text-[var(--accent-bright)]">Licensed representation when the lane fits.</span></>}
         image={IMG('pegasus-craft-blueprint.png')}
-        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay (DRE #02333658), backed by the full Pegasus standard. Pegasus Dreamscapes is not a brokerage." />
+        lead="Paolo “Apollo” Duran leads Pegasus Dreamscapes as founder/operator. When buyer or seller representation is the right path, Apollo provides licensed real estate services through Keller Williams East Bay (CA DRE #02333658). Pegasus Dreamscapes is not a brokerage." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
