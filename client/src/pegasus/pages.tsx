@@ -303,21 +303,22 @@ export function DevelopmentPage({ go }: { go: Nav }) {
 export function CapitalPage({ go }: { go: Nav }) {
   return (
     <>
+      {/* COPY_DECK §8 locked hero + required no-public-offering note (issue #22) */}
       <PageHero eyebrow="Capital partners"
-        title={<>Back specific <span className="italic text-[var(--accent-bright)]">projects.</span></>}
+        title={<>Capital should <span className="italic text-[var(--accent-bright)]">follow discipline.</span></>}
         image={IMG('pegasus-closing.png')}
-        lead="Pegasus works with a small number of capital partners on individual real estate projects, reviewed one deal at a time." />
+        lead="Pegasus reviews capital relationships project-by-project. No public offering, no guaranteed returns, no pooled fund. Any capital relationship must be privately reviewed and documented appropriately." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
           <p className="text-[var(--muted)] leading-relaxed text-lg mb-6">
-            Capital partnerships are arranged privately, one project at a time, through direct conversation. Never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, start a conversation.
+            Capital partnerships are arranged privately, one project at a time, through direct conversation. Never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, request a private review.
           </p>
           <p className="text-[var(--text-2)] text-[0.95rem] leading-relaxed mb-9" data-testid="text-capital-securities">
             No securities are offered through this website.
           </p>
           <button type="button" onClick={() => go('connect')} data-testid="button-capital-connect"
             className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-            Start a conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            Request Private Review <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
           <div className="mt-6">
             <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--muted)]">
@@ -777,36 +778,50 @@ export function Footer({ go }: { go: Nav }) {
               <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
                 <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus Dreamscapes</span>
-                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
+                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Development &middot; Investments &middot; Systems</span>
               </div>
             </button>
             <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug">
-              We read the situation, underwrite the numbers, and tell you what the deal actually is.
+              Dream it. Build it. Live it.
             </p>
+            <ul className="mt-6 space-y-2.5 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">
+              <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
+              <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
+              <li>East Bay · CA</li>
+            </ul>
           </div>
+
+          {/* Footer link map per PRD §5.2 (issue #22): the audience lanes,
+              the proof + vision pages, and the legal set. */}
+          <FooterCol title="Who We Serve">
+            <FooterLink label="Sellers & Owners" onClick={() => go('sellers')} />
+            <FooterLink label="Deal Finders" onClick={() => go('dealfinders')} />
+            <FooterLink label="Buyers" onClick={() => go('buyers')} />
+            <FooterLink label="Capital Partners" onClick={() => go('capital')} />
+            <FooterLink label="Operators & Vendors" onClick={() => go('operators')} />
+            <FooterLink label="Referral Partners" onClick={() => go('referral')} />
+          </FooterCol>
 
           <FooterCol title="Company">
             <FooterLink label="About the Firm" onClick={() => go('about')} />
-            <FooterLink label="Represent with Apollo" onClick={() => go('apollo')} />
-            <FooterLink label="The Work" onClick={() => setLocation('/projects/nelson-dr')} />
-            <FooterLink label="Pegasus Ecosystem" onClick={() => go('ecosystem')} />
+            <FooterLink label="Departments" onClick={() => setLocation('/departments')} />
+            <FooterLink label="Work With Apollo" onClick={() => go('apollo')} />
+            <FooterLink label="Case Study" onClick={() => setLocation('/case-study')} />
+            <FooterLink label="The Pegasus Standard" onClick={() => setLocation('/pegasus-standard')} />
           </FooterCol>
 
-          <FooterCol title="Start here">
-            <FooterLink label="Submit a Property" onClick={() => go('submit')} />
-            <FooterLink label="Connect" onClick={() => go('connect')} />
-          </FooterCol>
-
-          <FooterCol title="Contact">
-            <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
-            <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
-            <li>East Bay · CA</li>
+          <FooterCol title="Start Here">
+            <FooterLink label="Submit a Property" onClick={() => setLocation('/submit-property')} />
+            <FooterLink label="Strategy Lab" onClick={() => go('strategylab')} />
+            <FooterLink label="MarketFlow" onClick={() => go('marketflow')} />
+            <FooterLink label="Contact" onClick={() => go('contact')} />
           </FooterCol>
 
           <FooterCol title="Legal">
-            <FooterLink label="Privacy" onClick={() => setLocation('/privacy')} />
+            <FooterLink label="Privacy Policy" onClick={() => setLocation('/privacy')} />
             <FooterLink label="Terms" onClick={() => setLocation('/terms')} />
             <FooterLink label="Disclosures" onClick={() => setLocation('/disclosures')} />
+            <FooterLink label="FAQ" onClick={() => setLocation('/faq')} />
           </FooterCol>
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">

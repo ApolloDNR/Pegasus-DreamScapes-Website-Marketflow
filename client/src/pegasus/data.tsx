@@ -1,31 +1,20 @@
 import React from 'react';
-import type { NavGroup, Pillar, Category, AudienceKey, SplitPath, FaqItem, Route } from './theme';
+import type { NavLink, Pillar, Category, AudienceKey, SplitPath, FaqItem, Route } from './theme';
 
 /* ================================================================
    NAVIGATION
+   Public Website v1 (issue #22) PRD §5.1 locks the top navigation to a
+   clean flat list: Home, Submit a Property, Departments, Strategy Lab,
+   MarketFlow, Work With Apollo — with Submit a Property as the primary
+   nav button (rendered separately in nav.tsx). The audience lanes moved
+   to the footer per §5.2.
    ================================================================ */
-export const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'Who We Serve',
-    items: [
-      { label: 'Sellers & Owners', route: 'sellers', desc: 'Complex or stuck property, read for a path' },
-      { label: 'Investor & Operator Buyers', route: 'buyers', desc: 'Overlooked and structured opportunities' },
-      { label: 'Deal Finders & Wholesalers', route: 'dealfinders', desc: 'Bring a deal, get a straight answer' },
-      { label: 'Capital Partners', route: 'capital', desc: 'Back specific projects, not blind pools' },
-      { label: 'Vendors & Trades', route: 'operators', desc: 'GCs, subs, and trades for our projects' },
-      { label: 'Referral Partners', route: 'referral', desc: 'Send a name, share in the outcome' },
-    ],
-  },
-  {
-    label: 'What We Do',
-    items: [
-      { label: 'Deal Strategy', route: 'dealstrategy', desc: 'How we turn a property into a plan' },
-      { label: 'Investments', route: 'investments', desc: 'Acquisitions, value-add, and structure' },
-      { label: 'Development', route: 'development', desc: 'Ground-up and renovation, scoped and delivered' },
-      { label: 'Strategy Lab', route: 'strategylab', desc: 'Run the numbers before you commit' },
-      { label: 'MarketFlow', route: 'marketflow', desc: 'The deal network, verified end to end' },
-    ],
-  },
+export const NAV_LINKS: NavLink[] = [
+  { label: 'Home', route: 'home' },
+  { label: 'Departments', url: '/departments' },
+  { label: 'Strategy Lab', route: 'strategylab' },
+  { label: 'MarketFlow', route: 'marketflow' },
+  { label: 'Work With Apollo', route: 'apollo' },
 ];
 
 /* ================================================================
@@ -596,12 +585,13 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   sellers: {
     eyebrow: 'Who We Serve / Sellers & Owners',
-    title: <>Sell on your terms,<br />not the market's</>,
+    // COPY_DECK §5 locked hero (issue #22)
+    title: <>Sell on your terms,<br />not the market&rsquo;s.</>,
     image: 'pegasus-exterior-light.png',
     heroScrimTop: true,
     layout: 'timeline',
     pointsLabel: 'What you get',
-    lead: 'If your property is clean and ready, Apollo represents you through Keller Williams Realty East Bay. If it is distressed, inherited, occupied, or up against a deadline, send it for a property review and we will lay out the real options, with no guaranteed offer until the numbers and the agreement are real.',
+    lead: 'If the property is complicated, the answer does not have to be. Pegasus reviews the situation and helps identify whether the right path is a direct sale, partnership, listing, development strategy, or another structured exit.',
     points: [
       { t: 'List With Apollo', d: 'Clean and ready to market? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing.' },
       { t: 'Structure a complex situation', d: 'Distressed, inherited, occupied, or stalled? Send it for a review. We may evaluate it as an acquisition, a reposition, a JV, a stabilization plan, a listing, or a referral, subject to underwriting.' },
@@ -642,12 +632,13 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   buyers: {
     eyebrow: 'Who We Serve / Buyers',
-    title: <>Buy the finished<br />product, or the deal</>,
+    // COPY_DECK §7 locked hero (issue #22)
+    title: <>Buy with a strategy,<br />not just a search.</>,
     image: 'pegasus-interior-light.png',
     heroScrimTop: true,
     layout: 'grid',
     pointsLabel: 'How you buy',
-    lead: 'Buy with an investor-minded agent in your corner. When agency representation is the right lane, Apollo represents buyers through Keller Williams Realty East Bay, bringing buy-box discipline, diligence, and offer strategy to every purchase, whether it is a finished home or your next value-add.',
+    lead: 'Whether you are looking for a home, investment property, or reviewed opportunity, Apollo can help you think like an operator. Licensed buyer representation is provided through Keller Williams East Bay when applicable.',
     points: [
       { t: 'Investor-minded representation', d: 'Apollo can represent you as your buyer’s agent through Keller Williams Realty East Bay when agency is the right lane, with offers backed by real underwriting.' },
       { t: 'Buy-box guidance', d: 'We help you define what to chase and what to skip: location, condition, spread, and exit, so you are not bidding blind.' },
@@ -687,12 +678,13 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   dealfinders: {
     eyebrow: 'Who We Serve / Deal Finders & Wholesalers',
-    title: <>Bring a deal,<br />get a straight answer</>,
+    // COPY_DECK §6 locked hero + required source-attribution note (issue #22)
+    title: <>Bring the deal.<br />Get a serious review.</>,
     image: 'pegasus-prop1.png',
     heroScrimTop: true,
     layout: 'ledger',
     pointsLabel: 'A straight read',
-    lead: 'Bring a deal and get a straight answer. If it fits our buy box, Pegasus may buy it directly or partner on it. If it does not fit us directly, we may route it through our JV network or MarketFlow, but only after written terms. Not every deal is a fit, and we will tell you honestly.',
+    lead: 'Pegasus works with deal finders, wholesalers, agents, contractors, and referral partners who come across real estate opportunities that need structure, execution, buyers, or capital. Source attribution is recorded at submission. Any JV, assignment, referral, or compensation structure must be agreed in writing before distribution.',
     points: [
       { t: 'A fast, honest read', d: 'Send the deal. We tell you quickly whether it works, at what number, and which path it fits.' },
       { t: 'Two paths for a deal', d: 'If it fits our buy box, we may buy or partner directly. If not, we may route it through our JV network or MarketFlow after written terms.' },
@@ -732,11 +724,12 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   capital: {
     eyebrow: 'Who We Serve / Capital Partners',
-    title: <>Put capital to work,<br />with eyes open</>,
+    // COPY_DECK §8 locked hero + required no-public-offering note (issue #22)
+    title: <>Capital should<br />follow discipline.</>,
     image: 'pegasus-arch.png',
     layout: 'grid',
     pointsLabel: 'Eyes open',
-    lead: 'We do not pool funds or promise returns. We bring you specific projects, underwritten deal by deal, with the work, the timeline, and the risk laid out before you decide.',
+    lead: 'Pegasus reviews capital relationships project-by-project. No public offering, no guaranteed returns, no pooled fund. Any capital relationship must be privately reviewed and documented appropriately.',
     points: [
       { t: 'Project by project', d: 'You choose what to back. No blind pools, no commitments you did not pick.' },
       { t: 'Defined terms', d: 'Structure, security, and timeline stated plainly in writing.' },
@@ -776,11 +769,12 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   operators: {
     eyebrow: 'Who We Serve / Operators & Vendors',
-    title: <>Plug into a pipeline<br />that respects the work</>,
+    // COPY_DECK §9 locked hero (issue #22)
+    title: <>Join the Pegasus<br />operator bench.</>,
     image: 'pegasus-process.png',
     layout: 'ledger',
     pointsLabel: 'How we work',
-    lead: 'GCs, subcontractors, agents, title, lenders, and inspectors: the people who actually deliver. Work with an operator that scopes clearly, pays on terms, and brings repeat volume.',
+    lead: 'Pegasus works with contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners, and other operators on a project-by-project basis.',
     points: [
       { t: 'Clear scope', d: 'You bid against a real plan, not a moving target.' },
       { t: 'Paid on terms', d: 'Defined payment schedules, honored as agreed.' },
@@ -819,11 +813,12 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   referral: {
     eyebrow: 'Who We Serve / Referral Partners',
-    title: <>A professional referral,<br />handled with respect</>,
+    // COPY_DECK §10 locked hero + required lawful-compensation note (issue #22)
+    title: <>Send the situation.<br />Pegasus will handle it carefully.</>,
     image: 'nelson/nelson-exterior-1280.jpg',
     layout: 'timeline',
     pointsLabel: 'How it works',
-    lead: 'For agents, attorneys, advisors, and contractors who know an owner, buyer, seller, or deal source that needs a better path. Referral fees, JV splits, or compensation terms are documented in writing before we engage anyone you send.',
+    lead: 'For professionals and trusted contacts who know a property owner, investor, or situation that may need a structured path. Referral compensation, JV participation, or professional coordination is handled only where lawful, permitted, and agreed in writing.',
     points: [
       { t: 'Written terms before engagement', d: 'Where permitted by applicable licensing rules, the referral fee or JV split is agreed and documented before we make contact with anyone you send. What we agree is what you receive at close.' },
       { t: 'Your relationship stays intact', d: 'You keep the professional relationship. We solve the property or deal problem and hand it back to you cleanly.' },

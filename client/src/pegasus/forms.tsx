@@ -7,6 +7,20 @@ import type { Nav, FormCfg, PeggyHandoff } from './theme';
 import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from '@/lib/strategy-tier-ranges';
+import { trackEvent } from '@/lib/analytics';
+
+// Public Website v1 (issue #22) PRD §13 conversion events. Each lane form
+// fires its named PRD event on successful submission, keyed by the form's
+// intent. Intents without a PRD-named event fall back to the generic
+// lead_submitted signal (still carrying the intent as a prop).
+const PRD_EVENT_BY_INTENT: Record<string, string> = {
+  'deal-finder': 'submit_deal_completed',
+  'strategy-snapshot': 'strategy_review_requested',
+  representation: 'apollo_consult_requested',
+  'capital-partner': 'capital_review_requested',
+  operator: 'vendor_bench_joined',
+  referral: 'referral_submitted',
+};
 
 function SaveStrategyButton({ snapshot, title }: { snapshot: StrategyPreview; title: string }) {
   const [saved, setSaved] = useState(false);
@@ -152,7 +166,12 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           ...(transcript.length > 0 ? { transcript } : {}),
         },
       },
-      { onSuccess: () => setSubmitted(true) },
+      {
+        onSuccess: () => {
+          trackEvent(PRD_EVENT_BY_INTENT[cfg.intent] ?? 'lead_submitted', { intent: cfg.intent });
+          setSubmitted(true);
+        },
+      },
     );
   };
 

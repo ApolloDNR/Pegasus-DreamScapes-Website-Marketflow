@@ -122,9 +122,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // blank/crashing/mis-redirected shell.
 const STANDALONE_URLS: string[] = [
   "/submit",
-  // Public Website v1 (issue #22): multi-step intake desk.
+  // Public Website v1 (issue #22): multi-step intake desk + PRD pages.
   "/submit-property",
   "/pegasus-standard",
+  "/departments",
+  "/case-study",
   "/connect",
   "/projects",
   "/projects/nelson-dr",

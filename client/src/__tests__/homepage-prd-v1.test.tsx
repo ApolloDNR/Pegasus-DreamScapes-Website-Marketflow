@@ -145,10 +145,10 @@ describe("Homepage PRD v1 contract (issue #22)", () => {
       "Have a property, deal, or situation worth reviewing?",
     ];
     const positions = beats.map((b) => text.indexOf(b));
-    for (const [i, pos] of positions.entries()) {
-      expect(pos, `missing beat: ${beats[i]}`).toBeGreaterThan(-1);
+    for (let i = 0; i < positions.length; i++) {
+      expect(positions[i], `missing beat: ${beats[i]}`).toBeGreaterThan(-1);
       if (i > 0) {
-        expect(pos, `beat out of order: ${beats[i]}`).toBeGreaterThan(positions[i - 1]);
+        expect(positions[i], `beat out of order: ${beats[i]}`).toBeGreaterThan(positions[i - 1]);
       }
     }
   });

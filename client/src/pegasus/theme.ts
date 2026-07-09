@@ -36,8 +36,10 @@ export type PeggyHandoff = {
   transcript: ChatTurn[];
 };
 
-export type NavLink = { label: string; route: Route; desc?: string };
-export type NavGroup = { label: string; items: NavLink[] };
+// Public Website v1 (issue #22) PRD §5.1: the top navigation is a flat,
+// clean list. Items either resolve through the prototype route map (`route`)
+// or navigate straight to a standalone app URL (`url`).
+export type NavLink = { label: string; route?: Route; url?: string; desc?: string };
 
 export type Pillar = {
   eyebrow: string;

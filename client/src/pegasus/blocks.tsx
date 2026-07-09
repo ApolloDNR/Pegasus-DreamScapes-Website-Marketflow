@@ -429,11 +429,12 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-6 reveal">
           <div className="pg-label text-[var(--accent)] mb-5">Strategy Lab cockpit</div>
+          {/* COPY_DECK §2 locked Strategy Lab preview (issue #22) */}
           <h2 className="font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-[-0.01em] text-[var(--text)] mb-6">
-            Model the deal before it becomes a decision.
+            Model the property before you make the move.
           </h2>
           <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-xl">
-            Enter what you know. The Lab returns directional ranges, lane fit, and the risk flags worth understanding before a deeper Pegasus read. It is planning support, not a valuation, appraisal, CMA, BPO, or offer.
+            Strategy Lab helps owners, investors, and partners run a first-pass property review before requesting a deeper Pegasus read. It is planning support, not a valuation, appraisal, CMA, BPO, or offer.
           </p>
           <ul className="space-y-3.5 mb-10">
             {['Basis, scope, value, carry, and exit-cost assumptions', 'Lane fit with risk flags instead of a single verdict', 'A cleaner next step before money or terms move'].map((pt) => (
@@ -459,7 +460,8 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
                 </div>
               ))}
               <p className="mt-6 text-[rgba(239,231,218,0.5)] text-[0.72rem] leading-relaxed">
-                Illustrative ranges only. Not a valuation, appraisal, CMA, BPO, or offer for any specific property.
+                {/* COPY_DECK §2 locked disclaimer (issue #22) */}
+                Directional only. Not an appraisal, offer, legal advice, tax advice, financing commitment, or investment recommendation.
               </p>
             </div>
           </div>

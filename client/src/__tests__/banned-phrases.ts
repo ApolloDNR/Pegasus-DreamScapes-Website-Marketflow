@@ -33,6 +33,14 @@ export type BannedPhrase = {
   phrase: string;
   /** Short reason, surfaced in the failure message to guide the rewrite. */
   reason: string;
+  /**
+   * Longer runs of words that are explicitly permitted even though they
+   * contain `phrase`. Used for locked negative-disclosure copy (e.g. the
+   * PRD-locked "no guaranteed returns" on the capital surfaces). The scanner
+   * blanks these from a line before matching, so the affirmative use of
+   * `phrase` is still banned everywhere.
+   */
+  allow?: string[];
 };
 
 // AI-tells / generic filler the founder has flagged in editorial passes.
@@ -90,13 +98,19 @@ export const AI_TELLS: BannedPhrase[] = [
 
 // Real-estate / securities compliance-risk phrases from replit.md's "Voice /
 // copy" list. These create legal exposure regardless of how they read, so they
-// must never appear in public marketing copy. (Negative-disclosure use lives on
-// /capital and /terms, which are NOT part of the scanned Pegasus prototype.)
+// must never appear in public marketing copy. Exception: Public Website v1
+// (issue #22) PRD §7.6 locks the capital-lane disclosure "No public offering,
+// no guaranteed returns, no pooled fund" verbatim, so that exact negated form
+// is allow-listed; every affirmative use stays banned.
 export const COMPLIANCE_RISK: BannedPhrase[] = [
   { phrase: "invest now", reason: "compliance-risk (securities)" },
   { phrase: "invest with us", reason: "compliance-risk (securities)" },
   { phrase: "investor returns", reason: "compliance-risk (securities)" },
-  { phrase: "guaranteed returns", reason: "compliance-risk (securities)" },
+  {
+    phrase: "guaranteed returns",
+    reason: "compliance-risk (securities)",
+    allow: ["no guaranteed returns"],
+  },
   { phrase: "passive income", reason: "compliance-risk (securities)" },
   { phrase: "principal protected", reason: "compliance-risk (securities)" },
   { phrase: "we buy houses fast", reason: "compliance-risk (guru language)" },

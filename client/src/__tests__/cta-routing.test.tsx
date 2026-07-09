@@ -56,9 +56,16 @@ const VALID_ROUTES = new Set<string>(Object.keys(ROUTE_TO_URL));
 
 // Real surfaces a page *body* link may legitimately deep-link to that are not
 // part of the Pegasus prototype's own route map (standalone functional pages).
-// Public Website v1 (issue #22): /submit-property and /pegasus-standard are
-// canonical standalone surfaces the homepage deep-links to.
-const KNOWN_EXTRA_PATHS = ["/faq", "/submit-property", "/pegasus-standard"];
+// Public Website v1 (issue #22): the standalone PRD surfaces the prototype
+// chrome and pages deep-link to.
+const KNOWN_EXTRA_PATHS = [
+  "/faq",
+  "/submit-property",
+  "/pegasus-standard",
+  "/departments",
+  "/case-study",
+  "/projects/nelson-dr",
+];
 const KNOWN_PATHS = new Set<string>([
   ...Object.values(ROUTE_TO_URL),
   ...KNOWN_EXTRA_PATHS,

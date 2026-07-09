@@ -70,8 +70,11 @@ export function isPegasusUrl(path: string): boolean {
 // are listed in STANDALONE_SOLID_NAV so the nav renders solid (not the
 // transparent-over-dark-hero treatment) and stays legible.
 const STANDALONE_DARK_HERO: string[] = [
-  // Public Website v1 (issue #22): the labeled future-vision page.
+  // Public Website v1 (issue #22): the labeled future-vision page, the
+  // operating-model page, and the routed case-study summary.
   '/pegasus-standard',
+  '/departments',
+  '/case-study',
   '/submit',
   '/connect',
   '/projects',
@@ -140,7 +143,8 @@ const KNOWN_TOP_SEGMENTS: Set<string> = new Set([
   'marketflow', 'work-with-apollo', 'ecosystem', 'about', 'contact', 'peggy',
   'saved',
   // Standalone-chrome + functional public surfaces
-  'submit', 'submit-property', 'pegasus-standard', 'connect', 'projects', 'library', 'strategy-library',
+  'submit', 'submit-property', 'pegasus-standard', 'departments', 'case-study',
+  'connect', 'projects', 'library', 'strategy-library',
   'vendor-network', 'faq', 'privacy', 'terms', 'disclosures', 'deal-blueprint',
   // Auth / app-internal surfaces (keep legacy chrome on their own 404s)
   'login', 'signup', 'admin', 'snapshot', 'dashboard', 'dealflow',
