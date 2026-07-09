@@ -3228,3 +3228,117 @@ export const insertStrategyLabTouchpointSchema = createInsertSchema(strategyLabT
 });
 export type InsertStrategyLabTouchpoint = z.infer<typeof insertStrategyLabTouchpointSchema>;
 export type StrategyLabTouchpoint = typeof strategyLabTouchpoint.$inferSelect;
+
+// =====================================================
+// PUBLIC WEBSITE v1 — DEAL-ROUTING OPPORTUNITY RECORDS
+// (docs/website-v1/PEGASUS_PUBLIC_WEBSITE_PRD_V1.md §11,
+//  ROUTING_FORMS_AND_DATA_SCHEMA.md §6-7; issue #22)
+// Every public intake form creates one of these records.
+// =====================================================
+
+export const OPPORTUNITY_STATUSES = [
+  "New",
+  "Needs Review",
+  "Need More Info",
+  "Strategy Review",
+  "Routed",
+  "Active Opportunity",
+  "Under Contract",
+  "In Development",
+  "Disposition",
+  "Asset Management",
+  "Closed",
+  "Passed / Archived",
+] as const;
+export type OpportunityStatus = (typeof OPPORTUNITY_STATUSES)[number];
+
+export const OPPORTUNITY_VISITOR_TYPES = [
+  "owner",
+  "owner_representative",
+  "deal_finder",
+  "buyer",
+  "capital_partner",
+  "vendor_operator",
+  "referral_partner",
+  "strategy_only",
+  "other",
+] as const;
+export type OpportunityVisitorType = (typeof OPPORTUNITY_VISITOR_TYPES)[number];
+
+export const OPPORTUNITY_DEPARTMENTS = [
+  "Acquisitions",
+  "Development",
+  "Dispositions",
+  "Asset Management",
+  "Work With Apollo / KW",
+  "MarketFlow",
+  "Strategy Review",
+  "Vendor Bench",
+  "Private Capital Review",
+] as const;
+export type OpportunityDepartment = (typeof OPPORTUNITY_DEPARTMENTS)[number];
+
+export const opportunities = pgTable("opportunities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+
+  // intake provenance
+  sourcePage: varchar("source_page", { length: 120 }),
+  leadSource: varchar("lead_source", { length: 120 }),
+  visitorType: varchar("visitor_type", { length: 40 }).notNull(),
+
+  // contact
+  contactName: varchar("contact_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  preferredContactMethod: varchar("preferred_contact_method", { length: 40 }),
+  bestTimeToContact: varchar("best_time_to_contact", { length: 120 }),
+
+  // property
+  propertyAddress: text("property_address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zip_code", { length: 20 }),
+  propertyType: varchar("property_type", { length: 60 }),
+  occupancyStatus: varchar("occupancy_status", { length: 60 }),
+  condition: varchar("condition", { length: 60 }),
+
+  // situation + intent
+  situation: varchar("situation", { length: 80 }),
+  goal: varchar("goal", { length: 80 }),
+  urgency: varchar("urgency", { length: 60 }),
+  estimatedValue: real("estimated_value"),
+  estimatedDebt: real("estimated_debt"),
+  notes: text("notes"),
+
+  // routing (PRD §11.4)
+  recommendedLane: varchar("recommended_lane", { length: 120 }),
+  assignedDepartment: varchar("assigned_department", { length: 60 }),
+  status: varchar("status", { length: 40 }).notNull().default("New"),
+
+  // compliance + attribution
+  consentAccepted: boolean("consent_accepted").notNull().default(false),
+  utmSource: varchar("utm_source", { length: 100 }),
+  utmMedium: varchar("utm_medium", { length: 100 }),
+  utmCampaign: varchar("utm_campaign", { length: 100 }),
+  referrer: text("referrer"),
+}, (table) => [
+  index("IDX_opportunities_status").on(table.status),
+  index("IDX_opportunities_visitor_type").on(table.visitorType),
+  index("IDX_opportunities_created_at").on(table.createdAt),
+]);
+
+export const insertOpportunitySchema = createInsertSchema(opportunities)
+  .omit({ id: true, createdAt: true, updatedAt: true, status: true,
+          recommendedLane: true, assignedDepartment: true })
+  .extend({
+    visitorType: z.enum(OPPORTUNITY_VISITOR_TYPES),
+    contactName: z.string().trim().min(1).max(255),
+    email: z.string().trim().email().max(255),
+    consentAccepted: z.literal(true, {
+      errorMap: () => ({ message: "Consent is required to submit." }),
+    }),
+  });
+export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
+export type Opportunity = typeof opportunities.$inferSelect;
