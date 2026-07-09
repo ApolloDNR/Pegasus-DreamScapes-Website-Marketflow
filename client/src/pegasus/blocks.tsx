@@ -7,10 +7,11 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
+import { DealRoutingBoard } from './deal-engine';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON, DEPARTMENTS, DEPT_PILLARS,
-  PARTICIPATION_LANES, SITUATION_ROUTER, DEAL_ENGINE_FLOW, DEAL_ENGINE_ROUTES,
+  PARTICIPATION_LANES, SITUATION_ROUTER, DEAL_ENGINE_ROUTES,
 } from './data';
 
 /* ----------------------------------------------------------------
@@ -336,7 +337,9 @@ export function HomeIntro({ go }: { go: Nav }) {
 
 export function HowADealMovesBlock() {
   return (
-    <section className="operating-departments-section relative overflow-hidden bg-[var(--navy)] py-24 text-[var(--cream)] lg:py-32">
+    // No overflow-hidden on this section: it would break the routing board's
+    // position:sticky pin. Every decorative layer is inset-0 contained.
+    <section className="operating-departments-section relative bg-[var(--navy)] py-24 text-[var(--cream)] lg:py-32">
       <img
         src={IMG('nelson/nelson-exterior-1280.jpg')}
         alt=""
@@ -348,25 +351,26 @@ export function HowADealMovesBlock() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,14,24,0.98),rgba(5,14,24,0.9)_48%,rgba(5,14,24,0.96))]" />
       <ContourLines className="absolute inset-x-0 bottom-0 h-[55%] w-full text-[var(--accent-2)] opacity-[0.08]" />
       <div className="relative mx-auto max-w-[1320px] px-6 lg:px-12">
+        <div className="reveal max-w-3xl">
+          <div className="pg-label mb-6 text-[var(--accent-bright)]">The Pegasus Deal Engine</div>
+          <h2 className="font-serif-display max-w-[12ch] text-5xl leading-[1.02] tracking-[0em] text-[var(--cream)] md:text-7xl [text-wrap:balance]">
+            One property. Four departments. One routed path.
+          </h2>
+          <p className="mt-7 max-w-md text-[rgba(245,230,211,0.7)] leading-relaxed">
+            Pegasus does not force every property into one answer. Each opportunity is reviewed, structured, and routed through the departments it actually needs.
+          </p>
+        </div>
+      </div>
+
+      {/* PRD §6.2-3 visual direction: the routing board. Scroll scrubs a
+          bronze marble down the track and through the department rails. */}
+      <DealRoutingBoard />
+
+      <div className="relative mx-auto mt-20 max-w-[1320px] px-6 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="reveal lg:col-span-5">
-            <div className="pg-label mb-6 text-[var(--accent-bright)]">The Pegasus Deal Engine</div>
-            <h2 className="font-serif-display max-w-[12ch] text-5xl leading-[1.02] tracking-[0em] text-[var(--cream)] md:text-7xl [text-wrap:balance]">
-              One property. Four departments. One routed path.
-            </h2>
-            <p className="mt-7 max-w-md text-[rgba(245,230,211,0.7)] leading-relaxed">
-              Pegasus does not force every property into one answer. Each opportunity is reviewed, structured, and routed through the departments it actually needs.
-            </p>
-            {/* PRD §6.2-3 — the deal engine flow, real HTML text on bronze rails. */}
-            <div className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2" aria-label="Deal flow">
-              {DEAL_ENGINE_FLOW.map((step, i) => (
-                <span key={step} className="flex items-center gap-2">
-                  <span className="pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]">{step}</span>
-                  {i < DEAL_ENGINE_FLOW.length - 1 && <span aria-hidden="true" className="h-px w-5 bg-[var(--accent-bright)]/60" />}
-                </span>
-              ))}
-            </div>
-            <dl className="mt-8 space-y-2.5 border-t border-[rgba(245,230,211,0.14)] pt-6">
+            <div className="pg-label mb-5 text-[var(--accent-bright)]">Example routes</div>
+            <dl className="space-y-2.5 border-t border-[rgba(245,230,211,0.14)] pt-6">
               {DEAL_ENGINE_ROUTES.map((r) => (
                 <div key={r.name} className="flex flex-wrap items-baseline gap-x-3 text-[0.92rem]">
                   <dt className="text-[rgba(245,230,211,0.65)]">{r.name}:</dt>

@@ -2465,3 +2465,27 @@ select.pg-field option { color: #1b1712; }
   outline-offset: 3px;
   border-radius: 2px;
 }
+
+/* ============================================================
+   Deal Routing Board (PRD §6.2-3, issue #22)
+   Pinned scroll stage: bronze track on navy, marble scrubbed by
+   scroll. Before the scrub engages (no JS measurement, reduced
+   motion, jsdom) everything renders fully lit and static.
+   ============================================================ */
+.deal-board .deal-station {
+  opacity: 1;
+  transition: opacity 0.55s ease;
+}
+.deal-board.is-scrubbing .deal-station {
+  opacity: 0.3;
+}
+.deal-board.is-scrubbing .deal-station.is-on {
+  opacity: 1;
+}
+.deal-board .deal-track-lit {
+  filter: drop-shadow(0 0 6px rgba(217, 154, 91, 0.35));
+}
+/* The stage readout number/name swap without layout shift */
+.deal-board [data-station] .pg-label {
+  text-shadow: 0 1px 12px rgba(5, 14, 24, 0.9);
+}

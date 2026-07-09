@@ -109,7 +109,10 @@ export function Landing() {
   }, [route]);
 
   return (
-    <div className="pg-root min-h-screen antialiased selection:bg-[var(--accent)] selection:text-white overflow-x-hidden"
+    // overflow-x-clip (not -hidden): hidden makes this div a scroll container
+    // and silently kills position:sticky for the whole prototype — including
+    // the Deal Routing Board pin. clip clips without creating a scroller.
+    <div className="pg-root min-h-screen antialiased selection:bg-[var(--accent)] selection:text-white overflow-x-clip"
       data-theme={theme === 'dark' ? 'dark' : undefined}>
       <div ref={progressRef} className="scroll-progress" />
 
