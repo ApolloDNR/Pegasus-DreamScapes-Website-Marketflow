@@ -124,6 +124,7 @@ const STANDALONE_URLS: string[] = [
   "/submit",
   // Public Website v1 (issue #22): multi-step intake desk.
   "/submit-property",
+  "/pegasus-standard",
   "/connect",
   "/projects",
   "/projects/nelson-dr",

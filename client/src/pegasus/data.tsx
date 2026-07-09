@@ -157,11 +157,42 @@ export const ENGINE_OUTPUT = {
    HOW A DEAL MOVES - departments + two supporting pillars.
    Shows structure, not headcount.
    ================================================================ */
+// Locked copy — docs/website-v1/COPY_DECK_V1.md §2 "Four Departments".
 export const DEPARTMENTS: { stage: string; name: string; desc: string; icon: string }[] = [
-  { stage: '01', name: 'Acquisitions', desc: 'Reads every submitted property on real numbers and returns a written path within 48 hours.', icon: 'search' },
-  { stage: '02', name: 'Development', desc: 'Scopes the renovation or ground-up build to a real budget and draw schedule, delivered with licensed contractors.', icon: 'hammer' },
-  { stage: '03', name: 'Dispositions', desc: 'Lists, sells, or places the finished asset on the plan set before we close.', icon: 'handshake' },
-  { stage: '04', name: 'Asset Management', desc: 'Operates and holds what we keep, and carries the underwriting forward into the next deal.', icon: 'key' },
+  { stage: '01', name: 'Acquisitions', desc: 'Finds, reviews, structures, and secures opportunities.', icon: 'search' },
+  { stage: '02', name: 'Development', desc: 'Scopes, renovates, repositions, builds, and manages execution.', icon: 'hammer' },
+  { stage: '03', name: 'Dispositions', desc: 'Packages, markets, sells, assigns, lists, or connects the right exit.', icon: 'handshake' },
+  { stage: '04', name: 'Asset Management', desc: 'Operates, protects, and compounds long-term holds.', icon: 'key' },
+];
+
+// Locked copy — COPY_DECK_V1.md §2 "Situation Router" (PRD homepage §6.2-2).
+export const SITUATION_ROUTER: { key: string; title: string; desc: string; cta: string; href: string }[] = [
+  { key: 'own', title: 'I own a property',
+    desc: 'Distressed, inherited, occupied, vacant, behind on payments, unfinished, or simply complicated.',
+    cta: 'Start Owner Review', href: '/submit-property?type=owner' },
+  { key: 'found', title: 'I found a deal',
+    desc: 'Wholesaler, agent, contractor, investor, or referral partner with an opportunity.',
+    cta: 'Submit Deal', href: '/submit-property?type=deal-finder' },
+  { key: 'buy', title: 'I want to buy',
+    desc: 'Finished property, investment opportunity, or representation through Apollo/Keller Williams.',
+    cta: 'Explore Buyer Lane', href: '/buyers' },
+  { key: 'partner', title: 'I want to partner',
+    desc: 'Capital, JV, vendor, operator, or project support.',
+    cta: 'Partner With Pegasus', href: '/capital' },
+  { key: 'strategy', title: 'I need a strategy',
+    desc: 'Not sure whether to sell, hold, refinance, repair, list, partner, or exit.',
+    cta: 'Request Strategy Review', href: '/strategy-lab' },
+];
+
+// PRD homepage §6.2-3 — the Deal Engine flow and example routes. Real HTML
+// text, never baked into imagery (IMAGE_DIRECTION doctrine).
+export const DEAL_ENGINE_FLOW = ['Submit', 'Review', 'Structure', 'Route', 'Execute', 'Exit / Hold'];
+export const DEAL_ENGINE_ROUTES: { name: string; path: string }[] = [
+  { name: 'Direct sale', path: 'Acquisitions → Dispositions' },
+  { name: 'Value-add flip', path: 'Acquisitions → Development → Dispositions' },
+  { name: 'Rental hold', path: 'Acquisitions → Development → Asset Management' },
+  { name: 'Owner needs representation', path: 'Strategy Review → Work With Apollo / Keller Williams' },
+  { name: 'Deal finder needs buyer', path: 'Acquisitions → Dispositions / MarketFlow' },
 ];
 
 export const DEPT_PILLARS: { name: string; desc: string; icon: string }[] = [
@@ -317,11 +348,12 @@ export const FAQ_HOME: FaqItem[] = [
 /* ================================================================
    APOLLO
    ================================================================ */
+// Identity block locked per COPY_DECK_V1.md §13 (issue #22).
 export const APOLLO = {
-  name: 'Apollo Duran',
+  name: 'Paolo “Apollo” Duran',
   legal: 'Paolo Duran',
-  role: 'Founder & Deal Strategist',
-  license: 'Keller Williams East Bay · DRE #02333658',
+  role: 'Founder, Pegasus Dreamscapes Corp.',
+  license: 'Licensed Real Estate Professional, Keller Williams East Bay · CA DRE #02333658',
   lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He is a licensed real estate salesperson through Keller Williams Realty East Bay (DRE #02333658) and the strategist on every deal: he reads the situation, underwrites the numbers, and writes the plan. The build work is handled by licensed contractors brought on per project, not an in-house crew. The same underwriting runs from the first call to the final walkthrough.',
   points: [
     { t: 'The strategist', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
@@ -333,14 +365,16 @@ export const APOLLO = {
 /* ================================================================
    NELSON DRIVE CASE STUDY
    ================================================================ */
+// Locked per COPY_DECK_V1.md §2/§14 (issue #22): real figures, framed as
+// founder-led proof and lessons — never institutional scale.
 export const NELSON = {
   name: 'Nelson Drive',
   location: 'Richmond / El Sobrante Area, CA',
-  blurb: 'A dated single-family home, acquired, fully renovated, and delivered move-in ready.',
+  blurb: 'A dated East Bay residential property acquired, renovated, repositioned, and sold. The project shaped the Pegasus operating standard: underwrite honestly, scope carefully, manage the build, and understand the exit before entering.',
   rows: [
-    { k: 'Basis', v: 'Acquired', note: 'Purchased for full renovation' },
-    { k: 'Scope', v: 'Full refresh', note: 'Managed with the build team' },
-    { k: 'Exit', v: 'Delivered', note: 'Renovated and move-in ready' },
+    { k: 'Basis', v: 'Acquired $600,000', note: 'Purchased for full renovation' },
+    { k: 'Scope', v: 'Renovation ≈ $105,000', note: 'Managed with the build team' },
+    { k: 'Exit', v: 'Sold $840,000', note: 'Sold to an owner-occupant' },
     { k: 'Status', v: 'Closed', note: 'Finished and delivered' },
   ],
 };

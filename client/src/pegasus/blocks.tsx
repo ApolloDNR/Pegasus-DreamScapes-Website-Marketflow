@@ -10,7 +10,7 @@ import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON, DEPARTMENTS, DEPT_PILLARS,
-  PARTICIPATION_LANES,
+  PARTICIPATION_LANES, SITUATION_ROUTER, DEAL_ENGINE_FLOW, DEAL_ENGINE_ROUTES,
 } from './data';
 
 /* ----------------------------------------------------------------
@@ -210,24 +210,28 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="relative mx-auto max-w-[1440px] px-6 pb-20 pt-32 text-[var(--cream)] lg:px-12 lg:pb-24 lg:pt-36">
         <div className="flex min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-center">
           <div className="min-w-0 max-w-[860px]">
+            {/* Locked copy — COPY_DECK_V1.md §2 Hero (issue #22). */}
             <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo !tracking-[0.22em]">
-              East Bay real estate operating company
+              Real estate investment · development · strategy
             </div>
             <h1 className="font-serif-display max-w-[15ch] text-[clamp(3.25rem,6.8vw,7rem)] font-normal leading-[0.96] tracking-[0em] text-on-photo [text-wrap:balance]">
-              Read the property. <em className="hero-title-accent">Structure the path.</em>
+              Complex property. <em className="hero-title-accent">Structured opportunity.</em>
             </h1>
             <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
             <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
-              Pegasus Dreamscapes reviews the facts first: property, pressure, numbers, and duty. Then we name the responsible path: represent, acquire, structure, route, or pass with a clear reason.
+              Pegasus Dreamscapes reviews real estate situations and routes them into the right path — acquisition, development, disposition, representation, partnership, or long-term asset strategy.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <button type="button" onClick={() => go('submit')} className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+              <a href="/submit-property" className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </button>
+              </a>
               <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
-                Strategy Lab <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                Request a Strategy Review <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
+            <p className="mt-6 max-w-xl text-[0.95rem] text-[rgba(245,230,211,0.72)] text-on-photo">
+              Based in the East Bay. Founder-led real estate investment, development, and strategy.
+            </p>
             <div className="hero-proof-strip" aria-label="Public compliance and operating notes">
               <span>DRE #02333658</span>
               <span>KW East Bay for representation</span>
@@ -296,23 +300,25 @@ export function HomeIntro({ go }: { go: Nav }) {
 
         <div className="mt-16 grid items-start gap-10 lg:mt-20 lg:grid-cols-12 lg:gap-16">
           <div className="reveal lg:col-span-5">
-            <div className="pg-label text-[var(--accent)]">Start in the right lane</div>
+            {/* Locked copy — COPY_DECK_V1.md §2 Situation Router. */}
+            <div className="pg-label text-[var(--accent)]">The first decision point</div>
             <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
             <h3 className="font-serif-display text-4xl leading-[1.05] tracking-[0em] text-[var(--text)] md:text-6xl [text-wrap:balance]">
-              One firm. Different duties. No one-size answer.
+              What brings you here?
             </h3>
             <p className="mt-7 max-w-md text-[var(--muted)] leading-relaxed">
-              A ready listing, a distressed property, a buyer search, and a wholesale lead do not belong in the same script. The lane changes the duty.
+              A distressed property, a found deal, a buyer search, capital, and an unsure owner do not belong in the same script. Choose the lane and Pegasus routes the rest.
             </p>
           </div>
           <div className="reveal delay-100 lg:col-span-7">
             <div className="home-lane-ledger">
-              {PARTICIPATION_LANES.map((lane, i) => (
+              {SITUATION_ROUTER.map((lane, i) => (
                 <a key={lane.key} href={lane.href} className="home-lane-row group">
                   <span className="home-lane-num">{String(i + 1).padStart(2, '0')}</span>
                   <span>
                     <span className="home-lane-title">{lane.title}</span>
                     <span className="home-lane-desc">{lane.desc}</span>
+                    <span className="home-lane-desc !text-[var(--accent)] !mt-1">{lane.cta} →</span>
                   </span>
                   <ArrowUpRight className="home-lane-arrow" />
                 </a>
@@ -344,13 +350,30 @@ export function HowADealMovesBlock() {
       <div className="relative mx-auto max-w-[1320px] px-6 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="reveal lg:col-span-5">
-            <div className="pg-label mb-6 text-[var(--accent-bright)]">Operating departments</div>
-            <h2 className="font-serif-display max-w-[10ch] text-5xl leading-[1.02] tracking-[0em] text-[var(--cream)] md:text-7xl [text-wrap:balance]">
-              Four departments. One standard.
+            <div className="pg-label mb-6 text-[var(--accent-bright)]">The Pegasus Deal Engine</div>
+            <h2 className="font-serif-display max-w-[12ch] text-5xl leading-[1.02] tracking-[0em] text-[var(--cream)] md:text-7xl [text-wrap:balance]">
+              One property. Four departments. One routed path.
             </h2>
             <p className="mt-7 max-w-md text-[rgba(245,230,211,0.7)] leading-relaxed">
-              Acquisitions reads the deal. Development proves the scope. Dispositions controls the exit. Asset Management protects what is held.
+              Pegasus does not force every property into one answer. Each opportunity is reviewed, structured, and routed through the departments it actually needs.
             </p>
+            {/* PRD §6.2-3 — the deal engine flow, real HTML text on bronze rails. */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2" aria-label="Deal flow">
+              {DEAL_ENGINE_FLOW.map((step, i) => (
+                <span key={step} className="flex items-center gap-2">
+                  <span className="pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]">{step}</span>
+                  {i < DEAL_ENGINE_FLOW.length - 1 && <span aria-hidden="true" className="h-px w-5 bg-[var(--accent-bright)]/60" />}
+                </span>
+              ))}
+            </div>
+            <dl className="mt-8 space-y-2.5 border-t border-[rgba(245,230,211,0.14)] pt-6">
+              {DEAL_ENGINE_ROUTES.map((r) => (
+                <div key={r.name} className="flex flex-wrap items-baseline gap-x-3 text-[0.92rem]">
+                  <dt className="text-[rgba(245,230,211,0.65)]">{r.name}:</dt>
+                  <dd className="text-[var(--accent-bright)]">{r.path}</dd>
+                </div>
+              ))}
+            </dl>
             <div className="department-proof-card mt-10">
               <BrandMark boxClassName="h-12 w-12 shrink-0" onDark />
               <div>
@@ -1291,6 +1314,42 @@ export function NextStep({ go, label, route }: { go: Nav; label: string; route: 
 /* ----------------------------------------------------------------
    Final CTA band (three doors)
 ---------------------------------------------------------------- */
+/* ----------------------------------------------------------------
+   The Pegasus Standard — future-vision band (PRD §6.2-9, COPY_DECK §2).
+   Clearly labeled long-term direction; never implies current inventory.
+---------------------------------------------------------------- */
+export function PegasusStandardBand({ go }: { go: Nav }) {
+  void go;
+  return (
+    <section className="relative overflow-hidden bg-[var(--navy)] py-24 text-[var(--cream)] lg:py-32">
+      <ContourLines className="absolute inset-x-0 top-0 h-[60%] w-full text-[var(--accent-2)] opacity-[0.07]" />
+      <div className="relative mx-auto max-w-[1100px] px-6 text-center lg:px-12">
+        <div className="pg-label mb-6 text-[var(--accent-bright)]">Future vision · The Pegasus Standard</div>
+        <h2 className="font-serif-display mx-auto max-w-[18ch] text-4xl leading-[1.05] md:text-6xl [text-wrap:balance]">
+          The long-term vision is bigger than transactions.
+        </h2>
+        <p className="mx-auto mt-7 max-w-2xl leading-relaxed text-[rgba(245,230,211,0.75)]">
+          Pegasus Dreamscapes is building toward a higher living standard — homes, neighborhoods,
+          and communities shaped by durability, beauty, calm, nature, and human flourishing.
+          Today, that starts with disciplined real estate execution.
+        </p>
+        <p className="mx-auto mt-6 max-w-xl text-[0.95rem] italic leading-relaxed text-[rgba(245,230,211,0.6)]">
+          <span className="not-italic font-semibold text-[var(--accent-bright)]">Eudaimonia</span> — human
+          flourishing; the idea that places should help people live better, not just exist inside four walls.
+        </p>
+        <div className="mt-10">
+          <a href="/pegasus-standard" className="btn-line-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em]">
+            Explore The Pegasus Standard <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
+        <p className="mt-8 text-[0.8rem] uppercase tracking-[0.18em] text-[rgba(245,230,211,0.45)]">
+          Long-term development direction — not current inventory
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Request a Property Review', primaryAction = 'contact' }:
   { go: Nav; openPeggy: () => void; title: string; text: string; primaryLabel?: string; primaryAction?: Parameters<Nav>[0] }) {
   return (

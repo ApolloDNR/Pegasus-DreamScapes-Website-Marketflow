@@ -10,7 +10,7 @@ import {
   PageHero, Hero, HomeIntro, ThreePillarsBlock, PillarSection, ProcessSteps,
   EngineBlock, DealReadStepper, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
-  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock,
+  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock, PegasusStandardBand,
 } from './blocks';
 import {
   LeadSection, StrategyCalculator, StrategyCommandBoard, StrategyConsole, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
@@ -66,16 +66,20 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
   { go: Nav; theme: Theme; parallaxRef: React.RefObject<HTMLDivElement | null>; openPeggy: () => void }) {
   return (
     <>
+      {/* PRD §6.2 homepage order (issue #22): hero → router → engine/departments →
+          Strategy Lab → MarketFlow → Apollo → case study → Pegasus Standard → final CTA. */}
       <Hero go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />
       <HomeIntro go={go} />
       <HowADealMovesBlock />
       <StrategyLabFeature go={go} />
-      <NelsonProof go={go} />
       <MarketFlowBlock go={go} dark />
+      <ApolloBlock go={go} />
+      <NelsonProof go={go} />
+      <PegasusStandardBand go={go} />
       <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="/faq" />
       <CTABand go={go} openPeggy={openPeggy} primaryAction="submit" primaryLabel="Submit a Property"
-        title="Send us the situation. We'll map the path forward."
-        text="Complex, distressed, inherited, or simply complicated: every property gets a plain-language read. No pressure, no obligation." />
+        title="Have a property, deal, or situation worth reviewing?"
+        text="Submit the property, explain the situation, and Pegasus will route it to the right lane." />
     </>
   );
 }
@@ -807,7 +811,7 @@ export function Footer({ go }: { go: Nav }) {
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
           <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus Dreamscapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay. Each office is independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
+            Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company. Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation, when applicable, is provided by Paolo &ldquo;Apollo&rdquo; Duran through Keller Williams East Bay. CA DRE #02333658. No agency relationship is created without a written agreement. Strategy reviews are preliminary and are not legal, tax, lending, appraisal, financial, or investment advice. Each Keller Williams office is independently owned and operated. Equal Housing Opportunity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
             <span>© {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.</span>
