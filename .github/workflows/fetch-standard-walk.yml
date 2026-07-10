@@ -41,42 +41,34 @@ jobs:
               -vf "scale=1600:-2" -c:v libwebp -q:v 82 "$out/villa-dusk-1600.webp"
             echo "built villa-dusk-1600.webp"
           fi
-      - name: Encode scrub-optimized walk video
+      - name: Encode scrub-optimized walk video (v3 — 4K/60 master)
         run: |
           set -euo pipefail
           media=client/public/media
           img=client/public/images/standard
-          if [ -s "$media/walk-port.mp4" ]; then echo "have scrub videos"; exit 0; fi
+          if [ -s "$media/.walk-v3" ]; then echo "have v3 encodes"; exit 0; fi
           mkdir -p "$media" "$img"
-          curl -fsSL --retry 3 "$WALK_URL" -o /tmp/walk-2k.mp4
-          # All-intra (every frame a keyframe) H.264 so scroll-driven seeks
-          # land instantly. Two art-directed cuts: a 9:16 portrait crop at
-          # the master's native height (no upscale — crisp on phones) and a
-          # 1080p landscape cut for desktop. Plus a mid portrait for the
-          # self-contained preview artifact and a small VP9 twin for
-          # environments without H.264 (also the CI-side verification build).
-          enc264() { ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
+          curl -fsSL --retry 3 "$WALK_URL" -o /tmp/walk-4k.mp4
+          rm -f "$media"/walk-*.mp4 "$media"/walk-*.webm
+          # All-intra H.264 cuts from the motion-interpolated 4K/60 master.
+          # Portrait keeps the master's full native height (2160px) — the
+          # phone slice is pixel-native at retina density. 60fps preserved
+          # so the scrub quantizes at 1/60s.
+          enc264() { ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-4k.mp4 \
             -vf "$1" -c:v libx264 -profile:v high -crf "$2" \
             -g 1 -keyint_min 1 -pix_fmt yuv420p -movflags +faststart -an "$3"; }
-          enc264 "crop=ih*9/16:ih,fps=30"            26 "$media/walk-port.mp4"
-          enc264 "scale=1920:-2,fps=30"              25 "$media/walk-land.mp4"
-          enc264 "crop=ih*9/16:ih,scale=720:-2,fps=30" 26 "$media/walk-port-md.mp4"
-          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "crop=ih*9/16:ih,scale=540:-2,fps=30" -c:v libvpx-vp9 -crf 38 -b:v 0 \
+          enc264 "crop=ih*9/16:ih"              26 "$media/walk-port.mp4"
+          enc264 "scale=1920:-2"                25 "$media/walk-land.mp4"
+          enc264 "crop=ih*9/16:ih,scale=810:-2" 27 "$media/walk-port-md.mp4"
+          enc264 "crop=ih*9/16:ih,scale=810:-2" 30 "$media/walk-port-sm.mp4"
+          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-4k.mp4 \
+            -vf "crop=ih*9/16:ih,scale=540:-2,fps=30" -c:v libvpx-vp9 -crf 40 -b:v 0 \
             -g 1 -row-mt 1 -cpu-used 5 -an "$media/walk-port-test.webm"
-          # Poster (first frame) for instant paint / reduced motion / no-JS.
-          if [ ! -s "$img/descent-poster.webp" ]; then
-            ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-              -vf "select=eq(n\,0),scale=1600:-2" -frames:v 1 -c:v libwebp -q:v 80 \
-              "$img/descent-poster.webp"
-          fi
-          # Superseded first-generation encodes.
-          rm -f "$media/walk-scrub.mp4" "$media/walk-scrub-sm.mp4" "$media/walk-scrub-sm.webm"
+          touch "$media/.walk-v3"
           ls -la "$media"; du -sh "$media"
         env:
-          # Seedance walk eda9ca41 (start frame: docs/design-refs/corridor-dusk.png),
-          # upscaled to 2K by bytedance job 92189dc1.
-          WALK_URL: "https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260710_031629_92189dc1-76e5-45c5-b807-5590b850b204.mp4"
+          # Seedance walk eda9ca41 upscaled to 4K/60 by bytedance job 70015dc9.
+          WALK_URL: "https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260710_224710_70015dc9-92df-470f-a453-834d5cdfcdfe.mp4"
       - name: Commit vendored assets
         run: |
           set -euo pipefail
