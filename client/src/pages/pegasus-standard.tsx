@@ -5,29 +5,30 @@ import { ArrowRight } from "lucide-react";
  * Public Website v1 (issue #22) — The Pegasus Standard.
  * PRD §7.13 + COPY_DECK §15: the long-term vision page.
  *
- * THE DESCENT — the page opens with a scroll-scrubbed film sequence:
- * 48 frames of a blue-hour walk through a Hellenic Modern colonnade
- * (real Seedance footage generated for the Pegasus brand world, frames
- * vendored at /images/standard/descent/). The section pins for ~3.5
- * screens; scrolling down IS walking in. Copy beats fade through as the
- * walk advances, and a persistent label keeps the §18 non-negotiable
- * honest: this is concept imagery for a future vision, never current
- * inventory.
+ * THE DESCENT — the page opens with a scroll-scrubbed film: a dusk walk
+ * down the founder-approved colonnade corridor (docs/design-refs/
+ * corridor-dusk.png animated with Seedance, 2K master). The section
+ * pins for ~3.5 screens; scrolling down IS walking in.
  *
- * Motion runs on refs + one rAF loop with lerp easing. Environments
- * that can't paint (jsdom), and visitors who prefer reduced motion,
- * get the first frame as a static hero with the title beat visible —
- * identical text content, no scrub.
+ * Scrub architecture (the professional pattern, not frame-flipping):
+ * the walk ships as an all-intra video (every frame a keyframe — CI
+ * encodes H.264 for Safari and a VP9 twin for Chromium), fetched fully
+ * into memory as a blob when the visitor approaches, then scroll drives
+ * video.currentTime through a lerp. Decoding is hardware, off the main
+ * thread, so the scrub is 30fps-smooth with zero image-decode stalls.
+ * Seam transitions: the stage fades up from the navy page on entry,
+ * dissolves back to navy on exit, and the copy beats drift as they
+ * fade so they read as part of the scene.
+ *
+ * Fallbacks: reduced motion, jsdom, or any media failure ⇒ the poster
+ * frame with the title beat — identical text content, no scrub.
  */
 
-// 120 frames (fps 12) of the founder-approved corridor walk
-// (docs/design-refs/corridor-dusk.png animated forward with Seedance;
-// frames vendored by .github/workflows/fetch-standard-walk.yml). The
-// scrub also alpha-blends adjacent frames at fractional positions, so
-// the walk reads as continuous motion rather than stepped frames.
-const FRAME_COUNT = 120;
-const frameSrc = (i: number) =>
-  `/images/standard/descent/f-${String(i + 1).padStart(3, "0")}.webp`;
+const VIDEO_SOURCES: { src: string; type: string }[] = [
+  { src: "/media/walk-scrub.webm", type: "video/webm" },
+  { src: "/media/walk-scrub.mp4", type: "video/mp4" },
+];
+const POSTER = "/images/standard/descent-poster.webp";
 
 // Copy beats along the walk. [start, end] are scroll-progress windows;
 // the first beat starts visible, the last holds to the end.
@@ -66,92 +67,91 @@ function windowOpacity(p: number, [a, b]: [number, number], fade = 0.07): number
 
 function Descent() {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const veilRef = useRef<HTMLDivElement>(null);
   const beatRefs = useRef<(HTMLDivElement | null)[]>([]);
   const meterFillRef = useRef<HTMLDivElement>(null);
   const meterNumRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const wrap = wrapRef.current;
-    const canvas = canvasRef.current;
-    if (!wrap || !canvas) return;
-    const ctx = canvas.getContext("2d");
+    const video = videoRef.current;
+    if (!wrap || !video) return;
     const reduceMotion =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!ctx || reduceMotion) return; // static hero fallback stays
+    // jsdom's HTMLVideoElement has no real media pipeline; canPlayType
+    // returning nothing for both sources means "stay on the poster".
+    if (reduceMotion || typeof video.canPlayType !== "function") return;
+    const source = VIDEO_SOURCES.find((s) => video.canPlayType(s.type));
+    if (!source) return;
 
-    // Progressive preload: the base <img> already shows frame 1; fetch the
-    // rest in the background and draw whatever is loaded nearest.
-    const frames: (HTMLImageElement | null)[] = Array(FRAME_COUNT).fill(null);
     let disposed = false;
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = frameSrc(i);
-      img.onload = () => {
-        if (!disposed) frames[i] = img;
-      };
-    }
+    let objectUrl: string | null = null;
+    let raf = 0;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const sizeCanvas = () => {
-      const r = canvas.getBoundingClientRect();
-      canvas.width = Math.round(r.width * dpr);
-      canvas.height = Math.round(r.height * dpr);
+    // Fetch the whole file into memory before the scrub engages so every
+    // seek is a buffer hit — no network stalls mid-scroll. Kicks off when
+    // the visitor gets near the section (two viewports out).
+    const arm = async () => {
+      try {
+        const res = await fetch(source.src);
+        if (!res.ok) throw new Error(String(res.status));
+        const blob = await res.blob();
+        if (disposed) return;
+        objectUrl = URL.createObjectURL(blob);
+        video.src = objectUrl;
+        video.load();
+      } catch {
+        if (!disposed) {
+          video.src = source.src; // stream it — still all-intra seekable
+          video.load();
+        }
+      }
     };
-    sizeCanvas();
-    window.addEventListener("resize", sizeCanvas);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          void arm();
+        }
+      },
+      { rootMargin: "200% 0%" },
+    );
+    io.observe(wrap);
 
     let target = 0;
     let current = -1;
-    let paintedFi = -1;
-    let raf = 0;
-
-    // Nearest loaded frame at or below idx, so preload gaps never flash.
-    const loadedAt = (idx: number): HTMLImageElement | null => {
-      for (let i = idx; i >= 0; i--) if (frames[i]) return frames[i];
-      return null;
-    };
-    const drawCover = (img: HTMLImageElement, alpha: number) => {
-      const cw = canvas.width;
-      const ch = canvas.height;
-      const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
-      const dw = img.naturalWidth * scale;
-      const dh = img.naturalHeight * scale;
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-      ctx.globalAlpha = 1;
-    };
-    // Fractional-position paint: base frame + the next frame blended on
-    // top by the fractional part. This is what makes the walk smooth.
-    const paint = (fi: number) => {
-      const i0 = Math.min(FRAME_COUNT - 1, Math.floor(fi));
-      const i1 = Math.min(FRAME_COUNT - 1, i0 + 1);
-      const frac = fi - i0;
-      const a = loadedAt(i0);
-      if (!a) return;
-      drawCover(a, 1);
-      const b = frames[i1];
-      if (b && b !== a && frac > 0.02) drawCover(b, frac);
-      canvas.style.opacity = "1";
-    };
-
     const frame = () => {
       const rect = wrap.getBoundingClientRect();
       const scrollable = rect.height - window.innerHeight;
       target = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 1;
-      const next = current < 0 ? target : current + (target - current) * 0.14;
-      if (Math.abs(next - current) > 0.0003 || paintedFi < 0) {
+      const next = current < 0 ? target : current + (target - current) * 0.12;
+      if (Math.abs(next - current) > 0.0003 || current < 0) {
         current = next;
-        const fi = current * (FRAME_COUNT - 1);
-        if (Math.abs(fi - paintedFi) > 0.02) {
-          paint(fi);
-          paintedFi = fi;
+
+        // Scrub: hardware-decoded, every frame a keyframe. Only write
+        // currentTime when the delta is a visible fraction of a frame.
+        if (video.readyState >= 2 && video.duration > 0) {
+          const t = current * Math.max(0, video.duration - 0.05);
+          if (Math.abs(t - video.currentTime) > 1 / 60) {
+            video.currentTime = t;
+            if (video.style.opacity !== "1") video.style.opacity = "1";
+          }
         }
-        // Copy beats + descent meter
+
+        // Exit seam: the walk dissolves back into the navy page.
+        if (veilRef.current) {
+          const exit = Math.max(0, (current - 0.94) / 0.06);
+          veilRef.current.style.opacity = String(Math.min(1, exit));
+        }
+
+        // Copy beats fade AND drift so they sit in the scene.
         beatRefs.current.forEach((el, i) => {
-          if (el) el.style.opacity = String(windowOpacity(current, BEATS[i].win));
+          if (!el) return;
+          const op = windowOpacity(current, BEATS[i].win);
+          el.style.opacity = String(op);
+          el.style.transform = `translateY(${(1 - op) * 16}px)`;
         });
         if (meterFillRef.current) meterFillRef.current.style.height = `${current * 100}%`;
         if (meterNumRef.current) {
@@ -165,28 +165,37 @@ function Descent() {
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
+
     return () => {
       disposed = true;
+      io.disconnect();
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", sizeCanvas);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, []);
 
   return (
     <div ref={wrapRef} className="relative" style={{ height: "380vh" }}>
-      <div className="sticky top-0 h-screen overflow-hidden">
-        {/* Base frame: real <img> so the page has a hero even before JS,
-            for reduced motion, and for the LCP. The canvas paints over it. */}
+      <div className="sticky top-0 h-screen overflow-hidden bg-[#091421]">
+        {/* Poster paints instantly (LCP, no-JS, reduced motion); the video
+            fades over it once the blob is armed and the first seek lands. */}
         <img
-          src={frameSrc(0)}
+          src={POSTER}
           alt="Concept render — a dusk walk down a marble colonnade hall toward the sea. Future vision imagery, not a current Pegasus property."
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <canvas
-          ref={canvasRef}
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          preload="none"
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full opacity-0"
+          className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500"
         />
+        {/* Seam veil: fades from navy on page-open (CSS, once), and the
+            scrub raises it again at the very end so the walk dissolves
+            back into the page instead of stopping dead. */}
+        <div ref={veilRef} className="descent-veil pointer-events-none absolute inset-0 bg-[#091421]" />
         {/* Legibility scrims */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#091421]/90 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-[#091421]/95 via-[#091421]/40 to-transparent" />

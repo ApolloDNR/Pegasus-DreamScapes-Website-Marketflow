@@ -3004,3 +3004,18 @@ body:has(.connect-premium) .peggy-fab {
     margin-bottom: 1rem;
   }
 }
+
+/* Public Website v1 (issue #22) — The Descent seam veil. Opens the page
+   with a calm fade from navy into the corridor; the scroll scrub reuses
+   the same element to dissolve back out at the end of the walk. */
+.descent-veil {
+  opacity: 0;
+  animation: descent-veil-in 1.1s ease-out;
+}
+@keyframes descent-veil-in {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .descent-veil { animation: none; }
+}
