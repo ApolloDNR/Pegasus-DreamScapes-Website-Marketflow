@@ -212,21 +212,30 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-0 hero-scrim-top pointer-events-none" />
       <div className="absolute inset-0 hero-scrim-bottom" />
 
-      <div className="relative mx-auto max-w-[1440px] px-6 pb-20 pt-32 text-[var(--cream)] lg:px-12 lg:pb-24 lg:pt-36">
-        <div className="flex min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-center">
-          <div className="min-w-0 max-w-[860px]">
-            {/* Locked copy — COPY_DECK_V1.md §2 Hero (issue #22). */}
-            <div className="pg-label mb-7 text-[var(--accent-bright)] text-on-photo !tracking-[0.22em]">
+      {/* Founder board IMG_8773 composition: the villa image is symmetric
+          around its lit doorway, so the hero sits on that axis — centered,
+          monumental, staged entrance. Copy is locked (COPY_DECK §2). */}
+      <div className="hero-axis-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+      <div className="relative mx-auto max-w-[1440px] px-6 pb-16 pt-32 text-[var(--cream)] lg:px-12 lg:pb-20 lg:pt-36">
+        <div className="flex min-h-[calc(clamp(760px,100vh,980px)-9rem)] min-w-0 items-end justify-center">
+          <div className="flex min-w-0 max-w-4xl flex-col items-center text-center">
+            <img
+              src={IMG('pegasus-logo-mark.png')}
+              alt=""
+              aria-hidden="true"
+              className="hero-rise h-16 w-auto drop-shadow-[0_4px_24px_rgba(5,14,24,0.7)] sm:h-20"
+            />
+            <div className="hero-rise hero-rise-d1 pg-label mt-7 text-[var(--accent-bright)] text-on-photo !tracking-[0.3em]">
               Real estate investment · development · strategy
             </div>
-            <h1 className="font-serif-display max-w-[15ch] text-[clamp(3.25rem,6.8vw,7rem)] font-normal leading-[0.96] tracking-[0em] text-on-photo [text-wrap:balance]">
-              Complex property. <em className="hero-title-accent">Structured opportunity.</em>
+            <h1 className="hero-rise hero-rise-d2 font-serif-display mt-5 text-[clamp(3rem,7.2vw,6.6rem)] font-normal leading-[1.0] tracking-[0em] text-on-photo [text-wrap:balance]">
+              <span className="block">Complex property.</span>
+              <em className="hero-title-accent block">Structured opportunity.</em>
             </h1>
-            <div className="draw-x mt-8 mb-8 h-px max-w-[220px] bg-[var(--accent-bright)]/60" aria-hidden="true" />
-            <p className="max-w-xl text-[1.05rem] leading-[1.75] text-[rgba(245,230,211,0.82)] text-on-photo md:text-[1.15rem]">
+            <p className="hero-rise hero-rise-d3 mx-auto mt-7 max-w-2xl text-[1.02rem] leading-[1.75] text-[rgba(245,230,211,0.85)] text-on-photo md:text-[1.12rem]">
               Pegasus Dreamscapes reviews real estate situations and routes them into the right path — acquisition, development, disposition, representation, partnership, or long-term asset strategy.
             </p>
-            <div className="mt-9 flex flex-wrap items-center gap-4">
+            <div className="hero-rise hero-rise-d3 mt-9 flex flex-wrap items-center justify-center gap-4">
               <a href="/submit-property" className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </a>
@@ -234,10 +243,10 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
                 Request a Strategy Review <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
-            <p className="mt-6 max-w-xl text-[0.95rem] text-[rgba(245,230,211,0.72)] text-on-photo">
+            <p className="hero-rise hero-rise-d4 mt-6 max-w-xl text-[0.95rem] text-[rgba(245,230,211,0.75)] text-on-photo">
               Based in the East Bay. Founder-led real estate investment, development, and strategy.
             </p>
-            <div className="hero-proof-strip" aria-label="Public compliance and operating notes">
+            <div className="hero-rise hero-rise-d4 hero-proof-strip justify-center" aria-label="Public compliance and operating notes">
               <span>DRE #02333658</span>
               <span>KW East Bay for representation</span>
               <span>Equal Housing</span>
