@@ -20,10 +20,12 @@ import { ArrowRight } from "lucide-react";
  * identical text content, no scrub.
  */
 
-// 60 frames of the founder-approved corridor walk (docs/design-refs/
-// corridor-dusk.png animated forward with Seedance; frames vendored by
-// .github/workflows/fetch-standard-walk.yml).
-const FRAME_COUNT = 60;
+// 120 frames (fps 12) of the founder-approved corridor walk
+// (docs/design-refs/corridor-dusk.png animated forward with Seedance;
+// frames vendored by .github/workflows/fetch-standard-walk.yml). The
+// scrub also alpha-blends adjacent frames at fractional positions, so
+// the walk reads as continuous motion rather than stepped frames.
+const FRAME_COUNT = 120;
 const frameSrc = (i: number) =>
   `/images/standard/descent/f-${String(i + 1).padStart(3, "0")}.webp`;
 
@@ -103,20 +105,35 @@ function Descent() {
 
     let target = 0;
     let current = -1;
-    let drawnFrame = -1;
+    let paintedFi = -1;
     let raf = 0;
 
-    const draw = (idx: number) => {
-      // Nearest loaded frame at or below idx, so gaps never flash black.
-      let img: HTMLImageElement | null = null;
-      for (let i = idx; i >= 0 && !img; i--) img = frames[i];
-      if (!img) return;
+    // Nearest loaded frame at or below idx, so preload gaps never flash.
+    const loadedAt = (idx: number): HTMLImageElement | null => {
+      for (let i = idx; i >= 0; i--) if (frames[i]) return frames[i];
+      return null;
+    };
+    const drawCover = (img: HTMLImageElement, alpha: number) => {
       const cw = canvas.width;
       const ch = canvas.height;
       const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
       const dw = img.naturalWidth * scale;
       const dh = img.naturalHeight * scale;
+      ctx.globalAlpha = alpha;
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+      ctx.globalAlpha = 1;
+    };
+    // Fractional-position paint: base frame + the next frame blended on
+    // top by the fractional part. This is what makes the walk smooth.
+    const paint = (fi: number) => {
+      const i0 = Math.min(FRAME_COUNT - 1, Math.floor(fi));
+      const i1 = Math.min(FRAME_COUNT - 1, i0 + 1);
+      const frac = fi - i0;
+      const a = loadedAt(i0);
+      if (!a) return;
+      drawCover(a, 1);
+      const b = frames[i1];
+      if (b && b !== a && frac > 0.02) drawCover(b, frac);
       canvas.style.opacity = "1";
     };
 
@@ -125,12 +142,12 @@ function Descent() {
       const scrollable = rect.height - window.innerHeight;
       target = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 1;
       const next = current < 0 ? target : current + (target - current) * 0.14;
-      if (Math.abs(next - current) > 0.0005 || drawnFrame < 0) {
+      if (Math.abs(next - current) > 0.0003 || paintedFi < 0) {
         current = next;
-        const idx = Math.min(FRAME_COUNT - 1, Math.round(current * (FRAME_COUNT - 1)));
-        if (idx !== drawnFrame) {
-          draw(idx);
-          drawnFrame = idx;
+        const fi = current * (FRAME_COUNT - 1);
+        if (Math.abs(fi - paintedFi) > 0.02) {
+          paint(fi);
+          paintedFi = fi;
         }
         // Copy beats + descent meter
         beatRefs.current.forEach((el, i) => {

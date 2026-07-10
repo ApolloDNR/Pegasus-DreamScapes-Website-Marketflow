@@ -7,7 +7,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
-import { DealRoutingBoard } from './deal-engine';
+import { DealEngineSchematic } from './deal-engine';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON, DEPARTMENTS, DEPT_PILLARS,
@@ -198,12 +198,13 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
     <section className="hero-estate-shell relative min-h-[clamp(760px,100vh,980px)] w-full overflow-hidden">
       <div ref={parallaxRef as React.RefObject<HTMLDivElement>} className="hero-parallax absolute inset-0">
         {/* Founder-approved design direction (docs/design-refs, issue #22):
-            the dusk colonnade corridor — brand atmosphere per PRD §6.2, one
-            plate for both themes. Optimized webp is produced by CI from the
-            reference master. */}
+            the Hellenic Modern villa at dusk — brand atmosphere per PRD §6.2,
+            one plate for both themes. The colonnade corridor stays exclusive
+            to the /pegasus-standard walk so the two surfaces never repeat.
+            Optimized webp is produced by CI from the reference master. */}
         <img
-          src={IMG('hall/corridor-dusk-1600.webp')}
-          alt="Concept render — a marble colonnade at dusk opening to the sea. Pegasus brand atmosphere, not a current property."
+          src={IMG('hall/villa-dusk-1600.webp')}
+          alt="Concept render — a Hellenic Modern villa at dusk. Pegasus brand atmosphere, not a current property."
           className="ken-burns absolute inset-0 h-full w-full object-cover"
         />
       </div>
@@ -363,11 +364,12 @@ export function HowADealMovesBlock() {
             Pegasus does not force every property into one answer. Each opportunity is reviewed, structured, and routed through the departments it actually needs.
           </p>
         </div>
-      </div>
 
-      {/* PRD §6.2-3 visual direction: the routing board. Scroll scrubs a
-          bronze marble down the track and through the department rails. */}
-      <DealRoutingBoard />
+        {/* PRD §6.2-3: the routing schematic — compact, live routes. */}
+        <div className="reveal delay-100">
+          <DealEngineSchematic />
+        </div>
+      </div>
 
       <div className="relative mx-auto mt-20 max-w-[1320px] px-6 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">

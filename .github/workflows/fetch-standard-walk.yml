@@ -24,25 +24,34 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install ffmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-      - name: Build hero plate from the corridor reference
+      - name: Build hero plates from the reference masters
         run: |
           set -euo pipefail
           out=client/public/images/hall
           mkdir -p "$out"
-          if [ -s "$out/corridor-dusk-1600.webp" ]; then echo "have hero plate"; else
+          if [ -s "$out/corridor-dusk-1600.webp" ]; then echo "have corridor plate"; else
             ffmpeg -hide_banner -loglevel error -y -i docs/design-refs/corridor-dusk.png \
               -vf "scale=1600:-2" -c:v libwebp -q:v 82 "$out/corridor-dusk-1600.webp"
             echo "built corridor-dusk-1600.webp"
+          fi
+          # The homepage hero: the villa board (the corridor stays exclusive
+          # to the /pegasus-standard walk so the two never repeat).
+          if [ -s "$out/villa-dusk-1600.webp" ]; then echo "have villa plate"; else
+            ffmpeg -hide_banner -loglevel error -y -i docs/design-refs/villa-dusk.jpeg \
+              -vf "scale=1600:-2" -c:v libwebp -q:v 82 "$out/villa-dusk-1600.webp"
+            echo "built villa-dusk-1600.webp"
           fi
       - name: Fetch walk master and extract frames
         run: |
           set -euo pipefail
           dir=client/public/images/standard/descent
-          if [ -s "$dir/f-060.webp" ]; then echo "have new frames"; exit 0; fi
+          # fps 12 x 10s = 120 frames: half-step spacing so the scrub (which
+          # also alpha-blends adjacent frames) reads as continuous motion.
+          if [ -s "$dir/f-120.webp" ]; then echo "have smooth frames"; exit 0; fi
           curl -fsSL --retry 3 "$WALK_URL" -o /tmp/walk-2k.mp4
           rm -rf "$dir" && mkdir -p "$dir"
           ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "fps=6,scale=1600:-2" -frames:v 60 -c:v libwebp -q:v 70 \
+            -vf "fps=12,scale=1600:-2" -frames:v 120 -c:v libwebp -q:v 72 \
             "$dir/f-%03d.webp"
           echo "extracted $(ls -1 "$dir" | wc -l) frames"; du -sh "$dir"
         env:
