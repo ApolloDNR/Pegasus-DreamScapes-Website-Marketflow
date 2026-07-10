@@ -46,31 +46,32 @@ jobs:
           set -euo pipefail
           media=client/public/media
           img=client/public/images/standard
-          if [ -s "$media/walk-scrub.mp4" ]; then echo "have scrub video"; exit 0; fi
+          if [ -s "$media/walk-port.mp4" ]; then echo "have scrub videos"; exit 0; fi
           mkdir -p "$media" "$img"
           curl -fsSL --retry 3 "$WALK_URL" -o /tmp/walk-2k.mp4
-          # All-intra (every frame a keyframe) so scroll-driven currentTime
-          # seeks land instantly — the technique behind smooth scrollytelling.
-          # H.264 for Safari/production; VP9 twin (smaller) for Chromium.
+          # All-intra (every frame a keyframe) H.264 so scroll-driven seeks
+          # land instantly. Two art-directed cuts: a 9:16 portrait crop at
+          # the master's native height (no upscale — crisp on phones) and a
+          # 1080p landscape cut for desktop. Plus a mid portrait for the
+          # self-contained preview artifact and a small VP9 twin for
+          # environments without H.264 (also the CI-side verification build).
+          enc264() { ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
+            -vf "$1" -c:v libx264 -profile:v high -crf "$2" \
+            -g 1 -keyint_min 1 -pix_fmt yuv420p -movflags +faststart -an "$3"; }
+          enc264 "crop=ih*9/16:ih,fps=30"            26 "$media/walk-port.mp4"
+          enc264 "scale=1920:-2,fps=30"              25 "$media/walk-land.mp4"
+          enc264 "crop=ih*9/16:ih,scale=720:-2,fps=30" 26 "$media/walk-port-md.mp4"
           ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "scale=1440:-2,fps=30" -c:v libx264 -profile:v high -crf 26 \
-            -g 1 -keyint_min 1 -pix_fmt yuv420p -movflags +faststart -an \
-            "$media/walk-scrub.mp4"
-          # Smaller pair for the self-contained preview artifact.
-          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "scale=1024:-2,fps=30" -c:v libx264 -profile:v high -crf 28 \
-            -g 1 -keyint_min 1 -pix_fmt yuv420p -movflags +faststart -an \
-            "$media/walk-scrub-sm.mp4"
-          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "scale=1024:-2,fps=30" -c:v libvpx-vp9 -crf 37 -b:v 0 \
-            -g 1 -row-mt 1 -cpu-used 4 -an \
-            "$media/walk-scrub-sm.webm"
+            -vf "crop=ih*9/16:ih,scale=540:-2,fps=30" -c:v libvpx-vp9 -crf 38 -b:v 0 \
+            -g 1 -row-mt 1 -cpu-used 5 -an "$media/walk-port-test.webm"
           # Poster (first frame) for instant paint / reduced motion / no-JS.
-          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "select=eq(n\,0),scale=1600:-2" -frames:v 1 -c:v libwebp -q:v 80 \
-            "$img/descent-poster.webp"
-          # The 120 still frames are superseded by the scrub video.
-          rm -rf "$img/descent"
+          if [ ! -s "$img/descent-poster.webp" ]; then
+            ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
+              -vf "select=eq(n\,0),scale=1600:-2" -frames:v 1 -c:v libwebp -q:v 80 \
+              "$img/descent-poster.webp"
+          fi
+          # Superseded first-generation encodes.
+          rm -f "$media/walk-scrub.mp4" "$media/walk-scrub-sm.mp4" "$media/walk-scrub-sm.webm"
           ls -la "$media"; du -sh "$media"
         env:
           # Seedance walk eda9ca41 (start frame: docs/design-refs/corridor-dusk.png),

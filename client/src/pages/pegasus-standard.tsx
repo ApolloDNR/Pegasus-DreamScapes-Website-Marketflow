@@ -24,14 +24,21 @@ import { ArrowRight } from "lucide-react";
  * frame with the title beat — identical text content, no scrub.
  */
 
-// mp4 (all-intra H.264, 1440px) is the primary everywhere; the smaller
-// VP9 webm covers browsers without H.264 decode. The codec strings are
+// Art-directed cuts: portrait phones get a native-height 9:16 crop of
+// the master (no upscale — crisp), landscape viewports get the 1080p
+// cut. The VP9 twin covers browsers without H.264. Codec strings are
 // deliberate: canPlayType("video/mp4") answers "maybe" even where H.264
 // is missing, so probing must name the exact codec.
-const VIDEO_SOURCES: { src: string; type: string }[] = [
-  { src: "/media/walk-scrub.mp4", type: 'video/mp4; codecs="avc1.640028"' },
-  { src: "/media/walk-scrub-sm.webm", type: 'video/webm; codecs="vp09.00.40.08"' },
-];
+const H264 = 'video/mp4; codecs="avc1.640028"';
+const VP9 = 'video/webm; codecs="vp09.00.40.08"';
+function videoSources(): { src: string; type: string }[] {
+  const portrait =
+    typeof window !== "undefined" && window.innerHeight > window.innerWidth;
+  return [
+    { src: portrait ? "/media/walk-port.mp4" : "/media/walk-land.mp4", type: H264 },
+    { src: "/media/walk-port-test.webm", type: VP9 },
+  ];
+}
 const POSTER = "/images/standard/descent-poster.webp";
 
 // Copy beats along the walk. [start, end] are scroll-progress windows;
@@ -87,7 +94,7 @@ function Descent() {
     // jsdom's HTMLVideoElement has no real media pipeline; canPlayType
     // returning nothing for both sources means "stay on the poster".
     if (reduceMotion || typeof video.canPlayType !== "function") return;
-    const candidates = VIDEO_SOURCES.filter((s) => video.canPlayType(s.type) !== "");
+    const candidates = videoSources().filter((s) => video.canPlayType(s.type) !== "");
     if (candidates.length === 0) return;
 
     let disposed = false;
