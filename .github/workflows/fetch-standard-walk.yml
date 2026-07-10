@@ -56,10 +56,6 @@ jobs:
             -vf "scale=1440:-2,fps=30" -c:v libx264 -profile:v high -crf 26 \
             -g 1 -keyint_min 1 -pix_fmt yuv420p -movflags +faststart -an \
             "$media/walk-scrub.mp4"
-          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
-            -vf "scale=1440:-2,fps=30" -c:v libvpx-vp9 -crf 34 -b:v 0 \
-            -g 1 -row-mt 1 -cpu-used 4 -an \
-            "$media/walk-scrub.webm"
           # Smaller pair for the self-contained preview artifact.
           ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
             -vf "scale=1024:-2,fps=30" -c:v libx264 -profile:v high -crf 28 \

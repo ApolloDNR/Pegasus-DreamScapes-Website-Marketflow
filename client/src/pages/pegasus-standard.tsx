@@ -24,9 +24,13 @@ import { ArrowRight } from "lucide-react";
  * frame with the title beat — identical text content, no scrub.
  */
 
+// mp4 (all-intra H.264, 1440px) is the primary everywhere; the smaller
+// VP9 webm covers browsers without H.264 decode. The codec strings are
+// deliberate: canPlayType("video/mp4") answers "maybe" even where H.264
+// is missing, so probing must name the exact codec.
 const VIDEO_SOURCES: { src: string; type: string }[] = [
-  { src: "/media/walk-scrub.webm", type: "video/webm" },
-  { src: "/media/walk-scrub.mp4", type: "video/mp4" },
+  { src: "/media/walk-scrub.mp4", type: 'video/mp4; codecs="avc1.640028"' },
+  { src: "/media/walk-scrub-sm.webm", type: 'video/webm; codecs="vp09.00.40.08"' },
 ];
 const POSTER = "/images/standard/descent-poster.webp";
 
@@ -83,29 +87,62 @@ function Descent() {
     // jsdom's HTMLVideoElement has no real media pipeline; canPlayType
     // returning nothing for both sources means "stay on the poster".
     if (reduceMotion || typeof video.canPlayType !== "function") return;
-    const source = VIDEO_SOURCES.find((s) => video.canPlayType(s.type));
-    if (!source) return;
+    const candidates = VIDEO_SOURCES.filter((s) => video.canPlayType(s.type) !== "");
+    if (candidates.length === 0) return;
 
     let disposed = false;
     let objectUrl: string | null = null;
     let raf = 0;
 
+    // Load a source and resolve once metadata proves it is decodable;
+    // reject on error or an 8s stall so the next candidate gets a turn.
+    const tryLoad = (url: string) =>
+      new Promise<void>((resolve, reject) => {
+        const cleanup = () => {
+          video.removeEventListener("loadedmetadata", ok);
+          video.removeEventListener("error", bad);
+          window.clearTimeout(timer);
+        };
+        const ok = () => {
+          cleanup();
+          resolve();
+        };
+        const bad = () => {
+          cleanup();
+          reject(new Error("decode"));
+        };
+        const timer = window.setTimeout(bad, 8000);
+        video.addEventListener("loadedmetadata", ok, { once: true });
+        video.addEventListener("error", bad, { once: true });
+        video.src = url;
+        video.load();
+      });
+
     // Fetch the whole file into memory before the scrub engages so every
     // seek is a buffer hit — no network stalls mid-scroll. Kicks off when
-    // the visitor gets near the section (two viewports out).
+    // the visitor gets near the section (two viewports out). Candidates
+    // are tried in order until one actually decodes.
     const arm = async () => {
-      try {
-        const res = await fetch(source.src);
-        if (!res.ok) throw new Error(String(res.status));
-        const blob = await res.blob();
+      for (const source of candidates) {
         if (disposed) return;
-        objectUrl = URL.createObjectURL(blob);
-        video.src = objectUrl;
-        video.load();
-      } catch {
-        if (!disposed) {
-          video.src = source.src; // stream it — still all-intra seekable
-          video.load();
+        let url = source.src;
+        try {
+          const res = await fetch(source.src);
+          if (res.ok) {
+            const blob = await res.blob();
+            if (disposed) return;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            objectUrl = URL.createObjectURL(blob);
+            url = objectUrl;
+          }
+        } catch {
+          /* stream the original URL — still all-intra seekable */
+        }
+        try {
+          await tryLoad(url);
+          return; // decodable — the scrub loop takes it from here
+        } catch {
+          /* try the next candidate */
         }
       }
     };
