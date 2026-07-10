@@ -197,10 +197,13 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
   return (
     <section className="hero-estate-shell relative min-h-[clamp(760px,100vh,980px)] w-full overflow-hidden">
       <div ref={parallaxRef as React.RefObject<HTMLDivElement>} className="hero-parallax absolute inset-0">
+        {/* Founder-approved design direction (docs/design-refs, issue #22):
+            the dusk colonnade corridor — brand atmosphere per PRD §6.2, one
+            plate for both themes. Optimized webp is produced by CI from the
+            reference master. */}
         <img
-          key={theme}
-          src={IMG(theme === 'dark' ? 'pegasus-hero-cinematic.png' : 'pegasus-hero-light.png')}
-          alt="East Bay luxury hillside home"
+          src={IMG('hall/corridor-dusk-1600.webp')}
+          alt="Concept render — a marble colonnade at dusk opening to the sea. Pegasus brand atmosphere, not a current property."
           className="ken-burns absolute inset-0 h-full w-full object-cover"
         />
       </div>

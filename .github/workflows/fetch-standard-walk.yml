@@ -1,0 +1,60 @@
+name: Fetch standard walk footage
+
+# Vendors the founder-approved warm-dusk imagery (issue #22 redesign):
+#  1. Optimizes the corridor reference master into the homepage hero plate.
+#  2. Downloads the upscaled Seedance corridor-walk master from the
+#     generation CDN (blocked from the dev container, reachable from CI),
+#     extracts the 60-frame scroll-scrub sequence for /pegasus-standard,
+#     and removes the superseded blue-hour frames.
+# Runs on push; no-ops once the assets exist. Its own commit uses
+# GITHUB_TOKEN, which cannot re-trigger this workflow (no recursion).
+on:
+  push:
+    branches:
+      - feature/public-website-v1-deal-routing
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Build hero plate from the corridor reference
+        run: |
+          set -euo pipefail
+          out=client/public/images/hall
+          mkdir -p "$out"
+          if [ -s "$out/corridor-dusk-1600.webp" ]; then echo "have hero plate"; else
+            ffmpeg -hide_banner -loglevel error -y -i docs/design-refs/corridor-dusk.png \
+              -vf "scale=1600:-2" -c:v libwebp -q:v 82 "$out/corridor-dusk-1600.webp"
+            echo "built corridor-dusk-1600.webp"
+          fi
+      - name: Fetch walk master and extract frames
+        run: |
+          set -euo pipefail
+          dir=client/public/images/standard/descent
+          if [ -s "$dir/f-060.webp" ]; then echo "have new frames"; exit 0; fi
+          curl -fsSL --retry 3 "$WALK_URL" -o /tmp/walk-2k.mp4
+          rm -rf "$dir" && mkdir -p "$dir"
+          ffmpeg -hide_banner -loglevel error -y -i /tmp/walk-2k.mp4 \
+            -vf "fps=6,scale=1600:-2" -frames:v 60 -c:v libwebp -q:v 70 \
+            "$dir/f-%03d.webp"
+          echo "extracted $(ls -1 "$dir" | wc -l) frames"; du -sh "$dir"
+        env:
+          # Seedance walk eda9ca41 (start frame: docs/design-refs/corridor-dusk.png),
+          # upscaled to 2K by bytedance job 92189dc1.
+          WALK_URL: "https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp/hf_20260710_031629_92189dc1-76e5-45c5-b807-5590b850b204.mp4"
+      - name: Commit vendored assets
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add client/public/images/hall client/public/images/standard/descent
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "chore: vendor warm-dusk corridor hero plate + 60-frame walk sequence"
+          git push

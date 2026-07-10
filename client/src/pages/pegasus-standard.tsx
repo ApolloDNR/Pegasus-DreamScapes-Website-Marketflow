@@ -20,7 +20,10 @@ import { ArrowRight } from "lucide-react";
  * identical text content, no scrub.
  */
 
-const FRAME_COUNT = 48;
+// 60 frames of the founder-approved corridor walk (docs/design-refs/
+// corridor-dusk.png animated forward with Seedance; frames vendored by
+// .github/workflows/fetch-standard-walk.yml).
+const FRAME_COUNT = 60;
 const frameSrc = (i: number) =>
   `/images/standard/descent/f-${String(i + 1).padStart(3, "0")}.webp`;
 
@@ -159,7 +162,7 @@ function Descent() {
             for reduced motion, and for the LCP. The canvas paints over it. */}
         <img
           src={frameSrc(0)}
-          alt="Concept render — a blue-hour walk through a Hellenic Modern colonnade. Future vision imagery, not a current Pegasus property."
+          alt="Concept render — a dusk walk down a marble colonnade hall toward the sea. Future vision imagery, not a current Pegasus property."
           className="absolute inset-0 h-full w-full object-cover"
         />
         <canvas
@@ -172,7 +175,7 @@ function Descent() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-[#091421]/95 via-[#091421]/40 to-transparent" />
 
         {/* §18 non-negotiable: the vision is labeled the entire time. */}
-        <p className="absolute inset-x-0 top-24 z-10 px-6 text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-[#e8ded0]/70">
+        <p className="absolute inset-x-0 top-24 z-10 px-6 text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-[#e8ded0]/80 [text-shadow:0_1px_12px_rgba(5,14,24,0.85)]">
           Future vision · concept imagery — not current inventory
         </p>
 
