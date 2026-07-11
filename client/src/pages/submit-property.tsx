@@ -13,14 +13,14 @@ import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
  */
 
 const VISITOR_TYPES = [
-  { value: "owner", label: "I own the property" },
-  { value: "owner_representative", label: "I represent or help the owner" },
-  { value: "deal_finder", label: "I found a deal" },
-  { value: "buyer", label: "I want to buy" },
-  { value: "capital_partner", label: "I want to invest / partner" },
-  { value: "vendor_operator", label: "I am a vendor / operator" },
-  { value: "strategy_only", label: "I need advice / strategy" },
-  { value: "other", label: "Other" },
+  { value: "owner", label: "I own the property", desc: "Distressed, inherited, occupied, vacant, or simply complicated." },
+  { value: "owner_representative", label: "I represent or help the owner", desc: "Family member, attorney, advisor, or agent acting for the owner." },
+  { value: "deal_finder", label: "I found a deal", desc: "Wholesaler, agent, or finder with an opportunity to show." },
+  { value: "buyer", label: "I want to buy", desc: "A finished home, an investment, or representation." },
+  { value: "capital_partner", label: "I want to invest / partner", desc: "Back specific projects on defined terms." },
+  { value: "vendor_operator", label: "I am a vendor / operator", desc: "GC, trade, lender, title, or service partner." },
+  { value: "strategy_only", label: "I need advice / strategy", desc: "Not sure whether to sell, hold, refinance, or exit." },
+  { value: "other", label: "Other", desc: "Something else — tell us in the notes." },
 ] as const;
 
 const PROPERTY_TYPES = ["Single-family", "Duplex", "Triplex", "Fourplex", "Multifamily 5+", "Land", "Mixed-use", "Commercial", "Other"];
@@ -84,21 +84,37 @@ function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: str
   );
 }
 
+type Choice = string | { label: string; desc?: string };
+const choiceLabel = (c: Choice) => (typeof c === "string" ? c : c.label);
+
 function ChoiceGrid({ options, value, onPick, cols = 2 }:
-  { options: readonly string[]; value: string; onPick: (v: string) => void; cols?: number }) {
+  { options: readonly Choice[]; value: string; onPick: (v: string) => void; cols?: number }) {
   return (
     <div className={`grid gap-3 ${cols === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-      {options.map((o) => {
-        const active = value === o;
+      {options.map((c) => {
+        const label = choiceLabel(c);
+        const desc = typeof c === "string" ? undefined : c.desc;
+        const active = value === label;
         return (
-          <button key={o} type="button" onClick={() => onPick(o)} aria-pressed={active}
-            className={`rounded-md border px-4 py-3.5 text-left text-[15px] transition-colors ${
+          <button key={label} type="button" onClick={() => onPick(label)} aria-pressed={active}
+            className={`group relative rounded-md border px-4 py-3.5 text-left transition-all duration-200 ${
               active
-                ? "border-[#b47645] bg-[#b47645]/10 text-[#171f2a] dark:text-[#f4efe6] ring-1 ring-[#b47645]"
-                : "border-[#d8cdbc] dark:border-[#2a3a4e] text-[#454b55] dark:text-[#cfc5b4] hover:border-[#b47645]/60"
+                ? "border-[#b47645] bg-[#b47645]/[0.08] shadow-[0_10px_28px_-18px_rgba(139,90,54,0.55)]"
+                : "border-[#d8cdbc] bg-white/60 hover:-translate-y-px hover:border-[#b47645]/60 hover:shadow-[0_10px_24px_-20px_rgba(23,31,42,0.45)] dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60"
             }`}>
-            <span className="inline-flex items-center gap-2">
-              {active && <Check className="h-4 w-4 text-[#b47645]" strokeWidth={2.4} />} {o}
+            <span className={`block text-[15px] leading-snug ${active ? "font-medium text-[#171f2a] dark:text-[#f4efe6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
+              {label}
+            </span>
+            {desc && (
+              <span className="mt-1 block text-[12.5px] leading-snug text-[#8a7f6d] dark:text-[#7d8ba0]">
+                {desc}
+              </span>
+            )}
+            <span aria-hidden="true"
+              className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
+                active ? "border-[#b47645] bg-[#b47645] opacity-100" : "border-[#d8cdbc] opacity-0 group-hover:opacity-60 dark:border-[#2a3a4e]"
+              }`}>
+              <Check className="h-3 w-3 text-white" strokeWidth={3} />
             </span>
           </button>
         );
@@ -202,8 +218,8 @@ export default function SubmitPropertyPage() {
 
   return (
     <main className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
-      <div className="mx-auto max-w-3xl">
-        <header className="mb-10">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-10 max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#b47645] mb-3">
             The Intake Desk
           </p>
@@ -217,15 +233,22 @@ export default function SubmitPropertyPage() {
           </p>
         </header>
 
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start lg:gap-12">
+        <div className="min-w-0">
         {/* progress */}
         <ol className="mb-10 flex items-center gap-2" aria-label="Form progress">
           {STEPS.map((s, i) => (
             <li key={s} className="flex-1">
-              <div className={`h-1 rounded-full ${i <= step ? "bg-[#b47645]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
-              <span className={`mt-2 hidden sm:block text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                i === step ? "text-[#b47645]" : "text-[#8a7f6d] dark:text-[#7d8ba0]"}`}>
-                {s}
-              </span>
+              <button type="button" disabled={i >= step} onClick={() => setStep(i)}
+                className="block w-full text-left disabled:cursor-default"
+                aria-label={i < step ? `Return to ${s}` : s}
+                aria-current={i === step ? "step" : undefined}>
+                <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#b47645]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
+                <span className={`mt-2 hidden items-center gap-1 sm:inline-flex text-[10px] font-semibold uppercase tracking-[0.16em] ${
+                  i === step ? "text-[#b47645]" : i < step ? "text-[#6b5f4d] hover:text-[#b47645] dark:text-[#b9a888]" : "text-[#8a7f6d] dark:text-[#7d8ba0]"}`}>
+                  {i < step && <Check className="h-3 w-3 text-[#b47645]" strokeWidth={3} />}{s}
+                </span>
+              </button>
             </li>
           ))}
         </ol>
@@ -240,7 +263,7 @@ export default function SubmitPropertyPage() {
           {step === 0 && (
             <fieldset>
               <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6">What brings you here?</legend>
-              <ChoiceGrid options={VISITOR_TYPES.map((v) => v.label)}
+              <ChoiceGrid options={VISITOR_TYPES}
                 value={VISITOR_TYPES.find((v) => v.value === form.visitorType)?.label ?? ""}
                 onPick={(labelPicked) => set({ visitorType: VISITOR_TYPES.find((v) => v.label === labelPicked)!.value })} />
             </fieldset>
@@ -349,12 +372,15 @@ export default function SubmitPropertyPage() {
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <button type="submit" disabled={!canNext || submit.isPending}
-              className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] disabled:opacity-40 transition-colors">
+              className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_30px_-16px_rgba(139,90,54,0.7)] transition-all hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none">
               {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {step < 4 ? "Continue" : "Submit for Review"}
               {step < 4 && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
+          <p className="mt-5 text-center text-[12px] text-[#8a7f6d] dark:text-[#7d8ba0] lg:hidden">
+            Reviewed by a person within 48 hours. No agency created by submitting.
+          </p>
         </form>
 
         <p className="mt-8 text-xs leading-relaxed text-[#8a7f6d] dark:text-[#7d8ba0]">
@@ -363,6 +389,38 @@ export default function SubmitPropertyPage() {
           when applicable, is provided by Paolo “Apollo” Duran through Keller Williams East Bay.
           CA DRE #02333658. No agency relationship is created without a written agreement.
         </p>
+        </div>
+
+        {/* The desk's promise, kept in view while the visitor works. */}
+        <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
+          <div className="rounded-xl border border-[#d8cdbc] bg-white/60 p-6 dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b47645]">What happens next</p>
+            <ol className="mt-5 space-y-5">
+              {[
+                ["Received", "Your submission creates a private record — never a public listing."],
+                ["Read", "A person reviews it. Numbers first, adjectives second."],
+                ["Routed", "It goes to the right lane: acquisition, development, disposition, asset management, representation, or referral."],
+                ["Your call", "We lay out the options; you choose. If there is no fit, we say so plainly."],
+              ].map(([t, d], i) => (
+                <li key={t} className="flex gap-3">
+                  <span className="mt-px font-serif text-[15px] leading-none text-[#b47645]">{`0${i + 1}`}</span>
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold text-[#171f2a] dark:text-[#f4efe6]">{t}</span>
+                    <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">{d}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-6 border-t border-[#d8cdbc] pt-5 dark:border-[#2a3a4e]">
+              <ul className="space-y-2 text-[12px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#b47645]" />Response within 48 hours</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#b47645]" />No agency created by submitting</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#b47645]" />Nothing shared without written agreement</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+        </div>
       </div>
     </main>
   );
