@@ -1225,11 +1225,15 @@ body.pg-menu-open { overflow: hidden; }
   border-bottom: 1px solid rgba(245, 230, 211, 0.14);
 }
 
+/* The fit medallion: a struck coin, not a gauge widget. */
 .strategy-score-dial {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 5.25rem;
-  height: 5.25rem;
+  align-content: center;
+  row-gap: 0.22rem;
+  width: 5.5rem;
+  height: 5.5rem;
   flex: 0 0 auto;
   border: 1px solid rgba(212, 135, 46, 0.5);
   border-radius: 50%;
@@ -1237,11 +1241,35 @@ body.pg-menu-open { overflow: hidden; }
   background: radial-gradient(circle, rgba(212, 135, 46, 0.16), rgba(7, 17, 29, 0.4));
 }
 
+.strategy-score-dial::after {
+  content: '';
+  position: absolute;
+  inset: 0.34rem;
+  border: 1px solid rgba(245, 230, 211, 0.16);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.strategy-score-dial small,
+.strategy-score-dial em {
+  font-family: var(--pg-font-label);
+  font-style: normal;
+  font-size: 0.42rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(212, 135, 46, 0.95);
+}
+
+.strategy-score-dial em {
+  letter-spacing: 0.2em;
+  color: rgba(245, 230, 211, 0.45);
+}
+
 .strategy-score-dial span {
-  margin-top: -0.2rem;
   font-family: var(--pg-font-display);
   font-size: 1.85rem;
-  line-height: 1;
+  line-height: 0.9;
   color: var(--cream);
 }
 
@@ -1266,7 +1294,7 @@ body.pg-menu-open { overflow: hidden; }
 
 .strategy-metric-grid span,
 .strategy-panel-head span,
-.strategy-waterfall span,
+.strategy-ledger-row span,
 .strategy-lane-bars span {
   display: block;
   font-family: var(--pg-font-label);
@@ -1293,41 +1321,78 @@ body.pg-menu-open { overflow: hidden; }
   line-height: 1.45;
 }
 
+/* The board index: engraved folio tabs (plate I / II / III), not a
+   segmented control. The active leaf carries a gilded rule. */
 .strategy-tab-row {
   position: relative;
   z-index: 3;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  padding: 1.05rem;
-  background: rgba(245, 230, 211, 0.08);
+  border-bottom: 1px solid rgba(245, 230, 211, 0.14);
+  background: rgba(7, 17, 29, 0.35);
 }
 
 .strategy-tab-row button {
+  position: relative;
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
   min-width: 0;
-  min-height: 3.2rem;
-  color: rgba(245, 230, 211, 0.78);
-  background: rgba(7, 17, 29, 0.62);
+  min-height: 3.4rem;
+  padding: 1.1rem 1rem;
+  color: rgba(245, 230, 211, 0.55);
+  background: transparent;
   font-family: var(--pg-font-label);
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  transition:
-    color var(--dur-quick, 180ms) var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1)),
-    background-color var(--dur-quick, 180ms) var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1)),
-    transform var(--dur-quick, 180ms) var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
+  transition: color var(--dur-quick, 180ms) var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.strategy-tab-row button + button {
+  border-left: 1px solid rgba(245, 230, 211, 0.1);
+}
+
+.strategy-tab-row button em {
+  font-family: var(--pg-font-display);
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: rgba(212, 135, 46, 0.55);
+  transition: color var(--dur-quick, 180ms) var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.strategy-tab-row button::after {
+  content: '';
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: -1px;
+  height: 1px;
+  background: var(--accent-bright);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 300ms var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .strategy-tab-row button:hover,
-.strategy-tab-row button:focus-visible,
+.strategy-tab-row button:focus-visible {
+  color: rgba(245, 230, 211, 0.85);
+}
+
 .strategy-tab-row button.is-active {
+  color: var(--cream);
+}
+
+.strategy-tab-row button.is-active em {
   color: var(--accent-bright);
-  background: rgba(212, 135, 46, 0.12);
-  transform: translateY(-1px);
+}
+
+.strategy-tab-row button.is-active::after {
+  transform: scaleX(1);
 }
 
 .strategy-tab-panel {
@@ -1386,51 +1451,142 @@ body.pg-menu-open { overflow: hidden; }
   text-align: right;
 }
 
-.strategy-waterfall {
+/* The spread as an underwriter's ledger: small-cap entry, dot leaders,
+   struck serif figure — a bank statement, not an analytics widget. */
+.strategy-ledger {
   display: grid;
-  gap: 1rem;
 }
 
-.strategy-waterfall > div {
-  display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr) 7rem;
-  align-items: center;
-  gap: 1rem;
+.strategy-ledger-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  padding: 0.68rem 0;
 }
 
-.strategy-waterfall i,
-.strategy-lane-bars i {
-  display: block;
-  overflow: hidden;
-  height: 0.52rem;
-  background: rgba(245, 230, 211, 0.1);
+.strategy-ledger-row span {
+  flex: 0 0 auto;
 }
 
-.strategy-waterfall i::before {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, rgba(212, 135, 46, 0.35), var(--accent-bright));
+.strategy-ledger-row i {
+  flex: 1 1 auto;
+  min-width: 2rem;
+  border-bottom: 1px dotted rgba(245, 230, 211, 0.3);
 }
 
-.strategy-waterfall strong {
-  color: rgba(245, 230, 211, 0.86);
+.strategy-ledger-row strong {
+  flex: 0 0 auto;
   font-family: var(--pg-font-display);
-  text-align: right;
+  font-size: 1.22rem;
+  line-height: 1;
+  color: rgba(245, 230, 211, 0.9);
 }
 
+.strategy-ledger-row.is-total {
+  margin-top: 0.4rem;
+  padding-top: 1.05rem;
+  border-top: 1px solid rgba(212, 135, 46, 0.42);
+}
+
+.strategy-ledger-row.is-total span {
+  color: rgba(245, 230, 211, 0.78);
+}
+
+.strategy-ledger-row.is-total strong {
+  font-size: 1.55rem;
+  color: var(--cream);
+}
+
+/* An architect's scale bar: one framed band, gilded by weight, showing
+   where every dollar of the total sits. */
+.strategy-scale {
+  margin-top: 1.55rem;
+}
+
+.strategy-scale-band {
+  display: flex;
+  gap: 2px;
+  height: 0.72rem;
+  padding: 2px;
+  border: 1px solid rgba(212, 135, 46, 0.36);
+  background: rgba(7, 17, 29, 0.5);
+}
+
+.strategy-scale-band b {
+  display: block;
+  height: 100%;
+}
+
+.strategy-scale-band b:nth-child(1),
+.strategy-scale-legend span:nth-child(1) b {
+  background: rgba(212, 135, 46, 0.85);
+}
+
+.strategy-scale-band b:nth-child(2),
+.strategy-scale-legend span:nth-child(2) b {
+  background: rgba(212, 135, 46, 0.52);
+}
+
+.strategy-scale-band b:nth-child(3),
+.strategy-scale-legend span:nth-child(3) b {
+  background: rgba(212, 135, 46, 0.3);
+}
+
+.strategy-scale-band b:nth-child(4),
+.strategy-scale-legend span:nth-child(4) b {
+  background: rgba(245, 230, 211, 0.24);
+}
+
+.strategy-scale-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1.35rem;
+  margin-top: 0.7rem;
+}
+
+.strategy-scale-legend span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--pg-font-label);
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(245, 230, 211, 0.55);
+}
+
+.strategy-scale-legend b {
+  align-self: center;
+  width: 0.4rem;
+  height: 0.4rem;
+  transform: rotate(45deg);
+}
+
+.strategy-scale-legend em {
+  line-height: 1;
+}
+
+.strategy-scale-legend em {
+  font-family: var(--pg-font-display);
+  font-style: normal;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: rgba(212, 135, 46, 0.92);
+}
+
+/* Lane fit as a drafting caliper: hairline rule, gilded run, diamond
+   tick at the reading. */
 .strategy-lane-bars {
   display: grid;
-  gap: 1rem;
+  gap: 1.3rem;
 }
 
 .strategy-lane-bars > div > div {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.6rem;
 }
 
 .strategy-lane-bars strong {
@@ -1439,10 +1595,43 @@ body.pg-menu-open { overflow: hidden; }
   font-size: 1.2rem;
 }
 
-.strategy-lane-bars b {
+.strategy-lane-bars i {
+  position: relative;
   display: block;
-  height: 100%;
-  background: linear-gradient(90deg, rgba(212, 135, 46, 0.38), var(--accent-bright));
+  height: 9px;
+}
+
+.strategy-lane-bars i::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(245, 230, 211, 0.16);
+}
+
+.strategy-lane-bars b {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: linear-gradient(90deg, rgba(212, 135, 46, 0.3), var(--accent-bright));
+}
+
+.strategy-lane-bars b::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  transform: rotate(45deg);
+  border: 1px solid var(--accent-bright);
+  background: rgba(7, 17, 29, 0.95);
+  box-shadow: 0 0 8px rgba(212, 135, 46, 0.45);
 }
 
 .strategy-lane-bars p {
@@ -1452,27 +1641,76 @@ body.pg-menu-open { overflow: hidden; }
   line-height: 1.5;
 }
 
+/* The fit meter on the console scorecard: same caliper language as the
+   lane gauges — hairline, gilded run, diamond at the reading. */
+.fit-rule {
+  position: relative;
+  height: 9px;
+}
+
+.fit-rule::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(239, 231, 218, 0.18);
+}
+
+.fit-rule b {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: linear-gradient(90deg, rgba(212, 135, 46, 0.3), var(--accent-bright));
+  transition: width 700ms var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.fit-rule b::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  transform: rotate(45deg);
+  border: 1px solid var(--accent-bright);
+  background: rgba(7, 17, 29, 0.95);
+  box-shadow: 0 0 8px rgba(212, 135, 46, 0.45);
+}
+
+/* Risk notes as ledger annotations — ruled lines and a diamond mark,
+   no alert boxes. */
 .strategy-risk-list {
   display: grid;
-  gap: 0.75rem;
 }
 
 .strategy-risk-list li {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.9rem;
   align-items: start;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(245, 230, 211, 0.12);
-  background: rgba(245, 230, 211, 0.045);
+  padding: 0.95rem 0.15rem;
+  border-bottom: 1px solid rgba(245, 230, 211, 0.12);
   color: rgba(245, 230, 211, 0.76);
   font-size: 0.86rem;
   line-height: 1.5;
 }
 
-.strategy-risk-list svg {
-  margin-top: 0.2rem;
-  color: var(--accent-bright);
+.strategy-risk-list li:first-child {
+  border-top: 1px solid rgba(245, 230, 211, 0.12);
+}
+
+.strategy-risk-list li b {
   flex: 0 0 auto;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-top: 0.46rem;
+  transform: rotate(45deg);
+  border: 1px solid var(--accent-bright);
+  background: rgba(212, 135, 46, 0.25);
 }
 
 .strategy-workshop-continuation {
@@ -1684,13 +1922,8 @@ body.pg-menu-open { overflow: hidden; }
     display: none;
   }
 
-  .strategy-waterfall > div {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.45rem;
-  }
-
-  .strategy-waterfall strong {
-    text-align: left;
+  .strategy-ledger-row strong {
+    font-size: 1.05rem;
   }
 
   .strategy-panel-head {
@@ -1751,15 +1984,6 @@ body.pg-menu-open { overflow: hidden; }
   .strategy-panel-head strong {
     text-align: left;
   }
-
-  .strategy-waterfall > div {
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
-  }
-
-  .strategy-waterfall strong {
-    text-align: left;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1774,15 +1998,6 @@ body.pg-menu-open { overflow: hidden; }
 
   .strategy-proof-item + .strategy-proof-item {
     border-top: 1px solid rgba(245, 230, 211, 0.12);
-  }
-
-  .strategy-tab-row {
-    grid-template-columns: 1fr;
-  }
-
-  .strategy-tab-row button {
-    justify-content: flex-start;
-    padding-left: 1rem;
   }
 }
 
