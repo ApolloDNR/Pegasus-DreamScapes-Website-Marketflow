@@ -1,5 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabaseAdmin } from './lib/supabase';
+import {
+  supabase,
+  supabaseAdmin,
+  isSupabaseConfigured,
+  isSupabaseAdminConfigured,
+} from './lib/supabase';
 
 export interface SupabaseUser {
   id: string;
@@ -28,9 +33,21 @@ export async function extractSupabaseUser(req: Request): Promise<SupabaseUser | 
     }
     
     const token = authHeader.substring(7);
-    
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-    
+
+    // Token verification works with the service-role client when available,
+    // and falls back to the anon client (which can also validate user JWTs
+    // against the auth server). Without either, bearer auth is unavailable.
+    const authClient = isSupabaseAdminConfigured
+      ? supabaseAdmin
+      : isSupabaseConfigured
+        ? supabase
+        : null;
+    if (!authClient) {
+      return null;
+    }
+
+    const { data: { user }, error } = await authClient.auth.getUser(token);
+
     if (error || !user) {
       return null;
     }

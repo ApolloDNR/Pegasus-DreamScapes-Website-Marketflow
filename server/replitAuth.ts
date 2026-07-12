@@ -8,6 +8,14 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { ensureUserProfileExists } from "./lib/supabase";
+import { extractSupabaseUser } from "./supabaseAuth";
+
+// Replit OIDC is only available when the app runs with a provisioned
+// REPL_ID (i.e. on Replit). On other hosts (Render, Railway, ...) the
+// app authenticates users exclusively through Supabase bearer tokens
+// (see server/supabaseAuth.ts) and OIDC is skipped entirely so boot
+// does not depend on reaching replit.com.
+export const isReplitOidcEnabled = Boolean(process.env.REPL_ID);
 
 const getOidcConfig = memoize(
   async () => {
@@ -84,6 +92,22 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  if (!isReplitOidcEnabled) {
+    console.warn(
+      "[auth] REPL_ID not set — Replit OIDC disabled. Users authenticate via Supabase (see /signup).",
+    );
+    passport.serializeUser((user: Express.User, cb) => cb(null, user));
+    passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+    // Keep the legacy entry points alive so old links and client fallbacks
+    // land somewhere sensible instead of 404ing.
+    app.get("/api/login", (_req, res) => res.redirect("/signup"));
+    app.get("/api/callback", (_req, res) => res.redirect("/signup"));
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => res.redirect("/"));
+    });
+    return;
+  }
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -151,10 +175,41 @@ export async function setupAuth(app: Express) {
   });
 }
 
+// Local-user provisioning parity for Supabase-authenticated requests: OIDC
+// logins upsert into the app users table at login time; bearer users get the
+// same treatment lazily, once per process per user.
+const provisionedSupabaseSubs = new Set<string>();
+async function ensureLocalUserForSupabase(claims: Record<string, any>) {
+  const sub = claims?.sub;
+  if (!sub || provisionedSupabaseSubs.has(sub)) return;
+  provisionedSupabaseSubs.add(sub);
+  try {
+    await upsertUser(claims);
+  } catch (error) {
+    console.error("[auth] failed to provision local user for Supabase sub:", error);
+  }
+}
+
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Supabase bearer path: supabaseAuthMiddleware sets req.user = { claims }
+  // (no OIDC session, no expires_at). A verified token is authenticated.
+  if (user?.claims?.sub && !user.expires_at) {
+    await ensureLocalUserForSupabase(user.claims);
+    return next();
+  }
+
+  if (!req.isAuthenticated() || !user?.expires_at) {
+    // Last chance: verify a Supabase bearer token directly (covers requests
+    // that bypass the global middleware ordering).
+    const supabaseUser = req.supabaseUser ?? (await extractSupabaseUser(req));
+    if (supabaseUser) {
+      (req as any).user = { claims: supabaseUser.claims };
+      req.supabaseUser = supabaseUser;
+      await ensureLocalUserForSupabase(supabaseUser.claims);
+      return next();
+    }
     return res.status(401).json({ message: "Unauthorized" });
   }
 
