@@ -1,0 +1,44 @@
+# Render Blueprint for Pegasus DreamScapes Website + MarketFlow
+# Deploy: Render Dashboard -> New -> Blueprint -> select this repo.
+# Full walkthrough: docs/deploy/RENDER_DEPLOY.md
+services:
+  - type: web
+    name: pegasus-dreamscapes
+    runtime: node
+    plan: starter # always-on instance; free tier spins down between requests
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    autoDeploy: true # every push to main deploys (CI runs on GitHub first)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SITE_URL
+        value: https://pegasusdreamscapes.com
+      # --- set these in the Render dashboard (see runbook for where each lives) ---
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: STAFF_NOTIFICATION_EMAIL
+        sync: false
+      - key: AI_INTEGRATIONS_OPENAI_API_KEY
+        sync: false
+      - key: PEGASUS_HQ_PUBLIC_INTAKE_URL
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: VITE_GOOGLE_MAPS_API_KEY
+        sync: false
