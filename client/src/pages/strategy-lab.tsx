@@ -1480,7 +1480,10 @@ export default function StrategyLabPage() {
                 Start with the address. Read the lane. Stress the assumptions. Decide whether it belongs in Pegasus review.
               </p>
               <p className="strategy-lab-disclosure text-sm sm:text-base text-muted-foreground leading-relaxed mt-3 max-w-2xl font-serif italic">
-                Directional analysis only. Not a valuation, appraisal, offer, securities solicitation, or promise of return.
+                {/* Locked disclaimer — PRD §11.4 (issue #22) */}
+                Directional only. Not an offer, appraisal, legal advice, tax advice, financial
+                advice, lending commitment, or investment recommendation. Not a valuation,
+                securities solicitation, or promise of return.
               </p>
             </div>
             <div className="strategy-lab-hero-visual lg:col-span-6 min-w-0">

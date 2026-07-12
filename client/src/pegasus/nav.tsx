@@ -1,15 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Menu, X, ArrowRight, Phone, ChevronDown } from 'lucide-react';
-import type { Route, Nav, Theme } from './theme';
+import { useLocation } from 'wouter';
+import { Menu, X, ArrowRight, Phone } from 'lucide-react';
+import type { Route, Nav, Theme, NavLink } from './theme';
 import { ThemeToggle, BrandMark } from './primitives';
-import { NAV_GROUPS } from './data';
+import { NAV_LINKS } from './data';
+import { urlFor } from './routes';
+
+/* Public Website v1 (issue #22) PRD §5.1 locks the top navigation to a flat,
+   clean list — Home, Departments, Strategy Lab, MarketFlow, Work With Apollo —
+   with Submit a Property as the primary nav button (routing to the
+   /submit-property intake desk). The audience lanes live in the footer. */
 
 export function NavBar({ go, route, theme, toggleTheme, scrolled }:
   { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState<number | null>(null);
-  const [mAcc, setMAcc] = useState<number | null>(null);
-  const navRef = useRef<HTMLDivElement>(null);
+  const [location, setLocation] = useLocation();
   const toggleLock = useRef(0);
   const toggleMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -21,7 +26,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
     toggleLock.current = now;
     setMenuOpen((o) => !o);
   };
-  useEffect(() => { setMenuOpen(false); setOpenGroup(null); setMAcc(null); }, [route]);
+  useEffect(() => { setMenuOpen(false); }, [route, location]);
   useEffect(() => {
     if (menuOpen) {
       document.body.classList.add('pg-menu-open');
@@ -30,22 +35,15 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
     }
     return () => document.body.classList.remove('pg-menu-open');
   }, [menuOpen]);
-  // Close the desktop dropdowns on Escape or an outside click (keyboard + mouse).
-  useEffect(() => {
-    if (openGroup === null) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpenGroup(null); };
-    const onDown = (e: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) setOpenGroup(null);
-    };
-    document.addEventListener('keydown', onKey);
-    document.addEventListener('mousedown', onDown);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('mousedown', onDown);
-    };
-  }, [openGroup]);
   const overHero = !scrolled && !menuOpen;
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
+
+  const navigate = (item: NavLink) => {
+    if (item.url) setLocation(item.url);
+    else if (item.route) go(item.route);
+  };
+  const isActive = (item: NavLink) =>
+    location === (item.url ?? (item.route ? urlFor(item.route) : ''));
 
   return (
     <>
@@ -64,52 +62,22 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
           <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />
           <div className="hidden min-[360px]:flex flex-col leading-none text-left min-w-0">
             <span className="font-serif-display text-[16px] sm:text-[22px] tracking-[0.04em] sm:tracking-[0.06em] leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
-            <span className="pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
+            <span className="pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Development &middot; Investments &middot; Systems</span>
           </div>
         </button>
 
-        <div ref={navRef} className="hidden min-[1340px]:flex items-center gap-5 min-[1500px]:gap-7 pg-label !text-[10px] !tracking-[0.2em]">
-          {NAV_GROUPS.map((group, gi) => (
-            <div key={group.label} className="nav-group"
-              onMouseEnter={() => setOpenGroup(gi)}
-              onMouseLeave={() => setOpenGroup((g) => (g === gi ? null : g))}>
-              <button type="button"
-                aria-haspopup="true"
-                aria-expanded={openGroup === gi}
-                aria-controls={`nav-dd-${gi}`}
-                onClick={() => setOpenGroup((g) => (g === gi ? null : gi))}
-                className={`inline-flex min-h-11 items-center gap-1.5 px-1.5 transition-opacity hover:opacity-100 ${openGroup === gi ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
-                {group.label}
-                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${openGroup === gi ? 'rotate-180' : ''}`} strokeWidth={2} />
-              </button>
-              <div id={`nav-dd-${gi}`} aria-label={group.label}
-                className={`nav-dropdown ${openGroup === gi ? 'is-open' : ''}`}
-                {...(openGroup === gi ? {} : { inert: '' })}>
-                <div className="nav-dropdown-head">{group.label}</div>
-                {group.items.map((item) => (
-                  <button key={item.route} type="button"
-                    onClick={() => { setOpenGroup(null); go(item.route); }}
-                    className={`nav-dropdown-item ${route === item.route ? 'is-active' : ''}`}>
-                    <span className="nav-dd-title">{item.label}</span>
-                    {item.desc && <span className="nav-dd-desc">{item.desc}</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
+        <div className="hidden min-[1340px]:flex items-center gap-5 min-[1500px]:gap-7 pg-label !text-[10px] !tracking-[0.2em]">
+          {NAV_LINKS.map((item) => (
+            <button key={item.label} type="button" onClick={() => navigate(item)}
+              className={`inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
+              {item.label}
+            </button>
           ))}
-          <button type="button" onClick={() => go('about')}
-            className={`inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${route === 'about' ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
-            About
-          </button>
-          <button type="button" onClick={() => go('peggy')}
-            className={`inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${route === 'peggy' ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
-            Talk to Peggy
-          </button>
         </div>
 
         <div className="flex items-center gap-3 lg:gap-4">
           <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
-          <button type="button" onClick={() => go('submit')}
+          <button type="button" onClick={() => setLocation('/submit-property')}
             className={`hidden sm:inline-flex ${overHero ? 'btn-solid-light' : 'btn-primary'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
             Submit a Property
           </button>
@@ -127,7 +95,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
         className={`min-[1340px]:hidden fixed inset-0 z-30 bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3">
-            <button type="button" onClick={() => { setMenuOpen(false); go('submit'); }}
+            <button type="button" onClick={() => { setMenuOpen(false); setLocation('/submit-property'); }}
               className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
               Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
@@ -138,41 +106,14 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
           </div>
 
           <div className="mt-7 flex flex-col">
-            {NAV_GROUPS.map((group, gi) => (
-              <div key={group.label} className="nav-m-acc">
+            {NAV_LINKS.map((item) => (
+              <div key={item.label} className="nav-m-acc">
                 <button type="button" className="nav-m-acc-trigger w-full"
-                  aria-expanded={mAcc === gi} aria-controls={`nav-m-acc-${gi}`}
-                  onClick={() => setMAcc((g) => (g === gi ? null : gi))}>
-                  {group.label}
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${mAcc === gi ? 'rotate-180' : ''}`} strokeWidth={2} />
+                  onClick={() => { setMenuOpen(false); navigate(item); }}>
+                  {item.label}
                 </button>
-                <div id={`nav-m-acc-${gi}`} className={`nav-m-acc-panel ${mAcc === gi ? 'is-open' : ''}`}
-                  {...(mAcc === gi ? {} : { inert: '' })}>
-                  <div className="pb-4 pt-1 flex flex-col gap-1.5">
-                    {group.items.map((item) => (
-                      <button key={item.route} type="button"
-                        onClick={() => { setMenuOpen(false); go(item.route); }}
-                        className={`nav-m-acc-item ${route === item.route ? 'is-active' : ''}`}>
-                        {item.label}
-                        {item.desc && <span className="nav-m-acc-desc">{item.desc}</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             ))}
-            <div className="nav-m-acc">
-              <button type="button" className="nav-m-acc-trigger w-full"
-                onClick={() => { setMenuOpen(false); go('about'); }}>
-                About
-              </button>
-            </div>
-            <div className="nav-m-acc">
-              <button type="button" className="nav-m-acc-trigger w-full"
-                onClick={() => { setMenuOpen(false); go('peggy'); }}>
-                Talk to Peggy
-              </button>
-            </div>
           </div>
         </div>
       </div>

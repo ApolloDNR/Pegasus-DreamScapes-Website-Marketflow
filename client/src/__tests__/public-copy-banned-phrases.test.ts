@@ -62,7 +62,13 @@ function scanText(source: string, fileName: string): Offense[] {
     const haystack = normalizeForMatch(rawLine);
     for (const entry of BANNED_PHRASES) {
       const needle = normalizeForMatch(entry.phrase);
-      if (haystack.includes(needle)) {
+      // Blank explicitly-permitted longer runs (locked negative-disclosure
+      // copy) before matching, so only unauthorized uses are reported.
+      let scannable = haystack;
+      for (const allowed of entry.allow ?? []) {
+        scannable = scannable.split(normalizeForMatch(allowed)).join(" ");
+      }
+      if (scannable.includes(needle)) {
         offenses.push({
           file: fileName,
           line: idx + 1,

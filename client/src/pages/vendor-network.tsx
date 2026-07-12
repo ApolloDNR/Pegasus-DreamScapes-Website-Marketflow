@@ -161,7 +161,7 @@ const VENDOR_CATEGORIES = [
   {
     icon: Briefcase,
     title: "Agents & Brokers",
-    desc: "Listing agents and broker partners who understand off-market and complex situations.",
+    desc: "Listing agents and broker partners who understand unlisted deals and complex situations.",
   },
   {
     icon: Scale,

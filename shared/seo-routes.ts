@@ -22,10 +22,12 @@ export const SITE_URL = "https://pegasusdreamscapes.com";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 
 export const SEO_ROUTES: Record<string, SeoRoute> = {
+  // Public Website v1 (issue #22) PRD §12 locks the homepage title and
+  // meta description verbatim.
   "/": {
-    title: BRAND,
+    title: "Pegasus Dreamscapes | Real Estate Investment, Development & Strategy",
     description:
-      "Strategy-first real estate in the East Bay. We read the property and the numbers once, then map the path: sell, reposition, build, or partner.",
+      "Pegasus Dreamscapes reviews complex property situations and structures paths through acquisition, development, disposition, partnership, or long-term asset strategy. Based in the East Bay, California.",
     image: `${SITE_URL}/og/home.png`,
   },
 
@@ -168,6 +170,32 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Submit a property or a deal to Pegasus Dreamscapes. Every serious submission gets a real read and a clear path forward. No pressure.",
     image: `${SITE_URL}/og/submit.png`,
   },
+  // ---- Public Website v1 (issue #22) pages ----
+  "/submit-property": {
+    title: tag("Submit a Property for Review"),
+    description:
+      "Submit a property for review. Distressed, inherited, off-market, unfinished, or a possible sale — Pegasus reviews the situation and routes the right path.",
+    image: `${SITE_URL}/og/submit.png`,
+  },
+  "/departments": {
+    title: tag("Departments"),
+    description:
+      "Four departments, one operating system: Acquisitions, Development, Dispositions, and Asset Management. Every opportunity moves through the lanes it needs.",
+    image: DEFAULT_OG_IMAGE,
+  },
+  "/case-study": {
+    title: tag("Case Study"),
+    description:
+      "Founder-led value-add repositioning in the East Bay: acquired $600K, renovated ≈$105K, sold $840K to an owner-occupant. Real project, real photos.",
+    image: `${SITE_URL}/og/nelson-dr.png`,
+    type: "article",
+  },
+  "/pegasus-standard": {
+    title: tag("The Pegasus Standard"),
+    description:
+      "The long-term Pegasus vision: a future living standard shaped by beauty, durability, calm, nature, and human flourishing. Clearly labeled future direction.",
+    image: DEFAULT_OG_IMAGE,
+  },
   "/deal-blueprint": {
     title: tag("Deal Blueprint"),
     description:
@@ -226,10 +254,11 @@ export function seoFor(pathname: string): SeoRoute {
 
 // Returns the bare page name (brand suffix stripped) for the given path, for
 // the client useSEO hook which re-applies the brand itself. Returns undefined
-// for the home route so useSEO falls back to the bare brand title.
+// for the home route so useSEO falls back to the locked home title (the
+// homepage title carries the PRD §12 pipe format, not the ` · BRAND` suffix).
 export function seoNameFor(pathname: string): string | undefined {
   const { title } = seoFor(pathname);
-  if (title === BRAND) return undefined;
+  if (title === SEO_ROUTES["/"].title) return undefined;
   return title.replace(` · ${BRAND}`, "");
 }
 

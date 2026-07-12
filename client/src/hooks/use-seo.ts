@@ -15,7 +15,10 @@ interface SEOProps {
 // 60-character SERP truncation limit. The home (no `title` passed)
 // still renders the brand + tagline as the bare-document title.
 const BRAND = "Pegasus Dreamscapes";
-const BASE_TITLE = BRAND;
+// Public Website v1 (issue #22) PRD §12 locks the homepage title verbatim.
+// It intentionally exceeds the per-page 60-char clamp (which only applies to
+// composed `page · brand` titles, not this locked base title).
+const BASE_TITLE = "Pegasus Dreamscapes | Real Estate Investment, Development & Strategy";
 const BASE_DESCRIPTION =
   "Pegasus Dreamscapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
 const SITE_URL = "https://pegasusdreamscapes.com";
@@ -66,8 +69,9 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     // truncation limit. `noTagline` is accepted for backwards-compat with
     // earlier callers but no longer changes behavior in v1.0.1.
     void noTagline;
-    const rawTitle = title ? `${title} · ${BRAND}` : BASE_TITLE;
-    const fullTitle = clamp(rawTitle, MAX_TITLE);
+    // Per-page composed titles are clamped for SERP truncation; the locked
+    // PRD base title passes through verbatim.
+    const fullTitle = title ? clamp(`${title} · ${BRAND}`, MAX_TITLE) : BASE_TITLE;
     const desc = clamp(description || BASE_DESCRIPTION, MAX_DESC);
     const ogImage = absoluteImage(image);
     const url = typeof window !== "undefined" ? `${SITE_URL}${window.location.pathname}` : SITE_URL;

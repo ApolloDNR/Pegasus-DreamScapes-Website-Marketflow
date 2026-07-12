@@ -10,7 +10,7 @@ import {
   PageHero, Hero, HomeIntro, ThreePillarsBlock, PillarSection, ProcessSteps,
   EngineBlock, DealReadStepper, DoorsBlock, ProductLadderBlock, MarketFlowBlock, EcosystemBlock,
   ApolloBlock, ProofStats, NelsonProof, DoctrineBlock, FAQBlock, Qualifier,
-  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock,
+  SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock, PegasusStandardBand,
 } from './blocks';
 import {
   LeadSection, StrategyCalculator, StrategyCommandBoard, StrategyConsole, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
@@ -56,8 +56,10 @@ const APOLLO_REP = {
   },
 };
 
+// PRD §7.11 required copy (issue #22), locked verbatim, plus the page-level
+// no-agreement clarifier.
 const APOLLO_DISCLOSURE =
-  'Paolo “Apollo” Duran · Licensed California real estate salesperson · DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus Dreamscapes is not a licensed brokerage; agency representation is provided through Keller Williams Realty East Bay. This page is not a listing or buyer-representation agreement.';
+  'Paolo “Apollo” Duran · Licensed California real estate salesperson · CA DRE #02333658 · Keller Williams Realty East Bay (each office independently owned and operated). Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation, when applicable, is provided by Paolo “Apollo” Duran through Keller Williams East Bay. No agency relationship is created without a written agreement. This page is not a listing or buyer-representation agreement.';
 
 /* ================================================================
    HOME
@@ -66,16 +68,20 @@ export function HomePage({ go, theme, parallaxRef, openPeggy }:
   { go: Nav; theme: Theme; parallaxRef: React.RefObject<HTMLDivElement | null>; openPeggy: () => void }) {
   return (
     <>
+      {/* PRD §6.2 homepage order (issue #22): hero → router → engine/departments →
+          Strategy Lab → MarketFlow → Apollo → case study → Pegasus Standard → final CTA. */}
       <Hero go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />
       <HomeIntro go={go} />
       <HowADealMovesBlock />
       <StrategyLabFeature go={go} />
-      <NelsonProof go={go} />
       <MarketFlowBlock go={go} dark />
+      <ApolloBlock go={go} />
+      <NelsonProof go={go} />
+      <PegasusStandardBand go={go} />
       <FAQBlock items={FAQ_HOME} eyebrow="Common questions" title="The honest answers." allHref="/faq" />
       <CTABand go={go} openPeggy={openPeggy} primaryAction="submit" primaryLabel="Submit a Property"
-        title="Send us the situation. We'll map the path forward."
-        text="Complex, distressed, inherited, or simply complicated: every property gets a plain-language read. No pressure, no obligation." />
+        title="Have a property, deal, or situation worth reviewing?"
+        text="Submit the property, explain the situation, and Pegasus will route it to the right lane." />
     </>
   );
 }
@@ -299,21 +305,22 @@ export function DevelopmentPage({ go }: { go: Nav }) {
 export function CapitalPage({ go }: { go: Nav }) {
   return (
     <>
+      {/* COPY_DECK §8 locked hero + required no-public-offering note (issue #22) */}
       <PageHero eyebrow="Capital partners"
-        title={<>Back specific <span className="italic text-[var(--accent-bright)]">projects.</span></>}
+        title={<>Capital should <span className="italic text-[var(--accent-bright)]">follow discipline.</span></>}
         image={IMG('pegasus-closing.png')}
-        lead="Pegasus works with a small number of capital partners on individual real estate projects, reviewed one deal at a time." />
+        lead="Pegasus reviews capital relationships project-by-project. No public offering, no guaranteed returns, no pooled fund. Any capital relationship must be privately reviewed and documented appropriately." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
           <p className="text-[var(--muted)] leading-relaxed text-lg mb-6">
-            Capital partnerships are arranged privately, one project at a time, through direct conversation. Never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, start a conversation.
+            Capital partnerships are arranged privately, one project at a time, through direct conversation. Never a blind pool. Terms are specific to the project and put in writing before anything moves. If that is how you prefer to work, request a private review.
           </p>
           <p className="text-[var(--text-2)] text-[0.95rem] leading-relaxed mb-9" data-testid="text-capital-securities">
             No securities are offered through this website.
           </p>
           <button type="button" onClick={() => go('connect')} data-testid="button-capital-connect"
             className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-            Start a conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            Request Private Review <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
           <div className="mt-6">
             <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--muted)]">
@@ -386,10 +393,12 @@ const MARKETFLOW_ACCESS = [
 export function MarketFlowPage({ go }: { go: Nav }) {
   return (
     <>
-      <PageHero eyebrow="Systems · MarketFlow" title="MarketFlow"
+      {/* COPY_DECK §12 locked hero (issue #22) */}
+      <PageHero eyebrow="Systems · MarketFlow"
+        title={<>A private network for <span className="italic text-[var(--accent-bright)]">reviewed opportunities.</span></>}
         image={IMG('pegasus-casestudy.png')}
         scrimTop
-        lead="A private, vetted network. Reviewed deals, capital, and finished product move between people who have been checked out. Access is requested, and our team reviews every fit." />
+        lead="MarketFlow connects buyers, investors, deal finders, capital partners, vendors, and operators around reviewed Pegasus opportunities. Access is reviewed, not open." />
       <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -553,10 +562,11 @@ function ApolloSelector() {
 export function WorkWithApolloPage({ go }: { go: Nav }) {
   return (
     <>
-      <PageHero eyebrow="What we do · Representation"
-        title={<>Represent with <span className="italic text-[var(--accent-bright)]">Apollo.</span></>}
+      {/* PRD §7.11 / COPY_DECK §13 locked hero (issue #22) */}
+      <PageHero eyebrow="Work With Apollo"
+        title={<>Founder-led strategy. <span className="italic text-[var(--accent-bright)]">Licensed representation when the lane fits.</span></>}
         image={IMG('pegasus-craft-blueprint.png')}
-        lead="When agency representation is the right lane, Apollo is your agent through Keller Williams Realty East Bay (DRE #02333658), backed by the full Pegasus standard. Pegasus Dreamscapes is not a brokerage." />
+        lead="Paolo “Apollo” Duran leads Pegasus Dreamscapes as founder/operator. When buyer or seller representation is the right path, Apollo provides licensed real estate services through Keller Williams East Bay (CA DRE #02333658). Pegasus Dreamscapes is not a brokerage." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -773,41 +783,55 @@ export function Footer({ go }: { go: Nav }) {
               <BrandMark boxClassName="w-12 h-12" onDark />
               <div className="flex flex-col leading-none text-left">
                 <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus Dreamscapes</span>
-                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Deal Strategy</span>
+                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Development &middot; Investments &middot; Systems</span>
               </div>
             </button>
             <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug">
-              We read the situation, underwrite the numbers, and tell you what the deal actually is.
+              Dream it. Build it. Live it.
             </p>
+            <ul className="mt-6 space-y-2.5 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">
+              <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
+              <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
+              <li>East Bay · CA</li>
+            </ul>
           </div>
+
+          {/* Footer link map per PRD §5.2 (issue #22): the audience lanes,
+              the proof + vision pages, and the legal set. */}
+          <FooterCol title="Who We Serve">
+            <FooterLink label="Sellers & Owners" onClick={() => go('sellers')} />
+            <FooterLink label="Deal Finders" onClick={() => go('dealfinders')} />
+            <FooterLink label="Buyers" onClick={() => go('buyers')} />
+            <FooterLink label="Capital Partners" onClick={() => go('capital')} />
+            <FooterLink label="Operators & Vendors" onClick={() => go('operators')} />
+            <FooterLink label="Referral Partners" onClick={() => go('referral')} />
+          </FooterCol>
 
           <FooterCol title="Company">
             <FooterLink label="About the Firm" onClick={() => go('about')} />
-            <FooterLink label="Represent with Apollo" onClick={() => go('apollo')} />
-            <FooterLink label="The Work" onClick={() => setLocation('/projects/nelson-dr')} />
-            <FooterLink label="Pegasus Ecosystem" onClick={() => go('ecosystem')} />
+            <FooterLink label="Departments" onClick={() => setLocation('/departments')} />
+            <FooterLink label="Work With Apollo" onClick={() => go('apollo')} />
+            <FooterLink label="Case Study" onClick={() => setLocation('/case-study')} />
+            <FooterLink label="The Pegasus Standard" onClick={() => setLocation('/pegasus-standard')} />
           </FooterCol>
 
-          <FooterCol title="Start here">
-            <FooterLink label="Submit a Property" onClick={() => go('submit')} />
-            <FooterLink label="Connect" onClick={() => go('connect')} />
-          </FooterCol>
-
-          <FooterCol title="Contact">
-            <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
-            <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
-            <li>East Bay · CA</li>
+          <FooterCol title="Start Here">
+            <FooterLink label="Submit a Property" onClick={() => setLocation('/submit-property')} />
+            <FooterLink label="Strategy Lab" onClick={() => go('strategylab')} />
+            <FooterLink label="MarketFlow" onClick={() => go('marketflow')} />
+            <FooterLink label="Contact" onClick={() => go('contact')} />
           </FooterCol>
 
           <FooterCol title="Legal">
-            <FooterLink label="Privacy" onClick={() => setLocation('/privacy')} />
+            <FooterLink label="Privacy Policy" onClick={() => setLocation('/privacy')} />
             <FooterLink label="Terms" onClick={() => setLocation('/terms')} />
             <FooterLink label="Disclosures" onClick={() => setLocation('/disclosures')} />
+            <FooterLink label="FAQ" onClick={() => setLocation('/faq')} />
           </FooterCol>
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
           <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Paolo &ldquo;Apollo&rdquo; Duran · California DRE #02333658. Pegasus Dreamscapes Corp. is a real estate investment company, not a real estate brokerage. Licensed real estate services are provided separately by Apollo Duran through Keller Williams Realty East Bay. Each office is independently owned and operated. Nothing on this site is an offer of securities or a solicitation to invest, nor a valuation, appraisal, CMA, or BPO of any specific property.
+            Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company. Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation, when applicable, is provided by Paolo &ldquo;Apollo&rdquo; Duran through Keller Williams East Bay. CA DRE #02333658. No agency relationship is created without a written agreement. Strategy reviews are preliminary and are not legal, tax, lending, appraisal, financial, or investment advice. Each Keller Williams office is independently owned and operated. Equal Housing Opportunity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
             <span>© {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.</span>

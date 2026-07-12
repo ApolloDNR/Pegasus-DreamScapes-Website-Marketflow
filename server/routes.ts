@@ -74,6 +74,7 @@ const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Res
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { registerOpportunityRoutes } from "./opportunityRoutes";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
@@ -230,7 +231,7 @@ export async function registerRoutes(
   const LEGACY_REDIRECTS: Array<[string, string]> = [
     ['/sell', '/submit?intent=sell'],
     ['/submit-deal', '/submit?intent=deal-jv'],
-    ['/submit-property', '/submit?intent=property'],
+    // Public Website v1 (issue #22): /submit-property reinstated as canonical.
     ['/services', '/development'],
     ['/resources', '/library'],
     ['/invest', '/capital'],
@@ -2111,6 +2112,9 @@ export async function registerRoutes(
   });
   
   // Seller Lead Routes
+  // Public Website v1 (issue #22): structured opportunity intake + routing.
+  registerOpportunityRoutes(app, { isAuthenticated, requireStaffRole });
+
   app.post("/api/seller-leads", async (req, res) => {
     try {
       const result = insertSellerLeadSchema.safeParse(req.body);

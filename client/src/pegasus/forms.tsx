@@ -1,12 +1,26 @@
 import React, { useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck, Calculator, FileText, Gauge, Route as RouteIcon } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
 import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from '@/lib/strategy-tier-ranges';
+import { trackEvent } from '@/lib/analytics';
+
+// Public Website v1 (issue #22) PRD §13 conversion events. Each lane form
+// fires its named PRD event on successful submission, keyed by the form's
+// intent. Intents without a PRD-named event fall back to the generic
+// lead_submitted signal (still carrying the intent as a prop).
+const PRD_EVENT_BY_INTENT: Record<string, string> = {
+  'deal-finder': 'submit_deal_completed',
+  'strategy-snapshot': 'strategy_review_requested',
+  representation: 'apollo_consult_requested',
+  'capital-partner': 'capital_review_requested',
+  operator: 'vendor_bench_joined',
+  referral: 'referral_submitted',
+};
 
 function SaveStrategyButton({ snapshot, title }: { snapshot: StrategyPreview; title: string }) {
   const [saved, setSaved] = useState(false);
@@ -152,7 +166,12 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           ...(transcript.length > 0 ? { transcript } : {}),
         },
       },
-      { onSuccess: () => setSubmitted(true) },
+      {
+        onSuccess: () => {
+          trackEvent(PRD_EVENT_BY_INTENT[cfg.intent] ?? 'lead_submitted', { intent: cfg.intent });
+          setSubmitted(true);
+        },
+      },
     );
   };
 
@@ -399,23 +418,33 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
     { num: '03', label: 'Lane', note: 'List, buy, partner, route, or pass.' },
     { num: '04', label: 'Read', note: 'A written Property Read before any decision.' },
   ];
+  const costLines: [string, number][] = [
+    ['Acquisition', model.acq],
+    ['Scope', model.rehab],
+    ['Carry', model.carry],
+    ['Exit costs', model.exitCosts],
+  ];
 
   return (
     <section className="strategy-command-section strategy-cockpit-hero" data-testid="strategy-lab-premium-hero">
       <div className="strategy-command-shell mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-12 lg:px-12">
         <div className="min-w-0 lg:col-span-5">
+          {/* COPY_DECK §11 locked hero + PRD §11.4 disclaimer (issue #22) */}
           <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
-          <h1 className="strategy-command-title mt-5 max-w-[10ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
-            The deal cockpit.
+          <h1 className="strategy-command-title mt-5 max-w-[14ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
+            Model the property before you make the move.
           </h1>
           <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
-            A private underwriting room for the facts, assumptions, lane fit, risk flags, and next clean move. It guides the read without pretending to issue an offer.
+            Strategy Lab is an early Pegasus tool for turning property assumptions into possible paths. It gives a directional preview, then lets you request a human review.
           </p>
           <div className="strategy-command-note">
             <span>Private orientation</span>
             <span>No blind offer</span>
             <span>Written read before action</span>
           </div>
+          <p className="mt-5 max-w-xl text-[0.78rem] leading-relaxed text-[rgba(245,230,211,0.5)]">
+            Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice, lending commitment, or investment recommendation.
+          </p>
           <div className="strategy-command-actions">
             <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
               Enter the Cockpit <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
@@ -457,8 +486,9 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
                 <div className="mt-2 font-serif-display text-3xl text-[var(--cream)]">{model.read.label}</div>
               </div>
               <div className="strategy-score-dial" aria-label={`Fit score ${clampScore(model.margin * 3 + 48)} out of 100`}>
-                <Gauge className="h-5 w-5" />
+                <small>Fit</small>
                 <span>{clampScore(model.margin * 3 + 48)}</span>
+                <em>of 100</em>
               </div>
             </div>
 
@@ -482,24 +512,21 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
 
             <div className="strategy-tab-row" aria-label="Strategy board views">
               {[
-                { key: 'spread' as const, label: 'Spread', icon: Calculator },
-                { key: 'lanes' as const, label: 'Lanes', icon: RouteIcon },
-                { key: 'review' as const, label: 'Read', icon: FileText },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    aria-pressed={active === tab.key}
-                    onClick={() => setActive(tab.key)}
-                    className={active === tab.key ? 'is-active' : ''}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
+                { key: 'spread' as const, num: 'I', label: 'Spread' },
+                { key: 'lanes' as const, num: 'II', label: 'Lanes' },
+                { key: 'review' as const, num: 'III', label: 'Read' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  aria-pressed={active === tab.key}
+                  onClick={() => setActive(tab.key)}
+                  className={active === tab.key ? 'is-active' : ''}
+                >
+                  <em aria-hidden="true">{tab.num}</em>
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             <div className="strategy-tab-panel">
@@ -509,19 +536,36 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
                     <span>Basis to exit</span>
                     <strong>{model.read.lane}</strong>
                   </div>
-                  <div className="strategy-waterfall">
-                    {[
-                      ['Acquisition', model.acq],
-                      ['Scope', model.rehab],
-                      ['Carry', model.carry],
-                      ['Exit costs', model.exitCosts],
-                    ].map(([label, value]) => (
-                      <div key={label as string}>
+                  {/* Underwriter's ledger: dot-leader lines, then one composed
+                      scale band showing where every dollar sits — an architect's
+                      scale bar, not a bar chart. */}
+                  <div className="strategy-ledger">
+                    {costLines.map(([label, value]) => (
+                      <div key={label} className="strategy-ledger-row">
                         <span>{label}</span>
-                        <i style={{ width: `${Math.max(12, Math.min(100, (Number(value) / model.totalCost) * 100))}%` }} />
-                        <strong>{usd0(Number(value))}</strong>
+                        <i aria-hidden="true" />
+                        <strong>{usd0(value)}</strong>
                       </div>
                     ))}
+                    <div className="strategy-ledger-row is-total">
+                      <span>Total to deliver and sell</span>
+                      <i aria-hidden="true" />
+                      <strong>{usd0(model.totalCost)}</strong>
+                    </div>
+                  </div>
+                  <div className="strategy-scale" aria-hidden="true">
+                    <div className="strategy-scale-band">
+                      {costLines.map(([label, value]) => (
+                        <b key={label} style={{ width: `${Math.max(2, (value / model.totalCost) * 100)}%` }} />
+                      ))}
+                    </div>
+                    <div className="strategy-scale-legend">
+                      {costLines.map(([label, value]) => (
+                        <span key={label}>
+                          <b />{label}<em>{((value / model.totalCost) * 100).toFixed(0)}%</em>
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </>
               )}
@@ -553,7 +597,7 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
                   <ul className="strategy-risk-list">
                     {riskNotes.map((note) => (
                       <li key={note}>
-                        <AlertCircle className="h-3.5 w-3.5" />
+                        <b aria-hidden="true" />
                         <span>{note}</span>
                       </li>
                     ))}
@@ -788,13 +832,13 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                 <div className="pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)] mb-3" data-testid="text-console-fit-band">{fitBand}</div>
                 <div className="flex items-center gap-2.5 mb-5" data-testid="text-console-confidence">
                   <span className="pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/55">Input confidence</span>
-                  <span className={`pg-label !text-[8px] !tracking-[0.16em] px-2 py-0.5 rounded-full border ${
+                  <span className={`pg-label !text-[8px] !tracking-[0.16em] px-2 py-0.5 border ${
                     confidence === 'High' ? 'text-[var(--accent-bright)] border-[var(--accent-bright)]/50'
                     : confidence === 'Medium' ? 'text-[var(--cream)] border-[var(--cream)]/35'
                     : 'text-[var(--cream)]/60 border-[var(--cream)]/20'}`}>{confidence}</span>
                 </div>
-                <div className="h-2 rounded-full bg-[rgba(239,231,218,0.14)] overflow-hidden mb-7">
-                  <div className="h-full w-full origin-left rounded-full bg-[var(--accent-bright)] transition-transform duration-700" style={{ transform: `scaleX(${fit / 100})` }} />
+                <div className="fit-rule mb-7" aria-hidden="true">
+                  <b style={{ width: `${fit}%` }} />
                 </div>
                 <p className="text-[var(--cream)]/70 text-[0.9rem] leading-relaxed mb-6">
                   {read.note} This is a directional fit signal, not a valuation or an offer. A written Property Read returns the property-specific path.
@@ -811,7 +855,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                     <ul className="space-y-2.5">
                       {riskFlags.map((f) => (
                         <li key={f} className="flex gap-2.5 text-[var(--cream)]/80 text-[0.83rem] leading-relaxed">
-                          <AlertCircle className="w-3.5 h-3.5 text-[var(--accent-bright)] mt-0.5 shrink-0" strokeWidth={1.8} /><span>{f}</span>
+                          <span aria-hidden="true" className="mt-[7px] h-[7px] w-[7px] shrink-0 rotate-45 border border-[var(--accent-bright)] bg-[rgba(212,135,46,0.25)]" /><span>{f}</span>
                         </li>
                       ))}
                     </ul>
