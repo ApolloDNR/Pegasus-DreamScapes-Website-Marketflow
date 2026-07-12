@@ -227,7 +227,7 @@ export default function SubmitPropertyPage() {
             Submit a property for review.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
-            Whether you are dealing with a distressed property, inherited home, off-market opportunity,
+            Whether you are dealing with a distressed property, inherited home, unlisted opportunity,
             unfinished project, partnership idea, or possible sale, Pegasus reviews the situation and
             helps identify the right path.
           </p>
