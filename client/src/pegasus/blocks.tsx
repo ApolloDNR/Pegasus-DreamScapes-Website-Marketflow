@@ -197,14 +197,14 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
   return (
     <section className="hero-estate-shell relative min-h-[clamp(760px,100vh,980px)] w-full overflow-hidden">
       <div ref={parallaxRef as React.RefObject<HTMLDivElement>} className="hero-parallax absolute inset-0">
-        {/* Founder-approved design direction (docs/design-refs, issue #22):
-            the Hellenic Modern villa at dusk — brand atmosphere per PRD §6.2,
-            one plate for both themes. The colonnade corridor stays exclusive
-            to the /pegasus-standard walk so the two surfaces never repeat.
-            Optimized webp is produced by CI from the reference master. */}
+        {/* Founder-approved design direction (issue #22): a warm marble
+            colonnade at dusk — brand atmosphere per PRD §6.2, one plate for
+            both themes. The image is a concept render (not a Pegasus-owned
+            property); the compliance framing lives in the alt text and the
+            proof strip below. */}
         <img
-          src={IMG('hall/villa-dusk-1600.webp')}
-          alt="Concept render — a Hellenic Modern villa at dusk. Pegasus brand atmosphere, not a current property."
+          src={IMG('hall/colonnade-hero-1600.webp')}
+          alt="Concept render — a warm marble colonnade at dusk. Pegasus brand atmosphere, not a current property."
           className="ken-burns absolute inset-0 h-full w-full object-cover"
         />
       </div>
