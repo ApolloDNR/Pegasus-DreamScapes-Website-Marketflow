@@ -6,7 +6,6 @@ import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import {
-  HomePage,
   CategoryPage,
   CapitalPage,
   DealStrategyPage,
@@ -20,6 +19,8 @@ import {
   ContactPage,
   PeggyPage,
 } from "@/pegasus/pages";
+import { HomePageV51 } from "@/pegasus/home-v51";
+import { OurWorkPage } from "@/pegasus/our-work";
 import { CTABand } from "@/pegasus/blocks";
 import { CATEGORIES } from "@/pegasus/data";
 
@@ -103,26 +104,22 @@ type PageSpec = {
   allowSubmitProperty?: boolean;
 };
 
-const homeParallaxRef = React.createRef<HTMLDivElement>();
-
 const PAGES: PageSpec[] = [
   {
     name: "Home",
+    // Master Blueprint v5.1: the seven-movement homepage. Its primary CTA is
+    // "Bring an Opportunity" (§31), which is specific, so no exception needed.
     route: "/",
-    // Home's job is orient + route, so it is allowed to echo the global
-    // primary CTA ("Submit a Property") in its hero.
-    allowSubmitProperty: true,
-    element: (
-      <HomePage go={noop} theme="light" parallaxRef={homeParallaxRef} openPeggy={noop} />
-    ),
+    element: <HomePageV51 go={noop} openPeggy={noop} />,
   },
-  { name: "Sellers", route: "/sellers", element: <CategoryPage cat={CATEGORIES.sellers} go={noop} openPeggy={noop} /> },
+  { name: "Property Owners", route: "/property-owners", element: <CategoryPage cat={CATEGORIES.sellers} go={noop} openPeggy={noop} /> },
   { name: "Buyers", route: "/buyers", element: <CategoryPage cat={CATEGORIES.buyers} go={noop} openPeggy={noop} /> },
-  { name: "Deal finders", route: "/dealfinders", element: <CategoryPage cat={CATEGORIES.dealfinders} go={noop} openPeggy={noop} /> },
+  { name: "Deal Partners", route: "/deal-partners", element: <CategoryPage cat={CATEGORIES.dealfinders} go={noop} openPeggy={noop} /> },
   { name: "Capital", route: "/capital", element: <CapitalPage go={noop} /> },
   { name: "Operators", route: "/operators", element: <CategoryPage cat={CATEGORIES.operators} go={noop} openPeggy={noop} /> },
   { name: "Referral", route: "/referral", element: <CategoryPage cat={CATEGORIES.referral} go={noop} openPeggy={noop} /> },
-  { name: "Deal Strategy", route: "/deal-strategy", element: <DealStrategyPage go={noop} openPeggy={noop} /> },
+  { name: "How We Operate", route: "/how-we-operate", element: <DealStrategyPage go={noop} openPeggy={noop} /> },
+  { name: "Our Work", route: "/our-work", element: <OurWorkPage go={noop} /> },
   { name: "Investments", route: "/investments", element: <InvestmentsPage go={noop} openPeggy={noop} /> },
   { name: "Development", route: "/development", element: <DevelopmentPage go={noop} /> },
   { name: "Strategy Lab", route: "/strategy-lab", element: <StrategyLabPage go={noop} openPeggy={noop} /> },

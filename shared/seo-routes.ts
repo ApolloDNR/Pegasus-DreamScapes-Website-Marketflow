@@ -22,18 +22,18 @@ export const SITE_URL = "https://pegasusdreamscapes.com";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 
 export const SEO_ROUTES: Record<string, SeoRoute> = {
-  // Public Website v1 (issue #22) PRD §12 locks the homepage title and
-  // meta description verbatim.
+  // Master Blueprint v5.1 — homepage promise + copy-deck meta (supersedes
+  // issue #22 §12).
   "/": {
-    title: "Pegasus Dreamscapes | Real Estate Investment, Development & Strategy",
+    title: "Pegasus DreamScapes — Complex Real Estate, Made Executable",
     description:
-      "Pegasus Dreamscapes reviews complex property situations and structures paths through acquisition, development, disposition, partnership, or long-term asset strategy. Based in the East Bay, California.",
+      "A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward.",
     image: `${SITE_URL}/og/home.png`,
   },
 
-  // ---- Who We Serve ----
-  "/sellers": {
-    title: tag("Sellers & Owners"),
+  // ---- v5.1 public spine (canonical URLs; old paths 301 forward) ----
+  "/property-owners": {
+    title: tag("Property Owners"),
     description:
       "For owners with a complex or stuck property — inherited, distressed, occupied, or stalled. Get a clear written read and a real route forward.",
     image: `${SITE_URL}/og/sellers.png`,
@@ -44,8 +44,8 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Buy a finished home or buy into a deal with an investor's read — underwritten on real numbers before you commit. East Bay and beyond.",
     image: `${SITE_URL}/og/buyers.png`,
   },
-  "/dealfinders": {
-    title: tag("Deal Finders & Wholesalers"),
+  "/deal-partners": {
+    title: tag("Deal Partners"),
     description:
       "Bring a deal to Pegasus once and get a straight answer, written terms, and one buyer who actually closes. No mass blasts, no run-around.",
     image: `${SITE_URL}/og/dealfinders.png`,
@@ -71,11 +71,17 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/capital.png`,
   },
   // ---- What We Do ----
-  "/deal-strategy": {
-    title: tag("Deal Strategy"),
+  "/how-we-operate": {
+    title: tag("How We Operate"),
     description:
       "How a property becomes a plan: we read the situation and the numbers once, then map the route — sell, reposition, build, or partner.",
     image: `${SITE_URL}/og/deal-strategy.png`,
+  },
+  "/our-work": {
+    title: tag("Our Work — Nelson Drive"),
+    description:
+      "A tired 3/2 ranch in El Sobrante, taken down to the studs and rebuilt in-house into a 4/3 — acquired $600K, built for $105K, sold $840K. Real photos, real numbers.",
+    image: `${SITE_URL}/og/case-study.png`,
   },
   "/investments": {
     title: tag("Investments"),
@@ -171,10 +177,10 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/submit.png`,
   },
   // ---- Public Website v1 (issue #22) pages ----
-  "/submit-property": {
-    title: tag("Submit a Property for Review"),
+  "/bring-an-opportunity": {
+    title: tag("Bring an Opportunity"),
     description:
-      "Submit a property for review. Distressed, inherited, off-market, unfinished, or a possible sale — Pegasus reviews the situation and routes the right path.",
+      "Bring the property, the contract, the project, or the plan. Pegasus reads the situation, runs the numbers, and routes the right path. No pressure.",
     image: `${SITE_URL}/og/submit.png`,
   },
   "/departments": {
@@ -318,6 +324,11 @@ export function isCrawlablePublicPath(pathname: string): boolean {
 // Default per-route crawl hints; routes not listed fall back to SITEMAP_DEFAULT.
 const SITEMAP_HINTS: Record<string, { priority: string; changefreq: string }> = {
   "/": { priority: "1.0", changefreq: "weekly" },
+  "/bring-an-opportunity": { priority: "0.9", changefreq: "monthly" },
+  "/our-work": { priority: "0.9", changefreq: "monthly" },
+  "/how-we-operate": { priority: "0.8", changefreq: "monthly" },
+  "/property-owners": { priority: "0.8", changefreq: "monthly" },
+  "/deal-partners": { priority: "0.8", changefreq: "monthly" },
   "/submit": { priority: "0.9", changefreq: "monthly" },
   "/projects": { priority: "0.9", changefreq: "weekly" },
   "/development": { priority: "0.8", changefreq: "monthly" },

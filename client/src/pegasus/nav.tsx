@@ -6,10 +6,10 @@ import { ThemeToggle, BrandMark } from './primitives';
 import { NAV_LINKS } from './data';
 import { urlFor } from './routes';
 
-/* Public Website v1 (issue #22) PRD §5.1 locks the top navigation to a flat,
-   clean list — Home, Departments, Strategy Lab, MarketFlow, Work With Apollo —
-   with Submit a Property as the primary nav button (routing to the
-   /submit-property intake desk). The audience lanes live in the footer. */
+/* Master Blueprint v5.1 (§6, §31) locks the top navigation to the public
+   relationship — How We Operate, Property Owners, Deal Partners, Our Work,
+   About — with "Bring an Opportunity" as the primary nav button (routing to
+   the /bring-an-opportunity intake desk). Supersedes issue #22 §5.1. */
 
 export function NavBar({ go, route, theme, toggleTheme, scrolled }:
   { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean }) {
@@ -77,9 +77,9 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
 
         <div className="flex items-center gap-3 lg:gap-4">
           <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
-          <button type="button" onClick={() => setLocation('/submit-property')}
+          <button type="button" onClick={() => setLocation('/bring-an-opportunity')}
             className={`hidden sm:inline-flex ${overHero ? 'btn-solid-light' : 'btn-primary'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
-            Submit a Property
+            Bring an Opportunity
           </button>
           <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
             aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }}
@@ -95,9 +95,9 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
         className={`min-[1340px]:hidden fixed inset-0 z-30 bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3">
-            <button type="button" onClick={() => { setMenuOpen(false); setLocation('/submit-property'); }}
+            <button type="button" onClick={() => { setMenuOpen(false); setLocation('/bring-an-opportunity'); }}
               className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
-              Submit a Property <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              Bring an Opportunity <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
             <a href="tel:9257448525"
               className="btn-line w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.18em] text-center inline-flex items-center justify-center gap-2.5">

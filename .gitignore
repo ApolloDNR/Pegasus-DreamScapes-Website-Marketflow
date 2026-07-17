@@ -48,3 +48,6 @@ attached_assets/Pasted-*.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# screenshot/QA build output (regenerated on demand)
+client/dist-hero/

@@ -10,7 +10,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { legacyRedirects } from "@/App";
 import { REDIRECTED_URLS, PEGASUS_URLS, ROUTE_TO_URL } from "@/pegasus/routes";
 import { NavBar } from "@/pegasus/nav";
-import { Footer, HomePage, CapitalPage, DevelopmentPage } from "@/pegasus/pages";
+import { Footer, CapitalPage, DevelopmentPage } from "@/pegasus/pages";
+import { HomePageV51 } from "@/pegasus/home-v51";
 import type { Nav, Route } from "@/pegasus/theme";
 
 // Website Spec v4 (Re-skin) — redirect-reversal net.
@@ -35,27 +36,31 @@ function read(rel: string): string {
   return fs.readFileSync(path.join(process.cwd(), rel), "utf-8");
 }
 
-// Surfaces restored to the live public shell by the v4 re-skin.
+// Live public shell surfaces at their v5.1 canonical URLs (Master Blueprint
+// §6 renamed the spine: /property-owners, /deal-partners, /how-we-operate).
 const RESTORED_URLS: string[] = [
-  "/sellers",
+  "/property-owners",
   "/buyers",
-  "/dealfinders",
+  "/deal-partners",
   "/operators",
   "/referral",
   "/strategy-lab",
   "/marketflow",
   "/peggy",
-  "/deal-strategy",
+  "/how-we-operate",
   "/work-with-apollo",
+  "/our-work",
 ];
 
-// Still demoted in v4: the standalone page that 302-redirects to home.
+// Still demoted: the standalone page that 302-redirects to home.
 const DEMOTED_URLS: string[] = ["/library"];
 
-// The renamed Deal Strategy surface: its legacy URL 301s forward to the live
-// /deal-strategy shell page.
+// Renamed surfaces: each legacy URL 301s forward to its live v5.1 canonical.
 const RENAMED_LEGACY: Array<[string, string]> = [
-  ["/deal-architecture", "/deal-strategy"],
+  ["/deal-architecture", "/how-we-operate"],
+  ["/sellers", "/property-owners"],
+  ["/dealfinders", "/deal-partners"],
+  ["/deal-strategy", "/how-we-operate"],
 ];
 
 // URLs the live chrome must never link to: still-demoted or renamed-away.
@@ -138,7 +143,6 @@ describe("v4 re-skin: residual demotions + the Deal Strategy rename", () => {
 // ---------------------------------------------------------------------------
 
 const noop = () => {};
-const parallaxRef = React.createRef<HTMLDivElement>();
 
 // jsdom has no scrollIntoView; some CTAs call it. Stub so clicks don't throw.
 if (!HTMLElement.prototype.scrollIntoView) {
@@ -227,9 +231,7 @@ const CHROME: ChromeSpec[] = [
   { name: "Footer", render: (go) => <Footer go={go} /> },
   {
     name: "Home",
-    render: (go) => (
-      <HomePage go={go} theme="light" parallaxRef={parallaxRef} openPeggy={noop} />
-    ),
+    render: (go) => <HomePageV51 go={go} openPeggy={noop} />,
   },
   { name: "Capital stub", render: (go) => <CapitalPage go={go} /> },
   { name: "Development stub", render: (go) => <DevelopmentPage go={go} /> },
@@ -267,14 +269,14 @@ describe("v4 re-skin: chrome + shell pages never link to an off-limits URL", () 
   }
 
   it("the harness actually exercises navigation (non-vacuous)", () => {
-    // Guard against a vacuous pass: Home still offers its primary Submit CTA
-    // through go(), proving clickAll wires the handlers.
+    // Guard against a vacuous pass: the v5.1 Home routes its proof CTA to
+    // /our-work through go(), proving clickAll wires the handlers.
     const { go, calls } = makeGo();
     const { container } = renderChrome(
-      <HomePage go={go} theme="light" parallaxRef={parallaxRef} openPeggy={noop} />,
+      <HomePageV51 go={go} openPeggy={noop} />,
       "/",
     );
     clickAll(container);
-    expect(calls, "Home triggered no go() navigations").toContain("submit");
+    expect(calls, "Home triggered no go() navigations").toContain("ourwork");
   });
 });

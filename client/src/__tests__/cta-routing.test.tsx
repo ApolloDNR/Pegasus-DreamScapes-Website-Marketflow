@@ -6,7 +6,6 @@ import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import {
-  HomePage,
   CategoryPage,
   CapitalPage,
   DealStrategyPage,
@@ -20,6 +19,8 @@ import {
   ContactPage,
   PeggyPage,
 } from "@/pegasus/pages";
+import { HomePageV51 } from "@/pegasus/home-v51";
+import { OurWorkPage } from "@/pegasus/our-work";
 import { CTABand } from "@/pegasus/blocks";
 import { StrategyTierStrip } from "@/pegasus/forms";
 import { CATEGORIES } from "@/pegasus/data";
@@ -49,7 +50,6 @@ import type { Route } from "@/pegasus/theme";
 // anchor that no longer exists, fails here.
 
 const noop = () => {};
-const parallaxRef = React.createRef<HTMLDivElement>();
 
 // The valid `go(...)` destinations: exactly the keys ROUTE_TO_URL knows about.
 const VALID_ROUTES = new Set<string>(Object.keys(ROUTE_TO_URL));
@@ -60,6 +60,8 @@ const VALID_ROUTES = new Set<string>(Object.keys(ROUTE_TO_URL));
 // chrome and pages deep-link to.
 const KNOWN_EXTRA_PATHS = [
   "/faq",
+  // v5.1 §31: the canonical intake desk URL (primary public action).
+  "/bring-an-opportunity",
   "/submit-property",
   "/pegasus-standard",
   "/departments",
@@ -151,17 +153,16 @@ const PAGES: PageSpec[] = [
   {
     name: "Home",
     route: "/",
-    render: (go) => (
-      <HomePage go={go} theme="light" parallaxRef={parallaxRef} openPeggy={noop} />
-    ),
+    render: (go) => <HomePageV51 go={go} openPeggy={noop} />,
   },
-  { name: "Sellers", route: "/sellers", render: (go) => <CategoryPage cat={CATEGORIES.sellers} go={go} openPeggy={noop} /> },
+  { name: "Property Owners", route: "/property-owners", render: (go) => <CategoryPage cat={CATEGORIES.sellers} go={go} openPeggy={noop} /> },
   { name: "Buyers", route: "/buyers", render: (go) => <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={noop} /> },
-  { name: "Deal finders", route: "/dealfinders", render: (go) => <CategoryPage cat={CATEGORIES.dealfinders} go={go} openPeggy={noop} /> },
+  { name: "Deal Partners", route: "/deal-partners", render: (go) => <CategoryPage cat={CATEGORIES.dealfinders} go={go} openPeggy={noop} /> },
   { name: "Capital", route: "/capital", render: (go) => <CapitalPage go={go} /> },
   { name: "Operators", route: "/operators", render: (go) => <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={noop} /> },
   { name: "Referral", route: "/referral", render: (go) => <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={noop} /> },
-  { name: "Deal Strategy", route: "/deal-strategy", render: (go) => <DealStrategyPage go={go} openPeggy={noop} /> },
+  { name: "How We Operate", route: "/how-we-operate", render: (go) => <DealStrategyPage go={go} openPeggy={noop} /> },
+  { name: "Our Work", route: "/our-work", render: (go) => <OurWorkPage go={go} /> },
   { name: "Investments", route: "/investments", render: (go) => <InvestmentsPage go={go} openPeggy={noop} /> },
   { name: "Development", route: "/development", render: (go) => <DevelopmentPage go={go} /> },
   { name: "Strategy Lab", route: "/strategy-lab", render: (go) => <StrategyLabPage go={go} openPeggy={noop} /> },
@@ -213,16 +214,23 @@ describe("Click harness actually exercises navigation (Task #201)", () => {
   it("Home routes its CTAs through go() to real destinations", () => {
     const { go, calls } = makeGo();
     const { container } = renderPage(
-      <HomePage go={go} theme="light" parallaxRef={parallaxRef} openPeggy={noop} />,
+      <HomePageV51 go={go} openPeggy={noop} />,
       "/",
     );
     clickAll(container);
 
     expect(calls.length, "Home triggered no go() navigations").toBeGreaterThan(2);
-    expect(calls, "Home hero must offer Submit a Property").toContain("submit");
+    // v5.1: the Visitor Router + Proof movements must route to real pages.
+    expect(calls, "Home router must offer the owner lane").toContain("sellers");
+    expect(calls, "Home proof must route to Our Work").toContain("ourwork");
     for (const r of calls) {
       expect(VALID_ROUTES.has(r), `Home routed to unknown key '${r}'`).toBe(true);
     }
+    // §31: the primary CTA is a real link to the canonical intake URL.
+    const primary = Array.from(container.querySelectorAll("a")).find((a) =>
+      a.textContent?.includes("Bring an Opportunity"),
+    );
+    expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
   });
 });
 

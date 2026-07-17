@@ -93,12 +93,16 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     // retired.
     "/buyers",
     // Website Spec v4 (Re-skin) — restored "Who We Serve" audience lanes and
-    // What-We-Do surfaces, plus the renamed Deal Strategy page.
-    "/sellers",
-    "/dealfinders",
+    // What-We-Do surfaces. Master Blueprint v5.1 (§6) renamed the spine —
+    // the canonical URLs below; the old /sellers, /dealfinders, and
+    // /deal-strategy paths now 301 forward (see legacyRedirects).
+    "/property-owners",
+    "/deal-partners",
+    "/how-we-operate",
+    "/our-work",
+    "/bring-an-opportunity",
     "/operators",
     "/referral",
-    "/deal-strategy",
     "/work-with-apollo",
   ];
 

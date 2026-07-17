@@ -1,15 +1,21 @@
 import type { Route } from './theme';
 
 // Maps the prototype's internal route keys to real wouter URLs and back.
+// Master Blueprint v5.1 (§6) renames the public spine: the owner lane is
+// /property-owners, the deal lane is /deal-partners, the operating story is
+// /how-we-operate, and the proof surface is /our-work. Route KEYS are stable;
+// only canonical URLs change. Old URLs 301 via App.tsx + server LEGACY_REDIRECTS
+// and stay resolvable below (LEGACY_URL_ALIASES) for direct shell renders.
 export const ROUTE_TO_URL: Record<Route, string> = {
   home: '/',
-  sellers: '/sellers',
+  sellers: '/property-owners',
   buyers: '/buyers',
-  dealfinders: '/dealfinders',
+  dealfinders: '/deal-partners',
   capital: '/capital',
   operators: '/operators',
   referral: '/referral',
-  dealstrategy: '/deal-strategy',
+  dealstrategy: '/how-we-operate',
+  ourwork: '/our-work',
   investments: '/investments',
   development: '/development',
   strategylab: '/strategy-lab',
@@ -24,12 +30,21 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   connect: '/connect',
 };
 
+// v5.1 renames — the old URLs still resolve to their pages when the shell is
+// rendered at them directly (tests, stale in-app links). Public traffic gets a
+// real 301 (server + App.tsx) before this map is ever consulted.
+export const LEGACY_URL_ALIASES: Record<string, Route> = {
+  '/sellers': 'sellers',
+  '/dealfinders': 'dealfinders',
+  '/deal-strategy': 'dealstrategy',
+};
+
 export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).reduce(
   (acc, [route, url]) => {
     acc[url] = route as Route;
     return acc;
   },
-  {} as Record<string, Route>,
+  { ...LEGACY_URL_ALIASES } as Record<string, Route>,
 );
 
 // Website Spec v4 (Re-skin) restores the full public surface that the v3 Lean
@@ -87,8 +102,9 @@ const STANDALONE_DARK_HERO: string[] = [
 ];
 
 const STANDALONE_SOLID_NAV: string[] = [
-  // Public Website v1 (issue #22): the multi-step intake desk has a light
-  // top section, so it wears the solid nav.
+  // v5.1 (§31): "Bring an Opportunity" is the primary public action; it is the
+  // canonical URL of the multi-step intake desk. /submit-property 301s to it.
+  '/bring-an-opportunity',
   '/submit-property',
   '/strategy-lab/classic',
   // In-funnel destinations from /strategy-lab/classic on submit - keep them on
@@ -137,7 +153,9 @@ export function isSolidNavUrl(path: string): boolean {
 // legacy global Navigation/Footer. Keep this in sync with the route table in
 // App.tsx when adding/removing a top-level public route.
 const KNOWN_TOP_SEGMENTS: Set<string> = new Set([
-  // Pegasus prototype-owned public pages
+  // Pegasus prototype-owned public pages (v5.1 canonical + legacy aliases)
+  'property-owners', 'deal-partners', 'how-we-operate', 'our-work',
+  'bring-an-opportunity',
   'sellers', 'buyers', 'dealfinders', 'capital', 'operators', 'referral',
   'deal-strategy', 'investments', 'development', 'strategy-lab',
   'marketflow', 'work-with-apollo', 'ecosystem', 'about', 'contact', 'peggy',

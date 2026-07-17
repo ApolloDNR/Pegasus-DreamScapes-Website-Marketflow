@@ -1,20 +1,26 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Landing } from "@/pegasus/Landing";
 
-// Public Website v1 homepage contract (issue #22, PRD §6.2 / COPY_DECK §2).
+// Homepage contract — Master Blueprint v5.1 (§7, §31, §32.1, §32.2).
 //
-// The PRD locks the homepage promise, the Situation Router, the Deal
-// Engine, the four departments, the Apollo disclosure, the Nelson proof,
-// the labeled Pegasus Standard vision band, and the final CTA — in that
-// narrative order. This suite renders the real prototype shell at "/"
-// and pins both the locked copy and the section order so a future
-// refactor cannot silently drift the homepage away from the PRD.
+// v5.1 locks the homepage to seven narrative movements in a fixed order:
+//   1. Arrival  2. Visitor Router  3. Proof (Nelson Drive)  4. Pegasus Method
+//   5. Opportunity Plan (signature)  6. Partner Proposition
+//   7. Founder Trust + Final Invitation
+// It also locks the public promise ("Complex real estate, made executable."),
+// the primary CTA ("Bring an Opportunity" → /bring-an-opportunity), and the
+// §11-safe framing of the Nelson numbers (transparent stack; the in-house
+// edge as the featured stat; never "profit").
+//
+// This suite renders the real prototype shell at "/" and pins the locked
+// copy and the movement order so a refactor cannot silently drift the
+// homepage away from the blueprint. Supersedes the issue-#22 contract.
 
 vi.mock("@/lib/analytics", () => ({
   initAnalytics: () => () => {},
@@ -72,84 +78,116 @@ function renderHome() {
 
 afterEach(() => cleanup());
 
-describe("Homepage PRD v1 contract (issue #22)", () => {
-  it("locks the hero promise, CTAs, and trust line", () => {
+describe("Homepage v5.1 contract (Master Blueprint §7/§32.1)", () => {
+  it("locks the Arrival promise and the three hero actions", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Complex property.");
-    expect(text).toContain("Structured opportunity.");
+    expect(text).toContain("Complex real estate, made executable.");
     expect(text).toContain(
-      "reviews real estate situations and routes them into the right path",
+      "originates, structures, and operates opportunities that require more",
     );
-    expect(text).toContain("Submit a Property");
-    expect(text).toContain("Request a Strategy Review");
-    expect(text).toContain(
-      "Based in the East Bay. Founder-led real estate investment, development, and strategy.",
-    );
-    // Primary CTA routes to the reinstated intake desk.
+    expect(text).toContain("Bring an Opportunity");
+    expect(text).toContain("See How Pegasus Operates");
+    expect(text).toContain("Open Strategy Lab");
+    // §31: the primary CTA is a real link to the canonical intake URL.
     const primary = Array.from(container.querySelectorAll("a")).find((a) =>
-      a.textContent?.includes("Submit a Property"),
+      a.textContent?.includes("Bring an Opportunity"),
     );
-    expect(primary?.getAttribute("href")).toBe("/submit-property");
+    expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
   });
 
-  it("renders the five locked Situation Router lanes", () => {
+  it("locks the Visitor Router question and its four routes (§7.2)", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    for (const lane of [
-      "I own a property",
-      "I found a deal",
-      "I want to buy",
-      "I want to partner",
-      "I need a strategy",
+    expect(text).toContain("What are you bringing to Pegasus?");
+    for (const route of [
+      "A property I own",
+      "A deal I found",
+      "A project I run",
+      "A relationship or specialty",
     ]) {
-      expect(text).toContain(lane);
+      expect(text).toContain(route);
     }
-    expect(text).toContain("What brings you here?");
-    expect(text).toContain("Start Owner Review");
   });
 
-  it("renders the Deal Engine flow and the four locked departments", () => {
+  it("locks the Nelson proof with the §11-safe number framing", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("One property. Four departments. One routed path.");
-    for (const step of ["Submit", "Review", "Structure", "Route", "Execute", "Exit / Hold"]) {
+    expect(text).toContain("One house, taken down to the studs.");
+    expect(text).toContain("Nelson Drive");
+    expect(text).toContain("El Sobrante");
+    // Transparent stack — acquired / built in-house / sold.
+    expect(text).toContain("$600,000");
+    expect(text).toContain("$105,000");
+    expect(text).toContain("$840,000");
+    // Featured stat: the in-house operating edge, not a gross-lift headline.
+    expect(text).toContain("~$95K");
+    // §11 discipline: gross value creation is never presented as profit.
+    expect(text).toContain("not net profit");
+    expect(text).not.toContain("$240K value created");
+  });
+
+  it("locks the five-step Pegasus Method (§7.4)", () => {
+    const { container } = renderHome();
+    const text = container.querySelector("main")!.textContent!;
+    for (const step of ["Originate", "Structure", "Operate", "Realize", "Learn"]) {
       expect(text).toContain(step);
     }
-    expect(text).toContain("Finds, reviews, structures, and secures opportunities.");
-    expect(text).toContain("Scopes, renovates, repositions, builds, and manages execution.");
-    expect(text).toContain("Packages, markets, sells, assigns, lists, or connects the right exit.");
-    expect(text).toContain("Operates, protects, and compounds long-term holds.");
   });
 
-  it("keeps the labeled future-vision band and the locked final CTA", () => {
+  it("locks the Opportunity Plan signature with its eight needs (§32.2)", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("The long-term vision is bigger than transactions.");
-    expect(text).toContain("Eudaimonia");
-    // Non-negotiable: future vision must never read as current inventory.
-    expect(text).toContain("Long-term development direction — not current inventory");
-    expect(text).toContain("Have a property, deal, or situation worth reviewing?");
-  });
-
-  it("tells the story in PRD order: hero → router → engine → Apollo → proof → vision → final CTA", () => {
-    const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    const beats = [
-      "Structured opportunity.",
-      "What brings you here?",
-      "One property. Four departments. One routed path.",
-      "CA DRE #02333658",
-      "$840",
-      "The long-term vision is bigger than transactions.",
-      "Have a property, deal, or situation worth reviewing?",
-    ];
-    const positions = beats.map((b) => text.indexOf(b));
-    for (let i = 0; i < positions.length; i++) {
-      expect(positions[i], `missing beat: ${beats[i]}`).toBeGreaterThan(-1);
-      if (i > 0) {
-        expect(positions[i], `beat out of order: ${beats[i]}`).toBeGreaterThan(positions[i - 1]);
-      }
+    expect(text).toContain("Every deal is missing something.");
+    for (const need of [
+      "Control",
+      "Underwriting",
+      "Buyer",
+      "Capital",
+      "Development",
+      "Local execution",
+      "Disposition",
+      "Asset operations",
+    ]) {
+      expect(text).toContain(need);
     }
+    // The signature must never read as a commitment (§15/§21 discipline).
+    expect(text).toContain("Illustrative");
+  });
+
+  it("locks the Partner Proposition and Founder Trust movements (§7.7–§7.8)", () => {
+    const { container } = renderHome();
+    const text = container.querySelector("main")!.textContent!;
+    expect(text).toContain("Bring what you do well.");
+    expect(text).toContain("Paolo");
+    expect(text).toContain("Keller Williams East Bay");
+    expect(text).toContain("CA DRE #02333658");
+  });
+
+  it("keeps the seven movements in the locked narrative order (§32.1)", () => {
+    const { container } = renderHome();
+    const order = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-hv]"),
+    ).map((el) => el.dataset.hv);
+    expect(order).toEqual([
+      "arrival",
+      "router",
+      "proof",
+      "method",
+      "plan",
+      "partner",
+      "founder",
+      "final",
+    ]);
+  });
+
+  it("selecting an Opportunity Plan need reveals what Pegasus brings", () => {
+    const { container } = renderHome();
+    const chip = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (b) => b.textContent?.trim() === "Underwriting" && b.className.includes("hv-chip"),
+    );
+    expect(chip, "Opportunity Plan chip row must render").toBeTruthy();
+    fireEvent.click(chip!);
+    expect(chip!.getAttribute("aria-pressed")).toBe("true");
   });
 });

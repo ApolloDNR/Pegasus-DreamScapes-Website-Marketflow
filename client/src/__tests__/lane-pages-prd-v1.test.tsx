@@ -127,16 +127,20 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     });
   }
 
-  it("locks the PRD §5.1 top navigation and primary nav button", () => {
+  it("locks the v5.1 §6 top navigation and primary nav button", () => {
     const { container } = renderAt("/");
     const nav = container.querySelector("nav")!;
-    for (const label of ["Home", "Departments", "Strategy Lab", "MarketFlow", "Work With Apollo"]) {
+    // Master Blueprint v5.1 (§6/§31): the nav explains the public
+    // relationship; MarketFlow stays out of primary nav until its pilot
+    // gates are met (§18). Supersedes issue #22 §5.1.
+    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Our Work", "About"]) {
       expect(nav.textContent, `missing nav item: ${label}`).toContain(label);
     }
-    expect(nav.textContent).toContain("Submit a Property");
+    expect(nav.textContent).toContain("Bring an Opportunity");
+    expect(nav.textContent).not.toContain("MarketFlow");
   });
 
-  it("locks the PRD §5.2 footer page map", () => {
+  it("locks the footer page map (v5.1 contextual routes)", () => {
     const { container } = renderAt("/");
     const footer = container.querySelector("footer")!;
     for (const label of [
@@ -146,13 +150,15 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
       "Capital Partners",
       "Operators & Vendors",
       "Referral Partners",
+      "How We Operate",
+      "Our Work",
       "Case Study",
       "The Pegasus Standard",
       "Contact",
       "Disclosures",
       "Privacy Policy",
       "Terms",
-      "Submit a Property",
+      "Bring an Opportunity",
     ]) {
       expect(footer.textContent, `missing footer link: ${label}`).toContain(label);
     }

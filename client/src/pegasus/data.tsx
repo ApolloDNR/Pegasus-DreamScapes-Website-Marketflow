@@ -3,18 +3,19 @@ import type { NavLink, Pillar, Category, AudienceKey, SplitPath, FaqItem, Route 
 
 /* ================================================================
    NAVIGATION
-   Public Website v1 (issue #22) PRD §5.1 locks the top navigation to a
-   clean flat list: Home, Submit a Property, Departments, Strategy Lab,
-   MarketFlow, Work With Apollo — with Submit a Property as the primary
-   nav button (rendered separately in nav.tsx). The audience lanes moved
-   to the footer per §5.2.
+   Master Blueprint v5.1 (§6, §31) locks the top navigation to the public
+   relationship — How We Operate, Property Owners, Deal Partners, Our Work,
+   About — with "Bring an Opportunity" as the primary nav button (rendered
+   separately in nav.tsx, routing to the /bring-an-opportunity intake desk).
+   Strategy Lab / Peggy are utility actions; MarketFlow stays out of the
+   primary nav until its pilot gates are met (§18). Supersedes issue #22 §5.1.
    ================================================================ */
 export const NAV_LINKS: NavLink[] = [
-  { label: 'Home', route: 'home' },
-  { label: 'Departments', url: '/departments' },
-  { label: 'Strategy Lab', route: 'strategylab' },
-  { label: 'MarketFlow', route: 'marketflow' },
-  { label: 'Work With Apollo', route: 'apollo' },
+  { label: 'How We Operate', route: 'dealstrategy' },
+  { label: 'Property Owners', route: 'sellers' },
+  { label: 'Deal Partners', route: 'dealfinders' },
+  { label: 'Our Work', route: 'ourwork' },
+  { label: 'About', route: 'about' },
 ];
 
 /* ================================================================

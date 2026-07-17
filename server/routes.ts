@@ -229,15 +229,20 @@ export async function registerRoutes(
   // Canonical 301 redirects — only kept for routes that map cleanly to a
   // current v1 destination with preserved intent.
   const LEGACY_REDIRECTS: Array<[string, string]> = [
-    ['/sell', '/submit?intent=sell'],
-    ['/submit-deal', '/submit?intent=deal-jv'],
-    // Public Website v1 (issue #22): /submit-property reinstated as canonical.
-    ['/services', '/development'],
+    // Master Blueprint v5.1 (§6): funnel entries land on their audience
+    // pages; the intake desk is canonical at /bring-an-opportunity.
+    ['/sell', '/property-owners'],
+    ['/submit-deal', '/bring-an-opportunity?intent=deal-jv'],
+    ['/submit-property', '/bring-an-opportunity'],
+    ['/services', '/how-we-operate'],
     ['/resources', '/library'],
     ['/invest', '/capital'],
-    ['/partner', '/capital'],
-    // Website Spec v4 — permanent rename of the Deal Strategy surface.
-    ['/deal-architecture', '/deal-strategy'],
+    ['/partner', '/deal-partners'],
+    // v5.1 spine renames — permanent forwards for the old canonical URLs.
+    ['/sellers', '/property-owners'],
+    ['/dealfinders', '/deal-partners'],
+    ['/deal-strategy', '/how-we-operate'],
+    ['/deal-architecture', '/how-we-operate'],
   ];
   for (const [from, to] of LEGACY_REDIRECTS) {
     app.get(from, (_req, res) => res.redirect(301, to));

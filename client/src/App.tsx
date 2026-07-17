@@ -152,15 +152,20 @@ export const legacyRedirects: [string, string][] = [
   // all collapse into /submit with their intent preserved via query.
   // Mirror of server LEGACY_REDIRECTS for SPA-internal navigation only.
   // Server-side 301s / 410s are authoritative for direct HTTP hits.
-  ["/sell", "/submit?intent=sell"],
-  ["/submit-deal", "/submit?intent=deal-jv"],
-  // Public Website v1 (issue #22): /submit-property is reinstated as the
-  // canonical multi-step intake desk — no longer a legacy redirect.
-  ["/services", "/development"],
+  // Master Blueprint v5.1 (§6): owners/deal-source funnels route to their
+  // audience pages; the intake desk is canonical at /bring-an-opportunity.
+  ["/sell", "/property-owners"],
+  ["/submit-deal", "/bring-an-opportunity?intent=deal-jv"],
+  ["/submit-property", "/bring-an-opportunity"],
+  ["/services", "/how-we-operate"],
   ["/resources", "/library"],
   ["/buy", "/marketflow"],
-  ["/partner", "/capital"],
+  ["/partner", "/deal-partners"],
   ["/invest", "/capital"],
+  // v5.1 spine renames — permanent forwards for the old canonical URLs.
+  ["/sellers", "/property-owners"],
+  ["/dealfinders", "/deal-partners"],
+  ["/deal-strategy", "/how-we-operate"],
   // Phase 1 route-cleanup (Apollo guardrail #3 — redirects, not 410s,
   // for paths that still have a clear canonical replacement).
   ["/calculators", "/strategy-lab?tool=calculators"],
@@ -170,7 +175,7 @@ export const legacyRedirects: [string, string][] = [
   // prototype shell (PEGASUS_URLS), so they are no longer redirected. The only
   // lane-level redirect kept here is the permanent rename of the Deal Strategy
   // surface, which 301s its old URL forward.
-  ["/deal-architecture", "/deal-strategy"],
+  ["/deal-architecture", "/how-we-operate"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],
   ["/portal", "/marketflow"],
@@ -224,8 +229,10 @@ export function Router() {
       <Route path="/development" component={Development} />
       {/* Empire Doctrine v1.0.1 — canonical submission route. */}
       <Route path="/submit" component={SubmitPage} />
-      {/* Public Website v1 (issue #22): primary conversion flow */}
-      <Route path="/submit-property" component={SubmitPropertyPage} />
+      {/* Master Blueprint v5.1 (§31): "Bring an Opportunity" is the primary
+       * public action — the canonical URL of the multi-step intake desk.
+       * /submit-property 301s here via legacyRedirects. */}
+      <Route path="/bring-an-opportunity" component={SubmitPropertyPage} />
       <Route path="/pegasus-standard" component={PegasusStandardPage} />
       <Route path="/departments" component={DepartmentsPage} />
       <Route path="/case-study" component={CaseStudyPage} />

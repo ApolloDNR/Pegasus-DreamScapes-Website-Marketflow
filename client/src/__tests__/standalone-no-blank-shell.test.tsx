@@ -122,8 +122,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // blank/crashing/mis-redirected shell.
 const STANDALONE_URLS: string[] = [
   "/submit",
-  // Public Website v1 (issue #22): multi-step intake desk + PRD pages.
-  "/submit-property",
+  // Master Blueprint v5.1 (§31): the multi-step intake desk at its canonical
+  // "Bring an Opportunity" URL (/submit-property now 301s here).
+  "/bring-an-opportunity",
   "/pegasus-standard",
   "/departments",
   "/case-study",

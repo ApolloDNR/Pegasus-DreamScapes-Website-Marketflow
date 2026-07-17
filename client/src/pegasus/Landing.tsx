@@ -6,10 +6,12 @@ import { CATEGORIES } from './data';
 import { NavBar } from './nav';
 import { Peggy } from './peggy';
 import {
-  HomePage, CategoryPage, DealStrategyPage, InvestmentsPage, DevelopmentPage,
+  CategoryPage, DealStrategyPage, InvestmentsPage, DevelopmentPage,
   StrategyLabPage, MarketFlowPage, WorkWithApolloPage, EcosystemPage, PeggyPage,
   AboutPage, ContactPage, CapitalPage, Footer,
 } from './pages';
+import { HomePageV51 } from './home-v51';
+import { OurWorkPage } from './our-work';
 import { SavedPage } from './Saved';
 import { routeForUrl, urlFor } from './routes';
 import { useSEO } from '@/hooks/use-seo';
@@ -119,7 +121,9 @@ export function Landing() {
       <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} />
 
       <main key={route} className="page-in">
-        {route === 'home' && <HomePage go={go} theme={theme} parallaxRef={parallaxRef} openPeggy={openPeggy} />}
+        {/* v5.1 homepage (seven movements). The issue-#22 HomePage stays
+            exported for reference but no longer mounts. */}
+        {route === 'home' && <HomePageV51 go={go} openPeggy={openPeggy} />}
         {route === 'sellers' && <CategoryPage cat={CATEGORIES.sellers} go={go} openPeggy={openPeggy} />}
         {route === 'buyers' && <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={openPeggy} />}
         {route === 'dealfinders' && <CategoryPage cat={CATEGORIES.dealfinders} go={go} openPeggy={openPeggy} />}
@@ -127,6 +131,7 @@ export function Landing() {
         {route === 'operators' && <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={openPeggy} />}
         {route === 'referral' && <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={openPeggy} />}
         {route === 'dealstrategy' && <DealStrategyPage go={go} openPeggy={openPeggy} />}
+        {route === 'ourwork' && <OurWorkPage go={go} />}
         {route === 'investments' && <InvestmentsPage go={go} openPeggy={openPeggy} />}
         {route === 'development' && <DevelopmentPage go={go} />}
         {route === 'strategylab' && <StrategyLabPage go={go} openPeggy={openPeggy} />}

@@ -9,6 +9,7 @@ export type Route =
   | 'operators'
   | 'referral'
   | 'dealstrategy'
+  | 'ourwork'
   | 'investments'
   | 'development'
   | 'strategylab'

@@ -367,8 +367,57 @@ function LabPreview() {
   );
 }
 
+// The calm "one desk, one question" opening. A newcomer lands here on a single
+// invitation and only steps up to the instruments (command board / console /
+// calculator) once they choose to. Keeps the working machinery untouched —
+// this is the entrance, not the engine.
+function StrategyLabWelcome({ onBegin, go }: { onBegin: () => void; go: Nav }) {
+  return (
+    <section className="strategy-command-section strategy-cockpit-hero" data-testid="strategy-lab-welcome">
+      <div className="strategy-welcome">
+        <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
+        <h1 className="strategy-welcome-title mt-6 font-serif-display text-[var(--cream)]">
+          Start with a single property.
+        </h1>
+        <p className="strategy-welcome-copy">
+          Give me the numbers on one property and I&rsquo;ll show you the paths it could take &mdash;
+          hold, improve, list, or step back &mdash; with a directional read you can think with.
+          When it&rsquo;s worth a closer look, Apollo reviews it himself.
+        </p>
+        <div className="strategy-welcome-actions">
+          <button
+            type="button"
+            onClick={onBegin}
+            className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group"
+          >
+            Begin a read
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          </button>
+          <button
+            type="button"
+            onClick={() => go('submit')}
+            className="strategy-welcome-secondary"
+          >
+            Or send a property straight to Pegasus
+          </button>
+        </div>
+        <p className="strategy-welcome-fine">
+          Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice,
+          lending commitment, or investment recommendation.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const model = useStrategyModel();
+  const [entered, setEntered] = React.useState(false);
+
+  if (!entered) {
+    return <StrategyLabWelcome onBegin={() => setEntered(true)} go={go} />;
+  }
+
   return (
     <>
       <StrategyCommandBoard go={go} model={model} />
@@ -809,6 +858,8 @@ export function Footer({ go }: { go: Nav }) {
 
           <FooterCol title="Company">
             <FooterLink label="About the Firm" onClick={() => go('about')} />
+            <FooterLink label="How We Operate" onClick={() => go('dealstrategy')} />
+            <FooterLink label="Our Work" onClick={() => go('ourwork')} />
             <FooterLink label="Departments" onClick={() => setLocation('/departments')} />
             <FooterLink label="Work With Apollo" onClick={() => go('apollo')} />
             <FooterLink label="Case Study" onClick={() => setLocation('/case-study')} />
@@ -816,7 +867,8 @@ export function Footer({ go }: { go: Nav }) {
           </FooterCol>
 
           <FooterCol title="Start Here">
-            <FooterLink label="Submit a Property" onClick={() => setLocation('/submit-property')} />
+            {/* v5.1 §31: the primary public action. */}
+            <FooterLink label="Bring an Opportunity" onClick={() => setLocation('/bring-an-opportunity')} />
             <FooterLink label="Strategy Lab" onClick={() => go('strategylab')} />
             <FooterLink label="MarketFlow" onClick={() => go('marketflow')} />
             <FooterLink label="Contact" onClick={() => go('contact')} />
