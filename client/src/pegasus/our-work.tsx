@@ -75,7 +75,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
 
       {/* Thesis + numbers */}
       <section className="ow-numbers hv-pad">
-        <div className="hv-wrap ow-numbers-grid">
+        <div className="hv-wrap ow-numbers-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow-copper">The thesis</div>
             <h2 className="hv-h2 font-serif-display">Bought a 3/2. Sold a 4/3.</h2>
@@ -129,7 +129,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">The transformation</div>
           <h2 className="hv-h2 font-serif-display">Room by room, honestly shown.</h2>
-          <div className="ow-pairs">
+          <div className="ow-pairs reveal">
             {PAIRS.map((p) => (
               <figure key={p.title} className="ow-pair">
                 <div className="ow-pair-media">
@@ -149,7 +149,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
               </figure>
             ))}
           </div>
-          <div className="ow-strip">
+          <div className="ow-strip reveal">
             {FINISH_STRIP.map(([src, alt]) => (
               <img key={src} src={src} alt={alt} loading="lazy" />
             ))}

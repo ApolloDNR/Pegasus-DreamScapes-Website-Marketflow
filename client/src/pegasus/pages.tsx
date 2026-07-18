@@ -442,12 +442,14 @@ const MARKETFLOW_ACCESS = [
 export function MarketFlowPage({ go }: { go: Nav }) {
   return (
     <>
-      {/* COPY_DECK §12 locked hero (issue #22) */}
-      <PageHero eyebrow="Systems · MarketFlow"
+      {/* Master Blueprint v5.1 §18: MarketFlow presents as a private
+          distribution network in CONTROLLED PILOT — it never overclaims
+          scale, verification, or a public marketplace. */}
+      <PageHero eyebrow="Systems · MarketFlow · Controlled pilot"
         title={<>A private network for <span className="italic text-[var(--accent-bright)]">reviewed opportunities.</span></>}
         image={IMG('pegasus-casestudy.png')}
         scrimTop
-        lead="MarketFlow connects buyers, investors, deal finders, capital partners, vendors, and operators around reviewed Pegasus opportunities. Access is reviewed, not open." />
+        lead="MarketFlow is Pegasus's private opportunity-distribution network, currently in a controlled pilot. It connects buyers, investors, deal finders, capital partners, vendors, and operators around opportunities Pegasus has already reviewed. Access is reviewed by a person, not open." />
       <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
@@ -776,13 +778,41 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
 export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   return (
     <>
-      <PageHero eyebrow="The Firm"
-        title={<>Deal <span className="italic text-[var(--accent-bright)]">strategy.</span></>}
-        image={IMG('hero/luxury-home-1280.jpg')}
-        lead="Pegasus Dreamscapes is a real estate investment, development, and systems company in the East Bay. One firm that reads the situation, underwrites the numbers, builds the work, and sees a deal through, instead of handing you off." />
+      {/* Master Blueprint v5.1 §12: why Pegasus exists, the founder story,
+          the honest current state, and the long-term vision clearly labeled
+          as future direction. The hero backdrop is Nelson Drive — a real,
+          completed project, not atmosphere. */}
+      <PageHero eyebrow="About the Firm"
+        title={<>Why Pegasus <span className="italic text-[var(--accent-bright)]">exists.</span></>}
+        image={IMG('nelson/curb.webp')}
+        lead="Complex properties usually fail because the pieces live in different hands: the read, the money, the build, the sale. Pegasus DreamScapes was built to hold them together, one accountable operator carrying a deal from first look to final outcome." />
       <ApolloBlock go={go} showCta={false} />
+      <section className="py-20 lg:py-24">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
+          <SectionHead eyebrow="Where the firm stands today"
+            title="Founder-led, and honest about it."
+            copy="Pegasus is founder-led. The operating record is real and small: sourced, structured, built, and sold in-house, with licensed representation through Keller Williams East Bay and specialized work performed by appropriately licensed professionals. We would rather show one finished project truthfully than imply a staff we do not have." />
+          <button type="button" onClick={() => go('ourwork')}
+            className="btn-line px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            See the Nelson Drive project <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </section>
       <DoctrineBlock dark />
       <ProofStats />
+      {/* Long-term vision, explicitly labeled future (§12). */}
+      <section className="hv-photoband" aria-label="Long-term direction">
+        <img src={IMG('hall/colonnade-hero-1600.webp')}
+          alt="Concept render: a warm marble colonnade at dusk. Long-term design direction, not current inventory."
+          loading="lazy" />
+        <div className="hv-wrap">
+          <div className="pg-label hv-eyebrow">The long horizon</div>
+          <p className="font-serif-display">Communities built to a classical standard.</p>
+          <p className="pg-label !text-[9px] !tracking-[0.2em] text-[rgba(245,230,211,0.6)] mt-4">
+            Long-term development direction, not current inventory
+          </p>
+        </div>
+      </section>
       <CTABand go={go} openPeggy={openPeggy}
         primaryLabel="Start with one honest read"
         title="Start with one honest read."

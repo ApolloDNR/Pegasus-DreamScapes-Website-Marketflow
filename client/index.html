@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Public Website v1 (issue #22) PRD §12 locked homepage title/description.
-         The server rewrites these per-route at request time (server/seo-html.ts);
-         this static baseline is the homepage fallback. -->
-    <title>Pegasus Dreamscapes | Real Estate Investment, Development &amp; Strategy</title>
-    <meta name="description" content="Pegasus Dreamscapes reviews complex property situations and structures paths through acquisition, development, disposition, partnership, or long-term asset strategy. Based in the East Bay, California." />
+    <!-- Master Blueprint v5.1 homepage title/description (shared/seo-routes.ts
+         is the source of truth; the server rewrites these per-route at request
+         time via server/seo-html.ts). This static baseline is the fallback. -->
+    <title>Pegasus DreamScapes — Complex Real Estate, Made Executable</title>
+    <meta name="description" content="A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward." />
     <meta name="author" content="Pegasus Dreamscapes Corp." />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0D1B2D" />
-    <meta property="og:title" content="Pegasus Dreamscapes | Real Estate Investment, Development &amp; Strategy" />
-    <meta property="og:description" content="Pegasus Dreamscapes reviews complex property situations and structures paths through acquisition, development, disposition, partnership, or long-term asset strategy. Based in the East Bay, California." />
+    <meta property="og:title" content="Pegasus DreamScapes — Complex Real Estate, Made Executable" />
+    <meta property="og:description" content="A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Pegasus Dreamscapes" />
     <meta property="og:url" content="https://pegasusdreamscapes.com" />
@@ -21,8 +21,8 @@
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Pegasus Dreamscapes | Real Estate Investment, Development &amp; Strategy" />
-    <meta name="twitter:description" content="Strategy-first real estate operating company. Complex property, structured opportunity." />
+    <meta name="twitter:title" content="Pegasus DreamScapes — Complex Real Estate, Made Executable" />
+    <meta name="twitter:description" content="A real estate operating company for complex opportunities in the East Bay." />
     <meta name="twitter:image" content="https://pegasusdreamscapes.com/og/default.png" />
     <link rel="canonical" href="https://pegasusdreamscapes.com" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -30,15 +30,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-    <link
-      rel="preload"
-      as="image"
-      href="/images/hero/luxury-home-1280.webp"
-      imagesrcset="/images/hero/luxury-home-768.webp 768w, /images/hero/luxury-home-1280.webp 1280w, /images/hero/luxury-home-1920.webp 1920w"
-      imagesizes="100vw"
-      type="image/webp"
-      fetchpriority="high"
-    />
+    <!-- v5.1 homepage hero is drawn (CSS + inline SVG) — no LCP image to
+         preload. Removing the old photo preload saves ~100KB of contended
+         bandwidth on first paint (§32.9). -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -48,7 +42,7 @@
         "url": "https://pegasusdreamscapes.com",
         "logo": "https://pegasusdreamscapes.com/icon-512.png",
         "image": "https://pegasusdreamscapes.com/og/default.png",
-        "description": "Strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.",
+        "description": "A real estate operating company and operating partner for complex opportunities in Contra Costa and Alameda County, California. Complex real estate, made executable.",
         "email": "apollo@pegasusdreamscapes.com",
         "telephone": "+1-925-744-8525",
         "contactPoint": {
@@ -68,14 +62,13 @@
         "founder": {
           "@type": "Person",
           "name": "Paolo \"Apollo\" Duran",
-          "jobTitle": "Founder & Principal",
-          "identifier": "DRE #02333658"
-        },
-        "identifier": "DRE #02333658",
-        "memberOf": {
-          "@type": "Organization",
-          "name": "Keller Williams East Bay",
-          "description": "Each office is independently owned and operated."
+          "jobTitle": "Founder",
+          "identifier": "CA DRE #02333658",
+          "affiliation": {
+            "@type": "Organization",
+            "name": "Keller Williams East Bay",
+            "description": "Licensed real estate representation is provided by Paolo \"Apollo\" Duran through Keller Williams East Bay. Each office is independently owned and operated."
+          }
         },
         "slogan": "Dream it. Build it. Live it."
       }

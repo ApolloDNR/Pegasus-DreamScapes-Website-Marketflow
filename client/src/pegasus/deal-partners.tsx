@@ -64,7 +64,7 @@ export function DealPartnersPage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">Name the missing piece</div>
           <h2 className="hv-h2 font-serif-display">What does your deal lack?</h2>
-          <div className="dp-composer-grid">
+          <div className="dp-composer-grid reveal">
             <div className="dp-missing" role="tablist" aria-label="What the deal is missing">
               {MISSING.map((m, i) => (
                 <button key={m.label} type="button" role="tab" aria-selected={i === idx}
@@ -90,7 +90,7 @@ export function DealPartnersPage({ go }: { go: Nav }) {
 
       {/* Wholesaler lane */}
       <section className="dp-lane hv-pad-lg hv-grain">
-        <div className="hv-wrap dp-lane-grid">
+        <div className="hv-wrap dp-lane-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow">Deal finders and wholesalers</div>
             <h2 className="hv-h2-cream font-serif-display">One submission. A straight answer.</h2>

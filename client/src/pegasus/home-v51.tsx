@@ -176,7 +176,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
       {/* 2 · VISITOR ROUTER */}
       <section className="hv-router hv-pad" data-hv="router">
         <div className="hv-wrap">
-          <div className="hv-router-head">
+          <div className="hv-router-head reveal">
             <div>
               <div className="pg-label hv-eyebrow-copper">Start here</div>
               <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
@@ -205,7 +205,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
 
       {/* 3 · PROOF — Nelson Drive */}
       <section className="hv-proof hv-pad-lg hv-grain" data-hv="proof">
-        <div className="hv-wrap hv-proof-grid">
+        <div className="hv-wrap hv-proof-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow">Proof</div>
             <h2 className="hv-h2-cream font-serif-display">One house, taken down to the studs.</h2>
@@ -250,7 +250,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">How we work</div>
           <h2 className="hv-h2 font-serif-display">A method, not a script.</h2>
-          <div className="hv-steps">
+          <div className="hv-steps reveal">
             {([
               ['01', 'Originate', 'Find, receive, or build the opportunity.'],
               ['02', 'Structure', 'Set the role, the strategy, and the terms.'],
@@ -282,7 +282,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
       {/* 5 · OPPORTUNITY PLAN — signature */}
       <section className="hv-plan hv-pad-lg hv-grain" data-hv="plan">
         <div className="hv-wrap">
-          <div className="hv-plan-head">
+          <div className="hv-plan-head reveal">
             <div className="pg-label hv-eyebrow">The Opportunity Plan</div>
             <h2 className="hv-h2-cream font-serif-display">Every deal is missing something.</h2>
             <p className="hv-lead-dim">
@@ -299,7 +299,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
 
       {/* 6 · PARTNER PROPOSITION */}
       <section className="hv-partner hv-pad" data-hv="partner">
-        <div className="hv-wrap hv-partner-grid">
+        <div className="hv-wrap hv-partner-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow-copper">Partners</div>
             <h2 className="hv-h2 font-serif-display">Bring what you do well. Pegasus completes the operating picture.</h2>
@@ -325,7 +325,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
 
       {/* 7 · FOUNDER TRUST + FINAL INVITATION */}
       <section className="hv-founder hv-pad-lg" data-hv="founder">
-        <div className="hv-wrap hv-founder-grid">
+        <div className="hv-wrap hv-founder-grid reveal">
           <figure className="hv-founder-photo">
             <img src="/images/founder/apollo.webp" alt="Paolo 'Apollo' Duran, founder of Pegasus DreamScapes" loading="lazy" />
           </figure>

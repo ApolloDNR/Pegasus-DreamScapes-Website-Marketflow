@@ -62,7 +62,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">Start with the situation</div>
           <h2 className="hv-h2 font-serif-display">Pick the one that sounds like yours.</h2>
-          <div className="po-step-grid">
+          <div className="po-step-grid reveal">
             <div className="po-situations" role="tablist" aria-label="Common owner situations">
               {SITUATIONS.map((s, i) => (
                 <button key={s.label} type="button" role="tab" aria-selected={i === idx}
@@ -88,7 +88,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow">What happens next</div>
           <h2 className="hv-h2-cream font-serif-display">Four steps, no pressure at any of them.</h2>
-          <ol className="po-steps">
+          <ol className="po-steps reveal">
             <li><b>Tell Pegasus about the property.</b> Address, condition, timing, and what you want out of it.</li>
             <li><b>We review the facts and circumstances.</b> The numbers, the title, the tenancy, the local rules.</li>
             <li><b>We determine whether a direct purchase or another path fits.</b> Sometimes the answer is a listing, or a wait.</li>

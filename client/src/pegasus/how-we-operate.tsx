@@ -102,7 +102,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">The operating sequence</div>
           <h2 className="hv-h2 font-serif-display">Originate. Structure. Operate. Realize. Learn.</h2>
-          <div className="hwo-rail" role="tablist" aria-label="The five operating stages">
+          <div className="hwo-rail reveal" role="tablist" aria-label="The five operating stages">
             {STAGES.map((s, i) => (
               <button key={s.num} type="button" role="tab" aria-selected={i === stageIdx}
                 className="hwo-rail-stop" data-on={i === stageIdx || undefined}
@@ -139,7 +139,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
             Pegasus may participate in one of several capacities. Which one is decided by the facts of
             the deal, put in writing, and never mixed.
           </p>
-          <dl className="hwo-role-list">
+          <dl className="hwo-role-list reveal">
             {ROLES.map(([name, desc]) => (
               <div key={name}><dt className="font-serif-display">{name}</dt><dd>{desc}</dd></div>
             ))}
@@ -149,7 +149,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
 
       {/* Strategy vs structure */}
       <section className="hwo-svss hv-pad">
-        <div className="hv-wrap hwo-svss-grid">
+        <div className="hv-wrap hwo-svss-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow-copper">Strategy</div>
             <h2 className="hwo-svss-q font-serif-display">What should happen to the property?</h2>
@@ -177,7 +177,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
           <p className="hv-lead-dim">
             The selected path switches on only the capabilities it needs. A few common patterns:
           </p>
-          <dl className="hwo-activate-list">
+          <dl className="hwo-activate-list reveal">
             {ACTIVATIONS.map(([path, depts]) => (
               <div key={path}><dt>{path}</dt><dd>{depts}</dd></div>
             ))}
