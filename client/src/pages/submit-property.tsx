@@ -5,23 +5,31 @@ import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 
 /**
- * Public Website v1 (issue #22) — Submit a Property.
- * PRD §7.1: the primary conversion flow, built as a professional
- * multi-step intake desk. Every completed submission creates a
- * structured opportunity record via POST /api/opportunities and is
- * pre-routed to the department that should read it first.
+ * Bring an Opportunity — Master Blueprint v5.1 (§14, §31).
+ * The primary public action: a multi-step intake desk opening on the
+ * §14 first question ("What are you bringing to Pegasus?"). Every
+ * completed submission creates a structured opportunity record via
+ * POST /api/opportunities and is pre-routed to the lane that should
+ * read it first. URL intent params (?intent=sell | deal-jv |
+ * partnership) preselect the answer so lane CTAs land mid-flow.
+ * Supersedes the issue-#22 "Submit a Property" framing.
  */
 
 const VISITOR_TYPES = [
-  { value: "owner", label: "I own the property", desc: "Distressed, inherited, occupied, vacant, or simply complicated." },
-  { value: "owner_representative", label: "I represent or help the owner", desc: "Family member, attorney, advisor, or agent acting for the owner." },
-  { value: "deal_finder", label: "I found a deal", desc: "Wholesaler, agent, or finder with an opportunity to show." },
-  { value: "buyer", label: "I want to buy", desc: "A finished home, an investment, or representation." },
-  { value: "capital_partner", label: "I want to invest / partner", desc: "Back specific projects on defined terms." },
-  { value: "vendor_operator", label: "I am a vendor / operator", desc: "GC, trade, lender, title, or service partner." },
-  { value: "strategy_only", label: "I need advice / strategy", desc: "Not sure whether to sell, hold, refinance, or exit." },
-  { value: "other", label: "Other", desc: "Something else — tell us in the notes." },
+  { value: "owner", label: "A property I own", desc: "Condition, timing, inheritance, occupancy, or a sale that stalled." },
+  { value: "deal_finder", label: "A lead or opportunity", desc: "You found it; the contract is not signed yet." },
+  { value: "deal_finder_contract", label: "A property under contract", desc: "You hold the agreement and need the next piece." },
+  { value: "strategy_only", label: "A project or development plan", desc: "A scope, a lot, or a plan that needs a straight read." },
+  { value: "capital_partner", label: "An operating partnership", desc: "Co-GP, JV, capital, or an operating seat on a deal." },
+  { value: "buyer", label: "A licensed representation need", desc: "Buying or selling with representation through the Keller Williams lane." },
+  { value: "vendor_operator", label: "A specialist relationship", desc: "GC, trade, lender, title, design, or another service." },
+  { value: "other", label: "Something else", desc: "Tell us in the notes; we route it to the right desk." },
 ] as const;
+
+/** §14 choices that share a backend lane keep their nuance in the record. */
+const VISITOR_VALUE_MAP: Record<string, { backend: string; tag?: string }> = {
+  deal_finder_contract: { backend: "deal_finder", tag: "Holds a signed contract" },
+};
 
 const PROPERTY_TYPES = ["Single-family", "Duplex", "Triplex", "Fourplex", "Multifamily 5+", "Land", "Mixed-use", "Commercial", "Other"];
 const OCCUPANCY = ["Owner occupied", "Tenant occupied", "Vacant", "Partially occupied", "Unknown"];
@@ -30,7 +38,15 @@ const SITUATIONS = ["Inherited / probate", "Pre-foreclosure", "Behind on payment
 const GOALS = ["Sell", "Get offer", "Partner / JV", "List through Apollo / Keller Williams", "Develop / reposition", "Find buyer", "Hold / rent", "Refinance", "Not sure", "Other"];
 const CONTACT_METHODS = ["Phone call", "Text", "Email", "Any"];
 
-const STEPS = ["Visitor", "Property", "Situation", "Goal", "Contact"] as const;
+const STEPS = ["Bringing", "Property", "Situation", "Goal", "Contact"] as const;
+
+/** Lane CTAs deep-link with an intent; it preselects the §14 answer. */
+const INTENT_TO_VISITOR: Record<string, string> = {
+  sell: "owner",
+  "deal-jv": "deal_finder",
+  deal: "deal_finder",
+  partnership: "capital_partner",
+};
 
 const CONSENT_COPY =
   "By submitting this form, you agree that Pegasus Dreamscapes may contact you about your submission. " +
@@ -124,22 +140,26 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
 }
 
 export default function SubmitPropertyPage() {
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState<FormState>(EMPTY);
-  const [hp, setHp] = useState("");
-  const [result, setResult] = useState<{ id: string } | null>(null);
-  const startedAt = useRef(Date.now());
-  const startedTracked = useRef(false);
-
   const utm = useMemo(() => {
     const p = new URLSearchParams(window.location.search);
+    const intent = (p.get("intent") ?? p.get("type") ?? "").toLowerCase();
     return {
       utmSource: p.get("utm_source") ?? undefined,
       utmMedium: p.get("utm_medium") ?? undefined,
       utmCampaign: p.get("utm_campaign") ?? undefined,
-      preType: p.get("type") ?? "",
+      preVisitor: INTENT_TO_VISITOR[intent] ?? "",
     };
   }, []);
+
+  // A lane CTA that already answered the §14 question lands mid-flow.
+  const [step, setStep] = useState(utm.preVisitor ? 1 : 0);
+  const [form, setForm] = useState<FormState>(
+    utm.preVisitor ? { ...EMPTY, visitorType: utm.preVisitor } : EMPTY,
+  );
+  const [hp, setHp] = useState("");
+  const [result, setResult] = useState<{ id: string } | null>(null);
+  const startedAt = useRef(Date.now());
+  const startedTracked = useRef(false);
 
   const set = (patch: Partial<FormState>) => {
     if (!startedTracked.current) {
@@ -151,12 +171,13 @@ export default function SubmitPropertyPage() {
 
   const submit = useMutation({
     mutationFn: async () => {
+      const mapped = VISITOR_VALUE_MAP[form.visitorType];
       const res = await apiRequest("POST", "/api/opportunities", {
         hp_company: hp,
         ts_elapsed_ms: Date.now() - startedAt.current,
-        sourcePage: "/submit-property",
+        sourcePage: "/bring-an-opportunity",
         leadSource: "public_website_v1",
-        visitorType: form.visitorType,
+        visitorType: mapped ? mapped.backend : form.visitorType,
         contactName: form.contactName,
         email: form.email,
         phone: form.phone || undefined,
@@ -174,7 +195,7 @@ export default function SubmitPropertyPage() {
         urgency: form.urgency || undefined,
         estimatedValue: form.estimatedValue ? Number(form.estimatedValue.replace(/[^0-9.]/g, "")) : undefined,
         estimatedDebt: form.estimatedDebt ? Number(form.estimatedDebt.replace(/[^0-9.]/g, "")) : undefined,
-        notes: form.notes || undefined,
+        notes: [mapped?.tag, form.notes].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,
         utmSource: utm.utmSource,
         utmMedium: utm.utmMedium,
@@ -221,15 +242,14 @@ export default function SubmitPropertyPage() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-10 max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#b47645] mb-3">
-            The Intake Desk
+            Bring an Opportunity
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#171f2a] dark:text-[#f4efe6]">
-            Submit a property for review.
+            Bring the property, the contract, the project, or the plan.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
-            Whether you are dealing with a distressed property, inherited home, unlisted opportunity,
-            unfinished project, partnership idea, or possible sale, Pegasus reviews the situation and
-            helps identify the right path.
+            We begin by determining what is missing and whether Pegasus is the right participant.
+            Share what you know; partial information is fine.
           </p>
         </header>
 
@@ -262,7 +282,7 @@ export default function SubmitPropertyPage() {
 
           {step === 0 && (
             <fieldset>
-              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6">What brings you here?</legend>
+              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6">What are you bringing to Pegasus?</legend>
               <ChoiceGrid options={VISITOR_TYPES}
                 value={VISITOR_TYPES.find((v) => v.value === form.visitorType)?.label ?? ""}
                 onPick={(labelPicked) => set({ visitorType: VISITOR_TYPES.find((v) => v.label === labelPicked)!.value })} />
