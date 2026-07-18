@@ -6,12 +6,15 @@ import { CATEGORIES } from './data';
 import { NavBar } from './nav';
 import { Peggy } from './peggy';
 import {
-  CategoryPage, DealStrategyPage, InvestmentsPage, DevelopmentPage,
+  CategoryPage, InvestmentsPage, DevelopmentPage,
   StrategyLabPage, MarketFlowPage, WorkWithApolloPage, EcosystemPage, PeggyPage,
   AboutPage, ContactPage, CapitalPage, Footer,
 } from './pages';
 import { HomePageV51 } from './home-v51';
 import { OurWorkPage } from './our-work';
+import { HowWeOperatePage } from './how-we-operate';
+import { PropertyOwnersPage } from './property-owners';
+import { DealPartnersPage } from './deal-partners';
 import { SavedPage } from './Saved';
 import { routeForUrl, urlFor } from './routes';
 import { useSEO } from '@/hooks/use-seo';
@@ -124,13 +127,16 @@ export function Landing() {
         {/* v5.1 homepage (seven movements). The issue-#22 HomePage stays
             exported for reference but no longer mounts. */}
         {route === 'home' && <HomePageV51 go={go} openPeggy={openPeggy} />}
-        {route === 'sellers' && <CategoryPage cat={CATEGORIES.sellers} go={go} openPeggy={openPeggy} />}
+        {/* v5.1 §9/§10: bespoke owner + deal-partner pages replace the old
+            CategoryPage lanes at the renamed canonical URLs. */}
+        {route === 'sellers' && <PropertyOwnersPage go={go} />}
         {route === 'buyers' && <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={openPeggy} />}
-        {route === 'dealfinders' && <CategoryPage cat={CATEGORIES.dealfinders} go={go} openPeggy={openPeggy} />}
+        {route === 'dealfinders' && <DealPartnersPage go={go} />}
         {route === 'capital' && <CapitalPage go={go} />}
         {route === 'operators' && <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={openPeggy} />}
         {route === 'referral' && <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={openPeggy} />}
-        {route === 'dealstrategy' && <DealStrategyPage go={go} openPeggy={openPeggy} />}
+        {/* v5.1 §8: How We Operate is the intellectual center. */}
+        {route === 'dealstrategy' && <HowWeOperatePage go={go} />}
         {route === 'ourwork' && <OurWorkPage go={go} />}
         {route === 'investments' && <InvestmentsPage go={go} openPeggy={openPeggy} />}
         {route === 'development' && <DevelopmentPage go={go} />}

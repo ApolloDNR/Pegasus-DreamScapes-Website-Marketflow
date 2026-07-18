@@ -8,7 +8,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   CategoryPage,
   CapitalPage,
-  DealStrategyPage,
   InvestmentsPage,
   DevelopmentPage,
   StrategyLabPage,
@@ -21,6 +20,9 @@ import {
 } from "@/pegasus/pages";
 import { HomePageV51 } from "@/pegasus/home-v51";
 import { OurWorkPage } from "@/pegasus/our-work";
+import { HowWeOperatePage } from "@/pegasus/how-we-operate";
+import { PropertyOwnersPage } from "@/pegasus/property-owners";
+import { DealPartnersPage } from "@/pegasus/deal-partners";
 import { CTABand } from "@/pegasus/blocks";
 import { StrategyTierStrip } from "@/pegasus/forms";
 import { CATEGORIES } from "@/pegasus/data";
@@ -155,13 +157,13 @@ const PAGES: PageSpec[] = [
     route: "/",
     render: (go) => <HomePageV51 go={go} openPeggy={noop} />,
   },
-  { name: "Property Owners", route: "/property-owners", render: (go) => <CategoryPage cat={CATEGORIES.sellers} go={go} openPeggy={noop} /> },
+  { name: "Property Owners", route: "/property-owners", render: (go) => <PropertyOwnersPage go={go} /> },
   { name: "Buyers", route: "/buyers", render: (go) => <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={noop} /> },
-  { name: "Deal Partners", route: "/deal-partners", render: (go) => <CategoryPage cat={CATEGORIES.dealfinders} go={go} openPeggy={noop} /> },
+  { name: "Deal Partners", route: "/deal-partners", render: (go) => <DealPartnersPage go={go} /> },
   { name: "Capital", route: "/capital", render: (go) => <CapitalPage go={go} /> },
   { name: "Operators", route: "/operators", render: (go) => <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={noop} /> },
   { name: "Referral", route: "/referral", render: (go) => <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={noop} /> },
-  { name: "How We Operate", route: "/how-we-operate", render: (go) => <DealStrategyPage go={go} openPeggy={noop} /> },
+  { name: "How We Operate", route: "/how-we-operate", render: (go) => <HowWeOperatePage go={go} /> },
   { name: "Our Work", route: "/our-work", render: (go) => <OurWorkPage go={go} /> },
   { name: "Investments", route: "/investments", render: (go) => <InvestmentsPage go={go} openPeggy={noop} /> },
   { name: "Development", route: "/development", render: (go) => <DevelopmentPage go={go} /> },

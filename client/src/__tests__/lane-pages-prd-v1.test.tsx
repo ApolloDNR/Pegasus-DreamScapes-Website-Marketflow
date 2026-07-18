@@ -71,19 +71,21 @@ function renderAt(path: string) {
 
 afterEach(() => cleanup());
 
-// Each lane: [url, locked hero fragments (split on the <br/>), locked
-// subtext fragment, required compliance note (or null)].
+// Each lane: [url, locked hero fragments, locked subtext fragment, required
+// compliance note (or null)]. The owner + deal lanes carry the Master
+// Blueprint v5.1 §9/§10 locked heroes at their renamed canonical URLs; the
+// deal-lane source-attribution note is preserved verbatim (§21).
 const LANES: [string, string[], string, string | null][] = [
   [
-    "/sellers",
-    ["Sell on your terms,", "not the market’s."],
-    "If the property is complicated, the answer does not have to be.",
+    "/property-owners",
+    ["A difficult property does not always need a conventional solution."],
+    "Pegasus acquires selected properties directly and reviews situations involving condition",
     null,
   ],
   [
-    "/dealfinders",
-    ["Bring the deal.", "Get a serious review."],
-    "deal finders, wholesalers, agents, contractors, and referral partners",
+    "/deal-partners",
+    ["You found the opportunity. We help make it executable."],
+    "deal finders, wholesalers, agents, and operating sponsors",
     "Source attribution is recorded at submission. Any JV, assignment, referral, or compensation structure must be agreed in writing before distribution.",
   ],
   [
