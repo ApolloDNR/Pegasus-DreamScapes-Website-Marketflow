@@ -33,10 +33,23 @@ function ColonnadeArt({ className }: { className?: string }) {
             <rect x="-9" y="-20" width="80" height="20" stroke="rgba(245,230,211,0.55)" />
             <rect x="-9" y="560" width="80" height="18" stroke="rgba(245,230,211,0.55)" />
           </g>
+          {/* Polished-floor reflection fade (quiet-luxury depth; §32 restraint — static). */}
+          <linearGradient id="hv-refl-fade" x1="0" y1="782" x2="0" y2="902" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+          </linearGradient>
+          <mask id="hv-refl-mask">
+            <rect x="0" y="778" width="820" height="142" fill="url(#hv-refl-fade)" />
+          </mask>
         </defs>
         <use href="#hv-col" x="96" y="196" /><use href="#hv-col" x="232" y="196" />
         <use href="#hv-col" x="368" y="196" /><use href="#hv-col" x="504" y="196" />
         <use href="#hv-col" x="640" y="196" />
+        <g mask="url(#hv-refl-mask)" opacity="0.16" transform="translate(0,1556) scale(1,-1)">
+          <use href="#hv-col" x="96" y="196" /><use href="#hv-col" x="232" y="196" />
+          <use href="#hv-col" x="368" y="196" /><use href="#hv-col" x="504" y="196" />
+          <use href="#hv-col" x="640" y="196" />
+        </g>
         <line x1="40" y1="778" x2="780" y2="778" stroke="rgba(245,230,211,0.45)" />
         <line x1="24" y1="800" x2="796" y2="800" />
         <line x1="8" y1="824" x2="812" y2="824" stroke="rgba(245,230,211,0.24)" />
@@ -93,6 +106,16 @@ function OpportunityPlan() {
       <div className="hv-orbit" aria-hidden="true">
         <svg viewBox="0 0 760 760">
           <circle className="hv-ring" cx="380" cy="380" r="300" />
+          <circle className="hv-ring-outer" cx="380" cy="380" r="318" />
+          {/* Instrument ticks at the midpoints between nodes (§32.2 signature refinement). */}
+          {Array.from({ length: 8 }, (_, i) => {
+            const a = ((22.5 + i * 45) * Math.PI) / 180;
+            return (
+              <line key={i} className="hv-tick"
+                x1={380 + 293 * Math.cos(a)} y1={380 + 293 * Math.sin(a)}
+                x2={380 + 307 * Math.cos(a)} y2={380 + 307 * Math.sin(a)} />
+            );
+          })}
           {PLAN_ITEMS.map(({ key }) => {
             const p = NODE_POS[key];
             return (
