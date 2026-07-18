@@ -18,7 +18,7 @@ import {
 
 // Nelson Dr — launch-ready proof-of-work case study.
 //
-// Economics: acquisition ~$600K, improvement budget $100K, finished
+// Economics: acquisition ~$600K, improvement budget $105K, finished
 // exit ~$840K, settled September 2025. No net profit / ROI figures are
 // surfaced — full cost basis is not published. Property photos are real
 // project photography: finished/delivered "after" shots plus
@@ -30,7 +30,7 @@ import {
 
 const METRICS = [
   { label: "Approx. Acquisition", value: "Around $600K" },
-  { label: "Improvement Budget", value: "$100K" },
+  { label: "Improvement Budget", value: "$105K" },
   { label: "Finished Exit", value: "Around $840K" },
   { label: "Settled", value: "September 2025" },
 ];
@@ -66,14 +66,14 @@ const LENS = [
 const PIPELINE = [
   "Acquire · ~$600K",
   "Define Scope",
-  "$100K Budget",
+  "$105K Budget",
   "Execute",
   "Exit · ~$840K",
 ];
 
 const TIMELINE = [
   { phase: "Acquire", note: "Acquired on the open market at approximately $600K — a dated property where the work was the opportunity." },
-  { phase: "Define Scope", note: "Set a $100K improvement budget focused on kitchen, bathrooms, flooring, and finish quality — improvements that present clearly to retail buyers without overbuilding." },
+  { phase: "Define Scope", note: "Set a $105K improvement budget focused on kitchen, bathrooms, flooring, and finish quality — improvements that present clearly to retail buyers without overbuilding." },
   { phase: "Execute", note: "Ran the improvements in sequence on the defined budget, managed by the Pegasus development team." },
   { phase: "Prepare", note: "Staged and positioned the finished product for the retail market." },
   { phase: "Exit", note: "Listed, accepted, and settled at approximately $840K — September 2025." },
@@ -384,7 +384,7 @@ export default function NelsonDrPage() {
             Nelson Dr
           </h1>
           <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-8">
-            Acquired around $600K, improved on a disciplined $100K budget, and
+            Acquired around $600K, improved on a disciplined $105K budget, and
             exited around $840K in September 2025 — one value-add project, read and
             executed from acquisition through scope, build, and retail exit.
           </p>
@@ -648,7 +648,7 @@ export default function NelsonDrPage() {
               The result was a clean value-add execution path: acquire at the right
               basis, improve the property with a controlled scope, and position the
               finished product for a stronger exit. On a project level, the asset was
-              acquired around $600K, improved with a $100K budget, and exited around
+              acquired around $600K, improved with a $105K budget, and exited around
               $840K, settling in September 2025.
             </p>
             <p className="text-muted-foreground leading-relaxed">

@@ -99,16 +99,30 @@ address in SendGrid before broad launch.
 
 ## Step 5 — Launch smoke test (10 minutes)
 
-On https://pegasusdreamscapes.com:
+On https://pegasusdreamscapes.com (URLs below are the v5.1 spine —
+`/property-owners`, `/deal-partners`, `/how-we-operate`, `/our-work`,
+`/bring-an-opportunity` — the old `/sellers`, `/dealfinders`,
+`/deal-strategy`, `/submit-property` paths 301-redirect to them):
 
-1. `/` renders, dark-mode toggle works, no console errors.
-2. `/submit-property` → complete a real test submission → confirm the
-   intake record exists (and the notification email if SendGrid is set).
-3. `/strategy-lab` runs an analysis end to end.
-4. `/signup` → create a test account → sign in → a protected action works
-   (e.g. saving an analysis).
-5. `/privacy`, `/terms`, footer disclosure present.
-6. Phone check: no horizontal scroll on `/`, `/submit`, `/strategy-lab`.
+1. `/` renders (hero: "Complex real estate, made executable."),
+   dark-mode toggle works, no console errors.
+2. `/bring-an-opportunity` → pick "A property I own" → complete a real
+   test submission → confirm the intake record exists (and the
+   notification email if SendGrid is set).
+3. `/bring-an-opportunity?intent=deal-jv` lands mid-flow on the
+   Property step with the deal-finder path preselected.
+4. `/strategy-lab` → "Begin a read" → an analysis runs end to end.
+5. `/signup` → create a test account → sign in → a protected action
+   works (e.g. saving an analysis).
+6. `/our-work` — Nelson Drive photos load; numbers block shows
+   Acquired/Built/All-in/Sold and the "not net profit" disclosure.
+7. `/property-owners`, `/deal-partners`, `/how-we-operate` render;
+   legacy `/sellers` redirects to `/property-owners`.
+8. `/privacy`, `/terms`, `/disclosures` load; footer identity paragraph
+   (KW East Bay · CA DRE #02333658) present on every page.
+9. Talk to Peggy opens; greeting identifies her as an AI concierge.
+10. Phone check: no horizontal scroll on `/`, `/bring-an-opportunity`,
+    `/our-work`, `/strategy-lab`; mobile menu opens and navigates.
 
 ## Rollback
 
