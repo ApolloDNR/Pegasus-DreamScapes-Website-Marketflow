@@ -37,6 +37,16 @@ export default defineConfig({
   build: {
     outDir: path.resolve(projectRoot, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // §32.9 performance budget: keep the app entry lean and let the
+        // stable framework code cache independently across deploys.
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-app": ["wouter", "@tanstack/react-query", "lucide-react"],
+        },
+      },
+    },
   },
   server: {
     fs: {

@@ -115,20 +115,20 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
           <button key={label} type="button" onClick={() => onPick(label)} aria-pressed={active}
             className={`group relative rounded-md border px-4 py-3.5 text-left transition-all duration-200 ${
               active
-                ? "border-[#b47645] bg-[#b47645]/[0.08] shadow-[0_10px_28px_-18px_rgba(139,90,54,0.55)]"
+                ? "border-[#b47645] bg-[#9c5a24]/[0.08] shadow-[0_10px_28px_-18px_rgba(139,90,54,0.55)]"
                 : "border-[#d8cdbc] bg-white/60 hover:-translate-y-px hover:border-[#b47645]/60 hover:shadow-[0_10px_24px_-20px_rgba(23,31,42,0.45)] dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60"
             }`}>
             <span className={`block text-[15px] leading-snug ${active ? "font-medium text-[#171f2a] dark:text-[#f4efe6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
               {label}
             </span>
             {desc && (
-              <span className="mt-1 block text-[12.5px] leading-snug text-[#8a7f6d] dark:text-[#7d8ba0]">
+              <span className="mt-1 block text-[12.5px] leading-snug text-[#6e6455] dark:text-[#7d8ba0]">
                 {desc}
               </span>
             )}
             <span aria-hidden="true"
               className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
-                active ? "border-[#b47645] bg-[#b47645] opacity-100" : "border-[#d8cdbc] opacity-0 group-hover:opacity-60 dark:border-[#2a3a4e]"
+                active ? "border-[#b47645] bg-[#9c5a24] opacity-100" : "border-[#d8cdbc] opacity-0 group-hover:opacity-60 dark:border-[#2a3a4e]"
               }`}>
               <Check className="h-3 w-3 text-white" strokeWidth={3} />
             </span>
@@ -224,12 +224,12 @@ export default function SubmitPropertyPage() {
       <main className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
-            <Check className="h-7 w-7 text-[#b47645]" strokeWidth={2.4} />
+            <Check className="h-7 w-7 text-[#8b5a36]" strokeWidth={2.4} />
           </div>
           <h1 className="font-serif text-4xl text-[#171f2a] dark:text-[#f4efe6] mb-6">Received.</h1>
           <p className="text-[17px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">{CONFIRMATION_COPY}</p>
           <p className="mt-6 text-sm text-[#6b5f4d] dark:text-[#b9a888]">Reference: {result.id}</p>
-          <a href="/" className="mt-10 inline-block rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
+          <a href="/" className="mt-10 inline-block rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
             Back to Pegasus
           </a>
         </div>
@@ -241,7 +241,7 @@ export default function SubmitPropertyPage() {
     <main className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
         <header className="mb-10 max-w-3xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#b47645] mb-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] mb-3">
             Bring an Opportunity
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#171f2a] dark:text-[#f4efe6]">
@@ -263,10 +263,10 @@ export default function SubmitPropertyPage() {
                 className="block w-full text-left disabled:cursor-default"
                 aria-label={i < step ? `Return to ${s}` : s}
                 aria-current={i === step ? "step" : undefined}>
-                <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#b47645]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
+                <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#9c5a24]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
                 <span className={`mt-2 hidden items-center gap-1 sm:inline-flex text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                  i === step ? "text-[#b47645]" : i < step ? "text-[#6b5f4d] hover:text-[#b47645] dark:text-[#b9a888]" : "text-[#8a7f6d] dark:text-[#7d8ba0]"}`}>
-                  {i < step && <Check className="h-3 w-3 text-[#b47645]" strokeWidth={3} />}{s}
+                  i === step ? "text-[#8b5a36]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888]" : "text-[#6e6455] dark:text-[#7d8ba0]"}`}>
+                  {i < step && <Check className="h-3 w-3 text-[#8b5a36]" strokeWidth={3} />}{s}
                 </span>
               </button>
             </li>
@@ -388,22 +388,22 @@ export default function SubmitPropertyPage() {
 
           <div className="mt-10 flex items-center justify-between gap-4">
             <button type="button" onClick={() => setStep(Math.max(0, step - 1))}
-              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] dark:text-[#b9a888] hover:text-[#b47645] transition-colors ${step === 0 ? "invisible" : ""}`}>
+              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] dark:text-[#b9a888] hover:text-[#8b5a36] transition-colors ${step === 0 ? "invisible" : ""}`}>
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <button type="submit" disabled={!canNext || submit.isPending}
-              className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_30px_-16px_rgba(139,90,54,0.7)] transition-all hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none">
+              className="inline-flex items-center gap-2 rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_30px_-16px_rgba(139,90,54,0.7)] transition-all hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none">
               {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {step < 4 ? "Continue" : "Submit for Review"}
               {step < 4 && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
-          <p className="mt-5 text-center text-[12px] text-[#8a7f6d] dark:text-[#7d8ba0] lg:hidden">
+          <p className="mt-5 text-center text-[12px] text-[#6e6455] dark:text-[#7d8ba0] lg:hidden">
             Reviewed by a person within 48 hours. No agency created by submitting.
           </p>
         </form>
 
-        <p className="mt-8 text-xs leading-relaxed text-[#8a7f6d] dark:text-[#7d8ba0]">
+        <p className="mt-8 text-xs leading-relaxed text-[#6e6455] dark:text-[#7d8ba0]">
           Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company.
           Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation,
           when applicable, is provided by Paolo “Apollo” Duran through Keller Williams East Bay.
@@ -414,7 +414,7 @@ export default function SubmitPropertyPage() {
         {/* The desk's promise, kept in view while the visitor works. */}
         <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
           <div className="rounded-xl border border-[#d8cdbc] bg-white/60 p-6 dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b47645]">What happens next</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[
                 ["Received", "Your submission creates a private record — never a public listing."],
@@ -423,7 +423,7 @@ export default function SubmitPropertyPage() {
                 ["Your call", "We lay out the options; you choose. If there is no fit, we say so plainly."],
               ].map(([t, d], i) => (
                 <li key={t} className="flex gap-3">
-                  <span className="mt-px font-serif text-[15px] leading-none text-[#b47645]">{`0${i + 1}`}</span>
+                  <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36]">{`0${i + 1}`}</span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-semibold text-[#171f2a] dark:text-[#f4efe6]">{t}</span>
                     <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">{d}</span>
@@ -433,9 +433,9 @@ export default function SubmitPropertyPage() {
             </ol>
             <div className="mt-6 border-t border-[#d8cdbc] pt-5 dark:border-[#2a3a4e]">
               <ul className="space-y-2 text-[12px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#b47645]" />Response within 48 hours</li>
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#b47645]" />No agency created by submitting</li>
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#b47645]" />Nothing shared without written agreement</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Response within 48 hours</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No agency created by submitting</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Nothing shared without written agreement</li>
               </ul>
             </div>
           </div>

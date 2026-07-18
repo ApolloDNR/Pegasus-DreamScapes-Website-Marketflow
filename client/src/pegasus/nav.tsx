@@ -62,7 +62,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
           <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />
           <div className="hidden min-[360px]:flex flex-col leading-none text-left min-w-0">
             <span className="font-serif-display text-[16px] sm:text-[22px] tracking-[0.04em] sm:tracking-[0.06em] leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
-            <span className="pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Development &middot; Investments &middot; Systems</span>
+            <span className={`pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] ${overHero ? "text-[var(--accent-bright)]" : "text-[var(--accent-ink)]"} mt-1.5`}>Development &middot; Investments &middot; Systems</span>
           </div>
         </button>
 

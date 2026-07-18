@@ -86,7 +86,7 @@ export function SectionHead({ eyebrow, title, copy, dark = false, center = false
   if (center) {
     return (
       <div className="text-center max-w-3xl mx-auto mb-14 lg:mb-16 reveal">
-        <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{eyebrow}</div>
+        <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'}`}>{eyebrow}</div>
         <h2 className="font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-[-0.01em] mx-auto [text-wrap:balance]"
           style={{ color: dark ? 'var(--cream)' : 'var(--text)' }}>{title}</h2>
         {copy && <p className={`max-w-xl mx-auto leading-relaxed mt-6 ${dark ? 'text-[rgba(239,231,218,0.7)]' : 'text-[var(--muted)]'}`}>{copy}</p>}
@@ -96,7 +96,7 @@ export function SectionHead({ eyebrow, title, copy, dark = false, center = false
   return (
     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-14 lg:mb-16 reveal">
       <div>
-        <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{eyebrow}</div>
+        <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'}`}>{eyebrow}</div>
         <h2 className="font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-[-0.01em] max-w-2xl [text-wrap:balance]"
           style={{ color: dark ? 'var(--cream)' : 'var(--text)' }}>{title}</h2>
       </div>

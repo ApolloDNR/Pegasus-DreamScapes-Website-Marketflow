@@ -446,7 +446,7 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
     <section className="relative py-24 lg:py-32 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-6 reveal">
-          <div className="pg-label text-[var(--accent)] mb-5">Strategy Lab cockpit</div>
+          <div className="pg-label text-[var(--accent-ink)] mb-5">Strategy Lab cockpit</div>
           {/* COPY_DECK §2 locked Strategy Lab preview (issue #22) */}
           <h2 className="font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-[-0.01em] text-[var(--text)] mb-6">
             Model the property before you make the move.
@@ -999,7 +999,7 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
           )}
         </div>
         <div className="lg:col-span-7 reveal delay-100">
-          <div className="pg-label text-[var(--accent)] mb-5">Represent with Apollo</div>
+          <div className="pg-label text-[var(--accent-ink)] mb-5">Represent with Apollo</div>
           <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">{APOLLO.name}</h2>
           <p className="text-[var(--muted)] leading-relaxed mb-9 max-w-xl">{APOLLO.lead}</p>
           <div className="grid sm:grid-cols-3 gap-5 mb-10">
@@ -1054,7 +1054,7 @@ export function NelsonProof({ go }: { go: Nav }) {
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-6 reveal">
-            <div className="pg-label text-[var(--accent)] mb-5">The work · {NELSON.name}</div>
+            <div className="pg-label text-[var(--accent-ink)] mb-5">The work · {NELSON.name}</div>
             <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">
               Acquired and repositioned. Delivered move-in ready.
             </h2>

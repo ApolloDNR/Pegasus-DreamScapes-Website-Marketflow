@@ -459,7 +459,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {MARKETFLOW_PREVIEW.map((c, i) => (
               <div key={c.title} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
-                <div className="pg-label !text-[8px] text-[var(--accent)] mb-3">{c.tag}</div>
+                <div className="pg-label !text-[8px] text-[var(--accent-ink)] mb-3">{c.tag}</div>
                 <h3 className="font-serif-display text-xl text-[var(--text)] mb-4 leading-tight">{c.title}</h3>
                 <ul className="space-y-2.5">
                   {c.lines.map((l) => (
@@ -508,7 +508,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
 function RepLane({ rep }: { rep: { label: string; desc: string; points: string[] } }) {
   return (
     <div className="surface-card reveal h-full p-6 sm:p-8 lg:p-9">
-      <div className="pg-label !text-[9px] text-[var(--accent)] mb-4">{rep.label}</div>
+      <div className="pg-label !text-[9px] text-[var(--accent-ink)] mb-4">{rep.label}</div>
       <p className="text-[var(--text-2)] leading-relaxed mb-6">{rep.desc}</p>
       <ul className="space-y-3.5">
         {rep.points.map((p) => (
@@ -572,7 +572,7 @@ function ApolloSelector() {
   return (
     <section className="py-14 lg:py-16 border-b border-[var(--line)]" data-testid="section-apollo-selector">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 text-center">
-        <div className="pg-label text-[var(--accent)] mb-6">What brings you here?</div>
+        <div className="pg-label text-[var(--accent-ink)] mb-6">What brings you here?</div>
         <div className="flex flex-wrap justify-center gap-3 mb-8" role="group" aria-label="What brings you here?" data-testid="apollo-selector">
           {APOLLO_SELECTOR.map((s) => {
             const isActive = s.key === key;
@@ -585,8 +585,8 @@ function ApolloSelector() {
                 data-testid={`apollo-selector-${s.key}`}
                 className={`rounded-full px-6 py-3 pg-label !text-[10px] !tracking-[0.16em] border transition-colors ${
                   isActive
-                    ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/[0.08]'
-                    : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]'
+                    ? 'border-[var(--accent)] text-[var(--accent-ink)] bg-[var(--accent)]/[0.08]'
+                    : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--accent-ink)] hover:border-[var(--accent)]'
                 }`}
               >
                 {s.label}

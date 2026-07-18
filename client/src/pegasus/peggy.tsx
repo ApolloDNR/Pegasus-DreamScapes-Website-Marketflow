@@ -6,7 +6,7 @@ import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
 
 const GREETING =
-  "I’m Peggy, the Pegasus intake concierge. Tell me about a property, a deal, or what you’re weighing, in your own words. I’ll ask the right questions and point you to the lane that fits.";
+  "I’m Peggy, Pegasus’s AI concierge. Tell me what you’re bringing, a property, a deal, a project, or a plan, in your own words. I’ll help organize it and route it to the appropriate Pegasus review path.";
 
 const FALLBACK =
   "I can’t reach my brain at the moment. You can still get a fast read from a person: start a Review and someone writes back within 48 hours, or open the Strategy Lab to model the numbers yourself.";
