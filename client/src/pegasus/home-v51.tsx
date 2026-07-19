@@ -16,43 +16,113 @@ import type { Nav } from './theme';
    ================================================================ */
 
 /* Bespoke classical linework — the brand motif. Drawn, not stock. */
+/* Cinematic nocturne colonnade — painted with light, not outlined (owner note
+   2026-07-19: "editorial cinematic premium, not a sketch"). Code-drawn, so it
+   stays bespoke (§32.4-safe); one warm source low right, stone modeled by
+   gradient, polished-floor reflection. Static per §32 restraint. */
 function ColonnadeArt({ className }: { className?: string }) {
   return (
     <div className={className} aria-hidden="true">
-      <svg viewBox="0 0 820 920" fill="none" preserveAspectRatio="xMidYMid slice"
-        stroke="rgba(212,170,110,0.6)" strokeWidth="1.4">
-        <polygon points="70,150 750,150 410,44" stroke="rgba(245,230,211,0.4)" />
-        <line x1="70" y1="150" x2="750" y2="150" />
-        <rect x="70" y="150" width="680" height="20" />
-        <line x1="60" y1="176" x2="760" y2="176" stroke="rgba(245,230,211,0.24)" />
+      <svg viewBox="0 0 820 920" fill="none" preserveAspectRatio="xMidYMid slice" stroke="none">
         <defs>
-          <g id="hv-col">
-            <rect x="0" y="0" width="62" height="560" stroke="rgba(245,230,211,0.55)" />
-            <line x1="12" y1="6" x2="12" y2="554" /><line x1="24" y1="6" x2="24" y2="554" />
-            <line x1="38" y1="6" x2="38" y2="554" /><line x1="50" y1="6" x2="50" y2="554" />
-            <rect x="-9" y="-20" width="80" height="20" stroke="rgba(245,230,211,0.55)" />
-            <rect x="-9" y="560" width="80" height="18" stroke="rgba(245,230,211,0.55)" />
-          </g>
-          {/* Polished-floor reflection fade (quiet-luxury depth; §32 restraint — static). */}
-          <linearGradient id="hv-refl-fade" x1="0" y1="782" x2="0" y2="902" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
+          {/* stone cylinder, lit from the right */}
+          <linearGradient id="hv-shaft" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#122031" />
+            <stop offset="0.3" stopColor="#2b2519" />
+            <stop offset="0.56" stopColor="#5d4a31" />
+            <stop offset="0.8" stopColor="#9a7c54" />
+            <stop offset="0.92" stopColor="#c9ab7d" />
+            <stop offset="1" stopColor="#1d1710" />
+          </linearGradient>
+          <linearGradient id="hv-cap" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#152234" />
+            <stop offset="0.55" stopColor="#6e5334" />
+            <stop offset="0.86" stopColor="#c69d66" />
+            <stop offset="1" stopColor="#241c12" />
+          </linearGradient>
+          <linearGradient id="hv-stone-v" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#101f31" />
+            <stop offset="1" stopColor="#0b1726" />
+          </linearGradient>
+          <linearGradient id="hv-beam" x1="0.85" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor="#d4aa6e" stopOpacity="0.13" />
+            <stop offset="0.55" stopColor="#d4aa6e" stopOpacity="0.05" />
+            <stop offset="1" stopColor="#d4aa6e" stopOpacity="0" />
+          </linearGradient>
+          <radialGradient id="hv-dusk" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#c98d4e" stopOpacity="0.34" />
+            <stop offset="0.45" stopColor="#b07a42" stopOpacity="0.14" />
+            <stop offset="1" stopColor="#b07a42" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="hv-horizon" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#c9945a" stopOpacity="0" />
+            <stop offset="0.4" stopColor="#c9945a" stopOpacity="0.16" />
+            <stop offset="0.75" stopColor="#dfb37c" stopOpacity="0.26" />
+            <stop offset="1" stopColor="#c9945a" stopOpacity="0.1" />
+          </linearGradient>
+          {/* left-edge depth wash so the temple recedes toward the headline */}
+          <linearGradient id="hv-wash" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#091421" stopOpacity="0.62" />
+            <stop offset="0.45" stopColor="#091421" stopOpacity="0.2" />
+            <stop offset="1" stopColor="#091421" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="hv-refl-fade" x1="0" y1="782" x2="0" y2="898" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.85" />
             <stop offset="1" stopColor="#fff" stopOpacity="0" />
           </linearGradient>
           <mask id="hv-refl-mask">
             <rect x="0" y="778" width="820" height="142" fill="url(#hv-refl-fade)" />
           </mask>
+          <filter id="hv-soft" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="16" />
+          </filter>
+          {/* one column, painted */}
+          <g id="hv-col">
+            <rect x="-13" y="-20" width="88" height="8" fill="url(#hv-cap)" />
+            <line x1="-13" y1="-19" x2="75" y2="-19" stroke="#e9cf9f" strokeWidth="1" opacity="0.4" />
+            <rect x="-6" y="-12" width="74" height="12" fill="url(#hv-cap)" opacity="0.94" />
+            <rect x="0" y="0" width="62" height="560" fill="url(#hv-shaft)" />
+            <line x1="17" y1="4" x2="17" y2="556" stroke="#0a1524" strokeWidth="1.2" opacity="0.62" />
+            <line x1="31" y1="4" x2="31" y2="556" stroke="#0a1524" strokeWidth="1.2" opacity="0.46" />
+            <line x1="45" y1="4" x2="45" y2="556" stroke="#f0d9ae" strokeWidth="0.9" opacity="0.28" />
+            <rect x="-6" y="560" width="74" height="10" fill="url(#hv-cap)" opacity="0.94" />
+            <rect x="-13" y="570" width="88" height="8" fill="url(#hv-cap)" />
+            <line x1="-13" y1="570" x2="75" y2="570" stroke="#e9cf9f" strokeWidth="0.9" opacity="0.3" />
+          </g>
         </defs>
+
+        {/* golden-hour atmosphere behind the temple */}
+        <ellipse cx="590" cy="660" rx="520" ry="420" fill="url(#hv-dusk)" />
+        <rect x="0" y="706" width="820" height="26" fill="url(#hv-horizon)" opacity="0.7" />
+        {/* volumetric light falling between the columns (soft-edged) */}
+        <g filter="url(#hv-soft)">
+          <polygon points="560,176 820,176 820,920 300,920" fill="url(#hv-beam)" opacity="0.8" />
+          <polygon points="330,176 470,176 120,920 20,920" fill="url(#hv-beam)" opacity="0.45" />
+        </g>
+
+        {/* pediment + entablature, mostly silhouette with a lit lower rim */}
+        <polygon points="70,150 750,150 410,44" fill="url(#hv-stone-v)" />
+        <polygon points="70,150 750,150 410,44" fill="none" stroke="#c9a84c" strokeWidth="0.8" opacity="0.34" />
+        <rect x="70" y="150" width="680" height="20" fill="url(#hv-stone-v)" />
+        <line x1="70" y1="170" x2="750" y2="170" stroke="#c9a84c" strokeWidth="1.3" opacity="0.6" />
+        <line x1="60" y1="176" x2="760" y2="176" stroke="#e8cf9e" strokeWidth="0.8" opacity="0.22" />
+
         <use href="#hv-col" x="96" y="196" /><use href="#hv-col" x="232" y="196" />
         <use href="#hv-col" x="368" y="196" /><use href="#hv-col" x="504" y="196" />
         <use href="#hv-col" x="640" y="196" />
-        <g mask="url(#hv-refl-mask)" opacity="0.16" transform="translate(0,1556) scale(1,-1)">
+        {/* depth falloff toward the text column */}
+        <rect x="60" y="40" width="480" height="740" fill="url(#hv-wash)" />
+
+        {/* polished floor: hairlines + mirrored columns dissolving into stone */}
+        <line x1="40" y1="778" x2="780" y2="778" stroke="#e8cf9e" strokeWidth="1" opacity="0.34" />
+        <line x1="24" y1="800" x2="796" y2="800" stroke="#c9a84c" strokeWidth="0.9" opacity="0.2" />
+        <line x1="8" y1="824" x2="812" y2="824" stroke="#e8cf9e" strokeWidth="0.8" opacity="0.1" />
+        <g mask="url(#hv-refl-mask)" opacity="0.14" transform="translate(0,1556) scale(1,-1)">
           <use href="#hv-col" x="96" y="196" /><use href="#hv-col" x="232" y="196" />
           <use href="#hv-col" x="368" y="196" /><use href="#hv-col" x="504" y="196" />
           <use href="#hv-col" x="640" y="196" />
         </g>
-        <line x1="40" y1="778" x2="780" y2="778" stroke="rgba(245,230,211,0.45)" />
-        <line x1="24" y1="800" x2="796" y2="800" />
-        <line x1="8" y1="824" x2="812" y2="824" stroke="rgba(245,230,211,0.24)" />
+        <ellipse cx="600" cy="810" rx="360" ry="70" fill="url(#hv-dusk)" opacity="0.5" />
       </svg>
     </div>
   );
