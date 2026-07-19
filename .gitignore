@@ -18,7 +18,10 @@ vite.config.ts.*
 .config/
 .local/
 .agents/
-.claude/
+# .claude is local tooling EXCEPT the shared project skills, which every
+# Claude surface (Cowork cloud + Claude Code local) must load identically.
+.claude/*
+!.claude/skills/
 .claude-config/
 .claude-plugin/
 .replit-cache/
