@@ -1,0 +1,72 @@
+name: Masterpiece hero pipeline
+
+# One-shot relay + grading rig (docs/design/HANDOFF_TO_CLAUDE_CODE.md):
+# the four finished painting candidates live on the generation CDN, which
+# the driver container cannot reach. Phase A vendors all four and grades
+# each with the master-premium-design skill's grade-hero.py, committing a
+# luma report. Phase B fires once docs/design/hero-candidates/CHOSEN
+# names the pick, copying its graded webps into client/public/images/hero/.
+# Both phases are guarded no-ops when their outputs exist. Delete this
+# file once the hero ships.
+on:
+  push:
+    branches:
+      - claude/masterpiece-hero-v51
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vendor and grade the four candidates
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates
+          if [ -s "$out/.vendored" ]; then echo "have candidates"; exit 0; fi
+          mkdir -p "$out"
+          pip -q install pillow numpy
+          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
+          declare -A urls=(
+            [nano-21x9-a]="hf_20260719_183123_1b1b8349-9589-46b2-b1ae-8c42ae6ca122.png"
+            [nano-21x9-b]="hf_20260719_183123_1a537371-30af-4d15-8c92-ce0c0855fc60.png"
+            [recraft-16x9-a]="hf_20260719_183110_a91daf34-911b-47ca-a101-5a10007f52a7.png"
+            [recraft-16x9-b]="hf_20260719_183110_6f0437cd-b2ff-497f-9590-dd892abee248.png"
+          )
+          # grade-hero.py hardcodes the old session's OUT_DIR; point it at
+          # a per-candidate dir via env instead.
+          sed "s|^OUT_DIR = .*$|OUT_DIR = __import__('os').environ['GRADE_OUT']|" \
+            .claude/skills/master-premium-design/scripts/grade-hero.py > /tmp/grade.py
+          : > "$out/grading-report.txt"
+          for k in nano-21x9-a nano-21x9-b recraft-16x9-a recraft-16x9-b; do
+            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
+            echo "== $k ==" >> "$out/grading-report.txt"
+            GRADE_OUT="$out/graded/$k" python3 /tmp/grade.py "$out/$k.png" >> "$out/grading-report.txt"
+          done
+          echo vendored > "$out/.vendored"
+          cat "$out/grading-report.txt"
+      - name: Place the chosen candidate
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates
+          hero=client/public/images/hero
+          if [ ! -s "$out/CHOSEN" ]; then echo "no pick yet"; exit 0; fi
+          k=$(tr -d '[:space:]' < "$out/CHOSEN")
+          if [ -s "$hero/.placed" ] && [ "$(cat "$hero/.placed")" = "$k" ]; then echo "already placed $k"; exit 0; fi
+          test -s "$out/graded/$k/nocturne.webp"
+          mkdir -p "$hero"
+          cp "$out/graded/$k/nocturne.webp" "$hero/nocturne.webp"
+          cp "$out/graded/$k/nocturne-m.webp" "$hero/nocturne-m.webp"
+          echo "$k" > "$hero/.placed"
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/design/hero-candidates client/public/images/hero
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "chore: masterpiece-hero pipeline output (vendor/grade/place)"
+          git push
