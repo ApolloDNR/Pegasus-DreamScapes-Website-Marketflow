@@ -69,7 +69,8 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
         <div className="hidden min-[1340px]:flex items-center gap-5 min-[1500px]:gap-7 pg-label !text-[10px] !tracking-[0.2em]">
           {NAV_LINKS.map((item) => (
             <button key={item.label} type="button" onClick={() => navigate(item)}
-              className={`inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}>
+              className={`pg-navlink inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}
+              data-active={isActive(item) || undefined}>
               {item.label}
             </button>
           ))}

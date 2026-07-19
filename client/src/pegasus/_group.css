@@ -2849,6 +2849,23 @@ select.pg-field option { color: #1b1712; }
 .hv-colonnade { position:absolute; right:0; top:0; height:100%; width:60%; opacity:.96; z-index:1; }
 .hv-colonnade svg { height:100%; width:100%; }
 .hv-hero-inner { position: relative; z-index: 3; padding-top: 7.5rem; padding-bottom: 8rem; }
+
+/* The one orchestrated sequence (award standard: entrance choreography).
+   Runs once on load; transform/opacity only; timed so the headline is
+   fully painted well inside the LCP budget. */
+@media (prefers-reduced-motion: no-preference) {
+  .hv-hero .hv-rule { transform-origin: left; animation: hv-rule-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) both; }
+  .hv-hero .hv-eyebrow { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .06s both; }
+  .hv-hero .hv-h1 { animation: hv-rise-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .1s both; }
+  .hv-hero .hv-lead { animation: hv-rise-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .2s both; }
+  .hv-hero .hv-cta-row { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .32s both; }
+  .hv-hero .hv-hero-meta { animation: hv-fade-in .7s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .5s both; }
+  .hv-hero .hv-colonnade { animation: hv-bloom-in 1.1s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .05s both; }
+}
+@keyframes hv-rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes hv-rule-in { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+@keyframes hv-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hv-bloom-in { from { opacity: 0; transform: scale(1.012); } to { opacity: .96; transform: none; } }
 .hv-cta-row { display:flex; align-items:center; flex-wrap:wrap; gap: 1.1rem 1.4rem; margin-top: 2.6rem; }
 .hv-hero-link { font-size:.82rem; letter-spacing:.05em; color: rgba(245,230,211,.74);
   border-bottom: 1px solid rgba(200,122,58,.55); padding-bottom: 3px; transition: color .3s var(--ease-smooth, cubic-bezier(.16,1,.3,1)); }
@@ -2889,6 +2906,14 @@ select.pg-field option { color: #1b1712; }
 .hv-stack > div { display:flex; justify-content:space-between; align-items:baseline; padding: 1rem 0;
   border-bottom: 1px solid rgba(245,230,211,.1); }
 .hv-stack dt { color: rgba(245,230,211,.66); font-size: .95rem; }
+.hv-stack dd { font-variant-numeric: tabular-nums; }
+
+/* nav micro-detail: copper hairline grows in on hover/focus (shared tokens) */
+.pg-navlink { position: relative; }
+.pg-navlink::after { content:""; position:absolute; left: 6px; right: 6px; bottom: 8px; height: 1px;
+  background: var(--accent-bright); transform: scaleX(0); transform-origin: left;
+  transition: transform .36s var(--ease-smooth, cubic-bezier(.16,1,.3,1)); }
+.pg-navlink:hover::after, .pg-navlink:focus-visible::after, .pg-navlink[data-active]::after { transform: scaleX(1); }
 .hv-stack dd { margin:0; font-family: var(--pg-font-display, Georgia); font-size: 1.5rem; color: var(--hv-cream); font-variant-numeric: tabular-nums; }
 .hv-edge { margin-top: 1.6rem; padding: 1.35rem 1.5rem; background: #11243A; border-left: 2px solid var(--hv-copper); }
 .hv-edge-big { font-size: 2.4rem; color: var(--hv-brass); line-height: 1; font-weight: 600; }
