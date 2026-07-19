@@ -2,12 +2,14 @@ name: Masterpiece hero pipeline
 
 # One-shot relay + grading rig (docs/design/HANDOFF_TO_CLAUDE_CODE.md):
 # the four finished painting candidates live on the generation CDN, which
-# the driver container cannot reach. Phase A vendors all four and grades
-# each with the master-premium-design skill's grade-hero.py, committing a
-# luma report. Phase B fires once docs/design/hero-candidates/CHOSEN
-# names the pick, copying its graded webps into client/public/images/hero/.
-# Both phases are guarded no-ops when their outputs exist. Delete this
-# file once the hero ships.
+# the driver container cannot reach — and the driver's local git writes
+# are gated, so the hero wiring travels as a patch. Phase A vendors all
+# four candidates and grades each with the master-premium-design skill's
+# grade-hero.py, committing a luma report. Phase B applies the wiring
+# patch. Phase C fires once docs/design/hero-candidates/CHOSEN names the
+# pick, copying its graded webps into client/public/images/hero/. Every
+# phase is a guarded no-op when its outputs exist. Delete this file once
+# the hero ships.
 on:
   push:
     branches:
@@ -48,6 +50,13 @@ jobs:
           done
           echo vendored > "$out/.vendored"
           cat "$out/grading-report.txt"
+      - name: Apply the hero wiring patch
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates
+          if [ ! -s "$out/wiring.patch" ] || [ -s "$out/.wired" ]; then echo "no wiring to apply"; exit 0; fi
+          git apply --verbose "$out/wiring.patch"
+          echo wired > "$out/.wired"
       - name: Place the chosen candidate
         run: |
           set -euo pipefail
@@ -66,7 +75,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates client/public/images/hero
+          git add -A
           if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
-          git commit -m "chore: masterpiece-hero pipeline output (vendor/grade/place)"
+          git commit -m "chore: masterpiece-hero pipeline output (vendor/grade/wire/place)"
           git push

@@ -1,0 +1,79 @@
+diff --git a/client/index.html b/client/index.html
+index c88999b..d0fbc4b 100644
+--- a/client/index.html
++++ b/client/index.html
+@@ -25,6 +25,7 @@
+     <meta name="twitter:description" content="A real estate operating company for complex opportunities in the East Bay." />
+     <meta name="twitter:image" content="https://pegasusdreamscapes.com/og/default.png" />
+     <link rel="canonical" href="https://pegasusdreamscapes.com" />
++    <link rel="preload" as="image" href="/images/hero/nocturne.webp" fetchpriority="high" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+diff --git a/client/src/pegasus/_group.css b/client/src/pegasus/_group.css
+index 2af5a9f..ceeb411 100644
+--- a/client/src/pegasus/_group.css
++++ b/client/src/pegasus/_group.css
+@@ -2860,12 +2860,29 @@ select.pg-field option { color: #1b1712; }
+   .hv-hero .hv-lead { animation: hv-rise-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .2s both; }
+   .hv-hero .hv-cta-row { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .32s both; }
+   .hv-hero .hv-hero-meta { animation: hv-fade-in .7s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .5s both; }
+-  .hv-hero .hv-colonnade { animation: hv-bloom-in 1.1s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .05s both; }
++  .hv-hero .hv-hero-art-wrap { animation: hv-bloom-in 1.1s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .05s both; }
+ }
+ @keyframes hv-rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+ @keyframes hv-rule-in { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+ @keyframes hv-fade-in { from { opacity: 0; } to { opacity: 1; } }
+-@keyframes hv-bloom-in { from { opacity: 0; transform: scale(1.012); } to { opacity: .96; transform: none; } }
++@keyframes hv-bloom-in { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: none; } }
++
++/* The masterpiece hero art (painted nocturne, graded to brand navy).
++   The wash seats the painting into the field so the headline sits on
++   near-black; on phones the art fills the frame behind a heavier wash. */
++.hv-hero-art-wrap { position:absolute; inset:0; z-index:1; overflow:hidden; }
++.hv-hero-art { position:absolute; right:0; top:0; height:100%; width:72%;
++  object-fit:cover; object-position:center right; }
++.hv-hero-art-wash { position:absolute; inset:0;
++  background: linear-gradient(90deg, var(--hv-navy2) 0%, rgba(9,20,33,.86) 26%,
++    rgba(9,20,33,.4) 46%, rgba(9,20,33,0) 64%),
++    linear-gradient(0deg, rgba(9,20,33,.55) 0%, rgba(9,20,33,0) 22%); }
++@media (max-width: 900px) {
++  .hv-hero-art { width:100%; object-position: 62% center; }
++  .hv-hero-art-wash { background:
++    linear-gradient(90deg, rgba(9,20,33,.92) 0%, rgba(9,20,33,.55) 40%, rgba(9,20,33,.28) 100%),
++    linear-gradient(0deg, rgba(9,20,33,.6) 0%, rgba(9,20,33,0) 26%); }
++}
+ .hv-cta-row { display:flex; align-items:center; flex-wrap:wrap; gap: 1.1rem 1.4rem; margin-top: 2.6rem; }
+ .hv-hero-link { font-size:.82rem; letter-spacing:.05em; color: rgba(245,230,211,.74);
+   border-bottom: 1px solid rgba(200,122,58,.55); padding-bottom: 3px; transition: color .3s var(--ease-smooth, cubic-bezier(.16,1,.3,1)); }
+diff --git a/client/src/pegasus/home-v51.tsx b/client/src/pegasus/home-v51.tsx
+index d24c42c..c3f2980 100644
+--- a/client/src/pegasus/home-v51.tsx
++++ b/client/src/pegasus/home-v51.tsx
+@@ -20,7 +20,7 @@ import type { Nav } from './theme';
+    2026-07-19: "editorial cinematic premium, not a sketch"). Code-drawn, so it
+    stays bespoke (§32.4-safe); one warm source low right, stone modeled by
+    gradient, polished-floor reflection. Static per §32 restraint. */
+-function ColonnadeArt({ className }: { className?: string }) {
++export function ColonnadeArt({ className }: { className?: string }) {
+   return (
+     <div className={className} aria-hidden="true">
+       <svg viewBox="0 0 820 920" fill="none" preserveAspectRatio="xMidYMid slice" stroke="none">
+@@ -236,7 +236,16 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
+     <div className="hv">
+       {/* 1 · ARRIVAL */}
+       <section className="hv-hero hv-grain" data-hv="arrival">
+-        <ColonnadeArt className="hv-colonnade" />
++        {/* The masterpiece: painted nocturne, graded into the brand navy
++            (docs/design/HANDOFF_TO_CLAUDE_CODE.md). ColonnadeArt below
++            stays exported as the reduced-bandwidth / error fallback. */}
++        <div className="hv-hero-art-wrap" aria-hidden="true">
++          <img className="hv-hero-art" src={`${import.meta.env.BASE_URL}images/hero/nocturne.webp`}
++            srcSet={`${import.meta.env.BASE_URL}images/hero/nocturne-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/nocturne.webp 2000w`}
++            sizes="(max-width: 900px) 100vw, 72vw"
++            alt="" fetchPriority="high" decoding="async" />
++          <div className="hv-hero-art-wash" />
++        </div>
+         <div className="hv-wrap hv-hero-inner">
+           <div className="hv-rule" />
+           <div className="pg-label hv-eyebrow">Real estate operating company &middot; Contra Costa &amp; Alameda</div>
