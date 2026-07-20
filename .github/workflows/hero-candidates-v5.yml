@@ -1,0 +1,71 @@
+name: Hero candidates v5 (cinematic warm)
+
+# Relay + resize + place for the cinematic warm day/night hero. CDN
+# unreachable from the driver container, local git writes gated. Warm
+# images -> resized (not navy-seated) via docs/design/hero-tools/resize.py.
+# Place phase overwrites the live client/public/images/hero/hero-day.webp
+# and hero-night.webp once CHOSEN_DAY / CHOSEN_NIGHT are set (the
+# theme-reactive code already shipped in v4). Delete once the hero settles.
+on:
+  push:
+    branches: [claude/masterpiece-hero-v51]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and resize (warm-preserving)
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v5
+          if [ -s "$out/.vendored" ]; then echo have; exit 0; fi
+          mkdir -p "$out"
+          pip -q install pillow numpy
+          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
+          declare -A urls=(
+            [cday-1]="hf_20260720_224422_8e253354-55bf-4302-bcfb-94de329e95d9.png"
+            [cday-2]="hf_20260720_224422_4a96df6b-8dbe-4c2b-8543-0fcc3cfa0c5b.png"
+            [cday-3]="hf_20260720_224422_cac46287-9825-43e9-b99e-fa18645509bd.png"
+            [cdusk-1]="hf_20260720_224428_43d013be-8e09-472e-98ce-be65247b50c9.png"
+            [cdusk-2]="hf_20260720_224428_26b97ddb-945b-4db5-9139-91c5080d0335.png"
+            [cdusk-3]="hf_20260720_224428_aeaba4d0-7896-4288-9c7a-083c5b3edc45.png"
+            [cdusk-4]="hf_20260720_224428_306e1d36-88be-4745-a8ef-56bb9e10efe6.png"
+          )
+          : > "$out/report.txt"
+          for k in cday-1 cday-2 cday-3 cdusk-1 cdusk-2 cdusk-3 cdusk-4; do
+            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
+            echo "== $k ==" >> "$out/report.txt"
+            python3 docs/design/hero-tools/resize.py "$out/$k.png" "$out/graded/$k" >> "$out/report.txt"
+          done
+          echo vendored > "$out/.vendored"
+          cat "$out/report.txt"
+      - name: Place chosen day + night
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v5
+          hero=client/public/images/hero
+          place() {
+            marker="$1"; dest="$2"; destm="$3"
+            [ -s "$out/$marker" ] || return 0
+            k=$(tr -d '[:space:]' < "$out/$marker")
+            test -s "$out/graded/$k/hero.webp"
+            cp "$out/graded/$k/hero.webp" "$hero/$dest"
+            cp "$out/graded/$k/hero-m.webp" "$hero/$destm"
+            echo "$k" > "$hero/.placed-v5-$marker"
+          }
+          place CHOSEN_DAY hero-day.webp hero-day-m.webp
+          place CHOSEN_NIGHT hero-night.webp hero-night-m.webp
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/design/hero-candidates-v5 client/public/images/hero
+          if git diff --cached --quiet; then echo nothing; exit 0; fi
+          git commit -m "chore: vendor/resize + place cinematic day-night hero (v5)"
+          git push
