@@ -1,68 +1,10 @@
-name: Hero candidates v3 (premium)
-
-# Relay + grade + place for the premium hero set (Aman/Ando/luxe
-# residence). CDN is unreachable from the driver container and local git
-# writes are gated, so CI does the byte work: it grades the six
-# candidates, then (once CHOSEN names the pick) copies that pick's graded
-# webps into client/public/images/hero/. Guarded no-ops once done. The
-# phone wash already shipped in v2, so no patch here. Delete once the
-# hero re-ships.
+name: Hero candidates v3 (retired)
 on:
-  push:
-    branches: [claude/masterpiece-hero-v51]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  relay:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Download and grade
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v3
-          if [ -s "$out/.vendored" ]; then echo have; exit 0; fi
-          mkdir -p "$out"
-          pip -q install pillow numpy
-          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
-          declare -A urls=(
-            [loggia-a]="hf_20260720_054657_70e247e7-92df-4f9d-8f51-9834290ad3ad.png"
-            [loggia-b]="hf_20260720_054656_574da699-f38a-41c2-b7a7-4cd972e9d046.png"
-            [hall-a]="hf_20260720_054700_b36c8e06-03c2-4ddb-9759-e8e42059ae2a.png"
-            [hall-b]="hf_20260720_054700_c92f06cd-c1ab-4546-9241-5badd1783dd1.png"
-            [residence-a]="hf_20260720_054704_4f532c46-a6d4-41f7-9328-8e5253c9b109.png"
-            [residence-b]="hf_20260720_054705_31ffa157-8293-4395-a8d5-f5d2795f65a7.png"
-          )
-          sed "s|^OUT_DIR = .*$|OUT_DIR = __import__('os').environ['GRADE_OUT']|" \
-            .claude/skills/master-premium-design/scripts/grade-hero.py > /tmp/grade.py
-          : > "$out/grading-report.txt"
-          for k in loggia-a loggia-b hall-a hall-b residence-a residence-b; do
-            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
-            echo "== $k ==" >> "$out/grading-report.txt"
-            GRADE_OUT="$out/graded/$k" python3 /tmp/grade.py "$out/$k.png" >> "$out/grading-report.txt"
-          done
-          echo vendored > "$out/.vendored"
-      - name: Place the chosen candidate
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v3
-          hero=client/public/images/hero
-          [ -s "$out/CHOSEN" ] || { echo "no pick"; exit 0; }
-          k=$(tr -d '[:space:]' < "$out/CHOSEN")
-          if [ -s "$hero/.placed-v3" ] && [ "$(cat "$hero/.placed-v3")" = "$k" ]; then echo "already placed $k"; exit 0; fi
-          test -s "$out/graded/$k/nocturne.webp"
-          cp "$out/graded/$k/nocturne.webp" "$hero/nocturne.webp"
-          cp "$out/graded/$k/nocturne-m.webp" "$hero/nocturne-m.webp"
-          echo "$k" > "$hero/.placed-v3"
-      - name: Commit
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v3 client/public/images/hero
-          if git diff --cached --quiet; then echo nothing; exit 0; fi
-          git commit -m "chore: place premium loggia hero (v3)"
-          git push
+      - run: echo "retired — hero managed by hero-candidates-v6"

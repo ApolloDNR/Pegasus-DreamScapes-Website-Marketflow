@@ -1,71 +1,10 @@
-name: Hero candidates v2 (photoreal)
-
-# Relay + grade + place for the photoreal hero replacement. The
-# generation CDN is unreachable from the driver container, and this
-# session's local git writes are gated, so CI does the byte-level work:
-# it grades the five candidates, then (once CHOSEN names the pick) applies
-# the phone-wash patch and copies the chosen graded webps into
-# client/public/images/hero/. Each phase is a guarded no-op once done.
-# Delete this workflow once the hero re-ships.
+name: Hero candidates v2 (retired)
 on:
-  push:
-    branches: [claude/masterpiece-hero-v51]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  relay:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Download and grade
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v2
-          if [ -s "$out/.vendored" ]; then echo have; exit 0; fi
-          mkdir -p "$out"
-          pip -q install pillow numpy
-          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
-          declare -A urls=(
-            [colonnade]="hf_20260720_031322_bd8153ef-bffd-4dde-8eb0-049d74a982ee.png"
-            [portico-a]="hf_20260720_031326_6e684eec-97a8-4eae-8690-94e76ada824e.png"
-            [portico-b]="hf_20260720_031326_f4f31826-31ca-4023-b499-f2ed294713c8.png"
-            [hills-a]="hf_20260720_031331_6f885aee-d9f8-4743-8ce9-21daa271bbd4.png"
-            [hills-b]="hf_20260720_031331_594a296f-8545-4f0c-82a6-c53b0df89aa4.png"
-          )
-          sed "s|^OUT_DIR = .*$|OUT_DIR = __import__('os').environ['GRADE_OUT']|" \
-            .claude/skills/master-premium-design/scripts/grade-hero.py > /tmp/grade.py
-          : > "$out/grading-report.txt"
-          for k in colonnade portico-a portico-b hills-a hills-b; do
-            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
-            echo "== $k ==" >> "$out/grading-report.txt"
-            GRADE_OUT="$out/graded/$k" python3 /tmp/grade.py "$out/$k.png" >> "$out/grading-report.txt"
-          done
-          echo vendored > "$out/.vendored"
-      - name: Apply wash patch and place the chosen candidate
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v2
-          hero=client/public/images/hero
-          [ -s "$out/CHOSEN" ] || { echo "no pick"; exit 0; }
-          k=$(tr -d '[:space:]' < "$out/CHOSEN")
-          if [ -s "$hero/.placed-v2" ] && [ "$(cat "$hero/.placed-v2")" = "$k" ]; then echo "already placed $k"; exit 0; fi
-          test -s "$out/graded/$k/nocturne.webp"
-          # Apply the phone-wash patch if it has not already landed.
-          if [ -s "$out/wash.patch" ] && ! grep -q 'linear-gradient(180deg, rgba(9,20,33,.58)' client/src/pegasus/_group.css; then
-            git apply "$out/wash.patch"
-          fi
-          cp "$out/graded/$k/nocturne.webp" "$hero/nocturne.webp"
-          cp "$out/graded/$k/nocturne-m.webp" "$hero/nocturne-m.webp"
-          echo "$k" > "$hero/.placed-v2"
-      - name: Commit
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v2 client/public/images/hero client/src/pegasus/_group.css
-          if git diff --cached --quiet; then echo nothing; exit 0; fi
-          git commit -m "chore: place photoreal colonnade hero + phone wash (v2)"
-          git push
+      - run: echo "retired — hero managed by hero-candidates-v6"
