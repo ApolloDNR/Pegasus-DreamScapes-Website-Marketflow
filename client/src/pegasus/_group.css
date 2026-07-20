@@ -2879,8 +2879,12 @@ select.pg-field option { color: #1b1712; }
     linear-gradient(0deg, rgba(9,20,33,.55) 0%, rgba(9,20,33,0) 22%); }
 @media (max-width: 900px) {
   .hv-hero-art { width:100%; object-position: 62% center; }
+  /* Heavier seat on phones: the headline fills the upper band over the
+     lit columns, so darken left-to-right AND the top third to keep the
+     cream type on near-black while the colonnade still reads below. */
   .hv-hero-art-wash { background:
-    linear-gradient(90deg, rgba(9,20,33,.92) 0%, rgba(9,20,33,.55) 40%, rgba(9,20,33,.28) 100%),
+    linear-gradient(90deg, rgba(9,20,33,.95) 0%, rgba(9,20,33,.72) 45%, rgba(9,20,33,.5) 100%),
+    linear-gradient(180deg, rgba(9,20,33,.58) 0%, rgba(9,20,33,0) 36%),
     linear-gradient(0deg, rgba(9,20,33,.6) 0%, rgba(9,20,33,0) 26%); }
 }
 .hv-cta-row { display:flex; align-items:center; flex-wrap:wrap; gap: 1.1rem 1.4rem; margin-top: 2.6rem; }
