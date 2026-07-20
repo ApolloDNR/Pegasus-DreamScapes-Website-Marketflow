@@ -20,7 +20,7 @@ import type { Nav } from './theme';
    2026-07-19: "editorial cinematic premium, not a sketch"). Code-drawn, so it
    stays bespoke (§32.4-safe); one warm source low right, stone modeled by
    gradient, polished-floor reflection. Static per §32 restraint. */
-function ColonnadeArt({ className }: { className?: string }) {
+export function ColonnadeArt({ className }: { className?: string }) {
   return (
     <div className={className} aria-hidden="true">
       <svg viewBox="0 0 820 920" fill="none" preserveAspectRatio="xMidYMid slice" stroke="none">
@@ -236,7 +236,16 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
     <div className="hv">
       {/* 1 · ARRIVAL */}
       <section className="hv-hero hv-grain" data-hv="arrival">
-        <ColonnadeArt className="hv-colonnade" />
+        {/* The masterpiece: painted nocturne, graded into the brand navy
+            (docs/design/HANDOFF_TO_CLAUDE_CODE.md). ColonnadeArt below
+            stays exported as the reduced-bandwidth / error fallback. */}
+        <div className="hv-hero-art-wrap" aria-hidden="true">
+          <img className="hv-hero-art" src={`${import.meta.env.BASE_URL}images/hero/nocturne.webp`}
+            srcSet={`${import.meta.env.BASE_URL}images/hero/nocturne-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/nocturne.webp 2000w`}
+            sizes="(max-width: 900px) 100vw, 72vw"
+            alt="" fetchPriority="high" decoding="async" />
+          <div className="hv-hero-art-wash" />
+        </div>
         <div className="hv-wrap hv-hero-inner">
           <div className="hv-rule" />
           <div className="pg-label hv-eyebrow">Real estate operating company &middot; Contra Costa &amp; Alameda</div>

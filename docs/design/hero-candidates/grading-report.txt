@@ -1,0 +1,24 @@
+== nano-21x9-a ==
+in: (3168, 1344)
+left-third mean luma: 28.3 (OK)
+out: docs/design/hero-candidates/graded/nano-21x9-a/nocturne.webp (2000, 848) 70 KB
+out: docs/design/hero-candidates/graded/nano-21x9-a/nocturne-m.webp (1080, 458) 25 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== nano-21x9-b ==
+in: (3168, 1344)
+left-third mean luma: 22.7 (OK)
+out: docs/design/hero-candidates/graded/nano-21x9-b/nocturne.webp (2000, 848) 65 KB
+out: docs/design/hero-candidates/graded/nano-21x9-b/nocturne-m.webp (1080, 458) 22 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== recraft-16x9-a ==
+in: (2688, 1536)
+left-third mean luma: 13.3 (OK)
+out: docs/design/hero-candidates/graded/recraft-16x9-a/nocturne.webp (2000, 1143) 137 KB
+out: docs/design/hero-candidates/graded/recraft-16x9-a/nocturne-m.webp (1080, 617) 36 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== recraft-16x9-b ==
+in: (2688, 1536)
+left-third mean luma: 13.1 (OK)
+out: docs/design/hero-candidates/graded/recraft-16x9-b/nocturne.webp (2000, 1143) 141 KB
+out: docs/design/hero-candidates/graded/recraft-16x9-b/nocturne-m.webp (1080, 617) 42 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
