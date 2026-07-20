@@ -1,0 +1,16 @@
+== sday-1 ==
+left-third mean luma: 131.8
+== sday-2 ==
+left-third mean luma: 146.8
+== sday-3 ==
+left-third mean luma: 150.4
+== sday-4 ==
+left-third mean luma: 125.8
+== sdusk-1 ==
+left-third mean luma: 98.0
+== sdusk-2 ==
+left-third mean luma: 97.7
+== sdusk-3 ==
+left-third mean luma: 80.4
+== sdusk-4 ==
+left-third mean luma: 92.4
