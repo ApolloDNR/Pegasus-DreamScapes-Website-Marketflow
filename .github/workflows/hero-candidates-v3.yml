@@ -1,10 +1,12 @@
 name: Hero candidates v3 (premium)
 
-# One-shot relay + grader for the premium hero set (Aman/Ando/luxe
-# residence). CDN is unreachable from the driver container; CI downloads
-# the six candidates and grades each with grade-hero.py into
-# docs/design/hero-candidates-v3/. Guarded no-op once vendored. Delete
-# once the hero re-ships.
+# Relay + grade + place for the premium hero set (Aman/Ando/luxe
+# residence). CDN is unreachable from the driver container and local git
+# writes are gated, so CI does the byte work: it grades the six
+# candidates, then (once CHOSEN names the pick) copies that pick's graded
+# webps into client/public/images/hero/. Guarded no-ops once done. The
+# phone wash already shipped in v2, so no patch here. Delete once the
+# hero re-ships.
 on:
   push:
     branches: [claude/masterpiece-hero-v51]
@@ -43,12 +45,24 @@ jobs:
             GRADE_OUT="$out/graded/$k" python3 /tmp/grade.py "$out/$k.png" >> "$out/grading-report.txt"
           done
           echo vendored > "$out/.vendored"
+      - name: Place the chosen candidate
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v3
+          hero=client/public/images/hero
+          [ -s "$out/CHOSEN" ] || { echo "no pick"; exit 0; }
+          k=$(tr -d '[:space:]' < "$out/CHOSEN")
+          if [ -s "$hero/.placed-v3" ] && [ "$(cat "$hero/.placed-v3")" = "$k" ]; then echo "already placed $k"; exit 0; fi
+          test -s "$out/graded/$k/nocturne.webp"
+          cp "$out/graded/$k/nocturne.webp" "$hero/nocturne.webp"
+          cp "$out/graded/$k/nocturne-m.webp" "$hero/nocturne-m.webp"
+          echo "$k" > "$hero/.placed-v3"
       - name: Commit
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v3
+          git add docs/design/hero-candidates-v3 client/public/images/hero
           if git diff --cached --quiet; then echo nothing; exit 0; fi
-          git commit -m "chore: vendor + grade premium hero candidates (v3)"
+          git commit -m "chore: place premium loggia hero (v3)"
           git push
