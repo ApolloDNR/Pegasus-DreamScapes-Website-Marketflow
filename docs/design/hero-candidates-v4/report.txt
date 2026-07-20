@@ -1,0 +1,16 @@
+== day-1 ==
+left-third mean luma: 225.3
+== day-2 ==
+left-third mean luma: 200.1
+== day-3 ==
+left-third mean luma: 132.1
+== day-4 ==
+left-third mean luma: 216.3
+== dusk-1 ==
+left-third mean luma: 72.5
+== dusk-2 ==
+left-third mean luma: 44.8
+== dusk-3 ==
+left-third mean luma: 71.5
+== dusk-4 ==
+left-third mean luma: 29.0
