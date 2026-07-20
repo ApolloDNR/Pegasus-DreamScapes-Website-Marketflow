@@ -236,12 +236,17 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
     <div className="hv">
       {/* 1 · ARRIVAL */}
       <section className="hv-hero hv-grain" data-hv="arrival">
-        {/* The masterpiece: painted nocturne, graded into the brand navy
-            (docs/design/HANDOFF_TO_CLAUDE_CODE.md). ColonnadeArt below
-            stays exported as the reduced-bandwidth / error fallback. */}
+        {/* Warm Mediterranean classical loggia, reacting to the theme:
+            the sunlit DAY plate in light mode, the golden-dusk plate in
+            dark mode, cross-fading on toggle (owner reference boards).
+            ColonnadeArt stays exported as the reduced-bandwidth fallback. */}
         <div className="hv-hero-art-wrap" aria-hidden="true">
-          <img className="hv-hero-art" src={`${import.meta.env.BASE_URL}images/hero/nocturne.webp`}
-            srcSet={`${import.meta.env.BASE_URL}images/hero/nocturne-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/nocturne.webp 2000w`}
+          <img className="hv-hero-art hv-hero-art-day" src={`${import.meta.env.BASE_URL}images/hero/hero-day.webp`}
+            srcSet={`${import.meta.env.BASE_URL}images/hero/hero-day-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/hero-day.webp 2000w`}
+            sizes="(max-width: 900px) 100vw, 72vw"
+            alt="" fetchPriority="high" decoding="async" />
+          <img className="hv-hero-art hv-hero-art-night" src={`${import.meta.env.BASE_URL}images/hero/hero-night.webp`}
+            srcSet={`${import.meta.env.BASE_URL}images/hero/hero-night-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/hero-night.webp 2000w`}
             sizes="(max-width: 900px) 100vw, 72vw"
             alt="" fetchPriority="high" decoding="async" />
           <div className="hv-hero-art-wash" />
