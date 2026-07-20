@@ -1,0 +1,87 @@
+name: Hero candidates v4 (warm day/night)
+
+# Relay + resize + place for the warm classical day/night hero pair.
+# CDN unreachable from the driver container, local git writes gated, so
+# CI does the byte work. These images are WARM (owner reference) so they
+# are NOT navy-seated like the nocturne set — just resized to webp with a
+# left-third luma report. Place phase copies the chosen day + night into
+# client/public/images/hero/ once CHOSEN_DAY / CHOSEN_NIGHT are set.
+# Delete once the hero re-ships.
+on:
+  push:
+    branches: [claude/masterpiece-hero-v51]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and resize (warm-preserving)
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v4
+          if [ -s "$out/.vendored" ]; then echo have; exit 0; fi
+          mkdir -p "$out"
+          pip -q install pillow numpy
+          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
+          declare -A urls=(
+            [day-1]="hf_20260720_161459_0cdc9dad-283a-4558-81f2-547967e2fad1.png"
+            [day-2]="hf_20260720_161459_5b774fa1-fc6c-4e14-adab-4d0d6c037095.png"
+            [day-3]="hf_20260720_161459_d1cd26e1-d5ad-4793-b5ae-850c6be33143.png"
+            [day-4]="hf_20260720_161459_8cd00bb9-ef10-4e06-9cac-77a0e81bddcd.png"
+            [dusk-1]="hf_20260720_161504_8d2cefa4-f4cd-4980-b21c-567c31de3d6e.png"
+            [dusk-2]="hf_20260720_161504_bf13f3ed-9d5e-4499-a08f-0066ae539ffc.png"
+            [dusk-3]="hf_20260720_161504_01057acf-4828-4cbd-9943-8624b7effdae.png"
+            [dusk-4]="hf_20260720_161504_6704611d-8de6-4c5e-a142-cb3e50c4eef0.png"
+          )
+          cat > /tmp/resize.py <<'PY'
+import sys, os
+from PIL import Image
+import numpy as np
+src = sys.argv[1]; outdir = os.environ['OUT']
+os.makedirs(outdir, exist_ok=True)
+img = Image.open(src).convert('RGB')
+for w, name, q in ((2000, 'hero.webp', 86), (1080, 'hero-m.webp', 84)):
+    r = img.resize((w, round(img.height * w / img.width)), Image.LANCZOS)
+    r.save(os.path.join(outdir, name), quality=q, method=6)
+h, wd = img.height, img.width
+left = np.array(img.crop((0, int(h*0.18), int(wd*0.34), int(h*0.85)))).mean()
+print(f'left-third mean luma: {left:.1f}')
+PY
+          : > "$out/report.txt"
+          for k in day-1 day-2 day-3 day-4 dusk-1 dusk-2 dusk-3 dusk-4; do
+            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
+            echo "== $k ==" >> "$out/report.txt"
+            OUT="$out/graded/$k" python3 /tmp/resize.py "$out/$k.png" >> "$out/report.txt"
+          done
+          echo vendored > "$out/.vendored"
+          cat "$out/report.txt"
+      - name: Place chosen day + night
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v4
+          hero=client/public/images/hero
+          place() {
+            local marker="$1" dest="$2" destm="$3"
+            [ -s "$out/$marker" ] || return 0
+            local k; k=$(tr -d '[:space:]' < "$out/$marker")
+            test -s "$out/graded/$k/hero.webp"
+            cp "$out/graded/$k/hero.webp" "$hero/$dest"
+            cp "$out/graded/$k/hero-m.webp" "$hero/$destm"
+            echo "$k" > "$hero/.placed-$marker"
+          }
+          place CHOSEN_DAY hero-day.webp hero-day-m.webp
+          place CHOSEN_NIGHT hero-night.webp hero-night-m.webp
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/design/hero-candidates-v4 client/public/images/hero
+          if git diff --cached --quiet; then echo nothing; exit 0; fi
+          git commit -m "chore: vendor/resize + place warm day-night hero (v4)"
+          git push
