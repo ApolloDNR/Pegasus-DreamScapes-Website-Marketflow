@@ -1,0 +1,89 @@
+diff --git a/client/index.html b/client/index.html
+index d0fbc4b..2b1ede3 100644
+--- a/client/index.html
++++ b/client/index.html
+@@ -25,7 +25,8 @@
+     <meta name="twitter:description" content="A real estate operating company for complex opportunities in the East Bay." />
+     <meta name="twitter:image" content="https://pegasusdreamscapes.com/og/default.png" />
+     <link rel="canonical" href="https://pegasusdreamscapes.com" />
+-    <link rel="preload" as="image" href="/images/hero/nocturne.webp" fetchpriority="high" />
++    <link rel="preload" as="image" href="/images/hero/hero-night.webp" fetchpriority="high" media="(prefers-color-scheme: dark)" />
++    <link rel="preload" as="image" href="/images/hero/hero-day.webp" fetchpriority="high" media="(prefers-color-scheme: light)" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+diff --git a/client/src/pegasus/_group.css b/client/src/pegasus/_group.css
+index 75c113d..91e8f43 100644
+--- a/client/src/pegasus/_group.css
++++ b/client/src/pegasus/_group.css
+@@ -2872,20 +2872,34 @@ select.pg-field option { color: #1b1712; }
+    near-black; on phones the art fills the frame behind a heavier wash. */
+ .hv-hero-art-wrap { position:absolute; inset:0; z-index:1; overflow:hidden; }
+ .hv-hero-art { position:absolute; right:0; top:0; height:100%; width:72%;
+-  object-fit:cover; object-position:center right; }
++  object-fit:cover; object-position:center right;
++  transition: opacity 600ms var(--ease-smooth, cubic-bezier(.16,1,.3,1)); }
++/* Day plate in light mode, dusk plate in dark mode; cross-fade on toggle.
++   The theme class lives on <html> (ThemeProvider). Default = dusk to match
++   the navy hero base and avoid a bright flash before the theme resolves. */
++.hv-hero-art-day { opacity: 0; }
++.hv-hero-art-night { opacity: 1; }
++:root.light .hv-hero-art-day { opacity: 1; }
++:root.light .hv-hero-art-night { opacity: 0; }
++/* The bright day plate needs a stronger navy panel to seat the cream
++   headline; the wash carries the dark-left panel in both modes. */
+ .hv-hero-art-wash { position:absolute; inset:0;
+-  background: linear-gradient(90deg, var(--hv-navy2) 0%, rgba(9,20,33,.86) 26%,
+-    rgba(9,20,33,.4) 46%, rgba(9,20,33,0) 64%),
++  background: linear-gradient(90deg, var(--hv-navy2) 0%, rgba(9,20,33,.9) 32%,
++    rgba(9,20,33,.6) 50%, rgba(9,20,33,.18) 68%, rgba(9,20,33,0) 80%),
+     linear-gradient(0deg, rgba(9,20,33,.55) 0%, rgba(9,20,33,0) 22%); }
++:root.light .hv-hero-art-wash { background:
++  linear-gradient(90deg, var(--hv-navy2) 0%, rgba(9,20,33,.95) 34%,
++    rgba(9,20,33,.72) 52%, rgba(9,20,33,.32) 70%, rgba(9,20,33,0) 84%),
++    linear-gradient(0deg, rgba(9,20,33,.5) 0%, rgba(9,20,33,0) 22%); }
+ @media (max-width: 900px) {
+   .hv-hero-art { width:100%; object-position: 62% center; }
+   /* Heavier seat on phones: the headline fills the upper band over the
+-     lit columns, so darken left-to-right AND the top third to keep the
+-     cream type on near-black while the colonnade still reads below. */
+-  .hv-hero-art-wash { background:
+-    linear-gradient(90deg, rgba(9,20,33,.95) 0%, rgba(9,20,33,.72) 45%, rgba(9,20,33,.5) 100%),
+-    linear-gradient(180deg, rgba(9,20,33,.58) 0%, rgba(9,20,33,0) 36%),
+-    linear-gradient(0deg, rgba(9,20,33,.6) 0%, rgba(9,20,33,0) 26%); }
++     bright colonnade, so darken left-to-right AND the top third. */
++  .hv-hero-art-wash,
++  :root.light .hv-hero-art-wash { background:
++    linear-gradient(90deg, rgba(9,20,33,.96) 0%, rgba(9,20,33,.8) 45%, rgba(9,20,33,.6) 100%),
++    linear-gradient(180deg, rgba(9,20,33,.66) 0%, rgba(9,20,33,0) 40%),
++    linear-gradient(0deg, rgba(9,20,33,.62) 0%, rgba(9,20,33,0) 26%); }
+ }
+ .hv-cta-row { display:flex; align-items:center; flex-wrap:wrap; gap: 1.1rem 1.4rem; margin-top: 2.6rem; }
+ .hv-hero-link { font-size:.82rem; letter-spacing:.05em; color: rgba(245,230,211,.74);
+diff --git a/client/src/pegasus/home-v51.tsx b/client/src/pegasus/home-v51.tsx
+index c3f2980..d033fbc 100644
+--- a/client/src/pegasus/home-v51.tsx
++++ b/client/src/pegasus/home-v51.tsx
+@@ -236,12 +236,17 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
+     <div className="hv">
+       {/* 1 · ARRIVAL */}
+       <section className="hv-hero hv-grain" data-hv="arrival">
+-        {/* The masterpiece: painted nocturne, graded into the brand navy
+-            (docs/design/HANDOFF_TO_CLAUDE_CODE.md). ColonnadeArt below
+-            stays exported as the reduced-bandwidth / error fallback. */}
++        {/* Warm Mediterranean classical loggia, reacting to the theme:
++            the sunlit DAY plate in light mode, the golden-dusk plate in
++            dark mode, cross-fading on toggle (owner reference boards).
++            ColonnadeArt stays exported as the reduced-bandwidth fallback. */}
+         <div className="hv-hero-art-wrap" aria-hidden="true">
+-          <img className="hv-hero-art" src={`${import.meta.env.BASE_URL}images/hero/nocturne.webp`}
+-            srcSet={`${import.meta.env.BASE_URL}images/hero/nocturne-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/nocturne.webp 2000w`}
++          <img className="hv-hero-art hv-hero-art-day" src={`${import.meta.env.BASE_URL}images/hero/hero-day.webp`}
++            srcSet={`${import.meta.env.BASE_URL}images/hero/hero-day-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/hero-day.webp 2000w`}
++            sizes="(max-width: 900px) 100vw, 72vw"
++            alt="" fetchPriority="high" decoding="async" />
++          <img className="hv-hero-art hv-hero-art-night" src={`${import.meta.env.BASE_URL}images/hero/hero-night.webp`}
++            srcSet={`${import.meta.env.BASE_URL}images/hero/hero-night-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/hero-night.webp 2000w`}
+             sizes="(max-width: 900px) 100vw, 72vw"
+             alt="" fetchPriority="high" decoding="async" />
+           <div className="hv-hero-art-wash" />
