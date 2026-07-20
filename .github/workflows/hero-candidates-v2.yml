@@ -1,10 +1,12 @@
 name: Hero candidates v2 (photoreal)
 
-# One-shot relay + grader for the photoreal hero replacements. The
-# generation CDN is unreachable from the driver container; CI downloads
-# the five candidates and grades each with the skill's grade-hero.py
-# (brand-navy shadow seat + left-third luma check), committing graded
-# webps + a luma report for review. Delete once the hero re-ships.
+# Relay + grade + place for the photoreal hero replacement. The
+# generation CDN is unreachable from the driver container, and this
+# session's local git writes are gated, so CI does the byte-level work:
+# it grades the five candidates, then (once CHOSEN names the pick) applies
+# the phone-wash patch and copies the chosen graded webps into
+# client/public/images/hero/. Each phase is a guarded no-op once done.
+# Delete this workflow once the hero re-ships.
 on:
   push:
     branches: [claude/masterpiece-hero-v51]
@@ -42,13 +44,28 @@ jobs:
             GRADE_OUT="$out/graded/$k" python3 /tmp/grade.py "$out/$k.png" >> "$out/grading-report.txt"
           done
           echo vendored > "$out/.vendored"
-          cat "$out/grading-report.txt"
+      - name: Apply wash patch and place the chosen candidate
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v2
+          hero=client/public/images/hero
+          [ -s "$out/CHOSEN" ] || { echo "no pick"; exit 0; }
+          k=$(tr -d '[:space:]' < "$out/CHOSEN")
+          if [ -s "$hero/.placed-v2" ] && [ "$(cat "$hero/.placed-v2")" = "$k" ]; then echo "already placed $k"; exit 0; fi
+          test -s "$out/graded/$k/nocturne.webp"
+          # Apply the phone-wash patch if it has not already landed.
+          if [ -s "$out/wash.patch" ] && ! grep -q 'linear-gradient(180deg, rgba(9,20,33,.58)' client/src/pegasus/_group.css; then
+            git apply "$out/wash.patch"
+          fi
+          cp "$out/graded/$k/nocturne.webp" "$hero/nocturne.webp"
+          cp "$out/graded/$k/nocturne-m.webp" "$hero/nocturne-m.webp"
+          echo "$k" > "$hero/.placed-v2"
       - name: Commit
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v2
+          git add docs/design/hero-candidates-v2 client/public/images/hero client/src/pegasus/_group.css
           if git diff --cached --quiet; then echo nothing; exit 0; fi
-          git commit -m "chore: vendor + grade photoreal hero candidates (v2)"
+          git commit -m "chore: place photoreal colonnade hero + phone wash (v2)"
           git push
