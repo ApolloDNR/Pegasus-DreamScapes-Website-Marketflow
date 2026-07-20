@@ -1,0 +1,54 @@
+name: Hero candidates v2 (photoreal)
+
+# One-shot relay + grader for the photoreal hero replacements. The
+# generation CDN is unreachable from the driver container; CI downloads
+# the five candidates and grades each with the skill's grade-hero.py
+# (brand-navy shadow seat + left-third luma check), committing graded
+# webps + a luma report for review. Delete once the hero re-ships.
+on:
+  push:
+    branches: [claude/masterpiece-hero-v51]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and grade
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v2
+          if [ -s "$out/.vendored" ]; then echo have; exit 0; fi
+          mkdir -p "$out"
+          pip -q install pillow numpy
+          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
+          declare -A urls=(
+            [colonnade]="hf_20260720_031322_bd8153ef-bffd-4dde-8eb0-049d74a982ee.png"
+            [portico-a]="hf_20260720_031326_6e684eec-97a8-4eae-8690-94e76ada824e.png"
+            [portico-b]="hf_20260720_031326_f4f31826-31ca-4023-b499-f2ed294713c8.png"
+            [hills-a]="hf_20260720_031331_6f885aee-d9f8-4743-8ce9-21daa271bbd4.png"
+            [hills-b]="hf_20260720_031331_594a296f-8545-4f0c-82a6-c53b0df89aa4.png"
+          )
+          sed "s|^OUT_DIR = .*$|OUT_DIR = __import__('os').environ['GRADE_OUT']|" \
+            .claude/skills/master-premium-design/scripts/grade-hero.py > /tmp/grade.py
+          : > "$out/grading-report.txt"
+          for k in colonnade portico-a portico-b hills-a hills-b; do
+            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
+            echo "== $k ==" >> "$out/grading-report.txt"
+            GRADE_OUT="$out/graded/$k" python3 /tmp/grade.py "$out/$k.png" >> "$out/grading-report.txt"
+          done
+          echo vendored > "$out/.vendored"
+          cat "$out/grading-report.txt"
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/design/hero-candidates-v2
+          if git diff --cached --quiet; then echo nothing; exit 0; fi
+          git commit -m "chore: vendor + grade photoreal hero candidates (v2)"
+          git push
