@@ -1,11 +1,11 @@
 name: Hero candidates v6 (symmetric)
 
-# Relay + resize + place for the screenshot-matching symmetric hero.
-# CDN unreachable from the driver container, local git writes gated.
-# Warm images -> resized (not navy-seated) via docs/design/hero-tools/resize.py.
-# Place phase overwrites client/public/images/hero/hero-day.webp and
-# hero-night.webp once CHOSEN_DAY / CHOSEN_NIGHT are set (theme code
-# already shipped in v4). Delete once the hero settles.
+# Relay + resize + place + CSS patch for the screenshot-matching
+# symmetric hero. CDN unreachable from the driver container, local git
+# writes gated. Warm images -> resized (not navy-seated). Place phase
+# overwrites the live day/night webps and applies the full-bleed CSS
+# patch once CHOSEN_DAY / CHOSEN_NIGHT are set. Delete once the hero
+# settles.
 on:
   push:
     branches: [claude/masterpiece-hero-v51]
@@ -44,7 +44,6 @@ jobs:
             python3 docs/design/hero-tools/resize.py "$out/$k.png" "$out/graded/$k" >> "$out/report.txt"
           done
           echo vendored > "$out/.vendored"
-          cat "$out/report.txt"
       - name: Place chosen day + night
         run: |
           set -euo pipefail
@@ -61,12 +60,20 @@ jobs:
           }
           place CHOSEN_DAY hero-day.webp hero-day-m.webp
           place CHOSEN_NIGHT hero-night.webp hero-night-m.webp
+      - name: Apply full-bleed CSS patch (once markers exist)
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v6
+          [ -s "$out/CHOSEN_DAY" ] || { echo "no pick"; exit 0; }
+          if [ -s "$out/fullbleed.patch" ] && ! grep -q 'radial-gradient(120% 82% at 22% 46%' client/src/pegasus/_group.css; then
+            git apply "$out/fullbleed.patch"
+          fi
       - name: Commit
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v6 client/public/images/hero
+          git add docs/design/hero-candidates-v6 client/public/images/hero client/src/pegasus/_group.css
           if git diff --cached --quiet; then echo nothing; exit 0; fi
-          git commit -m "chore: vendor/resize + place symmetric day-night hero (v6)"
+          git commit -m "chore: place symmetric hero + full-bleed CSS (v6)"
           git push
