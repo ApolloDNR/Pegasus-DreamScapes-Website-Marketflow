@@ -3,10 +3,10 @@ name: Hero candidates v4 (warm day/night)
 # Relay + resize + place for the warm classical day/night hero pair.
 # CDN unreachable from the driver container, local git writes gated, so
 # CI does the byte work. These images are WARM (owner reference) so they
-# are NOT navy-seated like the nocturne set — just resized to webp with a
-# left-third luma report. Place phase copies the chosen day + night into
-# client/public/images/hero/ once CHOSEN_DAY / CHOSEN_NIGHT are set.
-# Delete once the hero re-ships.
+# are NOT navy-seated like the nocturne set — just resized to webp via
+# docs/design/hero-tools/resize.py. Place phase copies the chosen day +
+# night into client/public/images/hero/ once CHOSEN_DAY / CHOSEN_NIGHT
+# are set. Delete once the hero re-ships.
 on:
   push:
     branches: [claude/masterpiece-hero-v51]
@@ -38,25 +38,11 @@ jobs:
             [dusk-3]="hf_20260720_161504_01057acf-4828-4cbd-9943-8624b7effdae.png"
             [dusk-4]="hf_20260720_161504_6704611d-8de6-4c5e-a142-cb3e50c4eef0.png"
           )
-          cat > /tmp/resize.py <<'PY'
-import sys, os
-from PIL import Image
-import numpy as np
-src = sys.argv[1]; outdir = os.environ['OUT']
-os.makedirs(outdir, exist_ok=True)
-img = Image.open(src).convert('RGB')
-for w, name, q in ((2000, 'hero.webp', 86), (1080, 'hero-m.webp', 84)):
-    r = img.resize((w, round(img.height * w / img.width)), Image.LANCZOS)
-    r.save(os.path.join(outdir, name), quality=q, method=6)
-h, wd = img.height, img.width
-left = np.array(img.crop((0, int(h*0.18), int(wd*0.34), int(h*0.85)))).mean()
-print(f'left-third mean luma: {left:.1f}')
-PY
           : > "$out/report.txt"
           for k in day-1 day-2 day-3 day-4 dusk-1 dusk-2 dusk-3 dusk-4; do
             curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
             echo "== $k ==" >> "$out/report.txt"
-            OUT="$out/graded/$k" python3 /tmp/resize.py "$out/$k.png" >> "$out/report.txt"
+            python3 docs/design/hero-tools/resize.py "$out/$k.png" "$out/graded/$k" >> "$out/report.txt"
           done
           echo vendored > "$out/.vendored"
           cat "$out/report.txt"
@@ -66,9 +52,9 @@ PY
           out=docs/design/hero-candidates-v4
           hero=client/public/images/hero
           place() {
-            local marker="$1" dest="$2" destm="$3"
+            marker="$1"; dest="$2"; destm="$3"
             [ -s "$out/$marker" ] || return 0
-            local k; k=$(tr -d '[:space:]' < "$out/$marker")
+            k=$(tr -d '[:space:]' < "$out/$marker")
             test -s "$out/graded/$k/hero.webp"
             cp "$out/graded/$k/hero.webp" "$hero/$dest"
             cp "$out/graded/$k/hero-m.webp" "$hero/$destm"
@@ -76,12 +62,20 @@ PY
           }
           place CHOSEN_DAY hero-day.webp hero-day-m.webp
           place CHOSEN_NIGHT hero-night.webp hero-night-m.webp
+      - name: Apply hero code patch (once markers exist)
+        run: |
+          set -euo pipefail
+          out=docs/design/hero-candidates-v4
+          [ -s "$out/CHOSEN_DAY" ] || { echo "no pick yet"; exit 0; }
+          if [ -s "$out/hero-daynight.patch" ] && ! grep -q 'hv-hero-art-day' client/src/pegasus/home-v51.tsx; then
+            git apply "$out/hero-daynight.patch"
+          fi
       - name: Commit
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v4 client/public/images/hero
+          git add docs/design/hero-candidates-v4 client/public/images/hero client/src/pegasus/home-v51.tsx client/src/pegasus/_group.css client/index.html
           if git diff --cached --quiet; then echo nothing; exit 0; fi
           git commit -m "chore: vendor/resize + place warm day-night hero (v4)"
           git push
