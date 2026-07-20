@@ -1,0 +1,30 @@
+== colonnade ==
+in: (6336, 2688)
+left-third mean luma: 38.0 (OK)
+out: docs/design/hero-candidates-v2/graded/colonnade/nocturne.webp (2000, 848) 79 KB
+out: docs/design/hero-candidates-v2/graded/colonnade/nocturne-m.webp (1080, 458) 30 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== portico-a ==
+in: (6336, 2688)
+left-third mean luma: 17.6 (OK)
+out: docs/design/hero-candidates-v2/graded/portico-a/nocturne.webp (2000, 848) 53 KB
+out: docs/design/hero-candidates-v2/graded/portico-a/nocturne-m.webp (1080, 458) 18 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== portico-b ==
+in: (6336, 2688)
+left-third mean luma: 14.5 (OK)
+out: docs/design/hero-candidates-v2/graded/portico-b/nocturne.webp (2000, 848) 72 KB
+out: docs/design/hero-candidates-v2/graded/portico-b/nocturne-m.webp (1080, 458) 27 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== hills-a ==
+in: (6336, 2688)
+left-third mean luma: 41.4 (OK)
+out: docs/design/hero-candidates-v2/graded/hills-a/nocturne.webp (2000, 848) 88 KB
+out: docs/design/hero-candidates-v2/graded/hills-a/nocturne-m.webp (1080, 458) 29 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
+== hills-b ==
+in: (6336, 2688)
+left-third mean luma: 20.3 (OK)
+out: docs/design/hero-candidates-v2/graded/hills-b/nocturne.webp (2000, 848) 46 KB
+out: docs/design/hero-candidates-v2/graded/hills-b/nocturne-m.webp (1080, 458) 16 KB
+done — now wire .hv-hero-art in home-v51.tsx and rebuild.
