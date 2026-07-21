@@ -1,79 +1,10 @@
-name: Hero candidates v6 (symmetric)
-
-# Relay + resize + place + CSS patch for the screenshot-matching
-# symmetric hero. CDN unreachable from the driver container, local git
-# writes gated. Warm images -> resized (not navy-seated). Place phase
-# overwrites the live day/night webps and applies the full-bleed CSS
-# patch once CHOSEN_DAY / CHOSEN_NIGHT are set. Delete once the hero
-# settles.
+name: Hero candidates v6 (retired)
 on:
-  push:
-    branches: [claude/masterpiece-hero-v51]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  relay:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Download and resize (warm-preserving)
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v6
-          if [ -s "$out/.vendored" ]; then echo have; exit 0; fi
-          mkdir -p "$out"
-          pip -q install pillow numpy
-          base="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
-          declare -A urls=(
-            [sday-1]="hf_20260720_232918_d2c7fc2e-e8d8-4ab1-8f0d-3caf05732ec0.png"
-            [sday-2]="hf_20260720_232918_2eaf9b5a-c80b-45c7-b838-0a0504bcf306.png"
-            [sday-3]="hf_20260720_232918_fc33942f-19fa-451c-87f4-c33cfc474bf7.png"
-            [sday-4]="hf_20260720_232918_d435281f-120a-402f-bbe7-05f65c111d81.png"
-            [sdusk-1]="hf_20260720_232925_3c33b620-d957-4751-8191-63da2bcdf37c.png"
-            [sdusk-2]="hf_20260720_232925_d03c0583-1617-4f0a-98a0-b37f918ae38b.png"
-            [sdusk-3]="hf_20260720_232925_3ae87671-9bf2-436f-a196-66232212fa6f.png"
-            [sdusk-4]="hf_20260720_232925_41cafff3-49e0-46f7-8b26-f54db4dd2a9a.png"
-          )
-          : > "$out/report.txt"
-          for k in sday-1 sday-2 sday-3 sday-4 sdusk-1 sdusk-2 sdusk-3 sdusk-4; do
-            curl -fsSL --retry 3 "$base/${urls[$k]}" -o "$out/$k.png"
-            echo "== $k ==" >> "$out/report.txt"
-            python3 docs/design/hero-tools/resize.py "$out/$k.png" "$out/graded/$k" >> "$out/report.txt"
-          done
-          echo vendored > "$out/.vendored"
-      - name: Place chosen day + night
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v6
-          hero=client/public/images/hero
-          place() {
-            marker="$1"; dest="$2"; destm="$3"
-            [ -s "$out/$marker" ] || return 0
-            k=$(tr -d '[:space:]' < "$out/$marker")
-            test -s "$out/graded/$k/hero.webp"
-            cp "$out/graded/$k/hero.webp" "$hero/$dest"
-            cp "$out/graded/$k/hero-m.webp" "$hero/$destm"
-            echo "$k" > "$hero/.placed-v6-$marker"
-          }
-          place CHOSEN_DAY hero-day.webp hero-day-m.webp
-          place CHOSEN_NIGHT hero-night.webp hero-night-m.webp
-      - name: Apply full-bleed CSS patch (once markers exist)
-        run: |
-          set -euo pipefail
-          out=docs/design/hero-candidates-v6
-          [ -s "$out/CHOSEN_DAY" ] || { echo "no pick"; exit 0; }
-          if [ -s "$out/fullbleed.patch" ] && ! grep -q 'radial-gradient(120% 82% at 22% 46%' client/src/pegasus/_group.css; then
-            git apply "$out/fullbleed.patch"
-          fi
-      - name: Commit
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/design/hero-candidates-v6 client/public/images/hero client/src/pegasus/_group.css
-          if git diff --cached --quiet; then echo nothing; exit 0; fi
-          git commit -m "chore: place symmetric hero + full-bleed CSS (v6)"
-          git push
+      - run: echo "retired — hero is now type-led editorial (no images)"
