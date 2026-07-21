@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
@@ -228,39 +228,11 @@ function OpportunityPlan() {
 
 /* ── The page ── */
 
-/* A restrained, code-drawn geometric accent for the editorial hero — an
-   abstract nod to classical structure (a single arch, sparse plumb lines,
-   a datum) in fine brass hairlines. It is texture, not a picture: it sits
-   far right, whisper-low in opacity, and fades into the field. */
-function HeroGeometry() {
-  return (
-    <div className="hv-hero-geo" aria-hidden="true">
-      <svg viewBox="0 0 760 900" fill="none" preserveAspectRatio="xMidYMid slice">
-        <g className="hv-hero-geo-lines">
-          {/* plumb lines */}
-          <line x1="130" y1="0" x2="130" y2="900" />
-          <line x1="380" y1="0" x2="380" y2="900" />
-          <line x1="630" y1="0" x2="630" y2="900" />
-          {/* the arch, struck about the centre plumb */}
-          <path d="M214 900 V300 A166 166 0 0 1 546 300 V900" />
-          {/* datum + a fine cornice pair */}
-          <line x1="0" y1="806" x2="760" y2="806" />
-          <line x1="150" y1="150" x2="610" y2="150" />
-          {/* a large surveyor's circle, part off-frame */}
-          <circle cx="600" cy="300" r="250" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-/* ── The Four Pillars (signature) ──────────────────────────────────
-   The founder's own image: each of the four departments is a column,
-   and together they carry the company. Drawn in code (never stock), so
-   the classical instinct stays bespoke (§32.4). One orchestrated
-   sequence: the stylobate settles, the four columns rise left to right,
-   then the entablature lowers onto their capitals — elevation, made
-   literal. Each column lights and speaks on hover / focus. */
+/* ── The Four Pillars ──────────────────────────────────────────────
+   The operating company as four departments — Acquisitions, Development,
+   Dispositions, Asset Management (source · build · sell · hold). Presented
+   as an editorial rank beneath a cinematic marble capital (the brand's
+   classical DNA, rendered as real material, not a diagram). */
 
 type DeptKey = 'acq' | 'dev' | 'dis' | 'am';
 
@@ -271,157 +243,18 @@ const DEPARTMENTS: { key: DeptKey; name: string; verb: string; line: string }[] 
   { key: 'am', name: 'Asset Management', verb: 'Hold', line: 'When the plan is to keep it, we stabilize, operate, and manage it for the long term.' },
 ];
 
-/* One classical column, modeled in light (warm source from the right),
-   fluted shaft with a little entasis, an abstracted Corinthian capital,
-   an Attic base. Gradients are per-instance (uid) so four can coexist. */
-function PillarColumn({ uid }: { uid: string }) {
-  return (
-    <svg className="hv-pillar-svg" viewBox="0 0 170 548" fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id={`sh-${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#14273c" />
-          <stop offset="0.32" stopColor="#2a2417" />
-          <stop offset="0.56" stopColor="#5d4a31" />
-          <stop offset="0.78" stopColor="#9a7c54" />
-          <stop offset="0.92" stopColor="#cdb083" />
-          <stop offset="1" stopColor="#1d1710" />
-        </linearGradient>
-        <linearGradient id={`cp-${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#16273b" />
-          <stop offset="0.5" stopColor="#6e5334" />
-          <stop offset="0.84" stopColor="#c9a066" />
-          <stop offset="1" stopColor="#241c12" />
-        </linearGradient>
-        <linearGradient id={`lt-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f4dca6" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#eec886" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#e0ad63" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-
-      {/* shaft (slight entasis: a touch wider at the foot) */}
-      <path d="M55 60 L115 60 L118 470 L52 470 Z" fill={`url(#sh-${uid})`} />
-      {/* fluting */}
-      <g className="hv-flutes">
-        <line x1="65" y1="66" x2="63" y2="464" stroke="#0a1524" strokeWidth="1.4" opacity="0.5" />
-        <line x1="78" y1="66" x2="77" y2="464" stroke="#0a1524" strokeWidth="1.4" opacity="0.4" />
-        <line x1="91" y1="66" x2="91" y2="464" stroke="#0a1524" strokeWidth="1.2" opacity="0.32" />
-        <line x1="72" y1="66" x2="70" y2="464" stroke="#f0d9ae" strokeWidth="0.8" opacity="0.28" />
-        <line x1="85" y1="66" x2="84" y2="464" stroke="#f0d9ae" strokeWidth="0.8" opacity="0.34" />
-        <line x1="99" y1="66" x2="99" y2="464" stroke="#f6e2ba" strokeWidth="0.9" opacity="0.44" />
-        <line x1="107" y1="66" x2="108" y2="464" stroke="#f8e8c6" strokeWidth="0.9" opacity="0.5" />
-      </g>
-
-      {/* base — Attic: torus / scotia / torus / plinth */}
-      <rect x="46" y="470" width="76" height="12" rx="5" fill={`url(#cp-${uid})`} />
-      <rect x="52" y="482" width="64" height="8" fill="#0f1d2e" />
-      <rect x="42" y="490" width="84" height="14" rx="5" fill={`url(#cp-${uid})`} />
-      <rect x="38" y="504" width="92" height="20" fill="#0e1b2b" />
-      <line x1="38" y1="505" x2="130" y2="505" stroke="#c9a066" strokeWidth="0.9" opacity="0.4" />
-
-      {/* capital — refined neoclassical: a necking astragal, an ovolo
-          echinus that flares to a crisp abacus slab. No ornament that
-          would read as crude at this scale. */}
-      <rect x="52" y="55" width="66" height="6" rx="3" fill={`url(#cp-${uid})`} />
-      <path d="M52 56 C49 44 33 40 27 27 L143 27 C137 40 121 44 118 56 Z" fill={`url(#cp-${uid})`} />
-      <path d="M52 56 C49 44 33 40 27 27" fill="none" stroke="#f2ddb0" strokeWidth="1" opacity="0.32" />
-      <rect x="22" y="12" width="126" height="15" fill={`url(#cp-${uid})`} />
-      <line x1="22" y1="13" x2="148" y2="13" stroke="#f4e0b4" strokeWidth="1.1" opacity="0.42" />
-      <line x1="22" y1="26.5" x2="148" y2="26.5" stroke="#0a1524" strokeWidth="1" opacity="0.5" />
-
-      {/* warm wash that blooms when this column is live */}
-      <rect className="hv-pillar-lit" x="50" y="56" width="70" height="416" fill={`url(#lt-${uid})`} />
-    </svg>
-  );
-}
-
 function FourPillars() {
-  const [active, setActive] = useState<DeptKey | null>(null);
-  const templeRef = useRef<HTMLDivElement>(null);
-  const item = active ? DEPARTMENTS.find((d) => d.key === active) ?? null : null;
-
-  useEffect(() => {
-    const el = templeRef.current;
-    if (!el) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    // Without IntersectionObserver (older engines, jsdom), skip the reveal
-    // entirely so the temple stays fully visible rather than stuck hidden.
-    if (typeof IntersectionObserver === 'undefined') return;
-    el.classList.add('is-pending');
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            el.classList.remove('is-pending');
-            el.classList.add('is-raised');
-            obs.unobserve(e.target);
-          }
-        }
-      },
-      { threshold: 0.28, rootMargin: '0px 0px -60px 0px' },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  const state = (k: DeptKey) => (!active ? 'idle' : active === k ? 'on' : 'dim');
-
   return (
-    <div className="hv-temple" ref={templeRef}>
-      <div className="hv-temple-glow" aria-hidden="true" />
-
-      <div className="hv-entab" aria-hidden="true">
-        <div className="hv-entab-cornice" />
-        <div className="hv-entab-dentils" />
-        <div className="hv-entab-frieze">
-          <span className="hv-entab-word font-serif-display">Pegasus DreamScapes</span>
-        </div>
-        <div className="hv-entab-architrave" />
-      </div>
-
-      <div className="hv-temple-row" role="group" aria-label="The four departments of Pegasus DreamScapes">
-        {DEPARTMENTS.map((d, i) => (
-          <div
-            key={d.key}
-            className="hv-pillar"
-            data-state={state(d.key)}
-            style={{ ['--i' as string]: i }}
-          >
-            <div className="hv-pillar-col">
-              <PillarColumn uid={d.key} />
-            </div>
-            <button
-              type="button"
-              className="hv-pillar-label"
-              aria-pressed={active === d.key}
-              onMouseEnter={() => setActive(d.key)}
-              onMouseLeave={() => setActive((a) => (a === d.key ? null : a))}
-              onFocus={() => setActive(d.key)}
-              onBlur={() => setActive((a) => (a === d.key ? null : a))}
-              onClick={() => setActive((a) => (a === d.key ? null : d.key))}
-            >
-              <span className="hv-pillar-verb pg-label">{d.verb}</span>
-              <span className="hv-pillar-name font-serif-display">{d.name}</span>
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="hv-stylobate" aria-hidden="true">
-        <div className="hv-styl-step" />
-        <div className="hv-styl-step" />
-      </div>
-
-      <p className="hv-temple-caption" aria-live="polite">
-        {item ? (
-          <>
-            <b>{item.name}.</b> {item.line}
-          </>
-        ) : (
-          'Each department is a pillar. Hover one to see what it carries.'
-        )}
-      </p>
-    </div>
+    <ol className="hv-dept-grid">
+      {DEPARTMENTS.map((d, i) => (
+        <li key={d.key} className="hv-dept">
+          <span className="hv-dept-num font-serif-display">{String(i + 1).padStart(2, '0')}</span>
+          <span className="hv-dept-verb pg-label">{d.verb}</span>
+          <h3 className="hv-dept-name font-serif-display">{d.name}</h3>
+          <p className="hv-dept-line">{d.line}</p>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -431,11 +264,14 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
 
   return (
     <div className="hv">
-      {/* 1 · ARRIVAL — type-led editorial. The headline is the hero:
-          confident display type, generous air, one restrained code-drawn
-          geometric accent (never a stock photo). Restraint reads premium. */}
+      {/* 1 · ARRIVAL — editorial split: cream headline on the navy field at
+          left, a cinematic marble shaft glowing in from the right. Rendered
+          material, not stock — the brand's classical DNA up close. */}
       <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
-        <HeroGeometry />
+        <div className="hv-hero-marble" aria-hidden="true">
+          <img src={`${import.meta.env.BASE_URL}images/marble/shaft.webp`}
+            alt="" fetchPriority="high" decoding="async" />
+        </div>
         <div className="hv-wrap hv-hero-inner">
           <div className="hv-eyebrow-row">
             <span className="hv-rule" />
@@ -478,23 +314,27 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
         </div>
       </section>
 
-      {/* SIGNATURE · THE FOUR PILLARS — the operating company as four
-          departments, drawn as columns that carry the empire. Not one of
-          the seven governed movements (no data-hv), a visual identity beat
-          between arrival and routing. */}
+      {/* SIGNATURE · THE FOUR PILLARS — a cinematic marble capital crowns the
+          section (the classical DNA as real material); the four departments
+          rank beneath it. No data-hv: a visual identity beat, not one of the
+          seven governed movements. */}
       <section className="hv-pillars hv-grain" aria-labelledby="hv-pillars-h">
-        <div className="hv-wrap">
-          <div className="hv-pillars-head reveal">
+        <figure className="hv-pillars-band">
+          <img src={`${import.meta.env.BASE_URL}images/marble/capital.webp`}
+            alt="" loading="lazy" decoding="async" />
+          <div className="hv-pillars-band-cap hv-wrap">
             <div className="pg-label hv-eyebrow">The operating company</div>
             <h2 id="hv-pillars-h" className="hv-h2-cream font-serif-display">
               Four departments hold up the whole company.
             </h2>
-            <p className="hv-lead-dim">
-              Source it. Build it. Sell it. Hold it. Four departments run inside one company, so a
-              single opportunity can travel the whole path — first look to final outcome — without
-              being handed off to strangers.
-            </p>
           </div>
+        </figure>
+        <div className="hv-wrap">
+          <p className="hv-lead-dim hv-pillars-lead reveal">
+            Source it. Build it. Sell it. Hold it. Four departments run inside one company, so a
+            single opportunity can travel the whole path — first look to final outcome — without
+            being handed off to strangers.
+          </p>
           <FourPillars />
         </div>
       </section>

@@ -30,9 +30,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-    <!-- v5.1 homepage hero is drawn (CSS + inline SVG) — no LCP image to
-         preload. Removing the old photo preload saves ~100KB of contended
-         bandwidth on first paint (§32.9). -->
+    <!-- The v5.1 homepage hero is a cinematic marble shaft (the LCP image);
+         preload it so first paint is fast. -->
+    <link rel="preload" as="image" href="/images/marble/shaft.webp" fetchpriority="high" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
