@@ -16,8 +16,8 @@ jobs:
         run: |
           mkdir -p out
           BASE="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
-          declare -A M=( [c1]="hf_20260721_212305_65716904-c818-465c-9c92-ca7ca7d27130.png" [c2]="hf_20260721_212305_98e4d5e2-bbec-42ad-bef5-164632df139e.png" [c3]="hf_20260721_212305_be8a4ccf-9da6-4a4c-9be2-729ff7996e6e.png" [c4]="hf_20260721_212305_266b99e7-c61a-48ef-858f-32050437dc05.png" )
-          for k in c1 c2 c3 c4; do
+          declare -A M=( [shaft]="hf_20260721_213822_793e5c3b-60cc-4007-b327-5c98e157aecf.png" [capital]="hf_20260721_213824_c515b7fe-6376-4acb-bc74-989bf752214b.png" [frieze]="hf_20260721_213826_88c9806e-6c63-4db4-b61d-1d93c8c56404.png" [goldring]="hf_20260721_213829_95c41530-8b76-48c2-8ee3-78b7f2f4c63c.png" [texture]="hf_20260721_213831_eff25416-01a5-4cd7-b0f1-c567a0ec842f.png" )
+          for k in shaft capital frieze goldring texture; do
             curl -fsSL -o "out/$k.png" "$BASE/${M[$k]}"
             cwebp -q 88 "out/$k.png" -o "out/$k.webp"
           done
@@ -26,9 +26,9 @@ jobs:
         run: |
           git config user.name "pegasus-ci"
           git config user.email "ci@pegasusdreamscapes.com"
-          git checkout -b ci/pillar-renders-v2
-          mkdir -p docs/design/pillars-renders-v2
-          cp out/*.webp docs/design/pillars-renders-v2/
-          git add docs/design/pillars-renders-v2
-          git commit -m "chore: vendor cinematic marble render candidates v2"
-          git push -f origin ci/pillar-renders-v2
+          git checkout -b ci/site-imagery-v3
+          mkdir -p docs/design/site-imagery
+          cp out/*.webp docs/design/site-imagery/
+          git add docs/design/site-imagery
+          git commit -m "chore: vendor tailored site imagery set v3"
+          git push -f origin ci/site-imagery-v3
