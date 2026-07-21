@@ -1,6 +1,8 @@
 name: vendor-pillar-renders
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - '.github/relay-fire.txt'
 permissions:
   contents: write
 jobs:
