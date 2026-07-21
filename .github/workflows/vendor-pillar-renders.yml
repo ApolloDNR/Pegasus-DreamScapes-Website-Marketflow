@@ -1,0 +1,32 @@
+name: vendor-pillar-renders
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install webp
+        run: sudo apt-get update && sudo apt-get install -y webp
+      - name: Fetch and convert renders
+        run: |
+          mkdir -p out
+          BASE="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
+          declare -A M=( [v1]="hf_20260721_205858_88a474a2-ccd7-47c2-88a9-c5bf13043b4d.png" [v2]="hf_20260721_205858_2cbd252c-22da-4048-bf92-b19980fc7619.png" [v3]="hf_20260721_205858_e55ee146-2def-472c-957b-75cfdf4c1bf1.png" [v4]="hf_20260721_205858_9e90b5cc-49f7-4325-b403-dfb8c761fd88.png" )
+          for k in v1 v2 v3 v4; do
+            curl -fsSL -o "out/$k.png" "$BASE/${M[$k]}"
+            cwebp -q 86 "out/$k.png" -o "out/$k.webp"
+          done
+          ls -la out
+      - name: Commit to ci branch
+        run: |
+          git config user.name "pegasus-ci"
+          git config user.email "ci@pegasusdreamscapes.com"
+          git checkout -b ci/pillar-renders
+          mkdir -p docs/design/pillars-renders
+          cp out/*.webp docs/design/pillars-renders/
+          git add docs/design/pillars-renders
+          git commit -m "chore: vendor pillar render candidates (webp) for review"
+          git push -f origin ci/pillar-renders
