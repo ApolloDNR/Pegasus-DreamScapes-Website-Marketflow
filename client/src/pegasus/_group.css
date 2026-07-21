@@ -2854,18 +2854,78 @@ select.pg-field option { color: #1b1712; }
    Runs once on load; transform/opacity only; timed so the headline is
    fully painted well inside the LCP budget. */
 @media (prefers-reduced-motion: no-preference) {
-  .hv-hero .hv-rule { transform-origin: left; animation: hv-rule-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) both; }
-  .hv-hero .hv-eyebrow { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .06s both; }
-  .hv-hero .hv-h1 { animation: hv-rise-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .1s both; }
-  .hv-hero .hv-lead { animation: hv-rise-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .2s both; }
-  .hv-hero .hv-cta-row { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .32s both; }
-  .hv-hero .hv-hero-meta { animation: hv-fade-in .7s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .5s both; }
-  .hv-hero .hv-hero-art-wrap { animation: hv-bloom-in 1.1s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .05s both; }
+  .hv-hero .hv-eyebrow-row { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .06s both; }
+  .hv-hero .hv-h1 { animation: hv-rise-in .7s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .12s both; }
+  .hv-hero .hv-lead { animation: hv-rise-in .6s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .26s both; }
+  .hv-hero .hv-cta-row { animation: hv-rise-in .55s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .38s both; }
+  .hv-hero .hv-hero-facts { animation: hv-fade-in .8s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .55s both; }
+  .hv-hero .hv-hero-geo { animation: hv-fade-in 1.4s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .2s both; }
+  /* the arch draws itself once, quietly */
+  .hv-hero .hv-hero-geo-lines path { stroke-dasharray: 1400; stroke-dashoffset: 1400;
+    animation: hv-geo-draw 2.4s var(--ease-smooth, cubic-bezier(.16,1,.3,1)) .35s forwards; }
 }
+@keyframes hv-geo-draw { to { stroke-dashoffset: 0; } }
 @keyframes hv-rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes hv-rule-in { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
 @keyframes hv-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes hv-bloom-in { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: none; } }
+
+/* ======================================================================
+   Editorial, type-led hero. No photograph — the headline carries it, on a
+   deep navy field with a warm glow, film grain, and one whisper-quiet
+   code-drawn geometric accent. Restraint is the luxury signal.
+   ====================================================================== */
+.hv-hero-editorial { min-height: 100svh; }
+.hv-hero-editorial .hv-hero-inner { position: relative; z-index: 3;
+  padding-top: 8.5rem; padding-bottom: 6rem; max-width: 66rem; }
+
+/* eyebrow: a short rule then the kicker, on one refined line */
+.hv-eyebrow-row { display: flex; align-items: center; gap: 1.05rem; margin-bottom: 2.1rem; }
+.hv-eyebrow-row .hv-rule { width: 46px; height: 1px; margin: 0; flex: 0 0 auto;
+  background: linear-gradient(90deg, var(--hv-copper), rgba(200,122,58,.15)); }
+.hv-hero-editorial .hv-eyebrow { font-size: .72rem; letter-spacing: .26em; }
+
+/* the headline is the hero: large, tight, confident; one italic phrase */
+.hv-hero-editorial .hv-h1 { font-size: clamp(3rem, 6.7vw, 5.6rem); line-height: 1.0;
+  letter-spacing: -0.018em; max-width: 26ch; margin: 0; font-weight: 500; color: var(--hv-cream); }
+.hv-hero-editorial .hv-h1 em { font-style: italic; font-weight: 500;
+  color: color-mix(in srgb, var(--hv-cream) 82%, var(--hv-brass)); }
+.hv-h1-break { display: block; }
+
+.hv-hero-editorial .hv-lead { max-width: 44ch; font-size: 1.16rem; line-height: 1.62;
+  margin-top: 2.1rem; color: rgba(245,230,211,.76); }
+.hv-hero-editorial .hv-cta-row { margin-top: 2.9rem; }
+
+/* editorial proof rail: serif label + fine caption, hairline dividers */
+.hv-hero-facts { display: flex; flex-wrap: wrap; margin-top: 3.4rem;
+  border-top: 1px solid rgba(245,230,211,.16); padding-top: 1.5rem; }
+.hv-hero-facts > div { flex: 0 1 auto; padding-right: 2.4rem; margin-right: 2.4rem;
+  border-right: 1px solid rgba(245,230,211,.13); }
+.hv-hero-facts > div:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+.hv-hero-facts dt { font-family: var(--pg-font-display); font-size: 1.28rem; line-height: 1.1;
+  color: var(--hv-cream); }
+.hv-hero-facts dd { margin: .45rem 0 0; font-size: .82rem; line-height: 1.5;
+  color: rgba(245,230,211,.58); max-width: 22ch; }
+
+/* the geometric accent: far right, whisper-low, faded into the field */
+.hv-hero-geo { position: absolute; top: 0; right: 0; z-index: 1; height: 100%; width: 60%;
+  pointer-events: none; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 46%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 46%, #000 88%, transparent 100%); }
+.hv-hero-geo svg { position: absolute; right: -8%; top: 0; height: 100%; width: 116%; }
+.hv-hero-geo-lines { stroke: var(--hv-brass); stroke-width: 1; opacity: .15;
+  fill: none; vector-effect: non-scaling-stroke; }
+
+@media (max-width: 900px) {
+  .hv-hero-editorial .hv-hero-inner { padding-top: 8rem; padding-bottom: 4.5rem; }
+  .hv-hero-geo { width: 78%; opacity: .7; }
+  .hv-h1-break { display: none; }
+  .hv-hero-editorial .hv-h1 { max-width: 15ch; }
+  .hv-hero-facts { gap: 1.1rem 0; }
+  .hv-hero-facts > div { flex: 1 0 100%; padding: 1rem 0 0; margin: 0;
+    border-right: 0; border-top: 1px solid rgba(245,230,211,.1); }
+  .hv-hero-facts > div:first-child { border-top: 0; padding-top: 0; }
+}
 
 /* The masterpiece hero art (painted nocturne, graded to brand navy).
    The wash seats the painting into the field so the headline sits on

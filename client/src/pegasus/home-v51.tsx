@@ -228,33 +228,51 @@ function OpportunityPlan() {
 
 /* ── The page ── */
 
+/* A restrained, code-drawn geometric accent for the editorial hero — an
+   abstract nod to classical structure (a single arch, sparse plumb lines,
+   a datum) in fine brass hairlines. It is texture, not a picture: it sits
+   far right, whisper-low in opacity, and fades into the field. */
+function HeroGeometry() {
+  return (
+    <div className="hv-hero-geo" aria-hidden="true">
+      <svg viewBox="0 0 760 900" fill="none" preserveAspectRatio="xMidYMid slice">
+        <g className="hv-hero-geo-lines">
+          {/* plumb lines */}
+          <line x1="130" y1="0" x2="130" y2="900" />
+          <line x1="380" y1="0" x2="380" y2="900" />
+          <line x1="630" y1="0" x2="630" y2="900" />
+          {/* the arch, struck about the centre plumb */}
+          <path d="M214 900 V300 A166 166 0 0 1 546 300 V900" />
+          {/* datum + a fine cornice pair */}
+          <line x1="0" y1="806" x2="760" y2="806" />
+          <line x1="150" y1="150" x2="610" y2="150" />
+          {/* a large surveyor's circle, part off-frame */}
+          <circle cx="600" cy="300" r="250" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
   const [, setLocation] = useLocation();
   const toIntake = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity'); };
 
   return (
     <div className="hv">
-      {/* 1 · ARRIVAL */}
-      <section className="hv-hero hv-grain" data-hv="arrival">
-        {/* Warm Mediterranean classical loggia, reacting to the theme:
-            the sunlit DAY plate in light mode, the golden-dusk plate in
-            dark mode, cross-fading on toggle (owner reference boards).
-            ColonnadeArt stays exported as the reduced-bandwidth fallback. */}
-        <div className="hv-hero-art-wrap" aria-hidden="true">
-          <img className="hv-hero-art hv-hero-art-day" src={`${import.meta.env.BASE_URL}images/hero/hero-day.webp`}
-            srcSet={`${import.meta.env.BASE_URL}images/hero/hero-day-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/hero-day.webp 2000w`}
-            sizes="(max-width: 900px) 100vw, 72vw"
-            alt="" fetchPriority="high" decoding="async" />
-          <img className="hv-hero-art hv-hero-art-night" src={`${import.meta.env.BASE_URL}images/hero/hero-night.webp`}
-            srcSet={`${import.meta.env.BASE_URL}images/hero/hero-night-m.webp 1080w, ${import.meta.env.BASE_URL}images/hero/hero-night.webp 2000w`}
-            sizes="(max-width: 900px) 100vw, 72vw"
-            alt="" fetchPriority="high" decoding="async" />
-          <div className="hv-hero-art-wash" />
-        </div>
+      {/* 1 · ARRIVAL — type-led editorial. The headline is the hero:
+          confident display type, generous air, one restrained code-drawn
+          geometric accent (never a stock photo). Restraint reads premium. */}
+      <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
+        <HeroGeometry />
         <div className="hv-wrap hv-hero-inner">
-          <div className="hv-rule" />
-          <div className="pg-label hv-eyebrow">Real estate operating company &middot; Contra Costa &amp; Alameda</div>
-          <h1 className="hv-h1 font-serif-display">Complex real estate, made executable.</h1>
+          <div className="hv-eyebrow-row">
+            <span className="hv-rule" />
+            <span className="pg-label hv-eyebrow">Real estate operating company &middot; Contra Costa &amp; Alameda</span>
+          </div>
+          <h1 className="hv-h1 font-serif-display">
+            {"Complex real estate, "}<br className="hv-h1-break" /><em>made executable.</em>
+          </h1>
           <p className="hv-lead">
             Pegasus DreamScapes originates, structures, and operates opportunities that require more
             than a conventional path. We start with the property, the people, and the economics, then
@@ -272,11 +290,20 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
               Open Strategy Lab
             </button>
           </div>
-        </div>
-        <div className="hv-wrap hv-hero-meta">
-          <div><b>Founder-led.</b> Sourced, built, and sold in-house.</div>
-          <div><b>Nelson Drive.</b> A 3/2 rebuilt into a 4/3.</div>
-          <div><b>East Bay.</b> Contra Costa &amp; Alameda County.</div>
+          <dl className="hv-hero-facts">
+            <div>
+              <dt>Founder-led</dt>
+              <dd>Sourced, built, and sold in-house.</dd>
+            </div>
+            <div>
+              <dt>Nelson Drive</dt>
+              <dd>A 3/2 rebuilt into a 4/3.</dd>
+            </div>
+            <div>
+              <dt>East Bay</dt>
+              <dd>Contra Costa &amp; Alameda County.</dd>
+            </div>
+          </dl>
         </div>
       </section>
 
