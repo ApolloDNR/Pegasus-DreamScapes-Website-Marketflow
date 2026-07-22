@@ -78,17 +78,16 @@ function renderHome() {
 
 afterEach(() => cleanup());
 
-describe("Homepage v5.1 contract (Master Blueprint §7/§32.1)", () => {
-  it("locks the Arrival promise and the three hero actions", () => {
+describe("Homepage premium editorial contract", () => {
+  it("locks the Arrival promise and focused hero actions", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
     expect(text).toContain("Complex real estate, made executable.");
     expect(text).toContain(
-      "originates, structures, and operates opportunities that require more",
+      "reads the property, the people, and the economics",
     );
     expect(text).toContain("Bring an Opportunity");
     expect(text).toContain("See How Pegasus Operates");
-    expect(text).toContain("Open Strategy Lab");
     // §31: the primary CTA is a real link to the canonical intake URL.
     const primary = Array.from(container.querySelectorAll("a")).find((a) =>
       a.textContent?.includes("Bring an Opportunity"),

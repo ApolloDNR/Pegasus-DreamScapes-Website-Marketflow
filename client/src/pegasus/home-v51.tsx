@@ -228,39 +228,9 @@ function OpportunityPlan() {
 
 /* ── The page ── */
 
-/* ── The Four Pillars ──────────────────────────────────────────────
-   The operating company as four departments — Acquisitions, Development,
-   Dispositions, Asset Management (source · build · sell · hold). Presented
-   as an editorial rank beneath a cinematic marble capital (the brand's
-   classical DNA, rendered as real material, not a diagram). */
-
-type DeptKey = 'acq' | 'dev' | 'dis' | 'am';
-
-const DEPARTMENTS: { key: DeptKey; name: string; verb: string; line: string }[] = [
-  { key: 'acq', name: 'Acquisitions', verb: 'Source', line: 'We find and secure the opportunity — the overlooked, the complicated, the one that stalled.' },
-  { key: 'dev', name: 'Development', verb: 'Build', line: 'We scope, permit, and build it with our own crew. We own the work, so we own the result.' },
-  { key: 'dis', name: 'Dispositions', verb: 'Sell', line: 'We position and place the finished home — our list, our lane, or the right buyer for it.' },
-  { key: 'am', name: 'Asset Management', verb: 'Hold', line: 'When the plan is to keep it, we stabilize, operate, and manage it for the long term.' },
-];
-
-function FourPillars() {
-  return (
-    <ol className="hv-dept-grid">
-      {DEPARTMENTS.map((d, i) => (
-        <li key={d.key} className="hv-dept">
-          <span className="hv-dept-num font-serif-display">{String(i + 1).padStart(2, '0')}</span>
-          <span className="hv-dept-verb pg-label">{d.verb}</span>
-          <h3 className="hv-dept-name font-serif-display">{d.name}</h3>
-          <p className="hv-dept-line">{d.line}</p>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 /* Engraved brass line-marks for the hero stat rail (classical, not app-generic):
-   a temple front, an olive sprig, a laurel wreath, a compass rose. */
-function StatIcon({ name }: { name: 'temple' | 'sprig' | 'wreath' | 'compass' }) {
+   a temple front, an olive sprig, and a compass rose. */
+function StatIcon({ name }: { name: 'temple' | 'sprig' | 'compass' }) {
   const p = {
     width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
     strokeWidth: 1.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
@@ -285,16 +255,6 @@ function StatIcon({ name }: { name: 'temple' | 'sprig' | 'wreath' | 'compass' })
       </svg>
     );
   }
-  if (name === 'wreath') {
-    return (
-      <svg {...p}>
-        <path d="M9 20.5c-3.2-1.4-5-4.6-5-8.3S5.8 5.3 9 3.9" />
-        <path d="M15 20.5c3.2-1.4 5-4.6 5-8.3S18.2 5.3 15 3.9" />
-        <path d="M7 8.5c-.9.5-1.5 1.5-1.6 2.7M6.6 12.5c-.9.5-1.5 1.5-1.6 2.7M17 8.5c.9.5 1.5 1.5 1.6 2.7M17.4 12.5c.9.5 1.5 1.5 1.6 2.7" />
-        <path d="M12 21.5v-3.2" />
-      </svg>
-    );
-  }
   return (
     <svg {...p}>
       <circle cx="12" cy="12" r="9" />
@@ -316,21 +276,20 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
       <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
         <div className="hv-hero-top">
           <div className="hv-hero-marble" aria-hidden="true">
-            <img src={`${import.meta.env.BASE_URL}images/hero/bay.webp`}
+            <img src={`${import.meta.env.BASE_URL}images/hero/pegasus-v6-arrival.webp`}
               alt="" loading="eager" decoding="async" />
           </div>
           <div className="hv-wrap hv-hero-inner">
           <div className="hv-eyebrow-row">
             <span className="hv-rule" />
-            <span className="pg-label hv-eyebrow">Real estate operating company<br />Contra Costa &amp; Alameda</span>
+            <span className="pg-label hv-eyebrow">Real estate operating company &middot; East Bay, California</span>
           </div>
           <h1 className="hv-h1 font-serif-display">
             {"Complex real estate, "}<br className="hv-h1-break" /><em>made executable.</em>
           </h1>
           <p className="hv-lead">
-            Pegasus Dreamscapes originates, structures, and operates opportunities that require more
-            than a conventional path. We start with the property, the people, and the economics, then
-            determine the role, strategy, and structure that move it toward a controlled outcome.
+            Pegasus Dreamscapes reads the property, the people, and the economics, then structures the
+            role and route that can move a complex opportunity forward.
           </p>
           <div className="hv-cta-row">
             <a href="/bring-an-opportunity" onClick={toIntake}
@@ -339,9 +298,6 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
             </a>
             <button type="button" onClick={() => go('dealstrategy')} className="hv-hero-link">
               See How Pegasus Operates
-            </button>
-            <button type="button" onClick={() => go('strategylab')} className="hv-hero-link">
-              Open Strategy Lab
             </button>
           </div>
           </div>
@@ -352,56 +308,24 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
               <span className="hv-fact-ic"><StatIcon name="temple" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Founder-led</span>
-                <span className="hv-fact-v">Sourced, built, and sold in-house.</span>
+                <span className="hv-fact-v">One accountable operating picture.</span>
               </span>
             </li>
             <li className="hv-fact">
               <span className="hv-fact-ic"><StatIcon name="sprig" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Nelson Drive</span>
-                <span className="hv-fact-v">A 3/2 rebuilt into a 4/3.</span>
-              </span>
-            </li>
-            <li className="hv-fact">
-              <span className="hv-fact-ic"><StatIcon name="wreath" /></span>
-              <span className="hv-fact-txt">
-                <span className="hv-fact-k font-serif-display">East Bay</span>
-                <span className="hv-fact-v">Contra Costa &amp; Alameda County.</span>
+                <span className="hv-fact-v">Documented 3/2 to 4/3 transformation.</span>
               </span>
             </li>
             <li className="hv-fact">
               <span className="hv-fact-ic"><StatIcon name="compass" /></span>
               <span className="hv-fact-txt">
-                <span className="hv-fact-k font-serif-display">Strategy First</span>
-                <span className="hv-fact-v">We structure the route. You own the outcome.</span>
+                <span className="hv-fact-k font-serif-display">Strategy first</span>
+                <span className="hv-fact-v">Structure the route before the outcome.</span>
               </span>
             </li>
           </ul>
-        </div>
-      </section>
-
-      {/* SIGNATURE · THE FOUR PILLARS — a cinematic marble capital crowns the
-          section (the classical DNA as real material); the four departments
-          rank beneath it. No data-hv: a visual identity beat, not one of the
-          seven governed movements. */}
-      <section className="hv-pillars hv-grain" aria-labelledby="hv-pillars-h">
-        <figure className="hv-pillars-band">
-          <img src={`${import.meta.env.BASE_URL}images/marble/capital.webp`}
-            alt="" loading="lazy" decoding="async" />
-          <div className="hv-pillars-band-cap hv-wrap">
-            <div className="pg-label hv-eyebrow">The operating company</div>
-            <h2 id="hv-pillars-h" className="hv-h2-cream font-serif-display">
-              Four departments hold up the whole company.
-            </h2>
-          </div>
-        </figure>
-        <div className="hv-wrap">
-          <p className="hv-lead-dim hv-pillars-lead reveal">
-            Source it. Build it. Sell it. Hold it. Four departments run inside one company, so a
-            single opportunity can travel the whole path — first look to final outcome — without
-            being handed off to strangers.
-          </p>
-          <FourPillars />
         </div>
       </section>
 
@@ -410,11 +334,12 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
         <div className="hv-wrap">
           <div className="hv-router-head reveal">
             <div>
-              <div className="pg-label hv-eyebrow-copper">Start here</div>
+              <div className="pg-label hv-eyebrow-copper">Start with what you have</div>
               <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
             </div>
             <p className="hv-muted">
-              Tell us where you are starting. We point you to the right path, and we remember it as you go.
+              The first question is not which service to buy. It is what you have, what is missing,
+              and what a controlled next step should look like.
             </p>
           </div>
           {([
