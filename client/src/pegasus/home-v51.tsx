@@ -314,14 +314,15 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
           golden hour on the right (the brand's classical DNA meeting the
           real market). Rendered, not stock. */}
       <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
-        <div className="hv-hero-marble" aria-hidden="true">
-          <img src={`${import.meta.env.BASE_URL}images/hero/bay.webp`}
-            alt="" fetchPriority="high" decoding="async" />
-        </div>
-        <div className="hv-wrap hv-hero-inner">
+        <div className="hv-hero-top">
+          <div className="hv-hero-marble" aria-hidden="true">
+            <img src={`${import.meta.env.BASE_URL}images/hero/bay.webp`}
+              alt="" fetchPriority="high" decoding="async" />
+          </div>
+          <div className="hv-wrap hv-hero-inner">
           <div className="hv-eyebrow-row">
             <span className="hv-rule" />
-            <span className="pg-label hv-eyebrow">Real estate operating company &middot; Contra Costa &amp; Alameda</span>
+            <span className="pg-label hv-eyebrow">Real estate operating company<br />Contra Costa &amp; Alameda</span>
           </div>
           <h1 className="hv-h1 font-serif-display">
             {"Complex real estate, "}<br className="hv-h1-break" /><em>made executable.</em>
@@ -343,7 +344,10 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
               Open Strategy Lab
             </button>
           </div>
-          <ul className="hv-hero-facts">
+          </div>
+        </div>
+        <div className="hv-hero-statbar">
+          <ul className="hv-wrap hv-hero-facts">
             <li className="hv-fact">
               <span className="hv-fact-ic"><StatIcon name="temple" /></span>
               <span className="hv-fact-txt">
