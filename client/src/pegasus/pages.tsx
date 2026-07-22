@@ -785,7 +785,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
       <PageHero eyebrow="About the Firm"
         title={<>Why Pegasus <span className="italic text-[var(--accent-bright)]">exists.</span></>}
         image={IMG('nelson/curb.webp')}
-        lead="Complex properties usually fail because the pieces live in different hands: the read, the money, the build, the sale. Pegasus DreamScapes was built to hold them together, one accountable operator carrying a deal from first look to final outcome." />
+        lead="Complex properties usually fail because the pieces live in different hands: the read, the money, the build, the sale. Pegasus Dreamscapes was built to hold them together, one accountable operator carrying a deal from first look to final outcome." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">

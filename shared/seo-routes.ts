@@ -25,7 +25,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   // Master Blueprint v5.1 — homepage promise + copy-deck meta (supersedes
   // issue #22 §12).
   "/": {
-    title: "Pegasus DreamScapes — Complex Real Estate, Made Executable",
+    title: "Pegasus Dreamscapes — Complex Real Estate, Made Executable",
     description:
       "A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward.",
     image: `${SITE_URL}/og/home.png`,

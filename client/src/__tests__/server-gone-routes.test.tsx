@@ -91,7 +91,7 @@ describe("Server GONE_ROUTES answer 410 Gone over HTTP (Task #219)", () => {
   let baseUrl = "";
 
   const gonePage = (p: string) =>
-    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus DreamScapes</title><meta name="robots" content="noindex"></head><body><h1>This page has been retired.</h1><p><code>${p}</code></p></body></html>`;
+    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus Dreamscapes</title><meta name="robots" content="noindex"></head><body><h1>This page has been retired.</h1><p><code>${p}</code></p></body></html>`;
 
   beforeAll(async () => {
     const app = express();

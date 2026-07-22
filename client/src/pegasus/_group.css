@@ -2600,13 +2600,9 @@ select.pg-field option { color: #1b1712; }
   .peggy-fab { right: 16px; bottom: 16px; }
   .peggy-panel { right: 16px; bottom: 84px; }
   .pg-cookie-visible .peggy-fab {
-    bottom: 90px;
-    width: 54px;
-    padding: 0;
-    justify-content: center;
+    display: none;
   }
-  .pg-cookie-visible .peggy-fab .peggy-fab-label { display: none; }
-  .pg-cookie-visible .peggy-panel { bottom: 180px; }
+  .pg-cookie-visible .peggy-panel { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

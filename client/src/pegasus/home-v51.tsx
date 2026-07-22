@@ -317,7 +317,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
         <div className="hv-hero-top">
           <div className="hv-hero-marble" aria-hidden="true">
             <img src={`${import.meta.env.BASE_URL}images/hero/bay.webp`}
-              alt="" fetchPriority="high" decoding="async" />
+              alt="" loading="eager" decoding="async" />
           </div>
           <div className="hv-wrap hv-hero-inner">
           <div className="hv-eyebrow-row">
@@ -328,7 +328,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
             {"Complex real estate, "}<br className="hv-h1-break" /><em>made executable.</em>
           </h1>
           <p className="hv-lead">
-            Pegasus DreamScapes originates, structures, and operates opportunities that require more
+            Pegasus Dreamscapes originates, structures, and operates opportunities that require more
             than a conventional path. We start with the property, the people, and the economics, then
             determine the role, strategy, and structure that move it toward a controlled outcome.
           </p>
@@ -373,7 +373,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
               <span className="hv-fact-ic"><StatIcon name="compass" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Strategy First</span>
-                <span className="hv-fact-v">We architect the route. You own the outcome.</span>
+                <span className="hv-fact-v">We structure the route. You own the outcome.</span>
               </span>
             </li>
           </ul>
@@ -559,7 +559,7 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
       <section className="hv-founder hv-pad-lg" data-hv="founder">
         <div className="hv-wrap hv-founder-grid reveal">
           <figure className="hv-founder-photo">
-            <img src="/images/founder/apollo.webp" alt="Paolo 'Apollo' Duran, founder of Pegasus DreamScapes" loading="lazy" />
+            <img src="/images/founder/apollo.webp" alt="Paolo 'Apollo' Duran, founder of Pegasus Dreamscapes" loading="lazy" />
           </figure>
           <div>
             <div className="pg-label hv-eyebrow-copper">Founder-led</div>
