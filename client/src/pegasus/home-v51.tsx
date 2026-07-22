@@ -258,18 +258,64 @@ function FourPillars() {
   );
 }
 
+/* Engraved brass line-marks for the hero stat rail (classical, not app-generic):
+   a temple front, an olive sprig, a laurel wreath, a compass rose. */
+function StatIcon({ name }: { name: 'temple' | 'sprig' | 'wreath' | 'compass' }) {
+  const p = {
+    width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    strokeWidth: 1.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+  if (name === 'temple') {
+    return (
+      <svg {...p}>
+        <path d="M12 3 3.5 7.5h17L12 3Z" />
+        <path d="M5 8v9M9 8v9M15 8v9M19 8v9" />
+        <path d="M3.5 20.5h17M4.5 17.5h15" />
+      </svg>
+    );
+  }
+  if (name === 'sprig') {
+    return (
+      <svg {...p}>
+        <path d="M12 21V8" />
+        <path d="M12 13c-1.6 0-4-.7-4-3.6 2.5 0 4 1.5 4 3.6Z" />
+        <path d="M12 10.5c0-2.1 1.7-4 4.2-4 .2 2.7-1.6 4-4.2 4Z" />
+        <path d="M12 16.5c-1.4 0-3.2-.5-3.2-2.7 1.8 0 3.2 1 3.2 2.7Z" />
+      </svg>
+    );
+  }
+  if (name === 'wreath') {
+    return (
+      <svg {...p}>
+        <path d="M9 20.5c-3.2-1.4-5-4.6-5-8.3S5.8 5.3 9 3.9" />
+        <path d="M15 20.5c3.2-1.4 5-4.6 5-8.3S18.2 5.3 15 3.9" />
+        <path d="M7 8.5c-.9.5-1.5 1.5-1.6 2.7M6.6 12.5c-.9.5-1.5 1.5-1.6 2.7M17 8.5c.9.5 1.5 1.5 1.6 2.7M17.4 12.5c.9.5 1.5 1.5 1.6 2.7" />
+        <path d="M12 21.5v-3.2" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z" />
+    </svg>
+  );
+}
+
 export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
   const [, setLocation] = useLocation();
   const toIntake = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity'); };
 
   return (
     <div className="hv">
-      {/* 1 · ARRIVAL — editorial split: cream headline on the navy field at
-          left, a cinematic marble shaft glowing in from the right. Rendered
-          material, not stock — the brand's classical DNA up close. */}
+      {/* 1 · ARRIVAL — cinematic split: cream headline on the navy field at
+          left; a classical marble terrace opening onto the East Bay at
+          golden hour on the right (the brand's classical DNA meeting the
+          real market). Rendered, not stock. */}
       <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
         <div className="hv-hero-marble" aria-hidden="true">
-          <img src={`${import.meta.env.BASE_URL}images/marble/shaft.webp`}
+          <img src={`${import.meta.env.BASE_URL}images/hero/bay.webp`}
             alt="" fetchPriority="high" decoding="async" />
         </div>
         <div className="hv-wrap hv-hero-inner">
@@ -297,20 +343,36 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
               Open Strategy Lab
             </button>
           </div>
-          <dl className="hv-hero-facts">
-            <div>
-              <dt>Founder-led</dt>
-              <dd>Sourced, built, and sold in-house.</dd>
-            </div>
-            <div>
-              <dt>Nelson Drive</dt>
-              <dd>A 3/2 rebuilt into a 4/3.</dd>
-            </div>
-            <div>
-              <dt>East Bay</dt>
-              <dd>Contra Costa &amp; Alameda County.</dd>
-            </div>
-          </dl>
+          <ul className="hv-hero-facts">
+            <li className="hv-fact">
+              <span className="hv-fact-ic"><StatIcon name="temple" /></span>
+              <span className="hv-fact-txt">
+                <span className="hv-fact-k font-serif-display">Founder-led</span>
+                <span className="hv-fact-v">Sourced, built, and sold in-house.</span>
+              </span>
+            </li>
+            <li className="hv-fact">
+              <span className="hv-fact-ic"><StatIcon name="sprig" /></span>
+              <span className="hv-fact-txt">
+                <span className="hv-fact-k font-serif-display">Nelson Drive</span>
+                <span className="hv-fact-v">A 3/2 rebuilt into a 4/3.</span>
+              </span>
+            </li>
+            <li className="hv-fact">
+              <span className="hv-fact-ic"><StatIcon name="wreath" /></span>
+              <span className="hv-fact-txt">
+                <span className="hv-fact-k font-serif-display">East Bay</span>
+                <span className="hv-fact-v">Contra Costa &amp; Alameda County.</span>
+              </span>
+            </li>
+            <li className="hv-fact">
+              <span className="hv-fact-ic"><StatIcon name="compass" /></span>
+              <span className="hv-fact-txt">
+                <span className="hv-fact-k font-serif-display">Strategy First</span>
+                <span className="hv-fact-v">We architect the route. You own the outcome.</span>
+              </span>
+            </li>
+          </ul>
         </div>
       </section>
 
