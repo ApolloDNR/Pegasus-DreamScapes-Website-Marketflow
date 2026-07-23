@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, afterEach } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -91,11 +91,20 @@ describe("Every PEGASUS_URLS route renders real content, never a blank shell (Ta
   });
 
   for (const url of PEGASUS_URLS) {
-    it(`${url} resolves to a rendered page branch with visible content`, () => {
+    it(`${url} resolves to a rendered page branch with visible content`, async () => {
       const { container } = renderShell(url);
 
       const main = container.querySelector("main");
       expect(main, `${url}: prototype shell rendered no <main> landmark`).toBeTruthy();
+
+      // Non-home Pegasus pages are route-level lazy chunks. Wait through the
+      // shared PageLoader fallback before asserting the substantive page body.
+      await waitFor(() => {
+        expect(
+          main!.querySelector("h1, h2"),
+          `${url} (route '${routeForUrl(url)}') never resolved past PageLoader`,
+        ).toBeTruthy();
+      });
 
       // A blank shell renders <main> with no element children. A real page
       // mounts a substantial subtree.

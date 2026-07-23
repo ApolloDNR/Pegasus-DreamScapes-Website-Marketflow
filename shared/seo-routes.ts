@@ -80,7 +80,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/our-work": {
     title: tag("Our Work — Nelson Drive"),
     description:
-      "A tired 3/2 ranch in El Sobrante, taken down to the studs and rebuilt in-house into a 4/3 — acquired $600K, built for $105K, sold $840K. Real photos, real numbers.",
+      "A tired 3/2 ranch in El Sobrante, taken down to the studs and coordinated into a 4/3 — acquired $600K, renovated for $105K, sold $840K.",
     image: `${SITE_URL}/og/case-study.png`,
   },
   "/investments": {
@@ -92,7 +92,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/development": {
     title: tag("Development"),
     description:
-      "Our development team scopes every renovation and ground-up build to a real budget and draw schedule, and delivers finished, on time.",
+      "Pegasus scopes renovations and ground-up builds to a real budget and draw schedule, then coordinates the right licensed project team.",
     image: `${SITE_URL}/og/development.png`,
   },
   "/strategy-lab": {
@@ -104,7 +104,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/marketflow": {
     title: tag("MarketFlow"),
     description:
-      "The private deal network: three lanes that move deals, match capital to projects, and place finished inventory, each verified end to end.",
+      "MarketFlow is Pegasus's private opportunity-distribution network in a controlled pilot. Access is reviewed by a person, and no live deal inventory is published publicly.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/marketflow/access": {
@@ -116,7 +116,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/marketflow/buyboxes": {
     title: tag("Pegasus Buyboxes"),
     description:
-      "Four named Pegasus Buyboxes with target geographies, deal types, and underwriting bands. Request a notification when a fit shows up.",
+      "3 public buybox profiles are available in MarketFlow's controlled pilot. Each outlines target geography, deal type, and review criteria.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/ecosystem": {
@@ -167,7 +167,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/contact": {
     title: tag("Contact"),
     description:
-      "Tell us about the property or the situation and get a clear, written read from our team. Reach Pegasus Dreamscapes in the East Bay.",
+      "Tell us about the property or situation and get a clear, written read from Pegasus. Reach the founder-led East Bay operating company directly.",
     image: `${SITE_URL}/og/contact.png`,
   },
   "/submit": {

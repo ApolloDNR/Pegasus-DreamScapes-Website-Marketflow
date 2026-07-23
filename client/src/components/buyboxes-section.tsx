@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackCtaClick } from "@/lib/analytics";
-import { BUYBOXES, BUYBOX_DISCLOSURE, type Buybox } from "@/config/buyboxes";
+import { PUBLIC_BUYBOXES, BUYBOX_DISCLOSURE, type Buybox } from "@/config/buyboxes";
 import { CheckCircle2, MapPin, Target } from "lucide-react";
 
 function BuyboxCard({ buybox }: { buybox: Buybox }) {
@@ -123,7 +123,7 @@ export function BuyboxesSection() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-5" data-testid="buyboxes-grid">
-          {BUYBOXES.filter((b) => b.publicReady !== false).map((b) => (
+          {PUBLIC_BUYBOXES.map((b) => (
             <BuyboxCard key={b.id} buybox={b} />
           ))}
         </div>

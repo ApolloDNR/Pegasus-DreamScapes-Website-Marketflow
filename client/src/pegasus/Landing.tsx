@@ -1,25 +1,35 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import './_group.css';
 import type { Nav, Route, Theme, PeggyHandoff } from './theme';
 import { CATEGORIES } from './data';
 import { NavBar } from './nav';
 import { Peggy } from './peggy';
-import {
-  CategoryPage, InvestmentsPage, DevelopmentPage,
-  StrategyLabPage, MarketFlowPage, WorkWithApolloPage, EcosystemPage, PeggyPage,
-  AboutPage, ContactPage, CapitalPage, Footer,
-} from './pages';
+import { Footer } from './footer';
 import { HomePageV51 } from './home-v51';
-import { OurWorkPage } from './our-work';
-import { HowWeOperatePage } from './how-we-operate';
-import { PropertyOwnersPage } from './property-owners';
-import { DealPartnersPage } from './deal-partners';
-import { SavedPage } from './Saved';
 import { routeForUrl, urlFor } from './routes';
 import { useSEO } from '@/hooks/use-seo';
 import { useTheme } from '@/components/theme-provider';
+import { PageLoader } from '@/components/error-boundary';
 import { seoFor, seoNameFor } from '@shared/seo-routes';
+
+const loadPages = () => import('./pages');
+const CategoryPage = lazy(() => loadPages().then((module) => ({ default: module.CategoryPage })));
+const InvestmentsPage = lazy(() => loadPages().then((module) => ({ default: module.InvestmentsPage })));
+const DevelopmentPage = lazy(() => loadPages().then((module) => ({ default: module.DevelopmentPage })));
+const StrategyLabPage = lazy(() => loadPages().then((module) => ({ default: module.StrategyLabPage })));
+const MarketFlowPage = lazy(() => loadPages().then((module) => ({ default: module.MarketFlowPage })));
+const WorkWithApolloPage = lazy(() => loadPages().then((module) => ({ default: module.WorkWithApolloPage })));
+const EcosystemPage = lazy(() => loadPages().then((module) => ({ default: module.EcosystemPage })));
+const PeggyPage = lazy(() => loadPages().then((module) => ({ default: module.PeggyPage })));
+const AboutPageV6 = lazy(() => import('./about-v6').then((module) => ({ default: module.AboutPageV6 })));
+const ContactPage = lazy(() => loadPages().then((module) => ({ default: module.ContactPage })));
+const CapitalPage = lazy(() => loadPages().then((module) => ({ default: module.CapitalPage })));
+const OurWorkPage = lazy(() => import('./our-work').then((module) => ({ default: module.OurWorkPage })));
+const HowWeOperatePage = lazy(() => import('./how-we-operate').then((module) => ({ default: module.HowWeOperatePage })));
+const PropertyOwnersPage = lazy(() => import('./property-owners').then((module) => ({ default: module.PropertyOwnersPage })));
+const DealPartnersPage = lazy(() => import('./deal-partners').then((module) => ({ default: module.DealPartnersPage })));
+const SavedPage = lazy(() => import('./Saved').then((module) => ({ default: module.SavedPage })));
 
 export function Landing() {
   const [location, setLocation] = useLocation();
@@ -118,36 +128,40 @@ export function Landing() {
     // and silently kills position:sticky for the whole prototype — including
     // the Deal Routing Board pin. clip clips without creating a scroller.
     <div className="pg-root min-h-screen antialiased selection:bg-[var(--accent)] selection:text-white overflow-x-clip"
-      data-theme={theme === 'dark' ? 'dark' : undefined}>
+      data-theme={theme === 'dark' ? 'dark' : undefined}
+      data-scrolled={scrolled || undefined}>
       <div ref={progressRef} className="scroll-progress" />
 
-      <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} />
+      <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} openPeggy={openPeggy} />
 
       <main key={route} className="page-in">
-        {/* v5.1 homepage (seven movements). The issue-#22 HomePage stays
-            exported for reference but no longer mounts. */}
-        {route === 'home' && <HomePageV51 go={go} openPeggy={openPeggy} />}
-        {/* v5.1 §9/§10: bespoke owner + deal-partner pages replace the old
-            CategoryPage lanes at the renamed canonical URLs. */}
-        {route === 'sellers' && <PropertyOwnersPage go={go} />}
-        {route === 'buyers' && <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={openPeggy} />}
-        {route === 'dealfinders' && <DealPartnersPage go={go} />}
-        {route === 'capital' && <CapitalPage go={go} />}
-        {route === 'operators' && <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={openPeggy} />}
-        {route === 'referral' && <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={openPeggy} />}
-        {/* v5.1 §8: How We Operate is the intellectual center. */}
-        {route === 'dealstrategy' && <HowWeOperatePage go={go} />}
-        {route === 'ourwork' && <OurWorkPage go={go} />}
-        {route === 'investments' && <InvestmentsPage go={go} openPeggy={openPeggy} />}
-        {route === 'development' && <DevelopmentPage go={go} />}
-        {route === 'strategylab' && <StrategyLabPage go={go} openPeggy={openPeggy} />}
-        {route === 'marketflow' && <MarketFlowPage go={go} />}
-        {route === 'apollo' && <WorkWithApolloPage go={go} />}
-        {route === 'ecosystem' && <EcosystemPage go={go} openPeggy={openPeggy} />}
-        {route === 'about' && <AboutPage go={go} openPeggy={openPeggy} />}
-        {route === 'contact' && <ContactPage handoff={peggyHandoff} />}
-        {route === 'peggy' && <PeggyPage go={go} openPeggy={openPeggy} />}
-        {route === 'saved' && <SavedPage go={go} />}
+        <Suspense fallback={<PageLoader />}>
+          {/* v5.1 homepage (seven movements). The issue-#22 HomePage stays
+              exported for reference but no longer mounts. The homepage remains
+              synchronous; non-home public pages load only when their route is active. */}
+          {route === 'home' && <HomePageV51 go={go} openPeggy={openPeggy} />}
+          {/* v5.1 §9/§10: bespoke owner + deal-partner pages replace the old
+              CategoryPage lanes at the renamed canonical URLs. */}
+          {route === 'sellers' && <PropertyOwnersPage go={go} />}
+          {route === 'buyers' && <CategoryPage cat={CATEGORIES.buyers} go={go} openPeggy={openPeggy} />}
+          {route === 'dealfinders' && <DealPartnersPage go={go} />}
+          {route === 'capital' && <CapitalPage go={go} />}
+          {route === 'operators' && <CategoryPage cat={CATEGORIES.operators} go={go} openPeggy={openPeggy} />}
+          {route === 'referral' && <CategoryPage cat={CATEGORIES.referral} go={go} openPeggy={openPeggy} />}
+          {/* v5.1 §8: How We Operate is the intellectual center. */}
+          {route === 'dealstrategy' && <HowWeOperatePage go={go} />}
+          {route === 'ourwork' && <OurWorkPage go={go} />}
+          {route === 'investments' && <InvestmentsPage go={go} openPeggy={openPeggy} />}
+          {route === 'development' && <DevelopmentPage go={go} />}
+          {route === 'strategylab' && <StrategyLabPage go={go} openPeggy={openPeggy} />}
+          {route === 'marketflow' && <MarketFlowPage go={go} />}
+          {route === 'apollo' && <WorkWithApolloPage go={go} />}
+          {route === 'ecosystem' && <EcosystemPage go={go} openPeggy={openPeggy} />}
+          {route === 'about' && <AboutPageV6 go={go} />}
+          {route === 'contact' && <ContactPage handoff={peggyHandoff} />}
+          {route === 'peggy' && <PeggyPage go={go} openPeggy={openPeggy} />}
+          {route === 'saved' && <SavedPage go={go} />}
+        </Suspense>
       </main>
 
       <Footer go={go} />

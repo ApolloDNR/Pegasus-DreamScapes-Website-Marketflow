@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark, ClipboardList, Layers, Hammer, BadgeCheck } from 'lucide-react';
 import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
@@ -29,7 +29,7 @@ const MARKETFLOW_FORM: FormCfg = {
   ],
   intent: 'marketflow-access',
   heading: <>Request <span className="italic text-[var(--accent-bright)]">access.</span></>,
-  lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and our team will review your fit for the network.',
+  lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and Pegasus will review your fit for the network.',
   submit: 'Request MarketFlow Access',
   third: { label: 'Firm, fund, or trade', placeholder: 'Where you operate (optional)' },
   messageLabel: 'How you participate',
@@ -374,37 +374,72 @@ function LabPreview() {
 function StrategyLabWelcome({ onBegin, go }: { onBegin: () => void; go: Nav }) {
   return (
     <section className="strategy-command-section strategy-cockpit-hero" data-testid="strategy-lab-welcome">
-      <div className="strategy-welcome">
-        <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
-        <h1 className="strategy-welcome-title mt-6 font-serif-display text-[var(--cream)]">
-          Start with a single property.
-        </h1>
-        <p className="strategy-welcome-copy">
-          Give me the numbers on one property and I&rsquo;ll show you the paths it could take &mdash;
-          hold, improve, list, or step back &mdash; with a directional read you can think with.
-          When it&rsquo;s worth a closer look, Apollo reviews it himself.
-        </p>
-        <div className="strategy-welcome-actions">
-          <button
-            type="button"
-            onClick={onBegin}
-            className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group"
-          >
-            Begin a read
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-          </button>
-          <button
-            type="button"
-            onClick={() => go('submit')}
-            className="strategy-welcome-secondary"
-          >
-            Or send a property straight to Pegasus
-          </button>
+      <div className="strategy-welcome-shell">
+        <div className="strategy-welcome">
+          <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
+          <h1 className="strategy-welcome-title mt-6 font-serif-display text-[var(--cream)]">
+            Start with a single property.
+          </h1>
+          <p className="strategy-welcome-copy">
+            Give me the numbers on one property and I&rsquo;ll show you the paths it could take &mdash;
+            hold, improve, list, or step back &mdash; with a directional read you can think with.
+            When it&rsquo;s worth a closer look, Apollo reviews it himself.
+          </p>
+          <div className="strategy-welcome-actions">
+            <button
+              type="button"
+              onClick={onBegin}
+              className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group"
+            >
+              Begin a read
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go('submit')}
+              className="strategy-welcome-secondary"
+            >
+              Or send a property straight to Pegasus
+            </button>
+          </div>
+          <p className="strategy-welcome-fine">
+            Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice,
+            lending commitment, or investment recommendation.
+          </p>
         </div>
-        <p className="strategy-welcome-fine">
-          Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice,
-          lending commitment, or investment recommendation.
-        </p>
+
+        <figure className="strategy-welcome-illustration" aria-label="Illustration of a property moving through the Strategy Lab">
+          <figcaption>
+            <span>Opportunity plan</span>
+            <small>Private directional read</small>
+          </figcaption>
+          <div className="strategy-welcome-drawing" aria-hidden="true">
+            <svg viewBox="0 0 760 430" fill="none">
+              <path d="M72 333H688M110 333V172L264 89L418 172V333M137 172H392M182 333V221H268V333M316 333V221H383V333" />
+              <path d="M66 359H465M92 382H436M465 333C523 333 525 266 569 266H687" />
+              <path d="M569 266V131M569 198H688M569 131H688" />
+              <circle cx="569" cy="333" r="7" /><circle cx="569" cy="266" r="7" />
+              <circle cx="569" cy="198" r="7" /><circle cx="569" cy="131" r="7" />
+              <path d="M45 121H130M45 145H102M646 82H714M662 105H714" />
+              <path d="M492 81H584M538 81V38M512 54H564" />
+            </svg>
+            <div className="strategy-welcome-seed">
+              <span>01</span>
+              <strong>One property</strong>
+              <small>Situation · basis · scope</small>
+            </div>
+            <ol className="strategy-welcome-paths">
+              <li><span>02A</span><strong>Hold</strong></li>
+              <li><span>02B</span><strong>Improve</strong></li>
+              <li><span>02C</span><strong>List</strong></li>
+              <li><span>02D</span><strong>Step back</strong></li>
+            </ol>
+          </div>
+          <div className="strategy-welcome-flow" aria-hidden="true">
+            <span>Inputs</span><ArrowRight className="strategy-welcome-flow-arrow" /><span>Possible paths</span>
+            <ArrowRight className="strategy-welcome-flow-arrow" /><span>Human review</span>
+          </div>
+        </figure>
       </div>
     </section>
   );
@@ -412,7 +447,18 @@ function StrategyLabWelcome({ onBegin, go }: { onBegin: () => void; go: Nav }) {
 
 export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const model = useStrategyModel();
-  const [entered, setEntered] = React.useState(false);
+  const search = useSearch();
+  const calculatorsRequested = new URLSearchParams(search).get('tool') === 'calculators';
+  const [entered, setEntered] = React.useState(calculatorsRequested);
+
+  React.useEffect(() => {
+    if (calculatorsRequested) setEntered(true);
+  }, [calculatorsRequested]);
+
+  React.useEffect(() => {
+    if (!calculatorsRequested || !entered) return;
+    document.getElementById('strategy-calculators')?.scrollIntoView({ block: 'start' });
+  }, [calculatorsRequested, entered]);
 
   if (!entered) {
     return <StrategyLabWelcome onBegin={() => setEntered(true)} go={go} />;
@@ -435,7 +481,7 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
    ================================================================ */
 const MARKETFLOW_ACCESS = [
   { num: '01', title: 'Apply', desc: 'Tell us how you operate and where your capital or capacity sits. One short request, no obligation.' },
-  { num: '02', title: 'We review fit', desc: 'Our team reviews every request for fit. We would rather add fewer partners and actually service them.' },
+  { num: '02', title: 'We review fit', desc: 'Pegasus reviews every request for fit. We would rather add fewer partners and actually service them.' },
   { num: '03', title: 'You are introduced', desc: 'Approved members are onboarded to reviewed opportunities and the operators behind them, as fit appears.' },
 ];
 
@@ -616,7 +662,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       {/* PRD §7.11 / COPY_DECK §13 locked hero (issue #22) */}
       <PageHero eyebrow="Work With Apollo"
         title={<>Founder-led strategy. <span className="italic text-[var(--accent-bright)]">Licensed representation when the lane fits.</span></>}
-        image={IMG('pegasus-craft-blueprint.png')}
+        image={IMG('pegasus-craft-blueprint.webp')}
         lead="Paolo “Apollo” Duran leads Pegasus Dreamscapes as founder/operator. When buyer or seller representation is the right path, Apollo provides licensed real estate services through Keller Williams East Bay (CA DRE #02333658). Pegasus Dreamscapes is not a brokerage." />
       <ApolloBlock go={go} showCta={false} />
       <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
@@ -791,7 +837,7 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="Where the firm stands today"
             title="Founder-led, and honest about it."
-            copy="Pegasus is founder-led. The operating record is real and small: sourced, structured, built, and sold in-house, with licensed representation through Keller Williams East Bay and specialized work performed by appropriately licensed professionals. We would rather show one finished project truthfully than imply a staff we do not have." />
+            copy="Pegasus is founder-led. The operating record is real and focused: sourced, structured, coordinated, and sold under one accountable operating picture, with licensed representation through Keller Williams East Bay when applicable and specialized work performed by appropriately licensed professionals. We would rather show one finished project truthfully than imply a staff we do not have." />
           <button type="button" onClick={() => go('ourwork')}
             className="btn-line px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             See the Nelson Drive project <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -826,101 +872,4 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
    ================================================================ */
 export function ContactPage({ handoff = null }: { handoff?: PeggyHandoff | null }) {
   return <LeadSection cfg={CONTACT_FORM} eyebrow="Start a property review" showRole tone="page" handoff={handoff} />;
-}
-
-/* ================================================================
-   FOOTER
-   ================================================================ */
-function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="md:col-span-2">
-      <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-5">{title}</div>
-      <ul className="space-y-3 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">{children}</ul>
-    </div>
-  );
-}
-
-function FooterLink({ label, onClick, tag }: { label: string; onClick: () => void; tag?: string }) {
-  return (
-    <li>
-      <button type="button" onClick={onClick} className="link-underline text-left">
-        {label}
-        {tag && <span className="ml-2 align-middle text-[var(--accent-bright)] !text-[8px]">{tag}</span>}
-      </button>
-    </li>
-  );
-}
-
-export function Footer({ go }: { go: Nav }) {
-  const [, setLocation] = useLocation();
-  return (
-    <footer className="bg-[var(--navy)] text-[var(--cream)]">
-      <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
-          <div className="col-span-2 md:col-span-4">
-            <button type="button" onClick={() => go('home')} className="flex items-center gap-3.5 mb-6">
-              <BrandMark boxClassName="w-12 h-12" onDark />
-              <div className="flex flex-col leading-none text-left">
-                <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus Dreamscapes</span>
-                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Development &middot; Investments &middot; Systems</span>
-              </div>
-            </button>
-            <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug">
-              Dream it. Build it. Live it.
-            </p>
-            <ul className="mt-6 space-y-2.5 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">
-              <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
-              <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
-              <li>East Bay · CA</li>
-            </ul>
-          </div>
-
-          {/* Footer link map per PRD §5.2 (issue #22): the audience lanes,
-              the proof + vision pages, and the legal set. */}
-          <FooterCol title="Who We Serve">
-            <FooterLink label="Sellers & Owners" onClick={() => go('sellers')} />
-            <FooterLink label="Deal Finders" onClick={() => go('dealfinders')} />
-            <FooterLink label="Buyers" onClick={() => go('buyers')} />
-            <FooterLink label="Capital Partners" onClick={() => go('capital')} />
-            <FooterLink label="Operators & Vendors" onClick={() => go('operators')} />
-            <FooterLink label="Referral Partners" onClick={() => go('referral')} />
-          </FooterCol>
-
-          <FooterCol title="Company">
-            <FooterLink label="About the Firm" onClick={() => go('about')} />
-            <FooterLink label="How We Operate" onClick={() => go('dealstrategy')} />
-            <FooterLink label="Our Work" onClick={() => go('ourwork')} />
-            <FooterLink label="Departments" onClick={() => setLocation('/departments')} />
-            <FooterLink label="Work With Apollo" onClick={() => go('apollo')} />
-            <FooterLink label="Case Study" onClick={() => setLocation('/case-study')} />
-            <FooterLink label="The Pegasus Standard" onClick={() => setLocation('/pegasus-standard')} />
-          </FooterCol>
-
-          <FooterCol title="Start Here">
-            {/* v5.1 §31: the primary public action. */}
-            <FooterLink label="Bring an Opportunity" onClick={() => setLocation('/bring-an-opportunity')} />
-            <FooterLink label="Strategy Lab" onClick={() => go('strategylab')} />
-            <FooterLink label="MarketFlow" onClick={() => go('marketflow')} />
-            <FooterLink label="Contact" onClick={() => go('contact')} />
-          </FooterCol>
-
-          <FooterCol title="Legal">
-            <FooterLink label="Privacy Policy" onClick={() => setLocation('/privacy')} />
-            <FooterLink label="Terms" onClick={() => setLocation('/terms')} />
-            <FooterLink label="Disclosures" onClick={() => setLocation('/disclosures')} />
-            <FooterLink label="FAQ" onClick={() => setLocation('/faq')} />
-          </FooterCol>
-        </div>
-        <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
-          <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company. Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation, when applicable, is provided by Paolo &ldquo;Apollo&rdquo; Duran through Keller Williams East Bay. CA DRE #02333658. No agency relationship is created without a written agreement. Strategy reviews are preliminary and are not legal, tax, lending, appraisal, financial, or investment advice. Each Keller Williams office is independently owned and operated. Equal Housing Opportunity.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
-            <span>© {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.</span>
-            <span>NAR · CAR · Equal Housing Opportunity</span>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
 }

@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import './_group.css';
 import type { Nav, Route, PeggyHandoff } from './theme';
 import { NavBar } from './nav';
-import { Footer } from './pages';
+import { Footer } from './footer';
 import { Peggy } from './peggy';
 import { routeForUrl, urlFor } from './routes';
 import { useTheme } from '@/components/theme-provider';
@@ -94,6 +94,7 @@ export function PegasusStandaloneShell({
           theme={theme}
           toggleTheme={toggleTheme}
           scrolled={solidNav || scrolled}
+          openPeggy={() => setPeggyOpen(true)}
         />
       </div>
 

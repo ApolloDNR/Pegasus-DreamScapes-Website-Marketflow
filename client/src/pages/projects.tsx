@@ -131,6 +131,9 @@ function ProjectsGrid() {
     );
   }, [projects, statusFilter, strategyFilter]);
 
+  const showingNelsonFallback =
+    projects?.length === 0 && statusFilter === "all" && strategyFilter === "all";
+
   if (isLoading) {
     return (
       <section
@@ -214,7 +217,9 @@ function ProjectsGrid() {
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold mb-2">The Record</p>
               <h2 className="font-serif text-3xl font-semibold tracking-tight">
-                {filtered.length} {filtered.length === 1 ? "project" : "projects"} on file
+                {showingNelsonFallback
+                  ? "1 documented case study"
+                  : `${filtered.length} ${filtered.length === 1 ? "project" : "projects"} on file`}
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -238,14 +243,14 @@ function ProjectsGrid() {
 
         {filtered.length === 0 ? (
           <>
-          {statusFilter === "all" && strategyFilter === "all" && (
+          {showingNelsonFallback && (
             <div className="mb-8">
               <Link href="/projects/nelson-dr">
                 <div className="group block bg-card rounded-md border border-border/40 hover:border-primary/30 overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md max-w-md">
                   <div className="aspect-[16/10] relative bg-gradient-to-br from-primary/10 to-card flex items-center justify-center">
                     <HomeIcon className="w-10 h-10 text-primary/30" />
                     <div className="absolute top-5 left-5 flex flex-wrap gap-2">
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold bg-white/90 backdrop-blur-sm text-foreground rounded-md shadow-sm">In Progress</span>
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold bg-white/90 backdrop-blur-sm text-foreground rounded-md shadow-sm">Completed</span>
                       <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold bg-black/60 backdrop-blur-sm text-white rounded-md shadow-sm border border-white/15">Fix &amp; Flip</span>
                     </div>
                   </div>
@@ -255,9 +260,9 @@ function ProjectsGrid() {
                       <MapPin className="w-3.5 h-3.5" />
                       <span>Richmond / El Sobrante Area, CA</span>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">A complex East Bay residential acquisition routed through a value-add execution path. Case study publishing when final economics are signed off.</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">A completed East Bay residential transformation documented from acquisition through renovation and sale.</p>
                     <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                      <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">Preview</span>
+                      <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">View case study</span>
                       <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
@@ -270,22 +275,22 @@ function ProjectsGrid() {
               <Building className="w-6 h-6 text-primary/70" />
             </div>
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-              {statusFilter === "all" && strategyFilter === "all"
-                ? "Case studies · In progress"
+              {showingNelsonFallback
+                ? "Case studies · Documented"
                 : "No matches in this slice"}
             </p>
             <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
-              {statusFilter === "all" && strategyFilter === "all"
-                ? "First case study coming soon."
+              {showingNelsonFallback
+                ? "Nelson Drive is available now."
                 : "Nothing in this slice yet."}
             </h3>
             <p className="text-base text-muted-foreground mb-8 leading-relaxed">
-              {statusFilter === "all" && strategyFilter === "all"
-                ? "The first case studies are being documented now and publish once their final economics are signed off. In the meantime, the door is open for a Strategy Review on your situation."
+              {showingNelsonFallback
+                ? "Start with the completed Nelson Drive case study. Additional projects will be added when their records are ready for public review."
                 : "Clear the filters to see the full set, or start a Strategy Review and we will route your situation to the right lane."}
             </p>
             <div className="flex justify-center">
-              {statusFilter === "all" && strategyFilter === "all" ? (
+              {showingNelsonFallback ? (
                 <a
                   href="/submit"
                   className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-lg transition-all duration-300 hover:-translate-y-0.5"

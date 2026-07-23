@@ -18,9 +18,9 @@ const BRAND = "Pegasus Dreamscapes";
 // Public Website v1 (issue #22) PRD §12 locks the homepage title verbatim.
 // It intentionally exceeds the per-page 60-char clamp (which only applies to
 // composed `page · brand` titles, not this locked base title).
-const BASE_TITLE = "Pegasus Dreamscapes | Real Estate Investment, Development & Strategy";
+const BASE_TITLE = "Pegasus Dreamscapes — Complex Real Estate, Made Executable";
 const BASE_DESCRIPTION =
-  "Pegasus Dreamscapes is a strategy-first real estate operating company. Complex property, structured opportunity. Every property gets a path.";
+  "A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward.";
 const SITE_URL = "https://pegasusdreamscapes.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 

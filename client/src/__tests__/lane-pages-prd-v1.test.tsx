@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -116,16 +116,18 @@ const LANES: [string, string[], string, string | null][] = [
 
 describe("Lane pages PRD v1 contract (issue #22)", () => {
   for (const [url, heroParts, subtext, note] of LANES) {
-    it(`locks the ${url} hero${note ? " + required compliance note" : ""}`, () => {
+    it(`locks the ${url} hero${note ? " + required compliance note" : ""}`, async () => {
       const { container } = renderAt(url);
-      const text = container.textContent!;
-      for (const part of heroParts) {
-        expect(text, `missing hero fragment on ${url}`).toContain(part);
-      }
-      expect(text, `missing locked subtext on ${url}`).toContain(subtext);
-      if (note) {
-        expect(text, `missing required note on ${url}`).toContain(note);
-      }
+      await waitFor(() => {
+        const text = container.textContent!;
+        for (const part of heroParts) {
+          expect(text, `missing hero fragment on ${url}`).toContain(part);
+        }
+        expect(text, `missing locked subtext on ${url}`).toContain(subtext);
+        if (note) {
+          expect(text, `missing required note on ${url}`).toContain(note);
+        }
+      });
     });
   }
 

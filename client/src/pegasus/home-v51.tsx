@@ -147,7 +147,7 @@ const PLAN_ITEMS: PlanItem[] = [
   { key: 'underwriting', label: 'Underwriting', caption: 'We run the numbers ourselves. Real comps, real costs, a written read.', lights: ['underwriting', 'capital'] },
   { key: 'buyer', label: 'Buyer', caption: 'Dispositions finds the taker: our list, our brokerage lane, or a partner.', lights: ['buyer', 'disposition'] },
   { key: 'capital', label: 'Capital', caption: 'We bring or arrange the funding, sized to the deal and the timeline.', lights: ['capital', 'underwriting'] },
-  { key: 'development', label: 'Development', caption: 'Scope, budget, permits, and build, run by our own crew.', lights: ['development', 'local'] },
+  { key: 'development', label: 'Development', caption: 'Scope, budget, permits, and build, coordinated with the right licensed project team.', lights: ['development', 'local'] },
   { key: 'local', label: 'Local execution', caption: 'Boots in Contra Costa and Alameda. We walk it, we manage it.', lights: ['local', 'development'] },
   { key: 'disposition', label: 'Disposition', caption: 'Exit planned up front: sell, list, refinance, or hold.', lights: ['disposition', 'buyer'] },
   { key: 'assetops', label: 'Asset operations', caption: 'If the play is hold, we stabilize and operate it.', lights: ['assetops', 'underwriting'] },
@@ -173,38 +173,58 @@ function OpportunityPlan() {
 
   return (
     <div className="hv-plan-stage" data-testid="opportunity-plan">
-      <div className="hv-orbit" aria-hidden="true">
-        <svg viewBox="0 0 760 760">
-          <circle className="hv-ring" cx="380" cy="380" r="300" />
-          <circle className="hv-ring-outer" cx="380" cy="380" r="318" />
-          {/* Instrument ticks at the midpoints between nodes (§32.2 signature refinement). */}
-          {Array.from({ length: 8 }, (_, i) => {
-            const a = ((22.5 + i * 45) * Math.PI) / 180;
-            return (
-              <line key={i} className="hv-tick"
-                x1={380 + 293 * Math.cos(a)} y1={380 + 293 * Math.sin(a)}
-                x2={380 + 307 * Math.cos(a)} y2={380 + 307 * Math.sin(a)} />
-            );
-          })}
-          {PLAN_ITEMS.map(({ key }) => {
-            const p = NODE_POS[key];
-            return (
-              <line key={key} data-state={state(key)} className="hv-spoke"
-                x1="380" y1="380" x2={(p.x / 100) * 760} y2={(p.y / 100) * 760} />
-            );
-          })}
-        </svg>
-        <div className="hv-core">
-          <span className="hv-core-k">An opportunity</span>
-          <span className="hv-core-v">{item ? item.label : 'What does it need?'}</span>
+      <div className="hv-plan-bar">
+        <span className="font-serif-display">Opportunity Plan</span>
+        <span>Strategy Lab &middot; Illustrative quick read</span>
+      </div>
+
+      <div className="hv-plan-board">
+        <div className="hv-plan-seed">
+          <div className="pg-label hv-eyebrow">Property seed</div>
+          <h3 className="font-serif-display">Start with the property.</h3>
+          <dl>
+            <div><dt>Location</dt><dd>East Bay, California</dd></div>
+            <div><dt>Starting point</dt><dd>Property + known constraints</dd></div>
+            <div><dt>Decision</dt><dd>What is the honest route?</dd></div>
+          </dl>
+          <p>Choose a missing capability below to reveal a possible participation path.</p>
         </div>
-        {PLAN_ITEMS.map(({ key, label }) => {
-          const p = NODE_POS[key];
-          return (
-            <span key={key} data-state={state(key)} className="hv-node"
-              style={{ left: `${p.x}%`, top: `${p.y}%` }}>{label}</span>
-          );
-        })}
+
+        <div className="hv-plan-read">
+          <div className="pg-label hv-eyebrow">Quick read</div>
+          <div className="hv-orbit" aria-hidden="true">
+            <svg viewBox="0 0 760 760">
+              <circle className="hv-ring" cx="380" cy="380" r="300" />
+              <circle className="hv-ring-outer" cx="380" cy="380" r="318" />
+              {Array.from({ length: 8 }, (_, i) => {
+                const a = ((22.5 + i * 45) * Math.PI) / 180;
+                return (
+                  <line key={i} className="hv-tick"
+                    x1={380 + 293 * Math.cos(a)} y1={380 + 293 * Math.sin(a)}
+                    x2={380 + 307 * Math.cos(a)} y2={380 + 307 * Math.sin(a)} />
+                );
+              })}
+              {PLAN_ITEMS.map(({ key }) => {
+                const p = NODE_POS[key];
+                return (
+                  <line key={key} data-state={state(key)} className="hv-spoke"
+                    x1="380" y1="380" x2={(p.x / 100) * 760} y2={(p.y / 100) * 760} />
+                );
+              })}
+            </svg>
+            <div className="hv-core">
+              <span className="hv-core-k">Opportunity</span>
+              <span className="hv-core-v">{item ? item.label : 'What is missing?'}</span>
+            </div>
+            {PLAN_ITEMS.map(({ key, label }) => {
+              const p = NODE_POS[key];
+              return (
+                <span key={key} data-state={state(key)} className="hv-node"
+                  style={{ left: `${p.x}%`, top: `${p.y}%` }}>{label}</span>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="hv-plan-controls">
@@ -221,6 +241,10 @@ function OpportunityPlan() {
         <p className="hv-plan-caption" aria-live="polite">
           {item ? item.caption : 'Choose what your deal is missing, and see what we bring.'}
         </p>
+      </div>
+      <div className="hv-plan-flow" aria-hidden="true">
+        <span>Property seed</span><ArrowRight className="hv-plan-flow-arrow" /><span>Strategy read</span>
+        <ArrowRight className="hv-plan-flow-arrow" /><span>Participation route</span>
       </div>
     </div>
   );
@@ -263,44 +287,42 @@ function StatIcon({ name }: { name: 'temple' | 'sprig' | 'compass' }) {
   );
 }
 
-export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
+export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const [, setLocation] = useLocation();
   const toIntake = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity'); };
 
   return (
     <div className="hv">
-      {/* 1 · ARRIVAL — cinematic split: cream headline on the navy field at
-          left; a classical marble terrace opening onto the East Bay at
-          golden hour on the right (the brand's classical DNA meeting the
-          real market). Rendered, not stock. */}
+      {/* 1 · ARRIVAL */}
       <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
         <div className="hv-hero-top">
           <div className="hv-hero-marble" aria-hidden="true">
-            <img src={`${import.meta.env.BASE_URL}images/hero/pegasus-v6-arrival.webp`}
-              alt="" loading="eager" decoding="async" />
+            <img src="/images/hero/pegasus-v6-arrival.webp" alt="" loading="eager"
+              decoding="async" {...{ fetchpriority: 'high' }} />
           </div>
           <div className="hv-wrap hv-hero-inner">
-          <div className="hv-eyebrow-row">
-            <span className="hv-rule" />
-            <span className="pg-label hv-eyebrow">Real estate operating company &middot; East Bay, California</span>
+            <div className="hv-eyebrow-row">
+              <span className="hv-rule" />
+              <span className="pg-label hv-eyebrow">Real estate operating company &middot; East Bay, California</span>
+            </div>
+            <h1 className="hv-h1 font-serif-display">
+              Complex real estate,<br className="hv-h1-break" /> <em>made executable.</em>
+            </h1>
+            <p className="hv-lead">
+              Pegasus Dreamscapes reads the property, the people, and the economics, then structures the
+              role and route that can move a complex opportunity forward.
+            </p>
+            <div className="hv-cta-row">
+              <a href="/bring-an-opportunity" onClick={toIntake}
+                className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+                Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              </a>
+              <button type="button" onClick={() => go('dealstrategy')} className="hv-hero-link">
+                See How Pegasus Operates
+              </button>
+            </div>
           </div>
-          <h1 className="hv-h1 font-serif-display">
-            {"Complex real estate, "}<br className="hv-h1-break" /><em>made executable.</em>
-          </h1>
-          <p className="hv-lead">
-            Pegasus Dreamscapes reads the property, the people, and the economics, then structures the
-            role and route that can move a complex opportunity forward.
-          </p>
-          <div className="hv-cta-row">
-            <a href="/bring-an-opportunity" onClick={toIntake}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <button type="button" onClick={() => go('dealstrategy')} className="hv-hero-link">
-              See How Pegasus Operates
-            </button>
-          </div>
-          </div>
+          <p className="hv-hero-place">Architectural vision &middot; East Bay, California &middot; Not property inventory</p>
         </div>
         <div className="hv-hero-statbar">
           <ul className="hv-wrap hv-hero-facts">
@@ -331,186 +353,214 @@ export function HomePageV51({ go }: { go: Nav; openPeggy: () => void }) {
 
       {/* 2 · VISITOR ROUTER */}
       <section className="hv-router hv-pad" data-hv="router">
-        <div className="hv-wrap">
-          <div className="hv-router-head reveal">
-            <div>
-              <div className="pg-label hv-eyebrow-copper">Start with what you have</div>
-              <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
-            </div>
+        <div className="hv-wrap hv-router-layout reveal">
+          <div className="hv-router-intro">
+            <div className="pg-label hv-eyebrow-copper">Start with what you have</div>
+            <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
             <p className="hv-muted">
               The first question is not which service to buy. It is what you have, what is missing,
               and what a controlled next step should look like.
             </p>
-          </div>
-          {([
-            ['01', 'A property I own', 'Condition, timing, inheritance, or a sale that stalled.', 'sellers'],
-            ['02', 'A deal I found', 'A lead, a contract, or a buyer, with one piece missing.', 'dealfinders'],
-            ['03', 'A project I run', 'You run the deal. You need a specific capability filled.', 'dealfinders'],
-            ['04', 'A relationship or specialty', 'Capital, trades, or professional services.', 'operators'],
-          ] as const).map(([num, title, sub, route]) => (
-            <button key={num} type="button" className="hv-route" onClick={() => go(route)}>
-              <span className="hv-route-num font-serif-display">{num}</span>
-              <span className="hv-route-body">
-                <span className="hv-route-title font-serif-display">{title}</span>
-                <span className="hv-route-sub">{sub}</span>
-              </span>
-              <ArrowRight className="hv-route-arrow h-4 w-4" />
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* 3 · PROOF — Nelson Drive */}
-      <section className="hv-proof hv-pad-lg hv-grain" data-hv="proof">
-        <div className="hv-wrap hv-proof-grid reveal">
-          <div>
-            <div className="pg-label hv-eyebrow">Proof</div>
-            <h2 className="hv-h2-cream font-serif-display">One house, taken down to the studs.</h2>
-            <p className="hv-lead-dim">
-              Nelson Drive was a tired three-bed, two-bath ranch in El Sobrante. We rebuilt it in-house
-              into a four-bed, three-bath home, and sold it to a family who wanted to live there.
-            </p>
-            <div className="hv-ba">
-              <figure>
-                <img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the rebuild" loading="lazy" />
-                <figcaption>Before</figcaption>
-              </figure>
-              <figure className="hv-ba-after">
-                <img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the rebuild: navy cabinetry and a waterfall island" loading="lazy" />
-                <figcaption>After</figcaption>
-              </figure>
-            </div>
-            <button type="button" className="hv-proof-link" onClick={() => go('ourwork')}>
-              See the full project <ArrowRight className="inline h-3.5 w-3.5" />
+            <button type="button" className="hv-text-link" onClick={openPeggy}>
+              Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div>
-            <dl className="hv-stack">
-              <div><dt>Acquired</dt><dd>$600,000</dd></div>
-              <div><dt>Built, in-house</dt><dd>$105,000</dd></div>
-              <div><dt>Sold</dt><dd>$840,000</dd></div>
-            </dl>
-            <div className="hv-edge">
-              <div className="hv-edge-big font-serif-display">~$95K</div>
-              <p>under a comparable general-contractor bid. Owning the build is the difference
-                between a thin flip and a real return.</p>
-            </div>
-            <p className="hv-fine">
-              Figures from the closing statement and project records, rounded. Value shown is not net profit.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 4 · PEGASUS METHOD */}
-      <section className="hv-method hv-pad" data-hv="method">
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">How we work</div>
-          <h2 className="hv-h2 font-serif-display">A method, not a script.</h2>
-          <div className="hv-steps reveal">
+          <div className="hv-route-list">
             {([
-              ['01', 'Originate', 'Find, receive, or build the opportunity.'],
-              ['02', 'Structure', 'Set the role, the strategy, and the terms.'],
-              ['03', 'Operate', 'Bring the capital and the crew. Manage the work.'],
-              ['04', 'Realize', 'Sell, hold, refinance, or pass. Decided up front.'],
-              ['05', 'Learn', 'Turn the result into a better next deal.'],
-            ] as const).map(([num, title, sub]) => (
-              <div key={num} className="hv-step">
-                <div className="hv-step-num">{num} / {title.toUpperCase()}</div>
-                <h3 className="font-serif-display">{title}</h3>
-                <p>{sub}</p>
-              </div>
+              ['01', 'A property I own', 'Condition, timing, inheritance, or a sale that is not working.', 'Owner review', 'sellers'],
+              ['02', 'A deal I found', 'A lead, contract, buyer, or one missing capability.', 'Submit deal', 'dealfinders'],
+              ['03', 'A project I run', 'A defined project that needs a specific operating role.', 'Operating lane', 'operators'],
+              ['04', 'A relationship or specialty', 'Capital, trades, professional services, or referral alignment.', 'Partner path', 'referral'],
+            ] as const).map(([num, title, sub, action, route]) => (
+              <button key={num} type="button" className="hv-route" onClick={() => go(route)}>
+                <span className="hv-route-num font-serif-display">{num}</span>
+                <span className="hv-route-body">
+                  <span className="hv-route-title font-serif-display">{title}</span>
+                  <span className="hv-route-sub">{sub}</span>
+                </span>
+                <span className="hv-route-action">{action}</span>
+                <ArrowRight className="hv-route-arrow h-4 w-4" />
+              </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Brand atmosphere — the colonnade photo, mid-site by design */}
-      <section className="hv-photoband" aria-label="Pegasus brand atmosphere">
-        <img src="/images/hall/colonnade-hero-1600.webp"
-          alt="Concept render: a warm marble colonnade at dusk. Pegasus brand atmosphere, not a current property."
-          loading="lazy" />
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">Brand atmosphere</div>
-          <p className="font-serif-display">Built to a standard, not a shortcut.</p>
+      {/* 3 · PROOF — Nelson Drive */}
+      <section className="hv-proof hv-pad-lg hv-grain" data-hv="proof">
+        <div className="hv-wrap reveal">
+          <div className="hv-proof-head">
+            <div>
+              <div className="pg-label hv-eyebrow">Proof before aspiration &middot; Nelson Drive &middot; El Sobrante</div>
+              <h2 className="hv-h2-cream font-serif-display">One property, read honestly.</h2>
+            </div>
+            <p className="hv-lead-dim">
+              One house, taken down to the studs. Pegasus sourced the opportunity, built the budget
+              and design direction, coordinated the project, positioned the home, and carried it to sale.
+            </p>
+          </div>
+
+          <div className="hv-ba">
+            <figure className="hv-ba-after">
+              <img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" loading="lazy" />
+              <figcaption>After &middot; 4-bed / 3-bath home</figcaption>
+            </figure>
+            <figure>
+              <img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" loading="lazy" />
+              <figcaption>Before &middot; dated 3-bed / 2-bath</figcaption>
+            </figure>
+          </div>
+
+          <dl className="hv-proof-facts">
+            <div>
+              <dt>Program transformed</dt>
+              <dd aria-label="Three bedrooms and two bathrooms to four bedrooms and three bathrooms">
+                3/2 <span className="hv-inline-arrow" aria-hidden="true">&rarr;</span> 4/3
+              </dd>
+            </div>
+            <div><dt>Acquired</dt><dd>$600,000</dd></div>
+            <div><dt>In-house renovation</dt><dd>$105,000</dd></div>
+            <div><dt>All-in</dt><dd>~$705,000</dd></div>
+            <div><dt>Sold</dt><dd>$840,000</dd></div>
+          </dl>
+
+          <div className="hv-proof-notes">
+            <p><strong>~$95K</strong> below the comparable ~$200K retail general-contractor bid.</p>
+            <p>Approximately $135K above all-in cost before financing, holding, and selling costs.
+              Value shown is not net profit.</p>
+          </div>
+          <button type="button" className="hv-proof-link" onClick={() => go('ourwork')}>
+            See the full project <ArrowRight className="inline h-3.5 w-3.5" />
+          </button>
+        </div>
+      </section>
+
+      {/* 4 · PEGASUS METHOD */}
+      <section className="hv-method" data-hv="method">
+        <div className="hv-method-media">
+          <img src="/images/hall/pegasus-planning-loggia.webp"
+            alt="Architectural vision of a limestone planning loggia overlooking the Bay at dusk"
+            loading="lazy" />
+          <div className="hv-method-media-copy">
+            <div className="pg-label hv-eyebrow">Architectural discipline &middot; Operational clarity</div>
+            <p>Hellenic Modern is the long-term direction.<br />Disciplined execution is the standard now.</p>
+            <span>Architectural vision &middot; Not property inventory</span>
+          </div>
+        </div>
+        <div className="hv-method-content">
+          <div className="pg-label hv-eyebrow-copper">The Pegasus method</div>
+          <h2 className="hv-h2 font-serif-display">From first read to realized outcome.</h2>
+          <p className="hv-muted">A repeatable method keeps the role, route, and economics visible.
+            Only the capabilities an opportunity needs are activated.</p>
+          <div className="hv-steps reveal">
+            {([
+              ['01', 'Originate', 'Find it.'],
+              ['02', 'Structure', 'Set the route.'],
+              ['03', 'Operate', 'Coordinate.'],
+              ['04', 'Realize', 'Sell or hold.'],
+              ['05', 'Learn', 'Capture it.'],
+            ] as const).map(([num, title, sub]) => (
+              <div key={num} className="hv-step">
+                <div className="hv-step-num">{num}</div>
+                <h3 className="font-serif-display">{title}</h3>
+                <p>{sub}</p>
+              </div>
+            ))}
+          </div>
+          <div className="pg-label hv-method-label">Four departments &middot; One operating picture</div>
+          <div className="hv-departments">
+            {([
+              ['01', 'Acquisitions', 'Finds, reviews, structures, and secures opportunities.'],
+              ['02', 'Development', 'Scopes, renovates, repositions, builds, and manages execution.'],
+              ['03', 'Dispositions', 'Packages, markets, sells, assigns, lists, or connects the right exit.'],
+              ['04', 'Asset Management', 'Operates, protects, and compounds long-term holds.'],
+            ] as const).map(([num, title, sub]) => (
+              <div className="hv-department" key={num}>
+                <span>{num}</span>
+                <div><h3 className="font-serif-display">{title}</h3><p>{sub}</p></div>
+              </div>
+            ))}
+          </div>
+          <p className="hv-method-fine">Execution is coordinated with appropriately licensed contractors and project specialists.</p>
         </div>
       </section>
 
       {/* 5 · OPPORTUNITY PLAN — signature */}
-      <section className="hv-plan hv-pad-lg hv-grain" data-hv="plan">
-        <div className="hv-wrap">
+      <section className="hv-plan hv-pad-lg" data-hv="plan">
+        <div className="hv-wrap hv-plan-layout">
           <div className="hv-plan-head reveal">
-            <div className="pg-label hv-eyebrow">The Opportunity Plan</div>
-            <h2 className="hv-h2-cream font-serif-display">Every deal is missing something.</h2>
-            <p className="hv-lead-dim">
-              Tell us what a deal lacks. We show you the parts we can bring, and the ones you keep.
-              Not every deal needs every piece.
+            <div className="pg-label hv-eyebrow-copper">The Opportunity Plan</div>
+            <h2 className="hv-h2 font-serif-display">Strategy should become visible.</h2>
+            <p className="hv-muted">
+              Strategy Lab turns a first property read into a clear set of viable lanes. It exposes
+              assumptions, gaps, and the next decision. It does not make promises.
             </p>
+            <p className="hv-plan-contract">Every deal is missing something.</p>
+            <div className="hv-plan-actions">
+              <button type="button" className="hv-plan-primary inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px]"
+                onClick={() => go('strategylab')}>
+                Open Strategy Lab <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+              <button type="button" className="hv-text-link" onClick={openPeggy}>
+                Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <p className="hv-plan-legal">Illustrative Quick Read. A route is not a commitment to participate in any deal.</p>
           </div>
           <OpportunityPlan />
-          <p className="hv-fine hv-plan-fine">
-            Illustrative. It shows how Pegasus participates, not a commitment to any deal.
-          </p>
         </div>
       </section>
 
-      {/* 6 · PARTNER PROPOSITION */}
+      {/* 6 · PARTNER PROPOSITION + ACCOUNTABILITY */}
+      <div className="hv-alignment">
       <section className="hv-partner hv-pad" data-hv="partner">
-        <div className="hv-wrap hv-partner-grid reveal">
-          <div>
-            <div className="pg-label hv-eyebrow-copper">Partners</div>
-            <h2 className="hv-h2 font-serif-display">Bring what you do well. Pegasus completes the operating picture.</h2>
-          </div>
-          <div>
-            <p className="hv-muted">
-              You do not have to hand over the whole deal. Bring the part you are strong in; we supply
-              what is missing, on terms set in writing before anyone moves.
-            </p>
-            <ul className="hv-pairs">
-              <li>Deal finder + Pegasus operating support</li>
-              <li>Specialty GP + Pegasus local execution</li>
-              <li>Property owner + Pegasus principal review</li>
-              <li>Capital relationship + Pegasus operating capability</li>
-              <li>Contractor or specialist + Pegasus pipeline</li>
-            </ul>
-            <button type="button" className="hv-proof-link hv-link-ink" onClick={() => go('dealfinders')}>
-              Explore a partnership <ArrowRight className="inline h-3.5 w-3.5" />
+        <div className="hv-wrap hv-partner-shell reveal">
+          <div className="hv-partner-copy">
+            <div className="pg-label hv-eyebrow-copper">Alignment before conversion</div>
+            <h2 className="hv-h2 font-serif-display">Bring what you do well. Pegasus helps complete the operating picture.</h2>
+            <p className="hv-muted">Every relationship begins with a clear role, honest economics,
+              and an explicit operating boundary.</p>
+            <div className="hv-relationships">
+              <div><span>01</span><h3 className="font-serif-display">Property owner</h3><p>Principal review + a controlled next step</p></div>
+              <div><span>02</span><h3 className="font-serif-display">Deal or operating partner</h3><p>Clear role, economics, and participation boundary</p></div>
+              <div><span>03</span><h3 className="font-serif-display">Specialist or capital relationship</h3><p>Defined capability + project-specific scope</p></div>
+            </div>
+            <button type="button" className="hv-text-link" onClick={() => go('dealfinders')}>
+              Explore a partnership <ArrowRight className="h-3.5 w-3.5" />
             </button>
+            <p className="hv-partner-fine">Licensed representation is provided separately through Keller Williams East Bay when applicable.</p>
           </div>
         </div>
       </section>
 
-      {/* 7 · FOUNDER TRUST + FINAL INVITATION */}
-      <section className="hv-founder hv-pad-lg" data-hv="founder">
-        <div className="hv-wrap hv-founder-grid reveal">
+      <section className="hv-founder" data-hv="founder">
+        <div className="hv-founder-inner reveal">
+          <div className="pg-label hv-eyebrow">Founder-led &middot; East Bay</div>
           <figure className="hv-founder-photo">
             <img src="/images/founder/apollo.webp" alt="Paolo 'Apollo' Duran, founder of Pegasus Dreamscapes" loading="lazy" />
           </figure>
-          <div>
-            <div className="pg-label hv-eyebrow-copper">Founder-led</div>
-            <h2 className="hv-h2 font-serif-display">You will know who you are dealing with.</h2>
-            <p className="hv-muted">
-              Pegasus is led by Paolo &ldquo;Apollo&rdquo; Duran. On Nelson Drive he sourced the deal,
-              formed the LLC, built the budget, ran the schedule and the crew, set the design, and
-              carried it to the sale. One person accountable, with a team built to repeat it.
-            </p>
-            <p className="hv-cred">
-              Licensed representation through Keller Williams East Bay &middot; CA DRE #02333658.
-              Role, terms, and any conflicts are made clear before anything begins.
-            </p>
-          </div>
+          <h2 className="font-serif-display">Paolo &ldquo;Apollo&rdquo; Duran</h2>
+          <p className="hv-founder-title">Founder &middot; CA Real Estate Agent &middot; CA DRE #02333658</p>
+          <p>One principal read. One defined role.<br />One accountable operating picture.</p>
+          <p className="hv-cred">Representation through Keller Williams East Bay when applicable.</p>
         </div>
       </section>
+      </div>
 
       <section className="hv-final hv-pad-lg hv-grain" data-hv="final">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">Bring it to us</div>
+          <div className="pg-label hv-eyebrow">A clear first step</div>
           <h2 className="hv-h2-cream font-serif-display">Bring the property, the deal, or the plan.</h2>
-          <p className="hv-lead-dim">We read the situation, run the numbers, and tell you what it actually is.</p>
-          <a href="/bring-an-opportunity" onClick={toIntake}
-            className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group">
-            Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-          </a>
+          <p className="hv-lead-dim">We will begin by determining what is missing and whether Pegasus is the right participant.</p>
+          <div className="hv-final-actions">
+            <a href="/bring-an-opportunity" onClick={toIntake}
+              className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group">
+              Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </a>
+            <button type="button" className="hv-hero-link" onClick={() => go('dealstrategy')}>
+              See how we operate
+            </button>
+          </div>
         </div>
       </section>
     </div>

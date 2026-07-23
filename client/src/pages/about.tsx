@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import { CardSurface } from "@/components/ui/card-primitives";
-import founderApolloPath from "@assets/image_1778735694150.png";
+const founderApolloPath = "/images/founder/apollo.webp";
 
 // Wave 4 — asset discipline: pre-transcoded responsive variants live at
 // /images/founder/apollo-{w}.{avif|webp|jpg}. See scripts/transcode-images.mjs.
@@ -333,7 +333,7 @@ function FounderSection() {
                       data-testid="img-founder-apollo"
                       onError={(e) => {
                         const t = e.currentTarget as HTMLImageElement;
-                        if (t.src !== founderApolloPath) t.src = founderApolloPath;
+                        if (!t.src.endsWith(founderApolloPath)) t.src = founderApolloPath;
                       }}
                     />
                   </picture>

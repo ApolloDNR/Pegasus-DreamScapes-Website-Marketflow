@@ -183,7 +183,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center ring-2 ring-[var(--bg)]"><Check className="w-4 h-4" /></span>
         </div>
         <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">Received. Thank you.</h3>
-        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">Our team reads your submission and returns a plain-language path forward. We respond within 48 hours.</p>
+        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">Pegasus reads your submission and returns a plain-language path forward. We respond within 48 hours.</p>
       </div>
     );
   }
@@ -906,7 +906,11 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
   ] as const;
 
   return (
-    <section className="strategy-workshop-section strategy-workshop-continuation relative pb-16 lg:pb-20 overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+    <section
+      id="strategy-calculators"
+      data-testid="strategy-calculators"
+      className="strategy-workshop-section strategy-workshop-continuation relative pb-16 lg:pb-20 overflow-hidden bg-[var(--bg)] text-[var(--text)]"
+    >
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="strategy-continuation-head">
           <span>Underwriting levers</span>

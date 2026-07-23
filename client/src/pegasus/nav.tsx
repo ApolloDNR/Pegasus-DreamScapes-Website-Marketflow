@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
-import { Menu, X, ArrowRight, Phone } from 'lucide-react';
+import { Menu, X, ArrowRight, Phone, ConciergeBell } from 'lucide-react';
 import type { Route, Nav, Theme, NavLink } from './theme';
 import { ThemeToggle, BrandMark } from './primitives';
 import { NAV_LINKS } from './data';
@@ -11,8 +11,8 @@ import { urlFor } from './routes';
    About — with "Bring an Opportunity" as the primary nav button (routing to
    the /bring-an-opportunity intake desk). Supersedes issue #22 §5.1. */
 
-export function NavBar({ go, route, theme, toggleTheme, scrolled }:
-  { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean }) {
+export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
+  { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean; openPeggy?: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const toggleLock = useRef(0);
@@ -69,7 +69,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
         <div className="hidden min-[1340px]:flex items-center gap-5 min-[1500px]:gap-7 pg-label !text-[10px] !tracking-[0.2em]">
           {NAV_LINKS.map((item) => (
             <button key={item.label} type="button" onClick={() => navigate(item)}
-              className={`pg-navlink inline-flex min-h-11 items-center px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}
+              className={`pg-navlink inline-flex min-h-11 shrink-0 items-center whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? 'opacity-100 text-[var(--accent-bright)]' : 'opacity-80'}`}
               data-active={isActive(item) || undefined}>
               {item.label}
             </button>
@@ -79,7 +79,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
         <div className="flex items-center gap-3 lg:gap-4">
           <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
           <button type="button" onClick={() => setLocation('/bring-an-opportunity')}
-            className={`hidden sm:inline-flex ${overHero ? 'btn-solid-light' : 'btn-primary'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
+            className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
             Bring an Opportunity
           </button>
           <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
@@ -104,6 +104,10 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled }:
               className="btn-line w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.18em] text-center inline-flex items-center justify-center gap-2.5">
               <Phone className="w-3.5 h-3.5" strokeWidth={1.7} /> Call 925-744-8525
             </a>
+            <button type="button" onClick={() => { setMenuOpen(false); openPeggy?.(); }}
+              className="btn-line w-full px-6 py-4 pg-label !text-[10px] !tracking-[0.18em] text-center inline-flex items-center justify-center gap-2.5">
+              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Talk to Peggy
+            </button>
           </div>
 
           <div className="mt-7 flex flex-col">

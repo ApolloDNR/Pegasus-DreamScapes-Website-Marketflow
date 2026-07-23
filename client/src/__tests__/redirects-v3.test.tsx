@@ -10,7 +10,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { legacyRedirects } from "@/App";
 import { REDIRECTED_URLS, PEGASUS_URLS, ROUTE_TO_URL } from "@/pegasus/routes";
 import { NavBar } from "@/pegasus/nav";
-import { Footer, CapitalPage, DevelopmentPage } from "@/pegasus/pages";
+import { CapitalPage, DevelopmentPage } from "@/pegasus/pages";
+import { Footer } from "@/pegasus/footer";
 import { HomePageV51 } from "@/pegasus/home-v51";
 import type { Nav, Route } from "@/pegasus/theme";
 

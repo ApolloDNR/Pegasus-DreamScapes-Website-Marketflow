@@ -102,7 +102,7 @@ export const PILLARS3: Pillar[] = [
       'Led by experienced GCs and project managers, built with licensed subcontractors',
       'A delivered product, not a project left open',
     ],
-    img: 'pegasus-craft-blueprint.png',
+    img: 'pegasus-craft-blueprint.webp',
     imgAlt: 'Blueprints and renovation craftsmanship on a Pegasus development build',
     route: 'development',
     cta: 'See how we build',

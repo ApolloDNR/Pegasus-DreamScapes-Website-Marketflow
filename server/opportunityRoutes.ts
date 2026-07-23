@@ -9,6 +9,10 @@ import {
 } from "@shared/schema";
 import { sendEmail } from "./email";
 import { routeOpportunity } from "./opportunityRouting";
+import {
+  forward as hqForward,
+  outreachReasonForLeadType,
+} from "./integrations/hq-client";
 
 // ============================================================
 // PUBLIC WEBSITE v1 — OPPORTUNITY INTAKE + DEAL ROUTING
@@ -23,6 +27,29 @@ const CONFIRMATION_BODY =
   "We received your information and will review it to determine the appropriate lane. " +
   "If there is a fit or if we need more information, we will follow up with the next step.\n\n" +
   "No agency relationship, offer, or agreement is created by submitting this form.";
+
+function hqLeadTypeForVisitor(visitorType: string): string {
+  switch (visitorType) {
+    case "owner":
+    case "owner_representative":
+    case "deal_finder":
+      return "seller";
+    case "buyer":
+      return "buyer";
+    case "capital_partner":
+      return "investor";
+    case "vendor_operator":
+      return "vendor";
+    default:
+      return "contact";
+  }
+}
+
+function fullPropertyAddress(opportunity: InsertOpportunity): string | undefined {
+  const stateAndZip = [opportunity.state, opportunity.zipCode].filter(Boolean).join(" ");
+  const locality = [opportunity.city, stateAndZip].filter(Boolean).join(", ");
+  return [opportunity.propertyAddress, locality].filter(Boolean).join(", ") || undefined;
+}
 
 export function registerOpportunityRoutes(
   app: Express,
@@ -61,13 +88,47 @@ export function registerOpportunityRoutes(
         .values({ ...(parsed.data as InsertOpportunity), ...routed, status: "New" })
         .returning();
 
+      // Queue the canonical HQ intake payload before responding. As with
+      // /api/leads, hqForward persists to hq_outbox first and performs the
+      // network attempt asynchronously, so HQ downtime cannot lose or block
+      // a locally recorded opportunity. Opportunity ids are UUIDs, while the
+      // outbox sourceId is integer-only, so correlation lives in `extra`.
+      try {
+        await hqForward({
+          surface: "lead",
+          payload: {
+            propertyAddress: fullPropertyAddress(parsed.data),
+            contactName: parsed.data.contactName,
+            contactEmail: parsed.data.email,
+            contactPhone: parsed.data.phone || undefined,
+            outreachReason: outreachReasonForLeadType(
+              hqLeadTypeForVisitor(parsed.data.visitorType),
+            ),
+            sourceChannel: `website:${parsed.data.sourcePage || parsed.data.leadSource || "bring-an-opportunity"}`,
+            consentContact: parsed.data.consentAccepted,
+            consentCcpaAcknowledged: parsed.data.consentAccepted,
+            extra: {
+              ...parsed.data,
+              opportunityId: row.id,
+              recommendedLane: routed.recommendedLane,
+              assignedDepartment: routed.assignedDepartment,
+            },
+          },
+        });
+      } catch (err) {
+        console.error("[hq-forward] opportunity queue error (non-blocking):", err);
+      }
+
       // Best-effort notifications — a mail failure must never lose the lead.
       const summary =
         `${parsed.data.visitorType} — ` +
         (parsed.data.propertyAddress || parsed.data.contactName);
       Promise.allSettled([
         sendEmail({
-          to: process.env.INTERNAL_NOTIFY_EMAIL || "apollo@pegasusdreamscapes.com",
+          to:
+            process.env.STAFF_NOTIFICATION_EMAIL ||
+            process.env.INTERNAL_NOTIFY_EMAIL ||
+            "apollo@pegasusdreamscapes.com",
           subject: `New Pegasus Website Submission: ${summary}`,
           text:
             `Visitor type: ${parsed.data.visitorType}\n` +

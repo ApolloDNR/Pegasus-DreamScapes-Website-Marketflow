@@ -60,6 +60,8 @@ export const BUYBOXES: Buybox[] = [
   },
 ];
 
+export const PUBLIC_BUYBOXES = BUYBOXES.filter((buybox) => buybox.publicReady !== false);
+
 // Free buyer interest list framed as "Request Notification." This is not a
 // paid subscription product. Copy that implies a paid tier should not be added.
 export const BUYBOX_DISCLOSURE =

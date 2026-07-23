@@ -20,7 +20,7 @@ const MISSING: Missing[] = [
   { label: 'Underwriting', brings: 'Our own numbers on the deal: scope, comps, carry, and exit, written down and defensible.', keeps: 'The relationship. You bring the deal; the read is yours to use.' },
   { label: 'Buyer placement', brings: 'Dispositions places it with our list or through the licensed lane when a retail exit is right.', keeps: 'Source attribution on record from the moment you submit.' },
   { label: 'Capital planning', brings: 'We size and arrange the funding against the plan: debt, equity, or seller terms.', keeps: 'Your role in the deal. Capital joins the structure; it does not take it over.' },
-  { label: 'Renovation execution', brings: 'Our in-house crew runs scope, budget, and schedule. Nelson Drive ran at roughly half a retail bid.', keeps: 'Your deal. We execute inside the structure we agreed.' },
+  { label: 'Renovation execution', brings: 'Pegasus coordinates scope, budget, schedule, and the appropriately licensed project team. Nelson Drive ran at roughly half a retail bid.', keeps: 'Your deal. We execute inside the structure we agreed.' },
   { label: 'Local operations', brings: 'Contra Costa and Alameda ground presence: walkthroughs, vendors, inspections, and management.', keeps: 'Your market. We operate where you need hands, not a takeover.' },
   { label: 'Disposition or asset operations', brings: 'Exit or hold, run on plan: listing, placement, refinance, or stabilized operations.', keeps: 'The outcome split you signed, honored to the closing statement.' },
 ];
@@ -36,6 +36,9 @@ export function DealPartnersPage({ go }: { go: Nav }) {
     <div className="dp">
       {/* Hero — v5.1 §10 locked promise */}
       <section className="dp-hero hv-grain">
+        <div className="dp-hero-media" aria-hidden="true">
+          <img src="/images/pegasus-craft-blueprint.webp" alt="" loading="eager" decoding="async" />
+        </div>
         <div className="hv-wrap">
           <div className="hv-rule" />
           <div className="pg-label hv-eyebrow">Deal Partners</div>
@@ -56,6 +59,7 @@ export function DealPartnersPage({ go }: { go: Nav }) {
               Discuss an Operating Partnership
             </a>
           </div>
+          <p className="dp-hero-caption">Strategy, scope, and execution &middot; Illustrative planning image</p>
         </div>
       </section>
 

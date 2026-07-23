@@ -67,7 +67,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
           <p className="ow-loc pg-label">Nelson Drive &middot; El Sobrante, CA</p>
           <p className="hv-lead-dim">
             We bought a dated three-bed, two-bath ranch with an undersized sunroom and a detached
-            shed, took it down to the studs, and rebuilt it in-house as a four-bed, three-bath home.
+            shed, took it down to the studs, and coordinated its rebuild as a four-bed, three-bath home.
             Here is the whole project: before, during, and after.
           </p>
         </div>
@@ -116,9 +116,9 @@ export function OurWorkPage({ go }: { go: Nav }) {
           <h2 className="hv-h2-cream font-serif-display">One person led it, with a team built to repeat.</h2>
           <p className="hv-lead-dim">
             Paolo &ldquo;Apollo&rdquo; Duran sourced and bought the deal, formed the LLC, built the
-            budget, ran the schedule and vendors, set the design direction, and carried it to the
-            sale. Construction and repairs were handled in-house, with no retail GC margin, which is
-            where the cost edge comes from. Licensed representation through Keller Williams East Bay
+            budget, ran the schedule and project team, set the design direction, and carried it to the
+            sale. Pegasus coordinated construction and repairs without a retail GC layer, which is
+            where the documented cost edge comes from. Licensed representation through Keller Williams East Bay
             (CA DRE #02333658).
           </p>
         </div>

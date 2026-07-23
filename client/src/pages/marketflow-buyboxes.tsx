@@ -3,17 +3,21 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { Button } from "@/components/ui/button";
 import { BuyboxesSection } from "@/components/buyboxes-section";
+import { PUBLIC_BUYBOXES } from "@/config/buyboxes";
 import { ArrowRight, Lock } from "lucide-react";
+
+const BUYBOX_PILOT_DESCRIPTION =
+  `${PUBLIC_BUYBOXES.length} public buybox profiles are available in MarketFlow's controlled pilot. ` +
+  "Each outlines a target geography, deal type, and review criteria. Bring a property or request a notification when a reviewed fit appears.";
 
 // Website Structure v1 FINAL §7 — dedicated public /marketflow/buyboxes
 // surface. Pulled off the MarketFlow landing so the gated landing stays
-// focused on access requests. Carries the locked invite-only badge plus
+// focused on access requests. Carries the controlled-pilot status plus
 // the BuyboxesSection (with C.8.7 disclosure already inside it).
 export default function MarketflowBuyboxes() {
   useSEO({
     title: "Pegasus Buyboxes",
-    description:
-      "Four named Pegasus Buyboxes with target geographies, deal types, and underwriting bands. Request a notification when a fit shows up.",
+    description: BUYBOX_PILOT_DESCRIPTION,
     image: "/og/marketflow.png",
   });
 
@@ -32,7 +36,7 @@ export default function MarketflowBuyboxes() {
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10">
                 <Lock className="w-3 h-3 text-primary" aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">
-                  Private beta · invite only
+                  Controlled pilot · reviewed access
                 </span>
               </span>
             </div>
@@ -43,7 +47,7 @@ export default function MarketflowBuyboxes() {
               Pegasus Buyboxes.
             </h1>
             <p className="text-base sm:text-lg text-cream/85 leading-relaxed max-w-3xl mb-8">
-              Four named buyboxes. Each one has a target geography, deal type, and underwriting band. Bring the property or request a notification when a fit comes up.
+              {BUYBOX_PILOT_DESCRIPTION}
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/submit">

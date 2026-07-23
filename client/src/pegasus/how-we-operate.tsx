@@ -37,7 +37,7 @@ const STAGES: Stage[] = [
   {
     num: '03', name: 'Operate',
     claim: 'Bring the capital and the crew. Manage the work.',
-    detail: 'Only the capabilities the deal needs are switched on: acquisitions, development, dispositions, asset operations, capital, finance. On Nelson Drive that meant our own crew running a studs-out rebuild at roughly half a retail bid.',
+    detail: 'Only the capabilities the deal needs are switched on: acquisitions, development, dispositions, asset operations, capital, finance. On Nelson Drive that meant Pegasus coordinating a studs-out rebuild with the project team at roughly half a retail bid.',
     decided: ['Which departments activate', 'The schedule and the budget', 'Who is accountable for what'],
   },
   {

@@ -26,7 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
-import founderApolloPath from "@assets/image_1778735694150.png";
+const founderApolloPath = "/images/founder/apollo.webp";
 import { insertInvestorLeadSchema, type InsertInvestorLead, type InsertLead } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import {

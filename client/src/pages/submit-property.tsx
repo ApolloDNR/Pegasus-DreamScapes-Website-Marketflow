@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
+import { useSEO } from "@/hooks/use-seo";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 
 /**
@@ -140,6 +141,12 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
 }
 
 export default function SubmitPropertyPage() {
+  useSEO({
+    title: "Bring an Opportunity",
+    description: "Bring the property, contract, project, or plan. Pegasus reads the situation and routes the right next step.",
+    image: "/og/submit.png",
+  });
+
   const utm = useMemo(() => {
     const p = new URLSearchParams(window.location.search);
     const intent = (p.get("intent") ?? p.get("type") ?? "").toLowerCase();

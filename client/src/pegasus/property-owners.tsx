@@ -14,10 +14,10 @@ import type { Nav } from './theme';
 type Situation = { label: string; path: string };
 
 const SITUATIONS: Situation[] = [
-  { label: 'Significant repairs', path: 'We price the real scope, not the fear of it. Often we buy as-is with our own crew ready; sometimes the honest answer is a light touch-up and a clean listing.' },
+  { label: 'Significant repairs', path: 'We price the real scope, not the fear of it. Often we buy as-is with a project team ready; sometimes the honest answer is a light touch-up and a clean listing.' },
   { label: 'Vacant property', path: 'An empty house burns money quietly. We move on a short timeline: direct purchase, or a prepared listing with the carrying costs counted honestly.' },
   { label: 'Inherited property', path: 'Probate timing, siblings, and an old house at once. We map the estate steps with your attorney and hold the property decision until the family is actually ready.' },
-  { label: 'Unfinished construction', path: 'Half-done work scares retail buyers and most investors. Our own crew can finish the scope, or we buy it standing exactly as it stands.' },
+  { label: 'Unfinished construction', path: 'Half-done work scares retail buyers and most investors. We can coordinate the right licensed project team to finish the scope, or buy it standing exactly as it stands.' },
   { label: 'Tenant or occupancy issues', path: 'Occupied is workable. We buy with tenants in place, respect the tenancy rules, and never ask you to solve the hard part before the sale.' },
   { label: 'Code or permit concerns', path: 'Open permits and violations are a paperwork problem with a price. We underwrite the cure cost and carry the resolution ourselves after closing.' },
   { label: 'Time-sensitive sale', path: 'When the calendar is the pressure, certainty beats the last dollar. We give you a written read fast and close on the date the situation needs.' },
@@ -34,6 +34,9 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
     <div className="po">
       {/* Hero — v5.1 §9 locked promise */}
       <section className="po-hero hv-grain">
+        <div className="po-hero-media" aria-hidden="true">
+          <img src="/images/nelson/nelson-before-exterior-front-1280.jpg" alt="" loading="eager" decoding="async" />
+        </div>
         <div className="hv-wrap">
           <div className="hv-rule" />
           <div className="pg-label hv-eyebrow">Property Owners</div>
@@ -54,6 +57,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
               Open Strategy Lab
             </button>
           </div>
+          <p className="po-hero-caption">Real project photography &middot; Nelson Drive, before renovation</p>
         </div>
       </section>
 
