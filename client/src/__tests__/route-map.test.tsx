@@ -75,7 +75,6 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/development",
     "/marketflow",
     "/marketflow/access",
-    "/submit",
     "/capital",
     "/connect",
     "/library",
@@ -109,6 +108,7 @@ describe("Route map (Website Brief v1.0 §1)", () => {
   // Retired routes that MUST exit via either a 301 redirect or a 410 Gone.
   // Public Website v1 (issue #22): /submit-property is canonical again.
   const RETIRED_ROUTES = [
+    "/submit",
     "/sell",
     "/submit-deal",
     "/services",
@@ -158,7 +158,10 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     // land on the same URL.
     const FUNNEL_FROMS = [
       "/sell",
+      "/submit",
       "/submit-deal",
+      "/submit-property",
+      "/wholesale",
       "/services",
       "/resources",
       "/invest",

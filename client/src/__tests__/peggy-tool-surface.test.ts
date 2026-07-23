@@ -48,7 +48,7 @@ describe("Peggy system prompt: tool surface enumeration", () => {
       "/resources",
       "/vendor-network",
       "/marketflow",
-      "/submit",
+      "/bring-an-opportunity",
       "/capital",
       "/contact",
     ]) {

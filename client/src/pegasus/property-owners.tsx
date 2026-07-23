@@ -67,9 +67,9 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow-copper">Start with the situation</div>
           <h2 className="hv-h2 font-serif-display">Pick the one that sounds like yours.</h2>
           <div className="po-step-grid reveal">
-            <div className="po-situations" role="tablist" aria-label="Common owner situations">
+            <div className="po-situations" role="group" aria-label="Common owner situations">
               {SITUATIONS.map((s, i) => (
-                <button key={s.label} type="button" role="tab" aria-selected={i === idx}
+                <button key={s.label} type="button" aria-pressed={i === idx}
                   className="po-situation" data-on={i === idx || undefined}
                   onClick={() => setIdx(i)}>
                   {s.label}

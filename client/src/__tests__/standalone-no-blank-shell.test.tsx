@@ -121,7 +121,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // id to resolve). Each entry must render a real heading + copy, never a
 // blank/crashing/mis-redirected shell.
 const STANDALONE_URLS: string[] = [
-  "/submit",
   // Master Blueprint v5.1 (§31): the multi-step intake desk at its canonical
   // "Bring an Opportunity" URL (/submit-property now 301s here).
   "/bring-an-opportunity",

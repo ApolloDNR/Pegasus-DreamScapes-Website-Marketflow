@@ -161,7 +161,7 @@ export function LegacyHero({ go, theme, parallaxRef, openPeggy }:
       <div className="absolute inset-x-0 bottom-0">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 pb-16 lg:pb-20 text-[var(--cream)]">
           <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/95 text-on-photo mb-7 reveal">Deal Strategy &amp; Real Estate Execution · East Bay</div>
-          <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-[-0.01em] text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] text-on-photo reveal delay-100">
+          <h1 className="font-serif-display font-light leading-[1.0] sm:leading-[0.96] tracking-normal text-[clamp(2.3rem,7vw,6.8rem)] max-w-[18ch] [text-wrap:balance] text-on-photo reveal delay-100">
             Complex property. <span className="italic text-[var(--accent-bright)]">Structured upside.</span>
           </h1>
           <div className="draw-x h-px bg-[var(--accent-bright)]/60 max-w-[220px] mt-9 mb-9" aria-hidden="true" />
@@ -236,7 +236,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               Pegasus Dreamscapes reviews real estate situations and routes them into the right path — acquisition, development, disposition, representation, partnership, or long-term asset strategy.
             </p>
             <div className="hero-rise hero-rise-d3 mt-9 flex flex-wrap items-center justify-center gap-4">
-              <a href="/submit-property" className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
+              <a href="/bring-an-opportunity" className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
                 Submit a Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </a>
               <button type="button" onClick={() => go('strategylab')} className="btn-line-light inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
@@ -278,7 +278,7 @@ export function LegacyHomeIntro() {
           </p>
         </div>
         <div className="lg:col-span-8 reveal delay-100">
-          <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-[-0.01em]">
+          <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-normal">
             We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. Our Development team <span className="text-[var(--accent)]">builds</span> it with licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> that hold underwriting, intake, and the marketplace to the same read.
           </p>
         </div>
@@ -448,7 +448,7 @@ export function StrategyLabFeature({ go }: { go: Nav }) {
         <div className="lg:col-span-6 reveal">
           <div className="pg-label text-[var(--accent-ink)] mb-5">Strategy Lab cockpit</div>
           {/* COPY_DECK §2 locked Strategy Lab preview (issue #22) */}
-          <h2 className="font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-[-0.01em] text-[var(--text)] mb-6">
+          <h2 className="font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-normal text-[var(--text)] mb-6">
             Model the property before you make the move.
           </h2>
           <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-xl">
@@ -640,7 +640,7 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
               <span className={`pg-label ${eyebrowCls}`}>{p.eyebrow}</span>
               {p.tag && <span className="pg-label !text-[8px] !tracking-[0.16em] px-2.5 py-1 rounded-full border border-[var(--accent)]/40 text-[var(--accent)]">{p.tag}</span>}
             </div>
-            <h2 className={`font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-[-0.01em] mb-6 ${titleCls}`}>{p.title}</h2>
+            <h2 className={`font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-normal mb-6 ${titleCls}`}>{p.title}</h2>
             <p className={`${leadCls} leading-relaxed mb-8 max-w-xl`}>{p.lead}</p>
             <ul className="space-y-3.5 mb-10">
               {p.points.map((pt) => (
@@ -1000,7 +1000,7 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
         </div>
         <div className="lg:col-span-7 reveal delay-100">
           <div className="pg-label text-[var(--accent-ink)] mb-5">Represent with Apollo</div>
-          <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">{APOLLO.name}</h2>
+          <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-normal text-[var(--text)] mb-7">{APOLLO.name}</h2>
           <p className="text-[var(--muted)] leading-relaxed mb-9 max-w-xl">{APOLLO.lead}</p>
           <div className="grid sm:grid-cols-3 gap-5 mb-10">
             {APOLLO.points.map((pt) => (
@@ -1055,7 +1055,7 @@ export function NelsonProof({ go }: { go: Nav }) {
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-6 reveal">
             <div className="pg-label text-[var(--accent-ink)] mb-5">The work · {NELSON.name}</div>
-            <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-[-0.01em] text-[var(--text)] mb-7">
+            <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-normal text-[var(--text)] mb-7">
               Acquired and repositioned. Delivered move-in ready.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb}</p>
@@ -1378,7 +1378,7 @@ export function CTABand({ go, openPeggy, title, text, primaryLabel = 'Request a 
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(13,27,44,0.9), rgba(13,27,44,0.55))' }} />
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 text-center">
         <div className="pg-label text-[var(--accent-bright)] mb-7 reveal">Start with one honest read</div>
-        <h2 className="font-serif-display font-light text-5xl md:text-7xl leading-[1.02] tracking-[-0.01em] max-w-3xl mx-auto reveal delay-100">{title}</h2>
+        <h2 className="font-serif-display font-light text-5xl md:text-7xl leading-[1.02] tracking-normal max-w-3xl mx-auto reveal delay-100">{title}</h2>
         <p className="text-[var(--cream)]/75 max-w-xl mx-auto mt-7 leading-relaxed reveal delay-200">{text}</p>
         <div className="flex flex-wrap gap-4 justify-center mt-11 reveal delay-300">
           <button type="button" onClick={() => go(primaryAction)} className="btn-solid-light px-9 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">

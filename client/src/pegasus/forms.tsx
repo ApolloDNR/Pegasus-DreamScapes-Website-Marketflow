@@ -131,6 +131,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
     role: handoff?.role ?? cfg.role,
     third: handoff?.third ?? '',
     message: handoff?.message ?? '',
+    consentContact: false,
   });
   const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -141,6 +142,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   const source = strategy ? 'strategy-lab' : transcript.length > 0 ? 'peggy' : 'form';
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.consentContact) return;
     const fullName = form.name.trim();
     const [firstName, ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(' ');
@@ -153,6 +155,8 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         lastName: lastName || undefined,
         email: form.email.trim(),
         phone: form.phone.trim() || undefined,
+        consentContact: form.consentContact,
+        consentVersion: 'pegasus-followup-contact-v1',
         hp_company: hpCompany,
         ts_elapsed_ms: elapsed,
         leadData: {
@@ -160,6 +164,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           intent: cfg.intent,
           area: form.third.trim() || undefined,
           message: form.message.trim() || undefined,
+          consentContact: form.consentContact,
           hp_company: hpCompany,
           ts_elapsed_ms: elapsed,
           ...(strategy ? { strategy } : {}),
@@ -250,6 +255,23 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
           <span>Something went wrong sending your submission. Please try again, or email apollo@pegasusdreamscapes.com directly.</span>
         </div>
       )}
+      <label className={`sm:col-span-2 flex items-start gap-3 text-[0.78rem] leading-relaxed cursor-pointer ${onNavy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>
+        <input
+          type="checkbox"
+          checked={form.consentContact}
+          onChange={(event) => setForm((current) => ({ ...current, consentContact: event.target.checked }))}
+          className="mt-1 h-4 w-4 shrink-0 accent-[var(--accent)]"
+          required
+        />
+        <span>
+          I agree Pegasus Dreamscapes may contact me by email or phone about this submission.
+          Pegasus uses this information to evaluate and route the request and may share it with
+          service providers or qualified professionals involved in that review. See the{' '}
+          <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a> for
+          retention, rights, and deletion requests. Submitting does not create an agency
+          relationship, offer, or agreement.
+        </span>
+      </label>
       <div className="sm:col-span-2 mt-2">
         <button type="submit" disabled={createLead.isPending}
           className={`${onNavy ? 'btn-solid-light' : 'btn-primary'} w-full sm:w-auto px-10 py-4 pg-label !text-[10px] inline-flex items-center justify-center gap-3 group disabled:opacity-60 disabled:cursor-not-allowed`}>
@@ -274,7 +296,7 @@ export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', han
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
         <div className="lg:col-span-5 reveal">
           <div className={`pg-label mb-5 ${ic}`}>{eyebrow}</div>
-          <h2 className="font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-[-0.01em] mb-7"
+          <h2 className="font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-normal mb-7"
             style={{ color: navy ? 'var(--cream)' : 'var(--text)' }}>{cfg.heading}</h2>
           <p className={`leading-relaxed mb-10 max-w-md ${navy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>{cfg.lead}</p>
           <div className={`space-y-5 pg-label !text-[11px] !tracking-[0.16em] ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
@@ -435,7 +457,7 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
             Model the property before you make the move.
           </h1>
           <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">
-            Strategy Lab is an early Pegasus tool for turning property assumptions into possible paths. It gives a directional preview, then lets you request a human review.
+            Strategy Lab is an early Pegasus tool for turning property assumptions into possible paths. It gives a directional preview, then lets you request a written Property Read.
           </p>
           <div className="strategy-command-note">
             <span>Private orientation</span>
@@ -1016,12 +1038,12 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
 
 /* ----------------------------------------------------------------
    Strategy Lab - Tier strip - the three levels of depth, clearly
-   priced and routed. Front-end only; routes to the canonical /submit.
+   priced and routed. Front-end only; routes to the canonical intake desk.
 ---------------------------------------------------------------- */
 export function StrategyTierStrip() {
   const [, setLocation] = useLocation();
   const goSubmit = (intent?: string) => {
-    setLocation(intent ? `/submit?intent=${intent}` : '/submit');
+    setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
   const tiers = [

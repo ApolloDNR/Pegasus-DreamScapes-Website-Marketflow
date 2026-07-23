@@ -15,7 +15,7 @@ Pegasus Dreamscapes Website / MarketFlow is the public operating front door for 
 ## Core Workflow
 
 1. Visitor brings a property or situation.
-2. Pegasus captures context through `/submit`, Strategy Lab, Peggy, `/connect`, or MarketFlow request access.
+2. Pegasus captures context through `/bring-an-opportunity`, Strategy Lab, Peggy, `/connect`, or MarketFlow request access.
 3. Pegasus reviews and underwrites.
 4. Pegasus structures the appropriate participation lane.
 5. A human-reviewed next step is offered only when the situation fits.

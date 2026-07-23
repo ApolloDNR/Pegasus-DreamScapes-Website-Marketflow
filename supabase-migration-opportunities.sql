@@ -30,11 +30,15 @@ CREATE TABLE IF NOT EXISTS opportunities (
   assigned_department varchar(60),
   status varchar(40) NOT NULL DEFAULT 'New',
   consent_accepted boolean NOT NULL DEFAULT false,
+  consent_copy_version varchar(80),
+  consent_captured_at timestamp,
   utm_source varchar(100),
   utm_medium varchar(100),
   utm_campaign varchar(100),
   referrer text
 );
+ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS consent_copy_version varchar(80);
+ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS consent_captured_at timestamp;
 CREATE INDEX IF NOT EXISTS "IDX_opportunities_status" ON opportunities (status);
 CREATE INDEX IF NOT EXISTS "IDX_opportunities_visitor_type" ON opportunities (visitor_type);
 CREATE INDEX IF NOT EXISTS "IDX_opportunities_created_at" ON opportunities (created_at);

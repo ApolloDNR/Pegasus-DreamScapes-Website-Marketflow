@@ -159,10 +159,10 @@ export const DEPARTMENTS: { stage: string; name: string; desc: string; icon: str
 export const SITUATION_ROUTER: { key: string; title: string; desc: string; cta: string; href: string }[] = [
   { key: 'own', title: 'I own a property',
     desc: 'Distressed, inherited, occupied, vacant, behind on payments, unfinished, or simply complicated.',
-    cta: 'Start Owner Review', href: '/submit-property?type=owner' },
+    cta: 'Start Owner Review', href: '/bring-an-opportunity?intent=sell' },
   { key: 'found', title: 'I found a deal',
     desc: 'Wholesaler, agent, contractor, investor, or referral partner with an opportunity.',
-    cta: 'Submit Deal', href: '/submit-property?type=deal-finder' },
+    cta: 'Submit Deal', href: '/bring-an-opportunity?intent=deal-jv' },
   { key: 'buy', title: 'I want to buy',
     desc: 'Finished property, investment opportunity, or representation through Apollo/Keller Williams.',
     cta: 'Explore Buyer Lane', href: '/buyers' },
@@ -409,7 +409,7 @@ export const PARTICIPATION_LANES: {
     points: ['Direct purchase, listing, JV, reposition, or pass', 'No offer until review and written terms', 'A written path within the launch standard'],
     icon: 'compass',
     cta: 'Submit Property',
-    href: '/submit?intent=seller',
+    href: '/bring-an-opportunity?intent=sell',
   },
   {
     key: 'buyer-representation',
@@ -427,7 +427,7 @@ export const PARTICIPATION_LANES: {
     points: ['Source protection and written terms first', 'Direct acquisition when it fits the buy box', 'JV or MarketFlow routing when that is better'],
     icon: 'handshake',
     cta: 'Submit a Deal',
-    href: '/submit?intent=deal-jv',
+    href: '/bring-an-opportunity?intent=deal-jv',
   },
 ];
 

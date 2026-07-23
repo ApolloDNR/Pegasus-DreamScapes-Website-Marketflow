@@ -88,10 +88,21 @@ import {
   getUserBadges,
   updateUserProfile
 } from "./lib/supabase";
-import { sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
+import { sendEmail, sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
+import {
+  buildGenericLeadNotificationData,
+  mergeLeadConsentAudit,
+  normalizeLeadConsent,
+  resolveStaffNotificationRecipient,
+  validateLeadConsentRequirement,
+} from "./lead-intake-policy";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { sitemapEntries, isCrawlablePublicPath, ROBOTS_DISALLOW } from "../shared/seo-routes";
+import {
+  appendRedirectSearch,
+  QUERY_PRESERVING_INTAKE_PATHS,
+} from "../shared/redirects";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -234,6 +245,8 @@ export async function registerRoutes(
     ['/sell', '/property-owners'],
     ['/submit-deal', '/bring-an-opportunity?intent=deal-jv'],
     ['/submit-property', '/bring-an-opportunity'],
+    ['/submit', '/bring-an-opportunity'],
+    ['/wholesale', '/bring-an-opportunity?intent=deal-jv'],
     ['/services', '/how-we-operate'],
     ['/resources', '/library'],
     ['/invest', '/capital'],
@@ -245,7 +258,12 @@ export async function registerRoutes(
     ['/deal-architecture', '/how-we-operate'],
   ];
   for (const [from, to] of LEGACY_REDIRECTS) {
-    app.get(from, (_req, res) => res.redirect(301, to));
+    app.get(from, (req, res) => {
+      const incomingSearch = QUERY_PRESERVING_INTAKE_PATHS.has(from)
+        ? (req.originalUrl.split('?')[1] ?? '')
+        : '';
+      res.redirect(301, appendRedirectSearch(to, incomingSearch));
+    });
   }
 
   // ─── Website Spec v4 (Re-skin) residual demotions ─────────────────────
@@ -290,13 +308,12 @@ export async function registerRoutes(
   // not be 410'd here either.
   const GONE_ROUTES = [
     '/education',
-    '/wholesale',
     '/systems',
     '/dreamspace',
     '/capital-raising',
   ];
   const gonePage = (path: string) =>
-    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus Dreamscapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus Dreamscapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/submit" style="color:#C87A3A">submit a property</a> directly.</p></body></html>`;
+    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed — Pegasus Dreamscapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus Dreamscapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/bring-an-opportunity" style="color:#C87A3A">bring an opportunity</a> directly.</p></body></html>`;
   for (const path of GONE_ROUTES) {
     app.get(path, (_req, res) => {
       res.status(410).type('html').send(gonePage(path));
@@ -6034,6 +6051,20 @@ export async function registerRoutes(
         }
       }
 
+      // Consent is a factual, versioned part of the intake record. Only an
+      // explicit boolean counts; contact permission never doubles as a privacy
+      // acknowledgement. Migrated public surfaces must provide it before the
+      // lead is stored or forwarded.
+      const normalizedConsent = normalizeLeadConsent(req.body);
+      const consentRequirement = validateLeadConsentRequirement(lt, normalizedConsent);
+      if (!consentRequirement.ok) {
+        return res.status(400).json({ message: consentRequirement.message });
+      }
+      req.body.leadData = mergeLeadConsentAudit(req.body?.leadData, normalizedConsent, {
+        leadType: lt,
+        source: req.body?.source,
+      });
+
       // Empire Doctrine v1.0.1 — explicit boundary mapping for MarketFlow
       // access requests. /api/leads is the persistence path of record, but
       // marketflow_access submissions are conceptually a distinct
@@ -6052,6 +6083,8 @@ export async function registerRoutes(
           role: ld.role ?? "",
           introducedBy: ld.introducedBy ?? "",
           notes: ld.notes ?? "",
+          consentContact: normalizedConsent.consentContact,
+          consentCcpaAcknowledged: normalizedConsent.consentCcpaAcknowledged,
           source: req.body?.source ?? "marketflow_access_page",
           submittedAt: new Date().toISOString(),
         };
@@ -6111,8 +6144,8 @@ export async function registerRoutes(
             contactPhone: parseResult.data.phone || undefined,
             outreachReason: outreachReasonForLeadType(parseResult.data.leadType),
             sourceChannel: `website:${parseResult.data.source || parseResult.data.leadType}`,
-            consentContact: true,
-            consentCcpaAcknowledged: true,
+            consentContact: normalizedConsent.consentContact,
+            consentCcpaAcknowledged: normalizedConsent.consentCcpaAcknowledged,
             extra: {
               leadType: parseResult.data.leadType,
               leadData: parseResult.data.leadData,
@@ -6169,6 +6202,22 @@ export async function registerRoutes(
           serviceArea: (leadData.leadData as any)?.serviceArea || (leadData.leadData as any)?.area,
           notes: leadData.notes || undefined,
         }).catch(err => console.error('Failed to send vendor lead notification:', err));
+      } else {
+        const notification = buildGenericLeadNotificationData({
+          ...leadData,
+          id: lead.id,
+        });
+        void sendEmail({
+          to: resolveStaffNotificationRecipient(),
+          subject: notification.subject,
+          text: notification.text,
+        })
+          .then((result) => {
+            if (!result.success) {
+              console.error('[lead-email] delivery failed:', result.error);
+            }
+          })
+          .catch((error) => console.error('[lead-email] delivery failed:', error));
       }
       
       res.status(201).json(lead);

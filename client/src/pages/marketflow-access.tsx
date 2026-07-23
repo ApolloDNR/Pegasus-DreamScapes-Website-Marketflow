@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -30,10 +31,10 @@ import { SuccessView } from "@/components/success-view";
 
 function WhatYouGet() {
   const perks = [
-    { title: "Reviewed opportunities", desc: "Every record starts with a Pegasus structural read. No noise, no cold blasts." },
-    { title: "Verified operator network", desc: "Buyers, wholesalers, and capital partners: all introduced, not anonymous." },
-    { title: "Private deal room", desc: "Negotiate, structure JVs, and coordinate capital in one place." },
-    { title: "Priority review queue", desc: "Submissions from network members jump the general intake queue." },
+    { title: "Reviewed fit", desc: "Pegasus reviews each request against the needs of the controlled pilot." },
+    { title: "Role-based profile", desc: "Share your market, mandate, and capacity without publishing them publicly." },
+    { title: "Controlled introductions", desc: "When a real fit appears, Pegasus may make a direct introduction under written terms." },
+    { title: "Pilot updates", desc: "Approved participants receive relevant updates; access never guarantees inventory or placement." },
   ];
   return (
     <div className="mb-8 p-6 rounded-lg border border-border/40 bg-card space-y-4" data-testid="marketflow-what-you-get">
@@ -59,6 +60,9 @@ const accessSchema = z.object({
   role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"]),
   introducedBy: z.string().min(2, "Tell us who introduced you"),
   notes: z.string().optional().default(""),
+  consentContact: z.boolean().refine((value) => value, {
+    message: "Required to request access",
+  }),
 });
 
 type AccessValues = z.infer<typeof accessSchema>;
@@ -92,6 +96,7 @@ export default function MarketflowAccessPage() {
       role: "operator",
       introducedBy: "",
       notes: "",
+      consentContact: false,
     },
   });
 
@@ -108,10 +113,13 @@ export default function MarketflowAccessPage() {
         firstName: first || "",
         lastName: rest.join(" "),
         email: data.email,
+        consentContact: data.consentContact,
+        consentVersion: "marketflow-access-contact-v1",
         leadData: {
           role: data.role,
           introducedBy: data.introducedBy,
           notes: data.notes,
+          consentContact: data.consentContact,
           hp_company: "",
           ts_mounted_at: formMountedAt.current,
           ts_elapsed_ms: elapsedMs,
@@ -139,6 +147,7 @@ export default function MarketflowAccessPage() {
                 role: "operator",
                 introducedBy: "",
                 notes: "",
+                consentContact: false,
               });
               formMountedAt.current = Date.now();
               setSubmitted(false);
@@ -156,7 +165,7 @@ export default function MarketflowAccessPage() {
         <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
           MarketFlow &middot; Beta Access
         </p>
-        <h1 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-4">
+        <h1 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal text-foreground mb-4">
           Request beta access.
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -251,6 +260,34 @@ export default function MarketflowAccessPage() {
                     <Textarea rows={4} {...field} data-testid="textarea-access-notes" />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="consentContact"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-start gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        data-testid="checkbox-access-consent"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-normal leading-relaxed cursor-pointer">
+                        I agree Pegasus Dreamscapes may email me about this MarketFlow access
+                        request. Pegasus uses the information to review fit for the controlled
+                        pilot and may share it with service providers supporting that review. See
+                        the <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
+                        for retention, rights, and deletion requests. Requesting access does not
+                        guarantee approval, inventory, or placement.
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </div>
                 </FormItem>
               )}
             />

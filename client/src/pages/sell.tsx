@@ -848,7 +848,10 @@ function LeadFormSection() {
                       </FormControl>
                       <div className="space-y-1">
                         <FormLabel className="text-sm font-normal cursor-pointer">
-                          I consent to be contacted by Pegasus DreamScapes about this property.
+                          I agree Pegasus Dreamscapes may contact me by email or phone call about
+                          this property. Pegasus uses the information to evaluate and route the
+                          request. See the <a className="underline" href="/privacy">Privacy Policy</a>{' '}
+                          for retention, rights, and deletion requests.
                         </FormLabel>
                         <FormMessage />
                       </div>

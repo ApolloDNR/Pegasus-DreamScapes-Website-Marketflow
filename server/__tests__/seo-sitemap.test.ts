@@ -38,9 +38,16 @@ describe("sitemap generation from seo-routes", () => {
 
 describe("isCrawlablePublicPath", () => {
   it("allows public surfaces", () => {
-    for (const p of ["/", "/about", "/submit", "/marketflow/access"]) {
+    for (const p of ["/", "/about", "/bring-an-opportunity", "/marketflow/access"]) {
       expect(isCrawlablePublicPath(p)).toBe(true);
     }
+  });
+
+  it("does not advertise the legacy /submit alias", () => {
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+    expect(isCrawlablePublicPath("/submit")).toBe(false);
+    expect(sitemapPaths.has("/submit")).toBe(false);
+    expect(sitemapPaths.has("/bring-an-opportunity")).toBe(true);
   });
 
   it("excludes the remaining demoted bare route from the sitemap (it 302-redirects)", () => {

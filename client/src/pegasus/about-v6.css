@@ -4,13 +4,27 @@
   --ab6-limestone: #f2eadc;
   --ab6-limestone-deep: #e5d9c6;
   --ab6-ink: #13253a;
-  --ab6-muted: #5f6870;
-  --ab6-bronze: #a9683c;
+  --ab6-muted: #59646a;
+  --ab6-bronze: #8b522d;
   --ab6-bronze-bright: #d19a6d;
   --ab6-line: rgba(19, 37, 58, 0.17);
   background: var(--ab6-limestone);
   color: var(--ab6-ink);
   overflow: clip;
+}
+
+.pg-root[data-theme='dark'] .about-v6 {
+  --ab6-limestone: #0b1b2d;
+  --ab6-limestone-deep: #122940;
+  --ab6-ink: #f5ecdf;
+  --ab6-muted: #c7bdaf;
+  --ab6-bronze: #d19a6d;
+  --ab6-line: rgba(245, 236, 223, 0.17);
+}
+
+.pg-root[data-theme='dark'] .ab6-founder {
+  background: #122940;
+  border-color: rgba(245, 236, 223, 0.13);
 }
 
 .ab6-shell {
@@ -88,7 +102,6 @@
   font-family: var(--pg-font-display);
   font-size: clamp(4.25rem, 7.3vw, 7.6rem);
   font-weight: 400;
-  letter-spacing: -0.048em;
   line-height: 0.91;
   text-wrap: balance;
 }
@@ -289,7 +302,6 @@
   font-family: var(--pg-font-display);
   font-size: clamp(3.15rem, 5.4vw, 5.8rem);
   font-weight: 400;
-  letter-spacing: -0.042em;
   line-height: 0.98;
   text-wrap: balance;
 }
@@ -499,7 +511,7 @@
 .ab6-disclosure {
   max-width: 820px;
   margin: 2rem 0 0 auto;
-  color: rgba(245, 236, 223, 0.43);
+  color: rgba(245, 236, 223, 0.5);
   font-size: 0.74rem;
   line-height: 1.65;
 }

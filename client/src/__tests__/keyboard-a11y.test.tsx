@@ -273,7 +273,7 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/home.tsx",
   "client/src/pages/about.tsx",
   "client/src/pages/development.tsx",
-  "client/src/pages/submit.tsx",
+  "client/src/pages/submit-property.tsx",
   "client/src/pages/capital.tsx",
   "client/src/pages/connect.tsx",
   "client/src/pages/library.tsx",
@@ -469,7 +469,7 @@ beforeAll(() => {
 import HomePage from "@/pages/home";
 import AboutPage from "@/pages/about";
 import DevelopmentPage from "@/pages/development";
-import SubmitPage from "@/pages/submit";
+import SubmitPropertyPage from "@/pages/submit-property";
 import CapitalPage from "@/pages/capital";
 import LibraryPage from "@/pages/library";
 import ProjectsPage from "@/pages/projects";
@@ -504,7 +504,7 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/", Page: HomePage },
   { path: "/about", Page: AboutPage },
   { path: "/development", Page: DevelopmentPage },
-  { path: "/submit", Page: SubmitPage },
+  { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
   { path: "/capital", Page: CapitalPage },
   { path: "/connect", Page: ConnectPage },
   { path: "/library", Page: LibraryPage },

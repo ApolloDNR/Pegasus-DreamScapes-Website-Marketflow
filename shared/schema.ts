@@ -3319,6 +3319,8 @@ export const opportunities = pgTable("opportunities", {
 
   // compliance + attribution
   consentAccepted: boolean("consent_accepted").notNull().default(false),
+  consentCopyVersion: varchar("consent_copy_version", { length: 80 }),
+  consentCapturedAt: timestamp("consent_captured_at"),
   utmSource: varchar("utm_source", { length: 100 }),
   utmMedium: varchar("utm_medium", { length: 100 }),
   utmCampaign: varchar("utm_campaign", { length: 100 }),
@@ -3331,7 +3333,8 @@ export const opportunities = pgTable("opportunities", {
 
 export const insertOpportunitySchema = createInsertSchema(opportunities)
   .omit({ id: true, createdAt: true, updatedAt: true, status: true,
-          recommendedLane: true, assignedDepartment: true })
+          recommendedLane: true, assignedDepartment: true,
+          consentCopyVersion: true, consentCapturedAt: true })
   .extend({
     visitorType: z.enum(OPPORTUNITY_VISITOR_TYPES),
     contactName: z.string().trim().min(1).max(255),

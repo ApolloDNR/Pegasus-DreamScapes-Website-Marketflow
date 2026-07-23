@@ -36,7 +36,7 @@ Modes:
   --example         Verify .env.example lists the required production variables.
   --env             Verify the current process environment has required variables.
   --base-url URL    Deployed site origin to check.
-  --post-test-lead  Send a clearly marked discardable lead to /api/leads.
+  --post-test-lead  Send a clearly marked discardable opportunity through the canonical intake.
 `;
 }
 
@@ -86,28 +86,26 @@ async function checkHealth(baseUrl) {
   return true;
 }
 
-async function postTestLead(baseUrl) {
+async function postTestOpportunity(baseUrl) {
   const payload = {
-    firstName: "Launch",
-    lastName: "Smoke",
+    hp_company: "",
+    ts_elapsed_ms: 5000,
+    sourcePage: "/bring-an-opportunity",
+    leadSource: "launch_smoke",
+    visitorType: "owner",
+    contactName: "Launch Smoke",
     email: "apollo+launch-smoke@pegasusdreamscapes.com",
     phone: "9257448525",
-    address: "123 Launch Smoke Test, Concord, CA",
-    leadType: "submit",
-    source: "launch_smoke",
+    propertyAddress: "123 Launch Smoke Test",
+    city: "Concord",
+    state: "CA",
+    situation: "Just exploring",
+    goal: "Not sure",
     notes: "Launch smoke test. Discard after confirming lead row, HQ outbox/forwarding, and staff notification.",
-    leadData: {
-      intent: "property",
-      submitterRole: "owner_seller",
-      timeline: "launch_smoke",
-      desiredOutcome: "confirm_intake_pipeline",
-      hp_company: "",
-      ts_elapsed_ms: 5000,
-      smokeTest: true,
-    },
+    consentAccepted: true,
   };
 
-  const response = await fetch(`${baseUrl}/api/leads`, {
+  const response = await fetch(`${baseUrl}/api/opportunities`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -122,13 +120,13 @@ async function postTestLead(baseUrl) {
   }
 
   if (!response.ok) {
-    fail(`[launch-smoke] POST /api/leads returned ${response.status}: ${JSON.stringify(body)}`);
+    fail(`[launch-smoke] POST /api/opportunities returned ${response.status}: ${JSON.stringify(body)}`);
     return;
   }
 
-  const id = body?.id ?? body?.lead?.id ?? "unknown";
-  console.log(`[launch-smoke] POST /api/leads accepted test lead. response id: ${id}`);
-  console.log("[launch-smoke] Manual proof still required: confirm lead row, hq_outbox forward/queued state, and staff notification email.");
+  const id = body?.id ?? body?.opportunity?.id ?? "unknown";
+  console.log(`[launch-smoke] POST /api/opportunities accepted test opportunity. response id: ${id}`);
+  console.log("[launch-smoke] Manual proof still required: confirm opportunity row, hq_outbox forward/queued state, and staff/customer notification emails.");
 }
 
 async function main() {
@@ -149,9 +147,9 @@ async function main() {
   if (baseUrl) {
     const healthy = await checkHealth(baseUrl);
     if (healthy && has("--post-test-lead")) {
-      await postTestLead(baseUrl);
+      await postTestOpportunity(baseUrl);
     } else if (healthy) {
-      console.log("[launch-smoke] skipped POST /api/leads. Add --post-test-lead to create a marked test lead.");
+      console.log("[launch-smoke] skipped POST /api/opportunities. Add --post-test-lead to create a marked test opportunity.");
     }
   }
 }

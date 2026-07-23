@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark, ClipboardList, Layers, Hammer, BadgeCheck } from 'lucide-react';
-import type { Nav, Theme, Category, FormCfg, PeggyHandoff } from './theme';
+import type { Nav, Theme, Category, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_ROLES, PEGGY_SLA,
@@ -18,29 +18,11 @@ import {
 
 const INVESTMENTS = PILLARS3[0];
 
-const MARKETFLOW_FORM: FormCfg = {
-  role: 'Deal finder / Wholesaler',
-  roleOptions: [
-    'Deal finder / Wholesaler',
-    'Buyer / Investor',
-    'Capital partner',
-    'Agent / Vendor',
-    'Other',
-  ],
-  intent: 'marketflow-access',
-  heading: <>Request <span className="italic text-[var(--accent-bright)]">access.</span></>,
-  lead: 'MarketFlow is private, reviewed access. Tell us how you operate or where your capital sits, and Pegasus will review your fit for the network.',
-  submit: 'Request MarketFlow Access',
-  third: { label: 'Firm, fund, or trade', placeholder: 'Where you operate (optional)' },
-  messageLabel: 'How you participate',
-  messagePlaceholder: 'Share your market, role, capacity, buy box, or the deal types you focus on.',
-};
-
 const MARKETFLOW_PREVIEW = [
   { tag: 'Opportunity record', title: 'Value-add property file', lines: ['Basis, scope, timeline, and source', 'Lane fit and next review step', 'Shown only after approval'] },
   { tag: 'Operator profile', title: 'Licensed GC profile', lines: ['Trade and license reviewed', 'References and capacity noted', 'Matched to the right project type'] },
   { tag: 'Buyer interest', title: 'Capital partner mandate', lines: ['Check size & risk band', 'Asset types they back', 'Matched to projects, not pools'] },
-  { tag: 'Trust layer', title: 'Verification badges', lines: ['Identity & license reviewed', 'Source attribution logged', 'Written terms before introductions'] },
+  { tag: 'Trust record', title: 'Review notes', lines: ['Identity or license details, where relevant', 'Source attribution recorded', 'Written terms before introductions'] },
 ];
 
 const APOLLO_REP = {
@@ -125,7 +107,7 @@ function WhatYouGet({ cat }: { cat: Category }) {
           <div className="lg:col-span-5 reveal lg:sticky lg:top-28">
             <div className="pg-label text-[var(--accent)]">{label}</div>
             <div className="pg-rule mt-6 mb-7 max-w-[3rem] !bg-[var(--accent)] draw-x" />
-            <p className="font-serif-display text-3xl md:text-[2.6rem] text-[var(--text)] leading-[1.15] tracking-[-0.01em]">{cat.quote}</p>
+            <p className="font-serif-display text-3xl md:text-[2.6rem] text-[var(--text)] leading-[1.15] tracking-normal">{cat.quote}</p>
           </div>
           <div className="lg:col-span-7">
             {cat.points.map((p, i) => (
@@ -216,7 +198,7 @@ export function DealStrategyPage({ go, openPeggy }: { go: Nav; openPeggy: () => 
           </div>
           <div className="lg:col-span-7 reveal delay-100">
             <div className="pg-label text-[var(--accent)] mb-5">Why it exists</div>
-            <h2 className="font-serif-display text-4xl md:text-[3.2rem] leading-[1.05] tracking-[-0.01em] text-[var(--text)] mb-7">
+            <h2 className="font-serif-display text-4xl md:text-[3.2rem] leading-[1.05] tracking-normal text-[var(--text)] mb-7">
               We never lead with the lane.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-5 max-w-xl">
@@ -345,7 +327,7 @@ function LabPreview() {
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           <div className="lg:col-span-4 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">What you’ll model</div>
-            <h2 className="font-serif-display text-4xl md:text-[2.6rem] leading-[1.08] tracking-[-0.01em] text-[var(--text)] mb-5">
+            <h2 className="font-serif-display text-4xl md:text-[2.6rem] leading-[1.08] tracking-normal text-[var(--text)] mb-5">
               One cockpit in.<br />One clear read out.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed max-w-md">
@@ -437,7 +419,7 @@ function StrategyLabWelcome({ onBegin, go }: { onBegin: () => void; go: Nav }) {
           </div>
           <div className="strategy-welcome-flow" aria-hidden="true">
             <span>Inputs</span><ArrowRight className="strategy-welcome-flow-arrow" /><span>Possible paths</span>
-            <ArrowRight className="strategy-welcome-flow-arrow" /><span>Human review</span>
+            <ArrowRight className="strategy-welcome-flow-arrow" /><span>Pegasus read</span>
           </div>
         </figure>
       </div>
@@ -496,7 +478,7 @@ export function MarketFlowPage({ go }: { go: Nav }) {
         image={IMG('pegasus-casestudy.png')}
         scrimTop
         lead="MarketFlow is Pegasus's private opportunity-distribution network, currently in a controlled pilot. It connects buyers, investors, deal finders, capital partners, vendors, and operators around opportunities Pegasus has already reviewed. Access is reviewed by a person, not open." />
-      <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '#marketflow-request' }} />
+      <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '/marketflow/access' }} />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="A look inside"
@@ -541,9 +523,23 @@ export function MarketFlowPage({ go }: { go: Nav }) {
           </div>
         </div>
       </section>
-      <div id="marketflow-request" className="scroll-mt-24">
-        <LeadSection cfg={MARKETFLOW_FORM} eyebrow="Request access" tone="page" showRole />
-      </div>
+      <section id="marketflow-request" className="relative overflow-hidden bg-[var(--bg)] py-24 lg:py-32 scroll-mt-24">
+        <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-[1fr_auto] gap-10 items-end">
+          <div className="max-w-3xl">
+            <div className="pg-label text-[var(--accent-ink)] mb-5">Controlled pilot</div>
+            <h2 className="font-serif-display text-4xl sm:text-5xl md:text-6xl leading-[1.04] text-[var(--text)]">
+              Tell us the role you can actually fill.
+            </h2>
+            <p className="mt-6 max-w-2xl text-[var(--muted)] leading-relaxed">
+              The dedicated access desk records your role, who introduced you, and the context
+              Pegasus needs to review fit. A request is not approval, membership, or a promise of inventory.
+            </p>
+          </div>
+          <a href="/marketflow/access" className="btn-primary inline-flex items-center justify-center gap-3 px-8 py-4 pg-label !text-[10px]">
+            Request MarketFlow Access <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      </section>
     </>
   );
 }
@@ -569,7 +565,7 @@ function RepLane({ rep }: { rep: { label: string; desc: string; points: string[]
 
 // Step 7 - visible sell/buy/situation/deal selector shown before the inline
 // representation lead form. "Sell"/"Buy" scroll to the form (Apollo's two
-// roleOptions); "complex situation"/"deal" route to the canonical /submit
+// roleOptions); "complex situation"/"deal" route to the canonical intake
 // intake with a valid ?intent= so nothing falls back to a default.
 const APOLLO_SELECTOR = [
   {
@@ -592,7 +588,7 @@ const APOLLO_SELECTOR = [
     blurb: 'Distressed, inherited, occupied, stalled, or up against a deadline? Send it for a property review and Apollo will lay out the real options, with no guaranteed offer until the numbers and the agreement are real.',
     cta: 'Request a Property Review',
     mode: 'link' as const,
-    href: '/submit?intent=property',
+    href: '/bring-an-opportunity?intent=property',
   },
   {
     key: 'deal',
@@ -600,7 +596,7 @@ const APOLLO_SELECTOR = [
     blurb: 'Bring a deal and get a straight answer. If it fits, Apollo may buy, partner, or route it, with written JV or compensation terms before anything moves.',
     cta: 'Submit a Deal',
     mode: 'link' as const,
-    href: '/submit?intent=deal-jv',
+    href: '/bring-an-opportunity?intent=deal-jv',
   },
 ];
 
@@ -731,7 +727,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-5 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">How Peggy helps</div>
-            <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-[-0.01em] text-[var(--text)] mb-7">
+            <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-normal text-[var(--text)] mb-7">
               The fastest way to find your lane.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-md">
@@ -790,7 +786,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
         <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
           <div className="max-w-2xl mb-14 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">What Peggy can actually do</div>
-            <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-[-0.01em] text-[var(--text)]">
+            <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-normal text-[var(--text)]">
               Fluent in the deal, not just the chat.
             </h2>
           </div>

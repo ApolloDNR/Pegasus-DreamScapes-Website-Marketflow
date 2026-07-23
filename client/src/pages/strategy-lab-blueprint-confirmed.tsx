@@ -57,7 +57,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
             <ArrowRight className="w-3.5 h-3.5" /> Back to Strategy Lab
           </Link>
           <Link
-            href="/submit?intent=blueprint"
+            href="/bring-an-opportunity?intent=blueprint"
             className="inline-flex items-center gap-2 border border-cream/18 px-4 py-2 text-sm text-cream hover:border-[hsl(var(--copper))] transition-colors"
             data-testid="link-submit-blueprint"
           >

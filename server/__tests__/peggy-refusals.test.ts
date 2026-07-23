@@ -74,7 +74,7 @@ describe("Peggy post-output voice guard", () => {
     const { sanitized, violations } = applyPostOutputGuard(dirty);
     expect(violations).toContain("price_quote");
     expect(sanitized).toContain("can't quote");
-    expect(sanitized).toContain("/submit");
+    expect(sanitized).toContain("/bring-an-opportunity");
     expect(sanitized).not.toMatch(/\$625,000/);
   });
 
@@ -124,8 +124,8 @@ describe("Peggy system prompt locks", () => {
     expect(PEGGY_SYSTEM_PROMPT).toMatch(/Do not.*20\+? years/i);
   });
 
-  it("routes to Amendment 2 canonical URLs (/submit, /capital, /library, /strategy-lab)", () => {
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/submit");
+  it("routes to canonical URLs (/bring-an-opportunity, /capital, /library, /strategy-lab)", () => {
+    expect(PEGGY_SYSTEM_PROMPT).toContain("/bring-an-opportunity");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/capital");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/library");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab");

@@ -97,6 +97,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
             different hands. Pegasus coordinates the capabilities each path requires, so one accountable
             operator carries the deal from first read to final outcome.
           </p>
+          <p className="hwo-hero-caption">Architectural vision &middot; Not property inventory</p>
         </div>
       </section>
 
@@ -105,9 +106,9 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">The operating sequence</div>
           <h2 className="hv-h2 font-serif-display">Originate. Structure. Operate. Realize. Learn.</h2>
-          <div className="hwo-rail reveal" role="tablist" aria-label="The five operating stages">
+          <div className="hwo-rail reveal" role="group" aria-label="The five operating stages">
             {STAGES.map((s, i) => (
-              <button key={s.num} type="button" role="tab" aria-selected={i === stageIdx}
+              <button key={s.num} type="button" aria-pressed={i === stageIdx}
                 className="hwo-rail-stop" data-on={i === stageIdx || undefined}
                 onClick={() => setStageIdx(i)}>
                 <span className="hwo-rail-num">{s.num}</span>
@@ -118,7 +119,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
               <div className="hwo-rail-fill" style={{ width: `${((stageIdx + 1) / STAGES.length) * 100}%` }} />
             </div>
           </div>
-          <div className="hwo-stage" key={stage.num}>
+          <div className="hwo-stage" key={stage.num} aria-live="polite">
             <div>
               <h3 className="hwo-stage-claim font-serif-display">{stage.claim}</h3>
               <p className="hv-muted">{stage.detail}</p>

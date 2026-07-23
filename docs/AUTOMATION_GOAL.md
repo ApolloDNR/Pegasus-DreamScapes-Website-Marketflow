@@ -23,7 +23,7 @@ Do not wait for Apollo to pick small tasks unless blocked by production secrets,
 Prioritize:
 
 - removing misleading launch surfaces;
-- making `/submit`, Strategy Lab, Peggy, `/connect`, and MarketFlow request access work cleanly;
+- making `/bring-an-opportunity`, Strategy Lab, Peggy, `/connect`, and MarketFlow request access work cleanly;
 - verifying public routing, SEO, accessibility, mobile behavior, and production build;
 - keeping Deal Blueprint by-review only;
 - keeping MarketFlow private/beta;

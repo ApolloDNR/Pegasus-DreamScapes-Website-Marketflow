@@ -60,7 +60,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navPrimary("/deal-strategy"),
       navPrimary("/strategy-lab"),
       navPrimary("/development"),
-      extraLink("/submit", "Submit a Property", "submit"),
+      extraLink("/bring-an-opportunity", "Bring an Opportunity", "submit"),
     ],
   },
   {

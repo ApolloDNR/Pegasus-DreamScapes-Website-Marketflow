@@ -145,11 +145,11 @@ describe("Public copy contains no banned filler / AI-tell phrases (Task #247)", 
     });
   }
 
-  // The canonical /submit intake page is public-facing copy too (Task #250) —
+  // The canonical opportunity intake is public-facing copy too (Task #250) —
   // guard it with the same banned-phrase list even though it lives outside the
   // pegasus prototype directory.
-  it("client/src/pages/submit.tsx ships no banned phrases", () => {
-    const offenses = scanRepoFile("client/src/pages/submit.tsx");
+  it("client/src/pages/submit-property.tsx ships no banned phrases", () => {
+    const offenses = scanRepoFile("client/src/pages/submit-property.tsx");
     expect(
       offenses,
       offenses.length

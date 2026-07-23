@@ -10,7 +10,7 @@ import { useTheme } from '@/components/theme-provider';
 
 /**
  * PegasusStandaloneShell renders the prototype's NavBar + Footer + Peggy dock
- * around a standalone (non-prototype) public page - e.g. /submit - so the
+ * around a standalone (non-prototype) public page - e.g. the intake desk - so the
  * whole public site wears ONE chrome instead of jarring users with the legacy
  * global nav/footer.
  *
@@ -61,7 +61,7 @@ export function PegasusStandaloneShell({
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
   const toSubmit = useCallback(
     (intent?: string) => {
-      setLocation(intent ? `/submit?intent=${intent}` : '/submit');
+      setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
       window.scrollTo({ top: 0, behavior: 'auto' });
     },
     [setLocation],

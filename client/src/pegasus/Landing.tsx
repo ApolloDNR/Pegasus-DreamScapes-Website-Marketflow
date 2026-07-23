@@ -59,7 +59,9 @@ export function Landing() {
 
   const toggleTheme = useCallback(() => setTheme(theme === 'dark' ? 'light' : 'dark'), [setTheme, theme]);
   const openPeggy = useCallback((role?: string) => {
-    if (role) setPeggyRole(role);
+    // Keep this boundary defensive: a callback passed directly to onClick can
+    // otherwise receive React's click event and mistake it for a visitor role.
+    if (typeof role === 'string' && role) setPeggyRole(role);
     setPeggyOpen(true);
   }, []);
   const setPeggyPanel = useCallback((v: boolean) => {
@@ -68,7 +70,7 @@ export function Landing() {
   }, []);
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
   const toSubmit = useCallback((intent?: string) => {
-    setLocation(intent ? `/submit?intent=${intent}` : '/submit');
+    setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [setLocation]);
   const onHandoffToReview = useCallback((h: PeggyHandoff) => {

@@ -35,17 +35,23 @@ const VISITOR_VALUE_MAP: Record<string, { backend: string; tag?: string }> = {
 const PROPERTY_TYPES = ["Single-family", "Duplex", "Triplex", "Fourplex", "Multifamily 5+", "Land", "Mixed-use", "Commercial", "Other"];
 const OCCUPANCY = ["Owner occupied", "Tenant occupied", "Vacant", "Partially occupied", "Unknown"];
 const CONDITIONS = ["Turnkey", "Light cosmetic", "Moderate repairs", "Heavy repairs", "Fire/water damage", "Unfinished project", "Unknown"];
-const SITUATIONS = ["Inherited / probate", "Pre-foreclosure", "Behind on payments", "Divorce", "Vacant", "Tenant issue", "Major repairs", "Fire/water damage", "Unfinished project", "Partnership dispute", "Off-market deal", "Need buyer", "Need capital", "Need construction", "Just exploring", "Other"];
+const SITUATIONS = ["Inherited / probate", "Pre-foreclosure", "Behind on payments", "Divorce", "Vacant", "Tenant issue", "Major repairs", "Fire/water damage", "Unfinished project", "Partnership dispute", "Deal not publicly listed", "Need buyer", "Need capital", "Need construction", "Just exploring", "Other"];
 const GOALS = ["Sell", "Get offer", "Partner / JV", "List through Apollo / Keller Williams", "Develop / reposition", "Find buyer", "Hold / rent", "Refinance", "Not sure", "Other"];
-const CONTACT_METHODS = ["Phone call", "Text", "Email", "Any"];
+// Text messaging requires its own consent record. Until that contract exists,
+// the public intake offers only email and phone-call follow-up.
+const CONTACT_METHODS = ["Phone call", "Email", "Any"];
 
 const STEPS = ["Bringing", "Property", "Situation", "Goal", "Contact"] as const;
 
 /** Lane CTAs deep-link with an intent; it preselects the §14 answer. */
 const INTENT_TO_VISITOR: Record<string, string> = {
   sell: "owner",
+  property: "owner",
   "deal-jv": "deal_finder",
   deal: "deal_finder",
+  adu: "strategy_only",
+  explore: "strategy_only",
+  blueprint: "strategy_only",
   partnership: "capital_partner",
 };
 
@@ -151,6 +157,9 @@ export default function SubmitPropertyPage() {
     const p = new URLSearchParams(window.location.search);
     const intent = (p.get("intent") ?? p.get("type") ?? "").toLowerCase();
     return {
+      intent,
+      address: (p.get("address") ?? "").slice(0, 500),
+      referralReference: (p.get("ref") ?? "").slice(0, 160),
       utmSource: p.get("utm_source") ?? undefined,
       utmMedium: p.get("utm_medium") ?? undefined,
       utmCampaign: p.get("utm_campaign") ?? undefined,
@@ -161,7 +170,7 @@ export default function SubmitPropertyPage() {
   // A lane CTA that already answered the §14 question lands mid-flow.
   const [step, setStep] = useState(utm.preVisitor ? 1 : 0);
   const [form, setForm] = useState<FormState>(
-    utm.preVisitor ? { ...EMPTY, visitorType: utm.preVisitor } : EMPTY,
+    { ...EMPTY, visitorType: utm.preVisitor, propertyAddress: utm.address },
   );
   const [hp, setHp] = useState("");
   const [result, setResult] = useState<{ id: string } | null>(null);
@@ -183,7 +192,7 @@ export default function SubmitPropertyPage() {
         hp_company: hp,
         ts_elapsed_ms: Date.now() - startedAt.current,
         sourcePage: "/bring-an-opportunity",
-        leadSource: "public_website_v1",
+        leadSource: utm.intent === "blueprint" ? "blueprint_request" : "public_website_v1",
         visitorType: mapped ? mapped.backend : form.visitorType,
         contactName: form.contactName,
         email: form.email,
@@ -202,7 +211,12 @@ export default function SubmitPropertyPage() {
         urgency: form.urgency || undefined,
         estimatedValue: form.estimatedValue ? Number(form.estimatedValue.replace(/[^0-9.]/g, "")) : undefined,
         estimatedDebt: form.estimatedDebt ? Number(form.estimatedDebt.replace(/[^0-9.]/g, "")) : undefined,
-        notes: [mapped?.tag, form.notes].filter(Boolean).join(" — ") || undefined,
+        notes: [
+          mapped?.tag,
+          utm.intent ? `Intake intent: ${utm.intent}` : undefined,
+          utm.referralReference ? `Referral reference: ${utm.referralReference}` : undefined,
+          form.notes,
+        ].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,
         utmSource: utm.utmSource,
         utmMedium: utm.utmMedium,
@@ -228,7 +242,7 @@ export default function SubmitPropertyPage() {
 
   if (result) {
     return (
-      <main className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-32 pb-24 px-6">
+      <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
             <Check className="h-7 w-7 text-[#8b5a36]" strokeWidth={2.4} />
@@ -240,14 +254,14 @@ export default function SubmitPropertyPage() {
             Back to Pegasus
           </a>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
+    <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-10 max-w-3xl">
+        <div className="mb-10 max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] mb-3">
             Bring an Opportunity
           </p>
@@ -258,7 +272,7 @@ export default function SubmitPropertyPage() {
             We begin by determining what is missing and whether Pegasus is the right participant.
             Share what you know; partial information is fine.
           </p>
-        </header>
+        </div>
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start lg:gap-12">
         <div className="min-w-0">
@@ -381,9 +395,19 @@ export default function SubmitPropertyPage() {
               <label className="flex items-start gap-3 text-sm leading-relaxed text-[#454b55] dark:text-[#cfc5b4] cursor-pointer">
                 <input type="checkbox" checked={form.consentAccepted}
                   onChange={(e) => set({ consentAccepted: e.target.checked })}
-                  className="mt-1 h-4 w-4 accent-[#b47645]" required />
+                  className="mt-1 h-4 w-4 accent-[#b47645]" required
+                  aria-describedby="sp-privacy-notice" />
                 <span>{CONSENT_COPY}</span>
               </label>
+              <p id="sp-privacy-notice" className="text-xs leading-relaxed text-[#6e6455] dark:text-[#9aa6b7]">
+                Pegasus uses this information to evaluate and route the request and may share it
+                with service providers or qualified professionals involved in that review. The{' '}
+                <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
+                explains retention and your rights. To request access or deletion, email{' '}
+                <a className="underline underline-offset-2" href="mailto:apollo@pegasusdreamscapes.com">
+                  apollo@pegasusdreamscapes.com
+                </a>.
+              </p>
               {submit.isError && (
                 <p role="alert" className="text-sm text-red-600 dark:text-red-400">
                   Something went wrong recording the submission. Please try again, or email
@@ -449,6 +473,6 @@ export default function SubmitPropertyPage() {
         </aside>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

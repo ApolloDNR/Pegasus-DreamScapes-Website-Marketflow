@@ -4,8 +4,8 @@
  * Locks in the premium planning-depth upgrade:
  *   1. All three tiers (Instant Strategy Preview / Property Read /
  *      Deal Blueprint) render.
- *   2. The "Property Read" CTA routes to /submit.
- *   3. The "Deal Blueprint" CTA routes to /submit?intent=blueprint.
+ *   2. The "Property Read" CTA routes to the canonical intake.
+ *   3. The "Deal Blueprint" CTA preserves its Blueprint intent.
  *   4. The free "Instant Strategy Preview" tier has no CTA button.
  */
 import React from "react";
@@ -52,15 +52,15 @@ describe("StrategyTierStrip — three-tier pricing strip", () => {
     expect(screen.queryByTestId("button-tier-preview")).toBeNull();
   });
 
-  it("the Property Read CTA routes to /submit", () => {
+  it("the Property Read CTA routes to the canonical intake", () => {
     const history = renderStrip();
     fireEvent.click(screen.getByTestId("button-tier-snapshot"));
-    expect(history[history.length - 1]).toBe("/submit");
+    expect(history[history.length - 1]).toBe("/bring-an-opportunity");
   });
 
-  it("the Deal Blueprint CTA routes to /submit?intent=blueprint", () => {
+  it("the Deal Blueprint CTA preserves Blueprint intent", () => {
     const history = renderStrip();
     fireEvent.click(screen.getByTestId("button-tier-blueprint"));
-    expect(history[history.length - 1]).toBe("/submit?intent=blueprint");
+    expect(history[history.length - 1]).toBe("/bring-an-opportunity?intent=blueprint");
   });
 });

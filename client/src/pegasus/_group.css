@@ -89,7 +89,7 @@
   font-family: var(--pg-font-display);
   font-weight: 300;
   line-height: 0.78;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   font-size: clamp(7rem, 15vw, 16rem);
   pointer-events: none;
   user-select: none;
@@ -1080,7 +1080,7 @@ body.pg-menu-open { overflow: hidden; }
 .strategy-welcome-title {
   font-size: clamp(2.6rem, 6vw, 4.15rem);
   line-height: 0.98;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   text-wrap: balance;
   text-shadow: 0 18px 48px rgba(0, 0, 0, 0.44);
 }
@@ -3081,9 +3081,9 @@ select.pg-field option { color: #1b1712; }
 .hv-eyebrow { color: var(--hv-brass); }
 .hv-eyebrow-copper { color: var(--accent-ink); }
 .hv-rule { width: 64px; height: 2px; background: var(--hv-copper); margin-bottom: 1.7rem; }
-.hv-h1 { font-size: clamp(3rem, 6.4vw, 5.5rem); line-height: 1.02; letter-spacing: -0.015em; color: var(--hv-cream); max-width: 16ch; font-weight: 500; margin-top: 1.4rem; }
-.hv-h2 { font-size: clamp(2.1rem, 3.6vw, 3.15rem); line-height: 1.06; letter-spacing: -0.01em; color: var(--text); max-width: 22ch; font-weight: 500; margin-top: 1rem; }
-.hv-h2-cream { font-size: clamp(2.1rem, 3.8vw, 3.3rem); line-height: 1.06; letter-spacing: -0.01em; color: var(--hv-cream); max-width: 20ch; font-weight: 500; margin-top: 1rem; }
+.hv-h1 { font-size: clamp(3rem, 6.4vw, 5.5rem); line-height: 1.02; letter-spacing: 0; color: var(--hv-cream); max-width: 16ch; font-weight: 500; margin-top: 1.4rem; }
+.hv-h2 { font-size: clamp(2.1rem, 3.6vw, 3.15rem); line-height: 1.06; letter-spacing: 0; color: var(--text); max-width: 22ch; font-weight: 500; margin-top: 1rem; }
+.hv-h2-cream { font-size: clamp(2.1rem, 3.8vw, 3.3rem); line-height: 1.06; letter-spacing: 0; color: var(--hv-cream); max-width: 20ch; font-weight: 500; margin-top: 1rem; }
 .hv-lead { color: rgba(245,230,211,.8); font-size: 1.1rem; line-height: 1.65; max-width: 46ch; margin-top: 1.6rem; }
 .hv-lead-dim { color: rgba(245,230,211,.72); font-size: 1.05rem; line-height: 1.65; max-width: 50ch; margin-top: 1.2rem; }
 .hv-muted { color: var(--muted); font-size: 1rem; line-height: 1.68; max-width: 52ch; margin-top: 1rem; }
@@ -3144,7 +3144,7 @@ select.pg-field option { color: #1b1712; }
 
 /* the headline is the hero: large, tight, confident; one italic phrase */
 .hv-hero-editorial .hv-h1 { font-size: clamp(3.35rem, 6.35vw, 6.15rem); line-height: .98;
-  letter-spacing: -0.018em; max-width: none; margin: 0; font-weight: 500; color: #F7F2E8; }
+  letter-spacing: 0; max-width: none; margin: 0; font-weight: 500; color: #F7F2E8; }
 .hv-hero-editorial .hv-h1 em { font-style: italic; font-weight: 500; color: #F7F2E8; }
 .hv-h1-break { display: block; }
 
@@ -3438,7 +3438,7 @@ select.pg-field option { color: #1b1712; }
 .ow-hero-media::after { content:""; position:absolute; inset:0;
   background: linear-gradient(0deg, rgba(9,20,33,.96) 0%, rgba(9,20,33,.55) 46%, rgba(9,20,33,.28) 100%); }
 .ow-hero-inner { position:relative; z-index:2; padding-top: 9rem; padding-bottom: 3.6rem; }
-.ow-h1 { font-size: clamp(2.5rem, 5vw, 4.2rem); line-height: 1.04; letter-spacing: -0.012em; max-width: 18ch; color: var(--hv-cream); font-weight: 500; margin-top: 1.1rem; }
+.ow-h1 { font-size: clamp(2.5rem, 5vw, 4.2rem); line-height: 1.04; letter-spacing: 0; max-width: 18ch; color: var(--hv-cream); font-weight: 500; margin-top: 1.1rem; }
 .ow-loc { color: rgba(245,230,211,.62); margin-top: 1rem; }
 .ow-numbers { background: var(--bg); }
 .ow-numbers-grid { display:grid; grid-template-columns: 1.05fr .95fr; gap: 3.6rem; align-items:start; }
@@ -3473,7 +3473,8 @@ select.pg-field option { color: #1b1712; }
 .hv button:focus-visible, .hv a:focus-visible, .ow button:focus-visible, .ow a:focus-visible {
   outline: 2px solid var(--hv-copper); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .hv *, .ow * { transition-duration: .01ms !important; }
+  .hv *, .ow *, .hwo *, .po *, .dp * { transition-duration: .01ms !important; }
+  .hwo-stage, .po-path, .dp-answer { animation: none !important; }
   .hv-node[data-state="dim"] { opacity: .7; }
 }
 
@@ -3496,17 +3497,40 @@ select.pg-field option { color: #1b1712; }
 
 /* ======================================================================
    HOMEPAGE v6 — premium editorial translation.
-   The public homepage is art-directed independently of the preference
-   theme so its limestone/navy cadence remains exactly composed.
+   The public homepage keeps its limestone/navy cadence while allowing the
+   visitor's theme preference to change the light editorial surfaces.
    ====================================================================== */
 .hv {
   --hv-v6-limestone: #e8e0d4;
   --hv-v6-paper: #f3eee6;
   --hv-v6-ink: #102331;
-  --hv-v6-slate: #5e6a70;
+  --hv-v6-slate: #59646a;
   --hv-v6-bronze: #8b5535;
   --hv-v6-deep: #0d2639;
   --hv-v6-black: #07151f;
+}
+
+.pg-root[data-theme='dark'] .hv {
+  --hv-v6-limestone: #0d1b2a;
+  --hv-v6-paper: #11243a;
+  --hv-v6-ink: #f5e6d3;
+  --hv-v6-slate: #c7bdaf;
+  --hv-v6-bronze: #d2a074;
+  --hv-v6-deep: #091421;
+  --hv-v6-black: #060e18;
+}
+
+.pg-root[data-theme='dark'] .hv-route-list,
+.pg-root[data-theme='dark'] .hv-relationships {
+  border-color: rgba(245,230,211,.18);
+}
+.pg-root[data-theme='dark'] .hv-route,
+.pg-root[data-theme='dark'] .hv-department,
+.pg-root[data-theme='dark'] .hv-relationships > div {
+  border-color: rgba(245,230,211,.18);
+}
+.pg-root[data-theme='dark'] .hv-method .hv-step::before {
+  background: rgba(245,230,211,.2);
 }
 
 .hv .hv-eyebrow-copper { color: var(--hv-v6-bronze); }
@@ -3756,7 +3780,7 @@ select.pg-field option { color: #1b1712; }
   linear-gradient(90deg, rgba(5,16,27,.96) 0%, rgba(5,16,27,.78) 42%, rgba(5,16,27,.22) 72%, rgba(5,16,27,.08) 100%),
   linear-gradient(0deg, rgba(5,16,27,.72) 0%, transparent 48%); }
 .hwo-hero .hv-wrap { position:relative; z-index:2; width:100%; }
-.hwo-h1 { font-size: clamp(2.5rem, 5vw, 4.1rem); line-height: 1.05; letter-spacing: -0.012em;
+.hwo-h1 { font-size: clamp(2.5rem, 5vw, 4.1rem); line-height: 1.05; letter-spacing: 0;
   color: var(--hv-cream); max-width: 20ch; font-weight: 500; margin-top: 1.3rem; }
 
 /* lifecycle rail */
@@ -3859,10 +3883,22 @@ select.pg-field option { color: #1b1712; }
   --ip-limestone:#e8e0d4;
   --ip-paper:#f3eee6;
   --ip-ink:#102331;
-  --ip-slate:#5e6a70;
+  --ip-slate:#59646a;
   --ip-bronze:#8b5535;
   --ip-deep:#0d2639;
   --ip-black:#07151f;
+}
+.pg-root[data-theme='dark'] .hwo,
+.pg-root[data-theme='dark'] .po,
+.pg-root[data-theme='dark'] .dp,
+.pg-root[data-theme='dark'] .ow {
+  --ip-limestone:#0d1b2a;
+  --ip-paper:#11243a;
+  --ip-ink:#f5e6d3;
+  --ip-slate:#c7bdaf;
+  --ip-bronze:#d2a074;
+  --ip-deep:#091421;
+  --ip-black:#060e18;
 }
 .hwo .hv-h2, .po .hv-h2, .dp .hv-h2, .ow .hv-h2 { color:var(--ip-ink); }
 .hwo .hv-muted, .po .hv-muted, .dp .hv-muted, .ow .hv-muted { color:var(--ip-slate); }
@@ -3872,7 +3908,7 @@ select.pg-field option { color: #1b1712; }
 .hwo-hero, .po-hero, .dp-hero { min-height:min(900px,88svh); display:flex; align-items:flex-end;
   padding:clamp(10rem,15vw,13rem) 0 clamp(4.5rem,8vw,7rem); background:var(--ip-black); }
 .hwo-hero .hv-wrap, .po-hero .hv-wrap, .dp-hero .hv-wrap { position:relative; z-index:2; width:100%; }
-.hwo-h1 { max-width:15ch; font-size:clamp(3.1rem,6.2vw,6rem); line-height:.98; letter-spacing:-.022em; }
+.hwo-h1 { max-width:15ch; font-size:clamp(3.1rem,6.2vw,6rem); line-height:.98; }
 .hwo-hero .hv-lead, .po-hero .hv-lead, .dp-hero .hv-lead { max-width:48ch; }
 .po-hero-media, .dp-hero-media { position:absolute; inset:0; z-index:0; overflow:hidden; }
 .po-hero-media img, .dp-hero-media img { width:100%; height:100%; object-fit:cover; }
@@ -3889,7 +3925,7 @@ select.pg-field option { color: #1b1712; }
 .hwo-hero-media::after { background:
   linear-gradient(90deg, rgba(7,21,31,.97) 0%, rgba(7,21,31,.82) 35%, rgba(7,21,31,.28) 70%, rgba(7,21,31,.08) 100%),
   linear-gradient(0deg, rgba(7,21,31,.78), transparent 55%); }
-.po-hero-caption, .dp-hero-caption { margin:2.6rem 0 0; color:rgba(245,230,211,.5); font-size:.6rem;
+.hwo-hero-caption, .po-hero-caption, .dp-hero-caption { margin:2.6rem 0 0; color:rgba(245,230,211,.7); font-size:.6rem;
   font-weight:650; letter-spacing:.14em; text-transform:uppercase; }
 
 /* How We Operate */

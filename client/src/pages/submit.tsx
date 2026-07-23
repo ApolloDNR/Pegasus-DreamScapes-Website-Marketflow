@@ -206,6 +206,8 @@ export default function SubmitPage() {
         email: data.email,
         phone: data.phone,
         address: data.propertyAddress,
+        consentContact: data.consent,
+        consentVersion: "submit-property-contact-v1",
         leadData: {
           intent: data.intent,
           propertyType: data.propertyType,
@@ -649,10 +651,12 @@ export default function SubmitPage() {
                     </FormControl>
                     <div className="submit-consent-copy">
                       <FormLabel>
-                        I understand Pegasus Dreamscapes may
-                        contact me by phone, text, or email about the property. I understand the
-                        submission is intake only, is not an offer, valuation, appraisal, or CMA, and does not commit Pegasus or me
-                        to a transaction. I can withdraw at any time.
+                        I agree Pegasus Dreamscapes may contact me by email or phone call about the
+                        property. Pegasus uses the information to evaluate and route the request
+                        and may share it with service providers or qualified professionals involved
+                        in that review. The <a href="/privacy">Privacy Policy</a> explains retention,
+                        rights, and deletion requests. This intake is not an offer, valuation,
+                        appraisal, CMA, or commitment to transact.
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -767,4 +771,3 @@ function FormGroup({
     </fieldset>
   );
 }
-

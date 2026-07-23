@@ -42,12 +42,16 @@ vi.mock("../integrations/hq-client", () => ({
       investor: "capital_inquiry",
       buyer: "buyer_inquiry",
       contact: "general_inquiry",
+      blueprint_request: "paid_blueprint_request",
     };
     return reasons[leadType] ?? "general_inquiry";
   },
 }));
 
-const { registerOpportunityRoutes } = await import("../opportunityRoutes");
+const {
+  OPPORTUNITY_CONTACT_CONSENT_VERSION,
+  registerOpportunityRoutes,
+} = await import("../opportunityRoutes");
 
 let server: Server;
 let baseUrl = "";
@@ -133,6 +137,11 @@ describe("POST /api/opportunities — durable HQ intake", () => {
       assignedDepartment: "Acquisitions",
     });
     expect(testState.hqForward).toHaveBeenCalledTimes(1);
+    expect(testState.inserted[0]).toEqual(expect.objectContaining({
+      consentAccepted: true,
+      consentCopyVersion: OPPORTUNITY_CONTACT_CONSENT_VERSION,
+      consentCapturedAt: expect.any(Date),
+    }));
     expect(testState.hqForward).toHaveBeenCalledWith({
       surface: "lead",
       payload: {
@@ -143,8 +152,14 @@ describe("POST /api/opportunities — durable HQ intake", () => {
         outreachReason: "property_review",
         sourceChannel: "website:bring-an-opportunity",
         consentContact: true,
-        consentCcpaAcknowledged: true,
+        consentCcpaAcknowledged: false,
         extra: expect.objectContaining({
+          consentAudit: {
+            consentContact: true,
+            consentCcpaAcknowledged: false,
+            version: OPPORTUNITY_CONTACT_CONSENT_VERSION,
+            capturedAt: expect.any(String),
+          },
           opportunityId: "opportunity-1",
           visitorType: "owner",
           recommendedLane: "Acquisitions → (Development) → Dispositions",
@@ -175,6 +190,30 @@ describe("POST /api/opportunities — durable HQ intake", () => {
       expect.any(Error),
     );
     errorSpy.mockRestore();
+  });
+
+  it("preserves Blueprint triage and does not manufacture a CA-only address", async () => {
+    const response = await postOpportunity({
+      visitorType: "strategy_only",
+      leadSource: "blueprint_request",
+      sourcePage: "/bring-an-opportunity",
+      propertyAddress: undefined,
+      city: undefined,
+      state: "CA",
+      zipCode: undefined,
+    });
+
+    expect(response.status).toBe(201);
+    expect(testState.hqForward).toHaveBeenCalledWith({
+      surface: "lead",
+      payload: expect.objectContaining({
+        propertyAddress: undefined,
+        outreachReason: "paid_blueprint_request",
+        sourceChannel: "website:bring-an-opportunity",
+        consentContact: true,
+        consentCcpaAcknowledged: false,
+      }),
+    });
   });
 });
 

@@ -1,5 +1,5 @@
 import { useEffect, Suspense, lazy } from "react";
-import { Switch, Route, Redirect, useLocation } from "wouter";
+import { Switch, Route, Redirect, useLocation, useSearch } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,6 +27,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Landing as PegasusSite } from "@/pegasus/Landing";
 import { PEGASUS_URLS, isPegasusUrl, isStandaloneChromeUrl, isSolidNavUrl, isNotFoundUrl } from "@/pegasus/routes";
 import { PegasusStandaloneShell } from "@/pegasus/standalone-shell";
+import {
+  appendRedirectSearch,
+  QUERY_PRESERVING_INTAKE_PATHS,
+} from "@shared/redirects";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -36,6 +40,11 @@ function ScrollToTop() {
   }, [location]);
   
   return null;
+}
+
+function QueryPreservingRedirect({ to }: { to: string }) {
+  const search = useSearch();
+  return <Redirect to={appendRedirectSearch(to, search)} />;
 }
 
 // Website Brief v1.0 §11 — boot the consent-gated Plausible loader once
@@ -97,7 +106,6 @@ const AdminPeggyConversations = lazy(() => import("@/pages/admin-peggy-conversat
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const Resources = lazy(() => import("@/pages/resources"));
 const ArticleDetail = lazy(() => import("@/pages/article-detail"));
-const SubmitPage = lazy(() => import("@/pages/submit"));
 const SubmitPropertyPage = lazy(() => import("@/pages/submit-property"));
 const PegasusStandardPage = lazy(() => import("@/pages/pegasus-standard"));
 const DepartmentsPage = lazy(() => import("@/pages/departments"));
@@ -147,9 +155,8 @@ const Ecosystem = lazy(() => import("@/pages/ecosystem"));
 const FAQ = lazy(() => import("@/pages/faq"));
 
 export const legacyRedirects: [string, string][] = [
-  // Empire Doctrine v1.0.1 Foundation Reset: /submit is canonical; the
-  // old funnel routes (/sell, /submit-deal, /submit-property, /wholesale)
-  // all collapse into /submit with their intent preserved via query.
+  // Master Blueprint v5.1: /bring-an-opportunity is canonical; old funnel
+  // routes collapse into that desk with their intent preserved via query.
   // Mirror of server LEGACY_REDIRECTS for SPA-internal navigation only.
   // Server-side 301s / 410s are authoritative for direct HTTP hits.
   // Master Blueprint v5.1 (§6): owners/deal-source funnels route to their
@@ -157,6 +164,7 @@ export const legacyRedirects: [string, string][] = [
   ["/sell", "/property-owners"],
   ["/submit-deal", "/bring-an-opportunity?intent=deal-jv"],
   ["/submit-property", "/bring-an-opportunity"],
+  ["/submit", "/bring-an-opportunity"],
   ["/services", "/how-we-operate"],
   ["/resources", "/library"],
   ["/buy", "/marketflow"],
@@ -170,7 +178,7 @@ export const legacyRedirects: [string, string][] = [
   // for paths that still have a clear canonical replacement).
   ["/calculators", "/strategy-lab?tool=calculators"],
   ["/education", "/library"],
-  ["/wholesale", "/submit?intent=deal-jv"],
+  ["/wholesale", "/bring-an-opportunity?intent=deal-jv"],
   // Website Spec v4 (Re-skin) — the audience lanes are restored to the public
   // prototype shell (PEGASUS_URLS), so they are no longer redirected. The only
   // lane-level redirect kept here is the permanent rename of the Deal Strategy
@@ -227,8 +235,6 @@ export function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/about" component={About} />
       <Route path="/development" component={Development} />
-      {/* Empire Doctrine v1.0.1 — canonical submission route. */}
-      <Route path="/submit" component={SubmitPage} />
       {/* Master Blueprint v5.1 (§31): "Bring an Opportunity" is the primary
        * public action — the canonical URL of the multi-step intake desk.
        * /submit-property 301s here via legacyRedirects. */}
@@ -290,8 +296,8 @@ export function Router() {
       <Route path="/snapshot/:token" component={SnapshotStatus} />
       {/* Phase 2 Copy Proposal — Surface 3: /deal-blueprint is now a real
        * stub page (tier 03 of the Strategy Lab funnel) instead of a
-       * redirect. Intake routes through /submit?intent=blueprint which
-       * posts with leadType: "blueprint_request" for separate triage. */}
+       * redirect. Intake routes through /bring-an-opportunity?intent=blueprint,
+       * which preserves Blueprint-specific HQ triage. */}
       <Route path="/deal-blueprint" component={DealBlueprint} />
       {/* Legacy /dashboard route. Kept as a redirect because the auth-aware
        * destination lives at /marketflow/dashboard; the role router there
@@ -301,7 +307,11 @@ export function Router() {
       
       {/* Legacy route redirects to MarketFlow - consolidated for maintainability */}
       {legacyRedirects.map(([from, to]) => (
-        <Route key={from} path={from}>{() => <Redirect to={to} />}</Route>
+        <Route key={from} path={from}>
+          {() => QUERY_PRESERVING_INTAKE_PATHS.has(from)
+            ? <QueryPreservingRedirect to={to} />
+            : <Redirect to={to} />}
+        </Route>
       ))}
       
       {/* MarketFlow Routes with Supabase Auth. Website Spec v4 restores the

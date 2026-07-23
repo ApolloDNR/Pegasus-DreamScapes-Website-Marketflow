@@ -28,6 +28,9 @@ const CONFIRMATION_BODY =
   "If there is a fit or if we need more information, we will follow up with the next step.\n\n" +
   "No agency relationship, offer, or agreement is created by submitting this form.";
 
+export const OPPORTUNITY_CONTACT_CONSENT_VERSION =
+  "bring-opportunity-contact-v1";
+
 function hqLeadTypeForVisitor(visitorType: string): string {
   switch (visitorType) {
     case "owner":
@@ -46,9 +49,24 @@ function hqLeadTypeForVisitor(visitorType: string): string {
 }
 
 function fullPropertyAddress(opportunity: InsertOpportunity): string | undefined {
+  // The public form defaults state to CA. Do not manufacture an address from
+  // that default when the visitor brought a partnership or another non-property
+  // opportunity and supplied no location at all.
+  if (!opportunity.propertyAddress && !opportunity.city && !opportunity.zipCode) {
+    return undefined;
+  }
   const stateAndZip = [opportunity.state, opportunity.zipCode].filter(Boolean).join(" ");
   const locality = [opportunity.city, stateAndZip].filter(Boolean).join(", ");
   return [opportunity.propertyAddress, locality].filter(Boolean).join(", ") || undefined;
+}
+
+function sourceChannelForOpportunity(opportunity: InsertOpportunity): string {
+  const source = (
+    opportunity.sourcePage ||
+    opportunity.leadSource ||
+    "bring-an-opportunity"
+  ).replace(/^\/+/, "");
+  return `website:${source || "bring-an-opportunity"}`;
 }
 
 export function registerOpportunityRoutes(
@@ -83,9 +101,16 @@ export function registerOpportunityRoutes(
       }
 
       const routed = routeOpportunity(parsed.data);
+      const consentCapturedAt = new Date();
       const [row] = await db
         .insert(opportunities)
-        .values({ ...(parsed.data as InsertOpportunity), ...routed, status: "New" })
+        .values({
+          ...(parsed.data as InsertOpportunity),
+          ...routed,
+          status: "New",
+          consentCopyVersion: OPPORTUNITY_CONTACT_CONSENT_VERSION,
+          consentCapturedAt,
+        })
         .returning();
 
       // Queue the canonical HQ intake payload before responding. As with
@@ -102,13 +127,23 @@ export function registerOpportunityRoutes(
             contactEmail: parsed.data.email,
             contactPhone: parsed.data.phone || undefined,
             outreachReason: outreachReasonForLeadType(
-              hqLeadTypeForVisitor(parsed.data.visitorType),
+              parsed.data.leadSource === "blueprint_request"
+                ? "blueprint_request"
+                : hqLeadTypeForVisitor(parsed.data.visitorType),
             ),
-            sourceChannel: `website:${parsed.data.sourcePage || parsed.data.leadSource || "bring-an-opportunity"}`,
+            sourceChannel: sourceChannelForOpportunity(parsed.data),
             consentContact: parsed.data.consentAccepted,
-            consentCcpaAcknowledged: parsed.data.consentAccepted,
+            // The public checkbox authorizes follow-up about this submission;
+            // it does not separately acknowledge a CCPA/privacy disclosure.
+            consentCcpaAcknowledged: false,
             extra: {
               ...parsed.data,
+              consentAudit: {
+                consentContact: true,
+                consentCcpaAcknowledged: false,
+                version: OPPORTUNITY_CONTACT_CONSENT_VERSION,
+                capturedAt: consentCapturedAt.toISOString(),
+              },
               opportunityId: row.id,
               recommendedLane: routed.recommendedLane,
               assignedDepartment: routed.assignedDepartment,

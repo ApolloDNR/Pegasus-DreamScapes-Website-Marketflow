@@ -58,9 +58,9 @@ export function AboutPageV6({ go }: { go: Nav }) {
               Pegasus is a founder-led real estate operating company built for consequential property decisions—bringing the read, the plan, and the right path forward into one line of sight.
             </p>
             <div className="ab6-actions">
-              <button type="button" className="ab6-button ab6-button-light" onClick={() => go('submit')}>
+              <a className="ab6-button ab6-button-light" href="/bring-an-opportunity">
                 Bring an Opportunity <ArrowRight aria-hidden="true" />
-              </button>
+              </a>
               <button type="button" className="ab6-text-link ab6-text-link-light" onClick={() => go('dealstrategy')}>
                 How we operate <ArrowRight aria-hidden="true" />
               </button>
@@ -102,8 +102,8 @@ export function AboutPageV6({ go }: { go: Nav }) {
           </div>
 
           <ol className="ab6-conviction-list">
-            {CONVICTIONS.map((item, index) => (
-              <li key={item.number} className="reveal" style={{ animationDelay: `${index * 70}ms` }}>
+            {CONVICTIONS.map((item) => (
+              <li key={item.number}>
                 <span className="ab6-conviction-number" aria-hidden="true">{item.number}</span>
                 <h3>{item.title}</h3>
                 <p>{item.copy}</p>
@@ -166,8 +166,8 @@ export function AboutPageV6({ go }: { go: Nav }) {
           </div>
 
           <div className="ab6-boundary-list">
-            {BOUNDARIES.map((item, index) => (
-              <article key={item.label} className="reveal" style={{ animationDelay: `${index * 70}ms` }}>
+            {BOUNDARIES.map((item) => (
+              <article key={item.label}>
                 <div className="ab6-boundary-label">{item.label}</div>
                 <h3>{item.title}</h3>
                 <p>{item.copy}</p>
@@ -191,9 +191,9 @@ export function AboutPageV6({ go }: { go: Nav }) {
               A property, a deal, or an unanswered question. Pegasus will begin with a plain read and tell you which lane—if any—fits.
             </p>
             <div className="ab6-actions">
-              <button type="button" className="ab6-button ab6-button-navy" onClick={() => go('submit')}>
+              <a className="ab6-button ab6-button-navy" href="/bring-an-opportunity">
                 Bring an Opportunity <ArrowRight aria-hidden="true" />
-              </button>
+              </a>
               <button type="button" className="ab6-text-link" onClick={() => go('ourwork')}>
                 See the evidence <ArrowRight aria-hidden="true" />
               </button>

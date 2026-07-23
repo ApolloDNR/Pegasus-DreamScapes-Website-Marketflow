@@ -24,8 +24,8 @@ import {
 // Free Quick Read (tier 01) and Full Path Analyzer (tier 02) live on
 // /strategy-lab. This page describes the by-review, human-prepared memo
 // that closes the loop when the free tiers aren't enough. Intake
-// routes through /submit?intent=blueprint which posts with
-// leadType: "blueprint_request" for separate triage.
+// routes through /bring-an-opportunity?intent=blueprint, preserving
+// Blueprint-specific triage in the canonical opportunity record.
 
 function HeroSection() {
   return (
@@ -84,7 +84,7 @@ function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.85 }}
         >
-          <Link href="/submit?intent=blueprint">
+          <Link href="/bring-an-opportunity?intent=blueprint">
             <Button
               size="lg"
               className="text-sm uppercase tracking-[0.15em] px-10 py-7 bg-white text-slate-900 hover:bg-white/95 font-semibold shadow-md shadow-black/20 w-full sm:w-auto"
@@ -247,7 +247,7 @@ function HowItWorks() {
       tag: "Step 01",
       icon: PenLine,
       title: "Submit the property.",
-      desc: "Bring the address and the situation at /submit. Tell us it's for a Blueprint.",
+      desc: "Bring the address and the situation to the opportunity desk. Tell us it's for a Blueprint.",
     },
     {
       tag: "Step 02",
@@ -370,7 +370,7 @@ function CTASection() {
             first.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/submit?intent=blueprint">
+            <Link href="/bring-an-opportunity?intent=blueprint">
               <Button
                 size="lg"
                 className="text-sm uppercase tracking-[0.15em] px-10 py-7 font-semibold"

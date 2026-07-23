@@ -96,8 +96,10 @@ export function Peggy({
   // When the panel is opened from a page chip with a role already chosen,
   // skip the "who am I helping?" step and jump straight to that role's prompts.
   useEffect(() => {
-    if (open && initialRole) setPickedRole(initialRole);
-  }, [open, initialRole]);
+    if (open && !messages.some((message) => message.role === 'user')) {
+      setPickedRole(typeof initialRole === 'string' && initialRole ? initialRole : null);
+    }
+  }, [open, initialRole, messages]);
 
   useEffect(() => {
     if (!open) return;

@@ -26,7 +26,7 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   contact: '/contact',
   peggy: '/peggy',
   saved: '/saved',
-  submit: '/submit',
+  submit: '/bring-an-opportunity',
   connect: '/connect',
 };
 
@@ -56,14 +56,14 @@ export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).
 // below keep a single source of truth.
 export const REDIRECTED_URLS: string[] = [];
 
-// Every URL the prototype public shell owns. `/submit` and `/connect` are
+// Every URL the prototype public shell owns. The canonical intake and `/connect` are
 // deliberately excluded: they render canonical app-level pages (SubmitPage /
 // ConnectPage), not the prototype shell, so they must fall through instead of
 // painting a blank Pegasus shell. `go('submit')` / `go('connect')` still
 // resolve via ROUTE_TO_URL. REDIRECTED_URLS are excluded so App.tsx's
 // redirects take effect (see above).
 export const PEGASUS_URLS: string[] = Object.values(ROUTE_TO_URL).filter(
-  (u) => u !== '/submit' && u !== '/connect' && !REDIRECTED_URLS.includes(u),
+  (u) => u !== '/bring-an-opportunity' && u !== '/connect' && !REDIRECTED_URLS.includes(u),
 );
 
 export function urlFor(route: Route): string {
@@ -90,7 +90,6 @@ const STANDALONE_DARK_HERO: string[] = [
   '/pegasus-standard',
   '/departments',
   '/case-study',
-  '/submit',
   '/connect',
   '/projects',
   '/vendor-network',

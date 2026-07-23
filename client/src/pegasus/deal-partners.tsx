@@ -69,9 +69,9 @@ export function DealPartnersPage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow-copper">Name the missing piece</div>
           <h2 className="hv-h2 font-serif-display">What does your deal lack?</h2>
           <div className="dp-composer-grid reveal">
-            <div className="dp-missing" role="tablist" aria-label="What the deal is missing">
+            <div className="dp-missing" role="group" aria-label="What the deal is missing">
               {MISSING.map((m, i) => (
-                <button key={m.label} type="button" role="tab" aria-selected={i === idx}
+                <button key={m.label} type="button" aria-pressed={i === idx}
                   className="dp-missing-item" data-on={i === idx || undefined}
                   onClick={() => setIdx(i)}>
                   {m.label}

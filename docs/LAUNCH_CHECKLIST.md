@@ -3,7 +3,7 @@
 ## Product Readiness
 
 - Public story is simple: submit situation, Pegasus reviews, Pegasus structures, appropriate lane is proposed.
-- `/submit`, Strategy Lab, Peggy, `/connect`, and MarketFlow request access are the main conversion doors.
+- `/bring-an-opportunity`, Strategy Lab, Peggy, `/connect`, and MarketFlow request access are the main conversion doors. `/submit` is a query-preserving legacy redirect.
 - Deal Blueprint is by-review only.
 - MarketFlow is request-access/private beta only.
 
@@ -40,4 +40,4 @@
 ## Deployment
 
 - Production domain, SSL, robots, sitemap, OG image, favicon, and canonical URLs are verified.
-- Real production `/submit` smoke verifies database, Pegasus HQ intake/outbox, and staff notification. Use a marked test lead and delete/archive it after proof is captured.
+- Real production `/api/opportunities` smoke verifies the canonical intake, database, Pegasus HQ outbox, and staff/customer notifications. Use a marked test opportunity and delete/archive it after proof is captured.

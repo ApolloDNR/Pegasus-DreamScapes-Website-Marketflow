@@ -23,7 +23,7 @@ reading order.
 | --- | --- | --- |
 | `/` (Home) | Skip link, logo, 5 primary nav links, More trigger, More items, mobile menu trigger, hero CTAs, Strategy Lab CTA, Final CTA buttons, footer columns, theme toggle, Sign In | All show bronze ring on Tab. Hero CTAs use shadcn `Button` (built-in ring). |
 | `/about` | Nav, belief-line block (non-interactive), Strategy Library link, Submit CTA, footer | Pass. |
-| `/submit` | Nav, three field groups (Property / Situation / Contact), submit button, "Add another" reset on success | All inputs use shadcn `FormControl` which preserves the global ring; submit button uses bronze `Button`. |
+| `/bring-an-opportunity` | Nav, five-step intake (Bringing / Property / Situation / Goal / Contact), submit button | Native fields retain visible focus; progress controls, choices, consent, and submit remain keyboard reachable. `/submit` redirects here with its query intact. |
 | `/capital` | Nav, "Conversations, not pitches" block, contact link, footer | Pass. |
 | `/connect` | Nav, six routing buttons | Buttons already carry explicit `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2` and a visible `active:` pressed state (Wave 3, Task #134). |
 | `/library` | Nav, article cards, article body links, footer | Pass — anchor tags inherit the global ring. |

@@ -636,7 +636,7 @@ function ARVCalculator() {
                 </p>
                 <DealGradeBadge grade={calculateDealGrade(results.roi, undefined, results.meetsRule)} />
               </div>
-              <Link href="/submit">
+              <Link href="/bring-an-opportunity">
                 <Button data-testid="button-arv-cta">
                   Submit Your Property
                   <ArrowRight className="w-4 h-4 ml-2" />

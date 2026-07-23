@@ -38,7 +38,7 @@ const LANES = [
     desc: "Full-service representation through Keller Williams East Bay. Pricing, prep, marketing, negotiation, and close, driven by the same strategy-first lens applied to every Pegasus property.",
     deliverables: ["Pre-listing strategy read", "Pricing + prep plan", "Marketing + showings", "Negotiation + close"],
     cta: "Start a Listing Conversation",
-    href: "/submit?intent=sell",
+    href: "/bring-an-opportunity?intent=sell",
     testId: "wwa-card-list",
   },
   {
@@ -48,7 +48,7 @@ const LANES = [
     desc: "A pre-listing strategy session: pricing read, prep priorities, comp picture, and the right path forward. Honest read, no pressure, no obligation to list.",
     deliverables: ["Pricing range read", "Prep priority list", "Comp picture", "Recommended path forward"],
     cta: "Request a Strategy Review",
-    href: "/submit?intent=sell",
+    href: "/bring-an-opportunity?intent=sell",
     testId: "wwa-card-listing-strategy",
   },
   {
@@ -58,7 +58,7 @@ const LANES = [
     desc: "Buyer representation for owner-occupants. Search, tour, write, negotiate, and close with an agent who underwrites every property structurally before submitting an offer.",
     deliverables: ["Search + tour plan", "Structural read per home", "Offer + negotiation", "Inspection + close"],
     cta: "Start a Buyer Conversation",
-    href: "/submit?intent=explore",
+    href: "/bring-an-opportunity?intent=explore",
     testId: "wwa-card-buy",
   },
   {
@@ -68,18 +68,18 @@ const LANES = [
     desc: "Operator and investor-side buyer rep for value-add, BRRRR, ADU upside, and small-multifamily acquisitions. Every offer is run through the Pegasus underwriting lens first.",
     deliverables: ["Buybox-aligned sourcing", "Pegasus underwriting lens", "Comp + scope review", "Offer + close coordination"],
     cta: "Request Investor Rep",
-    href: "/submit?intent=explore",
+    href: "/bring-an-opportunity?intent=explore",
     testId: "wwa-card-buyer-rep",
   },
 ];
 
 // Quick-routing selector shown above the lanes. Each option deep-links to
-// the canonical /submit intake with a valid ?intent= prefill.
+// the canonical intake desk with a valid ?intent= prefill.
 const SELECTOR = [
-  { label: "I want to sell", href: "/submit?intent=sell", testId: "wwa-selector-sell" },
-  { label: "I want to buy", href: "/submit?intent=explore", testId: "wwa-selector-buy" },
-  { label: "I have a complex situation", href: "/submit?intent=property", testId: "wwa-selector-situation" },
-  { label: "I have a deal to submit", href: "/submit?intent=deal-jv", testId: "wwa-selector-deal" },
+  { label: "I want to sell", href: "/bring-an-opportunity?intent=sell", testId: "wwa-selector-sell" },
+  { label: "I want to buy", href: "/bring-an-opportunity?intent=explore", testId: "wwa-selector-buy" },
+  { label: "I have a complex situation", href: "/bring-an-opportunity?intent=property", testId: "wwa-selector-situation" },
+  { label: "I have a deal to submit", href: "/bring-an-opportunity?intent=deal-jv", testId: "wwa-selector-deal" },
 ];
 
 // Website Structure v1 FINAL §4 — locked DRE/KW disclosure, verbatim.
@@ -161,7 +161,7 @@ export default function WorkWithApollo() {
                 The Pegasus structural lens stays on. Every property is read first, then matched to the right representation lane.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/submit?intent=sell">
+                <Link href="/bring-an-opportunity?intent=sell">
                   <Button
                     size="lg"
                     className="px-8 py-6 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white"
@@ -569,7 +569,7 @@ export default function WorkWithApollo() {
             <p className="text-base text-muted-foreground leading-relaxed max-w-xl mx-auto mb-8">
               Submit the property or situation. Apollo reviews every serious inbound within 48 hours, Monday through Friday.
             </p>
-            <Link href="/submit">
+            <Link href="/bring-an-opportunity">
               <Button
                 size="lg"
                 className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white"

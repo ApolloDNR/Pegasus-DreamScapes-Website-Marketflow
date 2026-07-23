@@ -69,6 +69,9 @@ const KNOWN_EXTRA_PATHS = [
   "/departments",
   "/case-study",
   "/projects/nelson-dr",
+  // Explicit notice-at-collection links and the dedicated controlled-pilot desk.
+  "/privacy",
+  "/marketflow/access",
 ];
 const KNOWN_PATHS = new Set<string>([
   ...Object.values(ROUTE_TO_URL),
@@ -364,7 +367,7 @@ function expectValidNavTarget(target: string, ctx: string) {
 }
 
 describe("Programmatic setLocation CTAs resolve to a real route + valid intent (Task #210)", () => {
-  it("ApolloSelector link CTAs navigate to /submit with a recognized intent", () => {
+  it("ApolloSelector link CTAs navigate to the canonical intake with a recognized intent", () => {
     const { container, history } = renderWithHistory(
       <WorkWithApolloPage go={noop as unknown as (r: Route) => void} />,
       "/work-with-apollo",
@@ -391,15 +394,15 @@ describe("Programmatic setLocation CTAs resolve to a real route + valid intent (
     }
 
     // Non-vacuous: the two link-mode options must have produced real navigations.
-    expect(navTargets).toContain("/submit?intent=property");
-    expect(navTargets).toContain("/submit?intent=deal-jv");
+    expect(navTargets).toContain("/bring-an-opportunity?intent=property");
+    expect(navTargets).toContain("/bring-an-opportunity?intent=deal-jv");
 
     for (const target of navTargets) {
       expectValidNavTarget(target, "ApolloSelector");
     }
   });
 
-  it("StrategyTierStrip tier CTAs navigate to /submit with a recognized intent", () => {
+  it("StrategyTierStrip tier CTAs navigate to the canonical intake with a recognized intent", () => {
     const { container, history } = renderWithHistory(
       <StrategyTierStrip />,
       "/strategy-lab",
@@ -422,9 +425,9 @@ describe("Programmatic setLocation CTAs resolve to a real route + valid intent (
       if (history.length > before) navTargets.push(history[history.length - 1]);
     }
 
-    // Non-vacuous: the snapshot + blueprint tiers route to canonical /submit.
-    expect(navTargets).toContain("/submit");
-    expect(navTargets).toContain("/submit?intent=blueprint");
+    // Non-vacuous: the snapshot + blueprint tiers route to the canonical desk.
+    expect(navTargets).toContain("/bring-an-opportunity");
+    expect(navTargets).toContain("/bring-an-opportunity?intent=blueprint");
 
     for (const target of navTargets) {
       expectValidNavTarget(target, "StrategyTierStrip");

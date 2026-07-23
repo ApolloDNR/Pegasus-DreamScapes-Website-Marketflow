@@ -361,7 +361,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               The first question is not which service to buy. It is what you have, what is missing,
               and what a controlled next step should look like.
             </p>
-            <button type="button" className="hv-text-link" onClick={openPeggy}>
+            <button type="button" className="hv-text-link" onClick={() => openPeggy()}>
               Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -501,7 +501,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
                 onClick={() => go('strategylab')}>
                 Open Strategy Lab <ArrowRight className="h-3.5 w-3.5" />
               </button>
-              <button type="button" className="hv-text-link" onClick={openPeggy}>
+              <button type="button" className="hv-text-link" onClick={() => openPeggy()}>
                 Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>

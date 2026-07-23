@@ -80,4 +80,4 @@ export const NAV_MORE_GROUP_ORDER: NavMoreGroup[] = [
 // Footer-only legal links surfaced under the Legal column.
 export const FOOTER_MORE_EXTRA: NavMoreItem[] = [];
 
-export const PRIMARY_CTA = { href: "/submit", label: "Submit a Property" };
+export const PRIMARY_CTA = { href: "/bring-an-opportunity", label: "Bring an Opportunity" };

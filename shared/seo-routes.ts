@@ -170,12 +170,6 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Tell us about the property or situation and get a clear, written read from Pegasus. Reach the founder-led East Bay operating company directly.",
     image: `${SITE_URL}/og/contact.png`,
   },
-  "/submit": {
-    title: tag("Submit a Property"),
-    description:
-      "Submit a property or a deal to Pegasus Dreamscapes. Every serious submission gets a real read and a clear path forward. No pressure.",
-    image: `${SITE_URL}/og/submit.png`,
-  },
   // ---- Public Website v1 (issue #22) pages ----
   "/bring-an-opportunity": {
     title: tag("Bring an Opportunity"),
@@ -284,6 +278,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/offer-studio(\/|$)/,
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
+  /^\/submit$/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
   // Buyboxes are soft-launched (config publicReady: false). The page stays
   // reachable and indexable (it is not noindex) and carries its own unique
@@ -329,7 +324,6 @@ const SITEMAP_HINTS: Record<string, { priority: string; changefreq: string }> = 
   "/how-we-operate": { priority: "0.8", changefreq: "monthly" },
   "/property-owners": { priority: "0.8", changefreq: "monthly" },
   "/deal-partners": { priority: "0.8", changefreq: "monthly" },
-  "/submit": { priority: "0.9", changefreq: "monthly" },
   "/projects": { priority: "0.9", changefreq: "weekly" },
   "/development": { priority: "0.8", changefreq: "monthly" },
   "/investments": { priority: "0.8", changefreq: "monthly" },
