@@ -15,16 +15,9 @@ import "@fontsource/cinzel/latin-500.css";
 import "@fontsource/cinzel/latin-600.css";
 import "./index.css";
 import "./pegasus/_group.css";
+import { isPreviewHostname } from "@shared/preview-hosts";
 
-const host = window.location.hostname.toLowerCase();
-const isPreviewHost =
-  host.includes("replit.dev") ||
-  host.includes("replit.app") ||
-  host.includes("repl.co") ||
-  host === "localhost" ||
-  host === "127.0.0.1";
-
-if (isPreviewHost) {
+if (isPreviewHostname(window.location.hostname)) {
   let robotsMeta = document.querySelector('meta[name="robots"]');
   if (!robotsMeta) {
     robotsMeta = document.createElement("meta");

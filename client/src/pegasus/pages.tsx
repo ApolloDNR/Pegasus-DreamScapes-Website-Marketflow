@@ -432,28 +432,45 @@ export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => v
   const search = useSearch();
   const calculatorsRequested = new URLSearchParams(search).get('tool') === 'calculators';
   const [entered, setEntered] = React.useState(calculatorsRequested);
+  const [entryAnnouncement, setEntryAnnouncement] = React.useState('');
+  const commandBoardHeadingRef = React.useRef<HTMLHeadingElement>(null);
 
   React.useEffect(() => {
     if (calculatorsRequested) setEntered(true);
   }, [calculatorsRequested]);
 
   React.useEffect(() => {
+    if (!entered || !entryAnnouncement) return;
+    commandBoardHeadingRef.current?.focus();
+  }, [entered, entryAnnouncement]);
+
+  React.useEffect(() => {
     if (!calculatorsRequested || !entered) return;
     document.getElementById('strategy-calculators')?.scrollIntoView({ block: 'start' });
   }, [calculatorsRequested, entered]);
 
-  if (!entered) {
-    return <StrategyLabWelcome onBegin={() => setEntered(true)} go={go} />;
-  }
+  const beginRead = () => {
+    setEntryAnnouncement('Strategy Lab command board opened. Start with the live underwriting read.');
+    setEntered(true);
+  };
 
   return (
     <>
-      <StrategyCommandBoard go={go} model={model} />
-      <div className="strategy-cockpit-flow">
-        <StrategyConsole go={go} model={model} />
-        <StrategyCalculator go={go} model={model} />
-      </div>
-      <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Property Read" tone="navy" strategy={model.snapshot} />
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {entryAnnouncement}
+      </p>
+      {!entered ? (
+        <StrategyLabWelcome onBegin={beginRead} go={go} />
+      ) : (
+        <>
+          <StrategyCommandBoard go={go} model={model} headingRef={commandBoardHeadingRef} />
+          <div className="strategy-cockpit-flow">
+            <StrategyConsole go={go} model={model} />
+            <StrategyCalculator go={go} model={model} />
+          </div>
+          <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Property Read" tone="navy" strategy={model.snapshot} />
+        </>
+      )}
     </>
   );
 }

@@ -78,6 +78,7 @@ import { registerOpportunityRoutes } from "./opportunityRoutes";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
+import { isPreviewHostname } from "@shared/preview-hosts";
 import peggy from "./peggy";
 import { forward as hqForward, outreachReasonForLeadType, retryOutboxRow as hqRetryOutboxRow, drainPending as hqDrainPending, isHqHealthy } from "./integrations/hq-client";
 import { 
@@ -183,6 +184,21 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Staging and branch previews are review surfaces, never canonical pages.
+  // Apply the header to HTML, API, and static responses so crawlers cannot
+  // index a preview even if they ignore robots.txt.
+  app.use((req, res, next) => {
+    const host = req.get("host") || "";
+    if (isPreviewHostname(host)) {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+    }
+    next();
+  });
+
+  app.get("/api/health", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+  });
+
   
   // Setup Replit Auth (legacy - for session-based auth)
   await setupAuth(app);
@@ -206,14 +222,7 @@ export async function registerRoutes(
   app.get('/robots.txt', (req, res) => {
     const rawHost = (req.get('host') || '').toLowerCase();
     const host = `${req.protocol}://${rawHost}`;
-    const isPreviewHost =
-      rawHost.includes('replit.dev') ||
-      rawHost.includes('replit.app') ||
-      rawHost.includes('repl.co') ||
-      rawHost.includes('localhost') ||
-      rawHost.includes('127.0.0.1');
-
-    if (isPreviewHost) {
+    if (isPreviewHostname(rawHost)) {
       res.type('text/plain').send(
         ['User-agent: *', 'Disallow: /', ''].join('\n'),
       );

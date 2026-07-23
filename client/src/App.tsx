@@ -418,7 +418,14 @@ function AppShell() {
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <a href="#main-content" className="skip-to-content">Skip to main content</a>
         {legacy && <Navigation />}
-        {standalone ? (
+        {pegasus ? (
+          // PegasusSite owns the semantic content landmark because its fixed
+          // NavBar must precede the skip-link target in DOM order. Wrapping the
+          // site in another <main> here would create an invalid nested main.
+          <div className="flex-1">
+            <PageRouteTransition />
+          </div>
+        ) : standalone ? (
           <PegasusStandaloneShell solidNav={isSolidNavUrl(location)}>
             <main id="main-content" className="flex-1" tabIndex={-1}>
               <PageRouteTransition />

@@ -27,15 +27,30 @@ const SITUATIONS: Situation[] = [
 
 export function PropertyOwnersPage({ go }: { go: Nav }) {
   const [, setLocation] = useLocation();
-  const toIntake = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity'); };
+  const toIntake = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setLocation(e.currentTarget.getAttribute('href') ?? '/bring-an-opportunity');
+  };
   const [idx, setIdx] = useState(0);
+  const selectedSituationHref =
+    `/bring-an-opportunity?intent=property&owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`;
 
   return (
     <div className="po">
       {/* Hero — v5.1 §9 locked promise */}
       <section className="po-hero hv-grain">
         <div className="po-hero-media" aria-hidden="true">
-          <img src="/images/nelson/nelson-before-exterior-front-1280.jpg" alt="" loading="eager" decoding="async" />
+          <div className="po-hero-plate">
+            <img
+              src="/images/nelson/nelson-before-exterior-front-1280.jpg"
+              alt=""
+              width="1280"
+              height="941"
+              loading="eager"
+              decoding="async"
+            />
+            <span>Nelson Drive &middot; before renovation &middot; real project record</span>
+          </div>
         </div>
         <div className="hv-wrap">
           <div className="hv-rule" />
@@ -79,7 +94,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
             <div className="po-path" key={SITUATIONS[idx].label} aria-live="polite">
               <div className="pg-label hv-eyebrow-copper">The honest path</div>
               <p className="po-path-copy font-serif-display">{SITUATIONS[idx].path}</p>
-              <a href="/bring-an-opportunity" onClick={toIntake} className="hv-proof-link hv-link-ink">
+              <a href={selectedSituationHref} onClick={toIntake} className="hv-proof-link hv-link-ink">
                 Start with this situation <ArrowRight className="inline h-3.5 w-3.5" />
               </a>
             </div>

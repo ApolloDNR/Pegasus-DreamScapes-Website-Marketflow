@@ -150,7 +150,7 @@ export default function StrategyLabLibraryPage() {
         </div>
       </section>
 
-      <main className="max-w-[1180px] mx-auto px-6 lg:px-10 py-10">
+      <div className="max-w-[1180px] mx-auto px-6 lg:px-10 py-10">
         {isLoading ? (
           <div className="text-sm text-muted-foreground">Loading your library…</div>
         ) : rows.length === 0 ? (
@@ -218,7 +218,7 @@ export default function StrategyLabLibraryPage() {
             })}
           </ul>
         )}
-      </main>
+      </div>
 
       {/* Share dialog */}
       <Dialog open={!!shareTarget} onOpenChange={(o) => { if (!o) { setShareTarget(null); setShareToken(null); setPendingFullShareConfirm(false); } }}>

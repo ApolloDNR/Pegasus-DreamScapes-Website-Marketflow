@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isPreviewHostname } from "@shared/preview-hosts";
 
 interface SEOProps {
   title?: string;
@@ -74,12 +75,28 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     const fullTitle = title ? clamp(`${title} · ${BRAND}`, MAX_TITLE) : BASE_TITLE;
     const desc = clamp(description || BASE_DESCRIPTION, MAX_DESC);
     const ogImage = absoluteImage(image);
-    const url = typeof window !== "undefined" ? `${SITE_URL}${window.location.pathname}` : SITE_URL;
+    const previewHost =
+      typeof window !== "undefined" && isPreviewHostname(window.location.hostname);
+    const url =
+      typeof window !== "undefined"
+        ? previewHost
+          ? `${window.location.origin}${window.location.pathname}`
+          : `${SITE_URL}${window.location.pathname}`
+        : SITE_URL;
 
     document.title = fullTitle;
 
     setMeta('meta[name="description"]', "name", "description", desc);
-    setMeta('meta[name="robots"]', "name", "robots", noIndex ? "noindex, nofollow" : "index, follow");
+    setMeta(
+      'meta[name="robots"]',
+      "name",
+      "robots",
+      previewHost
+        ? "noindex, nofollow, noarchive, nosnippet"
+        : noIndex
+          ? "noindex, nofollow"
+          : "index, follow",
+    );
 
     setMeta('meta[property="og:title"]', "property", "og:title", fullTitle);
     setMeta('meta[property="og:description"]', "property", "og:description", desc);
@@ -95,7 +112,11 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     setMeta('meta[name="twitter:description"]', "name", "twitter:description", desc);
     setMeta('meta[name="twitter:image"]', "name", "twitter:image", ogImage);
 
-    setLink("canonical", url);
+    if (previewHost) {
+      document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.remove();
+    } else {
+      setLink("canonical", url);
+    }
 
     return () => {
       document.title = BASE_TITLE;

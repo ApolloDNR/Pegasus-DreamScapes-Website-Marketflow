@@ -240,14 +240,55 @@ describe("Global focus-visible baseline (Empire Doctrine v1.0.1, Task #143)", ()
     ).toBeTruthy();
   });
 
-  it("preserves the skip-to-content link + main landmark wiring in App.tsx", () => {
+  it("preserves the skip link and delegates the Pegasus main landmark to Landing", () => {
     const app = fs.readFileSync(
       path.join(process.cwd(), "client/src/App.tsx"),
       "utf-8",
     );
+    const landing = fs.readFileSync(
+      path.join(process.cwd(), "client/src/pegasus/Landing.tsx"),
+      "utf-8",
+    );
     expect(app.includes('className="skip-to-content"')).toBe(true);
     expect(app.includes('href="#main-content"')).toBe(true);
-    expect(app.includes('id="main-content"')).toBe(true);
+    expect(landing.includes('<main id="main-content"')).toBe(true);
+
+    const pegasusBranch = app.match(
+      /\{pegasus \? \(\s*([\s\S]*?)\s*\) : standalone \? \(/,
+    )?.[1];
+    expect(pegasusBranch).toBeTruthy();
+    expect(
+      pegasusBranch?.includes('<main id="main-content"'),
+      "AppShell must not wrap Landing in a second <main> landmark",
+    ).toBe(false);
+  });
+
+  it("keeps every standalone public page inside the AppShell main without nesting another main", () => {
+    for (const page of [
+      "client/src/pages/submit-property.tsx",
+      "client/src/pages/pegasus-standard.tsx",
+      "client/src/pages/departments.tsx",
+      "client/src/pages/case-study.tsx",
+      "client/src/pages/connect.tsx",
+      "client/src/pages/projects.tsx",
+      "client/src/pages/project-nelson-dr.tsx",
+      "client/src/pages/project-detail.tsx",
+      "client/src/pages/vendor-network.tsx",
+      "client/src/pages/privacy.tsx",
+      "client/src/pages/terms.tsx",
+      "client/src/pages/disclosures.tsx",
+      "client/src/pages/faq.tsx",
+      "client/src/pages/deal-blueprint.tsx",
+      "client/src/pages/strategy-lab-submitted.tsx",
+      "client/src/pages/strategy-lab-blueprint-confirmed.tsx",
+      "client/src/pages/strategy-lab-library.tsx",
+      "client/src/pages/article-detail.tsx",
+    ]) {
+      const source = fs.readFileSync(path.join(process.cwd(), page), "utf-8");
+      expect(source, `${page} must not render a nested <main>`).not.toMatch(
+        /<main(?:\s|>)/,
+      );
+    }
   });
 
   it("keeps the .skip-to-content CSS class visible on focus", () => {

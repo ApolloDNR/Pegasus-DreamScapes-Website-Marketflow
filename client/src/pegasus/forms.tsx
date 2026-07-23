@@ -413,7 +413,15 @@ function clampScore(v: number) {
   return Math.max(12, Math.min(96, Math.round(v)));
 }
 
-export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyModel }) {
+export function StrategyCommandBoard({
+  go,
+  model,
+  headingRef,
+}: {
+  go: Nav;
+  model: StrategyModel;
+  headingRef?: React.Ref<HTMLHeadingElement>;
+}) {
   const [active, setActive] = useState<'spread' | 'lanes' | 'review'>('spread');
   const jumpToConsole = () => {
     const target = document.getElementById('strategy-console');
@@ -453,7 +461,11 @@ export function StrategyCommandBoard({ go, model }: { go: Nav; model: StrategyMo
         <div className="min-w-0 lg:col-span-5">
           {/* COPY_DECK §11 locked hero + PRD §11.4 disclaimer (issue #22) */}
           <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
-          <h1 className="strategy-command-title mt-5 max-w-[14ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]">
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="strategy-command-title mt-5 max-w-[14ch] font-serif-display leading-[0.96] text-[var(--cream)] [text-wrap:balance]"
+          >
             Model the property before you make the move.
           </h1>
           <p className="strategy-command-copy mt-7 max-w-xl text-[rgba(245,230,211,0.72)] leading-relaxed">

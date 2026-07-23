@@ -74,7 +74,7 @@ const DEPARTMENTS: {
 
 export default function DepartmentsPage() {
   return (
-    <main className="min-h-screen bg-[#091421] text-[#f4efe6]">
+    <div className="min-h-screen bg-[#091421] text-[#f4efe6]">
       {/* hero */}
       <section className="px-6 pt-36 pb-16 lg:pb-24">
         <div className="mx-auto max-w-4xl text-center">
@@ -156,6 +156,6 @@ export default function DepartmentsPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

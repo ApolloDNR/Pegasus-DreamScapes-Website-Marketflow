@@ -136,7 +136,7 @@ export function Landing() {
 
       <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} openPeggy={openPeggy} />
 
-      <main key={route} className="page-in">
+      <main id="main-content" key={route} className="page-in" tabIndex={-1}>
         <Suspense fallback={<PageLoader />}>
           {/* v5.1 homepage (seven movements). The issue-#22 HomePage stays
               exported for reference but no longer mounts. The homepage remains

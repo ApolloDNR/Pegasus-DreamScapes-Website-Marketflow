@@ -50,8 +50,8 @@ export function Footer({ go }: { go: Nav }) {
           {/* Footer link map per PRD §5.2 (issue #22): the audience lanes,
               the proof + vision pages, and the legal set. */}
           <FooterCol title="Who We Serve">
-            <FooterLink label="Sellers & Owners" onClick={() => go('sellers')} />
-            <FooterLink label="Deal Finders" onClick={() => go('dealfinders')} />
+            <FooterLink label="Property Owners" onClick={() => go('sellers')} />
+            <FooterLink label="Deal Partners" onClick={() => go('dealfinders')} />
             <FooterLink label="Buyers" onClick={() => go('buyers')} />
             <FooterLink label="Capital Partners" onClick={() => go('capital')} />
             <FooterLink label="Operators & Vendors" onClick={() => go('operators')} />

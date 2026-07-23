@@ -8,6 +8,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
@@ -127,6 +128,62 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
   },
 ];
 
+describe("Pegasus public-shell navigation accessibility", () => {
+  it("places the single content main after the Pegasus navigation", async () => {
+    const { container } = renderLanding("/");
+
+    await screen.findByRole("heading", {
+      name: /Complex real estate, made executable/i,
+    });
+
+    const nav = container.querySelector("nav");
+    const mains = container.querySelectorAll("main");
+    const main = container.querySelector("main#main-content");
+    expect(nav).toBeTruthy();
+    expect(mains).toHaveLength(1);
+    expect(main).toHaveAttribute("tabindex", "-1");
+    expect(
+      nav!.compareDocumentPosition(main!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("makes the full-screen menu modal, traps focus, closes on Escape, and restores focus", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { container } = renderLanding("/");
+
+    const trigger = screen.getByRole("button", { name: "Open menu" });
+    await user.click(trigger);
+
+    const menu = screen.getByRole("dialog", { name: "Primary navigation" });
+    expect(menu).toHaveAttribute("aria-modal", "true");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(container.querySelector("nav")).toHaveAttribute("inert");
+
+    const initial = within(menu).getByRole("button", {
+      name: /Bring an Opportunity/i,
+    });
+    const first = within(menu).getByRole("button", { name: "Close menu" });
+    const last = within(menu).getByRole("button", { name: "About" });
+    await waitFor(() => expect(initial).toHaveFocus());
+
+    last.focus();
+    await user.tab();
+    expect(first).toHaveFocus();
+
+    await user.tab({ shift: true });
+    expect(last).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(trigger).toHaveFocus();
+    });
+    expect(container.querySelector("nav")).not.toHaveAttribute("inert");
+    expect(menu).toHaveAttribute("aria-hidden", "true");
+    expect(menu).not.toHaveAttribute("aria-modal");
+  });
+});
+
 describe("Pegasus v6 Landing-shell choice controls", () => {
   for (const route of SIGNATURE_ROUTES) {
     it(`${route.path} uses button-group semantics and announces the current output`, async () => {
@@ -162,6 +219,26 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
       });
     });
   }
+});
+
+describe("Pegasus Strategy Lab entry accessibility", () => {
+  it("announces the opened command board and moves focus to its heading", async () => {
+    const { container } = renderLanding("/strategy-lab");
+
+    const begin = await screen.findByRole("button", { name: /Begin a read/i });
+    fireEvent.click(begin);
+
+    const heading = await screen.findByRole("heading", {
+      name: /Model the property before you make the move/i,
+    });
+    await waitFor(() => expect(heading).toHaveFocus());
+
+    const main = container.querySelector("main");
+    expect(main).toBeTruthy();
+    expect(within(main!).getByRole("status")).toHaveTextContent(
+      "Strategy Lab command board opened. Start with the live underwriting read.",
+    );
+  });
 });
 
 describe("Pegasus v6 live About routing", () => {

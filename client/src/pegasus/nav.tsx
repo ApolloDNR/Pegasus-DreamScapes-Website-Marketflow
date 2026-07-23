@@ -16,6 +16,10 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const toggleLock = useRef(0);
+  const navRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const toggleMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -28,12 +32,76 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
   };
   useEffect(() => { setMenuOpen(false); }, [route, location]);
   useEffect(() => {
-    if (menuOpen) {
-      document.body.classList.add('pg-menu-open');
-    } else {
+    if (!menuOpen) {
       document.body.classList.remove('pg-menu-open');
+      navRef.current?.removeAttribute('inert');
+      return;
     }
-    return () => document.body.classList.remove('pg-menu-open');
+
+    document.body.classList.add('pg-menu-open');
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : menuButtonRef.current;
+
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+    const focusableItems = () =>
+      Array.from(
+        menuRef.current?.querySelectorAll<HTMLElement>(focusableSelector) ?? [],
+      ).filter((item) => item.getAttribute('aria-hidden') !== 'true');
+
+    const initial =
+      menuRef.current?.querySelector<HTMLElement>('[data-menu-initial-focus]') ??
+      focusableItems()[0] ??
+      menuRef.current;
+    initial?.focus();
+    navRef.current?.setAttribute('inert', '');
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMenuOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const items = focusableItems();
+      if (items.length === 0) {
+        event.preventDefault();
+        menuRef.current?.focus();
+        return;
+      }
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !menuRef.current?.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !menuRef.current?.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('pg-menu-open');
+      navRef.current?.removeAttribute('inert');
+      const returnTarget = returnFocusRef.current?.isConnected
+        ? returnFocusRef.current
+        : menuButtonRef.current;
+      returnTarget?.focus();
+      returnFocusRef.current = null;
+    };
   }, [menuOpen]);
   const overHero = !scrolled && !menuOpen;
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
@@ -47,7 +115,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
 
   return (
     <>
-    <nav className="fixed top-0 inset-x-0 z-40">
+    <nav ref={navRef} className="fixed top-0 inset-x-0 z-40">
       <div
         className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${
           menuOpen
@@ -82,7 +150,7 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
             className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>
             Bring an Opportunity
           </button>
-          <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
+          <button ref={menuButtonRef} type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}
             aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }}
             className="min-[1340px]:hidden relative z-10 -mr-2 p-2.5">
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -91,12 +159,23 @@ export function NavBar({ go, route, theme, toggleTheme, scrolled, openPeggy }:
       </div>
     </nav>
 
-      <div id="mobile-menu" aria-hidden={!menuOpen} {...(!menuOpen ? { inert: '' } : {})}
+      <div ref={menuRef} id="mobile-menu" role="dialog" aria-modal={menuOpen ? 'true' : undefined}
+        aria-label="Primary navigation" aria-hidden={!menuOpen} tabIndex={-1}
+        {...(!menuOpen ? { inert: '' } : {})}
         style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
-        className={`min-[1340px]:hidden fixed inset-0 z-30 bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        className={`min-[1340px]:hidden fixed inset-0 z-[100] bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen(false)}
+          aria-label="Close menu"
+          className="absolute right-6 top-6 z-10 inline-flex h-11 w-11 items-center justify-center text-[var(--text)]"
+        >
+          <X className="h-6 w-6" />
+        </button>
         <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3">
             <button type="button" onClick={() => { setMenuOpen(false); setLocation('/bring-an-opportunity'); }}
+              data-menu-initial-focus
               className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">
               Bring an Opportunity <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>

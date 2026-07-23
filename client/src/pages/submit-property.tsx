@@ -55,6 +55,30 @@ const INTENT_TO_VISITOR: Record<string, string> = {
   partnership: "capital_partner",
 };
 
+const OWNER_SITUATION_TO_INTAKE: Record<string, string> = {
+  "Significant repairs": "Major repairs",
+  "Vacant property": "Vacant",
+  "Inherited property": "Inherited / probate",
+  "Unfinished construction": "Unfinished project",
+  "Tenant or occupancy issues": "Tenant issue",
+  "Code or permit concerns": "Other",
+  "Time-sensitive sale": "Other",
+  "ADU or development potential": "Other",
+  "A listing that is not working": "Other",
+};
+
+export function normalizeOwnerSituation(rawValue: string | null): {
+  situation: string;
+  sourceLabel: string;
+} {
+  const bounded = (rawValue ?? "").slice(0, 160);
+  const situation = OWNER_SITUATION_TO_INTAKE[bounded] ?? "";
+  return {
+    situation,
+    sourceLabel: situation ? bounded : "",
+  };
+}
+
 const CONSENT_COPY =
   "By submitting this form, you agree that Pegasus Dreamscapes may contact you about your submission. " +
   "No agency relationship, offer, or agreement is created by submitting this form.";
@@ -85,6 +109,9 @@ type FormState = {
   notes: string;
   consentAccepted: boolean;
 };
+
+type ContactErrorKey = "contactName" | "email" | "consentAccepted";
+type ContactErrors = Partial<Record<ContactErrorKey, string>>;
 
 const EMPTY: FormState = {
   visitorType: "", propertyAddress: "", city: "", state: "CA", zipCode: "",
@@ -156,6 +183,7 @@ export default function SubmitPropertyPage() {
   const utm = useMemo(() => {
     const p = new URLSearchParams(window.location.search);
     const intent = (p.get("intent") ?? p.get("type") ?? "").toLowerCase();
+    const ownerSituation = normalizeOwnerSituation(p.get("owner_situation"));
     return {
       intent,
       address: (p.get("address") ?? "").slice(0, 500),
@@ -164,16 +192,25 @@ export default function SubmitPropertyPage() {
       utmMedium: p.get("utm_medium") ?? undefined,
       utmCampaign: p.get("utm_campaign") ?? undefined,
       preVisitor: INTENT_TO_VISITOR[intent] ?? "",
+      ownerSituation: ownerSituation.situation,
+      ownerSituationLabel: ownerSituation.sourceLabel,
     };
   }, []);
 
   // A lane CTA that already answered the §14 question lands mid-flow.
   const [step, setStep] = useState(utm.preVisitor ? 1 : 0);
   const [form, setForm] = useState<FormState>(
-    { ...EMPTY, visitorType: utm.preVisitor, propertyAddress: utm.address },
+    {
+      ...EMPTY,
+      visitorType: utm.preVisitor,
+      propertyAddress: utm.address,
+      situation: utm.ownerSituation,
+    },
   );
   const [hp, setHp] = useState("");
   const [result, setResult] = useState<{ id: string } | null>(null);
+  const [contactErrors, setContactErrors] = useState<ContactErrors>({});
+  const [contactValidationMessage, setContactValidationMessage] = useState("");
   const startedAt = useRef(Date.now());
   const startedTracked = useRef(false);
 
@@ -183,6 +220,16 @@ export default function SubmitPropertyPage() {
       trackEvent("submit_property_started");
     }
     setForm((f) => ({ ...f, ...patch }));
+  };
+
+  const clearContactError = (key: ContactErrorKey) => {
+    setContactErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+    setContactValidationMessage("");
   };
 
   const submit = useMutation({
@@ -214,6 +261,7 @@ export default function SubmitPropertyPage() {
         notes: [
           mapped?.tag,
           utm.intent ? `Intake intent: ${utm.intent}` : undefined,
+          utm.ownerSituationLabel ? `Owner situation: ${utm.ownerSituationLabel}` : undefined,
           utm.referralReference ? `Referral reference: ${utm.referralReference}` : undefined,
           form.notes,
         ].filter(Boolean).join(" — ") || undefined,
@@ -231,6 +279,37 @@ export default function SubmitPropertyPage() {
       window.scrollTo({ top: 0, behavior: "auto" });
     },
   });
+
+  const validateContact = () => {
+    const nextErrors: ContactErrors = {};
+    if (!form.contactName.trim()) {
+      nextErrors.contactName = "Enter your full name.";
+    }
+    if (!/.+@.+\..+/.test(form.email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+    if (!form.consentAccepted) {
+      nextErrors.consentAccepted = "Agree to contact about this submission before sending.";
+    }
+
+    setContactErrors(nextErrors);
+    const firstInvalid = ([
+      ["contactName", "sp-name"],
+      ["email", "sp-email"],
+      ["consentAccepted", "sp-consent"],
+    ] as const).find(([key]) => nextErrors[key]);
+
+    if (firstInvalid) {
+      setContactValidationMessage(
+        "Please complete the required contact fields and consent before submitting.",
+      );
+      document.getElementById(firstInvalid[1])?.focus();
+      return false;
+    }
+
+    setContactValidationMessage("");
+    return true;
+  };
 
   const canNext = [
     !!form.visitorType,
@@ -295,8 +374,16 @@ export default function SubmitPropertyPage() {
         </ol>
 
         <form
-          className="rounded-xl border border-[#d8cdbc] dark:border-[#2a3a4e] bg-white/70 dark:bg-[#0d1b2a]/70 p-6 sm:p-10 backdrop-blur"
-          onSubmit={(e) => { e.preventDefault(); if (step < 4) setStep(step + 1); else submit.mutate(); }}>
+          noValidate
+          className="rounded-md border border-[#d8cdbc] dark:border-[#2a3a4e] bg-white/70 dark:bg-[#0d1b2a]/70 p-6 sm:p-10 backdrop-blur"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (step < 4) {
+              setStep(step + 1);
+              return;
+            }
+            if (validateContact()) submit.mutate();
+          }}>
           {/* honeypot */}
           <input type="text" name="hp_company" value={hp} onChange={(e) => setHp(e.target.value)}
             className="hidden" tabIndex={-1} autoComplete="off" aria-hidden="true" />
@@ -370,16 +457,65 @@ export default function SubmitPropertyPage() {
           )}
 
           {step === 4 && (
-            <fieldset className="space-y-6">
+            <fieldset className="space-y-6" aria-describedby="sp-contact-requirements">
               <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2">How do we reach you?</legend>
+              <p id="sp-contact-requirements" className="text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
+                Full name, email, and contact consent are required. Phone and scheduling details are optional.
+              </p>
+              <p
+                id="sp-contact-validation"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                className="text-sm text-red-600 dark:text-red-400 empty:hidden"
+              >
+                {contactValidationMessage}
+              </p>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div><Label htmlFor="sp-name">Full name</Label>
-                  <input id="sp-name" className={field} value={form.contactName} onChange={(e) => set({ contactName: e.target.value })} autoComplete="name" required /></div>
-                <div><Label htmlFor="sp-phone">Phone</Label>
+                <div><Label htmlFor="sp-name">Full name (required)</Label>
+                  <input
+                    id="sp-name"
+                    className={field}
+                    value={form.contactName}
+                    onChange={(e) => {
+                      set({ contactName: e.target.value });
+                      clearContactError("contactName");
+                    }}
+                    autoComplete="name"
+                    required
+                    aria-invalid={!!contactErrors.contactName}
+                    aria-describedby={contactErrors.contactName ? "sp-name-error" : undefined}
+                  />
+                  {contactErrors.contactName && (
+                    <p id="sp-name-error" className="mt-2 text-sm text-red-600 dark:text-red-400">
+                      {contactErrors.contactName}
+                    </p>
+                  )}
+                </div>
+                <div><Label htmlFor="sp-phone">Phone (optional)</Label>
                   <input id="sp-phone" className={field} value={form.phone} onChange={(e) => set({ phone: e.target.value })} autoComplete="tel" inputMode="tel" /></div>
               </div>
-              <div><Label htmlFor="sp-email">Email</Label>
-                <input id="sp-email" type="email" className={field} value={form.email} onChange={(e) => set({ email: e.target.value })} autoComplete="email" required /></div>
+              <div><Label htmlFor="sp-email">Email (required)</Label>
+                <input
+                  id="sp-email"
+                  type="email"
+                  className={field}
+                  value={form.email}
+                  onChange={(e) => {
+                    set({ email: e.target.value });
+                    clearContactError("email");
+                  }}
+                  autoComplete="email"
+                  required
+                  aria-invalid={!!contactErrors.email}
+                  aria-describedby={contactErrors.email ? "sp-email-error" : undefined}
+                />
+                {contactErrors.email && (
+                  <p id="sp-email-error" className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {contactErrors.email}
+                  </p>
+                )}
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div><Label htmlFor="sp-method">Preferred contact method</Label>
                   <select id="sp-method" className={field} value={form.preferredContactMethod} onChange={(e) => set({ preferredContactMethod: e.target.value })}>
@@ -393,12 +529,21 @@ export default function SubmitPropertyPage() {
                 <textarea id="sp-notes" className={`${field} min-h-[110px]`} value={form.notes} onChange={(e) => set({ notes: e.target.value })} />
               </div>
               <label className="flex items-start gap-3 text-sm leading-relaxed text-[#454b55] dark:text-[#cfc5b4] cursor-pointer">
-                <input type="checkbox" checked={form.consentAccepted}
-                  onChange={(e) => set({ consentAccepted: e.target.checked })}
+                <input id="sp-consent" type="checkbox" checked={form.consentAccepted}
+                  onChange={(e) => {
+                    set({ consentAccepted: e.target.checked });
+                    clearContactError("consentAccepted");
+                  }}
                   className="mt-1 h-4 w-4 accent-[#b47645]" required
-                  aria-describedby="sp-privacy-notice" />
+                  aria-invalid={!!contactErrors.consentAccepted}
+                  aria-describedby={`sp-privacy-notice${contactErrors.consentAccepted ? " sp-consent-error" : ""}`} />
                 <span>{CONSENT_COPY}</span>
               </label>
+              {contactErrors.consentAccepted && (
+                <p id="sp-consent-error" className="text-sm text-red-600 dark:text-red-400">
+                  {contactErrors.consentAccepted}
+                </p>
+              )}
               <p id="sp-privacy-notice" className="text-xs leading-relaxed text-[#6e6455] dark:text-[#9aa6b7]">
                 Pegasus uses this information to evaluate and route the request and may share it
                 with service providers or qualified professionals involved in that review. The{' '}
@@ -422,7 +567,8 @@ export default function SubmitPropertyPage() {
               className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] dark:text-[#b9a888] hover:text-[#8b5a36] transition-colors ${step === 0 ? "invisible" : ""}`}>
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
-            <button type="submit" disabled={!canNext || submit.isPending}
+            <button type="submit" disabled={(step < 4 && !canNext) || submit.isPending}
+              aria-describedby={step === 4 ? "sp-contact-requirements sp-contact-validation" : undefined}
               className="inline-flex items-center gap-2 rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_30px_-16px_rgba(139,90,54,0.7)] transition-all hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none">
               {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {step < 4 ? "Continue" : "Submit for Review"}
@@ -444,7 +590,7 @@ export default function SubmitPropertyPage() {
 
         {/* The desk's promise, kept in view while the visitor works. */}
         <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
-          <div className="rounded-xl border border-[#d8cdbc] bg-white/60 p-6 dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60">
+          <div className="rounded-md border border-[#d8cdbc] bg-white/60 p-6 dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[

@@ -537,7 +537,12 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         <div className="hv-founder-inner reveal">
           <div className="pg-label hv-eyebrow">Founder-led &middot; East Bay</div>
           <figure className="hv-founder-photo">
-            <img src="/images/founder/apollo.webp" alt="Paolo 'Apollo' Duran, founder of Pegasus Dreamscapes" loading="lazy" />
+            <img
+              src="/images/founder/apollo.webp"
+              alt="Paolo 'Apollo' Duran, founder of Pegasus Dreamscapes"
+              loading="eager"
+              decoding="async"
+            />
           </figure>
           <h2 className="font-serif-display">Paolo &ldquo;Apollo&rdquo; Duran</h2>
           <p className="hv-founder-title">Founder &middot; CA Real Estate Agent &middot; CA DRE #02333658</p>

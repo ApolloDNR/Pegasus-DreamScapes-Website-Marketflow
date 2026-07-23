@@ -110,7 +110,9 @@ function openPeggy(container: HTMLElement): HTMLElement {
   );
   expect(fab, "Peggy launcher (FAB) not found").toBeTruthy();
   fireEvent.click(fab!);
-  const panel = container.querySelector<HTMLElement>('[role="dialog"]');
+  const panel = container.querySelector<HTMLElement>(
+    '[role="dialog"][aria-label="Peggy, the Pegasus intake concierge"]',
+  );
   expect(panel, "Peggy panel did not open").toBeTruthy();
   return panel!;
 }

@@ -315,7 +315,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 export default function PegasusStandardPage() {
   return (
-    <main className="min-h-screen bg-[#091421] text-[#f4efe6]">
+    <div className="min-h-screen bg-[#091421] text-[#f4efe6]">
       {/* the descent — scrolling down is walking in */}
       <Descent />
 
@@ -379,6 +379,6 @@ export default function PegasusStandardPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

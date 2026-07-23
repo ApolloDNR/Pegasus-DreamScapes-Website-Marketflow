@@ -148,8 +148,8 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     const { container } = renderAt("/");
     const footer = container.querySelector("footer")!;
     for (const label of [
-      "Sellers & Owners",
-      "Deal Finders",
+      "Property Owners",
+      "Deal Partners",
       "Buyers",
       "Capital Partners",
       "Operators & Vendors",

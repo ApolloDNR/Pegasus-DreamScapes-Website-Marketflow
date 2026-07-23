@@ -41,7 +41,7 @@ const STORY: { heading: string; body: string }[] = [
 
 export default function CaseStudyPage() {
   return (
-    <main className="min-h-screen bg-[#091421] text-[#f4efe6]">
+    <div className="min-h-screen bg-[#091421] text-[#f4efe6]">
       {/* hero — real project photo */}
       <section className="relative">
         <img
@@ -159,6 +159,6 @@ export default function CaseStudyPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

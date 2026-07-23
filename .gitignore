@@ -54,3 +54,4 @@ yarn-error.log*
 
 # screenshot/QA build output (regenerated on demand)
 client/dist-hero/
+client/dist-qa/
