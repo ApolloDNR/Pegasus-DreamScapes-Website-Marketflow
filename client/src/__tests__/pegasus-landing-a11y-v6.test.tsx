@@ -147,6 +147,24 @@ describe("Pegasus public-shell navigation accessibility", () => {
     ).toBeTruthy();
   });
 
+  it("keeps Strategy Lab and MarketFlow visible and exposes the complete More directory", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { container } = renderLanding("/");
+    const nav = container.querySelector("nav");
+    expect(nav).toBeTruthy();
+
+    expect(within(nav!).getByRole("button", { name: /Strategy Lab/i })).toBeInTheDocument();
+    expect(within(nav!).getByRole("button", { name: /MarketFlow/i })).toBeInTheDocument();
+
+    const more = within(nav!).getByRole("button", { name: /More/i });
+    await user.click(more);
+
+    const directory = screen.getByRole("menu", { name: /More Pegasus pages/i });
+    expect(within(directory).getByRole("menuitem", { name: /Our Work/i })).toBeInTheDocument();
+    expect(within(directory).getByRole("menuitem", { name: /Investments/i })).toBeInTheDocument();
+    expect(within(directory).getByRole("menuitem", { name: /Pegasus Ecosystem/i })).toBeInTheDocument();
+  });
+
   it("makes the full-screen menu modal, traps focus, closes on Escape, and restores focus", async () => {
     const user = userEvent.setup({ delay: null });
     const { container } = renderLanding("/");
@@ -221,23 +239,25 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
   }
 });
 
-describe("Pegasus Strategy Lab entry accessibility", () => {
-  it("announces the opened command board and moves focus to its heading", async () => {
+describe("Pegasus Strategy Lab workspace accessibility", () => {
+  it("opens on the real decision desk, advances steps, and moves focus to the current workspace heading", async () => {
     const { container } = renderLanding("/strategy-lab");
 
-    const begin = await screen.findByRole("button", { name: /Begin a read/i });
-    fireEvent.click(begin);
-
-    const heading = await screen.findByRole("heading", {
-      name: /Model the property before you make the move/i,
+    await screen.findByRole("heading", {
+      name: /Turn one property into a decision you can defend/i,
     });
-    await waitFor(() => expect(heading).toHaveFocus());
-
     const main = container.querySelector("main");
     expect(main).toBeTruthy();
-    expect(within(main!).getByRole("status")).toHaveTextContent(
-      "Strategy Lab command board opened. Start with the live underwriting read.",
-    );
+
+    const basisStep = within(main!).getByRole("button", { name: /02\s*Basis/i });
+    fireEvent.click(basisStep);
+
+    const heading = await within(main!).findByRole("heading", {
+      name: /Strategy Lab Basis step/i,
+    });
+    await waitFor(() => expect(heading).toHaveFocus());
+    expect(within(main!).getByRole("heading", { name: /Put the assumptions in one place/i })).toBeInTheDocument();
+    expect(basisStep).toHaveAttribute("aria-current", "step");
   });
 });
 

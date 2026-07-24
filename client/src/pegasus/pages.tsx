@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, useSearch } from 'wouter';
+import { useLocation } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark, ClipboardList, Layers, Hammer, BadgeCheck } from 'lucide-react';
 import type { Nav, Theme, Category, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
@@ -13,17 +13,12 @@ import {
   SplitPaths, NextStep, CTABand, DealFindersExtras, HowADealMovesBlock, ParticipationLanesBlock, StrategyLabFeature, LaneCardsBlock, PegasusStandardBand,
 } from './blocks';
 import {
-  LeadSection, StrategyCalculator, StrategyCommandBoard, StrategyConsole, useStrategyModel, CONTACT_FORM, STRATEGYLAB_FORM, INVESTMENTS_FORM, APOLLO_FORM,
+  LeadSection, CONTACT_FORM, INVESTMENTS_FORM, APOLLO_FORM,
 } from './forms';
+import { PremiumStrategyLab } from './strategy-lab-experience';
+import { PremiumMarketFlow } from './marketflow-experience';
 
 const INVESTMENTS = PILLARS3[0];
-
-const MARKETFLOW_PREVIEW = [
-  { tag: 'Opportunity record', title: 'Value-add property file', lines: ['Basis, scope, timeline, and source', 'Lane fit and next review step', 'Shown only after approval'] },
-  { tag: 'Operator profile', title: 'Licensed GC profile', lines: ['Trade and license reviewed', 'References and capacity noted', 'Matched to the right project type'] },
-  { tag: 'Buyer interest', title: 'Capital partner mandate', lines: ['Check size & risk band', 'Asset types they back', 'Matched to projects, not pools'] },
-  { tag: 'Trust record', title: 'Review notes', lines: ['Identity or license details, where relevant', 'Source attribution recorded', 'Written terms before introductions'] },
-];
 
 const APOLLO_REP = {
   seller: {
@@ -316,249 +311,17 @@ export function CapitalPage({ go }: { go: Nav }) {
 }
 
 /* ================================================================
-   STRATEGY LAB
+   STRATEGY LAB + MARKETFLOW
+   Premium product surfaces share the public shell but keep distinct jobs:
+   Strategy Lab is a private decision desk; MarketFlow is the permissioned
+   relationship layer after review.
    ================================================================ */
-const LAB_OUTPUTS: Array<{ label: string; hint: string }> = [];
-
-function LabPreview() {
-  return (
-    <section className="py-20 lg:py-24">
-      <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-          <div className="lg:col-span-4 reveal">
-            <div className="pg-label text-[var(--accent)] mb-5">What you’ll model</div>
-            <h2 className="font-serif-display text-4xl md:text-[2.6rem] leading-[1.08] tracking-normal text-[var(--text)] mb-5">
-              One cockpit in.<br />One clear read out.
-            </h2>
-            <p className="text-[var(--muted)] leading-relaxed max-w-md">
-              The Strategy Lab now works as one cockpit: property signals, underwriting assumptions, lane fit, and next step in the same flow. Directional orientation only, not an offer or an underwrite.
-            </p>
-          </div>
-          <div className="lg:col-span-8 grid sm:grid-cols-2 gap-5">
-            {LAB_OUTPUTS.map((o, i) => (
-              <div key={o.label} className="surface-card reveal p-7 flex flex-col" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-4">Output {String(i + 1).padStart(2, '0')}</div>
-                <div className="font-serif-display text-xl text-[var(--text)] mb-2 leading-tight">{o.label}</div>
-                <p className="text-[var(--muted)] text-[0.85rem] leading-relaxed">{o.hint}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// The calm "one desk, one question" opening. A newcomer lands here on a single
-// invitation and only steps up to the instruments (command board / console /
-// calculator) once they choose to. Keeps the working machinery untouched —
-// this is the entrance, not the engine.
-function StrategyLabWelcome({ onBegin, go }: { onBegin: () => void; go: Nav }) {
-  return (
-    <section className="strategy-command-section strategy-cockpit-hero" data-testid="strategy-lab-welcome">
-      <div className="strategy-welcome-shell">
-        <div className="strategy-welcome">
-          <div className="pg-label text-[var(--accent-bright)]">Pegasus Strategy Lab</div>
-          <h1 className="strategy-welcome-title mt-6 font-serif-display text-[var(--cream)]">
-            Start with a single property.
-          </h1>
-          <p className="strategy-welcome-copy">
-            Give me the numbers on one property and I&rsquo;ll show you the paths it could take &mdash;
-            hold, improve, list, or step back &mdash; with a directional read you can think with.
-            When it&rsquo;s worth a closer look, Apollo reviews it himself.
-          </p>
-          <div className="strategy-welcome-actions">
-            <button
-              type="button"
-              onClick={onBegin}
-              className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group"
-            >
-              Begin a read
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </button>
-            <button
-              type="button"
-              onClick={() => go('submit')}
-              className="strategy-welcome-secondary"
-            >
-              Or send a property straight to Pegasus
-            </button>
-          </div>
-          <p className="strategy-welcome-fine">
-            Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice,
-            lending commitment, or investment recommendation.
-          </p>
-        </div>
-
-        <figure className="strategy-welcome-illustration" aria-label="Illustration of a property moving through the Strategy Lab">
-          <figcaption>
-            <span>Opportunity plan</span>
-            <small>Private directional read</small>
-          </figcaption>
-          <div className="strategy-welcome-drawing" aria-hidden="true">
-            <svg viewBox="0 0 760 430" fill="none">
-              <path d="M72 333H688M110 333V172L264 89L418 172V333M137 172H392M182 333V221H268V333M316 333V221H383V333" />
-              <path d="M66 359H465M92 382H436M465 333C523 333 525 266 569 266H687" />
-              <path d="M569 266V131M569 198H688M569 131H688" />
-              <circle cx="569" cy="333" r="7" /><circle cx="569" cy="266" r="7" />
-              <circle cx="569" cy="198" r="7" /><circle cx="569" cy="131" r="7" />
-              <path d="M45 121H130M45 145H102M646 82H714M662 105H714" />
-              <path d="M492 81H584M538 81V38M512 54H564" />
-            </svg>
-            <div className="strategy-welcome-seed">
-              <span>01</span>
-              <strong>One property</strong>
-              <small>Situation · basis · scope</small>
-            </div>
-            <ol className="strategy-welcome-paths">
-              <li><span>02A</span><strong>Hold</strong></li>
-              <li><span>02B</span><strong>Improve</strong></li>
-              <li><span>02C</span><strong>List</strong></li>
-              <li><span>02D</span><strong>Step back</strong></li>
-            </ol>
-          </div>
-          <div className="strategy-welcome-flow" aria-hidden="true">
-            <span>Inputs</span><ArrowRight className="strategy-welcome-flow-arrow" /><span>Possible paths</span>
-            <ArrowRight className="strategy-welcome-flow-arrow" /><span>Pegasus read</span>
-          </div>
-        </figure>
-      </div>
-    </section>
-  );
-}
-
 export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
-  const model = useStrategyModel();
-  const search = useSearch();
-  const calculatorsRequested = new URLSearchParams(search).get('tool') === 'calculators';
-  const [entered, setEntered] = React.useState(calculatorsRequested);
-  const [entryAnnouncement, setEntryAnnouncement] = React.useState('');
-  const commandBoardHeadingRef = React.useRef<HTMLHeadingElement>(null);
-
-  React.useEffect(() => {
-    if (calculatorsRequested) setEntered(true);
-  }, [calculatorsRequested]);
-
-  React.useEffect(() => {
-    if (!entered || !entryAnnouncement) return;
-    commandBoardHeadingRef.current?.focus();
-  }, [entered, entryAnnouncement]);
-
-  React.useEffect(() => {
-    if (!calculatorsRequested || !entered) return;
-    document.getElementById('strategy-calculators')?.scrollIntoView({ block: 'start' });
-  }, [calculatorsRequested, entered]);
-
-  const beginRead = () => {
-    setEntryAnnouncement('Strategy Lab command board opened. Start with the live underwriting read.');
-    setEntered(true);
-  };
-
-  return (
-    <>
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {entryAnnouncement}
-      </p>
-      {!entered ? (
-        <StrategyLabWelcome onBegin={beginRead} go={go} />
-      ) : (
-        <>
-          <StrategyCommandBoard go={go} model={model} headingRef={commandBoardHeadingRef} />
-          <div className="strategy-cockpit-flow">
-            <StrategyConsole go={go} model={model} />
-            <StrategyCalculator go={go} model={model} />
-          </div>
-          <LeadSection cfg={STRATEGYLAB_FORM} eyebrow="Property Read" tone="navy" strategy={model.snapshot} />
-        </>
-      )}
-    </>
-  );
+  return <PremiumStrategyLab go={go} openPeggy={openPeggy} />;
 }
-
-/* ================================================================
-   MARKETFLOW
-   ================================================================ */
-const MARKETFLOW_ACCESS = [
-  { num: '01', title: 'Apply', desc: 'Tell us how you operate and where your capital or capacity sits. One short request, no obligation.' },
-  { num: '02', title: 'We review fit', desc: 'Pegasus reviews every request for fit. We would rather add fewer partners and actually service them.' },
-  { num: '03', title: 'You are introduced', desc: 'Approved members are onboarded to reviewed opportunities and the operators behind them, as fit appears.' },
-];
 
 export function MarketFlowPage({ go }: { go: Nav }) {
-  return (
-    <>
-      {/* Master Blueprint v5.1 §18: MarketFlow presents as a private
-          distribution network in CONTROLLED PILOT — it never overclaims
-          scale, verification, or a public marketplace. */}
-      <PageHero eyebrow="Systems · MarketFlow · Controlled pilot"
-        title={<>A private network for <span className="italic text-[var(--accent-bright)]">reviewed opportunities.</span></>}
-        image={IMG('pegasus-casestudy.png')}
-        scrimTop
-        lead="MarketFlow is Pegasus's private opportunity-distribution network, currently in a controlled pilot. It connects buyers, investors, deal finders, capital partners, vendors, and operators around opportunities Pegasus has already reviewed. Access is reviewed by a person, not open." />
-      <MarketFlowBlock go={go} enter={{ label: 'Request MarketFlow Access', href: '/marketflow/access' }} />
-      <section className="py-24 lg:py-28">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead eyebrow="A look inside"
-            title="What members see."
-            copy="A product preview of the records approved members use. No live deal inventory is published here; opportunities, profiles, and introductions only appear after reviewed access." />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {MARKETFLOW_PREVIEW.map((c, i) => (
-              <div key={c.title} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
-                <div className="pg-label !text-[8px] text-[var(--accent-ink)] mb-3">{c.tag}</div>
-                <h3 className="font-serif-display text-xl text-[var(--text)] mb-4 leading-tight">{c.title}</h3>
-                <ul className="space-y-2.5">
-                  {c.lines.map((l) => (
-                    <li key={l} className="flex gap-2.5 text-[var(--muted)] text-[0.85rem] leading-relaxed">
-                      <Check className="w-3.5 h-3.5 text-[var(--accent)] mt-0.5 shrink-0" strokeWidth={2} /><span>{l}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <p className="mt-7 text-[0.8rem] text-[var(--muted)] max-w-2xl">
-            Preview content shows record types only. It is not live inventory, an offer, a listing, or a solicitation. Access is private and reviewed by a person; participation is subject to a written agreement.
-          </p>
-        </div>
-      </section>
-      <section className="relative py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)] overflow-hidden">
-        <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.12] float-slow" />
-        <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead dark eyebrow="How access works"
-            title={<>Earned, not opened<br />to everyone.</>}
-            copy="Membership is reviewed by a person. We protect the standard of the network over its size." />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12 lg:gap-8">
-            {MARKETFLOW_ACCESS.map((s, i) => (
-              <div key={i} className="reveal" style={{ animationDelay: `${i * 110}ms` }}>
-                <div className="path-node relative z-10 w-[54px] h-[54px] rounded-full border border-[var(--accent-2)] bg-[var(--navy)] flex items-center justify-center mb-7">
-                  <span className="font-serif-display text-xl text-[var(--accent-bright)]">{s.num}</span>
-                </div>
-                <h3 className="font-serif-display text-2xl text-[var(--cream)] mb-3">{s.title}</h3>
-                <p className="text-[rgba(239,231,218,0.65)] text-[0.92rem] leading-relaxed lg:pr-4">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section id="marketflow-request" className="relative overflow-hidden bg-[var(--bg)] py-24 lg:py-32 scroll-mt-24">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-[1fr_auto] gap-10 items-end">
-          <div className="max-w-3xl">
-            <div className="pg-label text-[var(--accent-ink)] mb-5">Controlled pilot</div>
-            <h2 className="font-serif-display text-4xl sm:text-5xl md:text-6xl leading-[1.04] text-[var(--text)]">
-              Tell us the role you can actually fill.
-            </h2>
-            <p className="mt-6 max-w-2xl text-[var(--muted)] leading-relaxed">
-              The dedicated access desk records your role, who introduced you, and the context
-              Pegasus needs to review fit. A request is not approval, membership, or a promise of inventory.
-            </p>
-          </div>
-          <a href="/marketflow/access" className="btn-primary inline-flex items-center justify-center gap-3 px-8 py-4 pg-label !text-[10px]">
-            Request MarketFlow Access <ArrowRight className="h-3.5 w-3.5" />
-          </a>
-        </div>
-      </section>
-    </>
-  );
+  return <PremiumMarketFlow go={go} />;
 }
 
 /* ================================================================

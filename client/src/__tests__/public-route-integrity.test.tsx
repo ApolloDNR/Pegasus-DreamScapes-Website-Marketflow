@@ -79,7 +79,7 @@ describe("Projects public fallback truth", () => {
 });
 
 describe("Strategy Lab documented calculator deep link", () => {
-  it("opens and moves to the active Strategy Lab cockpit for ?tool=calculators", async () => {
+  it("opens the premium desk on its Basis step for ?tool=calculators", async () => {
     const originalScrollIntoView = Element.prototype.scrollIntoView;
     const scrollIntoView = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoView;
@@ -89,10 +89,10 @@ describe("Strategy Lab documented calculator deep link", () => {
         search: "?tool=calculators",
       });
 
-      expect(screen.queryByTestId("strategy-lab-welcome")).not.toBeInTheDocument();
-      expect(screen.getByText("Underwriting levers")).toBeInTheDocument();
-      expect(screen.getByLabelText("Acquisition price")).toBeInTheDocument();
-      expect(screen.getByTestId("strategy-calculators")).toBeInTheDocument();
+      const basisStep = screen.getByRole("button", { name: /02\s*Basis/i });
+      expect(basisStep).toHaveAttribute("aria-current", "step");
+      expect(screen.getByLabelText("Acquisition or current basis")).toBeInTheDocument();
+      expect(screen.getByTestId("strategy-lab-workspace")).toBeInTheDocument();
       expect(screen.getByTestId("text-strategy-disclaimer")).toBeInTheDocument();
       await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" }));
     } finally {

@@ -3,13 +3,74 @@ import type { NavLink, Pillar, Category, AudienceKey, SplitPath, FaqItem, Route 
 
 /* ================================================================
    NAVIGATION
-   Master Blueprint v5.1 (§6, §31) locks the top navigation to the public
-   relationship — How We Operate, Property Owners, Deal Partners, Our Work,
-   About — with "Bring an Opportunity" as the primary nav button (rendered
-   separately in nav.tsx, routing to the /bring-an-opportunity intake desk).
-   Strategy Lab / Peggy are utility actions; MarketFlow stays out of the
-   primary nav until its pilot gates are met (§18). Supersedes issue #22 §5.1.
+   The compact public spine keeps the highest-intent paths visible while the
+   More directory makes the full firm, operating lanes, proof, and systems
+   reachable from every page. NAV_LINKS remains the legacy flat contract used
+   by older page-level tests and supporting blocks.
    ================================================================ */
+export type PremiumNavigationItem = NavLink & { note?: string; badge?: string };
+export type PremiumNavigationGroup = { label: string; items: PremiumNavigationItem[] };
+
+const PREMIUM_PRIMARY_NAV: PremiumNavigationItem[] = [
+  { label: 'How We Operate', route: 'dealstrategy' },
+  { label: 'Property Owners', route: 'sellers' },
+  { label: 'Deal Partners', route: 'dealfinders' },
+  { label: 'Strategy Lab', route: 'strategylab' },
+  { label: 'MarketFlow', route: 'marketflow', badge: 'Private pilot' },
+];
+
+const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
+  {
+    label: 'Company & proof',
+    items: [
+      { label: 'Our Work', route: 'ourwork', note: 'Nelson Drive, documented from basis to exit.' },
+      { label: 'About', route: 'about', note: 'Founder, discipline, and current operating model.' },
+      { label: 'Work With Apollo', route: 'apollo', note: 'Licensed representation through Keller Williams East Bay.' },
+      { label: 'Pegasus Standard', url: '/pegasus-standard', note: 'The long-term development direction, clearly labeled.' },
+    ],
+  },
+  {
+    label: 'Operating lanes',
+    items: [
+      { label: 'Investments', route: 'investments', note: 'How Pegasus reads and participates in acquisitions.' },
+      { label: 'Development', route: 'development', note: 'Scope, build teams, budget, and delivery.' },
+      { label: 'Capital Partners', route: 'capital', note: 'Private, project-specific relationships.' },
+      { label: 'Buyers', route: 'buyers', note: 'Representation, diligence, and reviewed opportunity paths.' },
+    ],
+  },
+  {
+    label: 'Network & resources',
+    items: [
+      { label: 'Operators & Vendors', route: 'operators', note: 'The project-specific execution bench.' },
+      { label: 'Referral Partners', route: 'referral', note: 'Careful handoffs and written terms where lawful.' },
+      { label: 'Pegasus Ecosystem', route: 'ecosystem', note: 'HQ, Peggy, Strategy Lab, MarketFlow, and the operating layers.' },
+      { label: 'Peggy', route: 'peggy', note: 'The AI concierge for orientation and intake—not licensed advice.' },
+    ],
+  },
+];
+
+export const PREMIUM_NAVIGATION = {
+  primary: PREMIUM_PRIMARY_NAV,
+  more: PREMIUM_MORE_NAV,
+  mobile: [
+    { label: 'How We Operate', route: 'dealstrategy' },
+    { label: 'Property Owners', route: 'sellers' },
+    { label: 'Deal Partners', route: 'dealfinders' },
+    { label: 'Investments', route: 'investments' },
+    { label: 'Development', route: 'development' },
+    { label: 'Capital Partners', route: 'capital' },
+    { label: 'Buyers', route: 'buyers' },
+    { label: 'Operators & Vendors', route: 'operators' },
+    { label: 'Referral Partners', route: 'referral' },
+    { label: 'Pegasus Ecosystem', route: 'ecosystem' },
+    { label: 'Peggy', route: 'peggy' },
+    { label: 'Our Work', route: 'ourwork' },
+    { label: 'Work With Apollo', route: 'apollo' },
+    { label: 'Pegasus Standard', url: '/pegasus-standard' },
+    { label: 'About', route: 'about' },
+  ] as PremiumNavigationItem[],
+};
+
 export const NAV_LINKS: NavLink[] = [
   { label: 'How We Operate', route: 'dealstrategy' },
   { label: 'Property Owners', route: 'sellers' },
