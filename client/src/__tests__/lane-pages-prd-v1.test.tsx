@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup, waitFor } from "@testing-library/react";
+import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -131,17 +131,25 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     });
   }
 
-  it("locks the v5.1 §6 top navigation and primary nav button", () => {
+  it("locks the premium top navigation, product access, and More directory", () => {
     const { container } = renderAt("/");
     const nav = container.querySelector("nav")!;
-    // Master Blueprint v5.1 (§6/§31): the nav explains the public
-    // relationship; MarketFlow stays out of primary nav until its pilot
-    // gates are met (§18). Supersedes issue #22 §5.1.
-    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Our Work", "About"]) {
-      expect(nav.textContent, `missing nav item: ${label}`).toContain(label);
+    // Premium navigation keeps the core audience routes and the two product
+    // surfaces one click away. Supporting firm/lane pages remain reachable
+    // through the explicit More directory.
+    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Strategy Lab", "MarketFlow"]) {
+      expect(nav.textContent, `missing primary nav item: ${label}`).toContain(label);
     }
+    expect(nav.textContent).toContain("Private pilot");
     expect(nav.textContent).toContain("Bring an Opportunity");
-    expect(nav.textContent).not.toContain("MarketFlow");
+
+    const moreButton = Array.from(nav.querySelectorAll("button")).find((button) => button.textContent?.includes("More"));
+    expect(moreButton).toBeTruthy();
+    fireEvent.click(moreButton!);
+    expect(nav.querySelector('[role="menu"]')).toBeTruthy();
+    for (const label of ["Our Work", "About", "Investments", "Development", "Capital Partners", "Buyers", "Operators & Vendors", "Referral Partners"]) {
+      expect(nav.textContent, `missing More directory item: ${label}`).toContain(label);
+    }
   });
 
   it("locks the footer page map (v5.1 contextual routes)", () => {
