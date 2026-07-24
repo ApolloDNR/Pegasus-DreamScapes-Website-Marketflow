@@ -75,6 +75,7 @@ import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerOpportunityRoutes } from "./opportunityRoutes";
+import { registerUserProvisioningRoute } from "./user-provisioning-routes";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
@@ -433,41 +434,13 @@ export async function registerRoutes(
     });
   });
 
-  // Supabase user provisioning (called after signup)
-  app.post('/api/supabase/provision-user', async (req, res) => {
-    try {
-      const { userId, role, displayName } = req.body;
-      
-      if (!userId || !role || !displayName) {
-        return res.status(400).json({ message: 'Missing required fields' });
-      }
-      
-      // Try Supabase provisioning, but don't fail if unavailable
-      try {
-        await createUserProfile(userId, {
-          primary_role: role,
-          display_name: displayName
-        });
-        await createUserReputation(userId);
-      } catch (supabaseError) {
-        console.log('Supabase provisioning failed (likely unavailable), using PostgreSQL fallback');
-      }
-      
-      // Ensure user role exists in PostgreSQL
-      try {
-        const existingRoles = await storage.getUserRoles(userId);
-        if (existingRoles.length === 0) {
-          await storage.addUserRole({ userId, role });
-        }
-      } catch (pgError) {
-        console.log('PostgreSQL role assignment failed:', pgError);
-      }
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error provisioning user:', error);
-      res.status(500).json({ message: 'Failed to provision user' });
-    }
+  // Signup may create only the authenticated user's non-governed role.
+  registerUserProvisioningRoute(app, {
+    isAuthenticated: isHybridAuthenticated,
+    createUserProfile,
+    createUserReputation,
+    getUserRoles: (userId) => storage.getUserRoles(userId),
+    addUserRole: (entry) => storage.addUserRole(entry),
   });
 
   // Get user profile - try Supabase first, fall back to PostgreSQL

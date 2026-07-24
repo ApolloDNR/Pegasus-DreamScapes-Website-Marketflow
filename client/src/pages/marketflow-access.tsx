@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -26,7 +27,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, FileCheck2, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { SuccessView } from "@/components/success-view";
 
 function WhatYouGet() {
@@ -37,20 +38,17 @@ function WhatYouGet() {
     { title: "Pilot updates", desc: "Approved participants receive relevant updates; access never guarantees inventory or placement." },
   ];
   return (
-    <div className="mb-8 p-6 rounded-lg border border-border/40 bg-card space-y-4" data-testid="marketflow-what-you-get">
-      <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">What you get</p>
-      <div className="grid sm:grid-cols-2 gap-3">
-        {perks.map((p) => (
-          <div key={p.title} className="flex gap-3">
-            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-foreground">{p.title}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
-            </div>
-          </div>
+    <section className="mf-access-perks" data-testid="marketflow-what-you-get">
+      <p>What a reviewed relationship provides</p>
+      <ol>
+        {perks.map((perk, index) => (
+          <li key={perk.title}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <div><strong>{perk.title}</strong><small>{perk.desc}</small></div>
+          </li>
         ))}
-      </div>
-    </div>
+      </ol>
+    </section>
   );
 }
 
@@ -67,7 +65,33 @@ const accessSchema = z.object({
 
 type AccessValues = z.infer<typeof accessSchema>;
 
+const ACCESS_ROLE_BY_QUERY: Record<string, AccessValues["role"]> = {
+  source: "wholesaler",
+  wholesaler: "wholesaler",
+  buyer: "buyer",
+  capital: "capital",
+  operator: "operator",
+  broker: "broker",
+  other: "other",
+};
+
+const ACCESS_ROLE_LABEL: Record<AccessValues["role"], string> = {
+  operator: "Operator / builder",
+  wholesaler: "Deal source",
+  buyer: "Cash buyer",
+  capital: "Capital partner",
+  broker: "Broker / agent",
+  other: "Other relationship",
+};
+
+export function marketflowAccessRole(search: string): AccessValues["role"] {
+  const requested = new URLSearchParams(search).get("role")?.trim().toLowerCase();
+  return (requested && ACCESS_ROLE_BY_QUERY[requested]) || "operator";
+}
+
 export default function MarketflowAccessPage() {
+  const requestedRole = marketflowAccessRole(useSearch());
+
   useSEO({
     title: "Request MarketFlow Access",
     description:
@@ -93,12 +117,13 @@ export default function MarketflowAccessPage() {
     defaultValues: {
       name: "",
       email: "",
-      role: "operator",
+      role: requestedRole,
       introducedBy: "",
       notes: "",
       consentContact: false,
     },
   });
+  const selectedRole = form.watch("role");
 
   const mutation = useMutation({
     mutationFn: async (data: AccessValues) => {
@@ -144,7 +169,7 @@ export default function MarketflowAccessPage() {
               form.reset({
                 name: "",
                 email: "",
-                role: "operator",
+                role: requestedRole,
                 introducedBy: "",
                 notes: "",
                 consentContact: false,
@@ -160,32 +185,48 @@ export default function MarketflowAccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20">
-      <div className="max-w-xl mx-auto px-6 lg:px-12">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
-          MarketFlow &middot; Beta Access
-        </p>
-        <h1 className="font-serif text-3xl sm:text-4xl font-semibold tracking-normal text-foreground mb-4">
-          Request beta access.
-        </h1>
-        <p className="text-base text-muted-foreground leading-relaxed mb-6">
-          Access is by introduction. Operators, deal finders and wholesalers, cash buyers, capital
-          partners, and brokers all have a lane. Tell us who connected you and what role you would
-          fill in the network.
-        </p>
-        <p
-          className="text-xs text-muted-foreground leading-relaxed mb-8 p-4 rounded-md border border-border/50 bg-muted/20"
-          data-testid="marketflow-private-access-note"
-        >
-          MarketFlow is a private, invitation-only network. It is not a public marketplace, not a
-          securities or investment platform, and access is not a guarantee that any deal will be
-          placed, purchased, or compensated. Membership is reviewed case by case.
-        </p>
+    <div className="mf-access-page">
+      <section className="mf-access-intro">
+        <div className="mf-access-intro-inner">
+          <div>
+            <p className="mf-access-kicker">MarketFlow · Controlled pilot</p>
+            <h1>Request a place in the relationship room.</h1>
+            <p>MarketFlow is reviewed access for professionals with a clear role, credible mandate, and enough context for a deliberate introduction. It is not an open signup or public marketplace.</p>
+          </div>
+          <aside className="mf-access-protocol" aria-label="Current access protocol">
+            <div><span>Access record</span><strong>MF · Request</strong></div>
+            <dl>
+              <div><dt>Relationship</dt><dd>{ACCESS_ROLE_LABEL[selectedRole]}</dd></div>
+              <div><dt>Review</dt><dd>Case by case</dd></div>
+              <div><dt>Distribution</dt><dd>Permissioned</dd></div>
+            </dl>
+            <p><LockKeyhole aria-hidden="true" /> No inventory, placement, compensation, or approval is promised by this request.</p>
+          </aside>
+        </div>
+      </section>
 
-        <WhatYouGet />
+      <section className="mf-access-body">
+        <aside className="mf-access-review">
+          <p className="mf-access-kicker">Before you request access</p>
+          <h2>One concise record. A Pegasus fit review.</h2>
+          <p>Tell Pegasus who you are, how you entered the relationship, and what role you can responsibly fill.</p>
+          <WhatYouGet />
+          <div className="mf-access-boundary" data-testid="marketflow-private-access-note">
+            <ShieldCheck aria-hidden="true" />
+            <p>MarketFlow is private and invitation-led. It is not a securities or investment platform, and participation never guarantees a deal, purchase, placement, or compensation.</p>
+          </div>
+        </aside>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-5">
+        <div className="mf-access-form-card">
+          <div className="mf-access-form-head">
+            <div><span>Private access dossier</span><strong>Applicant record</strong></div>
+            <p>{ACCESS_ROLE_LABEL[selectedRole]}</p>
+          </div>
+          <h2>Provide the facts required for a real review.</h2>
+          <p className="mf-access-form-lede">Fields remain private to the access review and the service providers supporting it.</p>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="mf-access-form">
+              <div className="mf-access-form-grid">
             <FormField
               control={form.control}
               name="name"
@@ -250,6 +291,7 @@ export default function MarketflowAccessPage() {
                 </FormItem>
               )}
             />
+              </div>
             <FormField
               control={form.control}
               name="notes"
@@ -295,15 +337,17 @@ export default function MarketflowAccessPage() {
             <Button
               type="submit"
               disabled={mutation.isPending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm"
+              className="mf-access-submit"
               data-testid="button-access-submit"
             >
               {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Send Request
+              Send for review <ArrowRight aria-hidden="true" />
             </Button>
-          </form>
-        </Form>
-      </div>
+            <p className="mf-access-form-foot"><FileCheck2 aria-hidden="true" /> Pegasus reviews identity, role, mandate, introduction context, and current network fit before responding.</p>
+            </form>
+          </Form>
+        </div>
+      </section>
     </div>
   );
 }

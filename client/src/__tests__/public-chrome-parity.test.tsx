@@ -54,9 +54,9 @@ function componentRoutesFromApp(): string[] {
 // out of scope for the public-premium-chrome contract:
 //   • /login, /signup — auth forms.
 //   • /admin/*        — admin-only surfaces (own in-page auth).
-//   • /marketflow/*   — MarketFlow platform/auth surfaces (the /marketflow
-//                       landing itself is a Pegasus prototype URL, but the
-//                       request-access / operator surfaces stay legacy).
+//   • private /marketflow/* operator and auth surfaces. The landing,
+//     request-access page, and public criteria belong to the premium public
+//     journey and must not be blanket-excluded with the private product.
 //   • /snapshot/*     — shared-analysis snapshot links are functional output
 //                       surfaces (an operator-generated share view), not part
 //                       of the public marketing site, and carry their own
@@ -64,13 +64,15 @@ function componentRoutesFromApp(): string[] {
 // Dynamic :param routes are excluded only from the literal-URL classification
 // assertions (no canned id), but their prefix is still covered below.
 const AUTH_FORMS = new Set(["/login", "/signup"]);
+const PUBLIC_MARKETFLOW = new Set(["/marketflow/access", "/marketflow/buyboxes"]);
 const isAdmin = (u: string) => u.startsWith("/admin");
-const isMarketflow = (u: string) => u.startsWith("/marketflow");
+const isPrivateMarketflow = (u: string) =>
+  u.startsWith("/marketflow/") && !PUBLIC_MARKETFLOW.has(u);
 const isSnapshot = (u: string) => u.startsWith("/snapshot");
 const isDynamic = (u: string) => u.includes(":");
 
 function isExcluded(u: string): boolean {
-  return AUTH_FORMS.has(u) || isAdmin(u) || isMarketflow(u) || isSnapshot(u);
+  return AUTH_FORMS.has(u) || isAdmin(u) || isPrivateMarketflow(u) || isSnapshot(u);
 }
 
 // A url wears the new premium chrome (prototype OR standalone) — i.e. NOT the
@@ -96,6 +98,15 @@ describe("Public routes never fall back to the retired legacy chrome (Task #234)
     // the suite must not silently pass with an empty set.
     expect(componentRoutes.length).toBeGreaterThan(15);
     expect(publicRoutes.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("keeps the public MarketFlow continuation pages in premium chrome", () => {
+    PUBLIC_MARKETFLOW.forEach((url) => {
+      expect(componentRoutes).toContain(url);
+      expect(hasPremiumChrome(url)).toBe(true);
+    });
+    expect(isSolidNavUrl("/marketflow/access")).toBe(true);
+    expect(isSolidNavUrl("/marketflow/buyboxes")).toBe(false);
   });
 
   it.each(publicRoutes.map((u) => [u]))(

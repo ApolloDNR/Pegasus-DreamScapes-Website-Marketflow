@@ -316,19 +316,18 @@ export function Router() {
       
       {/* MarketFlow Routes with Supabase Auth. Website Spec v4 restores the
        * public /marketflow landing as a live prototype shell page (mounted via
-       * PEGASUS_URLS above); /marketflow/access and the operator surfaces below
-       * stay live as their own standalone surfaces. */}
+       * PEGASUS_URLS above). Its public access and criteria continuations use
+       * the premium standalone shell; authenticated operator surfaces keep
+       * their own product chrome. */}
       <Route path="/marketflow/access" component={MarketflowAccess} />
       {/* Website Structure v1 FINAL §7 — Pegasus Buyboxes moved off the
        * MarketFlow landing into a dedicated public surface. */}
       <Route path="/marketflow/buyboxes" component={MarketflowBuyboxes} />
-      <Route path="/marketflow/wholesaler/:rest*">{() => <AuthGuard><MarketplaceWholesaler /></AuthGuard>}</Route>
       <Route path="/marketflow/wholesaler">{() => <AuthGuard><MarketplaceWholesaler /></AuthGuard>}</Route>
-      <Route path="/marketflow/dreamscaper/:rest*">{() => <AuthGuard><MarketplaceDreamscaper /></AuthGuard>}</Route>
       <Route path="/marketflow/dreamscaper">{() => <AuthGuard><MarketplaceDreamscaper /></AuthGuard>}</Route>
-      <Route path="/marketflow/investor/:rest*">{() => <AuthGuard><MarketplaceInvestor /></AuthGuard>}</Route>
       <Route path="/marketflow/investor">{() => <AuthGuard><MarketplaceInvestor /></AuthGuard>}</Route>
-      <Route path="/marketflow/buyer/:rest*">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
+      <Route path="/marketflow/buyer/saved">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
+      <Route path="/marketflow/buyer/offers">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
       <Route path="/marketflow/buyer">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
       <Route path="/marketflow/admin/:rest*">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
       <Route path="/marketflow/admin">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>

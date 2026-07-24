@@ -103,15 +103,15 @@ export function PremiumMarketFlow({ go }: { go: Nav }) {
           <p>MarketFlow does not flatten professionals into generic users. Select the role you actually fill to see how the relationship is designed.</p>
         </header>
 
-        <div className="px-mf-role-tabs" role="tablist" aria-label="MarketFlow relationship roles">
+        <div className="px-mf-role-tabs" role="group" aria-label="MarketFlow relationship roles">
           {ROLES.map((item) => (
-            <button key={item.key} type="button" role="tab" aria-selected={role === item.key} aria-controls="marketflow-role-panel" id={`marketflow-tab-${item.key}`} onClick={() => setRole(item.key)}>
+            <button key={item.key} type="button" aria-pressed={role === item.key} aria-controls="marketflow-role-panel" onClick={() => setRole(item.key)}>
               {item.label}
             </button>
           ))}
         </div>
 
-        <div id="marketflow-role-panel" role="tabpanel" aria-labelledby={`marketflow-tab-${active.key}`} className="px-mf-role-panel">
+        <div id="marketflow-role-panel" aria-live="polite" className="px-mf-role-panel">
           <div className="px-mf-role-statement">
             <span>Current relationship brief</span>
             <h3>{active.title}</h3>
@@ -140,7 +140,7 @@ export function PremiumMarketFlow({ go }: { go: Nav }) {
       </section>
 
       <section className="px-mf-dossier" aria-labelledby="marketflow-dossier-title">
-        <div className="px-mf-dossier-image"><img src={IMG('pegasus-process.png')} alt="A private Pegasus project record arranged for professional review" /></div>
+        <div className="px-mf-dossier-image"><img src={IMG('pegasus-craft-blueprint.webp')} alt="Planning documents being reviewed on an architectural worktable" /></div>
         <div className="px-mf-dossier-paper">
           <div className="px-mf-dossier-head"><span>Illustrative opportunity record</span><strong>MF · 0007</strong></div>
           <p className="px-kicker">Fictionalized product preview</p>

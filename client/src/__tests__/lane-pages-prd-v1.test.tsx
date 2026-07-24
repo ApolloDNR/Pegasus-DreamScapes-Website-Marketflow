@@ -146,7 +146,7 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     const moreButton = Array.from(nav.querySelectorAll("button")).find((button) => button.textContent?.includes("More"));
     expect(moreButton).toBeTruthy();
     fireEvent.click(moreButton!);
-    expect(nav.querySelector('[role="menu"]')).toBeTruthy();
+    expect(nav.querySelector('[role="region"][aria-label="More Pegasus pages"]')).toBeTruthy();
     for (const label of ["Our Work", "About", "Investments", "Development", "Capital Partners", "Buyers", "Operators & Vendors", "Referral Partners"]) {
       expect(nav.textContent, `missing More directory item: ${label}`).toContain(label);
     }
@@ -174,6 +174,12 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     ]) {
       expect(footer.textContent, `missing footer link: ${label}`).toContain(label);
     }
+    expect(footer.querySelector('a[href="/strategy-lab"]')).toHaveTextContent("Strategy Lab");
+    expect(footer.querySelector('a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
+    expect(footer.querySelector('a[href="/bring-an-opportunity"]')).toHaveTextContent(
+      "Bring an Opportunity",
+    );
+    expect(footer.querySelectorAll("button")).toHaveLength(0);
     // The site-wide locked disclosure paragraph stays intact.
     expect(footer.textContent).toContain("Pegasus Dreamscapes Corp. is not a real estate brokerage.");
     expect(footer.textContent).toContain("CA DRE #02333658");

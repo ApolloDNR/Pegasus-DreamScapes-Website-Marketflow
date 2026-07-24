@@ -8,6 +8,8 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Router } from "wouter";
+import { memoryLocation } from "wouter/memory-location";
 
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import { CONTACT_FORM, LeadForm } from "@/pegasus/forms";
@@ -43,7 +45,11 @@ if (typeof globalThis.ResizeObserver === "undefined") {
   globalThis.ResizeObserver = NoopResizeObserver;
 }
 
-function renderWithQueryClient(ui: React.ReactElement) {
+function renderWithQueryClient(
+  ui: React.ReactElement,
+  { path = "/", search = "" }: { path?: string; search?: string } = {},
+) {
+  const { hook } = memoryLocation({ path, static: true });
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
@@ -52,7 +58,11 @@ function renderWithQueryClient(ui: React.ReactElement) {
   });
 
   return render(
-    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+    <QueryClientProvider client={client}>
+      <Router hook={hook} searchHook={() => search}>
+        {ui}
+      </Router>
+    </QueryClientProvider>,
   );
 }
 
@@ -162,6 +172,20 @@ describe("Pegasus LeadForm explicit contact consent", () => {
 });
 
 describe("MarketFlow access explicit contact consent", () => {
+  it.each([
+    ["?role=source", "Deal finder / wholesaler"],
+    ["?role=buyer", "Cash buyer"],
+    ["?role=capital", "Capital partner"],
+    ["?role=operator", "Operator / builder"],
+  ])("prefills the public relationship handoff for %s", (search, label) => {
+    renderWithQueryClient(<MarketflowAccessPage />, {
+      path: "/marketflow/access",
+      search,
+    });
+
+    expect(screen.getByTestId("select-access-role")).toHaveTextContent(label);
+  });
+
   it("shows the consent error and does not request access while unchecked", async () => {
     renderWithQueryClient(<MarketflowAccessPage />);
     fillMarketflowAccessForm();

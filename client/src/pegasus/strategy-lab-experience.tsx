@@ -4,19 +4,39 @@ import {
   ArrowRight,
   Building2,
   Check,
+  ChevronDown,
   ChevronRight,
   CircleAlert,
   Compass,
   FileText,
+  Gauge,
   Hammer,
   Landmark,
   MessageCircle,
   RotateCcw,
   Save,
   ShieldCheck,
+  SlidersHorizontal,
 } from 'lucide-react';
+import {
+  ENGINE_VERSION,
+  runStrategyLab,
+  type ConditionRating,
+  type PropertyInput,
+  type StrategySnapshot,
+  type SubmitterRole,
+} from '@shared/strategy-lab';
+import type { CalcTabKey } from '@/components/strategy-lab/calculator-tools-panel';
+import { useOptionalPeggyContext } from '@/contexts/peggy-context';
 import type { Nav } from './theme';
 import { IMG } from './primitives';
+import { writeStrategyLabHandoff } from './strategy-lab-handoff';
+
+const CalculatorToolsPanel = React.lazy(() =>
+  import('@/components/strategy-lab/calculator-tools-panel').then((module) => ({
+    default: module.CalculatorToolsPanel,
+  })),
+);
 
 type LabStep = 'property' | 'basis' | 'strategy' | 'review';
 type LabState = {
@@ -24,77 +44,251 @@ type LabState = {
   propertyType: string;
   situation: string;
   occupancy: string;
+  condition: string;
+  submitterRole: string;
   acquisition: string;
   scope: string;
   arv: string;
-  holdMonths: string;
+  marketRent: string;
+  loanLtv: string;
+  loanRate: string;
+  vacancy: string;
   objective: string;
   timing: string;
 };
 
-type Scenario = {
-  name: string;
-  status: string;
-  note: string;
-  emphasis: 'lead' | 'consider' | 'hold';
-};
+type NumericField = 'acquisition' | 'scope' | 'arv' | 'marketRent' | 'loanLtv' | 'loanRate' | 'vacancy';
+type DraftEnvelope = { schemaVersion: 3; savedAt: string; state: LabState };
 
-const STORAGE_KEY = 'pegasus.strategy-lab.v2';
+const STORAGE_KEY = 'pegasus.strategy-lab.v3';
+const MONEY_LIMIT = 100_000_000;
 const INITIAL: LabState = {
   address: '',
   propertyType: 'Single-family residence',
   situation: 'Value-add opportunity',
   occupancy: 'Vacant',
+  condition: 'Moderate renovation',
+  submitterRole: 'Exploring a property',
   acquisition: '',
   scope: '',
   arv: '',
-  holdMonths: '6',
+  marketRent: '',
+  loanLtv: '75',
+  loanRate: '7.5',
+  vacancy: '8',
   objective: 'Understand the strongest executable path',
   timing: 'Flexible',
 };
 
 const STEPS: Array<{ key: LabStep; num: string; label: string; hint: string }> = [
-  { key: 'property', num: '01', label: 'Property', hint: 'Situation and context' },
-  { key: 'basis', num: '02', label: 'Basis', hint: 'Cost and exit assumptions' },
-  { key: 'strategy', num: '03', label: 'Strategy', hint: 'Objectives and constraints' },
-  { key: 'review', num: '04', label: 'Review', hint: 'Decision brief' },
+  { key: 'property', num: '01', label: 'Property', hint: 'Situation and facts' },
+  { key: 'basis', num: '02', label: 'Basis', hint: 'Economics and assumptions' },
+  { key: 'strategy', num: '03', label: 'Paths', hint: 'Nine executable routes' },
+  { key: 'review', num: '04', label: 'Brief', hint: 'Decision record' },
+];
+
+const PROPERTY_TYPES = ['Single-family residence', 'Condo or townhome', '2–4 units', 'Small multifamily', 'Land or development site', 'Commercial or mixed-use'];
+const SITUATIONS = ['Value-add opportunity', 'Owner needs options', 'Inherited or estate property', 'Distressed or time-sensitive', 'Contract or sourced opportunity', 'Development or ADU potential'];
+const OCCUPANCIES = ['Vacant', 'Owner occupied', 'Tenant occupied', 'Unknown or needs review'];
+const CONDITIONS = ['Turnkey', 'Light updates', 'Moderate renovation', 'Heavy renovation', 'Full reconstruction'];
+const ROLES = ['Exploring a property', 'Property owner', 'Deal partner or wholesaler', 'Investor or buyer', 'Agent or advisor', 'Capital partner'];
+const OBJECTIVES = ['Understand the strongest executable path', 'Maximize net value', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Find a capital or operating partner'];
+const TIMINGS = ['Flexible', 'Within 90 days', 'Within 30 days', 'Time-sensitive'];
+
+const INSTRUMENTS: Array<{ key: CalcTabKey; label: string; description: string }> = [
+  { key: 'arv', label: 'ARV + basis', description: 'Reconcile acquisition, rehabilitation, holding, and exit assumptions.' },
+  { key: 'roi', label: 'Return frame', description: 'Read cash invested, financing, and directional return relationships.' },
+  { key: 'brrrr', label: 'BRRRR', description: 'Test refinance proceeds, cash left in, and stabilized operations.' },
+  { key: 'cashflow', label: 'Cash flow', description: 'Separate collected rent, operating expenses, debt service, and reserves.' },
+  { key: 'wholesale', label: 'Assignment', description: 'Frame a maximum allowable offer and buyer-side execution room.' },
+  { key: 'piti', label: 'PITI', description: 'Model principal, interest, taxes, and insurance as one monthly obligation.' },
+  { key: 'ownvsrent', label: 'Own vs. rent', description: 'Compare long-range housing cost and equity assumptions.' },
+  { key: 'hardmoney', label: 'Bridge capital', description: 'Make points, interest, fees, and holding period visible.' },
 ];
 
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const money = (value: number) => USD.format(Number.isFinite(value) ? value : 0);
-const numberFrom = (value: string) => {
-  const parsed = Number(value.replace(/[^0-9.-]/g, ''));
+
+function laneDisplayName(lane: { lane: string; laneLabel: string } | undefined): string {
+  if (!lane) return 'Needs more data';
+  return lane.lane === 'listing_referral' ? 'Listing referral' : lane.laneLabel;
+}
+
+function parseNumber(value: string): number {
+  const cleaned = value.replace(/[$,\s]/g, '');
+  if (!cleaned || !/^-?\d*\.?\d*$/.test(cleaned)) return 0;
+  const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
-};
+}
+
+function numericError(key: NumericField, raw: string): string {
+  if (!raw.trim()) return '';
+  const value = parseNumber(raw);
+  if (!/^-?[$,\d\s]*\.?\d*$/.test(raw) || !Number.isFinite(value)) return 'Enter a number using digits only.';
+  if (value < 0) return 'Use a value of zero or more.';
+  if (['loanLtv', 'loanRate', 'vacancy'].includes(key) && value > 100) return 'Use a percentage from 0 to 100.';
+  if (!['loanLtv', 'loanRate', 'vacancy'].includes(key) && value > MONEY_LIMIT) return 'Use a value below $100,000,000.';
+  return '';
+}
+
+function boundedNumericValue(key: NumericField, raw: string): number | undefined {
+  if (!raw.trim() || numericError(key, raw)) return undefined;
+  return parseNumber(raw);
+}
+
+function optionOr(value: unknown, options: string[], fallback: string): string {
+  return typeof value === 'string' && options.includes(value) ? value : fallback;
+}
+
+function restoreDraft(raw: string): LabState | null {
+  try {
+    const candidate = JSON.parse(raw) as unknown;
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return null;
+    const record = candidate as Record<string, unknown>;
+    const source = record.schemaVersion === 3 && record.state && typeof record.state === 'object' && !Array.isArray(record.state)
+      ? record.state as Record<string, unknown>
+      : record;
+    const text = (key: keyof LabState, fallback = '') => {
+      const value = source[key];
+      return typeof value === 'string' ? value.slice(0, 180) : fallback;
+    };
+    return {
+      address: text('address'),
+      propertyType: optionOr(source.propertyType, PROPERTY_TYPES, INITIAL.propertyType),
+      situation: optionOr(source.situation, SITUATIONS, INITIAL.situation),
+      occupancy: optionOr(source.occupancy, OCCUPANCIES, INITIAL.occupancy),
+      condition: optionOr(source.condition, CONDITIONS, INITIAL.condition),
+      submitterRole: optionOr(source.submitterRole, ROLES, INITIAL.submitterRole),
+      acquisition: text('acquisition'),
+      scope: text('scope'),
+      arv: text('arv'),
+      marketRent: text('marketRent'),
+      loanLtv: text('loanLtv', INITIAL.loanLtv),
+      loanRate: text('loanRate', INITIAL.loanRate),
+      vacancy: text('vacancy', INITIAL.vacancy),
+      objective: optionOr(source.objective, OBJECTIVES, INITIAL.objective),
+      timing: optionOr(source.timing, TIMINGS, INITIAL.timing),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function conditionFrom(label: string): ConditionRating {
+  return ({
+    Turnkey: 'turnkey',
+    'Light updates': 'light',
+    'Moderate renovation': 'moderate',
+    'Heavy renovation': 'heavy',
+    'Full reconstruction': 'gut',
+  } as Record<string, ConditionRating>)[label] ?? 'moderate';
+}
+
+function roleFrom(label: string): SubmitterRole {
+  return ({
+    'Property owner': 'owner_seller',
+    'Deal partner or wholesaler': 'wholesaler',
+    'Investor or buyer': 'investor_buyer',
+    'Agent or advisor': 'agent',
+    'Capital partner': 'capital_partner',
+  } as Record<string, SubmitterRole>)[label] ?? 'unknown';
+}
+
+function occupancyFrom(label: string): PropertyInput['occupancyStatus'] {
+  return ({
+    Vacant: 'vacant',
+    'Owner occupied': 'owner_occupied',
+    'Tenant occupied': 'tenant_occupied',
+    'Unknown or needs review': 'unknown',
+  } as Record<string, PropertyInput['occupancyStatus']>)[label] ?? 'unknown';
+}
+
+function timingDays(label: string): number | undefined {
+  return ({ 'Within 90 days': 90, 'Within 30 days': 30, 'Time-sensitive': 14 } as Record<string, number>)[label];
+}
+
+function propertyFrom(state: LabState): PropertyInput {
+  const acquisition = boundedNumericValue('acquisition', state.acquisition) ?? 0;
+  const scope = boundedNumericValue('scope', state.scope) ?? 0;
+  const arv = boundedNumericValue('arv', state.arv) ?? 0;
+  const rent = boundedNumericValue('marketRent', state.marketRent) ?? 0;
+  const developmentPotential = state.situation.includes('Development') || state.propertyType.includes('Land');
+  const ownerSubmitted = ['Owner needs options', 'Inherited or estate property', 'Distressed or time-sensitive'].includes(state.situation);
+  return {
+    address: state.address.trim().slice(0, 180) || undefined,
+    askingPrice: acquisition,
+    purchasePrice: acquisition || undefined,
+    rehabBudget: scope || undefined,
+    arvEstimate: arv || undefined,
+    marketRent: rent || undefined,
+    condition: conditionFrom(state.condition),
+    occupancyStatus: occupancyFrom(state.occupancy),
+    timelineDaysToClose: timingDays(state.timing),
+    developmentPotential,
+    submitterRole: roleFrom(state.submitterRole),
+    dealStatus: ownerSubmitted ? 'owner_submitted' : state.situation.includes('Contract') ? 'wholesale' : 'unknown',
+  };
+}
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <span className="px-lab-label">{children}</span>;
 }
 
-function TextField({ label, value, onChange, placeholder, inputMode }:
-  { label: string; value: string; onChange: (value: string) => void; placeholder?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'] }) {
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  inputMode,
+  error,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  error?: string;
+  hint?: string;
+}) {
+  const id = React.useId();
+  const messageId = `${id}-message`;
   return (
     <label className="px-lab-field">
       <FieldLabel>{label}</FieldLabel>
-      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} inputMode={inputMode} />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error || hint ? messageId : undefined}
+      />
+      {(error || hint) && <small id={messageId} className={error ? 'is-error' : ''}>{error || hint}</small>}
     </label>
   );
 }
 
-function SelectField({ label, value, onChange, options }:
-  { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
+function SelectField({ label, value, onChange, options, hint }: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  hint?: string;
+}) {
+  const id = React.useId();
   return (
     <label className="px-lab-field">
       <FieldLabel>{label}</FieldLabel>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
+      <select value={value} onChange={(event) => onChange(event.target.value)} aria-describedby={hint ? id : undefined}>
         {options.map((option) => <option key={option}>{option}</option>)}
       </select>
+      {hint && <small id={id}>{hint}</small>}
     </label>
   );
 }
 
-function StepHeading({ eyebrow, title, copy }:
-  { eyebrow: string; title: string; copy: string }) {
+function StepHeading({ eyebrow, title, copy }: { eyebrow: string; title: string; copy: string }) {
   return (
     <header className="px-lab-step-heading">
       <span>{eyebrow}</span>
@@ -104,96 +298,147 @@ function StepHeading({ eyebrow, title, copy }:
   );
 }
 
+function buildHandoff(state: LabState, snapshot: StrategySnapshot) {
+  const top = snapshot.lanes[0];
+  return {
+    address: state.address,
+    propertyType: state.propertyType,
+    occupancy: state.occupancy,
+    condition: state.condition,
+    situation: state.situation,
+    askingPrice: parseNumber(state.acquisition),
+    rehabBudget: parseNumber(state.scope),
+    arvEstimate: parseNumber(state.arv),
+    marketRent: parseNumber(state.marketRent),
+    topLaneLabel: top ? laneDisplayName(top) : undefined,
+    topLaneVerdict: top?.verdictLabel,
+    primaryMetric: top ? `${top.economics.primaryMetric}: ${top.economics.primaryValue}` : undefined,
+    memoNextStep: snapshot.memo.nextStep,
+    engineVersion: snapshot.engineVersion,
+    generatedAt: snapshot.generatedAt,
+  };
+}
+
 export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
   const [, setLocation] = useLocation();
   const search = useSearch();
-  const calculatorsRequested = new URLSearchParams(search).get('tool') === 'calculators';
+  const params = React.useMemo(() => new URLSearchParams(search), [search]);
+  const calculatorsRequested = params.get('tool') === 'calculators';
+  const requestedTab = params.get('tab') as CalcTabKey | null;
+  const initialInstrument = INSTRUMENTS.some((item) => item.key === requestedTab) ? requestedTab! : 'arv';
   const [step, setStep] = React.useState<LabStep>(calculatorsRequested ? 'basis' : 'property');
   const [state, setState] = React.useState<LabState>(INITIAL);
   const [savedNote, setSavedNote] = React.useState('');
+  const [confirmReset, setConfirmReset] = React.useState(false);
+  const [instrumentsOpen, setInstrumentsOpen] = React.useState(calculatorsRequested);
+  const [detailedInstrumentOpen, setDetailedInstrumentOpen] = React.useState(calculatorsRequested);
+  const [instrument, setInstrument] = React.useState<CalcTabKey>(initialInstrument);
   const workspaceHeading = React.useRef<HTMLHeadingElement>(null);
+  const workspaceRef = React.useRef<HTMLElement>(null);
+  const instrumentsRef = React.useRef<HTMLElement>(null);
+  const focusAfterStepChange = React.useRef(false);
+  const peggy = useOptionalPeggyContext();
 
   React.useEffect(() => {
     try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
+      const stored = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem('pegasus.strategy-lab.v2');
       if (!stored) return;
-      const parsed = JSON.parse(stored) as Partial<LabState>;
-      setState((current) => ({ ...current, ...parsed }));
+      const restored = restoreDraft(stored);
+      if (!restored) return;
+      setState(restored);
       setSavedNote('Your private browser draft was restored.');
     } catch {
-      // A corrupt or blocked local draft should never stop the desk from opening.
+      // Storage can be unavailable in private or hardened browsing contexts.
     }
   }, []);
 
   React.useEffect(() => {
-    workspaceHeading.current?.focus();
+    if (!focusAfterStepChange.current) return;
+    focusAfterStepChange.current = false;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    workspaceRef.current?.scrollIntoView?.({
+      block: 'start',
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+    window.requestAnimationFrame(() => workspaceHeading.current?.focus({ preventScroll: true }));
   }, [step]);
 
   React.useEffect(() => {
     if (!calculatorsRequested) return;
-    document.querySelector('.px-lab-workspace')?.scrollIntoView({ block: 'start' });
+    setInstrumentsOpen(true);
+    setDetailedInstrumentOpen(true);
   }, [calculatorsRequested]);
 
-  const set = <K extends keyof LabState>(key: K, value: LabState[K]) =>
+  React.useEffect(() => {
+    if (!calculatorsRequested || !instrumentsOpen) return;
+    window.requestAnimationFrame(() => {
+      instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+    });
+  }, [calculatorsRequested, instrumentsOpen]);
+
+  const set = <K extends keyof LabState>(key: K, value: LabState[K]) => {
+    setConfirmReset(false);
     setState((current) => ({ ...current, [key]: value }));
+  };
 
-  const acquisition = numberFrom(state.acquisition);
-  const scope = numberFrom(state.scope);
-  const arv = numberFrom(state.arv);
-  const holdMonths = Math.max(0, numberFrom(state.holdMonths));
-  const hardBasis = acquisition + scope;
-  const carry = hardBasis * 0.09 * (holdMonths / 12);
-  const exitCosts = arv * 0.07;
-  const totalToDeliver = hardBasis + carry + exitCosts;
-  const netProceeds = arv - exitCosts;
-  const spread = netProceeds - hardBasis - carry;
-  const marginOnCost = totalToDeliver > 0 ? (spread / totalToDeliver) * 100 : 0;
-  const hasBasis = acquisition > 0 && arv > 0;
-  const completedInputs = [state.address.trim(), state.acquisition, state.arv, state.objective].filter(Boolean).length;
-  const readiness = completedInputs === 4 ? 'Ready for a directional review' : completedInputs >= 2 ? 'Promising draft — a few inputs remain' : 'Start with the property and basis';
+  const errors = React.useMemo(() => ({
+    acquisition: numericError('acquisition', state.acquisition),
+    scope: numericError('scope', state.scope),
+    arv: numericError('arv', state.arv),
+    marketRent: numericError('marketRent', state.marketRent),
+    loanLtv: numericError('loanLtv', state.loanLtv),
+    loanRate: numericError('loanRate', state.loanRate),
+    vacancy: numericError('vacancy', state.vacancy),
+  }), [state.acquisition, state.scope, state.arv, state.marketRent, state.loanLtv, state.loanRate, state.vacancy]);
 
-  const scenarioRank: Record<Scenario['emphasis'], number> = { lead: 0, consider: 1, hold: 2 };
-  const scenarios: Scenario[] = hasBasis
-    ? ([
-        {
-          name: 'Value-add execution',
-          status: marginOnCost >= 12 ? 'Leading path' : marginOnCost >= 5 ? 'Needs disciplined terms' : 'Do not lead with this path',
-          note: marginOnCost >= 12
-            ? 'The entered basis retains a material cushion after modeled carry and exit costs.'
-            : 'The entered basis leaves limited room for execution variance. Revisit price, scope, or timing.',
-          emphasis: marginOnCost >= 12 ? 'lead' : marginOnCost >= 5 ? 'consider' : 'hold',
-        },
-        {
-          name: 'Representation or retail exit',
-          status: state.situation.includes('Owner') || marginOnCost < 8 ? 'Consider alongside acquisition' : 'Secondary path',
-          note: 'Useful when owner equity, market exposure, or a lighter intervention may outperform a principal acquisition.',
-          emphasis: state.situation.includes('Owner') || marginOnCost < 8 ? 'consider' : 'hold',
-        },
-        {
-          name: 'Structured property review',
-          status: 'Required before action',
-          note: 'Condition, title, occupancy, market support, scope, and terms still need a human review.',
-          emphasis: 'consider',
-        },
-      ] as Scenario[]).sort((a, b) => scenarioRank[a.emphasis] - scenarioRank[b.emphasis])
-    : [];
+  const hasNumericErrors = Object.values(errors).some(Boolean);
+  const property = React.useMemo(() => propertyFrom(state), [state]);
+  const snapshot = React.useMemo(() => runStrategyLab(property, {
+    loanLtvPct: boundedNumericValue('loanLtv', state.loanLtv) ?? 75,
+    loanRatePct: boundedNumericValue('loanRate', state.loanRate) ?? 7.5,
+    vacancyPctBase: boundedNumericValue('vacancy', state.vacancy) ?? 8,
+  }), [property, state.loanLtv, state.loanRate, state.vacancy]);
 
-  const risks = [
-    !state.address.trim() ? 'Property location is still missing.' : '',
-    acquisition <= 0 ? 'Acquisition or current basis is still missing.' : '',
-    arv <= 0 ? 'Exit value assumption is still missing.' : '',
-    scope <= 0 ? 'Scope is entered as zero; confirm that no work is required.' : '',
-    hasBasis && marginOnCost < 8 ? 'Modeled margin is narrow after carry and exit costs.' : '',
-    holdMonths > 12 ? 'The hold period creates meaningful carry exposure.' : '',
-  ].filter(Boolean);
+  const acquisition = property.purchasePrice ?? 0;
+  const scope = property.rehabBudget ?? 0;
+  const arv = property.arvEstimate ?? 0;
+  const marketRent = property.marketRent ?? 0;
+  const hasDecisionBasis = acquisition > 0 && (arv > 0 || marketRent > 0) && !hasNumericErrors;
+  const topLanes = hasDecisionBasis ? snapshot.lanes.slice(0, 3) : [];
+  const topLane = topLanes[0];
+
+  const openQuestions = React.useMemo(() => {
+    const questions = [
+      !state.address.trim() ? 'Confirm the property location.' : '',
+      acquisition <= 0 ? 'Confirm acquisition price or current basis.' : '',
+      arv <= 0 && marketRent <= 0 ? 'Add an exit value or market-rent assumption.' : '',
+      scope <= 0 ? 'Confirm whether the property truly requires no improvement budget.' : '',
+      ...(hasDecisionBasis ? topLanes.flatMap((lane) => lane.confidence.missingInputs.slice(0, 2)) : []),
+      ...(hasDecisionBasis
+        ? snapshot.risks.filter((risk) => ['blocker', 'high', 'watch'].includes(risk.severity)).map((risk) => risk.title)
+        : []),
+    ].filter(Boolean);
+    return Array.from(new Set(questions)).slice(0, 6);
+  }, [state.address, acquisition, arv, marketRent, scope, hasDecisionBasis, topLanes, snapshot.risks]);
+
+  const readiness = hasDecisionBasis
+    ? topLane?.verdict === 'needs_more_data' ? 'Core basis entered · evidence still required' : 'Directional paths are ready to compare'
+    : acquisition > 0 ? 'Add exit evidence to complete the read' : 'Start with the property and basis';
 
   const currentIndex = STEPS.findIndex((item) => item.key === step);
-  const nextStep = () => setStep(STEPS[Math.min(currentIndex + 1, STEPS.length - 1)].key);
-  const previousStep = () => setStep(STEPS[Math.max(currentIndex - 1, 0)].key);
+  const moveToStep = (next: LabStep) => {
+    if (next === step) return;
+    focusAfterStepChange.current = true;
+    setStep(next);
+    setConfirmReset(false);
+  };
+  const nextStep = () => moveToStep(STEPS[Math.min(currentIndex + 1, STEPS.length - 1)].key);
+  const previousStep = () => moveToStep(STEPS[Math.max(currentIndex - 1, 0)].key);
 
   const saveDraft = () => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const envelope: DraftEnvelope = { schemaVersion: 3, savedAt: new Date().toISOString(), state };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
       setSavedNote('Decision brief saved in this browser.');
     } catch {
       setSavedNote('This browser blocked local saving. Your current desk remains open.');
@@ -201,10 +446,93 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
   };
 
   const resetDraft = () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      setSavedNote('Select “Confirm clear” to remove this browser draft.');
+      return;
+    }
     setState(INITIAL);
-    setStep('property');
+    moveToStep('property');
+    setConfirmReset(false);
     setSavedNote('Desk cleared.');
-    try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* no-op */ }
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem('pegasus.strategy-lab.v2');
+    } catch {
+      // The visible state is still safely reset if storage is unavailable.
+    }
+  };
+
+  const discussWithPeggy = () => {
+    if (!hasDecisionBasis) {
+      setSavedNote('Add a valid basis and exit assumption before asking Peggy about a decision brief.');
+      moveToStep('basis');
+      return;
+    }
+    peggy?.updateContext({
+      page: 'strategy-lab',
+      labMode: 'explain',
+      labAnalysis: {
+        address: property.address ?? null,
+        topLane: topLane?.lane ?? null,
+        topLaneLabel: topLane?.laneLabel ?? null,
+        topLaneVerdict: topLane?.verdictLabel ?? null,
+        confidenceScore: topLane?.confidence.score ?? null,
+        memoParagraph: snapshot.memo.paragraph,
+        memoNextStep: snapshot.memo.nextStep,
+        laneSummary: topLanes.map((lane) => ({
+          lane: lane.lane,
+          label: lane.laneLabel,
+          verdict: lane.verdictLabel,
+          headline: lane.headline,
+        })),
+        primaryMetric: topLane ? {
+          label: topLane.economics.primaryMetric,
+          value: topLane.economics.primaryValue,
+        } : null,
+        risks: snapshot.risks.slice(0, 5).map((risk) => ({
+          severity: risk.severity,
+          title: risk.title,
+          detail: risk.detail,
+        })),
+        inputs: {
+          askingPrice: acquisition,
+          rehabBudget: scope,
+          arvEstimate: arv,
+          marketRent,
+          condition: property.condition,
+          occupancyStatus: property.occupancyStatus,
+        },
+      },
+    });
+    peggy?.setPendingPrompt(`Explain this Strategy Lab read for ${property.address || 'the property'}, including the leading path, sensitive assumptions, and what Pegasus would need to verify.`);
+    openPeggy();
+  };
+
+  const carryToIntake = () => {
+    if (!hasDecisionBasis) {
+      setSavedNote('Add a valid basis and exit assumption before carrying a brief into intake.');
+      moveToStep('basis');
+      return;
+    }
+    writeStrategyLabHandoff(buildHandoff(state, snapshot));
+    setLocation('/bring-an-opportunity?intent=property&ref=strategy-lab');
+  };
+
+  const chooseInstrument = (key: CalcTabKey) => {
+    setInstrument(key);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tool', 'calculators');
+      if (key === 'arv') url.searchParams.delete('tab');
+      else url.searchParams.set('tab', key);
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
+  const openInstruments = () => {
+    setInstrumentsOpen(true);
+    window.requestAnimationFrame(() => instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }));
   };
 
   return (
@@ -213,21 +541,38 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
         <img src={IMG('pegasus-architecture.png')} alt="Architectural model and planning instruments on a Pegasus worktable" />
         <div className="px-lab-masthead-scrim" aria-hidden="true" />
         <div className="px-lab-masthead-inner">
-          <p className="px-kicker">Pegasus Strategy Lab · Private working desk</p>
-          <h1>Turn one property into a decision you can defend.</h1>
-          <p>Build the basis, compare executable paths, surface what is still unknown, and carry a concise brief into a written Pegasus review.</p>
+          <div>
+            <p className="px-kicker">Pegasus Strategy Lab · Private working desk</p>
+            <h1>Turn one property into a decision you can defend.</h1>
+            <p>Build the facts once. Compare nine executable paths through the Pegasus underwriting engine. Carry the same brief into Peggy or a written Property Read.</p>
+          </div>
+          <aside className="px-lab-masthead-record" aria-label="Strategy Lab operating record">
+            <span>Underwriting record · methodology {ENGINE_VERSION}</span>
+            <dl>
+              <div><dt>Method</dt><dd>Pegasus underwriting</dd></div>
+              <div><dt>Paths compared</dt><dd>09</dd></div>
+              <div><dt>Storage</dt><dd>This browser</dd></div>
+            </dl>
+            <button type="button" onClick={openInstruments}>Open instrument library <SlidersHorizontal aria-hidden="true" /></button>
+          </aside>
           <div className="px-lab-trust" aria-label="Strategy Lab principles">
             <span><ShieldCheck aria-hidden="true" /> Directional, not an offer</span>
-            <span><FileText aria-hidden="true" /> Saved in your browser</span>
-            <span><Compass aria-hidden="true" /> Human review before action</span>
+            <span><FileText aria-hidden="true" /> Assumptions stay visible</span>
+            <span><Compass aria-hidden="true" /> Pegasus review before action</span>
           </div>
         </div>
       </section>
 
-      <section className="px-lab-workspace" aria-labelledby="lab-workspace-title" data-testid="strategy-lab-workspace">
+      <section ref={workspaceRef} className="px-lab-workspace" aria-labelledby="lab-workspace-title" data-testid="strategy-lab-workspace">
         <div className="px-lab-progress" aria-label="Strategy Lab steps">
           {STEPS.map((item, index) => (
-            <button key={item.key} type="button" onClick={() => setStep(item.key)} aria-current={step === item.key ? 'step' : undefined} className={step === item.key ? 'is-current' : index < currentIndex ? 'is-complete' : ''}>
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => moveToStep(item.key)}
+              aria-current={step === item.key ? 'step' : undefined}
+              className={step === item.key ? 'is-current' : index < currentIndex ? 'is-complete' : ''}
+            >
               <span>{item.num}</span>
               <strong>{item.label}</strong>
               <small>{item.hint}</small>
@@ -242,80 +587,214 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'property' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="01 · Property record" title="What are we actually reading?" copy="Begin with the situation, not a generic score. The address stays on this browser unless you choose to send a review." />
+                <StepHeading eyebrow="01 · Property record" title="Start with the situation, not a score." copy="These facts shape the underwriting memo, risk register, and which paths remain credible. The address stays in this browser unless you choose to carry the brief forward." />
                 <div className="px-lab-form-grid">
                   <div className="px-lab-wide"><TextField label="Property address or city" value={state.address} onChange={(value) => set('address', value)} placeholder="East Bay property or city" /></div>
-                  <SelectField label="Property type" value={state.propertyType} onChange={(value) => set('propertyType', value)} options={['Single-family residence', 'Condo or townhome', '2–4 units', 'Small multifamily', 'Land or development site', 'Commercial or mixed-use']} />
-                  <SelectField label="Situation" value={state.situation} onChange={(value) => set('situation', value)} options={['Value-add opportunity', 'Owner needs options', 'Inherited or estate property', 'Distressed or time-sensitive', 'Contract or sourced opportunity', 'Development or ADU potential']} />
-                  <SelectField label="Occupancy" value={state.occupancy} onChange={(value) => set('occupancy', value)} options={['Vacant', 'Owner occupied', 'Tenant occupied', 'Unknown or needs review']} />
-                  <SelectField label="Timing" value={state.timing} onChange={(value) => set('timing', value)} options={['Flexible', 'Within 90 days', 'Within 30 days', 'Time-sensitive']} />
+                  <SelectField label="Property type" value={state.propertyType} onChange={(value) => set('propertyType', value)} options={PROPERTY_TYPES} />
+                  <SelectField label="Your position" value={state.submitterRole} onChange={(value) => set('submitterRole', value)} options={ROLES} hint="Changes how the written decision memo is framed." />
+                  <SelectField label="Situation" value={state.situation} onChange={(value) => set('situation', value)} options={SITUATIONS} />
+                  <SelectField label="Condition" value={state.condition} onChange={(value) => set('condition', value)} options={CONDITIONS} />
+                  <SelectField label="Occupancy" value={state.occupancy} onChange={(value) => set('occupancy', value)} options={OCCUPANCIES} />
+                  <SelectField label="Timing" value={state.timing} onChange={(value) => set('timing', value)} options={TIMINGS} />
                 </div>
               </div>
             )}
 
             {step === 'basis' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="02 · Basis ledger" title="Put the assumptions in one place." copy="The desk models carry at 9% annualized and exit costs at 7% of the entered value. These are orientation assumptions, not quotes." />
+                <StepHeading eyebrow="02 · Basis ledger" title="Make every material assumption visible." copy="The engine uses the entered basis, condition, occupancy, financing, rent, and exit evidence. Empty inputs remain empty; the desk does not quietly invent property facts." />
                 <div className="px-lab-form-grid">
-                  <TextField label="Acquisition or current basis" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="numeric" />
-                  <TextField label="Scope / improvement budget" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="numeric" />
-                  <TextField label="Projected exit value" value={state.arv} onChange={(value) => set('arv', value)} placeholder="$840,000" inputMode="numeric" />
-                  <TextField label="Modeled hold period (months)" value={state.holdMonths} onChange={(value) => set('holdMonths', value)} placeholder="6" inputMode="numeric" />
+                  <TextField label="Acquisition or current basis" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="decimal" error={errors.acquisition} />
+                  <TextField label="Scope / improvement budget" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="decimal" error={errors.scope} />
+                  <TextField label="Projected exit value" value={state.arv} onChange={(value) => set('arv', value)} placeholder="$840,000" inputMode="decimal" error={errors.arv} hint="Visitor-entered until supported by market evidence." />
+                  <TextField label="Projected monthly market rent" value={state.marketRent} onChange={(value) => set('marketRent', value)} placeholder="$4,500" inputMode="decimal" error={errors.marketRent} hint="Optional, but required for hold-path economics." />
                 </div>
-                <div className="px-lab-ledger" aria-live="polite">
-                  <div><span>Hard basis</span><strong>{money(hardBasis)}</strong><small>Acquisition + scope</small></div>
-                  <div><span>Modeled carry</span><strong>{money(carry)}</strong><small>9% annualized</small></div>
-                  <div><span>Modeled exit costs</span><strong>{money(exitCosts)}</strong><small>7% of exit value</small></div>
-                  <div className="is-total"><span>Total to deliver and sell</span><strong>{money(totalToDeliver)}</strong><small>Directional basis</small></div>
+                <details className="px-lab-assumptions">
+                  <summary>Financing and operating assumptions <ChevronDown aria-hidden="true" /></summary>
+                  <div className="px-lab-form-grid">
+                    <TextField label="Modeled loan-to-value (%)" value={state.loanLtv} onChange={(value) => set('loanLtv', value)} inputMode="decimal" error={errors.loanLtv} />
+                    <TextField label="Modeled loan rate (%)" value={state.loanRate} onChange={(value) => set('loanRate', value)} inputMode="decimal" error={errors.loanRate} />
+                    <TextField label="Base vacancy (%)" value={state.vacancy} onChange={(value) => set('vacancy', value)} inputMode="decimal" error={errors.vacancy} />
+                    <div className="px-lab-assumption-note">
+                      <ShieldCheck aria-hidden="true" />
+                      <p>
+                        Planning defaults: 30-year amortization, 3% closing reserve, 8% of
+                        collected rent for management, 8% for repairs, 5% for capital
+                        reserves, 1.1% annual property tax, and $150 monthly insurance.
+                        These are not financing terms, quotes, or property-specific facts.
+                      </p>
+                    </div>
+                    <div className="px-lab-assumption-note">
+                      <Gauge aria-hidden="true" />
+                      <p>
+                        Stress behavior: the stressed case reduces rent 5%, adds 2 points
+                        of vacancy, raises repairs to 10%, and increases tax and insurance
+                        10%. The downside case reduces rent 15%, adds 4 vacancy points,
+                        raises repairs to 12% and capital reserves to 6%, and increases tax
+                        and insurance 20%.
+                      </p>
+                    </div>
+                  </div>
+                </details>
+                <div className="px-lab-ledger">
+                  <div><span>Purchase assumption</span><strong>{!errors.acquisition && acquisition ? money(acquisition) : '—'}</strong><small>Visitor-entered</small></div>
+                  <div><span>Improvement scope</span><strong>{!errors.scope && scope ? money(scope) : '—'}</strong><small>Visitor-entered</small></div>
+                  <div><span>Modeled cash in</span><strong>{!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : '—'}</strong><small>Down payment + scope + reserve</small></div>
+                  <div className="is-total"><span>Exit evidence</span><strong>{!errors.arv && arv ? money(arv) : !errors.marketRent && marketRent ? `${money(marketRent)}/mo` : 'Missing'}</strong><small>ARV or market rent</small></div>
                 </div>
+                <p className="sr-only" role="status">Basis assumptions updated. Modeled cash in is {!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : 'not available'}.</p>
               </div>
             )}
 
             {step === 'strategy' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="03 · Decision frame" title="Choose the result that matters." copy="A sophisticated plan is not always the path with the highest headline price. State the objective and compare what can actually be executed." />
-                <div className="px-lab-form-grid">
-                  <div className="px-lab-wide"><SelectField label="Primary objective" value={state.objective} onChange={(value) => set('objective', value)} options={['Understand the strongest executable path', 'Maximize net value', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Find a capital or operating partner']} /></div>
+                <StepHeading eyebrow="03 · Path comparison" title="Read the leading paths—and their weak points." copy="The engine ranks nine Pegasus paths from the same facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
+                <div className="px-lab-form-grid px-lab-objective">
+                  <div className="px-lab-wide"><SelectField label="Decision lens" value={state.objective} onChange={(value) => set('objective', value)} options={OBJECTIVES} hint="Used to frame the brief; it does not alter the underwriting math." /></div>
                 </div>
-                <div className="px-lab-scenarios">
-                  {scenarios.length ? scenarios.map((scenario, index) => (
-                    <div key={scenario.name} className={scenario.emphasis === 'lead' ? 'is-leading' : ''}>
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                      <div><h3>{scenario.name}</h3><p>{scenario.note}</p></div>
-                      <strong>{scenario.status}</strong>
+                {!hasDecisionBasis ? (
+                  <section className="px-lab-needs-inputs" role="status" aria-label="More inputs required">
+                    <CircleAlert aria-hidden="true" />
+                    <div>
+                      <p className="px-lab-label">Decision brief not generated</p>
+                      <h3>Add a valid basis and exit assumption.</h3>
+                      <p>
+                        Enter an acquisition or current basis plus either projected exit
+                        value or monthly market rent. Resolve every numeric field marked
+                        with an error before the Lab compares paths.
+                      </p>
+                      <button type="button" onClick={() => moveToStep('basis')}>
+                        Complete the basis ledger <ArrowRight aria-hidden="true" />
+                      </button>
                     </div>
-                  )) : (
-                    <div className="px-lab-empty"><Landmark aria-hidden="true" /><p>Enter an acquisition basis and projected exit value to compare grounded paths.</p></div>
-                  )}
-                </div>
+                  </section>
+                ) : (
+                  <div className="px-lab-scenarios">
+                    {topLanes.map((lane, index) => (
+                      <details key={lane.lane} className={index === 0 ? 'is-leading' : ''} open={index === 0}>
+                        <summary>
+                          <span>{String(index + 1).padStart(2, '0')}</span>
+                          <div><h3>{laneDisplayName(lane)}</h3><p>{lane.headline}</p></div>
+                          <strong>{lane.verdictLabel}</strong>
+                          <ChevronDown aria-hidden="true" />
+                        </summary>
+                        <div className="px-lab-scenario-evidence">
+                          <div><span>{lane.economics.primaryMetric}</span><strong>{lane.economics.primaryValue}</strong></div>
+                          <ul>
+                            {lane.confidence.supportingFactors.slice(0, 2).map((factor) => <li key={factor}><Check aria-hidden="true" />{factor}</li>)}
+                            {lane.confidence.sensitiveFactors.slice(0, 2).map((factor) => <li key={factor}><CircleAlert aria-hidden="true" />{factor}</li>)}
+                            {lane.confidence.missingInputs.slice(0, 2).map((factor) => <li key={factor}><CircleAlert aria-hidden="true" />Needs: {factor}</li>)}
+                          </ul>
+                        </div>
+                      </details>
+                    ))}
+                    <details className="px-lab-all-paths">
+                      <summary>
+                        <span>Complete comparison</span>
+                        <strong>View all nine paths</strong>
+                        <small>6 additional routes</small>
+                        <ChevronDown aria-hidden="true" />
+                      </summary>
+                      <ol>
+                        {snapshot.lanes.slice(3).map((lane, index) => (
+                          <li key={lane.lane}>
+                            <span>{String(index + 4).padStart(2, '0')}</span>
+                            <div><strong>{laneDisplayName(lane)}</strong><small>{lane.headline}</small></div>
+                            <em>{lane.verdictLabel}</em>
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  </div>
+                )}
               </div>
             )}
 
             {step === 'review' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="04 · Review record" title="A concise brief, with the gaps left visible." copy="This is a planning record, not a valuation or recommendation. A Pegasus Property Read adds market, title, condition, and execution review." />
+                <StepHeading eyebrow="04 · Decision record" title="A concise brief, with uncertainty left visible." copy="This record is generated from the same versioned engine used for the path comparison. It is planning material—not a valuation, approval, or recommendation." />
+                {!hasDecisionBasis ? (
+                  <section className="px-lab-needs-inputs" role="status" aria-label="Decision brief unavailable">
+                    <CircleAlert aria-hidden="true" />
+                    <div>
+                      <p className="px-lab-label">Decision record held</p>
+                      <h3>The Lab needs valid inputs before it can write a conclusion.</h3>
+                      <p>
+                        Add a positive acquisition or current basis and either an exit
+                        value or market rent. Correct every numeric error before any path,
+                        memo, stress case, Peggy handoff, or intake brief is generated.
+                      </p>
+                      <button type="button" onClick={() => moveToStep('basis')}>
+                        Return to the basis ledger <ArrowRight aria-hidden="true" />
+                      </button>
+                    </div>
+                  </section>
+                ) : (
+                  <>
+                    <section className="px-lab-decision-record" aria-label="Decision brief">
+                  <div>
+                    <span>Recommendation</span>
+                    <strong>{laneDisplayName(topLane)}</strong>
+                    <small>{topLane?.verdictLabel ?? 'Needs more data'}</small>
+                  </div>
+                  <div>
+                    <span>Evidence</span>
+                    <strong>{topLane?.economics.primaryValue ?? 'Basis incomplete'}</strong>
+                    <small>{topLane?.economics.primaryMetric ?? 'Add basis and exit evidence'}</small>
+                  </div>
+                  <div>
+                    <span>Unresolved risk</span>
+                    <strong>{openQuestions[0] ?? 'No core input gap identified'}</strong>
+                    <small>{openQuestions.length > 1 ? `${openQuestions.length - 1} additional questions remain` : 'Pegasus diligence still applies'}</small>
+                  </div>
+                  <div>
+                    <span>Next action</span>
+                    <strong>{snapshot.memo.nextStep}</strong>
+                    <small>Pegasus review before execution</small>
+                  </div>
+                </section>
+                <details className="px-lab-method-note">
+                  <summary>Read the full engine rationale <ChevronDown aria-hidden="true" /></summary>
+                  <p>{snapshot.memo.paragraph}</p>
+                </details>
                 <div className="px-lab-review-grid">
                   <section>
-                    <p className="px-lab-label">Directional economics</p>
+                    <p className="px-lab-label">Leading path record</p>
                     <dl>
-                      <div><dt>Net proceeds after modeled exit costs</dt><dd>{money(netProceeds)}</dd></div>
-                      <div><dt>Modeled spread</dt><dd>{hasBasis ? money(spread) : 'Needs basis'}</dd></div>
-                      <div><dt>Margin on total modeled cost</dt><dd>{hasBasis ? `${marginOnCost.toFixed(1)}%` : 'Needs basis'}</dd></div>
-                      <div><dt>Current lead path</dt><dd>{scenarios[0]?.name ?? 'Needs basis'}</dd></div>
+                      <div><dt>Current leading path</dt><dd>{laneDisplayName(topLane)}</dd></div>
+                      <div><dt>Engine verdict</dt><dd>{topLane?.verdictLabel ?? 'Needs more data'}</dd></div>
+                      <div><dt>{topLane?.economics.primaryMetric ?? 'Primary metric'}</dt><dd>{topLane?.economics.primaryValue ?? '—'}</dd></div>
+                      <div><dt>Modeled cash in</dt><dd>{acquisition ? money(snapshot.totalCashIn) : 'Needs basis'}</dd></div>
                     </dl>
                   </section>
                   <section>
                     <p className="px-lab-label">Open questions</p>
-                    {risks.length ? <ul>{risks.map((risk) => <li key={risk}><CircleAlert aria-hidden="true" />{risk}</li>)}</ul> : <p className="px-lab-complete"><Check aria-hidden="true" /> Core desk inputs are present. Human diligence still applies.</p>}
+                    {openQuestions.length ? <ul>{openQuestions.map((risk) => <li key={risk}><CircleAlert aria-hidden="true" />{risk}</li>)}</ul> : <p className="px-lab-complete"><Check aria-hidden="true" /> Core desk inputs are present. Pegasus diligence still applies.</p>}
                   </section>
                 </div>
+                {marketRent > 0 && (
+                  <div className="px-lab-stress-table">
+                    <header><Gauge aria-hidden="true" /><div><span>Rental stress read</span><strong>Base, stressed, and downside cases</strong></div></header>
+                    <dl>
+                      {(['base', 'stressed', 'worst'] as const).map((scenario) => (
+                        <div key={scenario}>
+                          <dt>{scenario === 'base' ? 'Base' : scenario === 'stressed' ? 'Stressed' : 'Downside'}</dt>
+                          <dd>{money(snapshot.scenarios[scenario].annualCashFlow)} / year</dd>
+                          <dd className="px-lab-stress-meta">DSCR {snapshot.scenarios[scenario].dscr.toFixed(2)}×</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
                 <div className="px-lab-review-actions">
-                  <button type="button" onClick={saveDraft}><Save aria-hidden="true" /> Save decision brief</button>
-                  <button type="button" onClick={openPeggy}><MessageCircle aria-hidden="true" /> Discuss with Peggy</button>
-                  <button type="button" className="is-primary" onClick={() => setLocation('/bring-an-opportunity?intent=property&ref=strategy-lab')}>
+                  <button type="button" onClick={saveDraft}><Save aria-hidden="true" /> Save in this browser</button>
+                  <button type="button" onClick={discussWithPeggy}><MessageCircle aria-hidden="true" /> Ask Peggy about this brief</button>
+                  <button type="button" className="is-primary" onClick={carryToIntake}>
                     Request a written Property Read <ArrowRight aria-hidden="true" />
                   </button>
                 </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -325,7 +804,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
               {currentIndex < STEPS.length - 1 ? (
                 <button type="button" className="is-next" onClick={nextStep}>Continue <ChevronRight aria-hidden="true" /></button>
               ) : (
-                <button type="button" onClick={resetDraft}><RotateCcw aria-hidden="true" /> Clear desk</button>
+                <button type="button" className={confirmReset ? 'is-confirm' : ''} onClick={resetDraft}><RotateCcw aria-hidden="true" /> {confirmReset ? 'Confirm clear' : 'Clear desk'}</button>
               )}
             </footer>
           </article>
@@ -337,25 +816,53 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
             </div>
             <div className="px-lab-brief-property">
               <Building2 aria-hidden="true" />
-              <div><strong>{state.address || 'Property not entered'}</strong><span>{state.propertyType} · {state.occupancy}</span></div>
+              <div><strong>{state.address || 'Property not entered'}</strong><span>{state.propertyType} · {state.condition}</span></div>
             </div>
             <dl>
-              <div><dt>Basis + scope</dt><dd>{hardBasis ? money(hardBasis) : '—'}</dd></div>
-              <div><dt>Modeled spread</dt><dd>{hasBasis ? money(spread) : '—'}</dd></div>
-              <div><dt>Objective</dt><dd>{state.objective}</dd></div>
-              <div><dt>Timing</dt><dd>{state.timing}</dd></div>
+              <div><dt>Leading path</dt><dd>{hasDecisionBasis ? laneDisplayName(topLane) : 'Awaiting basis'}</dd></div>
+              <div><dt>Verdict</dt><dd>{hasDecisionBasis ? topLane?.verdictLabel : 'Needs inputs'}</dd></div>
+              <div><dt>Cash-in model</dt><dd>{hasDecisionBasis ? money(snapshot.totalCashIn) : '—'}</dd></div>
+              <div><dt>Open questions</dt><dd>{openQuestions.length}</dd></div>
+              <div><dt>Decision lens</dt><dd>{state.objective}</dd></div>
             </dl>
             <div className="px-lab-brief-rule" />
-            <p>Numbers are only one layer. A written review checks property facts, market support, title, occupancy, scope, capital, and terms before Pegasus participates.</p>
-            <button type="button" onClick={() => go('submit')}>Carry this into intake <ArrowRight aria-hidden="true" /></button>
+            <p>One record follows the property from first read to Peggy and the intake desk. Pegasus still verifies market support, title, occupancy, condition, capital, and written terms.</p>
+            <button type="button" onClick={carryToIntake} disabled={!hasDecisionBasis}>Carry this brief into intake <ArrowRight aria-hidden="true" /></button>
           </aside>
         </div>
       </section>
 
+      {instrumentsOpen && (
+        <section className="px-lab-instruments" ref={instrumentsRef} aria-labelledby="lab-instruments-title">
+          <header>
+            <div><p className="px-kicker">Instrument library · Eight focused worksheets</p><h2 id="lab-instruments-title">Open only the instrument the decision requires.</h2></div>
+            <button type="button" onClick={() => setInstrumentsOpen(false)}>Close library</button>
+          </header>
+          <div className="px-lab-instrument-grid" role="group" aria-label="Underwriting instruments">
+            {INSTRUMENTS.map((item) => (
+              <button key={item.key} type="button" aria-pressed={instrument === item.key} onClick={() => chooseInstrument(item.key)}>
+                <span>{item.label}</span><small>{item.description}</small>
+              </button>
+            ))}
+          </div>
+          <div className="px-lab-instrument-launch">
+            <div><span>Selected worksheet</span><strong>{INSTRUMENTS.find((item) => item.key === instrument)?.label}</strong><p>{INSTRUMENTS.find((item) => item.key === instrument)?.description}</p></div>
+            <button type="button" onClick={() => setDetailedInstrumentOpen(true)}>Open detailed worksheet <ArrowRight aria-hidden="true" /></button>
+          </div>
+          {detailedInstrumentOpen && (
+            <div className="px-lab-instrument-detail">
+              <React.Suspense fallback={<p role="status">Preparing the worksheet…</p>}>
+                <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} />
+              </React.Suspense>
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="px-lab-boundary" data-testid="text-strategy-disclaimer">
         <Hammer aria-hidden="true" />
         <div><p className="px-kicker">The operating boundary</p><h2>The Lab organizes a decision. It does not replace diligence.</h2></div>
-        <p>No offer, appraisal, legal advice, tax advice, financial advice, lending commitment, or investment recommendation is created here.</p>
+        <p>Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.</p>
       </section>
     </div>
   );

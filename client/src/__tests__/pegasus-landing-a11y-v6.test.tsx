@@ -86,6 +86,7 @@ function renderLanding(routePath: string) {
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.history.replaceState({}, "", "/");
 });
 
 type SignatureRoute = {
@@ -153,16 +154,47 @@ describe("Pegasus public-shell navigation accessibility", () => {
     const nav = container.querySelector("nav");
     expect(nav).toBeTruthy();
 
-    expect(within(nav!).getByRole("button", { name: /Strategy Lab/i })).toBeInTheDocument();
-    expect(within(nav!).getByRole("button", { name: /MarketFlow/i })).toBeInTheDocument();
+    expect(within(nav!).getByRole("link", { name: /Strategy Lab/i })).toHaveAttribute(
+      "href",
+      "/strategy-lab",
+    );
+    expect(within(nav!).getByRole("link", { name: /MarketFlow/i })).toHaveAttribute(
+      "href",
+      "/marketflow",
+    );
 
     const more = within(nav!).getByRole("button", { name: /More/i });
     await user.click(more);
 
-    const directory = screen.getByRole("menu", { name: /More Pegasus pages/i });
-    expect(within(directory).getByRole("menuitem", { name: /Our Work/i })).toBeInTheDocument();
-    expect(within(directory).getByRole("menuitem", { name: /Investments/i })).toBeInTheDocument();
-    expect(within(directory).getByRole("menuitem", { name: /Pegasus Ecosystem/i })).toBeInTheDocument();
+    const directory = screen.getByRole("region", { name: /More Pegasus pages/i });
+    expect(within(directory).getByRole("link", { name: /Our Work/i })).toHaveAttribute(
+      "href",
+      "/our-work",
+    );
+    expect(within(directory).getByRole("link", { name: /Investments/i })).toBeInTheDocument();
+    expect(within(directory).getByRole("link", { name: /Pegasus Ecosystem/i })).toBeInTheDocument();
+    expect(more).not.toHaveAttribute("aria-haspopup");
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("region", { name: /More Pegasus pages/i })).not.toBeInTheDocument();
+    expect(more).toHaveFocus();
+  });
+
+  it("keeps product navigation active throughout its public child journeys", () => {
+    const marketflow = renderLanding("/marketflow/access");
+    expect(
+      within(marketflow.container.querySelector("nav")!).getByRole("link", {
+        name: /MarketFlow/i,
+      }),
+    ).toHaveAttribute("aria-current", "page");
+    cleanup();
+
+    const lab = renderLanding("/strategy-lab/classic");
+    expect(
+      within(lab.container.querySelector("nav")!).getByRole("link", {
+        name: /Strategy Lab/i,
+      }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   it("makes the full-screen menu modal, traps focus, closes on Escape, and restores focus", async () => {
@@ -177,11 +209,15 @@ describe("Pegasus public-shell navigation accessibility", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(container.querySelector("nav")).toHaveAttribute("inert");
 
-    const initial = within(menu).getByRole("button", {
+    const initial = within(menu).getByRole("link", {
       name: /Bring an Opportunity/i,
     });
     const first = within(menu).getByRole("button", { name: "Close menu" });
-    const last = within(menu).getByRole("button", { name: "About" });
+    const last = within(menu).getByRole("link", { name: /^Peggy/i });
+    expect(within(menu).getByRole("heading", { name: "Core pages" })).toBeInTheDocument();
+    expect(within(menu).getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
+    expect(within(menu).getByRole("heading", { name: "Operating lanes" })).toBeInTheDocument();
+    expect(within(menu).getByRole("heading", { name: "Network & resources" })).toBeInTheDocument();
     await waitFor(() => expect(initial).toHaveFocus());
 
     last.focus();
@@ -203,6 +239,26 @@ describe("Pegasus public-shell navigation accessibility", () => {
 });
 
 describe("Pegasus v6 Landing-shell choice controls", () => {
+  it("uses pressed-button semantics for the MarketFlow relationship brief", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { container } = renderLanding("/marketflow");
+    const main = container.querySelector("main")!;
+    const group = await within(main).findByRole("group", {
+      name: "MarketFlow relationship roles",
+    });
+    expect(main.querySelector('[role="tablist"]')).toBeNull();
+
+    const source = within(group).getByRole("button", { name: "Deal source" });
+    const buyer = within(group).getByRole("button", { name: "Buyer" });
+    expect(source).toHaveAttribute("aria-pressed", "true");
+    expect(buyer).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(buyer);
+    expect(source).toHaveAttribute("aria-pressed", "false");
+    expect(buyer).toHaveAttribute("aria-pressed", "true");
+    expect(within(main).getByText(/See only what fits your mandate/i)).toBeInTheDocument();
+  });
+
   for (const route of SIGNATURE_ROUTES) {
     it(`${route.path} uses button-group semantics and announces the current output`, async () => {
       const { container } = renderLanding(route.path);
@@ -256,8 +312,75 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       name: /Strategy Lab Basis step/i,
     });
     await waitFor(() => expect(heading).toHaveFocus());
-    expect(within(main!).getByRole("heading", { name: /Put the assumptions in one place/i })).toBeInTheDocument();
+    expect(
+      within(main!).getByRole("heading", {
+        name: /Make every material assumption visible/i,
+      }),
+    ).toBeInTheDocument();
     expect(basisStep).toHaveAttribute("aria-current", "step");
+  });
+
+  it("holds conclusions and intake handoff until the numeric basis is valid", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { container } = renderLanding("/strategy-lab");
+    const main = container.querySelector("main")!;
+
+    await user.click(within(main).getByRole("button", { name: /02\s*Basis/i }));
+    const acquisition = within(main).getByRole("textbox", {
+      name: /Acquisition or current basis/i,
+    });
+    const exitValue = within(main).getByRole("textbox", {
+      name: /Projected exit value/i,
+    });
+    const ltv = within(main).getByRole("textbox", {
+      name: /Modeled loan-to-value/i,
+    });
+    await user.clear(acquisition);
+    await user.type(acquisition, "600000");
+    await user.clear(exitValue);
+    await user.type(exitValue, "840000");
+    await user.clear(ltv);
+    await user.type(ltv, "150");
+
+    expect(ltv).toHaveAttribute("aria-invalid", "true");
+    expect(within(main).getByText(/Use a percentage from 0 to 100/i)).toBeInTheDocument();
+    expect(within(main).getAllByText("—").length).toBeGreaterThan(0);
+
+    await user.click(within(main).getByRole("button", { name: /03\s*Paths/i }));
+    expect(
+      within(main).getByRole("status", { name: /More inputs required/i }),
+    ).toHaveTextContent(/Decision brief not generated/i);
+    expect(within(main).queryByText(/View all nine paths/i)).not.toBeInTheDocument();
+    expect(
+      within(main).getByRole("button", { name: /Carry this brief into intake/i }),
+    ).toBeDisabled();
+
+    await user.click(within(main).getByRole("button", { name: /04\s*Brief/i }));
+    expect(
+      within(main).getByRole("status", { name: /Decision brief unavailable/i }),
+    ).toHaveTextContent(/needs valid inputs/i);
+    expect(within(main).queryByText(/Read the full engine rationale/i)).not.toBeInTheDocument();
+  });
+
+  it("opens calculator deep links at the instrument library and keeps the detail open when switching", async () => {
+    const user = userEvent.setup({ delay: null });
+    window.history.replaceState({}, "", "/strategy-lab?tool=calculators&tab=roi");
+    const { container } = renderLanding("/strategy-lab");
+    const main = container.querySelector("main")!;
+
+    const group = await within(main).findByRole("group", {
+      name: /Underwriting instruments/i,
+    });
+    const roi = within(group).getByRole("button", { name: /Return frame/i });
+    const cashFlow = within(group).getByRole("button", { name: /Cash flow/i });
+    expect(roi).toHaveAttribute("aria-pressed", "true");
+    expect(cashFlow).toHaveAttribute("aria-pressed", "false");
+    expect(main.querySelector(".px-lab-instrument-detail")).toBeInTheDocument();
+
+    await user.click(cashFlow);
+    expect(roi).toHaveAttribute("aria-pressed", "false");
+    expect(cashFlow).toHaveAttribute("aria-pressed", "true");
+    expect(main.querySelector(".px-lab-instrument-detail")).toBeInTheDocument();
   });
 });
 

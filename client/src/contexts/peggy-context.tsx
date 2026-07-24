@@ -267,4 +267,8 @@ export function usePeggyContext() {
   return context;
 }
 
+export function useOptionalPeggyContext() {
+  return useContext(PeggyContext);
+}
+
 export default PeggyContext;

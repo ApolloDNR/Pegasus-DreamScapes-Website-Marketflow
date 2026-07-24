@@ -56,9 +56,9 @@ export async function extractSupabaseUser(req: Request): Promise<SupabaseUser | 
       id: user.id,
       email: user.email || '',
       claims: {
+        ...user.user_metadata,
         sub: user.id,
-        email: user.email || '',
-        ...user.user_metadata
+        email: user.email || ''
       }
     };
   } catch (err) {

@@ -152,6 +152,8 @@ const MARKETFLOW_OPERATOR_URLS: string[] = [
   "/marketflow/dreamscaper",
   "/marketflow/investor",
   "/marketflow/buyer",
+  "/marketflow/buyer/saved",
+  "/marketflow/buyer/offers",
   "/marketflow/admin",
   "/marketflow/calculators",
   "/marketflow/resources",
@@ -283,4 +285,13 @@ describe("Every AuthGuard-gated MarketFlow operator route renders real content f
       ).toBeGreaterThan(40);
     }, 20000);
   }
+
+  it("retired role subpaths resolve to the branded 404 instead of silently aliasing a dashboard", async () => {
+    const { container } = renderRoute("/marketflow/wholesaler/buyers");
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="text-404-title"]')).toBeTruthy();
+    });
+    expect(container.querySelector('[data-testid="text-page-title"]')).toBeNull();
+  }, 20000);
 });

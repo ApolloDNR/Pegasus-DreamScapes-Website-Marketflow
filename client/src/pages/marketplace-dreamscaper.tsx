@@ -13,7 +13,6 @@ import {
   TrendingUp,
   DollarSign,
   Plus,
-  ArrowRight,
   CheckCircle2,
   Hammer,
   Target,
@@ -24,6 +23,8 @@ import {
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { GuestPreviewBanner } from "@/components/guest-preview-banner";
+import { QUERY_KEYS } from "@/lib/queryClient";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 
 interface ProjectStats {
   activeProjects: number;
@@ -36,9 +37,9 @@ export default function MarketplaceDreamscaperPage() {
   const { profile } = useSupabaseAuth();
   const isPegasus = profile?.is_pegasus_badged;
 
-  const { data: stats, isLoading } = useQuery<ProjectStats>({
-    queryKey: ["/api/supabase/marketflow/dreamscaper/stats"],
-  });
+  const { data: stats, isLoading } = useAuthenticatedQuery<ProjectStats>(
+    QUERY_KEYS.userStats("dreamscaper"),
+  );
 
   const { data: myProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
     queryKey: ["/api/supabase/capital-projects/my"],
@@ -74,7 +75,7 @@ export default function MarketplaceDreamscaperPage() {
                   Pegasus Partner
                 </Badge>
               )}
-              <Link href="/marketflow/dreamscaper/projects/new">
+              <Link href="/marketflow/submit">
                 <Button data-testid="button-new-project">
                   <Plus className="h-4 w-4 mr-2" />
                   New Project
@@ -170,7 +171,7 @@ export default function MarketplaceDreamscaperPage() {
                   <div className="text-center py-8">
                     <Hammer className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-4">No projects yet</p>
-                    <Link href="/marketflow/dreamscaper/projects/new">
+                    <Link href="/marketflow/submit">
                       <Button size="sm">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Your First Project
@@ -209,12 +210,15 @@ export default function MarketplaceDreamscaperPage() {
                     })}
                   </div>
                 )}
-                <Link href="/marketflow/dreamscaper/projects">
-                  <Button variant="ghost" className="w-full mt-4" data-testid="link-view-all-projects">
-                    View All Projects
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full mt-4"
+                  disabled
+                  data-testid="button-project-registry-pilot"
+                >
+                  Full project registry · controlled pilot
+                </Button>
               </CardContent>
             </Card>
 
@@ -224,19 +228,27 @@ export default function MarketplaceDreamscaperPage() {
                 <CardDescription>Manage your DreamScaper activities</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link href="/marketflow/dreamscaper/projects/new" className="block">
+                <Link href="/marketflow/submit" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-new-project">
                     <Building2 className="h-4 w-4 mr-2" />
                     Create New Project
                   </Button>
                 </Link>
-                <Link href="/marketflow/dreamscaper/capital" className="block">
-                  <Button variant="outline" className="w-full justify-start" data-testid="action-raise-capital">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Raise Capital
-                  </Button>
-                </Link>
-                <Link href="/calculators" className="block">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled
+                  aria-describedby="capital-raise-pilot-note"
+                  data-testid="action-raise-capital-pilot"
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Capital coordination · controlled pilot
+                </Button>
+                <p id="capital-raise-pilot-note" className="text-xs text-muted-foreground">
+                  Project capital relationships remain private and coordinated by Pegasus.
+                </p>
+                <Link href="/marketflow/calculators" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-calculators">
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Project Calculators

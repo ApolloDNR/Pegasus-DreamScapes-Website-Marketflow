@@ -80,8 +80,9 @@ export function isPegasusUrl(path: string): boolean {
 
 // Public surfaces the prototype shell does NOT own, but which should still wear
 // the pegasus NavBar/Footer chrome (instead of the legacy global chrome) so the
-// public site reads as one coherent experience. Admin and marketflow auth
-// surfaces intentionally keep the legacy chrome. Pages with a LIGHT top section
+// public site reads as one coherent experience. Private MarketFlow auth and
+// operator surfaces intentionally keep the legacy chrome; its public access
+// and criteria pages belong to the premium public journey. Pages with a LIGHT top section
 // are listed in STANDALONE_SOLID_NAV so the nav renders solid (not the
 // transparent-over-dark-hero treatment) and stays legible.
 const STANDALONE_DARK_HERO: string[] = [
@@ -98,6 +99,7 @@ const STANDALONE_DARK_HERO: string[] = [
   '/disclosures',
   '/faq',
   '/deal-blueprint',
+  '/marketflow/buyboxes',
 ];
 
 const STANDALONE_SOLID_NAV: string[] = [
@@ -105,6 +107,7 @@ const STANDALONE_SOLID_NAV: string[] = [
   // canonical URL of the multi-step intake desk. /submit-property 301s to it.
   '/bring-an-opportunity',
   '/submit-property',
+  '/marketflow/access',
   '/strategy-lab/classic',
   // In-funnel destinations from /strategy-lab/classic on submit - keep them on
   // the unified chrome so users don't drop to the legacy site mid-conversion.

@@ -8,10 +8,7 @@ import {
   ShieldCheck,
   Briefcase,
   Store,
-  TrendingUp,
-  Building2,
   DollarSign,
-  Sparkles,
   Home,
   type LucideIcon
 } from "lucide-react";
@@ -42,39 +39,30 @@ export const ROLE_NAV_ITEMS: Record<UserRole, RouteConfig[]> = {
     { title: "Admin Panel", href: "/marketflow/admin", icon: ShieldCheck, description: "Platform management" },
   ],
   pegasus_wholesaler: [
-    { title: "My Deals", href: "/marketflow/wholesaler/deals", icon: Briefcase },
-    { title: "Buyer Network", href: "/marketflow/wholesaler/buyers", icon: Users },
-    { title: "Analytics", href: "/marketflow/wholesaler/analytics", icon: TrendingUp },
+    { title: "Submit a Deal", href: "/marketflow/submit", icon: Store },
   ],
   wholesaler: [
-    { title: "My Deals", href: "/marketflow/wholesaler/deals", icon: Briefcase },
-    { title: "Buyer Network", href: "/marketflow/wholesaler/buyers", icon: Users },
+    { title: "Submit a Deal", href: "/marketflow/submit", icon: Store },
   ],
   pegasus_dreamscaper: [
-    { title: "My Projects", href: "/marketflow/dreamscaper/projects", icon: Building2 },
-    { title: "Capital Raising", href: "/marketflow/dreamscaper/capital", icon: DollarSign },
-    { title: "Team", href: "/marketflow/dreamscaper/team", icon: Users },
-    { title: "Analytics", href: "/marketflow/dreamscaper/analytics", icon: TrendingUp },
+    { title: "Project Intake", href: "/marketflow/submit", icon: Store },
   ],
   dreamscaper: [
-    { title: "My Projects", href: "/marketflow/dreamscaper/projects", icon: Building2 },
-    { title: "Capital Raising", href: "/marketflow/dreamscaper/capital", icon: DollarSign },
-    { title: "Team", href: "/marketflow/dreamscaper/team", icon: Users },
+    { title: "Project Intake", href: "/marketflow/submit", icon: Store },
   ],
   investor: [
-    { title: "My Investments", href: "/marketflow/investor/portfolio", icon: DollarSign },
-    { title: "Saved Deals", href: "/marketflow/investor/saved", icon: Sparkles },
-    { title: "Watch List", href: "/marketflow/investor/watchlist", icon: Compass },
+    { title: "Reviewed Deals", href: "/marketflow/deals", icon: Briefcase },
+    { title: "Capital Projects", href: "/marketflow/capital", icon: DollarSign },
   ],
   buyer_retail: [
     { title: "Saved Properties", href: "/marketflow/buyer/saved", icon: Home },
     { title: "My Offers", href: "/marketflow/buyer/offers", icon: FileText },
-    { title: "Search", href: "/marketflow/buyer/search", icon: Compass },
+    { title: "Search", href: "/marketflow/properties", icon: Compass },
   ],
   buyer_investment: [
     { title: "Saved Properties", href: "/marketflow/buyer/saved", icon: Home },
     { title: "My Offers", href: "/marketflow/buyer/offers", icon: FileText },
-    { title: "Search", href: "/marketflow/buyer/search", icon: Compass },
+    { title: "Search", href: "/marketflow/properties", icon: Compass },
   ],
 };
 

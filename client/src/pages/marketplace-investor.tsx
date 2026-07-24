@@ -23,6 +23,8 @@ import {
   LogIn,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { QUERY_KEYS } from "@/lib/queryClient";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 
 interface InvestorStats {
   totalInvested: number;
@@ -44,9 +46,9 @@ export default function MarketplaceInvestorPage() {
     setLocation("/marketflow/discover");
   };
 
-  const { data: stats, isLoading } = useQuery<InvestorStats>({
-    queryKey: ["/api/supabase/marketflow/investor/stats"],
-  });
+  const { data: stats, isLoading } = useAuthenticatedQuery<InvestorStats>(
+    QUERY_KEYS.userStats("investor"),
+  );
 
   const { data: myCommitments, isLoading: isCommitmentsLoading } = useQuery<CommitmentWithProject[]>({
     queryKey: ["/api/supabase/capital-commitments"],
@@ -230,12 +232,19 @@ export default function MarketplaceInvestorPage() {
                     ))}
                   </div>
                 )}
-                <Link href="/marketflow/investor/portfolio">
-                  <Button variant="ghost" className="w-full mt-4" data-testid="link-view-portfolio">
-                    View Full Portfolio
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full mt-4"
+                  disabled
+                  aria-describedby="portfolio-pilot-note"
+                  data-testid="button-portfolio-pilot"
+                >
+                  Expanded portfolio · controlled pilot
+                </Button>
+                <p id="portfolio-pilot-note" className="mt-2 text-center text-xs text-muted-foreground">
+                  Your verified commitments remain visible in the summary above.
+                </p>
               </CardContent>
             </Card>
 
@@ -312,7 +321,7 @@ export default function MarketplaceInvestorPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Browse wholesale deals and capital projects matched to your preferences.
                 </p>
-                <Link href="/marketflow/discover">
+                <Link href="/marketflow/deals">
                   <Button className="w-full" data-testid="action-discover">
                     <Compass className="h-4 w-4 mr-2" />
                     Discover
@@ -332,7 +341,7 @@ export default function MarketplaceInvestorPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Use our calculators to evaluate deals and project returns.
                 </p>
-                <Link href="/calculators">
+                <Link href="/marketflow/calculators">
                   <Button variant="outline" className="w-full" data-testid="action-analyze">
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Calculators
@@ -352,12 +361,20 @@ export default function MarketplaceInvestorPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Review deals you've saved for later consideration.
                 </p>
-                <Link href="/marketflow/investor/saved">
-                  <Button variant="outline" className="w-full" data-testid="action-saved">
-                    <Heart className="h-4 w-4 mr-2" />
-                    View Saved
-                  </Button>
-                </Link>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled
+                  aria-describedby="saved-deals-pilot-note"
+                  data-testid="action-saved-pilot"
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  Saved workspace · controlled pilot
+                </Button>
+                <p id="saved-deals-pilot-note" className="mt-2 text-xs text-muted-foreground">
+                  Saved sets are not yet available outside the reviewed pilot.
+                </p>
               </CardContent>
             </Card>
           </div>

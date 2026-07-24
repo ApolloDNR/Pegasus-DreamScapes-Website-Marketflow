@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { AuthGuard } from "@/components/auth-guard";
@@ -24,6 +23,8 @@ import {
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { GuestPreviewBanner } from "@/components/guest-preview-banner";
 import type { RetailListing, WholesaleDeal, BuyerOffer } from "@shared/schema";
+import { QUERY_KEYS } from "@/lib/queryClient";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 
 interface BuyerStats {
   savedProperties: number;
@@ -73,17 +74,14 @@ function BuyerDashboard() {
   const { userRole } = useSupabaseAuth();
   const isInvestmentBuyer = userRole === "buyer_investment";
 
-  const { data: stats, isLoading: statsLoading } = useQuery<BuyerStats>({
-    queryKey: ["/api/supabase/marketflow/buyer/stats"],
-  });
+  const { data: stats, isLoading: statsLoading } =
+    useAuthenticatedQuery<BuyerStats>(QUERY_KEYS.userStats("buyer"));
 
-  const { data: savedProperties, isLoading: savedLoading } = useQuery<EnrichedSavedProperty[]>({
-    queryKey: ["/api/supabase/saved-items"],
-  });
+  const { data: savedProperties, isLoading: savedLoading } =
+    useAuthenticatedQuery<EnrichedSavedProperty[]>(["/api/supabase/saved-items"]);
 
-  const { data: offers, isLoading: offersLoading } = useQuery<EnrichedOffer[]>({
-    queryKey: ["/api/supabase/buyer-offers"],
-  });
+  const { data: offers, isLoading: offersLoading } =
+    useAuthenticatedQuery<EnrichedOffer[]>(["/api/supabase/buyer-offers"]);
 
   const displayStats: BuyerStats = stats ?? {
     savedProperties: 0,
@@ -413,7 +411,7 @@ function BuyerDashboard() {
               <p className="text-sm text-muted-foreground mb-4">
                 Analyze deals with our investment calculators
               </p>
-              <Link href="/calculators">
+              <Link href="/marketflow/calculators">
                 <Button variant="outline" className="w-full" data-testid="action-calculators">
                   <DollarSign className="h-4 w-4 mr-2" />
                   Open Calculators
@@ -446,9 +444,8 @@ function BuyerDashboard() {
 }
 
 function SavedPropertiesView() {
-  const { data: savedProperties, isLoading } = useQuery<EnrichedSavedProperty[]>({
-    queryKey: ["/api/marketflow/buyer/saved"],
-  });
+  const { data: savedProperties, isLoading } =
+    useAuthenticatedQuery<EnrichedSavedProperty[]>(["/api/supabase/saved-items"]);
 
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "N/A";
@@ -554,9 +551,8 @@ function SavedPropertiesView() {
 }
 
 function OffersView() {
-  const { data: offers, isLoading } = useQuery<EnrichedOffer[]>({
-    queryKey: ["/api/marketflow/buyer/offers"],
-  });
+  const { data: offers, isLoading } =
+    useAuthenticatedQuery<EnrichedOffer[]>(["/api/supabase/buyer-offers"]);
 
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "N/A";
@@ -598,7 +594,7 @@ function OffersView() {
             My Offers
           </h1>
           <p className="text-muted-foreground text-sm">
-            Track your submitted offers
+            Track submitted offers and their reviewed status in one workspace.
           </p>
         </div>
       </div>

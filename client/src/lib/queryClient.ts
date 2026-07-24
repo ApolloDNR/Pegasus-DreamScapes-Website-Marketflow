@@ -51,6 +51,20 @@ export async function apiRequest(
   return res;
 }
 
+export async function authenticatedJsonRequest<T>(
+  url: string,
+  accessToken?: string | null,
+): Promise<T> {
+  const token = accessToken?.trim();
+  const res = await fetch(url, {
+    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  await throwIfResNotOk(res);
+  return res.json() as Promise<T>;
+}
+
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;

@@ -1,6 +1,12 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { getSupabase, type UserRole, type UserProfile } from '@/lib/supabase';
+import {
+  ensureAuthenticatedUserProfile,
+  getSupabase,
+  type UserRole,
+  type UserProfile,
+} from '@/lib/supabase';
+import { queryClient } from '@/lib/queryClient';
 import { 
   isAdminRole, 
   isWholesalerRole, 
@@ -143,7 +149,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         
         if (mounted) {
           if (currentSession?.user) {
-            const profileData = await fetchProfile(currentSession.user.id);
+            const profileData = await ensureAuthenticatedUserProfile(
+              currentSession,
+              fetchProfile,
+            );
             
             if (profileData) {
               setSession(currentSession);
@@ -168,7 +177,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           async (event, newSession) => {
             if (mounted) {
               if (newSession?.user) {
-                const profileData = await fetchProfile(newSession.user.id);
+                const profileData = await ensureAuthenticatedUserProfile(
+                  newSession,
+                  fetchProfile,
+                );
                 if (profileData) {
                   setSession(newSession);
                   setUser(newSession.user);
@@ -248,19 +260,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         return { error };
       }
 
-      if (data.user) {
-        const response = await fetch('/api/supabase/provision-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: data.user.id,
-            role,
-            displayName
-          })
-        });
-
-        if (!response.ok) {
-          console.error('Error provisioning user profile');
+      if (data.session) {
+        try {
+          await ensureAuthenticatedUserProfile(data.session, fetchProfile);
+        } catch (provisioningError) {
+          console.error('Error provisioning user profile', provisioningError);
         }
       }
 
@@ -299,6 +303,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       const supabase = await getSupabase();
       await supabase.auth.signOut();
+      queryClient.removeQueries({ queryKey: ['authenticated'] });
       setUser(null);
       setSession(null);
       setProfile(null);

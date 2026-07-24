@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, QUERY_KEYS } from "@/lib/queryClient";
 import type { WholesaleDeal, JVRequest } from "@shared/schema";
 import {
   Briefcase,
@@ -16,7 +16,6 @@ import {
   Users,
   DollarSign,
   Plus,
-  ArrowRight,
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -28,6 +27,7 @@ import {
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { GuestPreviewBanner } from "@/components/guest-preview-banner";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 
 interface DealStats {
   active: number;
@@ -41,9 +41,9 @@ export default function MarketplaceWholesalerPage() {
   const { toast } = useToast();
   const isPegasus = profile?.is_pegasus_badged;
 
-  const { data: stats, isLoading } = useQuery<DealStats>({
-    queryKey: ["/api/supabase/marketflow/wholesaler/stats"],
-  });
+  const { data: stats, isLoading } = useAuthenticatedQuery<DealStats>(
+    QUERY_KEYS.userStats("wholesaler"),
+  );
 
   const { data: myDeals, isLoading: isDealsLoading } = useQuery<WholesaleDeal[]>({
     queryKey: ["/api/supabase/wholesale-deals/my"],
@@ -97,7 +97,7 @@ export default function MarketplaceWholesalerPage() {
                   Pegasus Verified
                 </Badge>
               )}
-              <Link href="/marketflow/wholesaler/submit">
+              <Link href="/marketflow/submit">
                 <Button data-testid="button-submit-deal">
                   <Plus className="h-4 w-4 mr-2" />
                   Submit New Deal
@@ -193,7 +193,7 @@ export default function MarketplaceWholesalerPage() {
                   <div className="text-center py-8">
                     <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground mb-4">No deals yet</p>
-                    <Link href="/marketflow/wholesaler/submit">
+                    <Link href="/marketflow/submit">
                       <Button size="sm">
                         <Plus className="w-4 h-4 mr-2" />
                         Submit Your First Deal
@@ -223,12 +223,15 @@ export default function MarketplaceWholesalerPage() {
                     ))}
                   </div>
                 )}
-                <Link href="/marketflow/wholesaler/deals">
-                  <Button variant="ghost" className="w-full mt-4" data-testid="link-view-all-deals">
-                    View All Deals
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full mt-4"
+                  disabled
+                  data-testid="button-deal-registry-pilot"
+                >
+                  Full deal registry · controlled pilot
+                </Button>
               </CardContent>
             </Card>
 
@@ -322,7 +325,7 @@ export default function MarketplaceWholesalerPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   List a new wholesale deal for our network of Dreamscapers and investors.
                 </p>
-                <Link href="/marketflow/wholesaler/submit">
+                <Link href="/marketflow/submit">
                   <Button className="w-full" data-testid="action-submit-deal">
                     <Plus className="h-4 w-4 mr-2" />
                     Submit Deal
@@ -339,12 +342,20 @@ export default function MarketplaceWholesalerPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect with verified Dreamscapers and investors in our network.
                 </p>
-                <Link href="/marketflow/discover">
-                  <Button variant="outline" className="w-full" data-testid="action-browse-buyers">
-                    <Users className="h-4 w-4 mr-2" />
-                    View Network
-                  </Button>
-                </Link>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled
+                  aria-describedby="buyer-network-pilot-note"
+                  data-testid="action-browse-buyers-pilot"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Controlled pilot
+                </Button>
+                <p id="buyer-network-pilot-note" className="mt-2 text-xs text-muted-foreground">
+                  Buyer introductions remain coordinated by Pegasus during private beta.
+                </p>
               </CardContent>
             </Card>
 
@@ -356,7 +367,7 @@ export default function MarketplaceWholesalerPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Analyze your deals with our MAO, rehab, and ROI calculators.
                 </p>
-                <Link href="/calculators">
+                <Link href="/marketflow/calculators">
                   <Button variant="outline" className="w-full" data-testid="action-calculators">
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Open Calculators

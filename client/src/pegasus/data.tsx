@@ -52,23 +52,6 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
 export const PREMIUM_NAVIGATION = {
   primary: PREMIUM_PRIMARY_NAV,
   more: PREMIUM_MORE_NAV,
-  mobile: [
-    { label: 'How We Operate', route: 'dealstrategy' },
-    { label: 'Property Owners', route: 'sellers' },
-    { label: 'Deal Partners', route: 'dealfinders' },
-    { label: 'Investments', route: 'investments' },
-    { label: 'Development', route: 'development' },
-    { label: 'Capital Partners', route: 'capital' },
-    { label: 'Buyers', route: 'buyers' },
-    { label: 'Operators & Vendors', route: 'operators' },
-    { label: 'Referral Partners', route: 'referral' },
-    { label: 'Pegasus Ecosystem', route: 'ecosystem' },
-    { label: 'Peggy', route: 'peggy' },
-    { label: 'Our Work', route: 'ourwork' },
-    { label: 'Work With Apollo', route: 'apollo' },
-    { label: 'Pegasus Standard', url: '/pegasus-standard' },
-    { label: 'About', route: 'about' },
-  ] as PremiumNavigationItem[],
 };
 
 export const NAV_LINKS: NavLink[] = [
@@ -833,7 +816,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     eyebrow: 'Who We Serve / Operators & Vendors',
     // COPY_DECK §9 locked hero (issue #22)
     title: <>Join the Pegasus<br />operator bench.</>,
-    image: 'pegasus-process.png',
+    image: 'pegasus-craft-blueprint.webp',
     layout: 'ledger',
     pointsLabel: 'How we work',
     lead: 'Pegasus works with contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners, and other operators on a project-by-project basis.',

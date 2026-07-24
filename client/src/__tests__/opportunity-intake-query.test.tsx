@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import SubmitPropertyPage, {
   normalizeOwnerSituation,
 } from "@/pages/submit-property";
+import {
+  STRATEGY_LAB_HANDOFF_SESSION_KEY,
+  clearStrategyLabHandoff,
+  writeStrategyLabHandoff,
+} from "@/pegasus/strategy-lab-handoff";
 
 const { apiRequestMock } = vi.hoisted(() => ({ apiRequestMock: vi.fn() }));
 
@@ -24,6 +29,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  clearStrategyLabHandoff();
   window.history.pushState(
     {},
     "",
@@ -34,6 +40,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  clearStrategyLabHandoff();
   apiRequestMock.mockReset();
   window.history.pushState({}, "", "/");
 });
@@ -134,6 +141,128 @@ describe("Bring an Opportunity query contract", () => {
     const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
     expect(payload.situation).toBe("Inherited / probate");
     expect(payload.notes).toContain("Owner situation: Inherited property");
+  });
+
+  it("prefills known property facts and submits a directional Strategy Lab brief", async () => {
+    writeStrategyLabHandoff({
+      address: "19 Lab Lane",
+      propertyType: "Single-family residence",
+      occupancy: "Vacant",
+      condition: "Moderate renovation",
+      situation: "Inherited or estate property",
+      askingPrice: 600_000,
+      rehabBudget: 105_000,
+      arvEstimate: 840_000,
+      topLaneLabel: "Value-add execution",
+      topLaneVerdict: "Needs disciplined terms",
+      primaryMetric: "$44,475 modeled spread",
+      memoNextStep: "Verify title and market support.",
+      engineVersion: "premium-desk-v1",
+    });
+    window.history.pushState(
+      {},
+      "",
+      "/bring-an-opportunity?intent=property&ref=strategy-lab",
+    );
+
+    renderPage();
+
+    expect(screen.getByLabelText("Property address")).toHaveValue("19 Lab Lane");
+    expect(screen.getByLabelText("Property type")).toHaveValue("Single-family");
+    expect(screen.getByLabelText("Occupancy")).toHaveValue("Vacant");
+    expect(screen.getByLabelText("Condition")).toHaveValue("Moderate repairs");
+    expect(screen.getByLabelText("Estimated value (if known)")).toHaveValue("840000");
+    fireEvent.change(screen.getByLabelText("Estimated value (if known)"), {
+      target: { value: "900000" },
+    });
+    await waitFor(() => {
+      expect(
+        window.sessionStorage.getItem(STRATEGY_LAB_HANDOFF_SESSION_KEY),
+      ).toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      screen.getByRole("button", { name: "Inherited / probate" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Not sure/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(screen.getByLabelText("Full name (required)"), {
+      target: { value: "Ada Lovelace" },
+    });
+    fireEvent.change(screen.getByLabelText("Email (required)"), {
+      target: { value: "ada@example.com" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Submit for Review" }));
+
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
+    expect(payload).toEqual(expect.objectContaining({
+      leadSource: "strategy_lab_handoff",
+      propertyAddress: "19 Lab Lane",
+      propertyType: "Single-family",
+      occupancyStatus: "Vacant",
+      condition: "Moderate repairs",
+      situation: "Inherited / probate",
+      estimatedValue: 900_000,
+      consentAccepted: true,
+    }));
+    expect(String(payload.notes)).toContain(
+      "Directional Strategy Lab brief (visitor-entered; requires Pegasus review):",
+    );
+    expect(String(payload.notes)).toContain("Asking price / basis: $600,000");
+    expect(String(payload.notes)).toContain("Projected exit value: $900,000");
+    expect(String(payload.notes)).not.toContain("Projected exit value: $840,000");
+    expect(String(payload.notes)).not.toContain("Modeled path:");
+    expect(String(payload.notes)).not.toContain("$44,475 modeled spread");
+    expect(String(payload.notes)).toContain(
+      "Intake facts changed after the Strategy Lab read; Pegasus must rerun the path comparison.",
+    );
+  });
+
+  it("keeps URL and Blueprint routing ahead of a stored Strategy Lab brief", async () => {
+    writeStrategyLabHandoff({
+      address: "Stored Lab Address",
+      situation: "Inherited or estate property",
+      arvEstimate: 840_000,
+      topLaneLabel: "Value-add execution",
+    });
+    window.history.pushState(
+      {},
+      "",
+      "/bring-an-opportunity?intent=blueprint&address=URL%20Address&owner_situation=Vacant%20property&ref=strategy-lab",
+    );
+
+    renderPage();
+
+    expect(screen.getByLabelText("Property address")).toHaveValue("URL Address");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("button", { name: "Vacant" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Not sure/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(screen.getByLabelText("Full name (required)"), {
+      target: { value: "Ada Lovelace" },
+    });
+    fireEvent.change(screen.getByLabelText("Email (required)"), {
+      target: { value: "ada@example.com" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Submit for Review" }));
+
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
+    expect(payload.leadSource).toBe("blueprint_request");
+    expect(payload.propertyAddress).toBe("URL Address");
+    expect(payload.situation).toBe("Vacant");
+    expect(payload.consentAccepted).toBe(true);
+    expect(String(payload.notes)).toContain("Address: URL Address");
+    expect(String(payload.notes)).not.toContain("Stored Lab Address");
   });
 
   it("keeps final submission available and explains each missing requirement", () => {

@@ -135,16 +135,16 @@ export function DealProgressTracker() {
         </div>
 
         <div className="flex gap-2">
-          <Link href="/marketflow/investor/saved" className="flex-1">
-            <Button variant="outline" size="sm" className="w-full" data-testid="link-saved-deals">
+          <Link href="/marketflow/investor" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full" data-testid="link-portfolio-summary">
               <Eye className="w-3 h-3 mr-1" />
-              Saved Deals
+              Portfolio Summary
             </Button>
           </Link>
-          <Link href="/marketflow/negotiations" className="flex-1">
-            <Button variant="outline" size="sm" className="w-full" data-testid="link-negotiations">
+          <Link href="/marketflow/messages" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full" data-testid="link-messages">
               <MessageSquare className="w-3 h-3 mr-1" />
-              Negotiations
+              Messages
             </Button>
           </Link>
         </div>

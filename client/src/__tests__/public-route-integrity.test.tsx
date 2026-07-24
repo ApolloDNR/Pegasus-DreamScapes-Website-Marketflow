@@ -11,6 +11,12 @@ import { StrategyLabPage } from "@/pegasus/pages";
 import { BUYBOXES } from "@/config/buyboxes";
 import { seoFor } from "@shared/seo-routes";
 
+vi.mock("@/components/strategy-lab/calculator-tools-panel", () => ({
+  CalculatorToolsPanel: ({ defaultTab }: { defaultTab?: string }) => (
+    <div data-testid="calculator-tools-panel-stub">{defaultTab ?? "arv"}</div>
+  ),
+}));
+
 class NoopIntersectionObserver {
   root = null;
   rootMargin = "";
@@ -94,7 +100,10 @@ describe("Strategy Lab documented calculator deep link", () => {
       expect(screen.getByLabelText("Acquisition or current basis")).toBeInTheDocument();
       expect(screen.getByTestId("strategy-lab-workspace")).toBeInTheDocument();
       expect(screen.getByTestId("text-strategy-disclaimer")).toBeInTheDocument();
-      await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" }));
+      expect(await screen.findByTestId("calculator-tools-panel-stub")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "auto" }),
+      );
     } finally {
       Element.prototype.scrollIntoView = originalScrollIntoView;
     }

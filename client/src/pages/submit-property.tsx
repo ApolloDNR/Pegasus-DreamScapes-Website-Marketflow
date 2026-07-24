@@ -1,8 +1,14 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
 import { useSEO } from "@/hooks/use-seo";
+import {
+  clearStrategyLabHandoff,
+  formatStrategyLabHandoffSummary,
+  readStrategyLabHandoff,
+  type StrategyLabHandoffBrief,
+} from "@/pegasus/strategy-lab-handoff";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 
 /**
@@ -66,6 +72,72 @@ const OWNER_SITUATION_TO_INTAKE: Record<string, string> = {
   "ADU or development potential": "Other",
   "A listing that is not working": "Other",
 };
+
+const STRATEGY_LAB_PROPERTY_TYPE_TO_INTAKE: Record<string, string> = {
+  "Single-family residence": "Single-family",
+  "single_family": "Single-family",
+  "sfh": "Single-family",
+  "Land or development site": "Land",
+  "mixed_use": "Mixed-use",
+};
+
+const STRATEGY_LAB_OCCUPANCY_TO_INTAKE: Record<string, string> = {
+  "Unknown or needs review": "Unknown",
+};
+
+const STRATEGY_LAB_CONDITION_TO_INTAKE: Record<string, string> = {
+  "Light updates": "Light cosmetic",
+  "Moderate renovation": "Moderate repairs",
+  "Heavy renovation": "Heavy repairs",
+  "Full reconstruction": "Heavy repairs",
+};
+
+const STRATEGY_LAB_SITUATION_TO_INTAKE: Record<string, string> = {
+  "Inherited or estate property": "Inherited / probate",
+  "Contract or sourced opportunity": "Deal not publicly listed",
+  "Development or ADU potential": "Need construction",
+};
+
+function knownIntakeChoice(
+  value: string | undefined,
+  choices: readonly string[],
+  aliases: Record<string, string> = {},
+): string {
+  if (!value) return "";
+  const candidate = aliases[value] ?? value;
+  return choices.includes(candidate) ? candidate : "";
+}
+
+function strategyLabPrefill(
+  brief: StrategyLabHandoffBrief | null,
+): Partial<FormState> {
+  if (!brief) return {};
+  return {
+    propertyAddress: brief.address ?? "",
+    propertyType: knownIntakeChoice(
+      brief.propertyType,
+      PROPERTY_TYPES,
+      STRATEGY_LAB_PROPERTY_TYPE_TO_INTAKE,
+    ),
+    occupancyStatus: knownIntakeChoice(
+      brief.occupancy,
+      OCCUPANCY,
+      STRATEGY_LAB_OCCUPANCY_TO_INTAKE,
+    ),
+    condition: knownIntakeChoice(
+      brief.condition,
+      CONDITIONS,
+      STRATEGY_LAB_CONDITION_TO_INTAKE,
+    ),
+    situation: knownIntakeChoice(
+      brief.situation,
+      SITUATIONS,
+      STRATEGY_LAB_SITUATION_TO_INTAKE,
+    ),
+    estimatedValue:
+      brief.arvEstimate !== undefined ? String(brief.arvEstimate) : "",
+  };
+}
 
 export function normalizeOwnerSituation(rawValue: string | null): {
   situation: string;
@@ -196,15 +268,29 @@ export default function SubmitPropertyPage() {
       ownerSituationLabel: ownerSituation.sourceLabel,
     };
   }, []);
+  const [strategyLabBrief] = useState<StrategyLabHandoffBrief | null>(() =>
+    utm.referralReference === "strategy-lab"
+      ? readStrategyLabHandoff()
+      : null,
+  );
+  const labPrefill = useMemo(
+    () => strategyLabPrefill(strategyLabBrief),
+    [strategyLabBrief],
+  );
+
+  useEffect(() => {
+    if (strategyLabBrief) clearStrategyLabHandoff();
+  }, [strategyLabBrief]);
 
   // A lane CTA that already answered the §14 question lands mid-flow.
   const [step, setStep] = useState(utm.preVisitor ? 1 : 0);
   const [form, setForm] = useState<FormState>(
     {
       ...EMPTY,
+      ...labPrefill,
       visitorType: utm.preVisitor,
-      propertyAddress: utm.address,
-      situation: utm.ownerSituation,
+      propertyAddress: utm.address || labPrefill.propertyAddress || "",
+      situation: utm.ownerSituation || labPrefill.situation || "",
     },
   );
   const [hp, setHp] = useState("");
@@ -235,11 +321,44 @@ export default function SubmitPropertyPage() {
   const submit = useMutation({
     mutationFn: async () => {
       const mapped = VISITOR_VALUE_MAP[form.visitorType];
+      const intakeArv = form.estimatedValue
+        ? Number(form.estimatedValue.replace(/[^0-9.]/g, ""))
+        : undefined;
+      const labFactsChanged = Boolean(strategyLabBrief) && (
+        form.propertyAddress !== (labPrefill.propertyAddress || "") ||
+        form.propertyType !== (labPrefill.propertyType || "") ||
+        form.occupancyStatus !== (labPrefill.occupancyStatus || "") ||
+        form.condition !== (labPrefill.condition || "") ||
+        form.situation !== (labPrefill.situation || "") ||
+        intakeArv !== strategyLabBrief?.arvEstimate
+      );
+      const strategyLabSummary = strategyLabBrief
+        ? formatStrategyLabHandoffSummary({
+            ...strategyLabBrief,
+            address: form.propertyAddress || undefined,
+            propertyType: form.propertyType || undefined,
+            occupancy: form.occupancyStatus || undefined,
+            condition: form.condition || undefined,
+            situation: form.situation || undefined,
+            arvEstimate: intakeArv,
+            topLaneLabel: labFactsChanged ? undefined : strategyLabBrief.topLaneLabel,
+            topLaneVerdict: labFactsChanged ? undefined : strategyLabBrief.topLaneVerdict,
+            primaryMetric: labFactsChanged ? undefined : strategyLabBrief.primaryMetric,
+            memoNextStep: labFactsChanged
+              ? "Intake facts changed after the Strategy Lab read; Pegasus must rerun the path comparison."
+              : strategyLabBrief.memoNextStep,
+          })
+        : undefined;
       const res = await apiRequest("POST", "/api/opportunities", {
         hp_company: hp,
         ts_elapsed_ms: Date.now() - startedAt.current,
         sourcePage: "/bring-an-opportunity",
-        leadSource: utm.intent === "blueprint" ? "blueprint_request" : "public_website_v1",
+        leadSource:
+          utm.intent === "blueprint"
+            ? "blueprint_request"
+            : strategyLabBrief
+              ? "strategy_lab_handoff"
+              : "public_website_v1",
         visitorType: mapped ? mapped.backend : form.visitorType,
         contactName: form.contactName,
         email: form.email,
@@ -256,13 +375,14 @@ export default function SubmitPropertyPage() {
         situation: form.situation || undefined,
         goal: form.goal || undefined,
         urgency: form.urgency || undefined,
-        estimatedValue: form.estimatedValue ? Number(form.estimatedValue.replace(/[^0-9.]/g, "")) : undefined,
+        estimatedValue: intakeArv,
         estimatedDebt: form.estimatedDebt ? Number(form.estimatedDebt.replace(/[^0-9.]/g, "")) : undefined,
         notes: [
           mapped?.tag,
           utm.intent ? `Intake intent: ${utm.intent}` : undefined,
           utm.ownerSituationLabel ? `Owner situation: ${utm.ownerSituationLabel}` : undefined,
           utm.referralReference ? `Referral reference: ${utm.referralReference}` : undefined,
+          strategyLabSummary,
           form.notes,
         ].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,

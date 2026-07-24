@@ -1302,7 +1302,7 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
           You've reviewed every reviewed deal.
         </h3>
         <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-          New opportunities are added as Pegasus HQ clears them. Revisit your saved set in the meantime.
+          New opportunities are added as Pegasus HQ clears them. Saved sets remain inside the controlled pilot.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
@@ -1314,15 +1314,15 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
             <RotateCcw className="w-4 h-4 mr-2" />
             Start over
           </Button>
-          <Link href="/marketflow/investor/saved">
-            <Button
-              className="min-h-[44px] px-6 text-sm uppercase tracking-[0.15em] font-semibold"
-              data-testid="button-view-saved"
-            >
-              <Bookmark className="w-4 h-4 mr-2" />
-              View Saved
-            </Button>
-          </Link>
+          <Button
+            type="button"
+            className="min-h-[44px] px-6 text-sm uppercase tracking-[0.15em] font-semibold"
+            disabled
+            data-testid="button-view-saved-pilot"
+          >
+            <Bookmark className="w-4 h-4 mr-2" />
+            Saved workspace · pilot
+          </Button>
         </div>
       </Card>
     );
@@ -2290,19 +2290,17 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
         <Sparkles className="w-12 h-12 mx-auto text-primary mb-4" />
         <h3 className="text-lg font-semibold mb-2">You've Seen All Projects!</h3>
         <p className="text-muted-foreground mb-6">
-          You've reviewed all available capital raises. Check your saved projects or come back later.
+          You've reviewed all available capital raises. Saved sets remain inside the controlled pilot.
         </p>
         <div className="flex gap-3 justify-center">
           <Button variant="outline" onClick={() => setCurrentIndex(0)} data-testid="button-capital-start-over">
             <RotateCcw className="w-4 h-4 mr-2" />
             Start Over
           </Button>
-          <Link href="/marketflow/investor/saved">
-            <Button data-testid="button-capital-view-saved">
-              <Bookmark className="w-4 h-4 mr-2" />
-              View Saved
-            </Button>
-          </Link>
+          <Button type="button" disabled data-testid="button-capital-view-saved-pilot">
+            <Bookmark className="w-4 h-4 mr-2" />
+            Saved workspace · pilot
+          </Button>
         </div>
       </Card>
     );

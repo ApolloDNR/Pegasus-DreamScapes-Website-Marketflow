@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, type Session } from '@supabase/supabase-js';
 
 let supabaseInstance: SupabaseClient | null = null;
 let initializationPromise: Promise<SupabaseClient> | null = null;
@@ -152,6 +152,70 @@ export async function testSupabaseConnection(): Promise<boolean> {
     console.error('Supabase connection test error:', err);
     return false;
   }
+}
+
+export async function provisionAuthenticatedUserProfile(input: {
+  userId: string;
+  role: string;
+  displayName: string;
+  accessToken: string;
+}): Promise<{ success: boolean }> {
+  const accessToken = input.accessToken.trim();
+  if (!accessToken) {
+    throw new Error('An authenticated session is required to provision a profile');
+  }
+
+  const response = await fetch('/api/supabase/provision-user', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      userId: input.userId,
+      role: input.role,
+      displayName: input.displayName,
+    }),
+  });
+
+  if (!response.ok) {
+    const responseBody = await response
+      .json()
+      .catch(() => ({ message: 'Unable to provision user profile' }));
+    throw new Error(
+      typeof responseBody?.message === 'string'
+        ? responseBody.message
+        : 'Unable to provision user profile',
+    );
+  }
+
+  return response.json() as Promise<{ success: boolean }>;
+}
+
+export async function ensureAuthenticatedUserProfile(
+  session: Pick<Session, 'access_token' | 'user'>,
+  fetchProfile: (userId: string) => Promise<UserProfile | null>,
+): Promise<UserProfile | null> {
+  const existingProfile = await fetchProfile(session.user.id);
+  if (existingProfile) {
+    return existingProfile;
+  }
+
+  const role = session.user.user_metadata?.primary_role;
+  const displayName = session.user.user_metadata?.display_name;
+  if (typeof role !== 'string' || typeof displayName !== 'string') {
+    return null;
+  }
+
+  await provisionAuthenticatedUserProfile({
+    userId: session.user.id,
+    role,
+    displayName,
+    accessToken: session.access_token,
+  });
+
+  return fetchProfile(session.user.id);
 }
 
 export { supabaseInstance as supabase };
