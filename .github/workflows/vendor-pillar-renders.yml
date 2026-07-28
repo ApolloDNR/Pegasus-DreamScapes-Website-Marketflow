@@ -16,8 +16,8 @@ jobs:
         run: |
           mkdir -p out
           BASE="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
-          declare -A M=( [b1]="hf_20260722_025004_2353148d-ddae-47d0-a1c0-4782b5be8b0a.png" [b2]="hf_20260722_025004_8595e308-a684-453d-849a-14f75d8a5b89.png" [b3]="hf_20260722_025004_27303fde-48da-46bb-983f-a8ab30310906.png" [b4]="hf_20260722_025004_9ede77d8-42ee-4ea9-a8ad-6e9a836e9899.png" )
-          for k in b1 b2 b3 b4; do
+          declare -A M=( [p1]="hf_20260728_163001_623b2ad3-75d7-4519-a22b-f7c0e2e48992.png" [p2]="hf_20260728_163001_139c7aa2-6ead-4b58-a3dc-3dfe7e4266cb.png" [p3]="hf_20260728_163001_388f9263-32f3-4819-8c6c-ec3ad07c0469.png" [p4]="hf_20260728_163001_bb89d988-6446-4cc3-8fb6-9753a99639ad.png" )
+          for k in p1 p2 p3 p4; do
             curl -fsSL -o "out/$k.png" "$BASE/${M[$k]}"
             cwebp -q 88 "out/$k.png" -o "out/$k.webp"
           done
@@ -26,9 +26,9 @@ jobs:
         run: |
           git config user.name "pegasus-ci"
           git config user.email "ci@pegasusdreamscapes.com"
-          git checkout -b ci/hero-bay2
-          mkdir -p docs/design/hero-bay2
-          cp out/*.webp docs/design/hero-bay2/
-          git add docs/design/hero-bay2
-          git commit -m "chore: vendor bay-terrace hero candidates v2"
-          git push -f origin ci/hero-bay2
+          git checkout -b ci/hero-photo
+          mkdir -p docs/design/hero-photo
+          cp out/*.webp docs/design/hero-photo/
+          git add docs/design/hero-photo
+          git commit -m "chore: vendor photoreal bay hero candidates"
+          git push -f origin ci/hero-photo
