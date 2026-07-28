@@ -3603,10 +3603,13 @@ select.pg-field option { color: #1b1712; }
   color:rgba(247,242,232,.7); font-size:.63rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase; }
 .hv-hero-editorial .hv-hero-inner { width:100%; max-width:1240px; margin:0 auto; }
 .hv-hero-marble img { object-position:center center; }
+/* The arrival photograph's left half is already deep dusk sky, so the veil
+   is a whisper: just enough seat for AA contrast, never a flat panel that
+   reads as a cut-off edge (owner note 2026-07-28). */
 .hv-hero-marble::after { background:
-  linear-gradient(90deg, rgba(4,17,27,.98) 0%, rgba(4,17,27,.84) 31%, rgba(4,17,27,.44) 52%, rgba(4,17,27,.06) 76%, transparent 88%),
-  linear-gradient(0deg, rgba(4,17,27,.72) 0%, transparent 34%),
-  linear-gradient(180deg, rgba(4,17,27,.3) 0%, transparent 26%); }
+  linear-gradient(90deg, rgba(4,17,27,.62) 0%, rgba(4,17,27,.4) 30%, rgba(4,17,27,.16) 52%, transparent 72%),
+  linear-gradient(0deg, rgba(4,17,27,.66) 0%, transparent 32%),
+  linear-gradient(180deg, rgba(4,17,27,.34) 0%, transparent 24%); }
 .hv-hero-statbar { background:rgba(7,21,31,.98); }
 .hv-hero-facts { max-width:1240px; }
 
