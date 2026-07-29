@@ -84,7 +84,9 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
       {/* Thesis */}
       <section className="hwo-hero hv-grain">
         <div className="hwo-hero-media" aria-hidden="true">
-          <img src="/images/hall/pegasus-operating-loggia.webp" alt="" loading="eager" decoding="async" />
+          <img src="/images/hall/pegasus-operating-loggia.webp"
+            srcSet="/images/hall/pegasus-operating-loggia-m.webp 1080w, /images/hall/pegasus-operating-loggia.webp 2752w"
+            sizes="100vw" width={2752} height={1536} alt="" loading="eager" decoding="async" />
         </div>
         <div className="hv-wrap">
           <div className="hv-rule" />

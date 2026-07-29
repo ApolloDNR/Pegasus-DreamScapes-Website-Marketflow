@@ -458,8 +458,10 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
       <section className="hv-method" data-hv="method">
         <div className="hv-method-media">
           <img src="/images/hall/pegasus-planning-loggia.webp"
-            alt="Architectural vision of a limestone planning loggia overlooking the Bay at dusk"
-            loading="lazy" />
+            srcSet="/images/hall/pegasus-planning-loggia-m.webp 1080w, /images/hall/pegasus-planning-loggia.webp 3168w"
+            sizes="100vw" width={3168} height={1344}
+            alt="A stone planning loggia at blue hour: rolled drawings and a brass lamp on the table, the Bay and its bridges below"
+            loading="lazy" decoding="async" />
           <div className="hv-method-media-copy">
             <div className="pg-label hv-eyebrow">Architectural discipline &middot; Operational clarity</div>
             <p>Hellenic Modern is the long-term direction.<br />Disciplined execution is the standard now.</p>
