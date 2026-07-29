@@ -121,7 +121,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
             <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />
             <div className="hidden min-[360px]:flex min-[1180px]:hidden min-[1340px]:flex flex-col leading-none text-left min-w-0">
               <span className="font-serif-display text-[16px] sm:text-[22px] tracking-[0.04em] sm:tracking-[0.06em] leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
-              <span className={`pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] ${overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'} mt-1.5`}>Development &middot; Investments &middot; Systems</span>
+              <span className={`pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] ${overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'} mt-1.5 whitespace-nowrap`}>Development &middot; Investments &middot; Systems</span>
             </div>
           </Link>
 
@@ -160,7 +160,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
 
           <div className="flex items-center gap-3 lg:gap-4">
             <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
-            <Link href="/bring-an-opportunity" className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em]`}>Bring an Opportunity</Link>
+            <Link href="/bring-an-opportunity" className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em] whitespace-nowrap`}>Bring an Opportunity</Link>
             <button ref={menuButtonRef} type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }} className="min-[1180px]:hidden relative z-10 -mr-2 p-2.5">
               {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

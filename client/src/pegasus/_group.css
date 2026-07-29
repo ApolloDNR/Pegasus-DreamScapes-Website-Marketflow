@@ -3209,7 +3209,7 @@ select.pg-field option { color: #1b1712; }
 .hv-hero-editorial .hv-cta-row { margin-top: 2.9rem; }
 
 /* editorial proof rail: serif label + fine caption, hairline dividers */
-.hv-hero-facts { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 3.2rem;
+.hv-hero-facts { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 3.2rem;
   list-style: none; padding: 1.5rem 0 0; margin-bottom: 0;
   border-top: 1px solid rgba(245,230,211,.16); }
 .hv-hero-facts > li { padding-right: 1.3rem; border-right: 1px solid rgba(245,230,211,.13); }

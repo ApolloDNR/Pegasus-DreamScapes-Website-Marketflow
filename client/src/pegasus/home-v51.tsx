@@ -253,8 +253,8 @@ function OpportunityPlan() {
 /* ── The page ── */
 
 /* Engraved brass line-marks for the hero stat rail (classical, not app-generic):
-   a temple front, an olive sprig, and a compass rose. */
-function StatIcon({ name }: { name: 'temple' | 'sprig' | 'compass' }) {
+   a temple front, an olive sprig, a laurel wreath, and a compass rose. */
+function StatIcon({ name }: { name: 'temple' | 'sprig' | 'wreath' | 'compass' }) {
   const p = {
     width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
     strokeWidth: 1.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
@@ -279,6 +279,16 @@ function StatIcon({ name }: { name: 'temple' | 'sprig' | 'compass' }) {
       </svg>
     );
   }
+  if (name === 'wreath') {
+    return (
+      <svg {...p}>
+        <path d="M9 20.5c-3.2-1.4-5-4.6-5-8.3S5.8 5.3 9 3.9" />
+        <path d="M15 20.5c3.2-1.4 5-4.6 5-8.3S18.2 5.3 15 3.9" />
+        <path d="M7 8.5c-.9.5-1.5 1.5-1.6 2.7M6.6 12.5c-.9.5-1.5 1.5-1.6 2.7M17 8.5c.9.5 1.5 1.5 1.6 2.7M17.4 12.5c.9.5 1.5 1.5 1.6 2.7" />
+        <path d="M12 21.5v-3.2" />
+      </svg>
+    );
+  }
   return (
     <svg {...p}>
       <circle cx="12" cy="12" r="9" />
@@ -297,7 +307,9 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
       <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
         <div className="hv-hero-top">
           <div className="hv-hero-marble" aria-hidden="true">
-            <img src="/images/hero/pegasus-v6-arrival.webp" alt="" loading="eager"
+            <img src="/images/hero/pegasus-v6-arrival.webp"
+              srcSet="/images/hero/pegasus-v6-arrival-m.webp 1080w, /images/hero/pegasus-v6-arrival.webp 2752w"
+              sizes="100vw" width={2752} height={1536} alt="" loading="eager"
               decoding="async" {...{ fetchpriority: 'high' }} />
           </div>
           <div className="hv-wrap hv-hero-inner">
@@ -338,6 +350,13 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Nelson Drive</span>
                 <span className="hv-fact-v">Documented 3/2 to 4/3 transformation.</span>
+              </span>
+            </li>
+            <li className="hv-fact">
+              <span className="hv-fact-ic"><StatIcon name="wreath" /></span>
+              <span className="hv-fact-txt">
+                <span className="hv-fact-k font-serif-display">East Bay</span>
+                <span className="hv-fact-v">Contra Costa &amp; Alameda County.</span>
               </span>
             </li>
             <li className="hv-fact">

@@ -59,12 +59,13 @@ export function PeggyPublicNote() {
             setOpen(true);
             trackCtaClick("peggy_dock", "Open Peggy", "/peggy");
           }}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-[hsl(var(--copper))] px-5 py-3 text-white shadow-lg shadow-black/30 hover:bg-[hsl(27_56%_44%)] transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 rounded-full bg-[hsl(var(--copper))] p-3.5 sm:px-5 sm:py-3 text-white shadow-lg shadow-black/30 hover:bg-[hsl(27_56%_44%)] transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
           aria-label="Open Peggy"
           data-testid="button-peggy-public-open"
         >
-          <Sparkles className="w-4 h-4" aria-hidden="true" />
-          <span className="text-[12px] uppercase tracking-[0.16em] font-semibold font-supporting">
+          <Sparkles className="w-4 h-4 sm:w-4 sm:h-4" aria-hidden="true" />
+          {/* icon-only on phones so the pill never covers statbar/footer copy */}
+          <span className="hidden sm:inline text-[12px] uppercase tracking-[0.16em] font-semibold font-supporting">
             Talk to Peggy
           </span>
         </button>

@@ -16,19 +16,20 @@ jobs:
         run: |
           mkdir -p out
           BASE="https://d8j0ntlcm91z4.cloudfront.net/user_3EqMQTGQ3AQXoXTWf2covcEGyhp"
-          declare -A M=( [p1]="hf_20260728_163001_623b2ad3-75d7-4519-a22b-f7c0e2e48992.png" [p2]="hf_20260728_163001_139c7aa2-6ead-4b58-a3dc-3dfe7e4266cb.png" [p3]="hf_20260728_163001_388f9263-32f3-4819-8c6c-ec3ad07c0469.png" [p4]="hf_20260728_163001_bb89d988-6446-4cc3-8fb6-9753a99639ad.png" )
-          for k in p1 p2 p3 p4; do
+          declare -A M=( [plan1]="hf_20260729_001844_f5640860-82d9-4909-8666-e6575c40a3d4.png" [plan2]="hf_20260729_001844_28a84c90-d61a-4387-ae4a-dbf1194ce1bc.png" [ops1]="hf_20260729_001846_f8d95336-848b-4a43-a7dd-8f2d39ca900e.png" [ops2]="hf_20260729_001846_1db4e780-6939-4a14-825a-ccbc89b578d2.png" )
+          for k in plan1 plan2 ops1 ops2; do
             curl -fsSL -o "out/$k.png" "$BASE/${M[$k]}"
-            cwebp -q 88 "out/$k.png" -o "out/$k.webp"
+            cwebp -q 86 "out/$k.png" -o "out/$k.webp"
+            cwebp -q 80 -resize 1080 0 "out/$k.png" -o "out/$k-m.webp"
           done
           ls -la out
       - name: Commit to ci branch
         run: |
           git config user.name "pegasus-ci"
           git config user.email "ci@pegasusdreamscapes.com"
-          git checkout -b ci/hero-photo
-          mkdir -p docs/design/hero-photo
-          cp out/*.webp docs/design/hero-photo/
-          git add docs/design/hero-photo
-          git commit -m "chore: vendor photoreal bay hero candidates"
-          git push -f origin ci/hero-photo
+          git checkout -b ci/ws1-loggias
+          mkdir -p docs/design/ws1-loggias
+          cp out/*.webp docs/design/ws1-loggias/
+          git add docs/design/ws1-loggias
+          git commit -m "chore: vendor WS1 documentary loggia candidates"
+          git push -f origin ci/ws1-loggias
