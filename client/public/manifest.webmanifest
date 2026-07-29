@@ -1,0 +1,14 @@
+{
+  "name": "Pegasus Dreamscapes",
+  "short_name": "Pegasus",
+  "description": "A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#091421",
+  "theme_color": "#0D1B2D",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
