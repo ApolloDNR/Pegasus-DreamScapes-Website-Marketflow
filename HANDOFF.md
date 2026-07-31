@@ -47,7 +47,7 @@ MarketFlow). It just needs to be deployed. Steps in §3.
   - `server/supabaseAuth.ts`: token verification falls back to the anon
     client when the service-role key is absent.
   - `render.yaml` (repo root) + `docs/deploy/RENDER_DEPLOY.md` (the
-    deploy runbook) + `package.json` engines pinned to Node 20.x.
+    deploy runbook) + `package.json` engines pinned to Node 22.x.
   - Verified: `tsc` clean, **798/798 tests pass**, and a full staging
     boot WITHOUT `REPL_ID` against the real Supabase project (public
     routes 200, protected routes fail closed 401).

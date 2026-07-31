@@ -43,6 +43,7 @@ import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerOpportunityRoutes } from "./opportunityRoutes";
 import { registerUserProvisioningRoute } from "./user-provisioning-routes";
+import { registerUserProfileRoute } from "./user-profile-route";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
@@ -127,7 +128,6 @@ import {
   toPublicSupabaseListing,
   toPublicSupabaseWholesaleDeal,
 } from "./supabase-marketplace-privacy";
-import { canReadUserProfile } from "./user-profile-access";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -487,62 +487,46 @@ export async function registerRoutes(
     addUserRole: (entry) => storage.addUserRole(entry),
   });
 
-  // Raw profile reads are account-scoped; public profile cards use DTO routes.
-  app.get('/api/supabase/profile/:userId', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const { userId } = req.params;
-      const requesterUserId = getAuthUserId(req);
-      if (!requesterUserId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-
-      if (!canReadUserProfile({
-        requesterUserId,
-        targetUserId: userId,
-      })) {
-        return res.status(404).json({ message: 'Profile not found' });
-      }
-      
-      // Try Supabase first if available
+  // Raw profile reads are self-only; public profile cards use DTO routes.
+  registerUserProfileRoute(app, {
+    isAuthenticated: isHybridAuthenticated,
+    getAuthenticatedUserId: getAuthUserId,
+    loadUserProfile: async (userId) => {
       try {
         const profile = await getUserProfile(userId);
         if (profile) {
-          return res.json(profile);
+          return profile;
         }
-      } catch (supabaseError) {
-        // Supabase unavailable, fall through to PostgreSQL
-        console.log('Supabase profile fetch failed, falling back to PostgreSQL');
+      } catch {
+        console.info(
+          "Supabase profile fetch unavailable; using PostgreSQL fallback",
+        );
       }
-      
-      // Fall back to PostgreSQL user data
+
       const pgUser = await storage.getUser(userId);
       if (!pgUser) {
-        return res.status(404).json({ message: 'Profile not found' });
+        return null;
       }
-      
-      // Get user roles from PostgreSQL
+
       const userRoles = await storage.getUserRoles(userId);
-      const primaryRole = userRoles.length > 0 ? userRoles[0].role : 'investor';
-      const isPegasus = primaryRole.startsWith('pegasus_');
-      
-      // Construct profile from PostgreSQL user data
-      const profile = {
+      const primaryRole = userRoles.length > 0 ? userRoles[0].role : "investor";
+      const isPegasus = primaryRole.startsWith("pegasus_");
+
+      return {
         id: pgUser.id,
         user_id: pgUser.id,
         primary_role: primaryRole,
-        display_name: `${pgUser.firstName || ''} ${pgUser.lastName || ''}`.trim() || pgUser.email?.split('@')[0] || 'User',
+        display_name:
+          `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim() ||
+          pgUser.email?.split("@")[0] ||
+          "User",
         avatar_url: pgUser.profileImageUrl || undefined,
-        is_pegasus_badged: isPegasus || pgUser.role === 'admin',
+        is_pegasus_badged: isPegasus || pgUser.role === "admin",
         pegasus_role_type: isPegasus ? primaryRole : undefined,
         created_at: pgUser.createdAt?.toISOString() || new Date().toISOString(),
-        updated_at: pgUser.updatedAt?.toISOString() || new Date().toISOString()
+        updated_at: pgUser.updatedAt?.toISOString() || new Date().toISOString(),
       };
-      
-      res.json(profile);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      res.status(500).json({ message: 'Failed to fetch profile' });
-    }
+    },
   });
 
   // Update user profile (own profile only)
