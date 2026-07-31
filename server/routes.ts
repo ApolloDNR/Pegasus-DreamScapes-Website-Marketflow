@@ -127,6 +127,7 @@ import {
   toPublicSupabaseListing,
   toPublicSupabaseWholesaleDeal,
 } from "./supabase-marketplace-privacy";
+import { canReadUserProfile } from "./user-profile-access";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -201,6 +202,20 @@ const isHybridAuthenticated = async (req: any, res: Response, next: NextFunction
   }
   
   return res.status(401).json({ message: "Unauthorized" });
+};
+
+// Extract the authenticated user ID from either supported auth system.
+const getAuthUserId = (req: any): string | null => {
+  if (req.user?.claims?.sub) {
+    return req.user.claims.sub;
+  }
+  if (req.supabaseUser?.id) {
+    return req.supabaseUser.id;
+  }
+  if (req.session?.user?.id) {
+    return req.session.user.id;
+  }
+  return null;
 };
 
 const hasMarketflowStaffAccess = async (req: any, userId: string) => {
@@ -472,10 +487,21 @@ export async function registerRoutes(
     addUserRole: (entry) => storage.addUserRole(entry),
   });
 
-  // Get user profile - try Supabase first, fall back to PostgreSQL
-  app.get('/api/supabase/profile/:userId', async (req, res) => {
+  // Raw profile reads are account-scoped; public profile cards use DTO routes.
+  app.get('/api/supabase/profile/:userId', isHybridAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const requesterUserId = getAuthUserId(req);
+      if (!requesterUserId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (!canReadUserProfile({
+        requesterUserId,
+        targetUserId: userId,
+      })) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
       
       // Try Supabase first if available
       try {
@@ -623,23 +649,6 @@ export async function registerRoutes(
       toCamelCase: module.toCamelCase,
       toSnakeCase: module.toSnakeCase
     };
-  };
-
-  // Helper to extract authenticated user ID from either Replit or Supabase auth
-  const getAuthUserId = (req: any): string | null => {
-    // Try Replit Auth first
-    if (req.user?.claims?.sub) {
-      return req.user.claims.sub;
-    }
-    // Try Supabase Auth
-    if (req.supabaseUser?.id) {
-      return req.supabaseUser.id;
-    }
-    // Check for session-based user
-    if (req.session?.user?.id) {
-      return req.session.user.id;
-    }
-    return null;
   };
 
   type LegacyParticipantSources = {

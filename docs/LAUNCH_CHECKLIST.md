@@ -27,6 +27,12 @@
 
 - Production env vars verified without exposing values.
 - Reviewed launch migrations have been applied to a backed-up database; `/api/ready` verifies required launch columns plus production email/HQ configuration and returns 200.
+- Live Supabase `pg_policies`, table/column grants, views, default privileges,
+  and `SECURITY DEFINER` functions have been inventoried across every exposed
+  Data API schema. Normal signed-in users cannot call privileged admin
+  functions or read another user's raw profile. Any deliberately client-callable
+  `SECURITY DEFINER` function has an explicit authorization check and a negative
+  test using a normal signed-in token.
 - Form payloads are validated and routed.
 - `/api/leads` creates a database row, queues HTTPS HQ forwarding in `hq_outbox`, recovers stale forwarding leases after a restart, and sends the staff notification in the deployed environment.
 - API and email fallback logs contain no contact, property, message-body, or outbox payload data.

@@ -32,6 +32,10 @@ describe("protected client transport migration", () => {
       "client/src/components/document-attachments.tsx",
       "/api/uploads/request-url",
     ],
+    [
+      "client/src/contexts/supabase-auth-context.tsx",
+      "/api/supabase/profile/",
+    ],
   ])("%s sends %s through authenticatedRequest", (file, endpoint) => {
     const fileSource = source(file);
     expect(fileSource).toContain("authenticatedRequest");

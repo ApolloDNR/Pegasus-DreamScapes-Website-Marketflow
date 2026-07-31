@@ -124,6 +124,7 @@ describe("forward() — outbox-first guarantee", () => {
     expect(row.surface).toBe("lead");
     expect(row.sourceId).toBe(42);
     expect(row.payload.idempotencyKey).toBe(result.idempotencyKey);
+    await result._inFlight;
     fetchSpy.mockRestore();
   });
 
@@ -142,6 +143,7 @@ describe("forward() — outbox-first guarantee", () => {
       },
     });
     expect(result.idempotencyKey).toBe(key);
+    await result._inFlight;
   });
 });
 

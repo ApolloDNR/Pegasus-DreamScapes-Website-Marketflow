@@ -66,6 +66,15 @@ In the Supabase dashboard for project `knfmdyufodbnqsgkzhqw`
 3. Keep Supabase for auth. Canonical website opportunities and `hq_outbox`
    live in the Postgres database named by Render's `DATABASE_URL`; apply the
    launch SQL there, not to an unrelated Supabase database.
+4. Before staging traffic, run a read-only inventory of `pg_policies`, table
+   and effective column grants, exposed views, default privileges, sequences,
+   and every `SECURITY DEFINER` function across each exposed Data API schema.
+   Apply `supabase-rls-hardening.sql` only after that inventory is reviewed and
+   backed up. Ordinary authenticated users must not have effective `EXECUTE`
+   on privileged admin functions, including access inherited through `PUBLIC`.
+   Any intentionally client-callable `SECURITY DEFINER` function must enforce
+   authorization internally and fail a normal-user RPC test. The repository's
+   read-only inventory is `docs/deploy/SUPABASE_LAUNCH_VERIFICATION.sql`.
 
 ## Step 3 — Render
 
@@ -163,9 +172,6 @@ https://pegasusdreamscapes.com after cutover (URLs below are the v5.1 spine —
 ## After launch
 
 - Watch Render logs for the first day (Render → Logs).
-- Turn on Supabase auth hardening: leaked-password protection and
-  additional MFA options (Supabase → Authentication → Settings) — these
-  are currently flagged by the security advisor.
 - Move to Option B (own Neon account) if you launched on Option A.
 - Decommission the Replit deployment once the domain is stable to stop
   double-spending.

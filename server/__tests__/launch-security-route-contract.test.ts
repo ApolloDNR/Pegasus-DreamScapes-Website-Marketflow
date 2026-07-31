@@ -89,6 +89,21 @@ describe("launch security route contract", () => {
     );
   });
 
+  it("keeps raw user profile reads authenticated and self-only", () => {
+    const profileRouteStart = routesSource.indexOf(
+      "app.get('/api/supabase/profile/:userId'",
+    );
+    const profileRoute = routesSource.slice(
+      profileRouteStart,
+      routesSource.indexOf("// Update user profile", profileRouteStart),
+    );
+
+    expect(profileRoute).toMatch(/isHybridAuthenticated/);
+    expect(profileRoute).toMatch(/getAuthUserId\(req\)/);
+    expect(profileRoute).toMatch(/canReadUserProfile\(/);
+    expect(profileRoute).not.toMatch(/hasMarketflowStaffAccess\(/);
+  });
+
   it("derives canonical offer recipients from server-side deal ownership", () => {
     const createRouteStart = routesSource.indexOf(
       'app.post("/api/marketflow/offers"',

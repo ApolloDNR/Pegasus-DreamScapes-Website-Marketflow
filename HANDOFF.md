@@ -102,9 +102,11 @@ Full runbook is in the repo: **`docs/deploy/RENDER_DEPLOY.md`**. Summary:
    project. Code already uses the Neon driver — zero code change either way.
 3. **Supabase** (project ref `knfmdyufodbnqsgkzhqw`): Authentication → URL
    Configuration → Site URL `https://pegasusdreamscapes.com`; copy the
-   `anon` and `service_role` keys for step 4. Run
-   `supabase-migration-opportunities.sql` (repo root) in the SQL editor if
-   not yet applied (adds the deal-routing opportunities tables).
+   `anon` and `service_role` keys for step 4. Verify and harden the live
+   Supabase RLS, grants, views, and privileged functions before staging.
+   The canonical `opportunities` and `hq_outbox` tables belong in the
+   Postgres database referenced by `DATABASE_URL`; apply the reviewed files
+   in `migrations/` there, not in the Supabase SQL editor.
 4. **Render**: render.com → New → Blueprint → select the repo → it reads
    `render.yaml`. Fill the env vars (table below). Deploy (~5–8 min).
 5. **Domain**: Render → Custom Domains → add apex + www → it shows an A
@@ -210,10 +212,16 @@ not depend on it. Ship the site first; fold this in later only if desired.
   — article pages `/library/:slug` still work; add an index only if wanted).
 - `/case-study` Nelson images total ~5.9 MB — a compression pass is
   recommended before broad traffic (not a blocker).
-- Supabase security advisor flags: 32 admin `SECURITY DEFINER` functions
-  callable by signed-in users + 2 auth-hardening toggles (leaked-password
-  protection, MFA options). These are HQ-backend hardening items, not
-  website launch blockers — address after launch.
+- Supabase security advisor previously reported 32 admin `SECURITY DEFINER`
+  functions callable by signed-in users. Because this website issues users
+  authenticated tokens for the same project, those function grants are a
+  launch blocker until the live catalog is rechecked and every privileged
+  function rejects ordinary users or has its effective `EXECUTE` grant revoked,
+  including grants inherited through `PUBLIC`. Any deliberately client-callable
+  privileged function needs an explicit internal authorization check and a
+  normal-user RPC denial test for unauthorized actions.
+  Leaked-password protection and MFA settings must also be reviewed before
+  broad account traffic.
 - Email: SendGrid sender not yet verified. Leads save without it; wire it
   up post-launch for notifications.
 - Housekeeping: the `pegasus-hq-replit` GitHub PAT was noted as expiring
