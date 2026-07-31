@@ -447,12 +447,17 @@ function DealDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Flag className="w-5 h-5" />
+                <Clock className="w-5 h-5" />
                 Deal Updates
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <DealUpdatesTimeline />
+              <div className="rounded-lg border border-dashed p-5 text-center">
+                <p className="font-medium">No verified updates have been posted yet.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Deal-team milestones will appear here when they are added to the record.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -579,40 +584,25 @@ function DealDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Wholesaler
+                <Shield className="w-5 h-5" />
+                Deal Source
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-6 h-6 text-primary" />
+                  <Building2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">Wholesaler #{((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}</p>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                    <span>4.8 rating</span>
-                    <span>·</span>
-                    <span>12 deals</span>
-                  </div>
+                  <p className="font-semibold">Marketplace submission</p>
+                  <p className="text-sm text-muted-foreground">
+                    Source identity is kept private during review.
+                  </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="secondary">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Verified
-                </Badge>
-                <Badge variant="outline">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  95% on-time
-                </Badge>
+              <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                Contact and source details are shared only through the authorized deal workflow.
               </div>
-              <Link href={`/profile/${(deal as any).externalWholesalerId || deal.submittedBy}`}>
-                <Button variant="outline" className="w-full" size="sm">
-                  View Profile
-                </Button>
-              </Link>
             </CardContent>
           </Card>
 
@@ -651,78 +641,6 @@ function DealDetailPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
-  );
-}
-
-interface DealUpdate {
-  id: string;
-  milestone: string;
-  description: string;
-  timestamp: Date;
-  completed: boolean;
-}
-
-const mockUpdates: DealUpdate[] = [
-  { id: "1", milestone: "Listed", description: "Deal listed on MarketFlow", timestamp: new Date(Date.now() - 86400000 * 14), completed: true },
-  { id: "2", milestone: "Under Review", description: "Property inspection completed", timestamp: new Date(Date.now() - 86400000 * 10), completed: true },
-  { id: "3", milestone: "Approved", description: "Deal approved for marketplace", timestamp: new Date(Date.now() - 86400000 * 7), completed: true },
-  { id: "4", milestone: "In Negotiation", description: "Active investor interest", timestamp: new Date(Date.now() - 86400000 * 2), completed: false },
-];
-
-const milestoneIcons: Record<string, typeof Construction> = {
-  "Listed": Flag,
-  "Under Review": Clock,
-  "Approved": CheckCircle2,
-  "In Negotiation": Handshake,
-  "Funded": DollarSign,
-  "Demo": Hammer,
-  "Rough": Layers,
-  "Drywall": Construction,
-  "Paint": PaintBucket,
-  "Flooring": Layers,
-  "Final": CheckSquare,
-  "In Escrow": FileText,
-  "Closed": CheckCircle2,
-};
-
-function DealUpdatesTimeline() {
-  return (
-    <div className="space-y-4">
-      {mockUpdates.map((update, index) => {
-        const Icon = milestoneIcons[update.milestone] || Flag;
-        return (
-          <div key={update.id} className="flex gap-3" data-testid={`update-${update.id}`}>
-            <div className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${update.completed ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              {index < mockUpdates.length - 1 && (
-                <div className={`w-0.5 flex-1 mt-2 ${update.completed ? "bg-green-500/30" : "bg-muted"}`} />
-              )}
-            </div>
-            <div className="flex-1 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{update.milestone}</span>
-                {update.completed && (
-                  <Badge variant="outline" className="border-green-500/30 text-green-600 text-xs">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Complete
-                  </Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">{update.description}</p>
-              <p className="text-xs text-muted-foreground mt-1">{update.timestamp.toLocaleDateString()}</p>
-            </div>
-          </div>
-        );
-      })}
-      
-      <div className="pt-2 border-t">
-        <p className="text-xs text-muted-foreground text-center">
-          Updates are posted by the Dreamscaper/Wholesaler
-        </p>
       </div>
     </div>
   );

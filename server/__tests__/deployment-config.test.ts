@@ -21,6 +21,8 @@ describe("production deployment contract", () => {
       type: "web",
       runtime: "node",
       branch: "main",
+      buildCommand:
+        "npm ci --include=dev && npm run build && npm prune --omit=dev",
       autoDeployTrigger: "checksPass",
       healthCheckPath: "/api/ready",
     });
@@ -34,6 +36,9 @@ describe("production deployment contract", () => {
       .filter(Boolean);
 
     expect(commands).toContain("npm run smoke:launch -- --example");
+    expect(commands).toContain(
+      "npm audit --omit=dev --audit-level=high",
+    );
   });
 
   it("rejects a malformed production HQ endpoint in the launch environment contract", () => {

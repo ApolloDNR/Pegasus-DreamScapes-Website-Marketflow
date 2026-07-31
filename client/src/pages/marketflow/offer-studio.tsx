@@ -192,7 +192,6 @@ export default function MarketflowOfferStudioPage() {
 
   const deal: any =
     lane === "WHOLESALE" ? wholesaleDeal : lane === "CAPITAL" ? capitalProject : listing;
-  const dealOwnerId = deal?.submittedBy || deal?.operatorId || deal?.createdBy || null;
 
   // --- Negotiation loading ---
   const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
@@ -281,13 +280,6 @@ export default function MarketflowOfferStudioPage() {
   const createOfferMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       if (!dealId) throw new Error("Deal ID is required");
-      const negotiation = currentNegotiation;
-      const recipientId = negotiation
-        ? negotiation.posterId === user?.id
-          ? negotiation.counterpartyId
-          : negotiation.posterId
-        : dealOwnerId;
-      if (!recipientId) throw new Error("Cannot determine deal owner for this offer");
 
       let parsedDealId: number | string = dealId;
       if (lane === "WHOLESALE") {
@@ -299,7 +291,6 @@ export default function MarketflowOfferStudioPage() {
       const res = await apiRequest("POST", "/api/marketflow/offers", {
         lane,
         dealId: parsedDealId,
-        recipientId,
         offerKind:
           lane === "WHOLESALE"
             ? "WHOLESALE_ASSIGNMENT"

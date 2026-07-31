@@ -37,7 +37,7 @@ import {
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, authenticatedRequest, queryClient } from "@/lib/queryClient";
 import type { User, UserReview } from "@shared/schema";
 
 interface UserActivity {
@@ -227,7 +227,7 @@ export default function UserProfile() {
     queryKey: ["user-activity", validUserId],
     queryFn: async ({ queryKey }) => {
       const [, id] = queryKey as [string, string];
-      const res = await fetch(`/api/users/${id}/activity`);
+      const res = await authenticatedRequest(`/api/users/${id}/activity`);
       if (!res.ok) throw new Error("Failed to fetch user activity");
       return res.json();
     },

@@ -70,36 +70,19 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
     return <NegotiationAnalyticsSkeleton />;
   }
 
-  const mockStats: NegotiationStats = stats || {
-    totalNegotiations: 24,
-    successRate: 72,
-    averageCounters: 2.3,
-    averageTimeToClose: 4.2,
-    averageDiscount: 8.5,
-    bestDealSaved: 45000,
-    recentTrend: "up",
-    strategyScore: 85,
+  const displayStats: NegotiationStats = stats || {
+    totalNegotiations: 0,
+    successRate: 0,
+    averageCounters: 0,
+    averageTimeToClose: 0,
+    averageDiscount: 0,
+    bestDealSaved: 0,
+    recentTrend: "stable",
+    strategyScore: 0,
   };
 
-  const mockInsights: NegotiationInsight[] = insights || [
-    {
-      type: "success",
-      title: "Strong Negotiator",
-      description: "Your success rate is 15% higher than average investors",
-    },
-    {
-      type: "tip",
-      title: "Timing Matters",
-      description: "Deals closed within 48 hours have 30% higher success rate",
-      action: "Respond faster to new offers",
-    },
-    {
-      type: "warning",
-      title: "Counter Limit",
-      description: "Negotiations with 4+ counters rarely close successfully",
-      action: "Consider final offers earlier",
-    },
-  ];
+  const displayInsights: NegotiationInsight[] = insights || [];
+  const hasHistory = displayStats.totalNegotiations > 0;
 
   return (
     <div className="space-y-6">
@@ -115,17 +98,21 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
                 Your deal-making statistics and trends
               </CardDescription>
             </div>
-            <Badge 
-              variant={mockStats.recentTrend === "up" ? "default" : "secondary"}
-              className={mockStats.recentTrend === "up" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
-            >
-              {mockStats.recentTrend === "up" ? (
-                <ArrowUpRight className="w-3 h-3 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 mr-1" />
-              )}
-              {mockStats.recentTrend === "up" ? "Improving" : "Declining"}
-            </Badge>
+            {hasHistory ? (
+              <Badge
+                variant={displayStats.recentTrend === "up" ? "default" : "secondary"}
+                className={displayStats.recentTrend === "up" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
+              >
+                {displayStats.recentTrend === "up" ? (
+                  <ArrowUpRight className="w-3 h-3 mr-1" />
+                ) : (
+                  <ArrowDownRight className="w-3 h-3 mr-1" />
+                )}
+                {displayStats.recentTrend === "up" ? "Improving" : "Declining"}
+              </Badge>
+            ) : (
+              <Badge variant="secondary">Awaiting activity</Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -133,39 +120,39 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
             <StatCard
               icon={<Target className="w-5 h-5 text-green-500" />}
               label="Success Rate"
-              value={`${mockStats.successRate}%`}
+              value={`${displayStats.successRate}%`}
               subtext="of negotiations closed"
-              trend={mockStats.successRate > 70 ? "good" : "neutral"}
+              trend={hasHistory && displayStats.successRate > 70 ? "good" : "neutral"}
             />
             <StatCard
               icon={<Scale className="w-5 h-5 text-blue-500" />}
               label="Avg Counters"
-              value={mockStats.averageCounters.toFixed(1)}
+              value={displayStats.averageCounters.toFixed(1)}
               subtext="per negotiation"
               trend="neutral"
             />
             <StatCard
               icon={<Clock className="w-5 h-5 text-amber-500" />}
               label="Time to Close"
-              value={`${mockStats.averageTimeToClose.toFixed(1)}d`}
+              value={`${displayStats.averageTimeToClose.toFixed(1)}d`}
               subtext="average days"
-              trend={mockStats.averageTimeToClose < 5 ? "good" : "neutral"}
+              trend={hasHistory && displayStats.averageTimeToClose < 5 ? "good" : "neutral"}
             />
             <StatCard
               icon={<DollarSign className="w-5 h-5 text-primary" />}
               label="Best Savings"
-              value={`$${(mockStats.bestDealSaved / 1000).toFixed(0)}k`}
+              value={`$${(displayStats.bestDealSaved / 1000).toFixed(0)}k`}
               subtext="on a single deal"
-              trend="good"
+              trend={displayStats.bestDealSaved > 0 ? "good" : "neutral"}
             />
           </div>
 
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Strategy Score</span>
-              <span className="text-sm text-muted-foreground">{mockStats.strategyScore}/100</span>
+              <span className="text-sm text-muted-foreground">{displayStats.strategyScore}/100</span>
             </div>
-            <Progress value={mockStats.strategyScore} className="h-2" />
+            <Progress value={displayStats.strategyScore} className="h-2" />
             <p className="text-xs text-muted-foreground mt-1">
               Based on timing, counter frequency, and close rate
             </p>
@@ -184,13 +171,20 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {mockInsights.map((insight, index) => (
-            <InsightCard key={index} insight={insight} />
-          ))}
+          {displayInsights.length > 0 ? (
+            displayInsights.map((insight, index) => (
+              <InsightCard key={index} insight={insight} />
+            ))
+          ) : (
+            <div className="rounded-lg border border-dashed p-5 text-center">
+              <p className="font-medium">No evidence-backed insights yet.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Recommendations will appear after enough completed negotiation activity exists.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      <SuccessFactorsCard stats={mockStats} />
     </div>
   );
 }
@@ -253,46 +247,6 @@ function InsightCard({ insight }: { insight: NegotiationInsight }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function SuccessFactorsCard({ stats }: { stats: NegotiationStats }) {
-  const factors = [
-    { label: "Response Speed", score: 88, tip: "You respond within 2 hours on average" },
-    { label: "Offer Quality", score: 75, tip: "Your initial offers are competitive" },
-    { label: "Counter Strategy", score: 82, tip: "Smart use of incremental counters" },
-    { label: "Closing Rate", score: stats.successRate, tip: "Your deals close successfully" },
-  ];
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Award className="w-5 h-5 text-amber-500" />
-          Success Factors
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {factors.map((factor, index) => (
-          <div key={index}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium">{factor.label}</span>
-              <span className={`text-sm font-medium ${
-                factor.score >= 80 ? "text-green-600" :
-                factor.score >= 60 ? "text-amber-600" : "text-red-600"
-              }`}>
-                {factor.score}%
-              </span>
-            </div>
-            <Progress 
-              value={factor.score} 
-              className="h-1.5"
-            />
-            <p className="text-xs text-muted-foreground mt-1">{factor.tip}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }
 

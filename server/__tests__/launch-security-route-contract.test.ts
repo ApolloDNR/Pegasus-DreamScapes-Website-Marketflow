@@ -7,6 +7,14 @@ const routesSource = readFileSync(
   "utf8",
 );
 
+const offerStudioSource = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../../client/src/pages/marketflow/offer-studio.tsx",
+  ),
+  "utf8",
+);
+
 describe("launch security route contract", () => {
   it("does not write onboarding payloads or property addresses to logs", () => {
     expect(routesSource).not.toMatch(
@@ -50,6 +58,75 @@ describe("launch security route contract", () => {
     );
     expect(routesSource).toMatch(
       /app\.get\(\s*"\/api\/peggy\/conversations",\s*isHybridAuthenticated,/s,
+    );
+  });
+
+  it("does not expose the legacy client-selected WebSocket channel", () => {
+    expect(routesSource).not.toMatch(/new WebSocketServer/);
+    expect(routesSource).not.toMatch(
+      /message\.payload\?\.userId|subscribedUserId/,
+    );
+    expect(routesSource).not.toMatch(
+      /\(app as any\)\.broadcastToUser\s*=/,
+    );
+  });
+
+  it("guards canonical MarketFlow offer reads and recipient-only responses", () => {
+    expect(routesSource).toMatch(
+      /app\.get\(\s*"\/api\/marketflow\/offers\/deal\/:lane\/:dealId",\s*isHybridAuthenticated,/s,
+    );
+    expect(routesSource).toMatch(
+      /filterMarketflowOffersForUser\(userId,\s*offers\)/s,
+    );
+    expect(routesSource).toMatch(
+      /app\.get\(\s*"\/api\/marketflow\/offers\/:offerId",\s*isHybridAuthenticated,/s,
+    );
+    expect(routesSource).toMatch(
+      /canAccessMarketflowOffer\(userId,\s*offer\)/s,
+    );
+    expect(routesSource).toMatch(
+      /if\s*\(offer\.recipientId !== userId\)\s*\{\s*return res\.status\(404\)/s,
+    );
+  });
+
+  it("derives canonical offer recipients from server-side deal ownership", () => {
+    const createRouteStart = routesSource.indexOf(
+      'app.post("/api/marketflow/offers"',
+    );
+    const createRoute = routesSource.slice(
+      createRouteStart,
+      routesSource.indexOf("// Get offers for a deal", createRouteStart),
+    );
+    expect(createRoute).toMatch(/storage\.getMarketflowNegotiationsByDeal\(/);
+    expect(createRoute).toMatch(/resolveLegacyDealAccess\(/);
+    expect(createRoute).toMatch(
+      /const recipientId = existingNegotiation[\s\S]*: access\.ownerId;/,
+    );
+    expect(createRoute).toMatch(/posterId: access\.ownerId/);
+    expect(createRoute).not.toMatch(
+      /access\.isOwner\s*\|\|\s*normalizedLane === "LISTING"/,
+    );
+    expect(createRoute).not.toMatch(
+      /const\s*\{[^}]*recipientId[^}]*\}\s*=\s*req\.body/s,
+    );
+    expect(offerStudioSource).not.toMatch(
+      /recipientId\s*,\s*\n\s*offerKind:/,
+    );
+  });
+
+  it("keeps canonical negotiation messages participant-only and text-only", () => {
+    const messageRouteStart = routesSource.indexOf(
+      'app.post("/api/marketflow/negotiations/:negotiationId/messages"',
+    );
+    const messageRoute = routesSource.slice(
+      messageRouteStart,
+      routesSource.indexOf("// Mark messages as read", messageRouteStart),
+    );
+    expect(messageRoute).toMatch(/content\.length > 5_000/);
+    expect(messageRoute).toMatch(/messageType: "text"/);
+    expect(messageRoute).toMatch(/relatedOfferId: null/);
+    expect(messageRoute).toMatch(
+      /status\(404\)\.json\(\{ message: "Negotiation not found" \}\)/,
     );
   });
 });

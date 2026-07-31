@@ -7,7 +7,7 @@ services:
     runtime: node
     plan: starter # always-on instance; free tier spins down between requests
     branch: main
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --include=dev && npm run build && npm prune --omit=dev
     startCommand: npm run start
     healthCheckPath: /api/ready
     autoDeployTrigger: checksPass

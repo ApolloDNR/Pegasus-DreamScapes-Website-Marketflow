@@ -75,7 +75,7 @@ export function useSupabaseMarketplace() {
   });
 
   const jvRequestsQuery = useQuery<JVRequest[]>({
-    queryKey: ['/api/supabase/jv-requests'],
+    queryKey: ['/api/marketplace/wholesaler/jv-requests'],
     enabled: isAuthenticated,
   });
 
@@ -138,10 +138,10 @@ export function useSupabaseMarketplace() {
       proposedFee?: number;
       message?: string;
     }) => {
-      return apiRequest("POST", "/api/supabase/jv-requests", data);
+      return apiRequest("POST", "/api/marketplace/jv-requests", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/supabase/jv-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/wholesaler/jv-requests'] });
       toast({
         title: "JV Request Submitted",
         description: "Your JV request has been sent to the wholesaler",
