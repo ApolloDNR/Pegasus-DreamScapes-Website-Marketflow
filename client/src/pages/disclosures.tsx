@@ -139,7 +139,7 @@ export default function Disclosures() {
                 Decisions on offers, structures, and capital relationships are always made by Pegasus operators. Peggy responses are conversational guidance, not contractual representations of the company.
               </p>
               <p>
-                Peggy enforces four hard refusal categories, on every channel (chat, phone, ecosystem apps): (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Triggering any of these routes moves the conversation to Apollo for a direct written read.
+                On the live website surface, Peggy uses four hard refusal categories: (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Planned voice and ecosystem surfaces must meet the same guardrails before release. Triggering any of these routes moves the conversation to Apollo for a direct written read.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -148,18 +148,18 @@ export default function Disclosures() {
             <DisclosureBlock
               idx={4}
               icon={Shield}
-              kicker="Call recording (Peggy phone)"
-              title="Two-party consent, 90-day retention, deletion on request."
+              kicker="Planned Peggy phone controls"
+              title="Phone and recording are not live."
               testId="disclosure-recording"
             >
               <p>
-                California is a two-party consent state under Penal Code §632. The first turn of every call on 925-744-8525 includes a verbatim recording disclosure and a clear way to stop the recording. If you ask Peggy to stop recording, recording stops immediately and the conversation continues. We do not condition the call on consent.
+                Peggy does not currently answer or record calls on 925-744-8525. California is a two-party consent state under Penal Code §632, so before any voice launch Pegasus must implement and verify a clear recording disclosure, a way to decline or stop recording immediately, and a path to continue without recording.
               </p>
               <p>
-                If you call about a property in foreclosure, notice of default, or pending trustee sale and you are the owner-occupant, Peggy reads the California Civil Code §1695 disclosure and routes you directly to Apollo. Peggy will not ask qualifying questions about the property or the loan in that path; she will collect only your name and a callback number so Apollo can speak with you personally.
+                Before a future voice service handles an owner-occupant foreclosure, notice-of-default, or pending trustee-sale inquiry, the California Civil Code §1695 disclosure and direct routing to Apollo must also be implemented and verified.
               </p>
               <p>
-                Recordings and transcripts are stored encrypted, retained 90 days, and deleted on request. See the Privacy Policy for the full mechanism.
+                If recording is enabled in the future, Pegasus will publish the final retention, deletion, security, and transcript-use policy before launch. See the Privacy Policy for the current status.
               </p>
             </DisclosureBlock>
           </ScrollReveal>

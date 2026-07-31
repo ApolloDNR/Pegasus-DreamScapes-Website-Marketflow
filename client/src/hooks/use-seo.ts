@@ -7,6 +7,7 @@ interface SEOProps {
   type?: string;
   image?: string;
   noIndex?: boolean;
+  noCanonical?: boolean;
   noTagline?: boolean;
 }
 
@@ -64,7 +65,15 @@ function absoluteImage(image: string | undefined) {
   return `${SITE_URL}/${raw}`;
 }
 
-export function useSEO({ title, description, type = "website", image, noIndex, noTagline }: SEOProps = {}) {
+export function useSEO({
+  title,
+  description,
+  type = "website",
+  image,
+  noIndex,
+  noCanonical,
+  noTagline,
+}: SEOProps = {}) {
   useEffect(() => {
     // Per-page titles always drop the tagline to stay under the SERP
     // truncation limit. `noTagline` is accepted for backwards-compat with
@@ -112,7 +121,7 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     setMeta('meta[name="twitter:description"]', "name", "twitter:description", desc);
     setMeta('meta[name="twitter:image"]', "name", "twitter:image", ogImage);
 
-    if (previewHost) {
+    if (previewHost || noCanonical) {
       document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.remove();
     } else {
       setLink("canonical", url);
@@ -121,5 +130,5 @@ export function useSEO({ title, description, type = "website", image, noIndex, n
     return () => {
       document.title = BASE_TITLE;
     };
-  }, [title, description, type, image, noIndex, noTagline]);
+  }, [title, description, type, image, noIndex, noCanonical, noTagline]);
 }

@@ -38,6 +38,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { authenticatedRequest } from "@/lib/queryClient";
 
 export interface DocumentAttachment {
   id: string;
@@ -149,7 +150,7 @@ export function DocumentAttachmentsCard({ dealId, dealAddress, compact = false }
   const { toast } = useToast();
 
   const handleUploadParameters = useCallback(async (file: any) => {
-    const response = await fetch("/api/uploads/request-url", {
+    const response = await authenticatedRequest("/api/uploads/request-url", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

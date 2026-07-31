@@ -39,7 +39,23 @@ vi.mock("../storage", () => ({
       peggyUpdates.push({ id, ...patch });
       return { id, ...patch };
     }),
-    getHqOutboxList: vi.fn(async () => Array.from(outboxRows.values())),
+    getHqOutboxList: vi.fn(async (filters?: {
+      status?: string;
+      updatedBefore?: Date;
+      limit?: number;
+    }) => {
+      const rows = Array.from(outboxRows.values()).filter((row) => {
+        if (filters?.status && row.status !== filters.status) return false;
+        if (
+          filters?.updatedBefore &&
+          row.updatedAt > filters.updatedBefore
+        ) {
+          return false;
+        }
+        return true;
+      });
+      return rows.slice(0, filters?.limit ?? rows.length);
+    }),
   },
 }));
 
@@ -289,4 +305,180 @@ describe("retryOutboxRow() — 5xx retries then leaves pending for next drain", 
     expect(final.status).toBe("pending");
     expect(final.lastError).toContain("HQ 500");
   }, 15_000);
+});
+
+describe("HQ endpoint environment contract", () => {
+  it("requires an explicit valid endpoint in production but permits queue-only staging", async () => {
+    const hqClient = await import("../integrations/hq-client");
+    const hasRequiredEndpoint = (hqClient as any)
+      .hasRequiredHqEndpointConfiguration;
+
+    expect(typeof hasRequiredEndpoint).toBe("function");
+    if (typeof hasRequiredEndpoint !== "function") return;
+
+    expect(
+      hasRequiredEndpoint({ APP_ENV: "production" }),
+    ).toBe(false);
+    expect(
+      hasRequiredEndpoint({
+        APP_ENV: "production",
+        PEGASUS_HQ_PUBLIC_INTAKE_URL: "not-a-url",
+      }),
+    ).toBe(false);
+    expect(
+      hasRequiredEndpoint({
+        APP_ENV: "production",
+        PEGASUS_HQ_PUBLIC_INTAKE_URL:
+          "https://hq.example.com/api/public/intake",
+      }),
+    ).toBe(true);
+    expect(
+      hasRequiredEndpoint({
+        APP_ENV: "production",
+        PEGASUS_HQ_PUBLIC_INTAKE_URL:
+          "http://hq.example.com/api/public/intake",
+      }),
+    ).toBe(false);
+    expect(
+      hasRequiredEndpoint({
+        APP_ENV: "staging",
+        PEGASUS_HQ_PUBLIC_INTAKE_URL:
+          "http://127.0.0.1:5050/api/public/intake",
+      }),
+    ).toBe(true);
+    expect(
+      hasRequiredEndpoint({ APP_ENV: "staging" }),
+    ).toBe(true);
+  });
+});
+
+describe("HQ pending recovery worker", () => {
+  it("reclaims stale forwarding leases but leaves active forwarding rows alone", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({ hq_submission_id: "HQ-RECOVERED-1" }),
+        { status: 200 },
+      ),
+    );
+
+    const { storage } = await import("../storage");
+    const payload = {
+      contactName: "Recovery Test",
+      outreachReason: "property_review",
+      sourceChannel: "website:submit",
+      consentContact: true,
+      consentCcpaAcknowledged: true,
+      idempotencyKey: "recovery-test-key",
+    };
+    const stale = await storage.createHqOutbox({
+      idempotencyKey: payload.idempotencyKey,
+      surface: "lead",
+      sourceId: undefined as any,
+      payload: payload as any,
+      status: "forwarding",
+    });
+    outboxRows.set(stale.id, {
+      ...outboxRows.get(stale.id),
+      updatedAt: new Date(Date.now() - 10 * 60_000),
+    });
+    const active = await storage.createHqOutbox({
+      idempotencyKey: "active-forwarding-key",
+      surface: "lead",
+      sourceId: undefined as any,
+      payload: {
+        ...payload,
+        idempotencyKey: "active-forwarding-key",
+      } as any,
+      status: "forwarding",
+    });
+
+    const result = await drainPending(25);
+
+    expect(result).toEqual({ tried: 1, ok: 1, stillPending: 0 });
+    expect(outboxRows.get(stale.id)?.status).toBe("forwarded");
+    expect(outboxRows.get(active.id)?.status).toBe("forwarding");
+  });
+
+  it("bounds each drain and skips an overlapping recovery cycle", async () => {
+    const hqClient = await import("../integrations/hq-client");
+    const runRecovery = (hqClient as any).runHqPendingRecoveryOnce;
+
+    expect(typeof runRecovery).toBe("function");
+    if (typeof runRecovery !== "function") return;
+
+    let releaseFirstDrain!: () => void;
+    const firstDrain = new Promise<void>((resolve) => {
+      releaseFirstDrain = resolve;
+    });
+    const limits: number[] = [];
+    let drains = 0;
+    const drain = async (limit: number) => {
+      drains += 1;
+      limits.push(limit);
+      if (drains === 1) await firstDrain;
+      return { tried: 0, ok: 0, stillPending: 0 };
+    };
+    const dependencies = {
+      batchSize: 10_000,
+      isHealthy: async () => true,
+      drain,
+    };
+
+    const first = runRecovery(dependencies);
+    await Promise.resolve();
+    const overlapping = await runRecovery(dependencies);
+
+    expect(overlapping).toBe(false);
+    expect(drains).toBe(1);
+    releaseFirstDrain();
+    expect(await first).toBe(true);
+    expect(limits).toEqual([25]);
+
+    expect(await runRecovery(dependencies)).toBe(true);
+    expect(drains).toBe(2);
+  });
+
+  it("starts only one bounded interval and stops it exactly once", async () => {
+    const hqClient = await import("../integrations/hq-client");
+    const startWorker = (hqClient as any).startHqPendingRecoveryWorker;
+    const stopWorker = (hqClient as any).stopHqPendingRecoveryWorker;
+
+    expect(typeof startWorker).toBe("function");
+    expect(typeof stopWorker).toBe("function");
+    if (
+      typeof startWorker !== "function" ||
+      typeof stopWorker !== "function"
+    ) {
+      return;
+    }
+
+    let registrations = 0;
+    let clears = 0;
+    let registeredDelay = 0;
+    const timer = { unref: () => undefined };
+    const options = {
+      runImmediately: false,
+      intervalMs: 1,
+      setIntervalFn: (_callback: () => void, delay: number) => {
+        registrations += 1;
+        registeredDelay = delay;
+        return timer;
+      },
+      clearIntervalFn: (received: unknown) => {
+        expect(received).toBe(timer);
+        clears += 1;
+      },
+    };
+
+    stopWorker();
+    startWorker(options);
+    startWorker(options);
+
+    expect(registrations).toBe(1);
+    expect(registeredDelay).toBe(30_000);
+
+    stopWorker();
+    stopWorker();
+    expect(clears).toBe(1);
+  });
 });

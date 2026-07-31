@@ -47,7 +47,7 @@ function extractGoneRoutes(): string[] {
 
 const GONE_ROUTES = extractGoneRoutes();
 const SERVER_SRC = read("server/routes.ts");
-const APP_SRC = read("client/src/App.tsx");
+const APP_SRC = read("client/src/LegacyApp.tsx");
 
 describe("Server GONE_ROUTES are genuinely retired, not live routes (Task #219)", () => {
   it("has gone routes to test (non-vacuous)", () => {

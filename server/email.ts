@@ -87,22 +87,17 @@ async function sendWithSendGrid(options: SendGridMailOptions): Promise<EmailResu
   }
 }
 
-function logEmailFallback(options: SendGridMailOptions): EmailResult {
-  console.log("=".repeat(60));
-  console.log("EMAIL NOTIFICATION (SendGrid not configured)");
-  console.log("=".repeat(60));
-  console.log(`To: ${Array.isArray(options.to) ? options.to.join(", ") : options.to}`);
-  console.log(`From: ${options.from}`);
-  console.log(`Subject: ${options.subject}`);
-  if (options.text) {
-    console.log(`Body (text):\n${options.text}`);
-  }
-  if (options.html) {
-    console.log(`Body (HTML - truncated):\n${options.html.substring(0, 500)}...`);
-  }
-  console.log("=".repeat(60));
-  
-  return { success: true, fallback: true };
+function logEmailFallback(_options: SendGridMailOptions): EmailResult {
+  // Never print recipients, subjects, or message bodies. Intake notifications
+  // routinely contain contact and property details, and platform logs are not
+  // an approved delivery channel.
+  console.warn("[email] delivery skipped: SendGrid is not configured");
+
+  return {
+    success: false,
+    fallback: true,
+    error: "Email delivery is not configured",
+  };
 }
 
 // Task #151 — Peggy daily inbound report + immediate human_required notification.

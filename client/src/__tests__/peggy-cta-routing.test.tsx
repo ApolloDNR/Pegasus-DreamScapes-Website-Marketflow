@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Landing } from "@/pegasus/Landing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ROUTE_TO_URL } from "@/pegasus/routes";
+import { PEGGY_CONVERSATION_ACCESS_HEADER } from "@shared/peggy-access";
 
 // Peggy quick-action net (Task #214).
 //
@@ -190,13 +191,13 @@ describe("Peggy 'Or go straight to' chips navigate to real routes (Task #214)", 
 // actually navigates.
 describe("Peggy handoff action buttons navigate to real routes (Task #214)", () => {
   function mockPeggyChat(response: string) {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/api/peggy/conversations")) {
         return {
           ok: true,
           status: 200,
-          json: async () => ({ id: 1 }),
+          json: async () => ({ id: 1, accessToken: "v1.scoped-token" }),
         } as Response;
       }
       if (url.includes("/api/peggy/chat")) {
@@ -209,6 +210,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
       return { ok: true, status: 200, json: async () => ({}) } as Response;
     });
     vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
   }
 
   async function sendMessageAndWaitForAction(
@@ -241,11 +243,20 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
   }
 
   it('strategylab handoff → "Open Strategy Lab" routes to the Strategy Lab', async () => {
-    mockPeggyChat('Let me set you up. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]');
+    const fetchMock = mockPeggyChat('Let me set you up. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]');
     const { container, history } = renderLanding("/");
     const panel = openPeggy(container);
 
     const action = await sendMessageAndWaitForAction(panel, "Open Strategy Lab");
+    const chatCall = fetchMock.mock.calls.find(([input]) =>
+      String(input).includes("/api/peggy/chat"),
+    );
+    expect(chatCall).toBeTruthy();
+    expect(
+      new Headers(chatCall?.[1]?.headers).get(
+        PEGGY_CONVERSATION_ACCESS_HEADER,
+      ),
+    ).toBe("v1.scoped-token");
     const before = history.length;
     fireEvent.click(action);
 

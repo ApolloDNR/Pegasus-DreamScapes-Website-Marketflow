@@ -7,7 +7,7 @@ import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { legacyRedirects } from "@/App";
+import { legacyRedirects } from "@/LegacyApp";
 import { REDIRECTED_URLS, PEGASUS_URLS, ROUTE_TO_URL } from "@/pegasus/routes";
 import { NavBar } from "@/pegasus/nav";
 import { CapitalPage, DevelopmentPage } from "@/pegasus/pages";
@@ -89,7 +89,7 @@ function explicitRedirects(src: string): Array<[string, string]> {
 const REDIRECT_MAP: Map<string, string> = (() => {
   const map = new Map<string, string>();
   for (const [from, to] of legacyRedirects) map.set(from, to);
-  for (const [from, to] of explicitRedirects(read("client/src/App.tsx"))) {
+  for (const [from, to] of explicitRedirects(read("client/src/LegacyApp.tsx"))) {
     if (!map.has(from)) map.set(from, to);
   }
   return map;

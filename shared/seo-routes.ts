@@ -13,6 +13,7 @@ export interface SeoRoute {
   description: string;
   image: string;
   type?: "website" | "article";
+  noIndex?: boolean;
 }
 
 export const BRAND = "Pegasus Dreamscapes";
@@ -138,6 +139,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "Describe your deal in plain language. Peggy is an intake assistant — she frames your options and routes you to the next step. No offers, no advice.",
     image: `${SITE_URL}/og/peggy.png`,
+  },
+  "/saved": {
+    title: tag("Saved"),
+    description:
+      "Your saved Pegasus planning items. This personal workspace is not included in public search results.",
+    image: DEFAULT_OG_IMAGE,
+    noIndex: true,
   },
   "/about": {
     title: tag("About"),
@@ -278,6 +286,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/offer-studio(\/|$)/,
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
+  /^\/saved$/,
   /^\/submit$/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
   // Buyboxes are soft-launched (config publicReady: false). The page stays
@@ -305,6 +314,7 @@ export const ROBOTS_DISALLOW: string[] = [
   "/offer-studio",
   "/profile/",
   "/snapshot/",
+  "/saved",
   "/marketflow/admin",
   "/marketflow/dashboard",
   "/marketflow/messages",

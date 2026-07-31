@@ -11,6 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  PEGGY_CONVERSATION_ACCESS_HEADER,
+  type PeggyConversationAccessResponse,
+} from "@shared/peggy-access";
 import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import { 
   MessageCircle, 
@@ -306,6 +310,7 @@ export function PeggyDock() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [conversationId, setConversationId] = useState<number | null>(null);
+  const [conversationAccessToken, setConversationAccessToken] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showQuickPrompts, setShowQuickPrompts] = useState(true);
   
@@ -329,22 +334,25 @@ export function PeggyDock() {
   const createConversationMutation = useMutation({
     mutationFn: async (newContext: PeggyContextData) => {
       const response = await apiRequest('POST', '/api/peggy/conversations', { sessionId, context: newContext });
-      return response.json();
+      return response.json() as Promise<PeggyConversationAccessResponse>;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       setConversationId(data.id);
+      setConversationAccessToken(data.accessToken);
     }
   });
   
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      if (!conversationId) {
+      if (!conversationId || !conversationAccessToken) {
         throw new Error('No conversation');
       }
       const response = await apiRequest('POST', '/api/peggy/chat', { 
         conversationId, 
         message, 
         context 
+      }, {
+        [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
       });
       return response.json();
     },
@@ -359,7 +367,15 @@ export function PeggyDock() {
   
   const feedbackMutation = useMutation({
     mutationFn: async ({ messageId, feedback }: { messageId: number; feedback: string }) => {
-      const response = await apiRequest('POST', `/api/peggy/messages/${messageId}/feedback`, { feedback });
+      if (!conversationId || !conversationAccessToken) {
+        throw new Error('No conversation');
+      }
+      const response = await apiRequest('POST', `/api/peggy/messages/${messageId}/feedback`, {
+        conversationId,
+        feedback,
+      }, {
+        [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
+      });
       return response.json();
     },
     onSuccess: (_, variables) => {

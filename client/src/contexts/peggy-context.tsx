@@ -139,7 +139,11 @@ function generateSessionId(): string {
   const stored = localStorage.getItem('peggy_session_id');
   if (stored) return stored;
   
-  const newId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const randomId =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+  const newId = `session_${randomId}`;
   localStorage.setItem('peggy_session_id', newId);
   return newId;
 }

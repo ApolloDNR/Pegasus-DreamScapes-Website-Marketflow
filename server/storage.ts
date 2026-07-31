@@ -441,7 +441,11 @@ export interface IStorage {
   createHqOutbox(row: InsertHqOutbox): Promise<HqOutbox>;
   updateHqOutbox(id: number, patch: Partial<HqOutbox>): Promise<HqOutbox | undefined>;
   getHqOutbox(id: number): Promise<HqOutbox | undefined>;
-  getHqOutboxList(filters?: { status?: string; limit?: number }): Promise<HqOutbox[]>;
+  getHqOutboxList(filters?: {
+    status?: string;
+    updatedBefore?: Date;
+    limit?: number;
+  }): Promise<HqOutbox[]>;
 
   // CTA Events (Empire Doctrine v1.0.1 Wave 3)
   createCtaEvent(event: InsertCtaEvent): Promise<CtaEvent>;
@@ -2404,13 +2408,24 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
-  async getHqOutboxList(filters?: { status?: string; limit?: number }): Promise<HqOutbox[]> {
+  async getHqOutboxList(filters?: {
+    status?: string;
+    updatedBefore?: Date;
+    limit?: number;
+  }): Promise<HqOutbox[]> {
     const limit = filters?.limit ?? 100;
+    const conditions = [];
     if (filters?.status) {
+      conditions.push(eq(hqOutbox.status, filters.status));
+    }
+    if (filters?.updatedBefore) {
+      conditions.push(lte(hqOutbox.updatedAt, filters.updatedBefore));
+    }
+    if (conditions.length) {
       return db
         .select()
         .from(hqOutbox)
-        .where(eq(hqOutbox.status, filters.status))
+        .where(conditions.length === 1 ? conditions[0] : and(...conditions))
         .orderBy(desc(hqOutbox.createdAt))
         .limit(limit);
     }

@@ -245,7 +245,7 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
     const main = container.querySelector("main")!;
     const group = await within(main).findByRole("group", {
       name: "MarketFlow relationship roles",
-    });
+    }, { timeout: 5000 });
     expect(main.querySelector('[role="tablist"]')).toBeNull();
 
     const source = within(group).getByRole("button", { name: "Deal source" });

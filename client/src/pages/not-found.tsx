@@ -7,6 +7,8 @@ export default function NotFound() {
   useSEO({
     title: "Page Not Found",
     description: "The path you're looking for doesn't exist on the Pegasus DreamScapes site. Return to the homepage or start a Strategy Review.",
+    noIndex: true,
+    noCanonical: true,
   });
 
   return (
@@ -92,7 +94,7 @@ export default function NotFound() {
           <div className="flex flex-wrap justify-center gap-3">
             {[
               { href: "/strategy-lab", label: "Strategy Lab" },
-              { href: "/submit", label: "Submit a Property" },
+              { href: "/bring-an-opportunity", label: "Bring an Opportunity" },
               { href: "/about", label: "About" },
             ].map((link) => (
               <Link

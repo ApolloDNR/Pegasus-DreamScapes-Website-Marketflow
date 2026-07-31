@@ -71,11 +71,15 @@ function sourceChannelForOpportunity(opportunity: InsertOpportunity): string {
 
 export function registerOpportunityRoutes(
   app: Express,
-  guards: { isAuthenticated: RequestHandler; requireStaffRole: RequestHandler },
+  guards: {
+    isAuthenticated: RequestHandler;
+    requireStaffRole: RequestHandler;
+    publicIntakeRateLimit: RequestHandler;
+  },
 ) {
   // Public intake. Mirrors the /api/leads server-truth anti-spam doctrine:
   // honeypot must be empty and the form must have been open >= 3s.
-  app.post("/api/opportunities", async (req, res) => {
+  app.post("/api/opportunities", guards.publicIntakeRateLimit, async (req, res) => {
     try {
       const hp = req.body?.hp_company ?? "";
       if (typeof hp === "string" && hp.trim().length > 0) {

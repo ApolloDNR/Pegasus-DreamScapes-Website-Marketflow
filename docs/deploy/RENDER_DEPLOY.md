@@ -1,6 +1,6 @@
 # Render Deploy Runbook — Pegasus DreamScapes
 
-Last updated: 2026-07-12. Pairs with `render.yaml` at the repo root.
+Last updated: 2026-07-30. Pairs with `render.yaml` at the repo root.
 
 This gets pegasusdreamscapes.com live on Render with the database on Neon
 and auth on Supabase. Total hands-on time: roughly 30–45 minutes.
@@ -40,8 +40,15 @@ Replit account/billing. Fine for launch week; plan Option B soon after.
 2. Copy its connection string (the pooled one).
 3. Restore your data into it:
    `pg_restore --no-owner --dbname "<NEON_URL>" pegasus-backup-<date>.dump`
-   (or, for a fresh start with no legacy data: run `npm run db:push` once
-   locally with `DATABASE_URL=<NEON_URL>` to create the schema.)
+4. Against a disposable staging database first, review and apply the explicit
+   SQL in `migrations/`, including `0004_hq_outbox_delivery.sql` and
+   `0005_public_opportunities.sql`. Apply the same reviewed files to production
+   only after the staging restore and intake smoke pass.
+
+For a completely empty database, `npm run db:push` can create the wider legacy
+schema, but it is interactive and not the production migration record. Run it
+only against an empty staging database, inspect the generated changes, then
+retain the reviewed SQL artifacts used for production.
 
 ## Step 2 — Supabase auth configuration
 
@@ -56,8 +63,9 @@ In the Supabase dashboard for project `knfmdyufodbnqsgkzhqw`
 2. Project Settings → API: copy the `anon` key and the `service_role`
    key for Step 3. The service-role key is what lets the server verify
    user tokens and perform admin operations — treat it like a password.
-3. SQL Editor: run `supabase-migration-opportunities.sql` from the repo
-   root (adds the deal-routing opportunities tables) if not yet applied.
+3. Keep Supabase for auth. Canonical website opportunities and `hq_outbox`
+   live in the Postgres database named by Render's `DATABASE_URL`; apply the
+   launch SQL there, not to an unrelated Supabase database.
 
 ## Step 3 — Render
 
@@ -72,21 +80,37 @@ In the Supabase dashboard for project `knfmdyufodbnqsgkzhqw`
    | `SUPABASE_URL` | `https://knfmdyufodbnqsgkzhqw.supabase.co` |
    | `SUPABASE_ANON_KEY` | Supabase → Settings → API |
    | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API (secret!) |
-   | `SENDGRID_API_KEY` | SendGrid dashboard (or leave blank to launch without email, see note) |
+   | `SENDGRID_API_KEY` | SendGrid dashboard (required for production readiness) |
    | `DEFAULT_FROM_EMAIL` | e.g. `apollo@pegasusdreamscapes.com` (must be a SendGrid-verified sender) |
    | `STAFF_NOTIFICATION_EMAIL` | where intake notifications go, e.g. `apollosynd@gmail.com` |
    | `AI_INTEGRATIONS_OPENAI_API_KEY` | OpenAI dashboard (powers Peggy) |
-   | `PEGASUS_HQ_PUBLIC_INTAKE_URL` | HQ intake endpoint if HQ is live; blank otherwise |
+   | `PEGASUS_HQ_PUBLIC_INTAKE_URL` | Explicit HTTPS production HQ intake endpoint (required in production) |
    | `GOOGLE_MAPS_API_KEY` / `VITE_GOOGLE_MAPS_API_KEY` | Google Cloud console, if maps are enabled |
 
-4. Deploy. First build takes ~5–8 minutes. The service URL will look like
+4. Render waits for the GitHub `launch verification` check before deploying.
+   First build takes roughly 5–8 minutes. The service URL will look like
    `https://pegasus-dreamscapes.onrender.com`.
+5. Confirm `/api/ready` returns 200. A 503 means the required launch tables or
+   columns, production email settings, or HTTPS HQ contract is incomplete; do
+   not attach the public domain.
 
-Note on email: if `SENDGRID_API_KEY` is blank the site still runs; intake
-records are stored but notification emails are skipped. Verify a sender
-address in SendGrid before broad launch.
+Email delivery deliberately fails visibly when SendGrid is missing and never
+prints message bodies to logs. Verify the sender and prove staff plus customer
+receipt before broad launch.
 
-## Step 4 — Domain
+The HQ recovery worker also reclaims a `forwarding` row after its five-minute
+lease expires. This protects queued intake from a process restart between the
+database status change and the outbound request; HQ still owns idempotency for
+safe replay.
+
+## Step 4 — Prove the Render release candidate
+
+Keep Squarespace serving the public domain. Run Step 5 against the
+`onrender.com` URL, including a marked intake whose database row, HQ outbox
+state, HQ receipt, and both notification emails are confirmed. Check desktop,
+tablet, and mobile layouts there before changing DNS.
+
+## Step 5 — Domain
 
 1. Render → the service → Settings → Custom Domains → add
    `pegasusdreamscapes.com` and `www.pegasusdreamscapes.com`.
@@ -97,9 +121,13 @@ address in SendGrid before broad launch.
    - Remove the Squarespace parking records for those hosts.
 3. Wait for DNS + certificate (minutes to ~an hour). Render shows both green.
 
-## Step 5 — Launch smoke test (10 minutes)
+Preserve MX, SPF, DKIM, DMARC, verification, and other non-website DNS records.
+Remove only the Squarespace website records that conflict with Render.
 
-On https://pegasusdreamscapes.com (URLs below are the v5.1 spine —
+## Step 6 — Launch smoke test (10 minutes)
+
+Run this on the Render release candidate first, then repeat on
+https://pegasusdreamscapes.com after cutover (URLs below are the v5.1 spine —
 `/property-owners`, `/deal-partners`, `/how-we-operate`, `/our-work`,
 `/bring-an-opportunity` — the old `/sellers`, `/dealfinders`,
 `/deal-strategy`, `/submit-property` paths 301-redirect to them):
@@ -127,7 +155,8 @@ On https://pegasusdreamscapes.com (URLs below are the v5.1 spine —
 ## Rollback
 
 - Bad deploy: Render → Deploys → "Rollback" to the previous build (instant).
-- Bad code: revert the commit on `main`; Render auto-deploys the revert.
+- Bad code: revert the commit on `main`; Render deploys the revert after CI
+  checks pass.
 - Database: restore the Step-0 dump into a fresh database and point
   `DATABASE_URL` at it.
 

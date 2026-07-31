@@ -38,7 +38,13 @@ export function Landing() {
   // with the server-side crawler injection). useSEO re-applies the brand, so we
   // pass the bare page name.
   const seo = seoFor(location);
-  useSEO({ title: seoNameFor(location), description: seo.description, image: seo.image, type: seo.type });
+  useSEO({
+    title: seoNameFor(location),
+    description: seo.description,
+    image: seo.image,
+    type: seo.type,
+    noIndex: seo.noIndex,
+  });
   // Theme is driven by the app-wide ThemeProvider so the chrome stays in sync
   // when navigating between the prototype shell and the standalone-shell pages
   // (which also consume the same provider). No local theme state.

@@ -41,36 +41,6 @@ import {
   STAFF_ROLES
 } from "@shared/schema";
 
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-setInterval(() => {
-  const now = Date.now();
-  const entries = Array.from(rateLimitStore.entries());
-  for (const [key, record] of entries) {
-    if (now > record.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 60000);
-
-const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Response, next: NextFunction) => {
-  const userId = req.user?.claims?.sub || req.ip;
-  const key = `${req.path}:${userId}`;
-  const now = Date.now();
-  
-  const record = rateLimitStore.get(key);
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
-    return next();
-  }
-  
-  if (record.count >= maxRequests) {
-    return res.status(429).json({ message: "Too many requests. Please try again later." });
-  }
-  
-  record.count++;
-  return next();
-};
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -100,11 +70,23 @@ import {
 } from "./lead-intake-policy";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
-import { sitemapEntries, isCrawlablePublicPath, ROBOTS_DISALLOW } from "../shared/seo-routes";
+import { registerReadinessRoute } from "./readiness";
+import {
+  SITE_URL,
+  sitemapEntries,
+  isCrawlablePublicPath,
+  ROBOTS_DISALLOW,
+} from "../shared/seo-routes";
 import {
   appendRedirectSearch,
   QUERY_PRESERVING_INTAKE_PATHS,
 } from "../shared/redirects";
+import { publicIntakeRateLimit, rateLimit } from "./rate-limit";
+import {
+  createPeggyConversationAccessGuard,
+  createPeggyConversationAccessToken,
+  getPeggyConversationAccessSecret,
+} from "./peggy-access";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -196,6 +178,8 @@ export async function registerRoutes(
     next();
   });
 
+  registerReadinessRoute(app);
+
   app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "ok" });
   });
@@ -222,7 +206,6 @@ export async function registerRoutes(
   // (pegasusdreamscapes.com) gets the full crawl policy.
   app.get('/robots.txt', (req, res) => {
     const rawHost = (req.get('host') || '').toLowerCase();
-    const host = `${req.protocol}://${rawHost}`;
     if (isPreviewHostname(rawHost)) {
       res.type('text/plain').send(
         ['User-agent: *', 'Disallow: /', ''].join('\n'),
@@ -236,7 +219,7 @@ export async function registerRoutes(
         'Allow: /',
         ...ROBOTS_DISALLOW.map((p) => `Disallow: ${p}`),
         '',
-        `Sitemap: ${host}/sitemap.xml`,
+        `Sitemap: ${SITE_URL}/sitemap.xml`,
         '',
       ].join('\n'),
     );
@@ -335,10 +318,7 @@ export async function registerRoutes(
   // any project case studies stored in the database. Admin, MarketFlow
   // operator surfaces, auth, and legacy-redirect paths are filtered out by
   // isCrawlablePublicPath so they never leak into the sitemap.
-  app.get('/sitemap.xml', async (req, res) => {
-    const host = `${req.protocol}://${req.get('host')}`;
-    const today = new Date().toISOString().split('T')[0];
-
+  app.get('/sitemap.xml', async (_req, res) => {
     const entries = sitemapEntries();
     const seen = new Set(entries.map((e) => e.path));
 
@@ -359,7 +339,7 @@ export async function registerRoutes(
     const urls = entries
       .map(
         (r) =>
-          `  <url><loc>${host}${r.path}</loc><lastmod>${today}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
+          `  <url><loc>${SITE_URL}${r.path}</loc><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
       )
       .join('\n');
 
@@ -369,7 +349,7 @@ export async function registerRoutes(
   });
 
   // Register object storage routes for file uploads
-  registerObjectStorageRoutes(app);
+  registerObjectStorageRoutes(app, { requireAuth: isHybridAuthenticated });
 
   // ─── Empire Doctrine v1.0.1 Wave 3 — CTA attribution ────────────────
   // Public POST /api/events captures primary-surface CTA clicks. Rate-
@@ -1477,7 +1457,7 @@ export async function registerRoutes(
       }
       
       // Log the acceptance (in a production system, this would create a binding agreement)
-      console.log(`[Negotiation] User ${userId} accepted terms for ${type} deal ${dealId}:`, terms);
+      console.info("[negotiation] terms accepted");
       
       // For wholesale deals, notify the deal poster (wholesaler)
       if (type === 'wholesale') {
@@ -1553,7 +1533,7 @@ export async function registerRoutes(
       }
       
       // Log the counter offer
-      console.log(`[Negotiation] User ${userId} sent counter offer for ${type} deal ${dealId}:`, terms, message);
+      console.info("[negotiation] counter offer recorded");
       
       // Notify the deal/project poster about the counter offer
       try {
@@ -2117,9 +2097,13 @@ export async function registerRoutes(
   
   // Seller Lead Routes
   // Public Website v1 (issue #22): structured opportunity intake + routing.
-  registerOpportunityRoutes(app, { isAuthenticated, requireStaffRole });
+  registerOpportunityRoutes(app, {
+    isAuthenticated,
+    requireStaffRole,
+    publicIntakeRateLimit,
+  });
 
-  app.post("/api/seller-leads", async (req, res) => {
+  app.post("/api/seller-leads", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertSellerLeadSchema.safeParse(req.body);
       if (!result.success) {
@@ -2129,7 +2113,7 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createSellerLead(result.data);
-      console.log("New seller lead received:", lead.email);
+      console.info("[intake] seller lead stored");
       return res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating seller lead:", error);
@@ -2138,7 +2122,7 @@ export async function registerRoutes(
   });
 
   // Investor Lead Routes
-  app.post("/api/investor-leads", async (req, res) => {
+  app.post("/api/investor-leads", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertInvestorLeadSchema.safeParse(req.body);
       if (!result.success) {
@@ -2148,7 +2132,7 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createInvestorLead(result.data);
-      console.log("New investor lead received:", lead.email);
+      console.info("[intake] investor lead stored");
       return res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating investor lead:", error);
@@ -2157,7 +2141,7 @@ export async function registerRoutes(
   });
 
   // Buyer Lead Routes
-  app.post("/api/buyer-leads", async (req, res) => {
+  app.post("/api/buyer-leads", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertBuyerLeadSchema.safeParse(req.body);
       if (!result.success) {
@@ -2167,7 +2151,7 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createBuyerLead(result.data);
-      console.log("New buyer lead received:", lead.email);
+      console.info("[intake] buyer lead stored");
       return res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating buyer lead:", error);
@@ -2176,7 +2160,7 @@ export async function registerRoutes(
   });
 
   // Contact Routes
-  app.post("/api/contacts", async (req, res) => {
+  app.post("/api/contacts", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertContactSchema.safeParse(req.body);
       if (!result.success) {
@@ -2186,7 +2170,7 @@ export async function registerRoutes(
       }
       
       const contact = await storage.createContact(result.data);
-      console.log("New contact message received:", contact.email);
+      console.info("[intake] contact message stored");
       return res.status(201).json(contact);
     } catch (error) {
       console.error("Error creating contact:", error);
@@ -2777,7 +2761,7 @@ export async function registerRoutes(
   });
 
   // Wholesale Request (public - investors can request deals)
-  app.post("/api/wholesale-requests", async (req, res) => {
+  app.post("/api/wholesale-requests", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertWholesaleRequestSchema.safeParse(req.body);
       if (!result.success) {
@@ -2787,7 +2771,7 @@ export async function registerRoutes(
       }
       
       const request = await storage.createWholesaleRequest(result.data);
-      console.log("New wholesale request received:", request.email);
+      console.info("[intake] wholesale request stored");
       return res.status(201).json(request);
     } catch (error) {
       console.error("Error creating wholesale request:", error);
@@ -2819,7 +2803,7 @@ export async function registerRoutes(
       }
       
       const deal = await storage.createWholesaleDeal(result.data);
-      console.log("New wholesale deal submitted by wholesaler:", deal.propertyAddress);
+      console.info("[dealflow] wholesale deal submitted");
       
       // Send email notification (non-blocking)
       sendDealSubmissionNotification({
@@ -3472,7 +3456,7 @@ export async function registerRoutes(
       }
       
       const deal = await storage.createWholesaleDeal(result.data);
-      console.log("New wholesale deal created:", deal.propertyAddress);
+      console.info("[dealflow] wholesale deal created");
       return res.status(201).json(deal);
     } catch (error) {
       console.error("Error creating wholesale deal:", error);
@@ -3593,7 +3577,7 @@ export async function registerRoutes(
   });
 
   // Buyer Inquiries (public)
-  app.post("/api/buyer-inquiries", async (req, res) => {
+  app.post("/api/buyer-inquiries", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertBuyerInquirySchema.safeParse(req.body);
       if (!result.success) {
@@ -3601,7 +3585,7 @@ export async function registerRoutes(
       }
       
       const inquiry = await storage.createBuyerInquiry(result.data);
-      console.log("New buyer inquiry received:", inquiry.email);
+      console.info("[intake] buyer inquiry stored");
       return res.status(201).json(inquiry);
     } catch (error) {
       console.error("Error creating buyer inquiry:", error);
@@ -3653,7 +3637,7 @@ export async function registerRoutes(
       }
 
       const listing = await storage.createListing(result.data);
-      console.log("New listing created:", listing.propertyAddress);
+      console.info("[listings] listing created");
       return res.status(201).json(listing);
     } catch (error) {
       console.error("Error creating listing:", error);
@@ -3750,7 +3734,7 @@ export async function registerRoutes(
       }
       
       const listing = await storage.createRetailListing(result.data);
-      console.log("New retail listing created:", listing.propertyAddress);
+      console.info("[retail-listings] listing created");
       return res.status(201).json(listing);
     } catch (error) {
       console.error("Error creating retail listing:", error);
@@ -5712,71 +5696,90 @@ export async function registerRoutes(
   // PEGGY AI ASSISTANT ROUTES
   // =====================================================
 
+  const requirePeggyConversationAccess =
+    createPeggyConversationAccessGuard({
+      getConversation: (id) => storage.getPeggyConversation(id),
+    });
+
+  const sendPeggyConversationWithAccess = (
+    res: Response,
+    conversation: Awaited<ReturnType<typeof storage.getPeggyConversation>>,
+  ) => {
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const secret = getPeggyConversationAccessSecret();
+    if (!secret) {
+      return res
+        .status(503)
+        .json({ message: "Peggy conversation access is unavailable" });
+    }
+
+    return res.json({
+      ...conversation,
+      accessToken: createPeggyConversationAccessToken(conversation, secret),
+    });
+  };
+
   // Get or create a conversation
-  app.post("/api/peggy/conversations", async (req: any, res) => {
+  app.post("/api/peggy/conversations", publicIntakeRateLimit, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
       const context = req.body.context || {};
       
       const conversation = await peggy.getOrCreateConversation(userId, sessionId, context);
-      res.json(conversation);
+      return sendPeggyConversationWithAccess(res, conversation);
     } catch (error) {
       console.error("Error getting/creating Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to get/create conversation" });
+      return res.status(500).json({ message: "Failed to get/create conversation" });
     }
   });
 
   // Start a new conversation
-  app.post("/api/peggy/conversations/new", async (req: any, res) => {
+  app.post("/api/peggy/conversations/new", publicIntakeRateLimit, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
       const context = req.body.context || {};
       
       const conversation = await peggy.startConversation(userId, sessionId, context);
-      res.json(conversation);
+      return sendPeggyConversationWithAccess(res, conversation);
     } catch (error) {
       console.error("Error starting new Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to start conversation" });
+      return res.status(500).json({ message: "Failed to start conversation" });
     }
   });
 
   // Get conversation history
-  app.get("/api/peggy/conversations/:id", async (req: any, res) => {
+  app.get("/api/peggy/conversations/:id", requirePeggyConversationAccess, async (req: any, res) => {
     try {
-      const conversationId = Number(req.params.id);
-      const conversation = await storage.getPeggyConversation(conversationId);
-      
-      if (!conversation) {
-        return res.status(404).json({ message: "Conversation not found" });
-      }
-      
+      const conversation = res.locals.peggyConversation;
+      const conversationId = conversation.id;
       const messages = await storage.getPeggyMessages(conversationId);
-      res.json({ conversation, messages });
+      return res.json({ conversation, messages });
     } catch (error) {
       console.error("Error fetching Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to fetch conversation" });
+      return res.status(500).json({ message: "Failed to fetch conversation" });
     }
   });
 
   // Get user's conversations list
-  app.get("/api/peggy/conversations", async (req: any, res) => {
+  app.get("/api/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const sessionId = req.query.sessionId as string;
-      
-      const conversations = await storage.getPeggyConversations(userId, sessionId);
-      res.json(conversations);
+      const conversations = await storage.getPeggyConversations(userId);
+      return res.json(conversations);
     } catch (error) {
       console.error("Error fetching Peggy conversations:", error);
-      res.status(500).json({ message: "Failed to fetch conversations" });
+      return res.status(500).json({ message: "Failed to fetch conversations" });
     }
   });
 
   // Send a message to Peggy
   // Task #151 — bumped from 20/60s to 30/60s per Amendment 2 §D.
-  app.post("/api/peggy/chat", rateLimit(30, 60000), async (req: any, res) => {
+  app.post("/api/peggy/chat", rateLimit(30, 60000), requirePeggyConversationAccess, async (req: any, res) => {
     try {
       const { conversationId, message, context } = req.body;
 
@@ -5785,24 +5788,19 @@ export async function registerRoutes(
       }
 
       const result = await peggy.chat(message, conversationId, context);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
       console.error("Error in Peggy chat:", error);
-      res.status(500).json({ message: "Failed to get response from Peggy" });
+      return res.status(500).json({ message: "Failed to get response from Peggy" });
     }
   });
 
   // Task #151 — mark a conversation done. Triggers final intake extraction
   // pass and (if disposition resolved to human_required) an immediate email.
-  app.post("/api/peggy/conversations/:id/finish", async (req: any, res) => {
+  app.post("/api/peggy/conversations/:id/finish", publicIntakeRateLimit, requirePeggyConversationAccess, async (req: any, res) => {
     try {
-      const id = Number(req.params.id);
-      if (!Number.isFinite(id)) {
-        return res.status(400).json({ message: "Invalid conversation id" });
-      }
-      const conversation = await storage.getPeggyConversation(id);
-      if (!conversation) return res.status(404).json({ message: "Conversation not found" });
-
+      const conversation = res.locals.peggyConversation;
+      const id = conversation.id;
       const messages = await storage.getPeggyMessages(id);
       const transcript = messages
         .filter(m => m.role !== "system")
@@ -5830,10 +5828,10 @@ export async function registerRoutes(
         });
       }
 
-      res.json(updated);
+      return res.json(updated);
     } catch (error) {
       console.error("Error finishing Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to finish conversation" });
+      return res.status(500).json({ message: "Failed to finish conversation" });
     }
   });
 
@@ -5925,7 +5923,7 @@ export async function registerRoutes(
   });
 
   // Analyze calculator results (Ask Peggy button)
-  app.post("/api/peggy/analyze-calculator", async (req: any, res) => {
+  app.post("/api/peggy/analyze-calculator", rateLimit(10, 60000), async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
@@ -5951,7 +5949,7 @@ export async function registerRoutes(
   });
 
   // Provide feedback on a message
-  app.post("/api/peggy/messages/:id/feedback", async (req: any, res) => {
+  app.post("/api/peggy/messages/:id/feedback", publicIntakeRateLimit, requirePeggyConversationAccess, async (req: any, res) => {
     try {
       const messageId = Number(req.params.id);
       const { feedback, feedbackNotes } = req.body;
@@ -5959,12 +5957,18 @@ export async function registerRoutes(
       if (!feedback || !['helpful', 'not_helpful'].includes(feedback)) {
         return res.status(400).json({ message: "Valid feedback (helpful/not_helpful) is required" });
       }
+
+      const conversation = res.locals.peggyConversation;
+      const conversationMessages = await storage.getPeggyMessages(conversation.id);
+      if (!conversationMessages.some((message) => message.id === messageId)) {
+        return res.status(404).json({ message: "Message not found" });
+      }
       
       const message = await storage.updatePeggyMessageFeedback(messageId, feedback, feedbackNotes);
-      res.json(message);
+      return res.json(message);
     } catch (error) {
       console.error("Error saving Peggy message feedback:", error);
-      res.status(500).json({ message: "Failed to save feedback" });
+      return res.status(500).json({ message: "Failed to save feedback" });
     }
   });
 
@@ -6005,7 +6009,7 @@ export async function registerRoutes(
   });
 
   // Create a new lead (public or authenticated)
-  app.post("/api/leads", async (req: any, res) => {
+  app.post("/api/leads", publicIntakeRateLimit, async (req: any, res) => {
     try {
       // Empire Doctrine v1.0.1 — server-truth anti-spam for /submit and
       // /marketflow/access submissions. Honeypot hp_company must be empty;
@@ -6070,10 +6074,7 @@ export async function registerRoutes(
           source: req.body?.source ?? "marketflow_access_page",
           submittedAt: new Date().toISOString(),
         };
-        console.log(
-          "[marketflow_access_requests]",
-          JSON.stringify(marketflow_access_request),
-        );
+        console.info("[marketflow_access_requests] accepted");
         // Persist the canonical shape inside leadData under a versioned
         // key so the leads row carries the full access-request envelope.
         if (req.body?.leadData && typeof req.body.leadData === "object") {
@@ -7314,7 +7315,7 @@ export async function registerRoutes(
   });
 
   // Submit buyer inquiry (schedule showing, ask question)
-  app.post("/api/marketplace/buyer/inquiries", async (req: any, res) => {
+  app.post("/api/marketplace/buyer/inquiries", publicIntakeRateLimit, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const { propertyType, propertyId, name, email, phone, message, requestType } = req.body;
@@ -8450,7 +8451,7 @@ export async function registerRoutes(
     try {
       const { dealId, feedback } = req.body;
       // Store feedback for ML training
-      console.log(`Curation feedback for deal ${dealId}: ${feedback}`);
+      console.info("[curation] feedback recorded");
       res.json({ success: true });
     } catch (error) {
       console.error("Error saving curation feedback:", error);
@@ -8529,9 +8530,8 @@ export async function registerRoutes(
   // Save onboarding data
   app.post("/api/user/onboarding", async (req, res) => {
     try {
-      const profileData = req.body;
       // Save onboarding preferences
-      console.log("Onboarding data received:", profileData);
+      console.info("[onboarding] preferences received");
       res.json({ success: true, message: "Onboarding complete" });
     } catch (error) {
       console.error("Error saving onboarding data:", error);

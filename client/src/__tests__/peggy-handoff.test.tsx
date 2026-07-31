@@ -125,7 +125,7 @@ describe("Peggy — handoff action buttons", () => {
       if (String(url).includes("/conversations")) {
         return Promise.resolve({
           ok: true,
-          json: async () => ({ id: 1 }),
+          json: async () => ({ id: 1, accessToken: "v1.test-token" }),
         } as unknown as Response);
       }
       return chat.promise;
@@ -162,7 +162,7 @@ describe("Peggy — handoff action buttons", () => {
       if (String(url).includes("/conversations")) {
         return Promise.resolve({
           ok: true,
-          json: async () => ({ id: 7 }),
+          json: async () => ({ id: 7, accessToken: "v1.test-token" }),
         } as unknown as Response);
       }
       return chat.promise;

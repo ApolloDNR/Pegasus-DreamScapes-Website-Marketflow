@@ -10,7 +10,7 @@ const SECTIONS = [
   { id: "cookies", label: "Cookies", icon: Cookie, title: "Consent-gated analytics. No advertising trackers.", kicker: "Cookies and analytics" },
   { id: "your-rights", label: "Your rights", icon: Scale, title: "Access, correction, deletion, opt-out.", kicker: "Your rights" },
   { id: "security", label: "Security", icon: Shield, title: "Reasonable safeguards. No system is perfect.", kicker: "Security and retention" },
-  { id: "call-recording", label: "Call recording", icon: Shield, title: "We record calls for quality. You can stop recording at any time.", kicker: "Call recording (Peggy phone)" },
+  { id: "call-recording", label: "Phone plans", icon: Shield, title: "Phone and voice are in development.", kicker: "Planned Peggy phone controls" },
   { id: "contact", label: "Contact", icon: Mail, title: "Reach the operator directly.", kicker: "Contact" },
 ];
 
@@ -131,13 +131,13 @@ export default function Privacy() {
 
             <LegalBlock id="call-recording" idx={7} icon={SECTIONS[7].icon} kicker={SECTIONS[7].kicker} title={SECTIONS[7].title}>
               <p>
-                When you call Pegasus' main line (925-744-8525), Peggy (our AI strategy assistant) answers and may record the call for quality and training. California is a two-party consent state (Penal Code §632), so the first thing you hear on every call is a clear disclosure that the call is being recorded and how to stop it.
+                Peggy does not currently answer or record calls on Pegasus' main line. The public Peggy experience is limited to website intake while phone and voice are in development.
               </p>
               <p>
-                You can say "stop recording" at any point in the call. We stop recording immediately and the conversation continues. We do not argue, negotiate, or ask you to reconsider. Recordings are encrypted at rest, retained for 90 days, then deleted automatically. You can request earlier deletion by emailing apollo@pegasusdreamscapes.com with your phone number and approximate call time.
+                California is a two-party consent state (Penal Code §632). Before any voice launch, Pegasus must implement and verify a clear recording disclosure, an immediate way to decline or stop recording, and a path to continue without recording.
               </p>
               <p>
-                We use the recording (and the call transcript) for two things: (1) Apollo's daily inbound report so nothing falls through the cracks, and (2) improving Peggy's behavior on edge cases. We do not sell call recordings, share them with third parties for marketing, or use them to train any model outside the Pegasus operating company.
+                If recording is enabled in the future, the final retention, deletion, security, and transcript-use policy will be published here before that service goes live.
               </p>
             </LegalBlock>
 

@@ -241,19 +241,23 @@ describe("Global focus-visible baseline (Empire Doctrine v1.0.1, Task #143)", ()
   });
 
   it("preserves the skip link and delegates the Pegasus main landmark to Landing", () => {
-    const app = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+    const publicApp = fs.readFileSync(
+      path.join(process.cwd(), "client/src/PublicApp.tsx"),
+      "utf-8",
+    );
+    const legacyApp = fs.readFileSync(
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const landing = fs.readFileSync(
       path.join(process.cwd(), "client/src/pegasus/Landing.tsx"),
       "utf-8",
     );
-    expect(app.includes('className="skip-to-content"')).toBe(true);
-    expect(app.includes('href="#main-content"')).toBe(true);
+    expect(publicApp.includes('className="skip-to-content"')).toBe(true);
+    expect(publicApp.includes('href="#main-content"')).toBe(true);
     expect(landing.includes('<main id="main-content"')).toBe(true);
 
-    const pegasusBranch = app.match(
+    const pegasusBranch = legacyApp.match(
       /\{pegasus \? \(\s*([\s\S]*?)\s*\) : standalone \? \(/,
     )?.[1];
     expect(pegasusBranch).toBeTruthy();

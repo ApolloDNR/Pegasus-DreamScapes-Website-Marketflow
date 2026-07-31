@@ -101,7 +101,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
   (window as unknown as { scrollTo: () => void }).scrollTo = () => {};
 }
 
-import { Router as AppRouter } from "@/App";
+import { Router as AppRouter } from "@/LegacyApp";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
@@ -299,7 +299,7 @@ describe("Every dynamic :param detail route renders real loaded content, never a
   // a test entry (or a documented exclusion) — it fails CI.
   it("DYNAMIC_DETAIL_ROUTES covers every dynamic :param route mounted in App.tsx", () => {
     const appSrc = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const re = /<Route\s+path="([^"]+)"\s+component=/g;
