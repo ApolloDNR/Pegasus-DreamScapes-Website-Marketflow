@@ -30,7 +30,7 @@ export default function Disclosures() {
         <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-[#e3a463] font-supporting font-semibold">
               Compliance · Plain language
             </p>
           </div>
@@ -51,7 +51,7 @@ export default function Disclosures() {
 
       <section className="py-16 lg:py-20 bg-muted/30 border-b border-border">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-4">
             Jump to a section
           </p>
           <nav aria-label="On-page navigation" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -62,7 +62,7 @@ export default function Disclosures() {
                 data-testid={`link-disclosures-jump-${s.id}`}
                 className="group flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:border-primary/60 hover:bg-primary/5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
               >
-                <s.icon className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                <s.icon className="w-4 h-4 text-[#8a5122] dark:text-primary flex-shrink-0" aria-hidden="true" />
                 <span className="truncate">{s.label}</span>
               </a>
             ))}
@@ -197,13 +197,13 @@ export default function Disclosures() {
           <ScrollReveal delay={0.1}>
             <div className="mt-16 pt-10 border-t border-border">
               <div className="flex items-start gap-4">
-                <Mail className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-[#8a5122] dark:text-primary mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-2">
                     Questions about this page
                   </p>
                   <p className="text-base text-foreground/90 leading-relaxed">
-                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-primary hover:underline">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-primary hover:underline">925-744-8525</a>.
+                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-[#8a5122] dark:text-primary underline underline-offset-2">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-[#8a5122] dark:text-primary underline underline-offset-2">925-744-8525</a>.
                   </p>
                   <p className="text-sm text-muted-foreground mt-3 italic">
                     Last updated: May 2026
@@ -246,8 +246,8 @@ function DisclosureBlock({
       }
     >
       <div className="flex items-center gap-3 mb-3">
-        <Icon className="w-4 h-4 text-primary" />
-        <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+        <Icon className="w-4 h-4 text-[#8a5122] dark:text-primary" />
+        <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold">
           {kicker}
         </p>
       </div>

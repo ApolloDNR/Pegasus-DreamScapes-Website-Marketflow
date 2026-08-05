@@ -618,11 +618,11 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
   const sectionCls = dark
     ? 'relative py-24 lg:py-32 overflow-hidden bg-[var(--navy)] text-[var(--cream)]'
     : 'relative py-24 lg:py-32 overflow-hidden';
-  const eyebrowCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]';
+  const eyebrowCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const titleCls = dark ? '' : 'text-[var(--text)]';
   const leadCls = dark ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]';
   const pointCls = dark ? 'text-[var(--cream)]/85' : 'text-[var(--text-2)]';
-  const checkCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]';
+  const checkCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const btnCls = dark ? 'btn-solid-light' : 'btn-primary';
 
   return (
@@ -638,7 +638,7 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
           <div className={`lg:col-span-6 reveal delay-100 ${flip ? 'lg:order-1' : ''}`}>
             <div className="flex items-center gap-3 mb-5">
               <span className={`pg-label ${eyebrowCls}`}>{p.eyebrow}</span>
-              {p.tag && <span className="pg-label !text-[8px] !tracking-[0.16em] px-2.5 py-1 rounded-full border border-[var(--accent)]/40 text-[var(--accent)]">{p.tag}</span>}
+              {p.tag && <span className="pg-label !text-[8px] !tracking-[0.16em] px-2.5 py-1 rounded-full border border-[var(--accent)]/40 text-[var(--accent-ink)]">{p.tag}</span>}
             </div>
             <h2 className={`font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-normal mb-6 ${titleCls}`}>{p.title}</h2>
             <p className={`${leadCls} leading-relaxed mb-8 max-w-xl`}>{p.lead}</p>
@@ -811,7 +811,7 @@ export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }
   const run = (a: StartAction) => { if (a === 'peggy') openPeggy(); else go(a); };
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute top-0 left-4 lg:left-12 text-[var(--line-soft)]">START</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 left-4 lg:left-12 text-[var(--decorative-ink)]">START</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Getting started" title="Choose how to start."
           copy="Three ways in, no wrong door. Talk to a person, run the numbers yourself, or just ask in plain language." />
@@ -819,7 +819,7 @@ export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }
           {DOORS3.map((d, i) => (
             <div key={d.key} className="surface-card reveal flex flex-col h-full p-8 lg:p-10" style={{ animationDelay: `${i * 90}ms` }}>
               <div className="door-icon mb-7"><Ico name={d.icon} className="w-5 h-5" /></div>
-              <div className="pg-label !text-[9px] text-[var(--accent)] mb-3">{d.kicker}</div>
+              <div className="pg-label !text-[9px] text-[var(--accent-ink)] mb-3">{d.kicker}</div>
               <h3 className="font-serif-display text-2xl text-[var(--text)] mb-4 leading-tight">{d.title}</h3>
               <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed mb-5">{d.desc}</p>
               <p className="text-[var(--text-2)] text-[0.85rem] italic leading-relaxed mb-8">{d.best}</p>
@@ -1171,13 +1171,13 @@ export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string
           copy="We say no early and often. Here is who this lane serves, and who it likely does not." />
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
           <div className="surface-card p-8 lg:p-10 reveal">
-            <div className="pg-label text-[var(--accent)] mb-7 flex items-center gap-2.5">
+            <div className="pg-label text-[var(--accent-ink)] mb-7 flex items-center gap-2.5">
               <Check className="w-4 h-4" strokeWidth={2} /> This is for you if
             </div>
             <ul className="space-y-5">
               {forYou.map((t, i) => (
                 <li key={i} className="flex gap-3.5 text-[var(--text-2)] leading-relaxed">
-                  <Check className="w-4 h-4 text-[var(--accent)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
+                  <Check className="w-4 h-4 text-[var(--accent-ink)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
                 </li>
               ))}
             </ul>
@@ -1323,7 +1323,7 @@ export function NextStep({ go, label, route }: { go: Nav; label: string; route: 
     <section className="py-12 border-b border-[var(--line)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <button type="button" onClick={() => go(route)}
-          className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--accent)] inline-flex items-center gap-3 group">
+          className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--accent-ink)] inline-flex items-center gap-3 group">
           {label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>

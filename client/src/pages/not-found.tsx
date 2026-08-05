@@ -66,7 +66,7 @@ export default function NotFound() {
           <Link href="/">
             <Button
               size="lg"
-              className="min-h-[48px] px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-sm uppercase tracking-[0.15em] font-semibold shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5"
+              className="min-h-[48px] bg-[#9c5a24] px-8 text-sm font-semibold uppercase tracking-[0.15em] text-white shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#8b4d1d]"
               data-testid="button-404-home"
             >
               <Compass className="mr-2 w-4 h-4" />

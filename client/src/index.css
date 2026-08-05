@@ -2712,7 +2712,7 @@ body:has(.submit-premium) [data-testid="button-peggy-public-open"] {
 }
 
 .connect-standards .connect-eyebrow {
-  color: var(--connect-copper);
+  color: #9c5a24;
 }
 
 .connect-standards h2 {
