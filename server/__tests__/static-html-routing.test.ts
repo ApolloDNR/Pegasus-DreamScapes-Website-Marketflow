@@ -27,6 +27,7 @@ type FallbackHandler = (
   req: { originalUrl: string; url: string },
   res: {
     status: (status: number) => unknown;
+    redirect: (status: number, location: string) => unknown;
     type: (contentType: string) => unknown;
     send: (body: string) => unknown;
   },
@@ -62,6 +63,11 @@ function requestHtml(pathname: string) {
       status = value;
       return response;
     },
+    redirect(value: number, location: string) {
+      status = value;
+      body = location;
+      return response;
+    },
     type(value: string) {
       contentType = value;
       return response;
@@ -81,6 +87,15 @@ afterEach(() => {
 });
 
 describe("production SPA HTML routing", () => {
+  it.each(["/library", "/library/fixture-article"])(
+    "redirects retired library route %s directly to Strategy Lab",
+    (pathname) => {
+      const response = requestHtml(pathname);
+
+      expect(response.status).toBe(302);
+      expect(response.body).toBe("/strategy-lab");
+    },
+  );
   it.each([
     "/about",
     "/projects/nelson-dr",

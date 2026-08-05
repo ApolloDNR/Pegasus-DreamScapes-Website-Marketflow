@@ -144,6 +144,10 @@ git add docs/qa/launch-completion-status.md
 git commit -m "docs: record exact-commit launch QA"
 ```
 
+- [ ] **Step 6: Refresh visual evidence on the immutable final preview**
+
+The earlier 17-route audit remains the defect-discovery baseline, but later privacy, MarketFlow, mobile, and browser-gate changes invalidate it as final-commit evidence. After Task 5 publishes the exact candidate and a non-production preview exists, run the current 18-route matrix at 1440px, 768px, and 390px in the cloud browser, rerun the 12 high-value journeys, and replace every `PENDING` ledger cell with a current result.
+
 ### Task 3: P0 And P1 Product Remediation
 
 **Files:**
@@ -221,7 +225,7 @@ NPM_CONFIG_CACHE=/tmp/pegasus-launch-npm-cache npx --yes -p node@22.23.2 -c 'npm
 
 Expected: zero high/critical production advisories, environment example contract passes, TypeScript exits 0, all tests pass with zero failures, and production build plus bundle budget exits 0.
 
-- [x] **Step 3: Re-run the high-value rendered smoke**
+- [ ] **Step 3: Re-run the high-value rendered smoke**
 
 Re-check `/`, `/bring-an-opportunity`, `/strategy-lab`, `/marketflow`, `/work-with-apollo`, mobile navigation, Peggy, and 404 on the freshly installed exact build.
 
@@ -236,9 +240,11 @@ git grep -nE "(SUPABASE_SERVICE_ROLE_KEY|SENDGRID_API_KEY|DATABASE_URL)=.+" -- '
 
 Expected: no whitespace errors, no unintended uncommitted files, only intended branch files, and no committed secret assignment.
 
-- [x] **Step 5: Record exact results**
+- [ ] **Step 5: Record exact results**
 
 Write command, timestamp, commit, pass count, build result, audit result, rendered smoke result, and any bounded warning into `docs/qa/launch-completion-status.md`, then commit the ledger.
+
+Local runtime evidence is recorded before publication; the rendered result and final commit identifier remain pending until GitHub CI and cloud-browser QA complete.
 
 ### Task 5: Publish And Prove PR #25
 

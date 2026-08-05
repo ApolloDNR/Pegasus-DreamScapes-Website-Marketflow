@@ -47,7 +47,7 @@ describe("launch integrity contract", () => {
       "// Deal Matches Routes",
     );
     expect(route).toContain("resolveLegacyDealAccess(");
-    expect(route).toContain("isPublicLegacyDeal(access)");
+    expect(route).toContain("canInitiateLegacyDealInteraction(access, res)");
     expect(route.indexOf("resolveLegacyDealAccess(")).toBeLessThan(
       route.indexOf("generateTermSheetPDF("),
     );
@@ -71,9 +71,9 @@ describe("launch integrity contract", () => {
   it("derives JV recipients from a reviewed public deal and transitions once", () => {
     const createRoute = routeSlice(
       'app.post("/api/marketplace/jv-requests"',
-      "// Get all capital projects for browsing",
+      "// Get all reviewed capital projects for approved browsing",
     );
-    expect(createRoute).toContain("isPublicWholesaleDeal(deal)");
+    expect(createRoute).toContain("canInitiateLegacyDealInteraction(access, res)");
     expect(createRoute).toContain("wholesalerId: deal.submittedBy");
     expect(createRoute).not.toMatch(
       /const\s*\{[^}]*wholesalerId[^}]*\}\s*=\s*req\.body/s,

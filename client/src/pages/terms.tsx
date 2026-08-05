@@ -124,7 +124,7 @@ export default function Terms() {
 
             <LegalBlock id="liability" idx={6} icon={SECTIONS[6].icon} kicker={SECTIONS[6].kicker} title={SECTIONS[6].title}>
               <p>
-                The site, the Strategy Lab tools, the Strategy Library, and any calculator output are provided as-is, for general informational and educational use. They are not legal, tax, accounting, or investment advice for your specific situation. Before acting on anything you read or model here, consult licensed professionals who know your facts and jurisdiction.
+                The site, Strategy Lab tools, educational materials, and any calculator output are provided as-is, for general informational and educational use. They are not legal, tax, accounting, or investment advice for your specific situation. Before acting on anything you read or model here, consult licensed professionals who know your facts and jurisdiction.
               </p>
               <p>
                 To the maximum extent permitted by law, Pegasus Dreamscapes Corp. is not liable for indirect, incidental, special, or consequential damages arising from your use of the site. Our total liability to you for any claim related to the site is limited to one hundred dollars (US $100).

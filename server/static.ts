@@ -21,6 +21,10 @@ export function serveStatic(app: Express) {
     const indexPath = path.resolve(distPath, "index.html");
     const html = fs.readFileSync(indexPath, "utf-8");
     const pathname = normalizeSpaPath(req.originalUrl || req.url || "/");
+    if (pathname === "/library" || pathname.startsWith("/library/")) {
+      res.redirect(302, "/strategy-lab");
+      return;
+    }
     const notFound = !isKnownSpaPath(pathname);
     res
       .status(notFound ? 404 : 200)

@@ -25,8 +25,9 @@ import { initAnalytics } from "@/lib/analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { Landing as PegasusSite } from "@/pegasus/Landing";
-import { PEGASUS_URLS, isPegasusUrl, isStandaloneChromeUrl, isSolidNavUrl, isNotFoundUrl } from "@/pegasus/routes";
+import { PEGASUS_URLS, isSolidNavUrl } from "@/pegasus/routes";
 import { PegasusStandaloneShell } from "@/pegasus/standalone-shell";
+import { classifyShellMode } from "@/lib/shell-mode";
 import {
   appendRedirectSearch,
   QUERY_PRESERVING_INTAKE_PATHS,
@@ -104,8 +105,6 @@ const AdminCtaEvents = lazy(() => import("@/pages/admin-cta-events"));
 const AdminHqOutbox = lazy(() => import("@/pages/admin-hq-outbox"));
 const AdminPeggyConversations = lazy(() => import("@/pages/admin-peggy-conversations"));
 const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
-const Resources = lazy(() => import("@/pages/resources"));
-const ArticleDetail = lazy(() => import("@/pages/article-detail"));
 const SubmitPropertyPage = lazy(() => import("@/pages/submit-property"));
 const PegasusStandardPage = lazy(() => import("@/pages/pegasus-standard"));
 const DepartmentsPage = lazy(() => import("@/pages/departments"));
@@ -166,7 +165,11 @@ export const legacyRedirects: [string, string][] = [
   ["/submit-property", "/bring-an-opportunity"],
   ["/submit", "/bring-an-opportunity"],
   ["/services", "/how-we-operate"],
-  ["/resources", "/library"],
+  ["/library", "/strategy-lab"],
+  ["/library/:slug", "/strategy-lab"],
+  ["/resources", "/strategy-lab"],
+  ["/education", "/strategy-lab"],
+  ["/strategy-library", "/strategy-lab"],
   ["/buy", "/marketflow"],
   ["/partner", "/deal-partners"],
   ["/invest", "/capital"],
@@ -177,7 +180,6 @@ export const legacyRedirects: [string, string][] = [
   // Phase 1 route-cleanup (Apollo guardrail #3 — redirects, not 410s,
   // for paths that still have a clear canonical replacement).
   ["/calculators", "/strategy-lab?tool=calculators"],
-  ["/education", "/library"],
   ["/wholesale", "/bring-an-opportunity?intent=deal-jv"],
   // Website Spec v4 (Re-skin) — the audience lanes are restored to the public
   // prototype shell (PEGASUS_URLS), so they are no longer redirected. The only
@@ -259,13 +261,6 @@ export function Router() {
       <Route path="/admin/hq-outbox" component={AdminHqOutbox} />
       <Route path="/admin/peggy/conversations" component={AdminPeggyConversations} />
       <Route path="/strategy-lab/classic" component={Calculators} />
-      {/* v3.0 Lean Launch Cut — /library is demoted out of the launch and
-       * redirects home. /resources & /education still redirect to /library,
-       * which then 302s here to / (an intentional redirect chain). The
-       * /library/:slug article shell is kept and is NOT redirected. */}
-      <Route path="/library">{() => <Redirect to="/" />}</Route>
-      <Route path="/library/:slug" component={ArticleDetail} />
-      <Route path="/strategy-library">{() => <Redirect to="/library" />}</Route>
       <Route path="/vendor-network" component={VendorNetwork} />
       {/* Restored to the live public surface: the full FAQ page (accordion +
        * FAQPage JSON-LD), fed by the shared/faq-data.ts source of truth. */}
@@ -393,6 +388,13 @@ function PageRouteTransition() {
 // double-framed; every other (functional) surface keeps the global chrome.
 function AppShell() {
   const [location] = useLocation();
+  const {
+    isAuthenticated,
+    isGuestMode,
+    profile,
+    userRole,
+    isAdmin,
+  } = useSupabaseAuth();
   // Three chrome modes:
   //  - pegasus:    the prototype shell (<PegasusSite>) renders its own
   //                nav/footer/Peggy, so no global chrome at all.
@@ -401,13 +403,17 @@ function AppShell() {
   //                so the public site is visually seamless.
   //  - legacy:     everything else (admin, auth, marketflow internals) keeps
   //                the legacy global Navigation/Footer/Peggy dock.
-  const pegasus = isPegasusUrl(location);
-  // The catch-all NotFound (404) is a public surface, so it wears the unified
-  // premium chrome (via PegasusStandaloneShell) like the rest of the public
-  // site — never the legacy global Navigation/Footer.
-  const standalone =
-    !pegasus && (isStandaloneChromeUrl(location) || isNotFoundUrl(location));
-  const legacy = !pegasus && !standalone;
+  const shellMode = classifyShellMode({
+    location,
+    isAuthenticated,
+    isGuestMode,
+    isPegasusBadged: profile?.is_pegasus_badged,
+    isStaff: isAdmin,
+    roles: [profile?.primary_role, userRole],
+  });
+  const pegasus = shellMode === "pegasus";
+  const standalone = shellMode === "standalone";
+  const legacy = shellMode === "legacy";
   return (
     <>
       <ScrollToTop />

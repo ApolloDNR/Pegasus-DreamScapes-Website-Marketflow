@@ -211,13 +211,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: DEFAULT_OG_IMAGE,
   },
 
-  // ---- Learn / network / legal ----
-  "/library": {
-    title: tag("Strategy Library"),
-    description:
-      "Field notes on complex property, structured opportunity, and the strategy-first operating model. Structured reads, no gurus, no hype.",
-    image: `${SITE_URL}/og/library.png`,
-  },
+  // ---- Network / legal ----
   "/vendor-network": {
     title: tag("Vendor Network"),
     description:
@@ -255,7 +249,6 @@ export function seoFor(pathname: string): SeoRoute {
   const exact = SEO_ROUTES[pathname];
   if (exact) return exact;
   if (pathname.startsWith("/projects/")) return SEO_ROUTES["/projects"];
-  if (pathname.startsWith("/library/")) return SEO_ROUTES["/library"];
   if (pathname.startsWith("/marketflow/")) return SEO_ROUTES["/marketflow"];
   return SEO_ROUTES["/"];
 }
@@ -294,12 +287,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   // crawler-visible metadata for direct visits / social shares — we simply
   // don't advertise it in the sitemap until the buyboxes are public-ready.
   /^\/marketflow\/buyboxes$/,
-  // Website Spec v4: /library remains demoted (302 → home), so it must not be
-  // advertised in the sitemap. Its SEO_ROUTES entry is retained only so
-  // seoFor()'s prefix fallback keeps serving live subpaths (e.g. /library/:slug).
-  // /marketflow was restored to the live public surface in v4 and is crawlable
-  // again. Exact-match, bare path only.
-  /^\/library$/,
+  /^\/library(?:\/|$)/,
 ];
 
 // Public directories the robots policy disallows. Crawlers should never index
@@ -315,6 +303,7 @@ export const ROBOTS_DISALLOW: string[] = [
   "/profile/",
   "/snapshot/",
   "/saved",
+  "/library",
   "/marketflow/admin",
   "/marketflow/dashboard",
   "/marketflow/messages",

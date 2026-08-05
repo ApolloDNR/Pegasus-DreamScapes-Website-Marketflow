@@ -45,6 +45,30 @@ function visibleText(ui: React.ReactElement, path: string): string {
 }
 
 describe("public Peggy capability truth", () => {
+  it("accurately describes browser storage without fingerprinting claims", () => {
+    const privacyText = visibleText(<Privacy />, "/privacy");
+    const disclosuresText = visibleText(<Disclosures />, "/disclosures");
+
+    expect(privacyText).toMatch(/local browser storage/i);
+    expect(privacyText).toMatch(/session storage/i);
+    expect(privacyText).toMatch(/current browsing session/i);
+    expect(privacyText).toMatch(/random anonymous Strategy Lab session identifier/i);
+    expect(privacyText).toMatch(/not derived from.*browser.*characteristics/i);
+    expect(privacyText).toMatch(/Peggy.*first-party conversation identifier/i);
+    expect(privacyText).toMatch(/continue.*Peggy conversation/i);
+    expect(privacyText).toMatch(/conversation content stored by Pegasus/i);
+    expect(privacyText).toMatch(
+      /send Peggy conversation content to our configured AI processing provider so it can generate Peggy(?:'s|’s) reply/i,
+    );
+    expect(privacyText).toMatch(/choose to save.*property and financial.*draft/i);
+    expect(privacyText).toMatch(/stored on your device.*local browser storage/i);
+    expect(privacyText).toMatch(/does not itself submit.*Pegasus/i);
+    expect(privacyText).not.toMatch(/one session cookie/i);
+    expect(privacyText).not.toMatch(/one preference cookie/i);
+    expect(`${privacyText} ${disclosuresText}`).not.toContain("Pegasus DreamScapes");
+    expect(`${privacyText} ${disclosuresText}`).toContain("Pegasus Dreamscapes");
+  });
+
   it("states on Privacy that Peggy phone and recording are not live", () => {
     const text = visibleText(<Privacy />, "/privacy");
 

@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
+import { canAccessReviewedMarketflowInventory } from "@shared/marketflow-inventory-access";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
@@ -161,8 +162,22 @@ export default function MarketflowDeals() {
     description: "Private MarketFlow dealflow surface.",
     noIndex: true,
   });
-  const { isAuthenticated, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
-  const shouldShowOperatorChrome = isAuthenticated && !isGuestMode;
+  const {
+    isAuthenticated,
+    isGuestMode,
+    guestRole,
+    exitGuestMode,
+    profile,
+    userRole,
+    isAdmin,
+  } = useSupabaseAuth();
+  const shouldShowOperatorChrome = canAccessReviewedMarketflowInventory({
+    isAuthenticated,
+    isGuestMode,
+    isPegasusBadged: profile?.is_pegasus_badged,
+    isStaff: isAdmin,
+    roles: [profile?.primary_role, userRole],
+  });
 
   if (!shouldShowOperatorChrome) {
     return (
@@ -221,7 +236,7 @@ function MarketflowPrivateBetaHold({
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/marketflow/submit">
+            <Link href="/bring-an-opportunity?intent=deal-jv">
               <Button
                 size="lg"
                 variant="outline"

@@ -38,8 +38,7 @@ export const NAV_PRIMARY: NavPrimaryItem[] = [
 ];
 
 export const NAV_MORE: NavMoreItem[] = [
-  // Learn — knowledge surfaces
-  { href: "/library", label: "Strategy Library", group: "learn" },
+  // Learn — live knowledge surfaces
   { href: "/faq", label: "FAQ", group: "learn" },
 
   // Network — the people side of the operating company

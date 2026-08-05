@@ -236,6 +236,22 @@ describe("Pegasus public-shell navigation accessibility", () => {
     expect(menu).toHaveAttribute("aria-hidden", "true");
     expect(menu).not.toHaveAttribute("aria-modal");
   });
+
+  it("opens the Peggy dialog from the mobile menu entry", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderLanding("/");
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const menu = screen.getByRole("dialog", { name: "Primary navigation" });
+    await user.click(within(menu).getByRole("button", { name: "Talk to Peggy" }));
+
+    expect(menu).toHaveAttribute("aria-hidden", "true");
+    expect(
+      screen.getByRole("dialog", {
+        name: "Peggy, the Pegasus intake concierge",
+      }),
+    ).toHaveAttribute("aria-hidden", "false");
+  });
 });
 
 describe("Pegasus v6 Landing-shell choice controls", () => {

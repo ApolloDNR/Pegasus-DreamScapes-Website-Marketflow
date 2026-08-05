@@ -61,17 +61,17 @@ export function CookieConsent() {
                   id="cookie-consent-title"
                   className="pg-cookie-title text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2"
                 >
-                  Cookie preferences
+                  Privacy preferences
                 </p>
                 <p className="pg-cookie-copy text-sm text-muted-foreground leading-relaxed">
-                  Analytics and marketing cookies are off until you opt in.
+                  Analytics and marketing technologies are off until you opt in.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowDetails(false)}
                 className="pg-cookie-close text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Close cookie preferences"
+                aria-label="Close privacy preferences"
                 data-testid="button-cookie-close-details"
               >
                 <X className="w-4 h-4" />
@@ -81,7 +81,7 @@ export function CookieConsent() {
             <div className="space-y-3 border-t border-border/60 pt-4" data-testid="cookie-consent-details">
               <ToggleRow
                 label="Essential"
-                description="Required to run the site, store your theme, and keep submissions secure. Cannot be disabled."
+                description="Local browser storage remembers your theme and consent choices. It is always active."
                 checked={true}
                 disabled
                 testId="toggle-cookie-essential"
@@ -140,7 +140,7 @@ export function CookieConsent() {
             id="cookie-consent-title"
             className="pg-cookie-copy text-xs sm:text-sm text-foreground leading-snug flex-1"
           >
-            <span className="hidden sm:inline">We use essential cookies to run this site. </span>
+            <span className="hidden sm:inline">Local browser storage remembers your theme and consent choices. </span>
             Analytics and marketing are off until you opt in.{" "}
             <a
               href="/privacy"
@@ -213,7 +213,7 @@ function ToggleRow({
         onCheckedChange={(v) => onChange?.(!!v)}
         disabled={disabled}
         data-testid={testId}
-        aria-label={`${label} cookies`}
+        aria-label={`${label} preference`}
       />
     </div>
   );

@@ -9,7 +9,6 @@ describe("SPA route classification", () => {
     "/bring-an-opportunity?intent=owner",
     "/projects/nelson-dr",
     "/projects/a-real-project",
-    "/library/a-real-article",
     "/marketflow/access",
     "/marketflow/deals/42",
     "/marketflow/deals/42/negotiate",
@@ -28,6 +27,7 @@ describe("SPA route classification", () => {
     "/snapshot",
     "/profile",
     "/marketflow/negotiate/only-one-part",
+    "/library/a-real-article",
   ])("rejects the invalid route %s", (pathname) => {
     expect(isNotFoundUrl(pathname)).toBe(true);
   });

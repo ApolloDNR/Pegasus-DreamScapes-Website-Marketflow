@@ -18,7 +18,7 @@ export default function Privacy() {
   useSEO({
     title: "Privacy Policy",
     description:
-      "Privacy policy for Pegasus DreamScapes Corp. What we collect, how we use it, and how to reach us.",
+      "Privacy policy for Pegasus Dreamscapes Corp. What we collect, how we use it, and how to reach us.",
     image: "/og/default.png",
   });
 
@@ -43,7 +43,7 @@ export default function Privacy() {
             </span>
           </h1>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
-            Pegasus DreamScapes Corp. respects your privacy. This page explains what we collect when you use the site, why we collect it, and how to reach us if you want it changed or removed.
+            Pegasus Dreamscapes Corp. respects your privacy. This page explains what we collect when you use the site, why we collect it, and how to reach us if you want it changed or removed.
           </p>
         </div>
       </section>
@@ -83,6 +83,9 @@ export default function Privacy() {
                 When you submit a form, we collect what you give us: name, email, phone, and the property or situation details you describe. When you visit a page, our server logs the request (IP address, user agent, page) for security and reliability.
               </p>
               <p>
+                When you chat with Peggy, we collect the conversation content you send and use a first-party conversation identifier to keep that conversation connected to this browser.
+              </p>
+              <p>
                 We do not ask for, store, or process financial account numbers, social security numbers, or sensitive personal categories through the public site.
               </p>
             </LegalBlock>
@@ -98,7 +101,7 @@ export default function Privacy() {
 
             <LegalBlock id="sharing" idx={3} icon={SECTIONS[3].icon} kicker={SECTIONS[3].kicker} title={SECTIONS[3].title}>
               <p>
-                We share information only with the service providers that run the site (hosting, email delivery, analytics) under contract, and only as needed to deliver the service. We share information with law enforcement only when legally required.
+                We share information only with the service providers that run the site (hosting, email delivery, analytics, and AI processing) under contract, and only as needed to deliver the service. When you use Peggy, we send Peggy conversation content to our configured AI processing provider so it can generate Peggy's reply. We share information with law enforcement only when legally required.
               </p>
               <p>
                 We will never sell your personal information.
@@ -107,10 +110,16 @@ export default function Privacy() {
 
             <LegalBlock id="cookies" idx={4} icon={SECTIONS[4].icon} kicker={SECTIONS[4].kicker} title={SECTIONS[4].title}>
               <p>
-                The site uses one session cookie for sign-in and one preference cookie for your light/dark theme. Both are first-party and required.
+                Local browser storage remembers your light/dark theme and consent choices. Strategy Lab retains a random anonymous Strategy Lab session identifier in local browser storage so an anonymous snapshot can be attached to your account if you sign in, and uses session storage to count free runs only for the current browsing session. The identifier is randomly generated, not derived from your device or browser characteristics.
               </p>
               <p>
-                Analytics (Plausible) only loads after you accept the cookie banner. We do not run advertising trackers, cross-site identifiers, or third-party retargeting pixels.
+                If you choose to save a Strategy Lab property and financial draft, its inputs are stored on your device in local browser storage. Your browser may keep that draft until you clear it or the browser removes site data; saving the local draft does not itself submit it to Pegasus.
+              </p>
+              <p>
+                Peggy keeps a random first-party conversation identifier in local browser storage. It lets this browser continue Peggy conversation content stored by Pegasus; it is not an advertising or cross-site identifier.
+              </p>
+              <p>
+                Sign-in services may use essential browser session data to keep you signed in. Analytics (Plausible) only loads after you accept analytics in the consent banner. We do not use browser fingerprinting, advertising trackers, cross-site identifiers, or third-party retargeting pixels.
               </p>
             </LegalBlock>
 
@@ -149,7 +158,7 @@ export default function Privacy() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-border text-sm text-muted-foreground">
-            <p>Last updated: May 2026.</p>
+            <p>Last updated: August 2026.</p>
           </div>
         </div>
       </section>

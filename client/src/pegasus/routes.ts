@@ -109,6 +109,7 @@ const STANDALONE_SOLID_NAV: string[] = [
   '/bring-an-opportunity',
   '/submit-property',
   '/marketflow/access',
+  '/marketflow/deals',
   '/strategy-lab/classic',
   // In-funnel destinations from /strategy-lab/classic on submit - keep them on
   // the unified chrome so users don't drop to the legacy site mid-conversion.
@@ -118,14 +119,11 @@ const STANDALONE_SOLID_NAV: string[] = [
 ];
 
 // Prefix-matched standalone routes. `/projects/...` detail/case-study pages
-// use dark image heroes (transparent nav). `/library/...` article pages have a
-// light top, so they need the solid nav treatment.
+// use dark image heroes (transparent nav).
 const STANDALONE_DARK_PREFIX: string[] = [
   '/projects/',
 ];
-const STANDALONE_SOLID_PREFIX: string[] = [
-  '/library/',
-];
+const STANDALONE_SOLID_PREFIX: string[] = [];
 const STANDALONE_CHROME_PREFIX: string[] = [
   ...STANDALONE_DARK_PREFIX,
   ...STANDALONE_SOLID_PREFIX,

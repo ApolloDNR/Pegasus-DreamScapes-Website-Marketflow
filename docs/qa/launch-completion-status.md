@@ -2,7 +2,9 @@
 
 Plan: `docs/superpowers/plans/2026-08-05-pegasus-launch-completion.md`
 
-Branch: `agent/launch-hardening-review`
+Local candidate branch: `agent/launch-pr-candidate`
+
+Publication target: `agent/launch-hardening-review`
 
 Pull request: PR #25
 
@@ -15,60 +17,63 @@ A status-only update does not complete work. Reconcile the plan checklists, the 
 | Task | Status | Durable evidence |
 | --- | --- | --- |
 | Task 1 — Durable Recovery And Launch Ledger | Complete | `371916744bfab9c08f04f4acb6eb5dd82f0ce1a6` (`docs: lock Pegasus launch completion plan`); all Task 1 checklist steps are checked in the canonical plan. |
-| Task 2 — Exact-Commit Rendered Product Audit | Complete | Fresh production build; 51 full-page captures covering all 17 routes at 1440px, 768px, and 390px; 102 automated route/viewport/theme checks; 12 rendered interaction journeys. |
-| Task 3 — P0 And P1 Product Remediation | Complete | The rendered gate first failed on the confirmed contrast/heading defects, then passed after the narrow source fixes. No P0/P1 remains in the local final tree. |
-| Task 4 — Complete Local Release Gate | Complete | Node 22.23.2, audit, launch contract, TypeScript, 1,168 tests, production build, bundle budget, 102 rendered checks, 12 interaction journeys, and hygiene all pass on the final candidate tree. |
-| Task 5 — Publish And Prove PR #25 | Pending | Publish only after Task 4 is green on the exact final tree. |
-| Task 6 — Non-Production Staging And Live-Service Proof | Blocked | Supabase project access is denied and no Render staging control surface or credential is connected. |
+| Task 2 — Exact-Commit Rendered Product Audit | Reverification pending | The prior 17-route/51-capture audit drove the accepted fixes. The final candidate adds `/marketflow/deals` and later privacy, authorization, and browser-gate changes, so fresh cloud-browser evidence is required after the immutable preview is published. |
+| Task 3 — P0 And P1 Product Remediation | Complete | Confirmed accessibility, route ownership, mobile Peggy, privacy truth, browser-egress, CTA, shell, and MarketFlow authorization defects are regression-covered. Independent exact-tree review on `aa756cb` found no remaining code/security blocker; focused review verification passed TypeScript, diff hygiene, and 98 tests. |
+| Task 4 — Complete Local Release Gate | Local runtime gate complete | On Node 22.23.2, audit, launch contract, TypeScript, 110 test files / 1,246 tests, production build, and bundle budget pass on the exact runtime tree. The 108-check/12-journey rendered gate still requires GitHub CI on the published head. |
+| Task 5 — Publish And Prove PR #25 | Pending | The local candidate is a clean fast-forward descendant of the current PR head. Publish only after the final review and evidence refresh. |
+| Task 6 — Non-Production Staging And Live-Service Proof | Partially blocked | A static, noindex, non-production preview and cloud-browser QA remain executable. Backend staging proof is blocked by denied Supabase project access and the absence of a connected Render staging control surface. |
 
 ## Source Commit And PR Evidence
 
 | Evidence | Result |
 | --- | --- |
 | Local source commit at plan start | `c81a129` |
-| Remote PR head before publication | `c81a129832b04511a17d57cca5e32aaa423d6cb2` (open draft, mergeable) |
-| Required GitHub checks on pre-publication head | Launch Verification succeeded; final candidate requires a new run after Task 5 publication. |
+| Independently approved runtime candidate | `aa756cbc19fe0efda7101a5dfab74813daed5fe6`; Git tree `955b885834ca11100c08147423d8eee41f1c8c92`. The following documentation-only evidence commit does not change this runtime tree. |
+| Remote PR head before final publication | `4121336babe004703351f813f9950f3bd537395c`; the local candidate is a true fast-forward descendant. |
+| Required GitHub checks on pre-publication head | The earlier Launch Verification run succeeded. It is baseline evidence only; the final candidate requires a new exact-head run after Task 5 publication. |
+| Local release-gate timestamp | `2026-08-05T20:37:41Z` on the documentation-only candidate headed by `d7bdfe0`; runtime tree remains `955b885834ca11100c08147423d8eee41f1c8c92`. |
 
 ## Route And Viewport Matrix
 
-Task 2 records `PASS`, `P0`, `P1`, or `P2` for every cell after a current-run capture. No blank cell is accepted as evidence.
+The historical visual baseline passed before the final authorization/privacy changes. Every `PENDING` cell below must be replaced by `PASS`, `P0`, `P1`, or `P2` from the immutable final preview; no blank or historical result is accepted as exact-candidate evidence.
 
 | Route | 1440px | 768px | 390px | Interaction | Console |
 | --- | --- | --- | --- | --- | --- |
-| `/` | PASS | PASS | PASS | PASS | PASS |
-| `/property-owners` | PASS | PASS | PASS | PASS | PASS |
-| `/deal-partners` | PASS | PASS | PASS | PASS | PASS |
-| `/how-we-operate` | PASS | PASS | PASS | PASS | PASS |
-| `/development` | PASS | PASS | PASS | PASS | PASS |
-| `/investments` | PASS | PASS | PASS | PASS | PASS |
-| `/strategy-lab` | PASS | PASS | PASS | PASS | PASS |
-| `/work-with-apollo` | PASS | PASS | PASS | PASS | PASS |
-| `/marketflow` | PASS | PASS | PASS | PASS | PASS |
-| `/bring-an-opportunity` | PASS | PASS | PASS | PASS | PASS |
-| `/connect` | PASS | PASS | PASS | PASS | PASS |
-| `/peggy` | PASS | PASS | PASS | PASS | PASS |
-| `/contact` | PASS | PASS | PASS | PASS | PASS |
-| `/privacy` | PASS | PASS | PASS | PASS | PASS |
-| `/terms` | PASS | PASS | PASS | PASS | PASS |
-| `/disclosures` | PASS | PASS | PASS | PASS | PASS |
-| `/__launch-404-check` | PASS | PASS | PASS | PASS | PASS |
+| `/` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/property-owners` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/deal-partners` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/how-we-operate` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/development` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/investments` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/strategy-lab` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/work-with-apollo` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/marketflow` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/marketflow/deals` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/bring-an-opportunity` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/connect` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/peggy` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/contact` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/privacy` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/terms` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/disclosures` | PENDING | PENDING | PENDING | PENDING | PENDING |
+| `/__launch-404-check` | PENDING | PENDING | PENDING | PENDING | PENDING |
 
 ## Interaction Results
 
 | Journey | Result | Evidence |
 | --- | --- | --- |
-| Desktop primary navigation and More menu | PASS | Keyboard focus plus Enter opens the rendered directory. |
-| Mobile navigation | PASS | Menu opens, exposes expanded state, and reaches `/strategy-lab`. |
-| Theme toggle | PASS | Dark-to-light change renders and persists in `pegasus-ui-theme`. |
-| Homepage primary CTA | PASS | Primary navigation CTA reaches `/bring-an-opportunity`. |
-| Opportunity intake validation | PASS | Empty intake cannot advance from step one. |
-| Strategy Lab primary interaction | PASS | Instrument library opens and exposes its titled workspace. |
-| MarketFlow access request path | PASS | Reviewed-access CTA reaches `/marketflow/access`. |
-| Peggy open, close, and approved handoff | PASS | Concierge panel exposes correct expanded/hidden state and routes its explicit submission handoff to `/bring-an-opportunity`. |
-| Contact form validation | PASS | Empty form exposes required invalid fields without sending a request. |
-| Cookie consent | PASS | Analytics choice saves with a decision timestamp and dismisses the banner. |
-| Keyboard focus order | PASS | Eight consecutive Tabs remain visible, interactive, and advance through at least six distinct controls. |
-| Branded 404 recovery | PASS | Recovery CTA returns to `/` and restores the Pegasus homepage. |
+| Desktop primary navigation and More menu | PENDING | Final immutable-preview run required. |
+| Mobile navigation | PENDING | Final immutable-preview run required. |
+| Theme toggle | PENDING | Final immutable-preview run required. |
+| Homepage hero CTA | PENDING | Gate targets the unique visible `Bring an Opportunity` link inside `[data-hv="arrival"]`; final immutable-preview run required. |
+| Opportunity intake validation | PENDING | Final immutable-preview run required. |
+| Strategy Lab primary interaction | PENDING | Final immutable-preview run required. |
+| MarketFlow access request path | PENDING | Final immutable-preview run must cover anonymous hold, canonical intake, and reviewed-access boundaries. |
+| Peggy open, close, and approved handoff | PENDING | Final immutable-preview run must include the 390px cookie/Peggy geometry. |
+| Contact form validation | PENDING | Final immutable-preview run required. |
+| Cookie consent | PENDING | Final immutable-preview run required. |
+| Keyboard focus order | PENDING | Final immutable-preview run required. |
+| Branded 404 recovery | PENDING | Final immutable-preview run required. |
 
 ## Confirmed Findings
 
@@ -83,25 +88,33 @@ Task 2 records `PASS`, `P0`, `P1`, or `P2` for every cell after a current-run ca
 | P1 | `/how-we-operate` | Inactive rail opacity reduced names and numbers below AA. | FIXED in `client/src/pegasus/_group.css`; all six viewport/theme combinations pass. |
 | P1 | `/peggy` | Peggy labels, START display text, and door kickers failed contrast in one or both themes. | FIXED in `client/src/pegasus/pages.tsx`, `client/src/pegasus/blocks.tsx`, and `client/src/pegasus/_group.css`; all six combinations pass. |
 | P1 | `/privacy`, `/terms`, `/disclosures` | Legal labels and inline contact links failed light-theme contrast or relied on color alone. | FIXED in the three legal page files; all eighteen route/viewport/theme combinations pass. |
+| P1 | Public Strategy Library | Legacy fixture articles and read APIs contradicted the reviewed Strategy Lab product boundary. | FIXED: public aliases redirect to `/strategy-lab`, public read APIs return 410, and client/SEO/navigation/Peggy ownership is retired. |
+| P1 | Mobile Peggy plus cookie consent | The cookie-visible mobile rule hid Peggy instead of keeping both controls usable. | FIXED with bounded `100dvh` layout and focused mobile regression coverage. |
+| P1 | `/marketflow/deals` | Anonymous and ordinary self-provisioned users could reach operator chrome or reviewed inventory through parallel read/write aliases. | FIXED with one governed reviewed-access predicate, global alias guards, mixed-surface filtering, participant/owner preservation, and self-offer rejection. |
+| P1 | Strategy Lab and Peggy storage disclosures | Runtime used undisclosed browser storage and legacy fingerprint-derived recovery while public privacy copy described cookies inaccurately. | FIXED: random claim ID remains local-only, run count is session-only, legacy fingerprint/cookies are removed, and privacy/consent copy discloses drafts, Peggy continuity, and configured AI processing. |
+| P1 | Rendered launch gate | The prior gate missed `/marketflow/deals`, mobile Peggy/cookie geometry, the actual homepage hero CTA, and blocked outbound failures. | FIXED in the checked-in gate contract: 18 routes, exact hero CTA, exact-origin HTTP/WS isolation, structured health evidence, and 12 journeys. Final execution is pending GitHub CI. |
 
 ## Automated Release Gate
 
 | Gate | Exact commit | Result |
 | --- | --- | --- |
-| Node 22 | Final candidate tree | Node `22.23.2` — PASS. |
-| Production dependency audit | Final candidate tree | Exit 0; no high/critical production advisory. Five moderate transitive UUID buffer advisories remain in the Google Cloud Storage chain. |
-| Launch environment example contract | Final candidate tree | All 10 required production variables are documented — PASS. |
-| TypeScript | Final candidate tree | Exit 0 with no diagnostics — PASS. |
-| Vitest | Final candidate tree | 103 files / 1,168 tests, zero failures — PASS. |
-| Production build | Final candidate tree | Vite client and Express server bundles build — PASS. |
-| Bundle budget | Final candidate tree | Entry 169,536 B raw / 53,126 B gzip; initial 431,410 B raw / 126,813 B gzip — PASS. |
-| Rendered accessibility and journeys | Final candidate tree | 102 route/viewport/theme checks and 12 interaction journeys — PASS. |
-| Diff and secret hygiene | Final candidate tree | Whitespace and committed-secret scans pass; final path review recorded before publication. |
+| Node 22 | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Node `22.23.2` — PASS. |
+| Clean lockfile install | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | `npm ci` installed 725 packages; `package-lock.json` unchanged — PASS. |
+| Production dependency audit | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Exit 0; no high/critical production advisory. Five moderate transitive UUID buffer advisories remain in the Google Cloud Storage chain. |
+| Launch environment example contract | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | All 10 required production variables are documented — PASS. |
+| TypeScript | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Exit 0 with no diagnostics — PASS. |
+| Vitest | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | 110 files / 1,246 tests, zero failures — PASS. |
+| Production build | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Vite built 3,821 modules and the Express server bundle through the sandbox-safe `node --import tsx script/build.ts` entry — PASS. GitHub CI will run the normal `npm run build` command. |
+| Bundle budget | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Entry 169,298 B raw / 53,036 B gzip; initial 431,172 B raw / 126,721 B gzip — PASS. |
+| Rendered accessibility and journeys | Final published commit | Checked-in gate defines 108 route/viewport/theme checks and 12 interaction journeys. Exact-final execution is PENDING GitHub CI. |
+| Diff and secret hygiene | Documentation-only candidate headed by `d7bdfe0` | `git diff --check` passes; worktree was clean before this final ledger amendment; the only assignment-shaped secret scan match is the documented placeholder in `SUPABASE_SETUP.md` — PASS. |
 
 ## External Staging Gate
 
 | Gate | Result | Evidence or blocker |
 | --- | --- | --- |
+| Immutable static preview | PENDING | Publish the exact built frontend as a noindex, non-production preview with `/api*` returning explicit 503 JSON and a commit manifest. |
+| Cloud-browser visual QA | PENDING | Run the 18-route 1440/768/390 matrix and 12 high-value interactions against the immutable preview. |
 | Non-production Render service | BLOCKED | No connected Render service, connector, or credential exists for this repository. |
 | Live Supabase authorization inventory | BLOCKED | Connector sees the ApolloDNR organization but zero projects; project `knfmdyufodbnqsgkzhqw` returns permission denied. |
 | `/api/ready` | BLOCKED | Requires the isolated Render service and protected environment. |
@@ -117,4 +130,4 @@ None recorded.
 
 ## Current Blocker
 
-Local product remediation is complete. Task 6 cannot begin until the Supabase connection can access project `knfmdyufodbnqsgkzhqw` and a non-production Render service for this repository is connected or provisioned with its protected environment variables. Production, `main`, and DNS remain untouched.
+There is no known local code or security blocker to publishing the final review candidate. The remaining local/review work is: commit this evidence refresh, fast-forward PR #25, require exact-head GitHub CI, publish the immutable non-production preview, and complete cloud-browser QA. Full backend staging proof remains blocked until the Supabase connection can access project `knfmdyufodbnqsgkzhqw` and a non-production Render service is connected or provisioned with protected environment variables. Production, `main`, and DNS remain untouched.

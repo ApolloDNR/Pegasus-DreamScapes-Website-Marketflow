@@ -16,7 +16,7 @@ export default function Disclosures() {
   useSEO({
     title: "Disclosures",
     description:
-      "Disclosures for Pegasus DreamScapes Corp. Not an offer to buy or sell securities. No guarantee of returns or principal protection. Educational content only.",
+      "Disclosures for Pegasus Dreamscapes Corp. Not an offer to buy or sell securities. No guarantee of returns or principal protection. Educational content only.",
     image: "/og/default.png",
   });
 
@@ -44,7 +44,7 @@ export default function Disclosures() {
             </span>
           </h1>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
-            Pegasus DreamScapes Corp. is a strategy-first real estate operating company. This page explains how we present our work, our limitations, and the rules of engagement for anything you read, calculate, or submit through this site.
+            Pegasus Dreamscapes Corp. is a strategy-first real estate operating company. This page explains how we present our work, our limitations, and the rules of engagement for anything you read, calculate, or submit through this site.
           </p>
         </div>
       </section>
@@ -102,7 +102,7 @@ export default function Disclosures() {
                 Submitting a property through the Strategy Review intake or through Peggy is a request for a structural read of the situation. Every submission gets a serious review. Not every submission gets an offer. When the right path is a referral, listing, or partner introduction, we will say so plainly.
               </p>
               <p>
-                Pegasus DreamScapes operates across acquisition, joint venture, creative-finance, listing, and referral lanes. The lane that fits the property is the lane we route it to. We do not guarantee timing, price, or outcome on any submission.
+                Pegasus Dreamscapes operates across acquisition, joint venture, creative-finance, listing, and referral lanes. The lane that fits the property is the lane we route it to. We do not guarantee timing, price, or outcome on any submission.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -111,12 +111,12 @@ export default function Disclosures() {
             <DisclosureBlock
               idx={2}
               icon={BookOpen}
-              kicker="Strategy Library and Calculators"
+              kicker="Strategy Lab and Educational Materials"
               title="Educational content. Not advice."
               testId="disclosure-education"
             >
               <p>
-                The Strategy Library, calculators, articles, and worked examples on this site are educational. They are not legal, tax, accounting, or investment advice for your specific situation. Numbers entered into the calculators are illustrative and depend entirely on the inputs you provide.
+                Strategy Lab, calculators, articles, and worked examples on this site are educational. They are not legal, tax, accounting, or investment advice for your specific situation. Numbers entered into the calculators are illustrative and depend entirely on the inputs you provide.
               </p>
               <p>
                 Before acting on anything you read, model, or calculate here, consult licensed professionals (real estate attorney, CPA, lender, broker) who know your specific facts and jurisdiction.
@@ -187,7 +187,7 @@ export default function Disclosures() {
               testId="disclosure-fairhousing"
             >
               <p>
-                Pegasus DreamScapes Corp. operates in compliance with the federal Fair Housing Act and applicable state fair-housing statutes. We do not discriminate on the basis of race, color, religion, sex, national origin, familial status, disability, or any other protected class.
+                Pegasus Dreamscapes Corp. operates in compliance with the federal Fair Housing Act and applicable state fair-housing statutes. We do not discriminate on the basis of race, color, religion, sex, national origin, familial status, disability, or any other protected class.
               </p>
             </DisclosureBlock>
           </ScrollReveal>

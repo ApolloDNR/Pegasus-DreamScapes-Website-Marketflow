@@ -208,7 +208,7 @@ export function getQuickPrompts(page?: string, labAnalysis?: PeggyContextData['l
     { icon: GitBranch, label: "I have a deal or JV idea", prompt: "I have a deal or JV idea to route.", context: "router", href: "/sell" },
     { icon: DollarSign, label: "I want to discuss capital", prompt: "I want to discuss a private capital or partnership conversation.", context: "router", href: "/invest" },
     { icon: Hammer, label: "ADU / development", prompt: "I want to explore ADU or development potential.", context: "router", href: "/sell" },
-    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies. Point me to the Strategy Library.", context: "router", href: "/resources" },
+    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies. Open the Strategy Lab.", context: "router", href: "/strategy-lab" },
     { icon: Network, label: "Vendor or operator", prompt: "I'm a vendor or operator interested in the Pegasus network. What's the right way in?", context: "router", href: "/vendor-network" },
   ];
 

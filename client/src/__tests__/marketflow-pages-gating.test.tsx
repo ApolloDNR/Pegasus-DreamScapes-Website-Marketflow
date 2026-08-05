@@ -16,6 +16,9 @@ type AuthRole =
   | "investor"
   | "wholesaler"
   | "dreamscaper"
+  | "badgedInvestor"
+  | "pegasusWholesaler"
+  | "staff"
   | "admin";
 
 interface AuthState {
@@ -90,6 +93,43 @@ function authFor(role: AuthRole): AuthState {
         isAuthenticated: true,
         userRole: "dreamscaper",
         isDreamscaper: true,
+      };
+    case "badgedInvestor":
+      return {
+        ...baseAuth,
+        user: { id: "u-badged", email: "badged@example.com" },
+        profile: {
+          primary_role: "investor",
+          is_pegasus_badged: true,
+        },
+        isAuthenticated: true,
+        userRole: "investor",
+        isInvestor: true,
+        isPegasus: true,
+      };
+    case "pegasusWholesaler":
+      return {
+        ...baseAuth,
+        user: { id: "u-pw", email: "operator@example.com" },
+        profile: {
+          primary_role: "pegasus_wholesaler",
+          is_pegasus_badged: true,
+        },
+        isAuthenticated: true,
+        userRole: "pegasus_wholesaler",
+        isWholesaler: true,
+        isPegasus: true,
+      };
+    case "staff":
+      return {
+        ...baseAuth,
+        user: { id: "u-staff", email: "staff@example.com" },
+        profile: {
+          primary_role: "project_manager",
+          is_pegasus_badged: false,
+        },
+        isAuthenticated: true,
+        userRole: "project_manager",
       };
     case "admin":
       return {
@@ -511,6 +551,10 @@ describe("marketflow-deals page gating", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("button-marketflow-request-access")).toBeInTheDocument();
     expect(screen.getByTestId("button-marketflow-submit-deal")).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-submit-deal").closest("a")).toHaveAttribute(
+      "href",
+      "/bring-an-opportunity?intent=deal-jv",
+    );
     expect(screen.queryByTestId("text-deals-title")).toBeNull();
     expect(screen.queryByTestId("button-exit-guest")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
@@ -530,13 +574,35 @@ describe("marketflow-deals page gating", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("button-exit-guest")).toBeInTheDocument();
     expect(screen.getByTestId("button-marketflow-request-access")).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-submit-deal").closest("a")).toHaveAttribute(
+      "href",
+      "/bring-an-opportunity?intent=deal-jv",
+    );
     expect(screen.queryByTestId("text-deals-title")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   }, 10000);
 
-  it("investors see deals but DO NOT see the wholesaler-only JV quick action", async () => {
-    setAuthState("investor");
+  it.each(["investor", "wholesaler", "dreamscaper"] as const)(
+    "ordinary self-provisioned %s users cannot render live inventory",
+    async (role) => {
+      setAuthState(role);
+      const { default: MarketflowDeals } = await import(
+        "@/pages/marketflow-deals"
+      );
+
+      renderWithProviders(<MarketflowDeals />);
+
+      expect(
+        screen.getByText(/reviewed opportunities are not shown as sample inventory/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId("text-deals-title")).toBeNull();
+      expect(screen.queryAllByTestId(/^button-accept-terms-/).length).toBe(0);
+    },
+  );
+
+  it("Pegasus-badged investors see reviewed deals without wholesaler-only JV actions", async () => {
+    setAuthState("badgedInvestor");
     const { default: MarketflowDeals } = await import(
       "@/pages/marketflow-deals"
     );
@@ -544,6 +610,10 @@ describe("marketflow-deals page gating", () => {
     renderWithProviders(<MarketflowDeals />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(screen.getByTestId("button-submit-deal").closest("a")).toHaveAttribute(
+      "href",
+      "/marketflow/submit",
+    );
     // Authenticated users can see reviewed API-backed deals.
     expect(
       screen.getAllByTestId(/^button-accept-terms-/).length,
@@ -552,8 +622,8 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("dreamscapers see deals but DO NOT see the wholesaler-only JV quick action", async () => {
-    setAuthState("dreamscaper");
+  it("Pegasus-prefixed operators see reviewed deals and their role-gated JV action", async () => {
+    setAuthState("pegasusWholesaler");
     const { default: MarketflowDeals } = await import(
       "@/pages/marketflow-deals"
     );
@@ -564,26 +634,22 @@ describe("marketflow-deals page gating", () => {
     expect(
       screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
-    // Dreamscapers are not wholesalers, so JV quick action stays hidden.
-    expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
-  });
-
-  it("wholesalers see the role-gated JV quick action on JV-allowed deals", async () => {
-    setAuthState("wholesaler");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
-
-    renderWithProviders(<MarketflowDeals />);
-
-    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
-    expect(
-      screen.getAllByTestId(/^button-accept-terms-/).length,
-    ).toBeGreaterThan(0);
-    // Critical gate: showJVRequest is true for wholesalers, so on the
-    // reviewed JV-allowed deal the quick-jv-* surface renders.
     expect(
       screen.getAllByTestId(/^quick-jv-/).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("staff identities see reviewed deals", async () => {
+    setAuthState("staff");
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(
+      screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
   });
 

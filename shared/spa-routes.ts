@@ -125,7 +125,6 @@ export const SPA_EXACT_PATHS = new Set<string>([
 
 export const SPA_PATTERN_PATHS: readonly RegExp[] = [
   /^\/projects\/[^/]+$/,
-  /^\/library\/[^/]+$/,
   /^\/snapshot\/(?:calc|property)\/[^/]+$/,
   /^\/snapshot\/[^/]+$/,
   /^\/dealflow\/project\/[^/]+$/,

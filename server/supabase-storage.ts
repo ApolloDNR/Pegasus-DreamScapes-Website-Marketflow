@@ -179,7 +179,13 @@ export interface SupabaseBuyerOffer {
 export interface SupabaseSavedItem {
   id: string;
   user_id: string;
-  item_type: 'wholesale_deal' | 'capital_project' | 'listing' | 'article';
+  item_type:
+    | 'wholesale_deal'
+    | 'capital_project'
+    | 'listing'
+    | 'retail'
+    | 'retail_listing'
+    | 'article';
   item_id: string;
   created_at: string;
 }

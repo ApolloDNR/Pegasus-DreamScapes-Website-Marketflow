@@ -321,7 +321,6 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/submit-property.tsx",
   "client/src/pages/capital.tsx",
   "client/src/pages/connect.tsx",
-  "client/src/pages/library.tsx",
   "client/src/pages/projects.tsx",
   "client/src/pages/project-nelson-dr.tsx",
   "client/src/pages/vendor-network.tsx",
@@ -516,7 +515,6 @@ import AboutPage from "@/pages/about";
 import DevelopmentPage from "@/pages/development";
 import SubmitPropertyPage from "@/pages/submit-property";
 import CapitalPage from "@/pages/capital";
-import LibraryPage from "@/pages/library";
 import ProjectsPage from "@/pages/projects";
 import NelsonDrPage from "@/pages/project-nelson-dr";
 import VendorNetworkPage from "@/pages/vendor-network";
@@ -552,7 +550,6 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
   { path: "/capital", Page: CapitalPage },
   { path: "/connect", Page: ConnectPage },
-  { path: "/library", Page: LibraryPage },
   { path: "/projects", Page: ProjectsPage },
   { path: "/projects/nelson-dr", Page: NelsonDrPage },
   { path: "/vendor-network", Page: VendorNetworkPage },

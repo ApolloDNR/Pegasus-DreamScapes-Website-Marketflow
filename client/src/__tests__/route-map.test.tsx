@@ -77,7 +77,6 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/marketflow/access",
     "/capital",
     "/connect",
-    "/library",
     "/vendor-network",
     "/contact",
     "/disclosures",
@@ -124,6 +123,8 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/capital-raising",
     "/education",
     "/calculators",
+    "/library",
+    "/strategy-library",
   ];
 
   it("registers every canonical public route in App.tsx", () => {

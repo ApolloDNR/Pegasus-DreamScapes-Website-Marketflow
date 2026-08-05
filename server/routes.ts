@@ -69,6 +69,7 @@ import {
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerReadinessRoute } from "./readiness";
+import { registerPublicLibraryRetirementRoutes } from "./public-library-retirement";
 import {
   SITE_URL,
   sitemapEntries,
@@ -89,6 +90,11 @@ import {
   canAccessMarketflowOffer,
   filterMarketflowOffersForUser,
 } from "./marketflow-access";
+import {
+  createRequireMarketflowInventoryAccess,
+  createResolveMarketflowInventoryAccess,
+  isReviewedMarketflowInventoryType,
+} from "./marketflow-inventory-authorization";
 import {
   isMarketflowNegotiationBoundToAuthoritativeDeal,
   isMarketflowOfferConsistentWithNegotiation,
@@ -227,6 +233,38 @@ const hasMarketflowStaffAccess = async (req: any, userId: string) => {
   return storage.hasAnyStaffRole(userId);
 };
 
+const marketflowInventoryAccessDependencies = {
+  getUserProfile,
+  getUserRoles: (userId: string) => storage.getUserRoles(userId),
+  adminEmails: ADMIN_EMAILS,
+};
+const resolveMarketflowInventoryAccess =
+  createResolveMarketflowInventoryAccess(
+    marketflowInventoryAccessDependencies,
+  );
+const requireMarketflowInventoryAccess =
+  createRequireMarketflowInventoryAccess(
+    marketflowInventoryAccessDependencies,
+  );
+const loadMarketflowInventoryAccessContext = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.locals.canAccessReviewedMarketflowInventory =
+      await resolveMarketflowInventoryAccess(req);
+  } catch (error) {
+    console.error("Unable to resolve optional MarketFlow inventory access:", error);
+    res.locals.canAccessReviewedMarketflowInventory = false;
+  }
+  next();
+};
+
+const canAccessMarketflowItemType = (res: Response, rawType: unknown) =>
+  !isReviewedMarketflowInventoryType(rawType) ||
+  res.locals.canAccessReviewedMarketflowInventory === true;
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -247,6 +285,8 @@ export async function registerRoutes(
   app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "ok" });
   });
+
+  registerPublicLibraryRetirementRoutes(app);
 
   
   // Setup Replit Auth (legacy - for session-based auth)
@@ -305,7 +345,7 @@ export async function registerRoutes(
     ['/submit', '/bring-an-opportunity'],
     ['/wholesale', '/bring-an-opportunity?intent=deal-jv'],
     ['/services', '/how-we-operate'],
-    ['/resources', '/library'],
+    ['/resources', '/strategy-lab'],
     ['/invest', '/capital'],
     ['/partner', '/deal-partners'],
     // v5.1 spine renames — permanent forwards for the old canonical URLs.
@@ -321,20 +361,6 @@ export async function registerRoutes(
         : '';
       res.redirect(301, appendRedirectSearch(to, incomingSearch));
     });
-  }
-
-  // ─── Website Spec v4 (Re-skin) residual demotions ─────────────────────
-  // The v4 re-skin restored the audience lanes, Strategy Lab, MarketFlow,
-  // Peggy, Represent With Apollo, and Deal Strategy to the live public
-  // surface, so they are no longer demoted. Only /library remains out
-  // of the v4 launch and 302 (temporary) to the home page. Exact-match only,
-  // so live subpaths (e.g. /library/:slug) are not caught. Kept separate from
-  // the permanent 301 LEGACY_REDIRECTS above.
-  const V3_DEMOTION_REDIRECTS: Array<[string, string]> = [
-    ['/library', '/'],
-  ];
-  for (const [from, to] of V3_DEMOTION_REDIRECTS) {
-    app.get(from, (_req, res) => res.redirect(302, to));
   }
 
   // The classic calculator suite was folded into the unified Strategy Lab.
@@ -364,7 +390,6 @@ export async function registerRoutes(
   // it 302-redirects to /submit via V3_DEMOTION_REDIRECTS above, so it must
   // not be 410'd here either.
   const GONE_ROUTES = [
-    '/education',
     '/systems',
     '/dreamspace',
     '/capital-raising',
@@ -756,9 +781,13 @@ export async function registerRoutes(
 
   const canInitiateLegacyDealInteraction = (
     access: LegacyDealAccess,
+    res: Response,
   ): boolean =>
     !access.isOwner &&
-    (access.isParticipant || access.isStaff || isPublicLegacyDeal(access));
+    (access.isParticipant ||
+      access.isStaff ||
+      (res.locals.canAccessReviewedMarketflowInventory === true &&
+        isPublicLegacyDeal(access)));
 
   const getPublicMarketplaceItem = async (
     rawType: unknown,
@@ -800,7 +829,7 @@ export async function registerRoutes(
   };
 
   // --- Saved Items ---
-  app.get('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+  app.get('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -809,14 +838,20 @@ export async function registerRoutes(
       const { type } = req.query;
       const { storage, toCamelCase } = await getSupabaseStorage();
       const items = await storage.getSavedItems(userId, type as any);
-      res.json(toCamelCase(items));
+      const visibleItems = items.filter((item: any) =>
+        canAccessMarketflowItemType(
+          res,
+          item.item_type ?? item.itemType ?? type,
+        ),
+      );
+      res.json(toCamelCase(visibleItems));
     } catch (error) {
       console.error('Error fetching saved items:', error);
       res.status(500).json({ message: 'Failed to fetch saved items' });
     }
   });
 
-  app.post('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+  app.post('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -826,6 +861,9 @@ export async function registerRoutes(
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      if (!canAccessMarketflowItemType(res, itemType)) {
+        return res.status(404).json({ message: 'Item not found' });
       }
       
       const { storage, toCamelCase } = await getSupabaseStorage();
@@ -837,7 +875,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+  app.delete('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -847,6 +885,9 @@ export async function registerRoutes(
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      if (!canAccessMarketflowItemType(res, itemType)) {
+        return res.status(404).json({ message: 'Item not found' });
       }
       
       const { storage } = await getSupabaseStorage();
@@ -858,7 +899,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/saved-items/check', isHybridAuthenticated, async (req: any, res) => {
+  app.get('/api/supabase/saved-items/check', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -868,6 +909,9 @@ export async function registerRoutes(
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      if (!canAccessMarketflowItemType(res, itemType)) {
+        return res.status(404).json({ message: 'Item not found' });
       }
       
       const { storage } = await getSupabaseStorage();
@@ -900,7 +944,7 @@ export async function registerRoutes(
   });
 
   // --- Capital Projects (Supabase) ---
-  app.get('/api/supabase/capital-projects', async (req: any, res) => {
+  app.get('/api/supabase/capital-projects', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const { storage } = await getSupabaseStorage();
       const projects = await storage.getPublicCapitalProjects();
@@ -930,7 +974,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/capital-projects/:id', async (req, res) => {
+  app.get('/api/supabase/capital-projects/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const { id } = req.params;
       const { storage } = await getSupabaseStorage();
@@ -1065,11 +1109,14 @@ export async function registerRoutes(
   });
 
   // --- Capital Commitments (Supabase) ---
-  app.post('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
+  app.post('/api/supabase/capital-commitments', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const identity = resolveSupabaseMarketplaceIdentity(req);
       if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
+      }
+      if (res.locals.canAccessReviewedMarketflowInventory !== true) {
+        return res.status(404).json({ message: 'Project not found' });
       }
       const { projectId, structurePreference, notes } = req.body;
       const amount = Number(req.body?.amount);
@@ -1179,7 +1226,7 @@ export async function registerRoutes(
   });
 
   // --- Wholesale Deals (Supabase) ---
-  app.get('/api/supabase/wholesale-deals', async (req: any, res) => {
+  app.get('/api/supabase/wholesale-deals', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const { storage } = await getSupabaseStorage();
       const deals = await storage.getPublicWholesaleDeals();
@@ -1209,7 +1256,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/wholesale-deals/:id', async (req, res) => {
+  app.get('/api/supabase/wholesale-deals/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const { id } = req.params;
       const { storage } = await getSupabaseStorage();
@@ -1396,7 +1443,7 @@ export async function registerRoutes(
   });
 
   // --- Listings (Supabase) ---
-  app.get('/api/supabase/listings', async (req: any, res) => {
+  app.get('/api/supabase/listings', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const { storage } = await getSupabaseStorage();
       const listings = await storage.getPublicListings();
@@ -1411,7 +1458,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/listings/:id', async (req, res) => {
+  app.get('/api/supabase/listings/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const { id } = req.params;
       const { storage } = await getSupabaseStorage();
@@ -1691,11 +1738,14 @@ export async function registerRoutes(
   });
 
   // --- Buyer Offers (Supabase) ---
-  app.post('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
+  app.post('/api/supabase/buyer-offers', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const identity = resolveSupabaseMarketplaceIdentity(req);
       if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
+      }
+      if (res.locals.canAccessReviewedMarketflowInventory !== true) {
+        return res.status(404).json({ message: 'Listing not found' });
       }
       const { listingId, financingType } = req.body;
       const offerAmount = Number(req.body?.offerAmount);
@@ -2089,23 +2139,30 @@ export async function registerRoutes(
   });
 
   // Saved Properties routes (for buyers)
-  app.get('/api/portal/buyer/saved-properties', isAuthenticated, async (req: any, res) => {
+  app.get('/api/portal/buyer/saved-properties', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const saved = await storage.getSavedProperties(userId);
-      return res.json(saved);
+      return res.json(
+        saved.filter((entry) =>
+          canAccessMarketflowItemType(res, entry.propertyType),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching saved properties:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.post('/api/portal/buyer/saved-properties', isAuthenticated, async (req: any, res) => {
+  app.post('/api/portal/buyer/saved-properties', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const result = insertSavedPropertySchema.safeParse({ ...req.body, userId });
       if (!result.success) {
         return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      if (!canAccessMarketflowItemType(res, result.data.propertyType)) {
+        return res.status(404).json({ message: "Property not found" });
       }
       const publicProperty = await getPublicMarketplaceItem(
         result.data.propertyType,
@@ -2153,12 +2210,23 @@ export async function registerRoutes(
     }
   });
 
-  app.post('/api/portal/buyer/offers', isAuthenticated, async (req: any, res) => {
+  app.post('/api/portal/buyer/offers', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const result = insertBuyerOfferSchema.safeParse({ ...req.body, userId });
       if (!result.success) {
         return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      if (isReviewedMarketflowInventoryType(result.data.propertyType)) {
+        const access = await resolveLegacyDealAccess(
+          req,
+          userId,
+          result.data.propertyType,
+          result.data.propertyId,
+        );
+        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+          return res.status(404).json({ message: "Property not found" });
+        }
       }
       const publicProperty = await getPublicMarketplaceItem(
         result.data.propertyType,
@@ -2348,28 +2416,6 @@ export async function registerRoutes(
     }
   });
 
-  // Articles/Resources Routes (public)
-  app.get("/api/articles", async (req, res) => {
-    try {
-      const articlesList = await storage.getPublishedArticles();
-      return res.json(articlesList);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Strategy Library curated articles (public, published + featuredInLibrary)
-  app.get("/api/articles/library", async (_req, res) => {
-    try {
-      const list = await storage.getLibraryArticles();
-      return res.json(list);
-    } catch (error) {
-      console.error("Error fetching library articles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
   // Admin: full Strategy Library management
   app.get("/api/hq/articles", isAuthenticated, requireStaffRole, async (_req, res) => {
     try {
@@ -2439,28 +2485,6 @@ export async function registerRoutes(
       return res.json({ success: true });
     } catch (error) {
       console.error("Error deleting article:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Education page: Beginner Path (public read)
-  app.get("/api/library/beginner-path", async (_req, res) => {
-    try {
-      const steps = await storage.getLibraryBeginnerSteps();
-      return res.json(steps);
-    } catch (error) {
-      console.error("Error fetching beginner path:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Education page: Glossary (public read)
-  app.get("/api/library/glossary", async (_req, res) => {
-    try {
-      const terms = await storage.getLibraryGlossaryTerms();
-      return res.json(terms);
-    } catch (error) {
-      console.error("Error fetching glossary:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -2569,19 +2593,6 @@ export async function registerRoutes(
       return res.json({ success: true });
     } catch (error) {
       console.error("Error deleting glossary term:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/articles/:slug", async (req, res) => {
-    try {
-      const article = await storage.getArticleBySlug(req.params.slug);
-      if (!article || !article.published) {
-        return res.status(404).json({ message: "Article not found" });
-      }
-      return res.json(article);
-    } catch (error) {
-      console.error("Error fetching article:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -2765,8 +2776,9 @@ export async function registerRoutes(
     }
   });
 
-  // Wholesale Deals Routes (public - only available deals)
-  app.get("/api/wholesale-deals", async (req, res) => {
+  // Reviewed MarketFlow inventory. Public marketing and intake routes remain
+  // separate; authentication alone does not grant private-beta data access.
+  app.get("/api/wholesale-deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const deals = await storage.getAvailableWholesaleDeals();
       return res.json(
@@ -2778,7 +2790,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/wholesale-deals-active", async (req, res) => {
+  app.get("/api/wholesale-deals-active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const deals = await storage.getAvailableWholesaleDeals();
       return res.json(
@@ -2790,7 +2802,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/wholesale-deals/:id", async (req, res) => {
+  app.get("/api/wholesale-deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const deal = await storage.getWholesaleDeal(parseInt(req.params.id));
       if (!deal || !isPublicWholesaleDeal(deal)) {
@@ -3611,7 +3623,8 @@ export async function registerRoutes(
 
   // ============ RETAIL LISTINGS ROUTES ============
 
-  // Public Routes - Active retail listings for buyers
+  // Public marketing listings. These are distinct from the private legacy
+  // /api/listings MarketFlow inventory below.
   app.get("/api/retail-listings", async (req, res) => {
     try {
       const listings = await storage.getActiveRetailListings();
@@ -3653,7 +3666,7 @@ export async function registerRoutes(
   });
 
   // LISTING dealType endpoints
-  app.get("/api/listings", async (req, res) => {
+  app.get("/api/listings", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const activeListings = await storage.getActiveListings();
       return res.json(
@@ -3665,7 +3678,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/listings/:id", async (req, res) => {
+  app.get("/api/listings/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const listing = await storage.getListing(parseInt(req.params.id));
       if (!listing || !isPublicListing(listing)) {
@@ -3751,7 +3764,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/listing-inquiries", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/listing-inquiries", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const { listingId, inquiryType, message, email, fullName, phone } = req.body;
       const userId = getAuthUserId(req);
@@ -3774,7 +3787,7 @@ export async function registerRoutes(
         "listing",
         numericListingId,
       );
-      if (!access || !canInitiateLegacyDealInteraction(access)) {
+      if (!access || !canInitiateLegacyDealInteraction(access, res)) {
         return res.status(404).json({ message: "Listing not found" });
       }
 
@@ -4309,7 +4322,7 @@ export async function registerRoutes(
   // =====================================================
 
   // Save/like/pass on a deal
-  app.post("/api/deals/action", isAuthenticated, async (req: any, res) => {
+  app.post("/api/deals/action", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { dealType, dealId, action } = req.body;
@@ -4319,6 +4332,9 @@ export async function registerRoutes(
       }
       if (!["save", "like", "pass"].includes(String(action))) {
         return res.status(400).json({ message: "Invalid action" });
+      }
+      if (!canAccessMarketflowItemType(res, dealType)) {
+        return res.status(404).json({ message: "Deal not found" });
       }
       const publicDeal = await getPublicMarketplaceItem(dealType, dealId);
       if (!publicDeal) {
@@ -4339,7 +4355,7 @@ export async function registerRoutes(
   });
 
   // Get user's saved deals
-  app.get("/api/deals/saved", isAuthenticated, async (req: any, res) => {
+  app.get("/api/deals/saved", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const savedDeals = await storage.getUserSavedDeals(userId);
@@ -4347,7 +4363,11 @@ export async function registerRoutes(
       // Enrich with deal details
       const enrichedDeals = (
         await Promise.all(
-          savedDeals.map(async (bookmark) => {
+          savedDeals
+            .filter((bookmark) =>
+              canAccessMarketflowItemType(res, bookmark.dealType),
+            )
+            .map(async (bookmark) => {
             const deal = await getPublicMarketplaceItem(
               bookmark.dealType,
               bookmark.dealId,
@@ -4365,7 +4385,7 @@ export async function registerRoutes(
   });
 
   // Get user's liked deals (matches)
-  app.get("/api/deals/liked", isAuthenticated, async (req: any, res) => {
+  app.get("/api/deals/liked", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const likedDeals = await storage.getUserLikedDeals(userId);
@@ -4373,7 +4393,11 @@ export async function registerRoutes(
       // Enrich with deal details
       const enrichedDeals = (
         await Promise.all(
-          likedDeals.map(async (bookmark) => {
+          likedDeals
+            .filter((bookmark) =>
+              canAccessMarketflowItemType(res, bookmark.dealType),
+            )
+            .map(async (bookmark) => {
             const deal = await getPublicMarketplaceItem(
               bookmark.dealType,
               bookmark.dealId,
@@ -4510,7 +4534,7 @@ export async function registerRoutes(
   // =====================================================
   
   // Get all capital projects
-  app.get("/api/capital-projects", async (req, res) => {
+  app.get("/api/capital-projects", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const projects = await storage.getCapitalProjects();
       return res.json(
@@ -4523,7 +4547,7 @@ export async function registerRoutes(
   });
 
   // Get active capital projects for investors
-  app.get("/api/capital-projects/active", async (req, res) => {
+  app.get("/api/capital-projects/active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const projects = await storage.getActiveCapitalProjects();
       return res.json(
@@ -4536,7 +4560,7 @@ export async function registerRoutes(
   });
 
   // Get single capital project
-  app.get("/api/capital-projects/:id", async (req, res) => {
+  app.get("/api/capital-projects/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const project = await storage.getCapitalProject(id);
@@ -4611,7 +4635,7 @@ export async function registerRoutes(
   // =====================================================
   
   // Get milestones for a capital project
-  app.get("/api/capital-projects/:projectId/milestones", async (req: any, res) => {
+  app.get("/api/capital-projects/:projectId/milestones", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const projectId = Number(req.params.projectId);
       const project = Number.isSafeInteger(projectId) && projectId > 0
@@ -4621,23 +4645,25 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Capital project not found" });
       }
 
-      if (!isPublicCapitalProject(project)) {
-        const userId = getAuthUserId(req);
-        if (!userId) {
-          return res.status(404).json({ message: "Capital project not found" });
-        }
-        const access = await resolveLegacyDealAccess(
-          req,
-          userId,
-          "capital_project",
-          projectId,
-        );
-        if (
-          !access ||
-          (!access.isOwner && !access.isParticipant && !access.isStaff)
-        ) {
-          return res.status(404).json({ message: "Capital project not found" });
-        }
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "capital_project",
+        projectId,
+      );
+      if (
+        !access ||
+        (!access.isOwner &&
+          !access.isParticipant &&
+          !access.isStaff &&
+          !(res.locals.canAccessReviewedMarketflowInventory === true &&
+            isPublicCapitalProject(project)))
+      ) {
+        return res.status(404).json({ message: "Capital project not found" });
       }
 
       const milestones = await storage.getProjectMilestones(projectId);
@@ -4825,7 +4851,7 @@ export async function registerRoutes(
       if (!offer) {
         return res.status(404).json({ message: "Investment offer not found" });
       }
-      
+
       // Get the project
       const project = await storage.getCapitalProject(offer.projectId);
       if (!project) {
@@ -4865,19 +4891,16 @@ export async function registerRoutes(
   });
   
   // Generate preview term sheet PDF (before confirming investment)
-  app.post("/api/capital-projects/:projectId/term-sheet-preview", isAuthenticated, async (req: any, res) => {
+  app.post("/api/capital-projects/:projectId/term-sheet-preview", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const projectId = Number(req.params.projectId);
       const { investmentAmount, structureType, role, equityPercent, profitSplit, interestRate, loanDuration, isAcceptingOperatorTerms } = req.body;
 
       if (!Number.isSafeInteger(projectId) || projectId <= 0) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      // Get the project
-      const project = await storage.getCapitalProject(projectId);
-      if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
 
@@ -4887,13 +4910,13 @@ export async function registerRoutes(
         "capital_project",
         projectId,
       );
-      if (
-        !access ||
-        (!access.isOwner &&
-          !access.isParticipant &&
-          !access.isStaff &&
-          !isPublicLegacyDeal(access))
-      ) {
+      if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Get the project
+      const project = await storage.getCapitalProject(projectId);
+      if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
       
@@ -7281,9 +7304,9 @@ export async function registerRoutes(
   });
 
   // Investor Dashboard Stats
-  app.get("/api/marketplace/investor/stats", async (req: any, res) => {
+  app.get("/api/marketplace/investor/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7291,13 +7314,16 @@ export async function registerRoutes(
       const investorProfile = await storage.getInvestorProfile(userId);
       const investmentOffers = await storage.getInvestmentOffersByInvestor(userId);
       const savedDeals = await storage.getUserSavedDeals(userId);
+      const visibleSavedDeals = savedDeals.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.dealType),
+      );
 
       const stats = {
         totalInvested: investmentOffers
           .filter(o => o.status === "accepted")
           .reduce((sum, o) => sum + (o.amountOffered || 0), 0),
         activeDeals: investmentOffers.filter(o => o.status === "accepted" && o.projectId).length,
-        savedDeals: savedDeals.length,
+        savedDeals: visibleSavedDeals.length,
         pendingOffers: investmentOffers.filter(o => o.status === "pending").length,
       };
 
@@ -7309,15 +7335,19 @@ export async function registerRoutes(
   });
 
   // Investor Saved/Bookmarked Deals
-  app.get("/api/marketplace/investor/saved", async (req: any, res) => {
+  app.get("/api/marketplace/investor/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const bookmarks = await storage.getUserSavedDeals(userId);
-      res.json(bookmarks);
+      res.json(
+        bookmarks.filter((entry) =>
+          canAccessMarketflowItemType(res, entry.dealType),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching investor saved deals:", error);
       res.status(500).json({ message: "Failed to fetch saved deals" });
@@ -7325,9 +7355,9 @@ export async function registerRoutes(
   });
 
   // Investor Commitments - Get investments with project details
-  app.get("/api/marketplace/investor/commitments", async (req: any, res) => {
+  app.get("/api/marketplace/investor/commitments", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7338,7 +7368,10 @@ export async function registerRoutes(
       const enrichedCommitments = await Promise.all(
         commitments.map(async (commitment) => {
           const project = await storage.getCapitalProject(commitment.projectId);
-          return { ...commitment, project };
+          return {
+            ...commitment,
+            project: project ? toPublicCapitalProject(project) : null,
+          };
         })
       );
       
@@ -7390,18 +7423,20 @@ export async function registerRoutes(
   });
 
   // Buyer Dashboard Stats
-  app.get("/api/marketplace/buyer/stats", async (req: any, res) => {
+  app.get("/api/marketplace/buyer/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const savedProperties = await storage.getSavedProperties(userId);
       const offers = await storage.getBuyerOffers(userId);
-
+      const visibleSavedProperties = savedProperties.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.propertyType),
+      );
       const stats = {
-        savedProperties: savedProperties.length,
+        savedProperties: visibleSavedProperties.length,
         pendingOffers: offers.filter(o => o.status === "pending").length,
         acceptedOffers: offers.filter(o => o.status === "accepted").length,
         totalPurchases: offers.filter(o => o.status === "closed").length,
@@ -7415,7 +7450,7 @@ export async function registerRoutes(
   });
 
   // Buyer Saved Properties
-  app.get("/api/marketplace/buyer/saved", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/marketplace/buyer/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -7425,7 +7460,11 @@ export async function registerRoutes(
       const savedProperties = await storage.getSavedProperties(userId);
       const enrichedProperties = (
         await Promise.all(
-          savedProperties.map(async (saved) => {
+          savedProperties
+            .filter((saved) =>
+              canAccessMarketflowItemType(res, saved.propertyType),
+            )
+            .map(async (saved) => {
             const property = await getPublicMarketplaceItem(
               saved.propertyType,
               saved.propertyId,
@@ -7480,7 +7519,7 @@ export async function registerRoutes(
   });
 
   // Submit a buyer offer
-  app.post("/api/marketplace/buyer/offers", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/marketplace/buyer/offers", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -7491,6 +7530,17 @@ export async function registerRoutes(
       
       if (!propertyType || !propertyId || !offerAmount || !fundingType) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (isReviewedMarketflowInventoryType(propertyType)) {
+        const access = await resolveLegacyDealAccess(
+          req,
+          userId,
+          propertyType,
+          propertyId,
+        );
+        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+          return res.status(404).json({ message: "Property not found" });
+        }
       }
       const publicProperty = await getPublicMarketplaceItem(
         propertyType,
@@ -7519,7 +7569,7 @@ export async function registerRoutes(
   });
 
   // Toggle save/unsave a property
-  app.post("/api/marketplace/buyer/save", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/marketplace/buyer/save", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -7530,6 +7580,9 @@ export async function registerRoutes(
       
       if (!propertyType || !propertyId) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (!canAccessMarketflowItemType(res, propertyType)) {
+        return res.status(404).json({ message: "Property not found" });
       }
       const publicProperty = await getPublicMarketplaceItem(
         propertyType,
@@ -7548,13 +7601,27 @@ export async function registerRoutes(
   });
 
   // Submit buyer inquiry (schedule showing, ask question)
-  app.post("/api/marketplace/buyer/inquiries", publicIntakeRateLimit, async (req: any, res) => {
+  app.post("/api/marketplace/buyer/inquiries", publicIntakeRateLimit, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       const { propertyType, propertyId, name, email, phone, message, requestType } = req.body;
 
       if (!propertyType || !propertyId || !name || !email || !requestType) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (isReviewedMarketflowInventoryType(propertyType)) {
+        if (!userId) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+        const access = await resolveLegacyDealAccess(
+          req,
+          userId,
+          propertyType,
+          propertyId,
+        );
+        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+          return res.status(404).json({ message: "Property not found" });
+        }
       }
       const publicProperty = await getPublicMarketplaceItem(
         propertyType,
@@ -8014,7 +8081,7 @@ export async function registerRoutes(
   });
 
   // Supabase Investor Stats
-  app.get("/api/supabase/marketplace/investor/stats", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/supabase/marketplace/investor/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -8031,6 +8098,9 @@ export async function registerRoutes(
       if (savedItems.length === 0 && isReplitAuthUser(req)) {
         savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
       }
+      const visibleSavedItems = savedItems.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.item_type),
+      );
 
       const stats = {
         totalInvested: commitments
@@ -8039,7 +8109,7 @@ export async function registerRoutes(
         activeDeals: commitments.filter(c => 
           c.status === "accepted" || c.status === "ACCEPTED" || c.status === "committed" || c.status === "Accepted"
         ).length,
-        savedDeals: savedItems.length,
+        savedDeals: visibleSavedItems.length,
         pendingOffers: commitments.filter(c => 
           c.status === "pending" || c.status === "PENDING" || c.status === "Pending"
         ).length,
@@ -8131,7 +8201,7 @@ export async function registerRoutes(
   });
 
   // Supabase Buyer Stats
-  app.get("/api/supabase/marketplace/buyer/stats", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/supabase/marketplace/buyer/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -8148,10 +8218,18 @@ export async function registerRoutes(
       if (savedItems.length === 0 && isReplitAuthUser(req)) {
         savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
       }
+      const visibleSavedItems = savedItems.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.item_type),
+      );
 
       const stats = {
-        savedProperties: savedItems.filter(s => 
-          s.item_type === "listing" || s.item_type === "wholesale_deal"
+        savedProperties: visibleSavedItems.filter((saved) =>
+          [
+            "listing",
+            "wholesale_deal",
+            "retail",
+            "retail_listing",
+          ].includes(saved.item_type)
         ).length,
         pendingOffers: offers.filter(o => o.status === "pending" || o.status === "PENDING" || o.status === "Pending").length,
         acceptedOffers: offers.filter(o => o.status === "accepted" || o.status === "ACCEPTED" || o.status === "Accepted").length,
@@ -8186,7 +8264,7 @@ export async function registerRoutes(
   });
 
   // Supabase Saved Items
-  app.get("/api/supabase/marketplace/saved", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/supabase/marketplace/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -8198,7 +8276,13 @@ export async function registerRoutes(
       if (savedItems.length === 0 && isReplitAuthUser(req)) {
         savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
       }
-      res.json(toCamelCase(savedItems));
+      res.json(
+        toCamelCase(
+          savedItems.filter((entry) =>
+            canAccessMarketflowItemType(res, entry.item_type),
+          ),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching saved items:", error);
       res.status(500).json({ message: "Failed to fetch saved items" });
@@ -8209,8 +8293,8 @@ export async function registerRoutes(
   // MARKETPLACE BROWSE API ENDPOINTS
   // ========================================
 
-  // Get all public/listed wholesale deals for browsing
-  app.get("/api/marketplace/deals", async (req: any, res) => {
+  // Get all reviewed/listed wholesale deals for approved browsing
+  app.get("/api/marketplace/deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const deals = await storage.getWholesaleDeals();
       
@@ -8289,7 +8373,7 @@ export async function registerRoutes(
   });
 
   // Get a single wholesale deal by ID
-  app.get("/api/marketplace/deals/:id", async (req: any, res) => {
+  app.get("/api/marketplace/deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const dealId = Number(req.params.id);
       if (isNaN(dealId)) {
@@ -8309,7 +8393,7 @@ export async function registerRoutes(
   });
 
   // Submit a JV request for a deal
-  app.post("/api/marketplace/jv-requests", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/marketplace/jv-requests", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -8322,9 +8406,16 @@ export async function registerRoutes(
       }
 
       const deal = await storage.getWholesaleDeal(dealId);
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "wholesale_deal",
+        dealId,
+      );
       if (
         !deal ||
-        !isPublicWholesaleDeal(deal) ||
+        !access ||
+        !canInitiateLegacyDealInteraction(access, res) ||
         !deal.submittedBy ||
         deal.submittedBy === userId
       ) {
@@ -8403,8 +8494,8 @@ export async function registerRoutes(
     }
   });
 
-  // Get all capital projects for browsing (public)
-  app.get("/api/marketplace/projects", async (req: any, res) => {
+  // Get all reviewed capital projects for approved browsing
+  app.get("/api/marketplace/projects", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const projects = await storage.getCapitalProjects();
       const users = await storage.getAllUsers();
@@ -8438,7 +8529,7 @@ export async function registerRoutes(
   });
 
   // Get a single capital project by ID
-  app.get("/api/marketplace/projects/:id", async (req: any, res) => {
+  app.get("/api/marketplace/projects/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const projectId = Number(req.params.id);
       if (isNaN(projectId)) {
@@ -8458,7 +8549,7 @@ export async function registerRoutes(
   });
 
   // Submit investment interest for a capital project
-  app.post("/api/marketplace/investment-interest", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/marketplace/investment-interest", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -8478,7 +8569,7 @@ export async function registerRoutes(
         "capital_project",
         Number(projectId),
       );
-      if (!project || !access || !canInitiateLegacyDealInteraction(access)) {
+      if (!project || !access || !canInitiateLegacyDealInteraction(access, res)) {
         return res.status(404).json({ message: "Project not found" });
       }
 
@@ -8949,7 +9040,7 @@ export async function registerRoutes(
   // =====================================================
 
   // Create a new offer (unified across all lanes)
-  app.post("/api/marketflow/offers", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/marketflow/offers", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -9007,7 +9098,8 @@ export async function registerRoutes(
         (!access.isOwner &&
           !access.isParticipant &&
           !access.isStaff &&
-          !isPublicLegacyDeal(access))
+          !(res.locals.canAccessReviewedMarketflowInventory === true &&
+            isPublicLegacyDeal(access)))
       ) {
         return res.status(404).json({ message: "Deal not found" });
       }

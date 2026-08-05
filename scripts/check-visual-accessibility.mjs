@@ -18,6 +18,7 @@ const routes = [
   '/investments',
   '/strategy-lab',
   '/marketflow',
+  '/marketflow/deals',
   '/bring-an-opportunity',
   '/work-with-apollo',
   '/connect',
@@ -36,6 +37,9 @@ const viewports = [
 ];
 
 const colorSchemes = ['dark', 'light'];
+const previewStubHeader = 'x-pegasus-preview-stub';
+const previewStubValue = 'backend-unavailable';
+const previewStubApiPaths = new Set(['/api/auth/user']);
 const interactionsOnly = process.env.A11Y_INTERACTIONS_ONLY === '1';
 const screenshotDir = process.env.A11Y_SCREENSHOT_DIR
   ? path.resolve(process.env.A11Y_SCREENSHOT_DIR)
@@ -61,8 +65,11 @@ const mimeTypes = {
   '.xml': 'application/xml; charset=utf-8',
 };
 
-function json(response, status, body) {
-  response.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
+function json(response, status, body, headers = {}) {
+  response.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    ...headers,
+  });
   response.end(JSON.stringify(body));
 }
 
@@ -78,7 +85,12 @@ const server = createServer(async (request, response) => {
     return;
   }
   if (pathname.startsWith('/api/')) {
-    json(response, 404, { message: 'Backend unavailable in rendered accessibility check' });
+    json(
+      response,
+      404,
+      { message: 'Backend unavailable in rendered accessibility check' },
+      { [previewStubHeader]: previewStubValue },
+    );
     return;
   }
 
@@ -148,6 +160,57 @@ const launchBrowser = () => chromium.launch({
   } : { args: ['--no-sandbox', '--disable-dev-shm-usage'] }),
 });
 
+function isAllowedBrowserUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    if (!['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)) return true;
+    if (url.protocol === 'http:' || url.protocol === 'https:') return url.origin === baseUrl;
+    const webSocketOrigin = `${url.protocol === 'wss:' ? 'https:' : 'http:'}//${url.host}`;
+    return webSocketOrigin === baseUrl;
+  } catch {
+    return false;
+  }
+}
+
+async function newGuardedContext(browser, options) {
+  const blockedEgress = [];
+  const context = await browser.newContext({
+    ...options,
+    serviceWorkers: 'block',
+  });
+  await context.route('**/*', async (route) => {
+    const request = route.request();
+    if (!isAllowedBrowserUrl(request.url())) {
+      const url = new URL(request.url());
+      blockedEgress.push({
+        protocol: url.protocol,
+        url: request.url(),
+        method: request.method(),
+        resourceType: request.resourceType(),
+        reason: 'outside exact rendered-preview origin',
+      });
+      await route.abort('blockedbyclient');
+      return;
+    }
+    await route.continue();
+  });
+  await context.routeWebSocket('**/*', async (webSocket) => {
+    if (!isAllowedBrowserUrl(webSocket.url())) {
+      const url = new URL(webSocket.url());
+      blockedEgress.push({
+        protocol: url.protocol,
+        url: webSocket.url(),
+        resourceType: 'websocket',
+        reason: 'outside exact rendered-preview origin',
+      });
+      await webSocket.close({ code: 1008, reason: 'Browser egress outside the preview origin is disabled' });
+      return;
+    }
+    webSocket.connectToServer();
+  });
+  return { context, blockedEgress };
+}
+
 const failures = [];
 const interactionFailures = [];
 
@@ -155,9 +218,82 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function isSameOriginAssetOrApi(request) {
+  const url = new URL(request.url());
+  if (url.origin !== baseUrl) return false;
+  if (url.pathname.startsWith('/api/')) return true;
+  return ['stylesheet', 'script', 'image', 'media', 'font', 'xhr', 'fetch', 'manifest']
+    .includes(request.resourceType());
+}
+
+function monitorPageHealth(page) {
+  const health = {
+    pageErrors: [],
+    consoleErrors: [],
+    requestFailures: [],
+    responseFailures: [],
+    previewStubUrls: new Set(),
+  };
+
+  page.on('pageerror', (error) => health.pageErrors.push(String(error)));
+  page.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    health.consoleErrors.push({
+      text: message.text(),
+      location: message.location(),
+    });
+  });
+  page.on('requestfailed', (request) => {
+    if (!isSameOriginAssetOrApi(request)) return;
+    health.requestFailures.push({
+      url: request.url(),
+      method: request.method(),
+      resourceType: request.resourceType(),
+      error: request.failure()?.errorText ?? 'unknown failure',
+    });
+  });
+  page.on('response', (response) => {
+    if (response.status() < 400 || !isSameOriginAssetOrApi(response.request())) return;
+    const url = new URL(response.url());
+    const isAllowedPreviewStub = previewStubApiPaths.has(url.pathname)
+      && response.status() === 404
+      && response.headers()[previewStubHeader] === previewStubValue;
+    if (isAllowedPreviewStub) {
+      health.previewStubUrls.add(response.url());
+      return;
+    }
+    health.responseFailures.push({
+      url: response.url(),
+      status: response.status(),
+      resourceType: response.request().resourceType(),
+    });
+  });
+
+  return health;
+}
+
+function browserHealthFailures(health, blockedEgress, blockedEgressStart) {
+  const consoleErrors = health.consoleErrors.filter(({ text, location }) => {
+    const isAllowedPreviewNoise = health.previewStubUrls.has(location.url)
+      && /^Failed to load resource:.*404/i.test(text);
+    return !isAllowedPreviewNoise;
+  });
+  return {
+    pageErrors: health.pageErrors,
+    consoleErrors,
+    requestFailures: health.requestFailures,
+    responseFailures: health.responseFailures,
+    blockedEgress: blockedEgress.slice(blockedEgressStart),
+  };
+}
+
+function hasBrowserHealthFailures(browserHealth) {
+  return Object.values(browserHealth).some((entries) => entries.length > 0);
+}
+
 async function runInteraction(name, options, check) {
   const browser = await launchBrowser();
-  const context = await browser.newContext({
+  const { context, blockedEgress } = await newGuardedContext(browser, {
     viewport: options.viewport ?? viewports[0][1],
     colorScheme: options.colorScheme ?? 'dark',
     reducedMotion: 'reduce',
@@ -173,15 +309,20 @@ async function runInteraction(name, options, check) {
     });
   }
   const page = await context.newPage();
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(String(error)));
+  const blockedEgressStart = blockedEgress.length;
+  const health = monitorPageHealth(page);
 
   try {
     await check(page);
-    assert(pageErrors.length === 0, `Browser errors: ${pageErrors.join('; ')}`);
+    const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
+    assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
     console.log(`[interaction] ${name}: PASS`);
   } catch (error) {
-    interactionFailures.push({ name, error: String(error), pageErrors });
+    interactionFailures.push({
+      name,
+      error: String(error),
+      browserHealth: browserHealthFailures(health, blockedEgress, blockedEgressStart),
+    });
     console.log(`[interaction] ${name}: FAIL`);
   } finally {
     await context.close();
@@ -199,16 +340,16 @@ try {
   for (const colorScheme of interactionsOnly ? [] : colorSchemes) {
     for (const [viewportName, viewport] of viewports) {
       const browser = await launchBrowser();
-      const context = await browser.newContext({
+      const { context, blockedEgress } = await newGuardedContext(browser, {
         viewport,
         colorScheme,
         reducedMotion: 'reduce',
       });
 
       for (const route of routes) {
+        const blockedEgressStart = blockedEgress.length;
         const page = await context.newPage();
-        const pageErrors = [];
-        page.on('pageerror', (error) => pageErrors.push(String(error)));
+        const health = monitorPageHealth(page);
 
         const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'load', timeout: 45_000 });
         await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
@@ -243,17 +384,18 @@ try {
           });
         }
 
-        if (!response?.ok() || pageErrors.length || violations.length) {
+        const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
+        if (!response?.ok() || hasBrowserHealthFailures(browserHealth) || violations.length) {
           failures.push({
             colorScheme,
             viewport: viewportName,
             route,
             status: response?.status(),
-            pageErrors,
+            browserHealth,
             violations,
           });
         }
-        const passed = response?.ok() && !pageErrors.length && !violations.length;
+        const passed = response?.ok() && !hasBrowserHealthFailures(browserHealth) && !violations.length;
         console.log(`[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`);
         await page.close();
       }
@@ -271,7 +413,7 @@ try {
     await page.getByRole('region', { name: 'More Pegasus pages' }).waitFor({ state: 'visible' });
   });
 
-  await runInteraction('mobile navigation destination', { viewport: viewports[2][1] }, async (page) => {
+  await runInteraction('mobile navigation destination', { viewport: viewports[2][1], seedConsent: false }, async (page) => {
     await openPage(page, '/');
     const menuButton = page.locator('button[aria-controls="mobile-menu"]');
     await menuButton.click();
@@ -280,6 +422,42 @@ try {
     await dialog.getByRole('link', { name: 'Strategy Lab', exact: true }).first().click();
     await page.waitForURL(/\/strategy-lab$/);
     await page.locator('h1').first().waitFor({ state: 'attached' });
+
+    await openPage(page, '/');
+    const banner = page.getByTestId('cookie-consent-banner');
+    await banner.waitFor({ state: 'visible', timeout: 5_000 });
+    await menuButton.click();
+    assert(await menuButton.getAttribute('aria-expanded') === 'true', 'Mobile menu did not re-open');
+    await dialog.getByRole('button', { name: 'Talk to Peggy', exact: true }).click();
+
+    const panel = page.locator('.peggy-panel');
+    await panel.waitFor({ state: 'visible' });
+    assert(await panel.getAttribute('aria-hidden') === 'false', 'Peggy panel remained hidden');
+    const geometry = await page.evaluate(() => {
+      const panelElement = document.querySelector('.peggy-panel');
+      const bannerElement = document.querySelector('[data-testid="cookie-consent-banner"]');
+      if (!(panelElement instanceof HTMLElement) || !(bannerElement instanceof HTMLElement)) return null;
+      const panelRect = panelElement.getBoundingClientRect();
+      const bannerRect = bannerElement.getBoundingClientRect();
+      const style = getComputedStyle(panelElement);
+      const overlapsConsent = panelRect.left < bannerRect.right
+        && panelRect.right > bannerRect.left
+        && panelRect.top < bannerRect.bottom
+        && panelRect.bottom > bannerRect.top;
+      return {
+        renderedVisible: style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0,
+        insideViewport: panelRect.left >= 0
+          && panelRect.right <= innerWidth
+          && panelRect.top >= 0
+          && panelRect.bottom <= innerHeight,
+        overlapsConsent,
+        panelRect: panelRect.toJSON(),
+        bannerRect: bannerRect.toJSON(),
+      };
+    });
+    assert(geometry?.renderedVisible, 'Peggy panel was not rendered visibly');
+    assert(geometry?.insideViewport, `Peggy panel escaped the mobile viewport: ${JSON.stringify(geometry)}`);
+    assert(!geometry?.overlapsConsent, `Peggy panel overlapped cookie consent: ${JSON.stringify(geometry)}`);
   });
 
   await runInteraction('theme toggle persistence', { colorScheme: 'dark' }, async (page) => {
@@ -293,7 +471,16 @@ try {
 
   await runInteraction('homepage primary CTA', {}, async (page) => {
     await openPage(page, '/');
-    await page.locator('nav a[href="/bring-an-opportunity"]').click();
+    const homepagePrimaryCta = page
+      .locator('[data-hv="arrival"]')
+      .getByRole('link', { name: 'Bring an Opportunity', exact: true });
+    assert(await homepagePrimaryCta.count() === 1, 'Homepage hero did not expose one primary conversion CTA');
+    await homepagePrimaryCta.waitFor({ state: 'visible' });
+    assert(
+      await homepagePrimaryCta.getAttribute('href') === '/bring-an-opportunity',
+      'Homepage hero CTA did not use the canonical intake URL',
+    );
+    await homepagePrimaryCta.click();
     await page.waitForURL(/\/bring-an-opportunity$/);
   });
 
@@ -308,7 +495,21 @@ try {
     await page.locator('#lab-instruments-title').waitFor({ state: 'visible' });
   });
 
-  await runInteraction('MarketFlow reviewed access path', {}, async (page) => {
+  await runInteraction('MarketFlow public boundaries and reviewed access path', {}, async (page) => {
+    await openPage(page, '/marketflow/deals');
+    await page.locator('.pg-root nav').waitFor({ state: 'visible' });
+    assert(await page.locator('.pg-root footer').count() === 1, 'Premium public footer was not rendered');
+    await page.getByRole('heading', { name: /Reviewed opportunities are not shown as sample inventory/i }).waitFor({ state: 'visible' });
+    const submitDeal = page.getByTestId('button-marketflow-submit-deal');
+    assert(
+      await submitDeal.evaluate((element) => element.closest('a')?.getAttribute('href'))
+        === '/bring-an-opportunity?intent=deal-jv',
+      'MarketFlow deal CTA did not use the canonical JV intake URL',
+    );
+    assert(await page.getByTestId('text-deals-title').count() === 0, 'Private deal inventory rendered anonymously');
+    assert(await page.locator('[data-testid^="card-deal-"]').count() === 0, 'Private deal cards rendered anonymously');
+    assert(await page.getByTestId('button-sidebar-toggle').count() === 0, 'Operator sidebar chrome rendered anonymously');
+
     await openPage(page, '/marketflow');
     await page.getByRole('button', { name: /Request reviewed access/ }).click();
     await page.waitForURL(/\/marketflow\/access$/);

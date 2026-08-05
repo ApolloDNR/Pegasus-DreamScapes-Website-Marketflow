@@ -2908,11 +2908,25 @@ select.pg-field option { color: #1b1712; }
 @media (max-width: 640px) {
   .peggy-fab { display:none; }
   .peggy-fab-label { display:none; }
-  .peggy-panel { right: 16px; bottom: 84px; }
+  .peggy-panel {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 32px - env(safe-area-inset-bottom, 0px));
+  }
+  .peggy-thread {
+    min-height: 0;
+    flex: 1 1 auto;
+    max-height: none;
+  }
   .pg-cookie-visible .peggy-fab {
     display: none;
   }
-  .pg-cookie-visible .peggy-panel { display: none; }
+  .pg-cookie-visible .peggy-panel {
+    bottom: calc(116px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 132px - env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

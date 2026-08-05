@@ -128,11 +128,11 @@ describe("Server GONE_ROUTES answer 410 Gone over HTTP (Task #219)", () => {
 // must turn this suite red.
 describe("Harness regression: a re-registered gone route is caught (Task #219)", () => {
   it("a gone route present in the App.tsx route table fails the ownership check", () => {
-    const fakeAppSrc = `<Route path="/education" component={Foo} />`;
+    const fakeAppSrc = `<Route path="${GONE_ROUTES[0]}" component={Foo} />`;
     const offending = GONE_ROUTES.filter((r) =>
       fakeAppSrc.includes(`path="${r}"`),
     );
-    // At least one gone route ("/education") is detectable as a live route in
+    // At least one gone route is detectable as a live route in
     // this simulated regression, which is exactly what would fail CI.
     expect(offending.length).toBeGreaterThan(0);
   });
