@@ -205,10 +205,6 @@ vi.mock("@/components/marketplace-layout", () => ({
   ),
 }));
 
-vi.mock("@/components/beta-banner", () => ({
-  BetaBanner: () => null,
-}));
-
 vi.mock("@/components/under-construction", () => ({
   UnderConstructionBadge: () => null,
   UnderConstructionBanner: () => null,
@@ -442,8 +438,46 @@ function renderWithProviders(ui: React.ReactElement, path = "/") {
   );
 }
 
+function tailwindHexColor(element: HTMLElement, utility: "text" | "bg"): string {
+  const match = element.className.match(
+    new RegExp(`(?:^|\\s)${utility}-\\[#([0-9a-fA-F]{6})\\](?:\\s|$)`),
+  );
+
+  if (!match) {
+    throw new Error(
+      `${element.tagName.toLowerCase()} does not declare an explicit light-mode ${utility} color`,
+    );
+  }
+
+  return `#${match[1]}`;
+}
+
+function relativeLuminance(hexColor: string): number {
+  const channels = hexColor
+    .slice(1)
+    .match(/.{2}/g)!
+    .map((channel) => Number.parseInt(channel, 16) / 255)
+    .map((channel) =>
+      channel <= 0.04045
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4,
+    );
+
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrastRatio(first: string, second: string): number {
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
+  const lighter = Math.max(firstLuminance, secondLuminance);
+  const darker = Math.min(firstLuminance, secondLuminance);
+
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 beforeEach(() => {
   cleanup();
+  localStorage.clear();
   setAuthState("loggedOut");
 });
 
@@ -538,6 +572,46 @@ describe("marketflow-submit page gating", () => {
 });
 
 describe("marketflow-deals page gating", () => {
+  it("names the private-beta dismiss control for anonymous visitors", async () => {
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(
+      screen.getByRole("button", { name: "Dismiss MarketFlow beta banner" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the anonymous private-beta kicker at AA contrast in light mode", async () => {
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    const privateBetaKicker = screen.getByText("MarketFlow private beta");
+    expect(
+      contrastRatio(tailwindHexColor(privateBetaKicker, "text"), "#ffffff"),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps the anonymous Request Access CTA at AA contrast in light mode", async () => {
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    const requestAccessButton = screen.getByTestId(
+      "button-marketflow-request-access",
+    );
+    expect(
+      contrastRatio(tailwindHexColor(requestAccessButton, "bg"), "#ffffff"),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("logged-out users do not see role-gated JV quick actions or the guest banner", async () => {
     setAuthState("loggedOut");
     const { default: MarketflowDeals } = await import(

@@ -70,6 +70,11 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("Talk to Peggy");
     expect(interaction).toContain(".peggy-panel");
     expect(interaction).toContain("cookie-consent-banner");
+    const transitionWait = interaction.indexOf("await page.waitForFunction");
+    const geometryRead = interaction.indexOf("const geometry = await page.evaluate");
+    expect(transitionWait).toBeGreaterThanOrEqual(0);
+    expect(transitionWait).toBeLessThan(geometryRead);
+    expect(interaction).toContain("Number(style.opacity) >= 0.99");
     expect(interaction).toMatch(/panelRect\.left\s*>=\s*0/);
     expect(interaction).toMatch(/panelRect\.right\s*<=\s*innerWidth/);
     expect(interaction).toMatch(/panelRect\.top\s*>=\s*0/);

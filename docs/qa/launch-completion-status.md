@@ -2,7 +2,7 @@
 
 Plan: `docs/superpowers/plans/2026-08-05-pegasus-launch-completion.md`
 
-Local candidate branch: `agent/launch-pr-candidate`
+Local candidate branch: `agent/launch-ci-final`
 
 Publication target: `agent/launch-hardening-review`
 
@@ -19,8 +19,8 @@ A status-only update does not complete work. Reconcile the plan checklists, the 
 | Task 1 — Durable Recovery And Launch Ledger | Complete | `371916744bfab9c08f04f4acb6eb5dd82f0ce1a6` (`docs: lock Pegasus launch completion plan`); all Task 1 checklist steps are checked in the canonical plan. |
 | Task 2 — Exact-Commit Rendered Product Audit | Reverification pending | The prior 17-route/51-capture audit drove the accepted fixes. The final candidate adds `/marketflow/deals` and later privacy, authorization, and browser-gate changes, so fresh cloud-browser evidence is required after the immutable preview is published. |
 | Task 3 — P0 And P1 Product Remediation | Complete | Confirmed accessibility, route ownership, mobile Peggy, privacy truth, browser-egress, CTA, shell, and MarketFlow authorization defects are regression-covered. Independent exact-tree review on `aa756cb` found no remaining code/security blocker; focused review verification passed TypeScript, diff hygiene, and 98 tests. |
-| Task 4 — Complete Local Release Gate | Local runtime gate complete | On Node 22.23.2, audit, launch contract, TypeScript, 110 test files / 1,246 tests, production build, and bundle budget pass on the exact runtime tree. The 108-check/12-journey rendered gate still requires GitHub CI on the published head. |
-| Task 5 — Publish And Prove PR #25 | Pending | The local candidate is a clean fast-forward descendant of the current PR head. Publish only after the final review and evidence refresh. |
+| Task 4 — Complete Local Release Gate | Complete | The corrected Node 22.23.2 runtime candidate passed a clean install, production audit, environment contract, TypeScript, 110 test files / 1,249 tests, production build, and bundle budget. GitHub's rendered rerun remains part of Task 5. |
+| Task 5 — Publish And Prove PR #25 | In progress | PR #25 was safely fast-forwarded to `19bf3f8`. Launch Verification #205 rejected that head at the rendered gate. The corrected fast-forward successor must pass the complete local gate and a fresh exact-head GitHub run. |
 | Task 6 — Non-Production Staging And Live-Service Proof | Partially blocked | A static, noindex, non-production preview and cloud-browser QA remain executable. Backend staging proof is blocked by denied Supabase project access and the absence of a connected Render staging control surface. |
 
 ## Source Commit And PR Evidence
@@ -32,6 +32,11 @@ A status-only update does not complete work. Reconcile the plan checklists, the 
 | Remote PR head before final publication | `4121336babe004703351f813f9950f3bd537395c`; the local candidate is a true fast-forward descendant. |
 | Required GitHub checks on pre-publication head | The earlier Launch Verification run succeeded. It is baseline evidence only; the final candidate requires a new exact-head run after Task 5 publication. |
 | Local release-gate timestamp | `2026-08-05T20:37:41Z` on the documentation-only candidate headed by `d7bdfe0`; runtime tree remains `955b885834ca11100c08147423d8eee41f1c8c92`. |
+| First final-candidate publication | PR head `19bf3f82e8513dc3076dc5c757b5eff623cdd7e0`; Git tree `274c9625fb1e41b889f27f69733703489b14cade`; byte-for-byte matched the local candidate. |
+| Launch Verification #205 | FAILED only at `check:a11y`: 102/108 route checks and 11/12 journeys passed; all six route failures were `/marketflow/deals`, and the test suite was skipped by the sequential workflow. |
+| Corrective commits | `5b43576` waits for Peggy's opacity transition before geometry; `d01760e` names the beta dismiss button and raises the two light-theme MarketFlow colors to 6.40:1. Focused Node 22 RED/GREEN verification passed; exact-head CI is pending. |
+| Corrected local runtime candidate | `d01760ec520c578ec5a8b83e942921f7afb4ef49`; Git tree `248780b76905cc34a6649a7581acdfecd36751fb`. The following launch-ledger commits are documentation-only. |
+| Corrected release-gate timestamp | `2026-08-05T21:01:45Z`; 110 test files / 1,249 tests, production build, and bundle budget passed on the corrected runtime tree. |
 
 ## Route And Viewport Matrix
 
@@ -93,21 +98,23 @@ The historical visual baseline passed before the final authorization/privacy cha
 | P1 | `/marketflow/deals` | Anonymous and ordinary self-provisioned users could reach operator chrome or reviewed inventory through parallel read/write aliases. | FIXED with one governed reviewed-access predicate, global alias guards, mixed-surface filtering, participant/owner preservation, and self-offer rejection. |
 | P1 | Strategy Lab and Peggy storage disclosures | Runtime used undisclosed browser storage and legacy fingerprint-derived recovery while public privacy copy described cookies inaccurately. | FIXED: random claim ID remains local-only, run count is session-only, legacy fingerprint/cookies are removed, and privacy/consent copy discloses drafts, Peggy continuity, and configured AI processing. |
 | P1 | Rendered launch gate | The prior gate missed `/marketflow/deals`, mobile Peggy/cookie geometry, the actual homepage hero CTA, and blocked outbound failures. | FIXED in the checked-in gate contract: 18 routes, exact hero CTA, exact-origin HTTP/WS isolation, structured health evidence, and 12 journeys. Final execution is pending GitHub CI. |
+| P1 | `/marketflow/deals` rendered accessibility | Launch Verification #205 found the beta-dismiss icon had no accessible name and two light-theme copper combinations measured 4.38:1. | FIXED in `d01760e`: the control has a specific accessible name and the anonymous hold uses explicit 6.40:1 light colors with existing dark tokens; 24 focused tests pass. |
+| P1 | Mobile cookie/Peggy journey | The gate inspected computed opacity before the reduced-motion transition settled, so it failed before proving viewport and consent geometry. | FIXED in `5b43576` with a condition-based opacity wait before geometry; production animation/CSS is unchanged and six focused gate tests pass. |
 
 ## Automated Release Gate
 
 | Gate | Exact commit | Result |
 | --- | --- | --- |
-| Node 22 | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Node `22.23.2` — PASS. |
-| Clean lockfile install | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | `npm ci` installed 725 packages; `package-lock.json` unchanged — PASS. |
-| Production dependency audit | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Exit 0; no high/critical production advisory. Five moderate transitive UUID buffer advisories remain in the Google Cloud Storage chain. |
-| Launch environment example contract | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | All 10 required production variables are documented — PASS. |
-| TypeScript | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Exit 0 with no diagnostics — PASS. |
-| Vitest | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | 110 files / 1,246 tests, zero failures — PASS. |
-| Production build | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Vite built 3,821 modules and the Express server bundle through the sandbox-safe `node --import tsx script/build.ts` entry — PASS. GitHub CI will run the normal `npm run build` command. |
-| Bundle budget | Runtime tree `955b885834ca11100c08147423d8eee41f1c8c92` | Entry 169,298 B raw / 53,036 B gzip; initial 431,172 B raw / 126,721 B gzip — PASS. |
-| Rendered accessibility and journeys | Final published commit | Checked-in gate defines 108 route/viewport/theme checks and 12 interaction journeys. Exact-final execution is PENDING GitHub CI. |
-| Diff and secret hygiene | Documentation-only candidate headed by `d7bdfe0` | `git diff --check` passes; worktree was clean before this final ledger amendment; the only assignment-shaped secret scan match is the documented placeholder in `SUPABASE_SETUP.md` — PASS. |
+| Node 22 | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | Node `22.23.2` — PASS. |
+| Clean lockfile install | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | `npm ci` installed 725 packages; `package-lock.json` unchanged — PASS. |
+| Production dependency audit | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | Exit 0; no high/critical production advisory. Five moderate transitive UUID buffer advisories remain in the Google Cloud Storage chain. |
+| Launch environment example contract | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | All 10 required production variables are documented — PASS. |
+| TypeScript | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | Exit 0 with no diagnostics — PASS. |
+| Vitest | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | 110 files / 1,249 tests, zero failures — PASS. |
+| Production build | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | Vite built 3,821 modules and the Express server bundle through the sandbox-safe `node --import tsx script/build.ts` entry — PASS. GitHub CI will run the normal `npm run build` command. |
+| Bundle budget | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` | Entry 169,298 B raw / 53,037 B gzip; initial 431,172 B raw / 126,722 B gzip — PASS. |
+| Rendered accessibility and journeys | PR head `19bf3f8` | Run #205: 102/108 route checks and 11/12 journeys passed. Corrective commits `5b43576` and `d01760e` are locally focused-green; a fresh exact-head run is PENDING. |
+| Diff and secret hygiene | Runtime tree `248780b76905cc34a6649a7581acdfecd36751fb` plus its documentation-only ledger successor | `git diff --check` passes; `package-lock.json` is unchanged; the only assignment-shaped secret scan match is the documented placeholder in `SUPABASE_SETUP.md` — PASS. |
 
 ## External Staging Gate
 
@@ -130,4 +137,4 @@ None recorded.
 
 ## Current Blocker
 
-There is no known local code or security blocker to publishing the final review candidate. The remaining local/review work is: commit this evidence refresh, fast-forward PR #25, require exact-head GitHub CI, publish the immutable non-production preview, and complete cloud-browser QA. Full backend staging proof remains blocked until the Supabase connection can access project `knfmdyufodbnqsgkzhqw` and a non-production Render service is connected or provisioned with protected environment variables. Production, `main`, and DNS remain untouched.
+There is no known source/security blocker. The complete local Node 22 gate passes on the two CI corrections; the immediate work is to publish their fast-forward successor to PR #25 and require exact-head GitHub CI. The immutable Vercel preview requires Apollo's explicit authorization because it publishes the built frontend externally; cloud-browser QA follows that approval. Full backend staging proof remains blocked until the Supabase connection can access project `knfmdyufodbnqsgkzhqw` and a non-production Render service is connected or provisioned with protected environment variables. Production, `main`, and DNS remain untouched.

@@ -215,7 +215,7 @@ function MarketflowPrivateBetaHold({
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
             <LockKeyhole className="h-6 w-6 text-primary" />
           </div>
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8a5122] dark:text-primary">
             MarketFlow private beta
           </p>
           <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
@@ -229,7 +229,7 @@ function MarketflowPrivateBetaHold({
             <Link href="/marketflow/access">
               <Button
                 size="lg"
-                className="min-h-[48px] w-full gap-2 rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                className="min-h-[48px] w-full gap-2 rounded-sm bg-[#8a5122] px-7 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#75451d] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 sm:w-auto"
                 data-testid="button-marketflow-request-access"
               >
                 Request Access

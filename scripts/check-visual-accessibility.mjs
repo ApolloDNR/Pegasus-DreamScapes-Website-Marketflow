@@ -433,6 +433,14 @@ try {
     const panel = page.locator('.peggy-panel');
     await panel.waitFor({ state: 'visible' });
     assert(await panel.getAttribute('aria-hidden') === 'false', 'Peggy panel remained hidden');
+    await page.waitForFunction(() => {
+      const panelElement = document.querySelector('.peggy-panel');
+      if (!(panelElement instanceof HTMLElement)) return false;
+      const style = getComputedStyle(panelElement);
+      return style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && Number(style.opacity) >= 0.99;
+    });
     const geometry = await page.evaluate(() => {
       const panelElement = document.querySelector('.peggy-panel');
       const bannerElement = document.querySelector('[data-testid="cookie-consent-banner"]');
