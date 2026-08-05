@@ -52,7 +52,7 @@ const SERVER_REDIRECTS = extractServerRedirects();
 // redirect is allowed to land on — identical to the client net's table so both
 // layers are checked against the same source of truth.
 const REGISTERED_PATTERNS: string[] = (() => {
-  const src = read("client/src/App.tsx");
+  const src = read("client/src/LegacyApp.tsx");
   const re = /path="([^"]+)"/g;
   const out = new Set<string>();
   let m: RegExpExecArray | null;

@@ -19,6 +19,7 @@
   --accent-2: #d8924a;
   --accent-bright: #e3a463;
   --accent-ink: #8a5122; /* WCAG AA copper for small text on light surfaces; verified vs the real rendered creams (#f5efe4 / #ebe2d2) with axe */
+  --decorative-ink: #8a867e; /* 3:1 for oversized display text on --bg */
   --gold: #c9a84c;
   --teal: #1a9e75;
   --navy: #0d1b2a;
@@ -54,6 +55,7 @@
   --accent-2: #d8924a;
   --accent-bright: #e3a463;
   --accent-ink: #e3a463; /* dark theme: surfaces are navy, vivid copper passes */
+  --decorative-ink: #657788; /* 3:1 for oversized display text on --bg */
   --gold: #c9a84c;
   --teal: #1a9e75;
   --navy: #091421;
@@ -2906,11 +2908,25 @@ select.pg-field option { color: #1b1712; }
 @media (max-width: 640px) {
   .peggy-fab { display:none; }
   .peggy-fab-label { display:none; }
-  .peggy-panel { right: 16px; bottom: 84px; }
+  .peggy-panel {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 32px - env(safe-area-inset-bottom, 0px));
+  }
+  .peggy-thread {
+    min-height: 0;
+    flex: 1 1 auto;
+    max-height: none;
+  }
   .pg-cookie-visible .peggy-fab {
     display: none;
   }
-  .pg-cookie-visible .peggy-panel { display: none; }
+  .pg-cookie-visible .peggy-panel {
+    bottom: calc(116px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 132px - env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3685,7 +3701,7 @@ select.pg-field option { color: #1b1712; }
 .hv-plan-head .hv-h2 { max-width:10ch; font-size:clamp(3rem,5vw,4.7rem); }
 .hv-plan-contract { margin:1.8rem 0 0; color:var(--hv-v6-ink); font-family:var(--pg-font-display,Georgia); font-size:1.2rem; }
 .hv-plan-actions { display:flex; flex-direction:column; align-items:flex-start; margin-top:2.2rem; }
-.hv-plan-primary { color:#f7f2e8; background:var(--hv-v6-ink); border:1px solid var(--hv-v6-ink);
+.hv-plan-primary { color:#f7f2e8; background:var(--hv-v6-deep); border:1px solid var(--hv-v6-deep);
   transition:background-color .25s ease, color .25s ease, border-color .25s ease; }
 .hv-plan-primary:hover { color:var(--hv-v6-ink); background:transparent; border-color:rgba(139,85,53,.62); }
 .hv-plan-actions .hv-text-link { margin-top:1.5rem; }
@@ -3991,7 +4007,7 @@ select.pg-field option { color: #1b1712; }
 .hwo-cycle { background:var(--ip-limestone); }
 .hwo-cycle .hv-h2 { max-width:18ch; font-size:clamp(2.8rem,5vw,4.8rem); }
 .hwo-rail { margin-top:4rem; }
-.hwo-rail-stop { padding-bottom:1.5rem; opacity:.55; }
+.hwo-rail-stop { padding-bottom:1.5rem; opacity:1; }
 .hwo-rail-name { color:var(--ip-ink); font-size:clamp(1.25rem,2vw,1.7rem); }
 .hwo-rail-num { color:var(--ip-bronze); }
 .hwo-rail-line { background:rgba(16,35,49,.18); }

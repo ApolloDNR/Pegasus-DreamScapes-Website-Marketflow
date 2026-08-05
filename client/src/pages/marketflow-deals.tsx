@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
+import { canAccessReviewedMarketflowInventory } from "@shared/marketflow-inventory-access";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
@@ -161,8 +162,22 @@ export default function MarketflowDeals() {
     description: "Private MarketFlow dealflow surface.",
     noIndex: true,
   });
-  const { isAuthenticated, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
-  const shouldShowOperatorChrome = isAuthenticated && !isGuestMode;
+  const {
+    isAuthenticated,
+    isGuestMode,
+    guestRole,
+    exitGuestMode,
+    profile,
+    userRole,
+    isAdmin,
+  } = useSupabaseAuth();
+  const shouldShowOperatorChrome = canAccessReviewedMarketflowInventory({
+    isAuthenticated,
+    isGuestMode,
+    isPegasusBadged: profile?.is_pegasus_badged,
+    isStaff: isAdmin,
+    roles: [profile?.primary_role, userRole],
+  });
 
   if (!shouldShowOperatorChrome) {
     return (
@@ -200,7 +215,7 @@ function MarketflowPrivateBetaHold({
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
             <LockKeyhole className="h-6 w-6 text-primary" />
           </div>
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8a5122] dark:text-primary">
             MarketFlow private beta
           </p>
           <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
@@ -214,14 +229,14 @@ function MarketflowPrivateBetaHold({
             <Link href="/marketflow/access">
               <Button
                 size="lg"
-                className="min-h-[48px] w-full gap-2 rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                className="min-h-[48px] w-full gap-2 rounded-sm bg-[#8a5122] px-7 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#75451d] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 sm:w-auto"
                 data-testid="button-marketflow-request-access"
               >
                 Request Access
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/marketflow/submit">
+            <Link href="/bring-an-opportunity?intent=deal-jv">
               <Button
                 size="lg"
                 variant="outline"

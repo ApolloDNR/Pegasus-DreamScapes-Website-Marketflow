@@ -1,6 +1,7 @@
 import { Link, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
+import { authenticatedRequest } from "@/lib/queryClient";
 import { CheckCircle2, ArrowRight, Clock } from "lucide-react";
 
 interface SubmissionRow {
@@ -25,7 +26,7 @@ export default function StrategyLabSubmittedPage() {
   const { data } = useQuery<SubmissionRow>({
     queryKey: ["/api/strategy-lab/submission", id],
     queryFn: async () => {
-      const res = await fetch(`/api/strategy-lab/submission/${id}`, { credentials: "include" });
+      const res = await authenticatedRequest(`/api/strategy-lab/submission/${id}`);
       if (!res.ok) throw new Error("Could not load submission");
       return res.json();
     },

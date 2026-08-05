@@ -66,6 +66,7 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
 
   const { data: insights } = useQuery<MarketInsight[]>({
     queryKey: ["/api/analytics/market-insights"],
+    enabled: !!userId,
     staleTime: 1000 * 60 * 15,
   });
 

@@ -25,7 +25,7 @@ import { useEffect } from "react";
 export default function MyAnalyticsPage() {
   const { user, isAuthenticated, isLoading } = useSupabaseAuth();
   const [, setLocation] = useLocation();
-  const userId = user?.id || "demo-user";
+  const userId = user?.id;
   const isDemoMode = !isAuthenticated;
 
   useEffect(() => {

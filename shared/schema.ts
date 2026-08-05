@@ -161,7 +161,7 @@ export function isValidMarketplaceRole(role: string): role is MarketplaceRole {
 }
 
 export function isPegasusRole(role: MarketplaceRole): boolean {
-  return MARKETPLACE_ROLE_CONFIG[role].isPegasus;
+  return MARKETPLACE_ROLE_CONFIG[role]?.isPegasus ?? false;
 }
 
 export function getRoleDashboard(role: MarketplaceRole): string {

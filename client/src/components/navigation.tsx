@@ -66,10 +66,6 @@ const MORE_ITEMS = NAV_MORE;
 // Tested separately by `nav-parity.test.tsx` which only asserts label presence,
 // so adding icons + taglines stays within guardrails.
 const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
-  "/library": {
-    icon: BookOpen,
-    tagline: "Frameworks, lane reads, and the operating doctrine.",
-  },
   "/strategy-lab": {
     icon: Calculator,
     tagline: "Run a property through the Pegasus lens. Fourteen strategies, one verdict.",

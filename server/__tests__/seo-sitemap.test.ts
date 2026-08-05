@@ -75,12 +75,22 @@ describe("isCrawlablePublicPath", () => {
       "/offer-studio",
       "/profile/123",
       "/snapshot/abc",
+      "/saved",
       "/marketflow/admin",
       "/marketflow/dashboard",
       "/marketflow/messages",
     ]) {
       expect(isCrawlablePublicPath(p)).toBe(false);
     }
+  });
+
+  it("keeps the personal saved workspace out of search and the sitemap", async () => {
+    const { SEO_ROUTES } = await import("../../shared/seo-routes");
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+
+    expect(SEO_ROUTES["/saved"]?.noIndex).toBe(true);
+    expect(sitemapPaths.has("/saved")).toBe(false);
+    expect(ROBOTS_DISALLOW).toContain("/saved");
   });
 });
 

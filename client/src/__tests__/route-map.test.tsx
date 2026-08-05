@@ -47,7 +47,7 @@ function extractStringList(src: string, anchor: string): string[] {
 }
 
 describe("Route map (Website Brief v1.0 §1)", () => {
-  const appSrc = read("client/src/App.tsx");
+  const appSrc = read("client/src/LegacyApp.tsx");
   const serverSrc = read("server/routes.ts");
   // Public pages now render the saved prototype, mounted in App.tsx via
   // PEGASUS_URLS.map(...) rather than literal <Route path="..."> tags.
@@ -77,7 +77,6 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/marketflow/access",
     "/capital",
     "/connect",
-    "/library",
     "/vendor-network",
     "/contact",
     "/disclosures",
@@ -124,6 +123,8 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/capital-raising",
     "/education",
     "/calculators",
+    "/library",
+    "/strategy-library",
   ];
 
   it("registers every canonical public route in App.tsx", () => {

@@ -1,6 +1,5 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertSellerLeadSchema, 
@@ -20,7 +19,6 @@ import {
   insertBuyerOfferSchema,
   insertCapitalProjectSchema,
   insertProjectMilestoneSchema,
-  insertInvestmentOfferSchema,
   insertCommittedInvestmentSchema,
   insertDealMatchSchema,
   insertAnnouncementSchema,
@@ -29,7 +27,6 @@ import {
   insertLeadSchema,
   insertCtaEventSchema,
   insertSavedAnalysisSchema,
-  insertWholesaleDealOfferSchema,
   insertFaqSchema,
   insertTestimonialSchema,
   insertTeamMemberSchema,
@@ -41,41 +38,12 @@ import {
   STAFF_ROLES
 } from "@shared/schema";
 
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-setInterval(() => {
-  const now = Date.now();
-  const entries = Array.from(rateLimitStore.entries());
-  for (const [key, record] of entries) {
-    if (now > record.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 60000);
-
-const rateLimit = (maxRequests: number, windowMs: number) => (req: any, res: Response, next: NextFunction) => {
-  const userId = req.user?.claims?.sub || req.ip;
-  const key = `${req.path}:${userId}`;
-  const now = Date.now();
-  
-  const record = rateLimitStore.get(key);
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
-    return next();
-  }
-  
-  if (record.count >= maxRequests) {
-    return res.status(429).json({ message: "Too many requests. Please try again later." });
-  }
-  
-  record.count++;
-  return next();
-};
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerOpportunityRoutes } from "./opportunityRoutes";
 import { registerUserProvisioningRoute } from "./user-provisioning-routes";
+import { registerUserProfileRoute } from "./user-profile-route";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
@@ -90,7 +58,7 @@ import {
   getUserBadges,
   updateUserProfile
 } from "./lib/supabase";
-import { sendEmail, sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendOfferNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
+import { sendEmail, sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
 import {
   buildGenericLeadNotificationData,
   mergeLeadConsentAudit,
@@ -100,11 +68,72 @@ import {
 } from "./lead-intake-policy";
 import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
-import { sitemapEntries, isCrawlablePublicPath, ROBOTS_DISALLOW } from "../shared/seo-routes";
+import { registerReadinessRoute } from "./readiness";
+import { registerPublicLibraryRetirementRoutes } from "./public-library-retirement";
+import {
+  SITE_URL,
+  sitemapEntries,
+  isCrawlablePublicPath,
+  ROBOTS_DISALLOW,
+} from "../shared/seo-routes";
 import {
   appendRedirectSearch,
   QUERY_PRESERVING_INTAKE_PATHS,
 } from "../shared/redirects";
+import { publicIntakeRateLimit, rateLimit } from "./rate-limit";
+import {
+  createPeggyConversationAccessGuard,
+  createPeggyConversationAccessToken,
+  getPeggyConversationAccessSecret,
+} from "./peggy-access";
+import {
+  canAccessMarketflowOffer,
+  filterMarketflowOffersForUser,
+} from "./marketflow-access";
+import {
+  createRequireMarketflowInventoryAccess,
+  createResolveMarketflowInventoryAccess,
+  isReviewedMarketflowInventoryType,
+} from "./marketflow-inventory-authorization";
+import {
+  isMarketflowNegotiationBoundToAuthoritativeDeal,
+  isMarketflowOfferConsistentWithNegotiation,
+} from "./marketflow-financial-integrity";
+import {
+  canDeleteLegacyWholesaleDocument,
+  filterLegacyCapitalInvestmentsForUser,
+  filterLegacyDocumentsForParticipant,
+  filterLegacyListingInquiriesForUser,
+  filterLegacyNegotiationsForUser,
+  filterLegacyWholesaleOffersForUser,
+  getLegacyDealTypeAliases,
+  isLegacyDealParticipant,
+  normalizeLegacyDealType,
+  type LegacyDealKind,
+} from "./legacy-private-access";
+import {
+  isPublicCapitalProject,
+  isPublicListing,
+  isPublicWholesaleDeal,
+  toPublicCapitalProject,
+  toPublicInvestorWantedDeal,
+  toPublicListing,
+  toPublicRetailListing,
+  toPublicUserProfile,
+  toPublicWholesaleDeal,
+} from "./public-marketplace";
+import {
+  canReadPrivateDealData,
+  requireCreatedSupabaseMarketplaceRecord,
+  resolveSupabaseMarketplaceIdentity,
+  toBuyerOfferDashboardDto,
+  toBuyerOfferIdentityColumns,
+  toCapitalCommitmentDashboardDto,
+  toCapitalCommitmentIdentityColumns,
+  toPublicSupabaseCapitalProject,
+  toPublicSupabaseListing,
+  toPublicSupabaseWholesaleDeal,
+} from "./supabase-marketplace-privacy";
 
 // Admin email allowlist for site editing
 const ADMIN_EMAILS = [
@@ -181,6 +210,61 @@ const isHybridAuthenticated = async (req: any, res: Response, next: NextFunction
   return res.status(401).json({ message: "Unauthorized" });
 };
 
+// Extract the authenticated user ID from either supported auth system.
+const getAuthUserId = (req: any): string | null => {
+  if (req.user?.claims?.sub) {
+    return req.user.claims.sub;
+  }
+  if (req.supabaseUser?.id) {
+    return req.supabaseUser.id;
+  }
+  if (req.session?.user?.id) {
+    return req.session.user.id;
+  }
+  return null;
+};
+
+const hasMarketflowStaffAccess = async (req: any, userId: string) => {
+  const userEmail = req.user?.claims?.email || req.supabaseUser?.email;
+  if (userEmail && ADMIN_EMAILS.includes(String(userEmail).toLowerCase())) {
+    return true;
+  }
+
+  return storage.hasAnyStaffRole(userId);
+};
+
+const marketflowInventoryAccessDependencies = {
+  getUserProfile,
+  getUserRoles: (userId: string) => storage.getUserRoles(userId),
+  adminEmails: ADMIN_EMAILS,
+};
+const resolveMarketflowInventoryAccess =
+  createResolveMarketflowInventoryAccess(
+    marketflowInventoryAccessDependencies,
+  );
+const requireMarketflowInventoryAccess =
+  createRequireMarketflowInventoryAccess(
+    marketflowInventoryAccessDependencies,
+  );
+const loadMarketflowInventoryAccessContext = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.locals.canAccessReviewedMarketflowInventory =
+      await resolveMarketflowInventoryAccess(req);
+  } catch (error) {
+    console.error("Unable to resolve optional MarketFlow inventory access:", error);
+    res.locals.canAccessReviewedMarketflowInventory = false;
+  }
+  next();
+};
+
+const canAccessMarketflowItemType = (res: Response, rawType: unknown) =>
+  !isReviewedMarketflowInventoryType(rawType) ||
+  res.locals.canAccessReviewedMarketflowInventory === true;
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -196,9 +280,13 @@ export async function registerRoutes(
     next();
   });
 
+  registerReadinessRoute(app);
+
   app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "ok" });
   });
+
+  registerPublicLibraryRetirementRoutes(app);
 
   
   // Setup Replit Auth (legacy - for session-based auth)
@@ -222,7 +310,6 @@ export async function registerRoutes(
   // (pegasusdreamscapes.com) gets the full crawl policy.
   app.get('/robots.txt', (req, res) => {
     const rawHost = (req.get('host') || '').toLowerCase();
-    const host = `${req.protocol}://${rawHost}`;
     if (isPreviewHostname(rawHost)) {
       res.type('text/plain').send(
         ['User-agent: *', 'Disallow: /', ''].join('\n'),
@@ -236,7 +323,7 @@ export async function registerRoutes(
         'Allow: /',
         ...ROBOTS_DISALLOW.map((p) => `Disallow: ${p}`),
         '',
-        `Sitemap: ${host}/sitemap.xml`,
+        `Sitemap: ${SITE_URL}/sitemap.xml`,
         '',
       ].join('\n'),
     );
@@ -258,7 +345,7 @@ export async function registerRoutes(
     ['/submit', '/bring-an-opportunity'],
     ['/wholesale', '/bring-an-opportunity?intent=deal-jv'],
     ['/services', '/how-we-operate'],
-    ['/resources', '/library'],
+    ['/resources', '/strategy-lab'],
     ['/invest', '/capital'],
     ['/partner', '/deal-partners'],
     // v5.1 spine renames — permanent forwards for the old canonical URLs.
@@ -274,20 +361,6 @@ export async function registerRoutes(
         : '';
       res.redirect(301, appendRedirectSearch(to, incomingSearch));
     });
-  }
-
-  // ─── Website Spec v4 (Re-skin) residual demotions ─────────────────────
-  // The v4 re-skin restored the audience lanes, Strategy Lab, MarketFlow,
-  // Peggy, Represent With Apollo, and Deal Strategy to the live public
-  // surface, so they are no longer demoted. Only /library remains out
-  // of the v4 launch and 302 (temporary) to the home page. Exact-match only,
-  // so live subpaths (e.g. /library/:slug) are not caught. Kept separate from
-  // the permanent 301 LEGACY_REDIRECTS above.
-  const V3_DEMOTION_REDIRECTS: Array<[string, string]> = [
-    ['/library', '/'],
-  ];
-  for (const [from, to] of V3_DEMOTION_REDIRECTS) {
-    app.get(from, (_req, res) => res.redirect(302, to));
   }
 
   // The classic calculator suite was folded into the unified Strategy Lab.
@@ -317,7 +390,6 @@ export async function registerRoutes(
   // it 302-redirects to /submit via V3_DEMOTION_REDIRECTS above, so it must
   // not be 410'd here either.
   const GONE_ROUTES = [
-    '/education',
     '/systems',
     '/dreamspace',
     '/capital-raising',
@@ -335,10 +407,7 @@ export async function registerRoutes(
   // any project case studies stored in the database. Admin, MarketFlow
   // operator surfaces, auth, and legacy-redirect paths are filtered out by
   // isCrawlablePublicPath so they never leak into the sitemap.
-  app.get('/sitemap.xml', async (req, res) => {
-    const host = `${req.protocol}://${req.get('host')}`;
-    const today = new Date().toISOString().split('T')[0];
-
+  app.get('/sitemap.xml', async (_req, res) => {
     const entries = sitemapEntries();
     const seen = new Set(entries.map((e) => e.path));
 
@@ -359,7 +428,7 @@ export async function registerRoutes(
     const urls = entries
       .map(
         (r) =>
-          `  <url><loc>${host}${r.path}</loc><lastmod>${today}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
+          `  <url><loc>${SITE_URL}${r.path}</loc><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
       )
       .join('\n');
 
@@ -369,7 +438,7 @@ export async function registerRoutes(
   });
 
   // Register object storage routes for file uploads
-  registerObjectStorageRoutes(app);
+  registerObjectStorageRoutes(app, { requireAuth: isHybridAuthenticated });
 
   // ─── Empire Doctrine v1.0.1 Wave 3 — CTA attribution ────────────────
   // Public POST /api/events captures primary-surface CTA clicks. Rate-
@@ -443,51 +512,46 @@ export async function registerRoutes(
     addUserRole: (entry) => storage.addUserRole(entry),
   });
 
-  // Get user profile - try Supabase first, fall back to PostgreSQL
-  app.get('/api/supabase/profile/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      
-      // Try Supabase first if available
+  // Raw profile reads are self-only; public profile cards use DTO routes.
+  registerUserProfileRoute(app, {
+    isAuthenticated: isHybridAuthenticated,
+    getAuthenticatedUserId: getAuthUserId,
+    loadUserProfile: async (userId) => {
       try {
         const profile = await getUserProfile(userId);
         if (profile) {
-          return res.json(profile);
+          return profile;
         }
-      } catch (supabaseError) {
-        // Supabase unavailable, fall through to PostgreSQL
-        console.log('Supabase profile fetch failed, falling back to PostgreSQL');
+      } catch {
+        console.info(
+          "Supabase profile fetch unavailable; using PostgreSQL fallback",
+        );
       }
-      
-      // Fall back to PostgreSQL user data
+
       const pgUser = await storage.getUser(userId);
       if (!pgUser) {
-        return res.status(404).json({ message: 'Profile not found' });
+        return null;
       }
-      
-      // Get user roles from PostgreSQL
+
       const userRoles = await storage.getUserRoles(userId);
-      const primaryRole = userRoles.length > 0 ? userRoles[0].role : 'investor';
-      const isPegasus = primaryRole.startsWith('pegasus_');
-      
-      // Construct profile from PostgreSQL user data
-      const profile = {
+      const primaryRole = userRoles.length > 0 ? userRoles[0].role : "investor";
+      const isPegasus = primaryRole.startsWith("pegasus_");
+
+      return {
         id: pgUser.id,
         user_id: pgUser.id,
         primary_role: primaryRole,
-        display_name: `${pgUser.firstName || ''} ${pgUser.lastName || ''}`.trim() || pgUser.email?.split('@')[0] || 'User',
+        display_name:
+          `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim() ||
+          pgUser.email?.split("@")[0] ||
+          "User",
         avatar_url: pgUser.profileImageUrl || undefined,
-        is_pegasus_badged: isPegasus || pgUser.role === 'admin',
+        is_pegasus_badged: isPegasus || pgUser.role === "admin",
         pegasus_role_type: isPegasus ? primaryRole : undefined,
         created_at: pgUser.createdAt?.toISOString() || new Date().toISOString(),
-        updated_at: pgUser.updatedAt?.toISOString() || new Date().toISOString()
+        updated_at: pgUser.updatedAt?.toISOString() || new Date().toISOString(),
       };
-      
-      res.json(profile);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      res.status(500).json({ message: 'Failed to fetch profile' });
-    }
+    },
   });
 
   // Update user profile (own profile only)
@@ -596,25 +660,176 @@ export async function registerRoutes(
     };
   };
 
-  // Helper to extract authenticated user ID from either Replit or Supabase auth
-  const getAuthUserId = (req: any): string | null => {
-    // Try Replit Auth first
-    if (req.user?.claims?.sub) {
-      return req.user.claims.sub;
+  type LegacyParticipantSources = {
+    negotiations?: readonly any[];
+    offers?: readonly any[];
+    inquiries?: readonly any[];
+    capitalInvestments?: readonly any[];
+  };
+
+  type LegacyDealAccess = {
+    kind: LegacyDealKind;
+    record: any;
+    ownerId: string | null;
+    isOwner: boolean;
+    isStaff: boolean;
+    isParticipant: boolean;
+  };
+
+  const resolveLegacyDealAccess = async (
+    req: any,
+    userId: string,
+    dealType: string,
+    dealId: number,
+    sources: LegacyParticipantSources = {},
+  ): Promise<LegacyDealAccess | null> => {
+    const kind = normalizeLegacyDealType(dealType);
+    if (!kind || !Number.isSafeInteger(dealId) || dealId <= 0) {
+      return null;
     }
-    // Try Supabase Auth
-    if (req.supabaseUser?.id) {
-      return req.supabaseUser.id;
+
+    let record: any;
+    if (kind === "wholesale") {
+      record = await storage.getWholesaleDeal(dealId);
+    } else if (kind === "capital") {
+      record = await storage.getCapitalProject(dealId);
+    } else {
+      record = await storage.getListing(dealId);
     }
-    // Check for session-based user
-    if (req.session?.user?.id) {
-      return req.session.user.id;
+    if (!record) {
+      return null;
+    }
+
+    const ownerId =
+      kind === "wholesale"
+        ? record.submittedBy
+        : kind === "capital"
+          ? record.createdBy
+          : record.submittedBy;
+    const isOwner = ownerId === userId;
+    const isStaff = await hasMarketflowStaffAccess(req, userId);
+
+    if (isOwner || isStaff) {
+      return {
+        kind,
+        record,
+        ownerId: ownerId || null,
+        isOwner,
+        isStaff,
+        isParticipant: false,
+      };
+    }
+
+    let negotiations = sources.negotiations;
+    if (negotiations === undefined) {
+      const negotiationGroups = await Promise.all(
+        getLegacyDealTypeAliases(dealType).map((alias) =>
+          storage.getDealNegotiations(alias, dealId),
+        ),
+      );
+      negotiations = negotiationGroups.flat();
+    }
+
+    let offers = sources.offers;
+    if (kind === "wholesale" && offers === undefined) {
+      offers = await storage.getWholesaleDealOffers(dealId);
+    }
+
+    let inquiries = sources.inquiries;
+    if (kind === "listing" && inquiries === undefined) {
+      inquiries = await storage.getListingInquiries(dealId);
+    }
+
+    let capitalInvestments = sources.capitalInvestments;
+    if (kind === "capital" && capitalInvestments === undefined) {
+      const [offersByInvestor, commitmentsByInvestor] = await Promise.all([
+        storage.getInvestmentOffersByInvestor(userId),
+        storage.getCommittedInvestmentsByInvestor(userId),
+      ]);
+      capitalInvestments = [
+        ...offersByInvestor.filter((offer) => offer.projectId === dealId),
+        ...commitmentsByInvestor.filter(
+          (commitment) => commitment.projectId === dealId,
+        ),
+      ];
+    }
+
+    return {
+      kind,
+      record,
+      ownerId: ownerId || null,
+      isOwner,
+      isStaff,
+      isParticipant: isLegacyDealParticipant(userId, {
+        negotiations,
+        offers,
+        inquiries,
+        capitalInvestments,
+      }),
+    };
+  };
+
+  const isPublicLegacyDeal = (access: LegacyDealAccess): boolean => {
+    if (access.kind === "wholesale") {
+      return isPublicWholesaleDeal(access.record);
+    }
+    if (access.kind === "capital") {
+      return isPublicCapitalProject(access.record);
+    }
+    return isPublicListing(access.record);
+  };
+
+  const canInitiateLegacyDealInteraction = (
+    access: LegacyDealAccess,
+    res: Response,
+  ): boolean =>
+    !access.isOwner &&
+    (access.isParticipant ||
+      access.isStaff ||
+      (res.locals.canAccessReviewedMarketflowInventory === true &&
+        isPublicLegacyDeal(access)));
+
+  const getPublicMarketplaceItem = async (
+    rawType: unknown,
+    rawId: unknown,
+  ): Promise<Record<string, unknown> | null> => {
+    const type =
+      typeof rawType === "string" ? rawType.trim().toLowerCase() : "";
+    const id = Number(rawId);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      return null;
+    }
+
+    if (type === "wholesale" || type === "wholesale_deal") {
+      const deal = await storage.getWholesaleDeal(id);
+      return deal && isPublicWholesaleDeal(deal)
+        ? toPublicWholesaleDeal(deal)
+        : null;
+    }
+    if (type === "capital" || type === "capital_project") {
+      const project = await storage.getCapitalProject(id);
+      return project && isPublicCapitalProject(project)
+        ? toPublicCapitalProject(project)
+        : null;
+    }
+    if (type === "listing") {
+      const listing = await storage.getListing(id);
+      return listing && isPublicListing(listing)
+        ? toPublicListing(listing)
+        : null;
+    }
+    if (type === "retail" || type === "retail_listing") {
+      const listing = await storage.getRetailListing(id);
+      return listing &&
+        (listing.status === "active" || listing.status === "coming_soon")
+        ? toPublicRetailListing(listing)
+        : null;
     }
     return null;
   };
 
   // --- Saved Items ---
-  app.get('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+  app.get('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -623,14 +838,20 @@ export async function registerRoutes(
       const { type } = req.query;
       const { storage, toCamelCase } = await getSupabaseStorage();
       const items = await storage.getSavedItems(userId, type as any);
-      res.json(toCamelCase(items));
+      const visibleItems = items.filter((item: any) =>
+        canAccessMarketflowItemType(
+          res,
+          item.item_type ?? item.itemType ?? type,
+        ),
+      );
+      res.json(toCamelCase(visibleItems));
     } catch (error) {
       console.error('Error fetching saved items:', error);
       res.status(500).json({ message: 'Failed to fetch saved items' });
     }
   });
 
-  app.post('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+  app.post('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -640,6 +861,9 @@ export async function registerRoutes(
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      if (!canAccessMarketflowItemType(res, itemType)) {
+        return res.status(404).json({ message: 'Item not found' });
       }
       
       const { storage, toCamelCase } = await getSupabaseStorage();
@@ -651,7 +875,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete('/api/supabase/saved-items', isHybridAuthenticated, async (req: any, res) => {
+  app.delete('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -661,6 +885,9 @@ export async function registerRoutes(
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      if (!canAccessMarketflowItemType(res, itemType)) {
+        return res.status(404).json({ message: 'Item not found' });
       }
       
       const { storage } = await getSupabaseStorage();
@@ -672,7 +899,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/saved-items/check', isHybridAuthenticated, async (req: any, res) => {
+  app.get('/api/supabase/saved-items/check', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -682,6 +909,9 @@ export async function registerRoutes(
       
       if (!itemType || !itemId) {
         return res.status(400).json({ message: 'Missing itemType or itemId' });
+      }
+      if (!canAccessMarketflowItemType(res, itemType)) {
+        return res.status(404).json({ message: 'Item not found' });
       }
       
       const { storage } = await getSupabaseStorage();
@@ -695,91 +925,34 @@ export async function registerRoutes(
 
   // --- JV Requests (Supabase) ---
   app.post('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { dealId, partnershipType, equityPercent, profitSplit, notes } = req.body;
-      
-      if (!dealId) {
-        return res.status(400).json({ message: 'Missing dealId' });
-      }
-      
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      
-      const deal = await storage.getWholesaleDeal(dealId);
-      if (!deal) {
-        return res.status(404).json({ message: 'Deal not found' });
-      }
-      
-      const request = await storage.createJVRequest({
-        deal_id: dealId,
-        requester_id: userId,
-        wholesaler_id: deal.wholesaler_id,
-        strategy: partnershipType || 'acquisition',
-        funding_source: equityPercent ? `${equityPercent}% equity` : undefined,
-        proposed_fee: profitSplit,
-        message: notes,
-        status: 'pending'
-      });
-      
-      if (request && deal.wholesaler_id) {
-        await storage.createNotification({
-          user_id: deal.wholesaler_id,
-          type: 'jv_request',
-          title: 'New JV Partnership Request',
-          message: `Someone wants to partner on your deal at ${deal.address || deal.city || 'your property'}`,
-          link: `/marketplace/wholesaler/requests`
-        });
-      }
-      
-      res.status(201).json(toCamelCase(request));
-    } catch (error) {
-      console.error('Error creating JV request:', error);
-      res.status(500).json({ message: 'Failed to create JV request' });
-    }
+    return res.status(410).json({
+      message: 'This endpoint has moved to /api/marketplace/jv-requests.',
+    });
   });
 
   app.get('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const requests = await storage.getJVRequestsByUser(userId);
-      res.json(toCamelCase(requests));
-    } catch (error) {
-      console.error('Error fetching JV requests:', error);
-      res.status(500).json({ message: 'Failed to fetch JV requests' });
-    }
+    return res.status(410).json({
+      message:
+        'This endpoint has moved to /api/marketplace/wholesaler/jv-requests.',
+    });
   });
 
   app.patch('/api/supabase/jv-requests/:id', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { status } = req.body;
-      
-      if (!status) {
-        return res.status(400).json({ message: 'Missing status' });
-      }
-      
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const updated = await storage.updateJVRequestStatus(id, status);
-      res.json(toCamelCase(updated));
-    } catch (error) {
-      console.error('Error updating JV request:', error);
-      res.status(500).json({ message: 'Failed to update JV request' });
-    }
+    return res.status(410).json({
+      message: 'This endpoint has moved to /api/marketplace/jv-requests/:id.',
+    });
   });
 
   // --- Capital Projects (Supabase) ---
-  app.get('/api/supabase/capital-projects', async (req: any, res) => {
+  app.get('/api/supabase/capital-projects', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       const projects = await storage.getPublicCapitalProjects();
-      res.json(toCamelCase(projects));
+      res.json(
+        projects
+          .map(toPublicSupabaseCapitalProject)
+          .filter((project) => project !== null),
+      );
     } catch (error) {
       console.error('Error fetching capital projects:', error);
       res.status(500).json({ message: 'Failed to fetch capital projects' });
@@ -801,17 +974,20 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/capital-projects/:id', async (req, res) => {
+  app.get('/api/supabase/capital-projects/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const { id } = req.params;
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       const project = await storage.getCapitalProject(id);
-      
-      if (!project) {
+
+      const publicProject = project
+        ? toPublicSupabaseCapitalProject(project)
+        : null;
+      if (!publicProject) {
         return res.status(404).json({ message: 'Project not found' });
       }
-      
-      res.json(toCamelCase(project));
+
+      res.json(publicProject);
     } catch (error) {
       console.error('Error fetching capital project:', error);
       res.status(500).json({ message: 'Failed to fetch capital project' });
@@ -820,17 +996,63 @@ export async function registerRoutes(
 
   app.post('/api/supabase/capital-projects', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
+      const identity = resolveSupabaseMarketplaceIdentity(req);
+      if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { storage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
-      const projectData = toSnakeCase(req.body);
-      
-      const project = await storage.createCapitalProject({
-        ...projectData,
-        owner_id: userId
-      });
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const body = req.body ?? {};
+      const title =
+        typeof body.title === 'string' ? body.title.trim().slice(0, 255) : '';
+      const structure =
+        typeof body.structure === 'string'
+          ? body.structure.trim().toUpperCase()
+          : '';
+      const fundingGoal = Number(body.fundingGoal);
+      const minInvestment =
+        body.minInvestment == null ? undefined : Number(body.minInvestment);
+
+      if (
+        !title ||
+        !['EQUITY', 'DEBT', 'HYBRID'].includes(structure) ||
+        !Number.isFinite(fundingGoal) ||
+        fundingGoal <= 0 ||
+        (minInvestment !== undefined &&
+          (!Number.isFinite(minInvestment) || minInvestment < 0))
+      ) {
+        return res.status(400).json({ message: 'Invalid project details' });
+      }
+
+      const cleanText = (value: unknown, maxLength: number) =>
+        typeof value === 'string' && value.trim()
+          ? value.trim().slice(0, maxLength)
+          : undefined;
+      const photos = Array.isArray(body.photos)
+        ? body.photos
+            .filter((photo: unknown): photo is string => typeof photo === 'string')
+            .slice(0, 30)
+        : undefined;
+
+      const project = requireCreatedSupabaseMarketplaceRecord(
+        await storage.createCapitalProject({
+          owner_id: identity.kind === 'supabase' ? identity.userId : null,
+          external_owner_id:
+            identity.kind === 'external' ? identity.userId : null,
+          title,
+          description: cleanText(body.description, 10_000),
+          location: cleanText(body.location, 255),
+          property_type: cleanText(body.propertyType, 100),
+          structure: structure as 'EQUITY' | 'DEBT' | 'HYBRID',
+          funding_goal: fundingGoal,
+          min_investment: minInvestment,
+          projected_return: cleanText(body.projectedReturn, 100),
+          hold_period: cleanText(body.holdPeriod, 100),
+          photos,
+          status: 'ACTIVE',
+          is_public: false,
+        }),
+        'Failed to create project',
+      );
       
       res.status(201).json(toCamelCase(project));
     } catch (error) {
@@ -839,6 +1061,17 @@ export async function registerRoutes(
     }
   });
 
+  const capitalProjectOwnerUpdateSchema = insertCapitalProjectSchema
+    .pick({
+      title: true,
+      fundingGoal: true,
+      minInvestment: true,
+      projectedReturn: true,
+      description: true,
+    })
+    .partial()
+    .strict();
+
   // Update capital project (owner only) - uses PostgreSQL storage
   app.patch('/api/supabase/capital-projects/:id', isHybridAuthenticated, async (req: any, res) => {
     try {
@@ -846,8 +1079,8 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const projectId = parseInt(req.params.id);
-      if (isNaN(projectId)) {
+      const projectId = Number(req.params.id);
+      if (!Number.isSafeInteger(projectId) || projectId <= 0) {
         return res.status(400).json({ message: 'Invalid project ID' });
       }
       
@@ -860,13 +1093,14 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Not authorized to edit this project' });
       }
       
-      // Update project with provided fields
-      const updateData = { ...req.body };
-      delete updateData.id;
-      delete updateData.createdBy;
-      delete updateData.createdAt;
+      const updateResult = capitalProjectOwnerUpdateSchema.safeParse(req.body);
+      if (!updateResult.success) {
+        return res.status(400).json({
+          message: fromError(updateResult.error).toString(),
+        });
+      }
       
-      const updatedProject = await storage.updateCapitalProject(projectId, updateData);
+      const updatedProject = await storage.updateCapitalProject(projectId, updateResult.data);
       res.json(updatedProject);
     } catch (error) {
       console.error('Error updating capital project:', error);
@@ -875,45 +1109,55 @@ export async function registerRoutes(
   });
 
   // --- Capital Commitments (Supabase) ---
-  app.post('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
+  app.post('/api/supabase/capital-commitments', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
+      const identity = resolveSupabaseMarketplaceIdentity(req);
+      if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { projectId, amount, structurePreference, notes } = req.body;
+      if (res.locals.canAccessReviewedMarketflowInventory !== true) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      const { projectId, structurePreference, notes } = req.body;
+      const amount = Number(req.body?.amount);
       
-      if (!projectId || !amount) {
+      if (!projectId || !Number.isFinite(amount) || amount <= 0) {
         return res.status(400).json({ message: 'Missing projectId or amount' });
       }
       
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       
       const project = await storage.getCapitalProject(projectId);
-      if (!project) {
+      const publicProject = project
+        ? toPublicSupabaseCapitalProject(project)
+        : null;
+      const ownerId = project?.owner_id || project?.external_owner_id || null;
+      if (!project || !publicProject || !ownerId || ownerId === identity.userId) {
         return res.status(404).json({ message: 'Project not found' });
       }
       
-      const commitment = await storage.createCapitalCommitment({
-        project_id: projectId,
-        investor_id: userId,
-        amount,
-        structure_preference: structurePreference,
-        notes,
-        status: 'pending'
+      const commitment = requireCreatedSupabaseMarketplaceRecord(
+        await storage.createCapitalCommitment({
+          project_id: projectId,
+          ...toCapitalCommitmentIdentityColumns(identity),
+          amount,
+          structure_preference: structurePreference,
+          notes,
+          status: 'pending'
+        }),
+        'Failed to create commitment',
+      );
+
+      await storage.createNotification({
+        user_id: project.owner_id || null,
+        external_user_id: project.external_owner_id || null,
+        type: 'capital_commitment',
+        title: 'New Investment Commitment',
+        message: `An investor has committed $${amount.toLocaleString()} to your project`,
+        link: `/marketplace/dreamscaper/projects/${projectId}`
       });
       
-      if (commitment) {
-        await storage.createNotification({
-          user_id: project.owner_id,
-          type: 'capital_commitment',
-          title: 'New Investment Commitment',
-          message: `An investor has committed $${amount.toLocaleString()} to your project`,
-          link: `/marketplace/dreamscaper/projects/${projectId}`
-        });
-      }
-      
-      res.status(201).json(toCamelCase(commitment));
+      res.status(201).json(toCapitalCommitmentDashboardDto(commitment));
     } catch (error) {
       console.error('Error creating capital commitment:', error);
       res.status(500).json({ message: 'Failed to create commitment' });
@@ -922,25 +1166,59 @@ export async function registerRoutes(
 
   app.get('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
+      const identity = resolveSupabaseMarketplaceIdentity(req);
+      if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const commitments = await storage.getCapitalCommitmentsByUser(userId);
-      res.json(toCamelCase(commitments));
+      const { storage } = await getSupabaseStorage();
+      const commitments = await storage.getCapitalCommitmentsByUser(identity);
+      res.json(commitments.map(toCapitalCommitmentDashboardDto));
     } catch (error) {
       console.error('Error fetching commitments:', error);
       res.status(500).json({ message: 'Failed to fetch commitments' });
     }
   });
 
-  app.get('/api/supabase/capital-projects/:id/commitments', async (req, res) => {
+  app.get('/api/supabase/capital-projects/:id/commitments', isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
       const { id } = req.params;
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const commitments = await storage.getCapitalCommitmentsByProject(id);
-      res.json(toCamelCase(commitments));
+      const { storage: supaStorage, toCamelCase } = await getSupabaseStorage();
+      const project = await supaStorage.getCapitalProject(id);
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+
+      const commitments = await supaStorage.getCapitalCommitmentsByProject(id);
+      const isStaff = await hasMarketflowStaffAccess(req, userId);
+      const participantCommitments = commitments.filter((commitment: any) =>
+        [commitment.investor_id, commitment.external_investor_id].includes(
+          userId,
+        ),
+      );
+      if (
+        !canReadPrivateDealData({
+          userId,
+          ownerId: project.owner_id,
+          participantIds: participantCommitments.map(
+            (commitment: any) =>
+              commitment.investor_id || commitment.external_investor_id,
+          ),
+          isStaff,
+        })
+      ) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+
+      const visibleCommitments =
+        isStaff || project.owner_id === userId
+          ? commitments
+          : participantCommitments;
+      res.json(toCamelCase(visibleCommitments));
     } catch (error) {
       console.error('Error fetching project commitments:', error);
       res.status(500).json({ message: 'Failed to fetch commitments' });
@@ -948,11 +1226,15 @@ export async function registerRoutes(
   });
 
   // --- Wholesale Deals (Supabase) ---
-  app.get('/api/supabase/wholesale-deals', async (req: any, res) => {
+  app.get('/api/supabase/wholesale-deals', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       const deals = await storage.getPublicWholesaleDeals();
-      res.json(toCamelCase(deals));
+      res.json(
+        deals
+          .map(toPublicSupabaseWholesaleDeal)
+          .filter((deal) => deal !== null),
+      );
     } catch (error) {
       console.error('Error fetching wholesale deals:', error);
       res.status(500).json({ message: 'Failed to fetch wholesale deals' });
@@ -974,17 +1256,18 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/supabase/wholesale-deals/:id', async (req, res) => {
+  app.get('/api/supabase/wholesale-deals/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const { id } = req.params;
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       const deal = await storage.getWholesaleDeal(id);
-      
-      if (!deal) {
+
+      const publicDeal = deal ? toPublicSupabaseWholesaleDeal(deal) : null;
+      if (!publicDeal) {
         return res.status(404).json({ message: 'Deal not found' });
       }
-      
-      res.json(toCamelCase(deal));
+
+      res.json(publicDeal);
     } catch (error) {
       console.error('Error fetching wholesale deal:', error);
       res.status(500).json({ message: 'Failed to fetch wholesale deal' });
@@ -993,20 +1276,62 @@ export async function registerRoutes(
 
   app.post('/api/supabase/wholesale-deals', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
+      const identity = resolveSupabaseMarketplaceIdentity(req);
+      if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { storage, toCamelCase, toSnakeCase } = await getSupabaseStorage();
-      const dealData = toSnakeCase(req.body);
-      
-      const deal = await storage.createWholesaleDeal({
-        ...dealData,
-        wholesaler_id: userId,
-        status: 'Under Review',
-        is_public: false,
-        raising_capital: false
-      });
+      const { storage, toCamelCase } = await getSupabaseStorage();
+      const body = req.body ?? {};
+      const address =
+        typeof body.address === 'string' ? body.address.trim().slice(0, 500) : '';
+      const arv = Number(body.arv);
+      const askingPrice = Number(body.askingPrice);
+      const repairEstimate = Number(body.repairEstimate);
+      const assignmentFee = Number(body.assignmentFee);
+      if (
+        !address ||
+        ![arv, askingPrice, repairEstimate, assignmentFee].every(
+          (value) => Number.isFinite(value) && value >= 0,
+        )
+      ) {
+        return res.status(400).json({ message: 'Invalid deal details' });
+      }
+
+      const cleanText = (value: unknown, maxLength: number) =>
+        typeof value === 'string' && value.trim()
+          ? value.trim().slice(0, maxLength)
+          : undefined;
+      const photos = Array.isArray(body.photos)
+        ? body.photos
+            .filter((photo: unknown): photo is string => typeof photo === 'string')
+            .slice(0, 30)
+        : undefined;
+
+      const deal = requireCreatedSupabaseMarketplaceRecord(
+        await storage.createWholesaleDeal({
+          wholesaler_id:
+            identity.kind === 'supabase' ? identity.userId : null,
+          external_wholesaler_id:
+            identity.kind === 'external' ? identity.userId : null,
+          address,
+          city: cleanText(body.city, 100),
+          state: cleanText(body.state, 50),
+          zip_code: cleanText(body.zipCode, 20),
+          property_type: cleanText(body.propertyType, 100),
+          arv,
+          asking_price: askingPrice,
+          repair_estimate: repairEstimate,
+          assignment_fee: assignmentFee,
+          photos,
+          occupancy: cleanText(body.occupancy, 100),
+          close_timeline: cleanText(body.closeTimeline, 100),
+          notes: cleanText(body.notes, 10_000),
+          status: 'Under Review',
+          is_public: false,
+          raising_capital: false,
+        }),
+        'Failed to create deal',
+      );
       
       res.status(201).json(toCamelCase(deal));
     } catch (error) {
@@ -1015,6 +1340,17 @@ export async function registerRoutes(
     }
   });
 
+  const wholesaleDealOwnerUpdateSchema = insertWholesaleDealSchema
+    .pick({
+      askingPrice: true,
+      arv: true,
+      estimatedRepairs: true,
+      description: true,
+      assignmentFee: true,
+    })
+    .partial()
+    .strict();
+
   // Update wholesale deal (owner only)
   app.patch('/api/supabase/wholesale-deals/:id', isHybridAuthenticated, async (req: any, res) => {
     try {
@@ -1022,8 +1358,8 @@ export async function registerRoutes(
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const dealId = parseInt(req.params.id);
-      if (isNaN(dealId)) {
+      const dealId = Number(req.params.id);
+      if (!Number.isSafeInteger(dealId) || dealId <= 0) {
         return res.status(400).json({ message: 'Invalid deal ID' });
       }
       
@@ -1036,14 +1372,14 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Not authorized to edit this deal' });
       }
       
-      // Update deal with provided fields using PostgreSQL storage
-      const updateData = { ...req.body };
-      delete updateData.id;
-      delete updateData.submittedBy;
-      delete updateData.wholesalerId;
-      delete updateData.createdAt;
+      const updateResult = wholesaleDealOwnerUpdateSchema.safeParse(req.body);
+      if (!updateResult.success) {
+        return res.status(400).json({
+          message: fromError(updateResult.error).toString(),
+        });
+      }
       
-      const updatedDeal = await storage.updateWholesaleDeal(dealId, updateData);
+      const updatedDeal = await storage.updateWholesaleDeal(dealId, updateResult.data);
       res.json(updatedDeal);
     } catch (error) {
       console.error('Error updating wholesale deal:', error);
@@ -1053,74 +1389,45 @@ export async function registerRoutes(
 
   // --- Wholesale Deal Offers (Supabase) ---
   app.post('/api/supabase/wholesale-offers', isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        'Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offers.',
+    });
+  });
+
+  app.get('/api/supabase/wholesale-deals/:dealId/negotiations', isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
+        return res.status(401).json({ message: 'Unauthorized' });
       }
-      const { dealId, type, isCounter, parentOfferId, partnershipType, assignmentFee, earnestMoney, closingDate, inspectionPeriod, message: offerMessage, offerAmount, equityPercent, profitSplit, notes } = req.body;
-      
-      if (!dealId) {
-        return res.status(400).json({ message: 'Missing dealId' });
-      }
-      
-      // Use PostgreSQL storage for deal lookup (deals use numeric IDs)
-      const deal = await storage.getWholesaleDeal(dealId);
+
+      const { dealId } = req.params;
+      const { storage: supaStorage, toCamelCase } = await getSupabaseStorage();
+      const deal = await supaStorage.getWholesaleDeal(dealId);
       if (!deal) {
         return res.status(404).json({ message: 'Deal not found' });
       }
-      
-      // Create offer using PostgreSQL storage (to match deal storage)
-      const offerAmountValue = assignmentFee || offerAmount || 0;
-      
-      const offer = await storage.createWholesaleDealOffer({
-        dealId: Number(dealId),
-        buyerId: userId,
-        offerAmount: offerAmountValue,
-        fundingType: 'cash', // Default to cash funding
-        earnestMoney: earnestMoney || 1000,
-        closingTimeline: closingDate || null,
-        inspectionContingency: true,
-        notes: offerMessage || notes || null,
-      });
-      
-      // Create notification for wholesaler (submittedBy is the wholesaler's user ID)
-      if (offer && deal.submittedBy) {
-        await storage.createNotification({
-          userId: deal.submittedBy,
-          type: isCounter ? 'counter_offer' : 'investment_offer',
-          title: isCounter ? 'Counter-Offer Received' : 'New Investment Offer',
-          message: isCounter 
-            ? `A counter-offer of $${offerAmountValue.toLocaleString()} was submitted on your deal`
-            : `An offer of $${offerAmountValue.toLocaleString()} was submitted on your deal`,
-          link: `/marketplace/wholesaler/deals/${dealId}`
-        });
-        
-        // Send email notification (async, don't await to avoid blocking response)
-        const dealAddress = deal.propertyAddress || `${deal.city}, ${deal.state}`;
-        sendOfferNotification({
-          recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'deals@pegasusdreamscapes.com',
-          recipientName: 'Property Owner',
-          dealTitle: dealAddress,
-          dealAddress,
-          offerAmount: offerAmountValue,
-          offerType: isCounter ? 'counter' : 'new',
-          notes: offerMessage || notes,
-        }).catch(err => console.error('Failed to send offer email:', err));
-      }
-      
-      res.status(201).json(offer);
-    } catch (error) {
-      console.error('Error creating wholesale offer:', error);
-      res.status(500).json({ message: 'Failed to create offer' });
-    }
-  });
 
-  app.get('/api/supabase/wholesale-deals/:dealId/negotiations', async (req: any, res) => {
-    try {
-      const { dealId } = req.params;
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const negotiations = await storage.getWholesaleDealNegotiations(dealId);
+      const isStaff = await hasMarketflowStaffAccess(req, userId);
+      const hasDealWideAccess = isStaff || deal.wholesaler_id === userId;
+      const negotiations = hasDealWideAccess
+        ? await supaStorage.getWholesaleDealNegotiations(dealId)
+        : await supaStorage.getWholesaleDealNegotiationsByParticipant(
+            dealId,
+            userId,
+          );
+      if (
+        !canReadPrivateDealData({
+          userId,
+          ownerId: deal.wholesaler_id,
+          participantIds: negotiations.length > 0 ? [userId] : [],
+          isStaff,
+        })
+      ) {
+        return res.status(404).json({ message: 'Deal not found' });
+      }
+
       res.json(toCamelCase(negotiations || []));
     } catch (error) {
       console.error('Error fetching negotiations:', error);
@@ -1128,72 +1435,43 @@ export async function registerRoutes(
     }
   });
 
-  app.patch('/api/supabase/wholesale-offers/:id/status', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { id } = req.params;
-      const { status } = req.body;
-      
-      if (!status || !['accepted', 'declined', 'expired', 'withdrawn'].includes(status)) {
-        return res.status(400).json({ message: 'Valid status is required' });
-      }
-      
-      const { storage: supaStorage, toCamelCase } = await getSupabaseStorage();
-      const offer = await supaStorage.updateWholesaleOfferStatus(id, status);
-      
-      if (!offer) {
-        return res.status(404).json({ message: 'Offer not found' });
-      }
-      
-      // Send email notification for status updates (accepted/declined)
-      if ((status === 'accepted' || status === 'declined') && offer.buyer_id) {
-        const deal = await storage.getWholesaleDeal(offer.deal_id);
-        if (deal) {
-          const dealAddress = deal.propertyAddress || `${deal.city}, ${deal.state}`;
-          sendOfferNotification({
-            recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'deals@pegasusdreamscapes.com',
-            recipientName: 'Investor',
-            dealTitle: dealAddress,
-            dealAddress,
-            offerAmount: offer.offer_amount || 0,
-            offerType: status as 'accepted' | 'declined',
-          }).catch(err => console.error('Failed to send offer status email:', err));
-        }
-      }
-      
-      res.json(toCamelCase(offer));
-    } catch (error) {
-      console.error('Error updating offer status:', error);
-      res.status(500).json({ message: 'Failed to update offer status' });
-    }
+  app.patch('/api/supabase/wholesale-offers/:id/status', isHybridAuthenticated, async (_req: any, res) => {
+    return res.status(501).json({
+      message:
+        'Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offer responses.',
+    });
   });
 
   // --- Listings (Supabase) ---
-  app.get('/api/supabase/listings', async (req: any, res) => {
+  app.get('/api/supabase/listings', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       const listings = await storage.getPublicListings();
-      res.json(toCamelCase(listings));
+      res.json(
+        listings
+          .map(toPublicSupabaseListing)
+          .filter((listing) => listing !== null),
+      );
     } catch (error) {
       console.error('Error fetching listings:', error);
       res.status(500).json({ message: 'Failed to fetch listings' });
     }
   });
 
-  app.get('/api/supabase/listings/:id', async (req, res) => {
+  app.get('/api/supabase/listings/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const { id } = req.params;
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       const listing = await storage.getListing(id);
-      
-      if (!listing) {
+
+      const publicListing = listing
+        ? toPublicSupabaseListing(listing)
+        : null;
+      if (!publicListing) {
         return res.status(404).json({ message: 'Listing not found' });
       }
-      
-      res.json(toCamelCase(listing));
+
+      res.json(publicListing);
     } catch (error) {
       console.error('Error fetching listing:', error);
       res.status(500).json({ message: 'Failed to fetch listing' });
@@ -1203,22 +1481,43 @@ export async function registerRoutes(
   // --- Unified Deal Context Endpoint ---
   // Returns normalized deal data based on dealType for any deal/project/listing
   // This is the single source of truth for all canonical forms
-  app.get('/api/deals/:dealType/:id/context', async (req: any, res) => {
+  app.get('/api/deals/:dealType/:id/context', isHybridAuthenticated, async (req: any, res) => {
     try {
       const { dealType, id } = req.params;
-      const userId = req.user?.id || null;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
       
       let context: any = null;
       
       if (dealType === 'WHOLESALE_ASSIGNMENT' || dealType === 'wholesale') {
         // Fetch wholesale deal from PostgreSQL storage
-        const deal = await storage.getWholesaleDeal(id);
+        const deal = await storage.getWholesaleDeal(Number(id));
         if (!deal) {
           return res.status(404).json({ message: 'Deal not found' });
         }
         
         // Fetch existing offers for this deal
         const offers = await storage.getWholesaleDealOffers(Number(id));
+        const isStaff = await hasMarketflowStaffAccess(req, userId);
+        const participantOffers = offers.filter(
+          (offer: any) => offer.buyerId === userId,
+        );
+        if (
+          !canReadPrivateDealData({
+            userId,
+            ownerId: deal.submittedBy,
+            participantIds: participantOffers.map(
+              (offer: any) => offer.buyerId,
+            ),
+            isStaff,
+          })
+        ) {
+          return res.status(404).json({ message: 'Deal not found' });
+        }
+        const visibleOffers =
+          isStaff || deal.submittedBy === userId ? offers : participantOffers;
         
         context = {
           dealType: 'WHOLESALE_ASSIGNMENT',
@@ -1246,7 +1545,7 @@ export async function registerRoutes(
             closingDate: deal.closingDate,
           },
           // Existing offers/counters
-          existingOffers: offers.map((o: any) => ({
+          existingOffers: visibleOffers.map((o: any) => ({
             id: o.id,
             buyerId: o.buyerId,
             offerAmount: o.offerAmount,
@@ -1256,7 +1555,7 @@ export async function registerRoutes(
             createdAt: o.createdAt,
           })),
           // User's existing offers on this deal
-          userOffers: userId ? offers.filter((o: any) => o.buyerId === userId) : [],
+          userOffers: participantOffers,
           // Permissions
           permissions: {
             canOffer: userId !== deal.submittedBy,
@@ -1276,6 +1575,26 @@ export async function registerRoutes(
         
         // Fetch existing investment offers for this project
         const commitments = await storage.getInvestmentOffersByProject(Number(id));
+        const isStaff = await hasMarketflowStaffAccess(req, userId);
+        const participantCommitments = commitments.filter(
+          (commitment: any) => commitment.investorId === userId,
+        );
+        if (
+          !canReadPrivateDealData({
+            userId,
+            ownerId: project.createdBy,
+            participantIds: participantCommitments.map(
+              (commitment: any) => commitment.investorId,
+            ),
+            isStaff,
+          })
+        ) {
+          return res.status(404).json({ message: 'Project not found' });
+        }
+        const visibleCommitments =
+          isStaff || project.createdBy === userId
+            ? commitments
+            : participantCommitments;
         
         context = {
           dealType: 'CAPITAL_RAISE',
@@ -1320,7 +1639,7 @@ export async function registerRoutes(
             projectedProfit: project.projectedProfit,
           },
           // Existing commitments
-          existingCommitments: commitments.map((c: any) => ({
+          existingCommitments: visibleCommitments.map((c: any) => ({
             id: c.id,
             investorId: c.investorId,
             amount: c.amount,
@@ -1329,7 +1648,7 @@ export async function registerRoutes(
             createdAt: c.createdAt,
           })),
           // User's existing commitments
-          userCommitments: userId ? commitments.filter((c: any) => c.investorId === userId) : [],
+          userCommitments: participantCommitments,
           // Permissions
           permissions: {
             canInvest: userId !== project.createdBy,
@@ -1343,6 +1662,23 @@ export async function registerRoutes(
         // Fetch listing - use PostgreSQL storage (listings table)
         const listing = await storage.getListing(Number(id));
         if (!listing) {
+          return res.status(404).json({ message: 'Listing not found' });
+        }
+        const inquiries = await storage.getListingInquiries(Number(id));
+        const isStaff = await hasMarketflowStaffAccess(req, userId);
+        const participantInquiries = inquiries.filter(
+          (inquiry: any) => inquiry.userId === userId,
+        );
+        if (
+          !canReadPrivateDealData({
+            userId,
+            ownerId: listing.submittedBy,
+            participantIds: participantInquiries.map(
+              (inquiry: any) => inquiry.userId,
+            ),
+            isStaff,
+          })
+        ) {
           return res.status(404).json({ message: 'Listing not found' });
         }
         
@@ -1402,46 +1738,64 @@ export async function registerRoutes(
   });
 
   // --- Buyer Offers (Supabase) ---
-  app.post('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
+  app.post('/api/supabase/buyer-offers', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
+      const identity = resolveSupabaseMarketplaceIdentity(req);
+      if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { listingId, offerAmount, financingType, contingencies, message } = req.body;
+      if (res.locals.canAccessReviewedMarketflowInventory !== true) {
+        return res.status(404).json({ message: 'Listing not found' });
+      }
+      const { listingId, financingType } = req.body;
+      const offerAmount = Number(req.body?.offerAmount);
       
-      if (!listingId || !offerAmount) {
+      if (!listingId || !Number.isFinite(offerAmount) || offerAmount <= 0) {
         return res.status(400).json({ message: 'Missing listingId or offerAmount' });
       }
       
-      const { storage, toCamelCase } = await getSupabaseStorage();
+      const { storage } = await getSupabaseStorage();
       
       const listing = await storage.getListing(listingId);
-      if (!listing) {
+      const publicListing = listing ? toPublicSupabaseListing(listing) : null;
+      const ownerId = listing?.owner_id || listing?.external_owner_id || null;
+      if (!listing || !publicListing || !ownerId || ownerId === identity.userId) {
         return res.status(404).json({ message: 'Listing not found' });
       }
+
+      const contingencies = Array.isArray(req.body?.contingencies)
+        ? req.body.contingencies
+            .filter((item: unknown): item is string => typeof item === 'string')
+            .slice(0, 20)
+        : undefined;
+      const message =
+        typeof req.body?.message === 'string'
+          ? req.body.message.trim().slice(0, 5_000)
+          : undefined;
       
-      const offer = await storage.createBuyerOffer({
-        listing_id: listingId,
-        buyer_id: userId,
-        offer_amount: offerAmount,
-        financing_type: financingType,
-        contingencies,
-        message,
-        status: 'pending'
+      const offer = requireCreatedSupabaseMarketplaceRecord(
+        await storage.createBuyerOffer({
+          listing_id: listingId,
+          ...toBuyerOfferIdentityColumns(identity),
+          offer_amount: offerAmount,
+          financing_type: financingType,
+          contingencies,
+          message,
+          status: 'pending'
+        }),
+        'Failed to create offer',
+      );
+
+      await storage.createNotification({
+        user_id: listing.owner_id || null,
+        external_user_id: listing.external_owner_id || null,
+        type: 'buyer_offer',
+        title: 'New Offer Received',
+        message: `You received an offer of $${offerAmount.toLocaleString()} on your listing`,
+        link: `/marketplace/listings/${listingId}`
       });
       
-      if (offer && listing.owner_id) {
-        await storage.createNotification({
-          user_id: listing.owner_id,
-          type: 'buyer_offer',
-          title: 'New Offer Received',
-          message: `You received an offer of $${offerAmount.toLocaleString()} on your listing`,
-          link: `/marketplace/listings/${listingId}`
-        });
-      }
-      
-      res.status(201).json(toCamelCase(offer));
+      res.status(201).json(toBuyerOfferDashboardDto(offer));
     } catch (error) {
       console.error('Error creating buyer offer:', error);
       res.status(500).json({ message: 'Failed to create offer' });
@@ -1450,13 +1804,13 @@ export async function registerRoutes(
 
   app.get('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
+      const identity = resolveSupabaseMarketplaceIdentity(req);
+      if (!identity) {
         return res.status(401).json({ message: 'User not authenticated' });
       }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const offers = await storage.getBuyerOffersByUser(userId);
-      res.json(toCamelCase(offers));
+      const { storage } = await getSupabaseStorage();
+      const offers = await storage.getBuyerOffersByUser(identity);
+      res.json(offers.map(toBuyerOfferDashboardDto));
     } catch (error) {
       console.error('Error fetching buyer offers:', error);
       res.status(500).json({ message: 'Failed to fetch offers' });
@@ -1465,140 +1819,17 @@ export async function registerRoutes(
 
   // --- Negotiations (Accept/Counter for deals) ---
   app.post('/api/negotiations/accept', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { type, dealId, terms } = req.body;
-      
-      if (!type || !dealId || !terms) {
-        return res.status(400).json({ message: 'Missing type, dealId, or terms' });
-      }
-      
-      // Log the acceptance (in a production system, this would create a binding agreement)
-      console.log(`[Negotiation] User ${userId} accepted terms for ${type} deal ${dealId}:`, terms);
-      
-      // For wholesale deals, notify the deal poster (wholesaler)
-      if (type === 'wholesale') {
-        try {
-          const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
-          if (!isNaN(numericId)) {
-            const deal = await storage.getWholesaleDeal(numericId);
-            const posterUserId = deal?.submittedBy;
-            
-            if (posterUserId && posterUserId !== userId) {
-              const { storage: supaStore } = await getSupabaseStorage();
-              await supaStore.createNotification({
-                user_id: posterUserId,
-                type: 'deal_accepted',
-                title: 'Your Deal Terms Accepted!',
-                message: `Someone has accepted your terms for deal #${dealId}. Check your inbox for details.`,
-                link: `/marketflow/deals/${dealId}`
-              });
-            }
-          }
-        } catch (e) {
-          console.log('Could not create notification for deal poster:', e);
-        }
-      }
-      
-      // For capital projects, notify the operator
-      if (type === 'capital') {
-        try {
-          const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
-          if (!isNaN(numericId)) {
-            const project = await storage.getCapitalProject(numericId);
-            const operatorUserId = project?.createdBy;
-            
-            if (operatorUserId && operatorUserId !== userId) {
-              const { storage: supaStore } = await getSupabaseStorage();
-              await supaStore.createNotification({
-                user_id: operatorUserId,
-                type: 'investment_accepted',
-                title: 'Investment Terms Accepted!',
-                message: `An investor has accepted your terms for project "${project?.title || dealId}".`,
-                link: `/marketflow/projects/${dealId}`
-              });
-            }
-          }
-        } catch (e) {
-          console.log('Could not create notification for project operator:', e);
-        }
-      }
-      
-      res.json({ 
-        success: true, 
-        message: 'Terms accepted successfully',
-        type,
-        dealId,
-        terms
-      });
-    } catch (error) {
-      console.error('Error accepting terms:', error);
-      res.status(500).json({ message: 'Failed to accept terms' });
-    }
+    return res.status(501).json({
+      message:
+        'This legacy negotiation action is unavailable. Use MarketFlow Offer Studio for persisted offers.',
+    });
   });
 
   app.post('/api/negotiations/counter', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { type, dealId, terms, message } = req.body;
-      
-      if (!type || !dealId || !terms) {
-        return res.status(400).json({ message: 'Missing type, dealId, or terms' });
-      }
-      
-      // Log the counter offer
-      console.log(`[Negotiation] User ${userId} sent counter offer for ${type} deal ${dealId}:`, terms, message);
-      
-      // Notify the deal/project poster about the counter offer
-      try {
-        let posterUserId: string | null = null;
-        let itemTitle = '';
-        const numericId = typeof dealId === 'string' ? parseInt(dealId, 10) : dealId;
-        
-        if (!isNaN(numericId)) {
-          if (type === 'wholesale') {
-            const deal = await storage.getWholesaleDeal(numericId);
-            posterUserId = deal?.submittedBy || null;
-            itemTitle = deal?.propertyAddress || `Deal #${dealId}`;
-          } else {
-            const project = await storage.getCapitalProject(numericId);
-            posterUserId = project?.createdBy || null;
-            itemTitle = project?.title || `Project #${dealId}`;
-          }
-          
-          if (posterUserId && posterUserId !== userId) {
-            const { storage: supaStore } = await getSupabaseStorage();
-            await supaStore.createNotification({
-              user_id: posterUserId,
-              type: 'counter_offer_received',
-              title: 'Counter Offer Received',
-              message: `You received a counter offer for "${itemTitle}". Review and respond.`,
-              link: type === 'wholesale' ? `/marketflow/deals/${dealId}` : `/marketflow/projects/${dealId}`
-            });
-          }
-        }
-      } catch (e) {
-        console.log('Could not create notification for counter offer:', e);
-      }
-      
-      res.json({ 
-        success: true, 
-        message: 'Counter offer sent successfully',
-        type,
-        dealId,
-        terms,
-        sentAt: new Date()
-      });
-    } catch (error) {
-      console.error('Error sending counter offer:', error);
-      res.status(500).json({ message: 'Failed to send counter offer' });
-    }
+    return res.status(501).json({
+      message:
+        'This legacy negotiation action is unavailable. Use MarketFlow Offer Studio for persisted offers.',
+    });
   });
 
   // --- Notifications (Supabase) ---
@@ -1908,23 +2139,37 @@ export async function registerRoutes(
   });
 
   // Saved Properties routes (for buyers)
-  app.get('/api/portal/buyer/saved-properties', isAuthenticated, async (req: any, res) => {
+  app.get('/api/portal/buyer/saved-properties', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const saved = await storage.getSavedProperties(userId);
-      return res.json(saved);
+      return res.json(
+        saved.filter((entry) =>
+          canAccessMarketflowItemType(res, entry.propertyType),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching saved properties:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.post('/api/portal/buyer/saved-properties', isAuthenticated, async (req: any, res) => {
+  app.post('/api/portal/buyer/saved-properties', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const result = insertSavedPropertySchema.safeParse({ ...req.body, userId });
       if (!result.success) {
         return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      if (!canAccessMarketflowItemType(res, result.data.propertyType)) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      const publicProperty = await getPublicMarketplaceItem(
+        result.data.propertyType,
+        result.data.propertyId,
+      );
+      if (!publicProperty) {
+        return res.status(404).json({ message: "Property not found" });
       }
       
       // Check if already saved
@@ -1965,12 +2210,30 @@ export async function registerRoutes(
     }
   });
 
-  app.post('/api/portal/buyer/offers', isAuthenticated, async (req: any, res) => {
+  app.post('/api/portal/buyer/offers', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const result = insertBuyerOfferSchema.safeParse({ ...req.body, userId });
       if (!result.success) {
         return res.status(400).json({ message: fromError(result.error).toString() });
+      }
+      if (isReviewedMarketflowInventoryType(result.data.propertyType)) {
+        const access = await resolveLegacyDealAccess(
+          req,
+          userId,
+          result.data.propertyType,
+          result.data.propertyId,
+        );
+        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+      }
+      const publicProperty = await getPublicMarketplaceItem(
+        result.data.propertyType,
+        result.data.propertyId,
+      );
+      if (!publicProperty) {
+        return res.status(404).json({ message: "Property not found" });
       }
       
       const offer = await storage.createBuyerOffer(result.data);
@@ -2057,69 +2320,28 @@ export async function registerRoutes(
   });
 
   app.post('/api/investment-offers/:offerId/accept', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const offerId = parseInt(req.params.offerId);
-      
-      const offer = await storage.getInvestmentOffer(offerId);
-      if (!offer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-      
-      const project = await storage.getCapitalProject(offer.projectId);
-      if (!project || project.createdBy !== userId) {
-        return res.status(403).json({ message: "Not authorized to manage this offer" });
-      }
-      
-      const updatedOffer = await storage.updateInvestmentOfferStatus(offerId, 'ACCEPTED');
-      
-      const committedInvestment = await storage.createCommittedInvestment({
-        projectId: offer.projectId,
-        investorId: offer.investorId,
-        committedAmount: offer.amountOffered,
-        structureType: offer.structureType,
-        interestRate: offer.proposedInterestRate,
-        equityPercent: offer.proposedEquityPercent,
-        role: offer.requestedRole,
-      });
-      
-      await storage.updateCapitalProjectFunding(offer.projectId, offer.amountOffered);
-      
-      return res.json({ offer: updatedOffer, investment: committedInvestment });
-    } catch (error) {
-      console.error("Error accepting offer:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(501).json({
+      message:
+        "Legacy investment offers are read-only. Use MarketFlow Offer Studio to respond.",
+    });
   });
 
   app.post('/api/investment-offers/:offerId/decline', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const offerId = parseInt(req.params.offerId);
-      
-      const offer = await storage.getInvestmentOffer(offerId);
-      if (!offer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-      
-      const project = await storage.getCapitalProject(offer.projectId);
-      if (!project || project.createdBy !== userId) {
-        return res.status(403).json({ message: "Not authorized to manage this offer" });
-      }
-      
-      const updatedOffer = await storage.updateInvestmentOfferStatus(offerId, 'DECLINED');
-      return res.json(updatedOffer);
-    } catch (error) {
-      console.error("Error declining offer:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(501).json({
+      message:
+        "Legacy investment offers are read-only. Use MarketFlow Offer Studio to respond.",
+    });
   });
   
   // Seller Lead Routes
   // Public Website v1 (issue #22): structured opportunity intake + routing.
-  registerOpportunityRoutes(app, { isAuthenticated, requireStaffRole });
+  registerOpportunityRoutes(app, {
+    isAuthenticated,
+    requireStaffRole,
+    publicIntakeRateLimit,
+  });
 
-  app.post("/api/seller-leads", async (req, res) => {
+  app.post("/api/seller-leads", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertSellerLeadSchema.safeParse(req.body);
       if (!result.success) {
@@ -2129,7 +2351,7 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createSellerLead(result.data);
-      console.log("New seller lead received:", lead.email);
+      console.info("[intake] seller lead stored");
       return res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating seller lead:", error);
@@ -2138,7 +2360,7 @@ export async function registerRoutes(
   });
 
   // Investor Lead Routes
-  app.post("/api/investor-leads", async (req, res) => {
+  app.post("/api/investor-leads", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertInvestorLeadSchema.safeParse(req.body);
       if (!result.success) {
@@ -2148,7 +2370,7 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createInvestorLead(result.data);
-      console.log("New investor lead received:", lead.email);
+      console.info("[intake] investor lead stored");
       return res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating investor lead:", error);
@@ -2157,7 +2379,7 @@ export async function registerRoutes(
   });
 
   // Buyer Lead Routes
-  app.post("/api/buyer-leads", async (req, res) => {
+  app.post("/api/buyer-leads", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertBuyerLeadSchema.safeParse(req.body);
       if (!result.success) {
@@ -2167,7 +2389,7 @@ export async function registerRoutes(
       }
       
       const lead = await storage.createBuyerLead(result.data);
-      console.log("New buyer lead received:", lead.email);
+      console.info("[intake] buyer lead stored");
       return res.status(201).json(lead);
     } catch (error) {
       console.error("Error creating buyer lead:", error);
@@ -2176,7 +2398,7 @@ export async function registerRoutes(
   });
 
   // Contact Routes
-  app.post("/api/contacts", async (req, res) => {
+  app.post("/api/contacts", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertContactSchema.safeParse(req.body);
       if (!result.success) {
@@ -2186,32 +2408,10 @@ export async function registerRoutes(
       }
       
       const contact = await storage.createContact(result.data);
-      console.log("New contact message received:", contact.email);
+      console.info("[intake] contact message stored");
       return res.status(201).json(contact);
     } catch (error) {
       console.error("Error creating contact:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Articles/Resources Routes (public)
-  app.get("/api/articles", async (req, res) => {
-    try {
-      const articlesList = await storage.getPublishedArticles();
-      return res.json(articlesList);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Strategy Library curated articles (public, published + featuredInLibrary)
-  app.get("/api/articles/library", async (_req, res) => {
-    try {
-      const list = await storage.getLibraryArticles();
-      return res.json(list);
-    } catch (error) {
-      console.error("Error fetching library articles:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -2285,28 +2485,6 @@ export async function registerRoutes(
       return res.json({ success: true });
     } catch (error) {
       console.error("Error deleting article:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Education page: Beginner Path (public read)
-  app.get("/api/library/beginner-path", async (_req, res) => {
-    try {
-      const steps = await storage.getLibraryBeginnerSteps();
-      return res.json(steps);
-    } catch (error) {
-      console.error("Error fetching beginner path:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Education page: Glossary (public read)
-  app.get("/api/library/glossary", async (_req, res) => {
-    try {
-      const terms = await storage.getLibraryGlossaryTerms();
-      return res.json(terms);
-    } catch (error) {
-      console.error("Error fetching glossary:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -2415,19 +2593,6 @@ export async function registerRoutes(
       return res.json({ success: true });
     } catch (error) {
       console.error("Error deleting glossary term:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/articles/:slug", async (req, res) => {
-    try {
-      const article = await storage.getArticleBySlug(req.params.slug);
-      if (!article || !article.published) {
-        return res.status(404).json({ message: "Article not found" });
-      }
-      return res.json(article);
-    } catch (error) {
-      console.error("Error fetching article:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -2611,165 +2776,39 @@ export async function registerRoutes(
     }
   });
 
-  // =================================================================
-  // UNIFIED DEAL CONTEXT ENDPOINT
-  // =================================================================
-  // Returns full deal context based on dealType, used by all forms/modals
-  // GET /api/deals/:dealType/:dealId/context
-  app.get("/api/deals/:dealType/:dealId/context", async (req, res) => {
-    try {
-      const { dealType, dealId } = req.params;
-      
-      let context: any = {
-        dealType,
-        dealId,
-      };
-      
-      if (dealType === "WHOLESALE_ASSIGNMENT" || dealType === "wholesale") {
-        const deal = await storage.getWholesaleDeal(parseInt(dealId));
-        if (!deal) {
-          return res.status(404).json({ message: "Wholesale deal not found" });
-        }
-        
-        context = {
-          ...context,
-          dealType: "WHOLESALE_ASSIGNMENT",
-          lane: "wholesale",
-          // Core fields
-          propertyAddress: deal.propertyAddress,
-          city: deal.city,
-          state: deal.state,
-          zipCode: deal.zipCode,
-          propertyType: deal.propertyType,
-          // Financial terms for context header
-          contractPrice: deal.contractPrice,
-          arv: deal.arv,
-          estimatedRepairs: deal.estimatedRepairs,
-          listedAssignmentFee: deal.assignmentFee,
-          negotiableFlag: true,
-          // Wholesale terms
-          wholesaleTerms: {
-            assignmentFee: deal.assignmentFee,
-            maxAssignmentFee: deal.maxAssignmentFee,
-            emdAmount: deal.emdAmount,
-            closingDate: deal.closingDate,
-            inspectionDeadline: deal.inspectionDeadline,
-            strategy: deal.strategy,
-          },
-          // Status
-          status: deal.status,
-          submittedBy: deal.submittedBy,
-        };
-      } else if (dealType === "CAPITAL_RAISE" || dealType === "capital") {
-        const project = await storage.getCapitalProject(parseInt(dealId));
-        if (!project) {
-          return res.status(404).json({ message: "Capital project not found" });
-        }
-        
-        context = {
-          ...context,
-          dealType: "CAPITAL_RAISE",
-          lane: "capital",
-          // Core fields
-          title: project.title,
-          description: project.description,
-          location: project.location,
-          propertyType: project.propertyType,
-          // Funding details for context header
-          fundingGoal: project.fundingGoal,
-          amountRaised: project.amountRaised,
-          remaining: (project.fundingGoal || 0) - (project.amountRaised || 0),
-          minInvestment: project.minInvestment,
-          structure: project.structure,
-          // Operator terms
-          operatorTerms: {
-            structure: project.structure,
-            askingInterestRate: project.askingInterestRate,
-            askingLoanDuration: project.askingLoanDuration,
-            askingPoints: project.askingPoints,
-            askingEquityPercent: project.askingEquityPercent,
-            askingProfitSplit: project.askingProfitSplit,
-            askingPreferredReturn: project.askingPreferredReturn,
-            holdPeriod: project.holdPeriod,
-            projectedReturn: project.projectedReturn,
-          },
-          // Status
-          status: project.status,
-          createdBy: project.createdBy,
-        };
-      } else if (dealType === "LISTING" || dealType === "listing") {
-        const listing = await storage.getListing(parseInt(dealId));
-        if (!listing) {
-          return res.status(404).json({ message: "Listing not found" });
-        }
-        
-        context = {
-          ...context,
-          dealType: "LISTING",
-          lane: "listing",
-          // Core fields
-          propertyAddress: listing.propertyAddress,
-          city: listing.city,
-          state: listing.state,
-          zipCode: listing.zipCode,
-          propertyType: listing.propertyType,
-          // Listing details
-          listingDetails: {
-            listPrice: listing.listPrice,
-            listingType: listing.listingType,
-            condition: listing.condition,
-            bedrooms: listing.bedrooms,
-            bathrooms: listing.bathrooms,
-            sqft: listing.sqft,
-            yearBuilt: listing.yearBuilt,
-          },
-          // Contact info
-          agentName: listing.agentName,
-          agentPhone: listing.agentPhone,
-          agentEmail: listing.agentEmail,
-          // Status
-          status: listing.status,
-        };
-      } else {
-        return res.status(400).json({ message: `Invalid deal type: ${dealType}` });
-      }
-      
-      return res.json(context);
-    } catch (error) {
-      console.error("Error fetching deal context:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Wholesale Deals Routes (public - only available deals)
-  app.get("/api/wholesale-deals", async (req, res) => {
+  // Reviewed MarketFlow inventory. Public marketing and intake routes remain
+  // separate; authentication alone does not grant private-beta data access.
+  app.get("/api/wholesale-deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const deals = await storage.getAvailableWholesaleDeals();
-      return res.json(deals);
+      return res.json(
+        deals.filter(isPublicWholesaleDeal).map(toPublicWholesaleDeal),
+      );
     } catch (error) {
       console.error("Error fetching wholesale deals:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.get("/api/wholesale-deals-active", async (req, res) => {
+  app.get("/api/wholesale-deals-active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const deals = await storage.getAvailableWholesaleDeals();
-      const activeDeals = deals.filter(d => d.status === "available" || d.status === "ACTIVE");
-      return res.json(activeDeals);
+      return res.json(
+        deals.filter(isPublicWholesaleDeal).map(toPublicWholesaleDeal),
+      );
     } catch (error) {
       console.error("Error fetching active wholesale deals:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.get("/api/wholesale-deals/:id", async (req, res) => {
+  app.get("/api/wholesale-deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const deal = await storage.getWholesaleDeal(parseInt(req.params.id));
-      if (!deal || deal.status !== "available") {
+      if (!deal || !isPublicWholesaleDeal(deal)) {
         return res.status(404).json({ message: "Deal not found" });
       }
-      return res.json(deal);
+      return res.json(toPublicWholesaleDeal(deal));
     } catch (error) {
       console.error("Error fetching wholesale deal:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -2777,7 +2816,7 @@ export async function registerRoutes(
   });
 
   // Wholesale Request (public - investors can request deals)
-  app.post("/api/wholesale-requests", async (req, res) => {
+  app.post("/api/wholesale-requests", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertWholesaleRequestSchema.safeParse(req.body);
       if (!result.success) {
@@ -2787,7 +2826,7 @@ export async function registerRoutes(
       }
       
       const request = await storage.createWholesaleRequest(result.data);
-      console.log("New wholesale request received:", request.email);
+      console.info("[intake] wholesale request stored");
       return res.status(201).json(request);
     } catch (error) {
       console.error("Error creating wholesale request:", error);
@@ -2819,7 +2858,7 @@ export async function registerRoutes(
       }
       
       const deal = await storage.createWholesaleDeal(result.data);
-      console.log("New wholesale deal submitted by wholesaler:", deal.propertyAddress);
+      console.info("[dealflow] wholesale deal submitted");
       
       // Send email notification (non-blocking)
       sendDealSubmissionNotification({
@@ -2843,7 +2882,10 @@ export async function registerRoutes(
   app.patch("/api/wholesale-deals/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const dealId = parseInt(req.params.id);
+      const dealId = Number(req.params.id);
+      if (!Number.isSafeInteger(dealId) || dealId <= 0) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
 
       const existing = await storage.getWholesaleDeal(dealId);
       if (!existing) {
@@ -2855,9 +2897,14 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Not authorized to edit this deal" });
       }
 
-      // Don't allow changing status through this endpoint
-      const { status, submittedBy, ...updateData } = req.body;
-      const updated = await storage.updateWholesaleDeal(dealId, updateData);
+      const updateResult = wholesaleDealOwnerUpdateSchema.safeParse(req.body);
+      if (!updateResult.success) {
+        return res.status(400).json({
+          message: fromError(updateResult.error).toString(),
+        });
+      }
+
+      const updated = await storage.updateWholesaleDeal(dealId, updateResult.data);
       return res.json(updated);
     } catch (error) {
       console.error("Error updating wholesale deal:", error);
@@ -2869,7 +2916,10 @@ export async function registerRoutes(
   app.patch("/api/capital-projects/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const projectId = parseInt(req.params.id);
+      const projectId = Number(req.params.id);
+      if (!Number.isSafeInteger(projectId) || projectId <= 0) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
 
       const existing = await storage.getCapitalProject(projectId);
       if (!existing) {
@@ -2881,9 +2931,14 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Not authorized to edit this project" });
       }
 
-      // Don't allow changing status through this endpoint
-      const { status, createdBy, ...updateData } = req.body;
-      const updated = await storage.updateCapitalProject(projectId, updateData);
+      const updateResult = capitalProjectOwnerUpdateSchema.safeParse(req.body);
+      if (!updateResult.success) {
+        return res.status(400).json({
+          message: fromError(updateResult.error).toString(),
+        });
+      }
+
+      const updated = await storage.updateCapitalProject(projectId, updateResult.data);
       return res.json(updated);
     } catch (error) {
       console.error("Error updating capital project:", error);
@@ -3472,7 +3527,7 @@ export async function registerRoutes(
       }
       
       const deal = await storage.createWholesaleDeal(result.data);
-      console.log("New wholesale deal created:", deal.propertyAddress);
+      console.info("[dealflow] wholesale deal created");
       return res.status(201).json(deal);
     } catch (error) {
       console.error("Error creating wholesale deal:", error);
@@ -3568,11 +3623,12 @@ export async function registerRoutes(
 
   // ============ RETAIL LISTINGS ROUTES ============
 
-  // Public Routes - Active retail listings for buyers
+  // Public marketing listings. These are distinct from the private legacy
+  // /api/listings MarketFlow inventory below.
   app.get("/api/retail-listings", async (req, res) => {
     try {
       const listings = await storage.getActiveRetailListings();
-      return res.json(listings);
+      return res.json(listings.map(toPublicRetailListing));
     } catch (error) {
       console.error("Error fetching retail listings:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -3585,7 +3641,7 @@ export async function registerRoutes(
       if (!listing || (listing.status !== "active" && listing.status !== "coming_soon")) {
         return res.status(404).json({ message: "Listing not found" });
       }
-      return res.json(listing);
+      return res.json(toPublicRetailListing(listing));
     } catch (error) {
       console.error("Error fetching retail listing:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -3593,7 +3649,7 @@ export async function registerRoutes(
   });
 
   // Buyer Inquiries (public)
-  app.post("/api/buyer-inquiries", async (req, res) => {
+  app.post("/api/buyer-inquiries", publicIntakeRateLimit, async (req, res) => {
     try {
       const result = insertBuyerInquirySchema.safeParse(req.body);
       if (!result.success) {
@@ -3601,7 +3657,7 @@ export async function registerRoutes(
       }
       
       const inquiry = await storage.createBuyerInquiry(result.data);
-      console.log("New buyer inquiry received:", inquiry.email);
+      console.info("[intake] buyer inquiry stored");
       return res.status(201).json(inquiry);
     } catch (error) {
       console.error("Error creating buyer inquiry:", error);
@@ -3610,23 +3666,25 @@ export async function registerRoutes(
   });
 
   // LISTING dealType endpoints
-  app.get("/api/listings", async (req, res) => {
+  app.get("/api/listings", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const activeListings = await storage.getActiveListings();
-      return res.json(activeListings);
+      return res.json(
+        activeListings.filter(isPublicListing).map(toPublicListing),
+      );
     } catch (error) {
       console.error("Error fetching listings:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.get("/api/listings/:id", async (req, res) => {
+  app.get("/api/listings/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const listing = await storage.getListing(parseInt(req.params.id));
-      if (!listing) {
+      if (!listing || !isPublicListing(listing)) {
         return res.status(404).json({ message: "Listing not found" });
       }
-      return res.json(listing);
+      return res.json(toPublicListing(listing));
     } catch (error) {
       console.error("Error fetching listing:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -3653,7 +3711,7 @@ export async function registerRoutes(
       }
 
       const listing = await storage.createListing(result.data);
-      console.log("New listing created:", listing.propertyAddress);
+      console.info("[listings] listing created");
       return res.status(201).json(listing);
     } catch (error) {
       console.error("Error creating listing:", error);
@@ -3661,11 +3719,25 @@ export async function registerRoutes(
     }
   });
 
+  const listingOwnerUpdateSchema = insertListingSchema
+    .pick({
+      listPrice: true,
+      bedrooms: true,
+      bathrooms: true,
+      sqft: true,
+      description: true,
+    })
+    .partial()
+    .strict();
+
   // Update listing (owner only)
   app.patch("/api/listings/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const listingId = parseInt(req.params.id);
+      const listingId = Number(req.params.id);
+      if (!Number.isSafeInteger(listingId) || listingId <= 0) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
 
       const existing = await storage.getListing(listingId);
       if (!existing) {
@@ -3677,7 +3749,14 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Not authorized to edit this listing" });
       }
 
-      const updated = await storage.updateListing(listingId, req.body);
+      const updateResult = listingOwnerUpdateSchema.safeParse(req.body);
+      if (!updateResult.success) {
+        return res.status(400).json({
+          message: fromError(updateResult.error).toString(),
+        });
+      }
+
+      const updated = await storage.updateListing(listingId, updateResult.data);
       return res.json(updated);
     } catch (error) {
       console.error("Error updating listing:", error);
@@ -3685,10 +3764,13 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/listing-inquiries", isAuthenticated, async (req: any, res) => {
+  app.post("/api/listing-inquiries", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const { listingId, inquiryType, message, email, fullName, phone } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       if (!listingId) {
         return res.status(400).json({ message: "Listing ID is required" });
@@ -3698,15 +3780,20 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Email and full name are required" });
       }
 
-      // Verify listing exists
-      const listing = await storage.getListing(listingId);
-      if (!listing) {
+      const numericListingId = Number(listingId);
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "listing",
+        numericListingId,
+      );
+      if (!access || !canInitiateLegacyDealInteraction(access, res)) {
         return res.status(404).json({ message: "Listing not found" });
       }
 
       const inquiry = await storage.createListingInquiry({
-        listingId,
-        userId: userId || undefined,
+        listingId: numericListingId,
+        userId,
         email,
         fullName,
         interestType: inquiryType || "info",
@@ -3721,10 +3808,40 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/listings/:id/inquiries", isAuthenticated, async (req, res) => {
+  app.get("/api/listings/:id/inquiries", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const inquiries = await storage.getListingInquiries(parseInt(req.params.id));
-      return res.json(inquiries);
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const listingId = Number(req.params.id);
+      const inquiries = Number.isSafeInteger(listingId) && listingId > 0
+        ? await storage.getListingInquiries(listingId)
+        : [];
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "listing",
+        listingId,
+        { inquiries },
+      );
+      if (!access) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      if (access.isOwner || access.isStaff) {
+        return res.json(inquiries);
+      }
+
+      const visibleInquiries = filterLegacyListingInquiriesForUser(
+        userId,
+        inquiries,
+      );
+      if (!access.isParticipant || visibleInquiries.length === 0) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      return res.json(visibleInquiries);
     } catch (error) {
       console.error("Error fetching listing inquiries:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -3750,7 +3867,7 @@ export async function registerRoutes(
       }
       
       const listing = await storage.createRetailListing(result.data);
-      console.log("New retail listing created:", listing.propertyAddress);
+      console.info("[retail-listings] listing created");
       return res.status(201).json(listing);
     } catch (error) {
       console.error("Error creating retail listing:", error);
@@ -4020,15 +4137,15 @@ export async function registerRoutes(
   app.post("/api/community/posts", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { categoryId, title, content, isPinned, isLocked } = req.body;
+      const { categoryId, title, content } = req.body;
       
       const post = await storage.createCommunityPost({
         categoryId,
         userId,
         title,
         content,
-        isPinned: isPinned || false,
-        isLocked: isLocked || false
+        isPinned: false,
+        isLocked: false,
       });
       return res.status(201).json(post);
     } catch (error) {
@@ -4042,6 +4159,9 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const id = Number(req.params.id);
+      if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(404).json({ message: "Post not found" });
+      }
       const post = await storage.getCommunityPost(id);
       
       if (!post) {
@@ -4056,7 +4176,24 @@ export async function registerRoutes(
       }
       
       const { title, content, isPinned, isLocked } = req.body;
-      const updated = await storage.updateCommunityPost(id, { title, content, isPinned, isLocked });
+      const updateData: {
+        title?: string;
+        content?: string;
+        isPinned?: boolean;
+        isLocked?: boolean;
+      } = {
+        title,
+        content,
+      };
+      if (isAdmin) {
+        if (typeof isPinned === "boolean") {
+          updateData.isPinned = isPinned;
+        }
+        if (typeof isLocked === "boolean") {
+          updateData.isLocked = isLocked;
+        }
+      }
+      const updated = await storage.updateCommunityPost(id, updateData);
       return res.json(updated);
     } catch (error) {
       console.error("Error updating community post:", error);
@@ -4185,7 +4322,7 @@ export async function registerRoutes(
   // =====================================================
 
   // Save/like/pass on a deal
-  app.post("/api/deals/action", isAuthenticated, async (req: any, res) => {
+  app.post("/api/deals/action", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { dealType, dealId, action } = req.body;
@@ -4193,8 +4330,23 @@ export async function registerRoutes(
       if (!dealType || !dealId || !action) {
         return res.status(400).json({ message: "Missing required fields" });
       }
+      if (!["save", "like", "pass"].includes(String(action))) {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+      if (!canAccessMarketflowItemType(res, dealType)) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      const publicDeal = await getPublicMarketplaceItem(dealType, dealId);
+      if (!publicDeal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
       
-      const result = await storage.saveDeal(userId, dealType, dealId, action);
+      const result = await storage.saveDeal(
+        userId,
+        String(dealType),
+        Number(dealId),
+        action,
+      );
       return res.json(result);
     } catch (error) {
       console.error("Error saving deal action:", error);
@@ -4203,22 +4355,27 @@ export async function registerRoutes(
   });
 
   // Get user's saved deals
-  app.get("/api/deals/saved", isAuthenticated, async (req: any, res) => {
+  app.get("/api/deals/saved", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const savedDeals = await storage.getUserSavedDeals(userId);
       
       // Enrich with deal details
-      const enrichedDeals = await Promise.all(savedDeals.map(async (bookmark) => {
-        if (bookmark.dealType === "capital_project") {
-          const project = await storage.getCapitalProject(bookmark.dealId);
-          return { ...bookmark, deal: project };
-        } else if (bookmark.dealType === "wholesale_deal") {
-          const deal = await storage.getWholesaleDeal(bookmark.dealId);
-          return { ...bookmark, deal };
-        }
-        return bookmark;
-      }));
+      const enrichedDeals = (
+        await Promise.all(
+          savedDeals
+            .filter((bookmark) =>
+              canAccessMarketflowItemType(res, bookmark.dealType),
+            )
+            .map(async (bookmark) => {
+            const deal = await getPublicMarketplaceItem(
+              bookmark.dealType,
+              bookmark.dealId,
+            );
+            return deal ? { ...bookmark, deal } : null;
+          }),
+        )
+      ).filter((entry) => entry !== null);
       
       return res.json(enrichedDeals);
     } catch (error) {
@@ -4228,22 +4385,27 @@ export async function registerRoutes(
   });
 
   // Get user's liked deals (matches)
-  app.get("/api/deals/liked", isAuthenticated, async (req: any, res) => {
+  app.get("/api/deals/liked", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const likedDeals = await storage.getUserLikedDeals(userId);
       
       // Enrich with deal details
-      const enrichedDeals = await Promise.all(likedDeals.map(async (bookmark) => {
-        if (bookmark.dealType === "capital_project") {
-          const project = await storage.getCapitalProject(bookmark.dealId);
-          return { ...bookmark, deal: project };
-        } else if (bookmark.dealType === "wholesale_deal") {
-          const deal = await storage.getWholesaleDeal(bookmark.dealId);
-          return { ...bookmark, deal };
-        }
-        return bookmark;
-      }));
+      const enrichedDeals = (
+        await Promise.all(
+          likedDeals
+            .filter((bookmark) =>
+              canAccessMarketflowItemType(res, bookmark.dealType),
+            )
+            .map(async (bookmark) => {
+            const deal = await getPublicMarketplaceItem(
+              bookmark.dealType,
+              bookmark.dealId,
+            );
+            return deal ? { ...bookmark, deal } : null;
+          }),
+        )
+      ).filter((entry) => entry !== null);
       
       return res.json(enrichedDeals);
     } catch (error) {
@@ -4372,10 +4534,12 @@ export async function registerRoutes(
   // =====================================================
   
   // Get all capital projects
-  app.get("/api/capital-projects", async (req, res) => {
+  app.get("/api/capital-projects", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const projects = await storage.getCapitalProjects();
-      return res.json(projects);
+      return res.json(
+        projects.filter(isPublicCapitalProject).map(toPublicCapitalProject),
+      );
     } catch (error) {
       console.error("Error fetching capital projects:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -4383,10 +4547,12 @@ export async function registerRoutes(
   });
 
   // Get active capital projects for investors
-  app.get("/api/capital-projects/active", async (req, res) => {
+  app.get("/api/capital-projects/active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const projects = await storage.getActiveCapitalProjects();
-      return res.json(projects);
+      return res.json(
+        projects.filter(isPublicCapitalProject).map(toPublicCapitalProject),
+      );
     } catch (error) {
       console.error("Error fetching active capital projects:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -4394,14 +4560,17 @@ export async function registerRoutes(
   });
 
   // Get single capital project
-  app.get("/api/capital-projects/:id", async (req, res) => {
+  app.get("/api/capital-projects/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const project = await storage.getCapitalProject(id);
       if (!project) {
         return res.status(404).json({ message: "Capital project not found" });
       }
-      return res.json(project);
+      if (!isPublicCapitalProject(project)) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      return res.json(toPublicCapitalProject(project));
     } catch (error) {
       console.error("Error fetching capital project:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -4466,9 +4635,37 @@ export async function registerRoutes(
   // =====================================================
   
   // Get milestones for a capital project
-  app.get("/api/capital-projects/:projectId/milestones", async (req, res) => {
+  app.get("/api/capital-projects/:projectId/milestones", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const projectId = Number(req.params.projectId);
+      const project = Number.isSafeInteger(projectId) && projectId > 0
+        ? await storage.getCapitalProject(projectId)
+        : undefined;
+      if (!project) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "capital_project",
+        projectId,
+      );
+      if (
+        !access ||
+        (!access.isOwner &&
+          !access.isParticipant &&
+          !access.isStaff &&
+          !(res.locals.canAccessReviewedMarketflowInventory === true &&
+            isPublicCapitalProject(project)))
+      ) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+
       const milestones = await storage.getProjectMilestones(projectId);
       return res.json(milestones);
     } catch (error) {
@@ -4513,20 +4710,38 @@ export async function registerRoutes(
   // =====================================================
   
   // Get investment offers for a project (Staff sees all, investors see theirs)
-  app.get("/api/capital-projects/:projectId/offers", isAuthenticated, async (req: any, res) => {
+  app.get("/api/capital-projects/:projectId/offers", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const projectId = Number(req.params.projectId);
-      const isStaff = await storage.hasAnyStaffRole(userId);
-      
-      if (isStaff) {
+      const investorOffers = await storage.getInvestmentOffersByInvestor(userId);
+      const visibleOffers = filterLegacyCapitalInvestmentsForUser(
+        userId,
+        investorOffers.filter((offer) => offer.projectId === projectId),
+      );
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "capital_project",
+        projectId,
+        { capitalInvestments: visibleOffers },
+      );
+      if (!access) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+
+      if (access.isStaff || access.isOwner) {
         const offers = await storage.getInvestmentOffersByProject(projectId);
         return res.json(offers);
-      } else {
-        const offers = await storage.getInvestmentOffersByInvestor(userId);
-        const filtered = offers.filter(o => o.projectId === projectId);
-        return res.json(filtered);
       }
+
+      if (!access.isParticipant || visibleOffers.length === 0) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      return res.json(visibleOffers);
     } catch (error) {
       console.error("Error fetching investment offers:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -4546,65 +4761,19 @@ export async function registerRoutes(
   });
 
   // Create investment offer (Investors)
-  app.post("/api/investment-offers", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertInvestmentOfferSchema.safeParse({ ...req.body, investorId: userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const offer = await storage.createInvestmentOffer(result.data);
-      return res.status(201).json(offer);
-    } catch (error) {
-      console.error("Error creating investment offer:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  app.post("/api/investment-offers", isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy investment offers are read-only. Use MarketFlow Offer Studio for persisted offers.",
+    });
   });
 
   // Respond to investment offer (Staff only - accept/decline/counter)
   app.post("/api/hq/investment-offers/:id/respond", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      const { status, counterTerms, notes } = req.body;
-      
-      if (!["accepted", "declined", "countered"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-      
-      const offer = await storage.respondToInvestmentOffer(id, status, counterTerms, notes, userId);
-      if (!offer) {
-        return res.status(404).json({ message: "Investment offer not found" });
-      }
-      
-      // If accepted, create committed investment
-      if (status === "accepted") {
-        await storage.createCommittedInvestment({
-          projectId: offer.projectId,
-          investorId: offer.investorId,
-          committedAmount: offer.amountOffered,
-          role: offer.requestedRole,
-          equityPercent: offer.proposedEquityPercent,
-          interestRate: offer.proposedInterestRate,
-          notes: offer.notes || "",
-          offerId: offer.id
-        });
-      }
-      
-      // Send real-time notification to investor via WebSocket
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser && offer.investorId) {
-        broadcastToUser(offer.investorId, {
-          type: 'offer_update',
-          payload: { offerId: offer.id, status, projectId: offer.projectId }
-        });
-      }
-      
-      return res.json(offer);
-    } catch (error) {
-      console.error("Error responding to investment offer:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(501).json({
+      message:
+        "Legacy investment offers are read-only. Use MarketFlow Offer Studio to respond.",
+    });
   });
 
   // =====================================================
@@ -4612,20 +4781,41 @@ export async function registerRoutes(
   // =====================================================
   
   // Get committed investments for a project
-  app.get("/api/capital-projects/:projectId/commitments", isAuthenticated, async (req: any, res) => {
+  app.get("/api/capital-projects/:projectId/commitments", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const projectId = Number(req.params.projectId);
-      const isStaff = await storage.hasAnyStaffRole(userId);
-      
-      if (isStaff) {
+      const investorCommitments =
+        await storage.getCommittedInvestmentsByInvestor(userId);
+      const visibleCommitments = filterLegacyCapitalInvestmentsForUser(
+        userId,
+        investorCommitments.filter(
+          (commitment) => commitment.projectId === projectId,
+        ),
+      );
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "capital_project",
+        projectId,
+        { capitalInvestments: visibleCommitments },
+      );
+      if (!access) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+
+      if (access.isStaff || access.isOwner) {
         const commitments = await storage.getCommittedInvestmentsByProject(projectId);
         return res.json(commitments);
-      } else {
-        const commitments = await storage.getCommittedInvestmentsByInvestor(userId);
-        const filtered = commitments.filter(c => c.projectId === projectId);
-        return res.json(filtered);
       }
+
+      if (!access.isParticipant || visibleCommitments.length === 0) {
+        return res.status(404).json({ message: "Capital project not found" });
+      }
+      return res.json(visibleCommitments);
     } catch (error) {
       console.error("Error fetching committed investments:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -4661,7 +4851,7 @@ export async function registerRoutes(
       if (!offer) {
         return res.status(404).json({ message: "Investment offer not found" });
       }
-      
+
       // Get the project
       const project = await storage.getCapitalProject(offer.projectId);
       if (!project) {
@@ -4701,12 +4891,29 @@ export async function registerRoutes(
   });
   
   // Generate preview term sheet PDF (before confirming investment)
-  app.post("/api/capital-projects/:projectId/term-sheet-preview", isAuthenticated, async (req: any, res) => {
+  app.post("/api/capital-projects/:projectId/term-sheet-preview", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const projectId = Number(req.params.projectId);
       const { investmentAmount, structureType, role, equityPercent, profitSplit, interestRate, loanDuration, isAcceptingOperatorTerms } = req.body;
-      
+
+      if (!Number.isSafeInteger(projectId) || projectId <= 0) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "capital_project",
+        projectId,
+      );
+      if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
       // Get the project
       const project = await storage.getCapitalProject(projectId);
       if (!project) {
@@ -5144,7 +5351,13 @@ export async function registerRoutes(
   app.get("/api/investor-wanted-deals", async (req, res) => {
     try {
       const deals = await storage.getActiveInvestorWantedDeals();
-      return res.json(deals);
+      return res.json(
+        deals
+          .filter(
+            (deal) => deal.isPublic !== false && deal.activelyLooking !== false,
+          )
+          .map(toPublicInvestorWantedDeal),
+      );
     } catch (error) {
       console.error("Error fetching investor wanted deals:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -5197,10 +5410,14 @@ export async function registerRoutes(
     try {
       const id = Number(req.params.id);
       const deal = await storage.getInvestorWantedDeal(id);
-      if (!deal) {
+      if (
+        !deal ||
+        deal.isPublic === false ||
+        deal.activelyLooking === false
+      ) {
         return res.status(404).json({ message: "Investor wanted deal not found" });
       }
-      return res.json(deal);
+      return res.json(toPublicInvestorWantedDeal(deal));
     } catch (error) {
       console.error("Error fetching investor wanted deal:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -5280,11 +5497,7 @@ export async function registerRoutes(
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      const roles = await storage.getUserRoles(userId);
-      return res.json({
-        ...user,
-        roles: roles.map(r => r.role)
-      });
+      return res.json(toPublicUserProfile(user));
     } catch (error) {
       console.error("Error fetching user profile:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -5300,7 +5513,7 @@ export async function registerRoutes(
     try {
       const { userId } = req.params;
       const reviews = await storage.getUserReviews(userId);
-      return res.json(reviews);
+      return res.json(reviews.filter((review) => review.isPublic === true));
     } catch (error) {
       console.error("Error fetching user reviews:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -5321,37 +5534,10 @@ export async function registerRoutes(
 
   // Create review
   app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
-    try {
-      const reviewerId = req.user.claims.sub;
-      const { revieweeId, dealType, dealId, transactionRole, overallRating, 
-              communicationRating, reliabilityRating, professionalismRating, title, content } = req.body;
-      
-      if (!revieweeId || !overallRating) {
-        return res.status(400).json({ message: "Reviewee ID and rating are required" });
-      }
-      
-      if (reviewerId === revieweeId) {
-        return res.status(400).json({ message: "Cannot review yourself" });
-      }
-      
-      const review = await storage.createUserReview({
-        reviewerId,
-        revieweeId,
-        dealType,
-        dealId,
-        transactionRole,
-        overallRating,
-        communicationRating,
-        reliabilityRating,
-        professionalismRating,
-        title,
-        content
-      });
-      return res.status(201).json(review);
-    } catch (error) {
-      console.error("Error creating review:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(501).json({
+      message:
+        "Reviews are unavailable until Pegasus can verify a completed transaction.",
+    });
   });
 
   // Respond to review (reviewee only)
@@ -5395,9 +5581,21 @@ export async function registerRoutes(
   });
 
   // Get user activity (timeline of recent actions)
-  app.get("/api/users/:userId/activity", async (req, res) => {
+  app.get("/api/users/:userId/activity", isHybridAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const requestingUserId =
+        req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!requestingUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      if (
+        requestingUserId !== userId &&
+        !(await hasMarketflowStaffAccess(req, requestingUserId))
+      ) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       const activities = await storage.getUserActivity(userId);
       return res.json(activities);
     } catch (error) {
@@ -5441,11 +5639,43 @@ export async function registerRoutes(
   // =====================================================
   
   // Get negotiations for a deal
-  app.get("/api/negotiations/:dealType/:dealId", isAuthenticated, async (req: any, res) => {
+  app.get("/api/negotiations/:dealType/:dealId(\\d+)", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { dealType, dealId } = req.params;
-      const negotiations = await storage.getDealNegotiations(dealType, Number(dealId));
-      return res.json(negotiations);
+      const numericDealId = Number(dealId);
+      const negotiations = await storage.getDealNegotiations(
+        dealType,
+        numericDealId,
+      );
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        dealType,
+        numericDealId,
+        { negotiations },
+      );
+      if (
+        !access ||
+        (!access.isOwner && !access.isParticipant && !access.isStaff)
+      ) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      if (access.isOwner || access.isStaff) {
+        return res.json(negotiations);
+      }
+      const visibleNegotiations = filterLegacyNegotiationsForUser(
+        userId,
+        negotiations,
+      );
+      if (visibleNegotiations.length === 0) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      return res.json(visibleNegotiations);
     } catch (error) {
       console.error("Error fetching deal negotiations:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -5453,9 +5683,12 @@ export async function registerRoutes(
   });
 
   // Get my negotiations
-  app.get("/api/my-negotiations", isAuthenticated, async (req: any, res) => {
+  app.get("/api/my-negotiations", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const negotiations = await storage.getNegotiationsByUser(userId);
       return res.json(negotiations);
     } catch (error) {
@@ -5465,49 +5698,53 @@ export async function registerRoutes(
   });
 
   // Create negotiation (make offer/counter-offer)
-  app.post("/api/negotiations", isAuthenticated, async (req: any, res) => {
-    try {
-      const initiatorId = req.user.claims.sub;
-      const { dealType, dealId, responderId, structureType, 
-              proposedEquityPercent, proposedInterestRate, proposedAmount, proposedLoanTerm,
-              proposedPreferredReturn, proposedProfitSplit, proposedHoldPeriod, exitStrategy,
-              notes, isCounterOffer, parentNegotiationId } = req.body;
-      
-      if (!dealType || !dealId || !responderId || !structureType) {
-        return res.status(400).json({ message: "Deal type, deal ID, responder ID, and structure type are required" });
-      }
-      
-      const negotiation = await storage.createDealNegotiation({
-        dealType,
-        dealId,
-        initiatorId,
-        responderId,
-        structureType,
-        proposedEquityPercent,
-        proposedInterestRate,
-        proposedAmount,
-        proposedLoanTerm,
-        proposedPreferredReturn,
-        proposedProfitSplit,
-        proposedHoldPeriod,
-        exitStrategy,
-        notes,
-        isCounterOffer: isCounterOffer || false,
-        parentNegotiationId
-      });
-      return res.status(201).json(negotiation);
-    } catch (error) {
-      console.error("Error creating negotiation:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  app.post("/api/negotiations", isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy negotiations are read-only. Use MarketFlow Offer Studio for new or counter offers.",
+    });
   });
 
   // Get negotiation thread (original + all counter-offers)
-  app.get("/api/negotiations/:id/thread", isAuthenticated, async (req: any, res) => {
+  app.get("/api/negotiations/:id/thread", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const id = Number(req.params.id);
+      const negotiation = Number.isSafeInteger(id) && id > 0
+        ? await storage.getDealNegotiation(id)
+        : undefined;
+      if (!negotiation) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        negotiation.dealType,
+        negotiation.dealId,
+        { negotiations: [negotiation] },
+      );
+      if (
+        !access ||
+        (!access.isOwner && !access.isParticipant && !access.isStaff)
+      ) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+
       const thread = await storage.getNegotiationThread(id);
-      return res.json(thread);
+      if (access.isOwner || access.isStaff) {
+        return res.json(thread);
+      }
+      const visibleThread = filterLegacyNegotiationsForUser(userId, thread);
+      if (
+        !isLegacyDealParticipant(userId, { negotiations: [negotiation] }) ||
+        visibleThread.length === 0
+      ) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+      return res.json(visibleThread);
     } catch (error) {
       console.error("Error fetching negotiation thread:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -5515,31 +5752,11 @@ export async function registerRoutes(
   });
 
   // Respond to negotiation (accept/decline/counter)
-  app.post("/api/negotiations/:id/respond", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      const { status } = req.body;
-      
-      if (!["accepted", "declined", "countered"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-      
-      // Verify user is the responder
-      const negotiation = await storage.getDealNegotiation(id);
-      if (!negotiation) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-      if (negotiation.responderId !== userId) {
-        return res.status(403).json({ message: "Only the responder can respond to this negotiation" });
-      }
-      
-      const updated = await storage.updateNegotiationStatus(id, status);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error responding to negotiation:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  app.post("/api/negotiations/:id/respond", isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy negotiations are read-only. Use MarketFlow Offer Studio to respond.",
+    });
   });
 
   // =====================================================
@@ -5547,53 +5764,27 @@ export async function registerRoutes(
   // =====================================================
   
   // Get messages for a deal
-  app.get("/api/deal-messages/:dealType/:dealId", isAuthenticated, async (req: any, res) => {
-    try {
-      const { dealType, dealId } = req.params;
-      const userId = req.user.claims.sub;
-      
-      // Mark messages as read
-      await storage.markDealMessagesRead(dealType, Number(dealId), userId);
-      
-      const messages = await storage.getDealMessages(dealType, Number(dealId));
-      return res.json(messages);
-    } catch (error) {
-      console.error("Error fetching deal messages:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  app.get("/api/deal-messages/:dealType/:dealId", isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy deal chat is unavailable. Use the conversation attached to a MarketFlow offer.",
+    });
   });
   
   // Send a message
-  app.post("/api/deal-messages", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      const message = await storage.createDealMessage({
-        ...req.body,
-        senderId: userId,
-        senderName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User',
-        senderAvatar: user?.profileImageUrl || undefined,
-      });
-      return res.status(201).json(message);
-    } catch (error) {
-      console.error("Error sending deal message:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  app.post("/api/deal-messages", isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy deal chat is unavailable. Use the conversation attached to a MarketFlow offer.",
+    });
   });
   
   // Get unread message count
-  app.get("/api/deal-messages/:dealType/:dealId/unread", isAuthenticated, async (req: any, res) => {
-    try {
-      const { dealType, dealId } = req.params;
-      const userId = req.user.claims.sub;
-      
-      const count = await storage.getUnreadDealMessageCount(dealType, Number(dealId), userId);
-      return res.json({ count });
-    } catch (error) {
-      console.error("Error fetching unread count:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  app.get("/api/deal-messages/:dealType/:dealId/unread", isHybridAuthenticated, async (req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy deal chat is unavailable. Use the conversation attached to a MarketFlow offer.",
+    });
   });
 
   // =====================================================
@@ -5601,10 +5792,30 @@ export async function registerRoutes(
   // =====================================================
   
   // Get documents for a wholesale deal
-  app.get("/api/wholesale-deals/:dealId/documents", async (req, res) => {
+  app.get("/api/wholesale-deals/:dealId/documents", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const dealId = Number(req.params.dealId);
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "wholesale_deal",
+        dealId,
+      );
+      if (
+        !access ||
+        (!access.isOwner && !access.isParticipant && !access.isStaff)
+      ) {
+        return res.status(404).json({ message: "Wholesale deal not found" });
+      }
+
       const documents = await storage.getWholesaleDealDocuments(dealId);
+      if (!access.isOwner && !access.isStaff) {
+        return res.json(filterLegacyDocumentsForParticipant(documents));
+      }
       return res.json(documents);
     } catch (error) {
       console.error("Error fetching wholesale deal documents:", error);
@@ -5613,27 +5824,28 @@ export async function registerRoutes(
   });
 
   // Upload document (wholesaler only)
-  app.post("/api/wholesale-deals/:dealId/documents", isAuthenticated, async (req: any, res) => {
+  app.post("/api/wholesale-deals/:dealId/documents", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const dealId = Number(req.params.dealId);
       
-      // Verify ownership of deal
-      const deal = await storage.getWholesaleDeal(dealId);
-      if (!deal) {
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "wholesale_deal",
+        dealId,
+      );
+      if (!access || (!access.isOwner && !access.isStaff)) {
         return res.status(404).json({ message: "Wholesale deal not found" });
-      }
-      if (deal.submittedBy !== userId) {
-        const isStaff = await storage.hasAnyStaffRole(userId);
-        if (!isStaff) {
-          return res.status(403).json({ message: "Not authorized to add documents to this deal" });
-        }
       }
       
       const document = await storage.createWholesaleDealDocument({
+        ...req.body,
         dealId,
         uploadedBy: userId,
-        ...req.body
       });
       return res.status(201).json(document);
     } catch (error) {
@@ -5643,9 +5855,37 @@ export async function registerRoutes(
   });
 
   // Delete document
-  app.delete("/api/wholesale-deal-documents/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/wholesale-deal-documents/:id", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const id = Number(req.params.id);
+      const document = Number.isSafeInteger(id) && id > 0
+        ? await storage.getWholesaleDealDocument(id)
+        : undefined;
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "wholesale_deal",
+        document.dealId,
+      );
+      if (
+        !access ||
+        !canDeleteLegacyWholesaleDocument({
+          userId,
+          dealOwnerId: access.ownerId,
+          uploadedBy: document.uploadedBy,
+          isStaff: access.isStaff,
+        })
+      ) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
       await storage.deleteWholesaleDealDocument(id);
       return res.status(204).send();
     } catch (error) {
@@ -5712,71 +5952,90 @@ export async function registerRoutes(
   // PEGGY AI ASSISTANT ROUTES
   // =====================================================
 
+  const requirePeggyConversationAccess =
+    createPeggyConversationAccessGuard({
+      getConversation: (id) => storage.getPeggyConversation(id),
+    });
+
+  const sendPeggyConversationWithAccess = (
+    res: Response,
+    conversation: Awaited<ReturnType<typeof storage.getPeggyConversation>>,
+  ) => {
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const secret = getPeggyConversationAccessSecret();
+    if (!secret) {
+      return res
+        .status(503)
+        .json({ message: "Peggy conversation access is unavailable" });
+    }
+
+    return res.json({
+      ...conversation,
+      accessToken: createPeggyConversationAccessToken(conversation, secret),
+    });
+  };
+
   // Get or create a conversation
-  app.post("/api/peggy/conversations", async (req: any, res) => {
+  app.post("/api/peggy/conversations", publicIntakeRateLimit, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
       const context = req.body.context || {};
       
       const conversation = await peggy.getOrCreateConversation(userId, sessionId, context);
-      res.json(conversation);
+      return sendPeggyConversationWithAccess(res, conversation);
     } catch (error) {
       console.error("Error getting/creating Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to get/create conversation" });
+      return res.status(500).json({ message: "Failed to get/create conversation" });
     }
   });
 
   // Start a new conversation
-  app.post("/api/peggy/conversations/new", async (req: any, res) => {
+  app.post("/api/peggy/conversations/new", publicIntakeRateLimit, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
       const context = req.body.context || {};
       
       const conversation = await peggy.startConversation(userId, sessionId, context);
-      res.json(conversation);
+      return sendPeggyConversationWithAccess(res, conversation);
     } catch (error) {
       console.error("Error starting new Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to start conversation" });
+      return res.status(500).json({ message: "Failed to start conversation" });
     }
   });
 
   // Get conversation history
-  app.get("/api/peggy/conversations/:id", async (req: any, res) => {
+  app.get("/api/peggy/conversations/:id", requirePeggyConversationAccess, async (req: any, res) => {
     try {
-      const conversationId = Number(req.params.id);
-      const conversation = await storage.getPeggyConversation(conversationId);
-      
-      if (!conversation) {
-        return res.status(404).json({ message: "Conversation not found" });
-      }
-      
+      const conversation = res.locals.peggyConversation;
+      const conversationId = conversation.id;
       const messages = await storage.getPeggyMessages(conversationId);
-      res.json({ conversation, messages });
+      return res.json({ conversation, messages });
     } catch (error) {
       console.error("Error fetching Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to fetch conversation" });
+      return res.status(500).json({ message: "Failed to fetch conversation" });
     }
   });
 
   // Get user's conversations list
-  app.get("/api/peggy/conversations", async (req: any, res) => {
+  app.get("/api/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const sessionId = req.query.sessionId as string;
-      
-      const conversations = await storage.getPeggyConversations(userId, sessionId);
-      res.json(conversations);
+      const conversations = await storage.getPeggyConversations(userId);
+      return res.json(conversations);
     } catch (error) {
       console.error("Error fetching Peggy conversations:", error);
-      res.status(500).json({ message: "Failed to fetch conversations" });
+      return res.status(500).json({ message: "Failed to fetch conversations" });
     }
   });
 
   // Send a message to Peggy
   // Task #151 — bumped from 20/60s to 30/60s per Amendment 2 §D.
-  app.post("/api/peggy/chat", rateLimit(30, 60000), async (req: any, res) => {
+  app.post("/api/peggy/chat", rateLimit(30, 60000), requirePeggyConversationAccess, async (req: any, res) => {
     try {
       const { conversationId, message, context } = req.body;
 
@@ -5785,24 +6044,19 @@ export async function registerRoutes(
       }
 
       const result = await peggy.chat(message, conversationId, context);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
       console.error("Error in Peggy chat:", error);
-      res.status(500).json({ message: "Failed to get response from Peggy" });
+      return res.status(500).json({ message: "Failed to get response from Peggy" });
     }
   });
 
   // Task #151 — mark a conversation done. Triggers final intake extraction
   // pass and (if disposition resolved to human_required) an immediate email.
-  app.post("/api/peggy/conversations/:id/finish", async (req: any, res) => {
+  app.post("/api/peggy/conversations/:id/finish", publicIntakeRateLimit, requirePeggyConversationAccess, async (req: any, res) => {
     try {
-      const id = Number(req.params.id);
-      if (!Number.isFinite(id)) {
-        return res.status(400).json({ message: "Invalid conversation id" });
-      }
-      const conversation = await storage.getPeggyConversation(id);
-      if (!conversation) return res.status(404).json({ message: "Conversation not found" });
-
+      const conversation = res.locals.peggyConversation;
+      const id = conversation.id;
       const messages = await storage.getPeggyMessages(id);
       const transcript = messages
         .filter(m => m.role !== "system")
@@ -5830,10 +6084,10 @@ export async function registerRoutes(
         });
       }
 
-      res.json(updated);
+      return res.json(updated);
     } catch (error) {
       console.error("Error finishing Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to finish conversation" });
+      return res.status(500).json({ message: "Failed to finish conversation" });
     }
   });
 
@@ -5925,7 +6179,7 @@ export async function registerRoutes(
   });
 
   // Analyze calculator results (Ask Peggy button)
-  app.post("/api/peggy/analyze-calculator", async (req: any, res) => {
+  app.post("/api/peggy/analyze-calculator", rateLimit(10, 60000), async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
@@ -5951,7 +6205,7 @@ export async function registerRoutes(
   });
 
   // Provide feedback on a message
-  app.post("/api/peggy/messages/:id/feedback", async (req: any, res) => {
+  app.post("/api/peggy/messages/:id/feedback", publicIntakeRateLimit, requirePeggyConversationAccess, async (req: any, res) => {
     try {
       const messageId = Number(req.params.id);
       const { feedback, feedbackNotes } = req.body;
@@ -5959,12 +6213,18 @@ export async function registerRoutes(
       if (!feedback || !['helpful', 'not_helpful'].includes(feedback)) {
         return res.status(400).json({ message: "Valid feedback (helpful/not_helpful) is required" });
       }
+
+      const conversation = res.locals.peggyConversation;
+      const conversationMessages = await storage.getPeggyMessages(conversation.id);
+      if (!conversationMessages.some((message) => message.id === messageId)) {
+        return res.status(404).json({ message: "Message not found" });
+      }
       
       const message = await storage.updatePeggyMessageFeedback(messageId, feedback, feedbackNotes);
-      res.json(message);
+      return res.json(message);
     } catch (error) {
       console.error("Error saving Peggy message feedback:", error);
-      res.status(500).json({ message: "Failed to save feedback" });
+      return res.status(500).json({ message: "Failed to save feedback" });
     }
   });
 
@@ -6005,7 +6265,7 @@ export async function registerRoutes(
   });
 
   // Create a new lead (public or authenticated)
-  app.post("/api/leads", async (req: any, res) => {
+  app.post("/api/leads", publicIntakeRateLimit, async (req: any, res) => {
     try {
       // Empire Doctrine v1.0.1 — server-truth anti-spam for /submit and
       // /marketflow/access submissions. Honeypot hp_company must be empty;
@@ -6070,10 +6330,7 @@ export async function registerRoutes(
           source: req.body?.source ?? "marketflow_access_page",
           submittedAt: new Date().toISOString(),
         };
-        console.log(
-          "[marketflow_access_requests]",
-          JSON.stringify(marketflow_access_request),
-        );
+        console.info("[marketflow_access_requests] accepted");
         // Persist the canonical shape inside leadData under a versioned
         // key so the leads row carries the full access-request envelope.
         if (req.body?.leadData && typeof req.body.leadData === "object") {
@@ -6440,11 +6697,36 @@ export async function registerRoutes(
   // =====================================================
 
   // Get offers for a deal
-  app.get("/api/wholesale-deals/:dealId/offers", isAuthenticated, async (req: any, res) => {
+  app.get("/api/wholesale-deals/:dealId/offers", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const dealId = Number(req.params.dealId);
       const offers = await storage.getWholesaleDealOffers(dealId);
-      res.json(offers);
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "wholesale_deal",
+        dealId,
+        { offers },
+      );
+      if (
+        !access ||
+        (!access.isOwner && !access.isParticipant && !access.isStaff)
+      ) {
+        return res.status(404).json({ message: "Wholesale deal not found" });
+      }
+
+      if (access.isOwner || access.isStaff) {
+        return res.json(offers);
+      }
+      const visibleOffers = filterLegacyWholesaleOffersForUser(userId, offers);
+      if (visibleOffers.length === 0) {
+        return res.status(404).json({ message: "Wholesale deal not found" });
+      }
+      return res.json(visibleOffers);
     } catch (error) {
       console.error("Error fetching deal offers:", error);
       res.status(500).json({ message: "Failed to fetch offers" });
@@ -6464,95 +6746,27 @@ export async function registerRoutes(
   });
 
   // Create offer on a deal
-  app.post("/api/wholesale-deals/:dealId/offers", isAuthenticated, async (req: any, res) => {
-    try {
-      const dealId = Number(req.params.dealId);
-      const buyerId = req.user.claims.sub;
-      
-      const parseResult = insertWholesaleDealOfferSchema.safeParse({
-        ...req.body,
-        dealId,
-        buyerId
-      });
-      
-      if (!parseResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid offer data", 
-          errors: fromError(parseResult.error).toString() 
-        });
-      }
-      
-      const offer = await storage.createWholesaleDealOffer(parseResult.data);
-      res.status(201).json(offer);
-    } catch (error) {
-      console.error("Error creating offer:", error);
-      res.status(500).json({ message: "Failed to create offer" });
-    }
+  app.post("/api/wholesale-deals/:dealId/offers", isHybridAuthenticated, async (_req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offers.",
+    });
   });
 
   // Update offer status (wholesaler accepting/rejecting)
-  app.patch("/api/wholesale-offers/:id/status", isAuthenticated, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const { status } = req.body;
-      
-      if (!status || !['accepted', 'rejected', 'expired'].includes(status)) {
-        return res.status(400).json({ message: "Valid status is required" });
-      }
-      
-      const offer = await storage.updateWholesaleDealOfferStatus(id, status);
-      
-      if (!offer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-      
-      // Send real-time notification to buyer via WebSocket
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser && offer.buyerId) {
-        broadcastToUser(offer.buyerId, {
-          type: 'offer_update',
-          payload: { offerId: offer.id, status, dealId: offer.dealId }
-        });
-      }
-      
-      // Send email notification for offer status update
-      sendOfferNotification({
-        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'offers@pegasusdreamscapes.com',
-        recipientName: 'Buyer',
-        dealTitle: `Wholesale Deal #${offer.dealId}`,
-        dealAddress: 'Address available in dashboard',
-        offerAmount: offer.offerAmount || 0,
-        offerType: status === "accepted" ? "accepted" : status === "rejected" ? "declined" : "counter",
-      }).catch(err => console.error('Failed to send offer status email:', err));
-      
-      res.json(offer);
-    } catch (error) {
-      console.error("Error updating offer status:", error);
-      res.status(500).json({ message: "Failed to update offer status" });
-    }
+  app.patch("/api/wholesale-offers/:id/status", isHybridAuthenticated, async (_req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offer responses.",
+    });
   });
 
   // Counter an offer
-  app.post("/api/wholesale-offers/:id/counter", isAuthenticated, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const { counterAmount, counterNotes } = req.body;
-      
-      if (!counterAmount) {
-        return res.status(400).json({ message: "counterAmount is required" });
-      }
-      
-      const offer = await storage.counterWholesaleDealOffer(id, counterAmount, counterNotes);
-      
-      if (!offer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-      
-      res.json(offer);
-    } catch (error) {
-      console.error("Error countering offer:", error);
-      res.status(500).json({ message: "Failed to counter offer" });
-    }
+  app.post("/api/wholesale-offers/:id/counter", isHybridAuthenticated, async (_req: any, res) => {
+    return res.status(501).json({
+      message:
+        "Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted counteroffers.",
+    });
   });
 
   // ============== PDF GENERATION ROUTES ==============
@@ -6933,12 +7147,23 @@ export async function registerRoutes(
   });
 
   // Generate wholesale deal PDF
-  app.get("/api/pdf/wholesale-deal/:id", async (req, res) => {
+  app.get("/api/pdf/wholesale-deal/:id", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const dealId = Number(req.params.id);
       const deal = await storage.getWholesaleDeal(dealId);
       
       if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      if (
+        deal.submittedBy !== userId &&
+        !(await hasMarketflowStaffAccess(req, userId))
+      ) {
         return res.status(404).json({ message: "Deal not found" });
       }
       
@@ -7019,9 +7244,9 @@ export async function registerRoutes(
   });
 
   // Wholesaler JV Requests (requests on their deals)
-  app.get("/api/marketplace/wholesaler/jv-requests", async (req: any, res) => {
+  app.get("/api/marketplace/wholesaler/jv-requests", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7035,9 +7260,9 @@ export async function registerRoutes(
   });
 
   // Update JV Request Status (accept/reject)
-  app.patch("/api/marketplace/jv-requests/:id", async (req: any, res) => {
+  app.patch("/api/marketplace/jv-requests/:id", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7045,7 +7270,10 @@ export async function registerRoutes(
       const requestId = Number(req.params.id);
       const { status } = req.body;
 
-      if (!["accepted", "rejected", "pending"].includes(status)) {
+      if (!Number.isSafeInteger(requestId) || requestId <= 0) {
+        return res.status(404).json({ message: "JV request not found" });
+      }
+      if (!["accepted", "rejected"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
 
@@ -7055,11 +7283,19 @@ export async function registerRoutes(
       }
 
       // Verify the user is the wholesaler for this deal
-      if (jvRequest.wholesalerId !== userId) {
-        return res.status(403).json({ message: "Not authorized to update this request" });
+      if (
+        jvRequest.wholesalerId !== userId ||
+        jvRequest.status !== "pending"
+      ) {
+        return res.status(404).json({ message: "JV request not found" });
       }
 
       const updated = await storage.updateJvRequestStatus(requestId, status);
+      if (!updated) {
+        return res.status(409).json({
+          message: "This JV request has already been answered.",
+        });
+      }
       res.json(updated);
     } catch (error) {
       console.error("Error updating JV request:", error);
@@ -7068,9 +7304,9 @@ export async function registerRoutes(
   });
 
   // Investor Dashboard Stats
-  app.get("/api/marketplace/investor/stats", async (req: any, res) => {
+  app.get("/api/marketplace/investor/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7078,13 +7314,16 @@ export async function registerRoutes(
       const investorProfile = await storage.getInvestorProfile(userId);
       const investmentOffers = await storage.getInvestmentOffersByInvestor(userId);
       const savedDeals = await storage.getUserSavedDeals(userId);
+      const visibleSavedDeals = savedDeals.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.dealType),
+      );
 
       const stats = {
         totalInvested: investmentOffers
           .filter(o => o.status === "accepted")
           .reduce((sum, o) => sum + (o.amountOffered || 0), 0),
         activeDeals: investmentOffers.filter(o => o.status === "accepted" && o.projectId).length,
-        savedDeals: savedDeals.length,
+        savedDeals: visibleSavedDeals.length,
         pendingOffers: investmentOffers.filter(o => o.status === "pending").length,
       };
 
@@ -7096,15 +7335,19 @@ export async function registerRoutes(
   });
 
   // Investor Saved/Bookmarked Deals
-  app.get("/api/marketplace/investor/saved", async (req: any, res) => {
+  app.get("/api/marketplace/investor/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const bookmarks = await storage.getUserSavedDeals(userId);
-      res.json(bookmarks);
+      res.json(
+        bookmarks.filter((entry) =>
+          canAccessMarketflowItemType(res, entry.dealType),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching investor saved deals:", error);
       res.status(500).json({ message: "Failed to fetch saved deals" });
@@ -7112,9 +7355,9 @@ export async function registerRoutes(
   });
 
   // Investor Commitments - Get investments with project details
-  app.get("/api/marketplace/investor/commitments", async (req: any, res) => {
+  app.get("/api/marketplace/investor/commitments", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7125,7 +7368,10 @@ export async function registerRoutes(
       const enrichedCommitments = await Promise.all(
         commitments.map(async (commitment) => {
           const project = await storage.getCapitalProject(commitment.projectId);
-          return { ...commitment, project };
+          return {
+            ...commitment,
+            project: project ? toPublicCapitalProject(project) : null,
+          };
         })
       );
       
@@ -7177,18 +7423,20 @@ export async function registerRoutes(
   });
 
   // Buyer Dashboard Stats
-  app.get("/api/marketplace/buyer/stats", async (req: any, res) => {
+  app.get("/api/marketplace/buyer/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const savedProperties = await storage.getSavedProperties(userId);
       const offers = await storage.getBuyerOffers(userId);
-
+      const visibleSavedProperties = savedProperties.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.propertyType),
+      );
       const stats = {
-        savedProperties: savedProperties.length,
+        savedProperties: visibleSavedProperties.length,
         pendingOffers: offers.filter(o => o.status === "pending").length,
         acceptedOffers: offers.filter(o => o.status === "accepted").length,
         totalPurchases: offers.filter(o => o.status === "closed").length,
@@ -7202,27 +7450,34 @@ export async function registerRoutes(
   });
 
   // Buyer Saved Properties
-  app.get("/api/marketplace/buyer/saved", async (req: any, res) => {
+  app.get("/api/marketplace/buyer/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const savedProperties = await storage.getSavedProperties(userId);
-      // Enrich with property details
-      const enrichedProperties = await Promise.all(
-        savedProperties.map(async (saved) => {
-          if (saved.propertyType === "retail") {
-            const listing = await storage.getRetailListing(saved.propertyId);
-            return { ...saved, listing };
-          } else if (saved.propertyType === "wholesale") {
-            const deal = await storage.getWholesaleDeal(saved.propertyId);
-            return { ...saved, deal };
-          }
-          return saved;
-        })
-      );
+      const enrichedProperties = (
+        await Promise.all(
+          savedProperties
+            .filter((saved) =>
+              canAccessMarketflowItemType(res, saved.propertyType),
+            )
+            .map(async (saved) => {
+            const property = await getPublicMarketplaceItem(
+              saved.propertyType,
+              saved.propertyId,
+            );
+            if (!property) {
+              return null;
+            }
+            return saved.propertyType === "retail"
+              ? { ...saved, listing: property }
+              : { ...saved, deal: property };
+          }),
+        )
+      ).filter((entry) => entry !== null);
       res.json(enrichedProperties);
     } catch (error) {
       console.error("Error fetching buyer saved properties:", error);
@@ -7231,27 +7486,31 @@ export async function registerRoutes(
   });
 
   // Buyer Offers - get user's offers
-  app.get("/api/marketplace/buyer/offers", async (req: any, res) => {
+  app.get("/api/marketplace/buyer/offers", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const offers = await storage.getBuyerOffers(userId);
       // Enrich with property details
-      const enrichedOffers = await Promise.all(
-        offers.map(async (offer) => {
-          if (offer.propertyType === "retail") {
-            const listing = await storage.getRetailListing(offer.propertyId);
-            return { ...offer, listing };
-          } else if (offer.propertyType === "wholesale") {
-            const deal = await storage.getWholesaleDeal(offer.propertyId);
-            return { ...offer, deal };
-          }
-          return offer;
-        })
-      );
+      const enrichedOffers = (
+        await Promise.all(
+          offers.map(async (offer) => {
+            const property = await getPublicMarketplaceItem(
+              offer.propertyType,
+              offer.propertyId,
+            );
+            if (!property) {
+              return null;
+            }
+            return offer.propertyType === "retail"
+              ? { ...offer, listing: property }
+              : { ...offer, deal: property };
+          }),
+        )
+      ).filter((entry) => entry !== null);
       res.json(enrichedOffers);
     } catch (error) {
       console.error("Error fetching buyer offers:", error);
@@ -7260,9 +7519,9 @@ export async function registerRoutes(
   });
 
   // Submit a buyer offer
-  app.post("/api/marketplace/buyer/offers", async (req: any, res) => {
+  app.post("/api/marketplace/buyer/offers", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7271,6 +7530,24 @@ export async function registerRoutes(
       
       if (!propertyType || !propertyId || !offerAmount || !fundingType) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (isReviewedMarketflowInventoryType(propertyType)) {
+        const access = await resolveLegacyDealAccess(
+          req,
+          userId,
+          propertyType,
+          propertyId,
+        );
+        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+      }
+      const publicProperty = await getPublicMarketplaceItem(
+        propertyType,
+        propertyId,
+      );
+      if (!publicProperty) {
+        return res.status(404).json({ message: "Property not found" });
       }
 
       const offer = await storage.createBuyerOffer({
@@ -7292,9 +7569,9 @@ export async function registerRoutes(
   });
 
   // Toggle save/unsave a property
-  app.post("/api/marketplace/buyer/save", async (req: any, res) => {
+  app.post("/api/marketplace/buyer/save", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -7303,6 +7580,16 @@ export async function registerRoutes(
       
       if (!propertyType || !propertyId) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (!canAccessMarketflowItemType(res, propertyType)) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      const publicProperty = await getPublicMarketplaceItem(
+        propertyType,
+        propertyId,
+      );
+      if (!publicProperty) {
+        return res.status(404).json({ message: "Property not found" });
       }
 
       const saved = await storage.toggleSavedProperty(userId, propertyType, Number(propertyId));
@@ -7314,13 +7601,34 @@ export async function registerRoutes(
   });
 
   // Submit buyer inquiry (schedule showing, ask question)
-  app.post("/api/marketplace/buyer/inquiries", async (req: any, res) => {
+  app.post("/api/marketplace/buyer/inquiries", publicIntakeRateLimit, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       const { propertyType, propertyId, name, email, phone, message, requestType } = req.body;
 
       if (!propertyType || !propertyId || !name || !email || !requestType) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (isReviewedMarketflowInventoryType(propertyType)) {
+        if (!userId) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+        const access = await resolveLegacyDealAccess(
+          req,
+          userId,
+          propertyType,
+          propertyId,
+        );
+        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+      }
+      const publicProperty = await getPublicMarketplaceItem(
+        propertyType,
+        propertyId,
+      );
+      if (!publicProperty) {
+        return res.status(404).json({ message: "Property not found" });
       }
 
       const inquiry = await storage.createBuyerInquiry({
@@ -7344,10 +7652,12 @@ export async function registerRoutes(
   app.get("/api/marketplace/properties", async (req: any, res) => {
     try {
       const listings = await storage.getRetailListings();
-      // Filter to only show active listings
-      const activeListings = listings.filter(l => 
-        l.status === "active" || l.status === "coming_soon" || l.status === "pending"
-      );
+      const activeListings = listings
+        .filter(
+          (listing) =>
+            listing.status === "active" || listing.status === "coming_soon",
+        )
+        .map(toPublicRetailListing);
       res.json(activeListings);
     } catch (error) {
       console.error("Error fetching retail listings:", error);
@@ -7364,11 +7674,14 @@ export async function registerRoutes(
       }
       
       const listing = await storage.getRetailListing(listingId);
-      if (!listing) {
+      if (
+        !listing ||
+        (listing.status !== "active" && listing.status !== "coming_soon")
+      ) {
         return res.status(404).json({ message: "Property not found" });
       }
       
-      res.json(listing);
+      res.json(toPublicRetailListing(listing));
     } catch (error) {
       console.error("Error fetching retail listing:", error);
       res.status(500).json({ message: "Failed to fetch property" });
@@ -7376,21 +7689,20 @@ export async function registerRoutes(
   });
 
   // Analytics Dashboard Data - comprehensive platform metrics
-  app.get("/api/analytics/dashboard", requireStaffRole, async (req: any, res) => {
+  app.get("/api/admin/analytics/dashboard", requireStaffRole, async (req: any, res) => {
     try {
-      const [wholesaleDeals, projects, users, sellerLeads, investorLeads] = await Promise.all([
+      const [wholesaleDeals, projects, users, listings] = await Promise.all([
         storage.getWholesaleDeals(),
         storage.getCapitalProjects(),
         storage.getAllUsers(),
-        storage.getSellerLeads(),
-        storage.getInvestorLeads(),
+        storage.getListings(),
       ]);
 
       // Calculate total volume from deals
       const totalVolume = wholesaleDeals.reduce((sum, d) => sum + (d.contractPrice || 0) + (d.assignmentFee || 0), 0);
       
       // Get user roles for distribution
-      const userRolesPromises = users.slice(0, 100).map(u => storage.getUserRoles(u.id));
+      const userRolesPromises = users.map(u => storage.getUserRoles(u.id));
       const allUserRoles = await Promise.all(userRolesPromises);
       
       // Count users by role
@@ -7441,7 +7753,7 @@ export async function registerRoutes(
         .map(p => ({
           project: p.title || 'Untitled Project',
           raised: p.amountRaised || 0,
-          goal: p.fundingGoal || 100000,
+          goal: p.fundingGoal || 0,
         }));
 
       const stats = {
@@ -7449,21 +7761,22 @@ export async function registerRoutes(
         totalVolume,
         activeProjects: projects.filter(p => p.status === 'funding' || p.status === 'active').length,
         totalUsers: users.length,
-        dealsChange: 12,
-        volumeChange: 8,
-        projectsChange: 5,
-        usersChange: 23,
       };
 
       const roleDistribution = [
-        { role: 'Investors', count: roleCounts.investor || users.length / 4, color: '#c9a55c' },
-        { role: 'Wholesalers', count: roleCounts.wholesaler || users.length / 6, color: '#2563eb' },
-        { role: 'Dreamscapers', count: roleCounts.dreamscaper || users.length / 8, color: '#16a34a' },
-        { role: 'Buyers', count: roleCounts.buyer || users.length / 5, color: '#dc2626' },
-      ];
+        { role: 'Investors', count: roleCounts.investor, color: '#c9a55c' },
+        { role: 'Wholesalers', count: roleCounts.wholesaler, color: '#2563eb' },
+        { role: 'Dreamscapers', count: roleCounts.dreamscaper, color: '#16a34a' },
+        { role: 'Buyers', count: roleCounts.buyer, color: '#dc2626' },
+      ].filter((role) => role.count > 0);
 
       res.json({
         stats,
+        laneStats: {
+          wholesale: wholesaleDeals.length,
+          capital: projects.length,
+          listings: listings.length,
+        },
         dealVolumeData,
         roleDistribution,
         fundingProgress,
@@ -7768,7 +8081,7 @@ export async function registerRoutes(
   });
 
   // Supabase Investor Stats
-  app.get("/api/supabase/marketplace/investor/stats", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/supabase/marketplace/investor/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -7785,6 +8098,9 @@ export async function registerRoutes(
       if (savedItems.length === 0 && isReplitAuthUser(req)) {
         savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
       }
+      const visibleSavedItems = savedItems.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.item_type),
+      );
 
       const stats = {
         totalInvested: commitments
@@ -7793,7 +8109,7 @@ export async function registerRoutes(
         activeDeals: commitments.filter(c => 
           c.status === "accepted" || c.status === "ACCEPTED" || c.status === "committed" || c.status === "Accepted"
         ).length,
-        savedDeals: savedItems.length,
+        savedDeals: visibleSavedItems.length,
         pendingOffers: commitments.filter(c => 
           c.status === "pending" || c.status === "PENDING" || c.status === "Pending"
         ).length,
@@ -7885,7 +8201,7 @@ export async function registerRoutes(
   });
 
   // Supabase Buyer Stats
-  app.get("/api/supabase/marketplace/buyer/stats", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/supabase/marketplace/buyer/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -7902,10 +8218,18 @@ export async function registerRoutes(
       if (savedItems.length === 0 && isReplitAuthUser(req)) {
         savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
       }
+      const visibleSavedItems = savedItems.filter((entry) =>
+        canAccessMarketflowItemType(res, entry.item_type),
+      );
 
       const stats = {
-        savedProperties: savedItems.filter(s => 
-          s.item_type === "listing" || s.item_type === "wholesale_deal"
+        savedProperties: visibleSavedItems.filter((saved) =>
+          [
+            "listing",
+            "wholesale_deal",
+            "retail",
+            "retail_listing",
+          ].includes(saved.item_type)
         ).length,
         pendingOffers: offers.filter(o => o.status === "pending" || o.status === "PENDING" || o.status === "Pending").length,
         acceptedOffers: offers.filter(o => o.status === "accepted" || o.status === "ACCEPTED" || o.status === "Accepted").length,
@@ -7940,7 +8264,7 @@ export async function registerRoutes(
   });
 
   // Supabase Saved Items
-  app.get("/api/supabase/marketplace/saved", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/supabase/marketplace/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
       const userId = getAuthUserId(req);
       if (!userId) {
@@ -7952,7 +8276,13 @@ export async function registerRoutes(
       if (savedItems.length === 0 && isReplitAuthUser(req)) {
         savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
       }
-      res.json(toCamelCase(savedItems));
+      res.json(
+        toCamelCase(
+          savedItems.filter((entry) =>
+            canAccessMarketflowItemType(res, entry.item_type),
+          ),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching saved items:", error);
       res.status(500).json({ message: "Failed to fetch saved items" });
@@ -7963,12 +8293,12 @@ export async function registerRoutes(
   // MARKETPLACE BROWSE API ENDPOINTS
   // ========================================
 
-  // Get all public/listed wholesale deals for browsing
-  app.get("/api/marketplace/deals", async (req: any, res) => {
+  // Get all reviewed/listed wholesale deals for approved browsing
+  app.get("/api/marketplace/deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const deals = await storage.getWholesaleDeals();
       
-      const filteredDeals = deals.filter(d => d.status === "listed" || d.status === "approved" || d.status === "available");
+      const filteredDeals = deals.filter(isPublicWholesaleDeal);
       
       const uniqueSubmitterIds = Array.from(new Set(filteredDeals.map(d => d.submittedBy).filter(Boolean))) as string[];
       
@@ -8006,7 +8336,7 @@ export async function registerRoutes(
         const badges = d.submittedBy ? badgesMap.get(d.submittedBy) || [] : [];
         
         return {
-          ...d,
+          ...toPublicWholesaleDeal(d),
           isPegasusDeal: d.submittedBy ? pegasusUserIds.has(d.submittedBy) : false,
           wholesalerInfo: submitter ? {
             id: submitter.id,
@@ -8043,7 +8373,7 @@ export async function registerRoutes(
   });
 
   // Get a single wholesale deal by ID
-  app.get("/api/marketplace/deals/:id", async (req: any, res) => {
+  app.get("/api/marketplace/deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const dealId = Number(req.params.id);
       if (isNaN(dealId)) {
@@ -8051,11 +8381,11 @@ export async function registerRoutes(
       }
       
       const deal = await storage.getWholesaleDeal(dealId);
-      if (!deal) {
+      if (!deal || !isPublicWholesaleDeal(deal)) {
         return res.status(404).json({ message: "Deal not found" });
       }
       
-      res.json(deal);
+      res.json(toPublicWholesaleDeal(deal));
     } catch (error) {
       console.error("Error fetching deal:", error);
       res.status(500).json({ message: "Failed to fetch deal" });
@@ -8063,29 +8393,86 @@ export async function registerRoutes(
   });
 
   // Submit a JV request for a deal
-  app.post("/api/marketplace/jv-requests", async (req: any, res) => {
+  app.post("/api/marketplace/jv-requests", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const { dealId, wholesalerId, message, intendedStrategy, fundingSource, proposedAssignmentFee } = req.body;
-      
-      if (!dealId) {
-        return res.status(400).json({ message: "Deal ID is required" });
+      const dealId = Number(req.body?.dealId);
+      if (!Number.isSafeInteger(dealId) || dealId <= 0) {
+        return res.status(404).json({ message: "Deal not found" });
       }
 
       const deal = await storage.getWholesaleDeal(dealId);
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "wholesale_deal",
+        dealId,
+      );
+      if (
+        !deal ||
+        !access ||
+        !canInitiateLegacyDealInteraction(access, res) ||
+        !deal.submittedBy ||
+        deal.submittedBy === userId
+      ) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      const existingRequests = await storage.getJvRequestsByDeal(dealId);
+      if (
+        existingRequests.some(
+          (request) =>
+            request.dreamscaperId === userId && request.status === "pending",
+        )
+      ) {
+        return res.status(409).json({
+          message: "You already have a pending JV request for this deal.",
+        });
+      }
+
+      const cleanOptionalText = (value: unknown, maxLength: number) =>
+        typeof value === "string" && value.trim()
+          ? value.trim().slice(0, maxLength)
+          : null;
+      const splitPercent = Number(req.body?.assignmentSplitPercent);
+      const proposedAssignmentFee = Number(req.body?.proposedAssignmentFee);
       
       const jvRequest = await storage.createJvRequest({
         dealId,
         dreamscaperId: userId,
-        wholesalerId: wholesalerId || "",
-        message: message || null,
-        intendedStrategy: intendedStrategy || null,
-        fundingSource: fundingSource || null,
-        proposedAssignmentFee: proposedAssignmentFee || null,
+        wholesalerId: deal.submittedBy,
+        message: cleanOptionalText(req.body?.message, 2_000),
+        intendedStrategy: cleanOptionalText(
+          req.body?.intendedStrategy ?? req.body?.partnerRole,
+          100,
+        ),
+        fundingSource: cleanOptionalText(req.body?.fundingSource, 100),
+        proposedAssignmentFee:
+          Number.isFinite(proposedAssignmentFee) &&
+          proposedAssignmentFee >= 0
+            ? proposedAssignmentFee
+            : null,
+        proposedJVSplit:
+          Number.isFinite(splitPercent) &&
+          splitPercent >= 0 &&
+          splitPercent <= 100
+            ? `${splitPercent}/${100 - splitPercent}`
+            : null,
+        proposedTimeline: cleanOptionalText(
+          req.body?.proposedTimeline,
+          100,
+        ),
+        experienceNotes: Array.isArray(req.body?.contributions)
+          ? req.body.contributions
+              .filter((item: unknown): item is string => typeof item === "string")
+              .slice(0, 12)
+              .join(", ")
+              .slice(0, 2_000) || null
+          : null,
       });
 
       if (deal && deal.submittedBy) {
@@ -8107,8 +8494,8 @@ export async function registerRoutes(
     }
   });
 
-  // Get all capital projects for browsing (public)
-  app.get("/api/marketplace/projects", async (req: any, res) => {
+  // Get all reviewed capital projects for approved browsing
+  app.get("/api/marketplace/projects", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const projects = await storage.getCapitalProjects();
       const users = await storage.getAllUsers();
@@ -8123,14 +8510,9 @@ export async function registerRoutes(
       }
       
       const publicProjects = projects
-        .filter(p => 
-          p.status === "OPEN_FOR_INVESTMENT" || 
-          p.status === "funding" || 
-          p.status === "active" ||
-          p.status === "FUNDED"
-        )
+        .filter(isPublicCapitalProject)
         .map(p => ({
-          ...p,
+          ...toPublicCapitalProject(p),
           isPegasusProject: p.createdBy ? pegasusUserIds.has(p.createdBy) : false,
         }))
         .sort((a, b) => {
@@ -8147,7 +8529,7 @@ export async function registerRoutes(
   });
 
   // Get a single capital project by ID
-  app.get("/api/marketplace/projects/:id", async (req: any, res) => {
+  app.get("/api/marketplace/projects/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
       const projectId = Number(req.params.id);
       if (isNaN(projectId)) {
@@ -8155,11 +8537,11 @@ export async function registerRoutes(
       }
       
       const project = await storage.getCapitalProject(projectId);
-      if (!project) {
+      if (!project || !isPublicCapitalProject(project)) {
         return res.status(404).json({ message: "Project not found" });
       }
       
-      res.json(project);
+      res.json(toPublicCapitalProject(project));
     } catch (error) {
       console.error("Error fetching project:", error);
       res.status(500).json({ message: "Failed to fetch project" });
@@ -8167,9 +8549,10 @@ export async function registerRoutes(
   });
 
   // Submit investment interest for a capital project
-  app.post("/api/marketplace/investment-interest", async (req: any, res) => {
+  app.post("/api/marketplace/investment-interest", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      if (!req.isAuthenticated()) {
+      const userId = getAuthUserId(req);
+      if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
@@ -8180,7 +8563,13 @@ export async function registerRoutes(
       }
 
       const project = await storage.getCapitalProject(Number(projectId));
-      if (!project) {
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "capital_project",
+        Number(projectId),
+      );
+      if (!project || !access || !canInitiateLegacyDealInteraction(access, res)) {
         return res.status(404).json({ message: "Project not found" });
       }
 
@@ -8193,7 +8582,7 @@ export async function registerRoutes(
       // Create an investment offer
       const offer = await storage.createInvestmentOffer({
         projectId: Number(projectId),
-        investorId: req.user.id,
+        investorId: userId,
         amountOffered: Number(amount),
         structureType: structurePreference || project.structure,
         notes: notes || null,
@@ -8353,9 +8742,18 @@ export async function registerRoutes(
   // ========================================
 
   // Get user dashboard analytics
-  app.get("/api/analytics/dashboard/:userId?", async (req, res) => {
+  app.get("/api/analytics/dashboard/:userId?", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.params.userId || (req.user as any)?.claims?.sub;
+      const userId = getAuthUserId(req);
+      const requestedUserId = req.params.userId;
+      if (
+        !userId ||
+        (requestedUserId &&
+          requestedUserId !== userId &&
+          !(await hasMarketflowStaffAccess(req, userId)))
+      ) {
+        return res.status(404).json({ message: "Analytics not found" });
+      }
       
       const stats = {
         totalDealsViewed: 0,
@@ -8378,8 +8776,18 @@ export async function registerRoutes(
   });
 
   // Get user activity feed
-  app.get("/api/analytics/activity/:userId?", async (req, res) => {
+  app.get("/api/analytics/activity/:userId?", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      const requestedUserId = req.params.userId;
+      if (
+        !userId ||
+        (requestedUserId &&
+          requestedUserId !== userId &&
+          !(await hasMarketflowStaffAccess(req, userId)))
+      ) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
       res.json([]);
     } catch (error) {
       console.error("Error fetching activity:", error);
@@ -8388,7 +8796,7 @@ export async function registerRoutes(
   });
 
   // Get market insights
-  app.get("/api/analytics/market-insights", async (_req, res) => {
+  app.get("/api/analytics/market-insights", isHybridAuthenticated, async (_req, res) => {
     try {
       res.json([]);
     } catch (error) {
@@ -8398,17 +8806,27 @@ export async function registerRoutes(
   });
 
   // Get negotiation analytics
-  app.get("/api/analytics/negotiations/:userId?", async (req, res) => {
+  app.get("/api/analytics/negotiations/:userId?", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      const requestedUserId = req.params.userId;
+      if (
+        !userId ||
+        (requestedUserId &&
+          requestedUserId !== userId &&
+          !(await hasMarketflowStaffAccess(req, userId)))
+      ) {
+        return res.status(404).json({ message: "Negotiation analytics not found" });
+      }
       const stats = {
-        totalNegotiations: 24,
-        successRate: 72,
-        averageCounters: 2.3,
-        averageTimeToClose: 4.2,
-        averageDiscount: 8.5,
-        bestDealSaved: 45000,
-        recentTrend: "up",
-        strategyScore: 85,
+        totalNegotiations: 0,
+        successRate: 0,
+        averageCounters: 0,
+        averageTimeToClose: 0,
+        averageDiscount: 0,
+        bestDealSaved: 0,
+        recentTrend: "stable",
+        strategyScore: 0,
       };
       res.json(stats);
     } catch (error) {
@@ -8418,13 +8836,19 @@ export async function registerRoutes(
   });
 
   // Get negotiation insights
-  app.get("/api/analytics/negotiation-insights/:userId?", async (req, res) => {
+  app.get("/api/analytics/negotiation-insights/:userId?", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const insights = [
-        { type: "success", title: "Strong Negotiator", description: "Your success rate is 15% higher than average investors" },
-        { type: "tip", title: "Timing Matters", description: "Deals closed within 48 hours have 30% higher success rate", action: "Respond faster to new offers" },
-      ];
-      res.json(insights);
+      const userId = getAuthUserId(req);
+      const requestedUserId = req.params.userId;
+      if (
+        !userId ||
+        (requestedUserId &&
+          requestedUserId !== userId &&
+          !(await hasMarketflowStaffAccess(req, userId)))
+      ) {
+        return res.status(404).json({ message: "Negotiation insights not found" });
+      }
+      res.json([]);
     } catch (error) {
       console.error("Error fetching negotiation insights:", error);
       res.status(500).json({ message: "Failed to fetch negotiation insights" });
@@ -8436,8 +8860,18 @@ export async function registerRoutes(
   // ========================================
 
   // Get AI curated deals
-  app.get("/api/ai/curated-deals/:userId?", async (req, res) => {
+  app.get("/api/ai/curated-deals/:userId?", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = getAuthUserId(req);
+      const requestedUserId = req.params.userId;
+      if (
+        !userId ||
+        (requestedUserId &&
+          requestedUserId !== userId &&
+          !(await hasMarketflowStaffAccess(req, userId)))
+      ) {
+        return res.status(404).json({ message: "Curated deals not found" });
+      }
       res.json([]);
     } catch (error) {
       console.error("Error fetching curated deals:", error);
@@ -8446,12 +8880,9 @@ export async function registerRoutes(
   });
 
   // Submit curation feedback
-  app.post("/api/ai/curation-feedback", async (req, res) => {
+  app.post("/api/ai/curation-feedback", isHybridAuthenticated, async (_req, res) => {
     try {
-      const { dealId, feedback } = req.body;
-      // Store feedback for ML training
-      console.log(`Curation feedback for deal ${dealId}: ${feedback}`);
-      res.json({ success: true });
+      res.status(501).json({ message: "Curation feedback is not available yet" });
     } catch (error) {
       console.error("Error saving curation feedback:", error);
       res.status(500).json({ message: "Failed to save feedback" });
@@ -8463,25 +8894,19 @@ export async function registerRoutes(
   // ========================================
 
   // Get shared watchlists
-  app.get("/api/watchlists/shared/:userId?", async (req, res) => {
+  app.get("/api/watchlists/shared/:userId?", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const watchlists = [
-        {
-          id: "1",
-          name: "Hot Wholesale Deals",
-          description: "Best wholesale opportunities this week",
-          color: "#F59E0B",
-          dealCount: 12,
-          owner: { id: "user1", name: "John Smith" },
-          collaborators: [],
-          isOwner: true,
-          canEdit: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          aiSummary: "12 deals with average 23% ROI potential",
-        },
-      ];
-      res.json(watchlists);
+      const userId = getAuthUserId(req);
+      const requestedUserId = req.params.userId;
+      if (
+        !userId ||
+        (requestedUserId &&
+          requestedUserId !== userId &&
+          !(await hasMarketflowStaffAccess(req, userId)))
+      ) {
+        return res.status(404).json({ message: "Watchlists not found" });
+      }
+      res.json([]);
     } catch (error) {
       console.error("Error fetching shared watchlists:", error);
       res.status(500).json({ message: "Failed to fetch watchlists" });
@@ -8489,22 +8914,9 @@ export async function registerRoutes(
   });
 
   // Create shared watchlist
-  app.post("/api/watchlists/shared", async (req, res) => {
+  app.post("/api/watchlists/shared", isHybridAuthenticated, async (_req, res) => {
     try {
-      const { name } = req.body;
-      const watchlist = {
-        id: Date.now().toString(),
-        name,
-        color: "#3B82F6",
-        dealCount: 0,
-        owner: { id: "current-user", name: "Current User" },
-        collaborators: [],
-        isOwner: true,
-        canEdit: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      res.status(201).json(watchlist);
+      res.status(501).json({ message: "Shared watchlists are not available yet" });
     } catch (error) {
       console.error("Error creating shared watchlist:", error);
       res.status(500).json({ message: "Failed to create watchlist" });
@@ -8512,10 +8924,9 @@ export async function registerRoutes(
   });
 
   // Get watchlist deals
-  app.get("/api/watchlists/shared/:watchlistId/deals", async (req, res) => {
+  app.get("/api/watchlists/shared/:watchlistId/deals", isHybridAuthenticated, async (_req, res) => {
     try {
-      const deals: any[] = [];
-      res.json(deals);
+      res.status(404).json({ message: "Watchlist not found" });
     } catch (error) {
       console.error("Error fetching watchlist deals:", error);
       res.status(500).json({ message: "Failed to fetch watchlist deals" });
@@ -8527,12 +8938,9 @@ export async function registerRoutes(
   // ========================================
 
   // Save onboarding data
-  app.post("/api/user/onboarding", async (req, res) => {
+  app.post("/api/user/onboarding", isHybridAuthenticated, async (_req, res) => {
     try {
-      const profileData = req.body;
-      // Save onboarding preferences
-      console.log("Onboarding data received:", profileData);
-      res.json({ success: true, message: "Onboarding complete" });
+      res.status(501).json({ message: "Onboarding preferences are not available yet" });
     } catch (error) {
       console.error("Error saving onboarding data:", error);
       res.status(500).json({ message: "Failed to save onboarding data" });
@@ -8544,12 +8952,9 @@ export async function registerRoutes(
   // ========================================
 
   // Get documents for a deal
-  app.get("/api/documents/:dealId/:dealType?", async (req, res) => {
+  app.get("/api/documents/:dealId/:dealType?", isHybridAuthenticated, async (_req, res) => {
     try {
-      const { dealId } = req.params;
-      // Return documents from object storage
-      const documents: any[] = [];
-      res.json(documents);
+      res.status(501).json({ message: "Use the authorized deal data room for documents" });
     } catch (error) {
       console.error("Error fetching documents:", error);
       res.status(500).json({ message: "Failed to fetch documents" });
@@ -8557,10 +8962,9 @@ export async function registerRoutes(
   });
 
   // Upload document (handled by object storage routes)
-  app.post("/api/documents/upload", async (req, res) => {
+  app.post("/api/documents/upload", isHybridAuthenticated, async (_req, res) => {
     try {
-      // Document upload is handled by object storage integration
-      res.json({ success: true, message: "Use object storage API for uploads" });
+      res.status(501).json({ message: "Use the authorized deal data room for uploads" });
     } catch (error) {
       console.error("Error uploading document:", error);
       res.status(500).json({ message: "Failed to upload document" });
@@ -8568,11 +8972,9 @@ export async function registerRoutes(
   });
 
   // Delete document
-  app.delete("/api/documents/:documentId", async (req, res) => {
+  app.delete("/api/documents/:documentId", isHybridAuthenticated, async (_req, res) => {
     try {
-      const { documentId } = req.params;
-      console.log(`Deleting document: ${documentId}`);
-      res.json({ success: true });
+      res.status(501).json({ message: "Use the authorized deal data room to manage documents" });
     } catch (error) {
       console.error("Error deleting document:", error);
       res.status(500).json({ message: "Failed to delete document" });
@@ -8584,12 +8986,23 @@ export async function registerRoutes(
   // ========================================
 
   // Generate capital project PDF
-  app.get("/api/pdf/capital-project/:id", async (req, res) => {
+  app.get("/api/pdf/capital-project/:id", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const projectId = Number(req.params.id);
       const project = await storage.getCapitalProject(projectId);
       
       if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      if (
+        project.createdBy !== userId &&
+        !(await hasMarketflowStaffAccess(req, userId))
+      ) {
         return res.status(404).json({ message: "Project not found" });
       }
       
@@ -8627,52 +9040,145 @@ export async function registerRoutes(
   // =====================================================
 
   // Create a new offer (unified across all lanes)
-  app.post("/api/marketflow/offers", isHybridAuthenticated, async (req: any, res) => {
+  app.post("/api/marketflow/offers", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      const userId = getAuthUserId(req);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const { lane, dealId, recipientId, offerKind, payload, expiresAt } = req.body;
+      const { lane, dealId, offerKind, payload, expiresAt } = req.body;
+      const normalizedLane =
+        typeof lane === "string" ? lane.trim().toUpperCase() : "";
+      const numericDealId = Number(dealId);
       
-      if (!lane || !dealId || !recipientId || !offerKind || !payload) {
-        return res.status(400).json({ message: "Missing required fields: lane, dealId, recipientId, offerKind, payload" });
+      if (
+        !["WHOLESALE", "CAPITAL", "LISTING"].includes(normalizedLane) ||
+        !Number.isSafeInteger(numericDealId) ||
+        numericDealId <= 0 ||
+        typeof offerKind !== "string" ||
+        !payload ||
+        typeof payload !== "object" ||
+        Array.isArray(payload)
+      ) {
+        return res.status(400).json({ message: "Invalid offer details" });
       }
 
-      // Check if negotiation already exists for these parties
-      let negotiation = await storage.getMarketflowNegotiationByDealAndParties(lane, dealId, recipientId, userId);
-      
-      // Create negotiation if it doesn't exist
-      if (!negotiation) {
-        negotiation = await storage.createMarketflowNegotiation({
-          lane,
-          dealId,
-          posterId: recipientId,
-          counterpartyId: userId,
-          currentOfferId: null,
-          lastActivityAt: new Date(),
+      const allowedKinds: Record<string, readonly string[]> = {
+        WHOLESALE: ["WHOLESALE_ASSIGNMENT", "WHOLESALE_JV"],
+        CAPITAL: ["CAPITAL_INVESTMENT"],
+        LISTING: ["LISTING_INQUIRY", "SHOWING_REQUEST"],
+      };
+      if (!allowedKinds[normalizedLane].includes(offerKind)) {
+        return res.status(400).json({ message: "Invalid offer details" });
+      }
+
+      const parsedExpiry =
+        typeof expiresAt === "string" && expiresAt
+          ? new Date(expiresAt)
+          : null;
+      const offerCreatedAt = new Date();
+      if (
+        parsedExpiry &&
+        (Number.isNaN(parsedExpiry.getTime()) ||
+          parsedExpiry.getTime() <= offerCreatedAt.getTime())
+      ) {
+        return res.status(400).json({ message: "Invalid offer details" });
+      }
+
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        normalizedLane,
+        numericDealId,
+      );
+      if (
+        !access ||
+        !access.ownerId ||
+        (!access.isOwner &&
+          !access.isParticipant &&
+          !access.isStaff &&
+          !(res.locals.canAccessReviewedMarketflowInventory === true &&
+            isPublicLegacyDeal(access)))
+      ) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+
+      const dealNegotiations = await storage.getMarketflowNegotiationsByDeal(
+        normalizedLane,
+        numericDealId,
+      );
+      const authoritativeNegotiations = dealNegotiations.filter(
+        (entry) =>
+          isMarketflowNegotiationBoundToAuthoritativeDeal(entry, {
+            lane: normalizedLane,
+            dealId: numericDealId,
+            ownerId: access.ownerId!,
+          }) &&
+          (entry.posterId === userId || entry.counterpartyId === userId),
+      );
+      if (authoritativeNegotiations.length > 1) {
+        return res.status(409).json({
+          message: "Offer state changed. Refresh and try again",
         });
       }
+      const existingNegotiation = authoritativeNegotiations[0];
+      if (existingNegotiation) {
+        if (existingNegotiation.status !== "active") {
+          return res.status(409).json({ message: "Negotiation is not active" });
+        }
+      } else if (access.isOwner) {
+        // A deal owner cannot choose an arbitrary recipient through this
+        // deal-level endpoint.
+        return res.status(404).json({ message: "Deal not found" });
+      }
 
-      // Create the offer
-      const offer = await storage.createMarketflowOffer({
-        lane,
-        dealId,
-        negotiationId: negotiation.id,
+      const recipientId = existingNegotiation
+        ? existingNegotiation.posterId === userId
+          ? existingNegotiation.counterpartyId
+          : existingNegotiation.posterId
+        : access.ownerId;
+      const counterpartyId =
+        existingNegotiation?.counterpartyId ?? userId;
+
+      // Public DTOs intentionally omit owner IDs. The storage transaction
+      // receives the owner resolved from the authoritative deal record, never
+      // a participant identity copied from a pre-fix negotiation row.
+      const createResult = await storage.createCurrentMarketflowOffer({
+        lane: normalizedLane,
+        dealId: numericDealId,
+        posterId: access.ownerId,
+        counterpartyId,
         createdBy: userId,
         recipientId,
         offerKind,
         payload,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        parentOfferId: null,
+        expiresAt: parsedExpiry,
+        now: offerCreatedAt,
       });
-
-      // Update negotiation with current offer
-      await storage.updateMarketflowNegotiation(negotiation.id, {
-        currentOfferId: offer.id,
-      });
-      await storage.incrementNegotiationOfferCount(negotiation.id);
+      if (!createResult.ok) {
+        if (createResult.reason === "invalid_payload") {
+          return res.status(400).json({ message: "Invalid offer terms" });
+        }
+        if (createResult.reason === "invalid_expiry") {
+          return res.status(400).json({ message: "Invalid offer details" });
+        }
+        if (createResult.reason === "invalid_participants") {
+          return res.status(404).json({ message: "Deal not found" });
+        }
+        if (createResult.reason === "negotiation_inactive") {
+          return res.status(409).json({ message: "Negotiation is not active" });
+        }
+        if (createResult.reason === "active_offer_exists") {
+          return res.status(409).json({
+            message: "A current offer is already awaiting a response",
+          });
+        }
+        return res.status(409).json({
+          message: "Offer state changed. Refresh and try again",
+        });
+      }
+      const { offer, negotiation } = createResult;
 
       // Broadcast to recipient via WebSocket
       const broadcastToUser = (app as any).broadcastToUser;
@@ -8682,7 +9188,7 @@ export async function registerRoutes(
           payload: {
             offerId: offer.id,
             negotiationId: negotiation.id,
-            lane,
+            lane: normalizedLane,
             offerKind,
             status: 'sent',
           }
@@ -8697,11 +9203,19 @@ export async function registerRoutes(
   });
 
   // Get offers for a deal
-  app.get("/api/marketflow/offers/deal/:lane/:dealId", async (req, res) => {
+  app.get("/api/marketflow/offers/deal/:lane/:dealId", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const { lane, dealId } = req.params;
       const offers = await storage.getMarketflowOffersByDeal(lane, parseInt(dealId));
-      res.json(offers);
+      const visibleOffers = await hasMarketflowStaffAccess(req, userId)
+        ? offers
+        : filterMarketflowOffersForUser(userId, offers);
+      res.json(visibleOffers);
     } catch (error) {
       console.error("Error fetching offers:", error);
       res.status(500).json({ message: "Failed to fetch offers" });
@@ -8727,12 +9241,24 @@ export async function registerRoutes(
   });
 
   // Get single offer
-  app.get("/api/marketflow/offers/:offerId", async (req, res) => {
+  app.get("/api/marketflow/offers/:offerId", isHybridAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const offerId = parseInt(req.params.offerId);
       const offer = await storage.getMarketflowOffer(offerId);
       
       if (!offer) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+
+      const mayReadOffer =
+        canAccessMarketflowOffer(userId, offer) ||
+        (await hasMarketflowStaffAccess(req, userId));
+      if (!mayReadOffer) {
         return res.status(404).json({ message: "Offer not found" });
       }
       
@@ -8751,83 +9277,133 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const offerId = parseInt(req.params.offerId);
+      const offerId = Number(req.params.offerId);
       const { action, counterPayload } = req.body;
-      
+      if (!Number.isSafeInteger(offerId) || offerId <= 0) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
+      if (!["accept", "reject", "counter"].includes(action)) {
+        return res.status(400).json({
+          message: "Invalid action. Must be 'accept', 'reject', or 'counter'",
+        });
+      }
+      if (
+        action === "counter" &&
+        (!counterPayload ||
+          typeof counterPayload !== "object" ||
+          Array.isArray(counterPayload))
+      ) {
+        return res.status(400).json({
+          message: "A valid counter offer is required",
+        });
+      }
+
       const offer = await storage.getMarketflowOffer(offerId);
       if (!offer) {
         return res.status(404).json({ message: "Offer not found" });
       }
 
-      if (offer.recipientId !== userId && offer.createdBy !== userId) {
-        return res.status(403).json({ message: "Not authorized to respond to this offer" });
+      // Only the current recipient may accept, reject, or counter. The
+      // creator can view or withdraw an offer, but cannot accept their own
+      // terms on the other party's behalf.
+      if (offer.recipientId !== userId) {
+        return res.status(404).json({ message: "Offer not found" });
       }
 
-      if (action === "accept") {
-        await storage.updateMarketflowOfferStatus(offerId, "accepted");
-        
-        // Update negotiation to accepted
-        if (offer.negotiationId) {
-          await storage.updateMarketflowNegotiation(offer.negotiationId, {
-            status: "accepted",
-            finalTerms: offer.payload as object,
-            acceptedAt: new Date(),
-            acceptedBy: userId,
-          });
-        }
-
-        const updatedOffer = await storage.getMarketflowOffer(offerId);
-        res.json({ offer: updatedOffer, action: "accepted" });
-      } 
-      else if (action === "reject") {
-        await storage.updateMarketflowOfferStatus(offerId, "rejected");
-        const updatedOffer = await storage.getMarketflowOffer(offerId);
-        res.json({ offer: updatedOffer, action: "rejected" });
-      }
-      else if (action === "counter" && counterPayload) {
-        await storage.updateMarketflowOfferStatus(offerId, "countered");
-        
-        // Create counter offer
-        const counterOffer = await storage.createMarketflowOffer({
+      const negotiation =
+        offer.negotiationId !== null
+          ? await storage.getMarketflowNegotiation(offer.negotiationId)
+          : undefined;
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        offer.lane,
+        offer.dealId,
+      );
+      if (
+        !negotiation ||
+        !access ||
+        !access.ownerId ||
+        (!access.isOwner &&
+          !access.isParticipant &&
+          !access.isStaff &&
+          !isPublicLegacyDeal(access)) ||
+        !isMarketflowNegotiationBoundToAuthoritativeDeal(negotiation, {
           lane: offer.lane,
           dealId: offer.dealId,
-          negotiationId: offer.negotiationId,
-          createdBy: userId,
-          recipientId: offer.createdBy,
-          offerKind: offer.offerKind,
-          payload: counterPayload,
-          parentOfferId: offerId,
-          expiresAt: null,
-        });
+          ownerId: access.ownerId,
+        }) ||
+        !isMarketflowOfferConsistentWithNegotiation(offer, negotiation)
+      ) {
+        return res.status(404).json({ message: "Offer not found" });
+      }
 
-        // Update negotiation
-        if (offer.negotiationId) {
-          await storage.updateMarketflowNegotiation(offer.negotiationId, {
-            currentOfferId: counterOffer.id,
-          });
-          await storage.incrementNegotiationOfferCount(offer.negotiationId);
+      const responseResult = await storage.respondToCurrentMarketflowOffer({
+        offerId,
+        userId,
+        action: action as "accept" | "reject" | "counter",
+        counterPayload,
+        authoritativeOwnerId: access.ownerId,
+      });
+      if (!responseResult.ok) {
+        if (
+          responseResult.reason === "not_found" ||
+          responseResult.reason === "not_recipient"
+        ) {
+          return res.status(404).json({ message: "Offer not found" });
         }
+        if (responseResult.reason === "invalid_counter") {
+          return res.status(400).json({
+            message: "A valid counter offer is required",
+          });
+        }
+        if (responseResult.reason === "invalid_offer_payload") {
+          return res.status(409).json({
+            message: "Offer terms are invalid and cannot be accepted",
+          });
+        }
+        if (responseResult.reason === "offer_expired") {
+          return res.status(409).json({ message: "Offer has expired" });
+        }
+        if (responseResult.reason === "negotiation_inactive") {
+          return res.status(409).json({ message: "Negotiation is not active" });
+        }
+        if (responseResult.reason === "stale_offer") {
+          return res.status(409).json({
+            message: "Offer is no longer the current offer",
+          });
+        }
+        if (responseResult.reason === "already_resolved") {
+          return res.status(409).json({
+            message: "Offer has already been resolved",
+          });
+        }
+        return res.status(409).json({
+          message: "Offer state changed. Refresh and try again",
+        });
+      }
 
+      if (responseResult.action === "countered") {
         // Broadcast to original offerer
         const broadcastToUser = (app as any).broadcastToUser;
         if (broadcastToUser) {
-          broadcastToUser(offer.createdBy, {
+          broadcastToUser(responseResult.offer.recipientId, {
             type: 'offer_update',
             payload: {
-              offerId: counterOffer.id,
-              negotiationId: offer.negotiationId,
-              lane: offer.lane,
-              offerKind: offer.offerKind,
+              offerId: responseResult.offer.id,
+              negotiationId: responseResult.negotiation.id,
+              lane: responseResult.offer.lane,
+              offerKind: responseResult.offer.offerKind,
               status: 'countered',
             }
           });
         }
+      }
 
-        res.json({ offer: counterOffer, action: "countered" });
-      }
-      else {
-        return res.status(400).json({ message: "Invalid action. Must be 'accept', 'reject', or 'counter'" });
-      }
+      res.json({
+        offer: responseResult.offer,
+        action: responseResult.action,
+      });
     } catch (error) {
       console.error("Error responding to offer:", error);
       res.status(500).json({ message: "Failed to respond to offer" });
@@ -8835,9 +9411,13 @@ export async function registerRoutes(
   });
 
   // Get negotiation by ID
-  app.get("/api/marketflow/negotiations/:negotiationId", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/marketflow/negotiations/:negotiationId(\\d+)", isHybridAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || req.supabaseUser?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const negotiationId = parseInt(req.params.negotiationId);
       
       const negotiation = await storage.getMarketflowNegotiation(negotiationId);
@@ -8845,9 +9425,10 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Negotiation not found" });
       }
 
-      // Check access
-      if (userId && negotiation.posterId !== userId && negotiation.counterpartyId !== userId) {
-        return res.status(403).json({ message: "Not authorized to view this negotiation" });
+      const isParticipant =
+        negotiation.posterId === userId || negotiation.counterpartyId === userId;
+      if (!isParticipant && !(await hasMarketflowStaffAccess(req, userId))) {
+        return res.status(404).json({ message: "Negotiation not found" });
       }
 
       // Get all offers in this negotiation
@@ -8890,10 +9471,11 @@ export async function registerRoutes(
       const { lane, dealId } = req.params;
       const negotiations = await storage.getMarketflowNegotiationsByDeal(lane, parseInt(dealId));
       
-      // Filter to only return negotiations the user is a participant in
-      const userNegotiations = negotiations.filter(
-        (n: any) => n.posterId === userId || n.counterpartyId === userId
-      );
+      const userNegotiations = await hasMarketflowStaffAccess(req, userId)
+        ? negotiations
+        : negotiations.filter(
+            (n: any) => n.posterId === userId || n.counterpartyId === userId,
+          );
       
       res.json(userNegotiations);
     } catch (error) {
@@ -8911,7 +9493,11 @@ export async function registerRoutes(
       }
 
       const negotiationId = parseInt(req.params.negotiationId);
-      const { content, messageType, relatedOfferId } = req.body;
+      const content =
+        typeof req.body?.content === "string" ? req.body.content.trim() : "";
+      if (!content || content.length > 5_000) {
+        return res.status(400).json({ message: "Message is required" });
+      }
 
       const negotiation = await storage.getMarketflowNegotiation(negotiationId);
       if (!negotiation) {
@@ -8920,15 +9506,15 @@ export async function registerRoutes(
 
       // Check access
       if (negotiation.posterId !== userId && negotiation.counterpartyId !== userId) {
-        return res.status(403).json({ message: "Not authorized to send messages in this negotiation" });
+        return res.status(404).json({ message: "Negotiation not found" });
       }
 
       const message = await storage.createNegotiationMessage({
         negotiationId,
         senderId: userId,
         content,
-        messageType: messageType || "text",
-        relatedOfferId: relatedOfferId || null,
+        messageType: "text",
+        relatedOfferId: null,
       });
 
       // Broadcast to the other party
@@ -8962,6 +9548,15 @@ export async function registerRoutes(
       }
 
       const negotiationId = parseInt(req.params.negotiationId);
+      const negotiation = await storage.getMarketflowNegotiation(negotiationId);
+      if (
+        !negotiation ||
+        (negotiation.posterId !== userId &&
+          negotiation.counterpartyId !== userId)
+      ) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+
       await storage.markNegotiationMessagesAsRead(negotiationId, userId);
       
       res.json({ success: true });
@@ -8971,77 +9566,12 @@ export async function registerRoutes(
     }
   });
 
-  // =====================================================
-  // WebSocket Server for Real-time Notifications
-  // =====================================================
   // Strategy Lab — Property Analysis routes (Task #84)
   const { registerPropertyAnalysisRoutes } = await import("./propertyAnalysisRoutes");
   registerPropertyAnalysisRoutes(app, { isAuthenticated: isHybridAuthenticated });
 
   const { registerStrategyLabRoutes } = await import("./strategyLabRoutes");
   registerStrategyLabRoutes(app, { isAuthenticated: isHybridAuthenticated, adminEmails: ADMIN_EMAILS });
-
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  const clients = new Map<string, Set<WebSocket>>();
-
-  wss.on('connection', (ws: WebSocket) => {
-    let userId: string | null = null;
-
-    ws.on('message', (data: Buffer) => {
-      try {
-        const message = JSON.parse(data.toString());
-        
-        if (message.type === 'subscribe' && message.payload?.userId) {
-          const subscribedUserId = String(message.payload.userId);
-          userId = subscribedUserId;
-          if (!clients.has(subscribedUserId)) {
-            clients.set(subscribedUserId, new Set());
-          }
-          clients.get(subscribedUserId)?.add(ws);
-          
-          ws.send(JSON.stringify({ 
-            type: 'subscribed', 
-            payload: { userId },
-            timestamp: Date.now() 
-          }));
-        }
-      } catch (err) {
-        console.error('WebSocket message parse error:', err);
-      }
-    });
-
-    ws.on('close', () => {
-      if (userId) {
-        const userClients = clients.get(userId);
-        if (userClients) {
-          userClients.delete(ws);
-          if (userClients.size === 0) {
-            clients.delete(userId);
-          }
-        }
-      }
-    });
-
-    ws.on('error', (err) => {
-      console.error('WebSocket error:', err);
-    });
-  });
-
-  // Helper function to broadcast to specific user
-  const broadcastToUser = (userId: string, message: object) => {
-    const userClients = clients.get(userId);
-    if (userClients) {
-      const payload = JSON.stringify({ ...message, timestamp: Date.now() });
-      userClients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(payload);
-        }
-      });
-    }
-  };
-
-  // Export broadcast function for use in other routes
-  (app as any).broadcastToUser = broadcastToUser;
 
   return httpServer;
 }

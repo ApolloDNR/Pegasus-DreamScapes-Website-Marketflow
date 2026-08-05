@@ -50,8 +50,8 @@ const PEGGY = {
   name: "Peggy",
   icon: Sparkles,
   status: "private-training" as StatusBadgeKind,
-  oneLiner: "Pegasus' AI strategy assistant. One intelligence, multiple surfaces.",
-  body: "Plugs into website, phone, HQ, and the ecosystem apps. Listens, qualifies, routes, and hands every conversation to Apollo. Public surface at /peggy.",
+  oneLiner: "Pegasus' AI strategy assistant, available on the website in private training.",
+  body: "The current website surface listens, qualifies, routes, and hands conversations to Apollo. Phone and voice remain in development; HQ and ecosystem-app integrations are planned, not live.",
 };
 
 export default function Ecosystem() {

@@ -364,16 +364,31 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/wholesale-offers", data);
+      const contractPrice = Number(deal?.contractPrice) || 0;
+      const assignmentFee = Number(data.assignmentFee) || 0;
+      const res = await apiRequest("POST", "/api/marketflow/offers", {
+        lane: "WHOLESALE",
+        dealId: Number(data.dealId),
+        offerKind: "WHOLESALE_ASSIGNMENT",
+        payload: {
+          offerPrice:
+            Number(deal?.askingPrice) || contractPrice + assignmentFee,
+          earnestMoney: Number(data.earnestMoney) || 0,
+          closeDate: data.closingDate || "",
+          inspectionPeriod: 0,
+          fundingType: "cash",
+          notes: data.message || "",
+        },
+      });
       return res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Offer Accepted",
-        description: "You've accepted the wholesaler's terms. They will be notified.",
+        title: "Offer sent",
+        description: "Your offer is now awaiting the wholesaler's response.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/negotiations"] });
       onClose();
     },
     onError: (error: any) => {
@@ -552,7 +567,21 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/wholesale-offers", data);
+      const contractPrice = Number(deal?.contractPrice) || 0;
+      const assignmentFee = Number(data.assignmentFee) || 0;
+      const res = await apiRequest("POST", "/api/marketflow/offers", {
+        lane: "WHOLESALE",
+        dealId: Number(data.dealId),
+        offerKind: "WHOLESALE_ASSIGNMENT",
+        payload: {
+          offerPrice: contractPrice + assignmentFee,
+          earnestMoney: Number(data.earnestMoney) || 0,
+          closeDate: data.closingDate || "",
+          inspectionPeriod: Number(data.inspectionPeriod) || 0,
+          fundingType: "cash",
+          notes: data.message || "",
+        },
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -561,7 +590,7 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
         description: "Your counter-offer has been sent for review.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/negotiations"] });
       onClose();
     },
     onError: (error: any) => {
@@ -750,7 +779,7 @@ function WholesaleJVRequestModal({ dealId, existingOfferId, onClose }: Wholesale
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/jv-requests", data);
+      const res = await apiRequest("POST", "/api/marketplace/jv-requests", data);
       return res.json();
     },
     onSuccess: () => {
@@ -759,7 +788,7 @@ function WholesaleJVRequestModal({ dealId, existingOfferId, onClose }: Wholesale
         description: "Your partnership request has been sent to the wholesaler.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/jv-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/wholesaler/jv-requests"] });
       onClose();
     },
     onError: (error: any) => {

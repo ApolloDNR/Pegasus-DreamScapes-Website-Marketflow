@@ -543,45 +543,26 @@ function CapitalDetailPage() {
             <Card data-testid="card-operator-info">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Operator
+                  <Shield className="w-5 h-5" />
+                  Project Source
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Hammer className="w-6 h-6 text-primary" />
+                    <Building2 className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Dreamscaper</p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                      <span>4.8 rating</span>
-                      <span className="mx-1">|</span>
-                      <span>12 deals</span>
-                    </div>
+                    <p className="font-medium">Marketplace submission</p>
+                    <p className="text-sm text-muted-foreground">
+                      Source identity is kept private during review.
+                    </p>
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-3 border-t">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Shield className="w-4 h-4 text-green-600" />
-                    <span>Identity Verified</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Award className="w-4 h-4 text-primary" />
-                    <span>Pegasus Certified</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                    <span>Background Checked</span>
-                  </div>
+                <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                  Operator identity and contact details are shared only through the authorized project workflow.
                 </div>
-
-                <Button variant="outline" className="w-full" data-testid="button-view-operator">
-                  View Full Profile
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
               </CardContent>
             </Card>
           </ScrollReveal>

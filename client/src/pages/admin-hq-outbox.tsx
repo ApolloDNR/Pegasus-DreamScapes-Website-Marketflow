@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, authenticatedRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ export default function AdminHqOutbox() {
     queryKey: ["/api/admin/hq-outbox", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
-      const res = await fetch(`/api/admin/hq-outbox${qs}`, { credentials: "include" });
+      const res = await authenticatedRequest(`/api/admin/hq-outbox${qs}`);
       if (!res.ok) throw new Error("Failed to load");
       return res.json();
     },

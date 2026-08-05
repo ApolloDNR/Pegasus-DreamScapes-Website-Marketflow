@@ -13,6 +13,7 @@ export interface SeoRoute {
   description: string;
   image: string;
   type?: "website" | "article";
+  noIndex?: boolean;
 }
 
 export const BRAND = "Pegasus Dreamscapes";
@@ -139,6 +140,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "Describe your deal in plain language. Peggy is an intake assistant — she frames your options and routes you to the next step. No offers, no advice.",
     image: `${SITE_URL}/og/peggy.png`,
   },
+  "/saved": {
+    title: tag("Saved"),
+    description:
+      "Your saved Pegasus planning items. This personal workspace is not included in public search results.",
+    image: DEFAULT_OG_IMAGE,
+    noIndex: true,
+  },
   "/about": {
     title: tag("About"),
     description:
@@ -203,13 +211,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: DEFAULT_OG_IMAGE,
   },
 
-  // ---- Learn / network / legal ----
-  "/library": {
-    title: tag("Strategy Library"),
-    description:
-      "Field notes on complex property, structured opportunity, and the strategy-first operating model. Structured reads, no gurus, no hype.",
-    image: `${SITE_URL}/og/library.png`,
-  },
+  // ---- Network / legal ----
   "/vendor-network": {
     title: tag("Vendor Network"),
     description:
@@ -247,7 +249,6 @@ export function seoFor(pathname: string): SeoRoute {
   const exact = SEO_ROUTES[pathname];
   if (exact) return exact;
   if (pathname.startsWith("/projects/")) return SEO_ROUTES["/projects"];
-  if (pathname.startsWith("/library/")) return SEO_ROUTES["/library"];
   if (pathname.startsWith("/marketflow/")) return SEO_ROUTES["/marketflow"];
   return SEO_ROUTES["/"];
 }
@@ -278,6 +279,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/offer-studio(\/|$)/,
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
+  /^\/saved$/,
   /^\/submit$/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
   // Buyboxes are soft-launched (config publicReady: false). The page stays
@@ -285,12 +287,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   // crawler-visible metadata for direct visits / social shares — we simply
   // don't advertise it in the sitemap until the buyboxes are public-ready.
   /^\/marketflow\/buyboxes$/,
-  // Website Spec v4: /library remains demoted (302 → home), so it must not be
-  // advertised in the sitemap. Its SEO_ROUTES entry is retained only so
-  // seoFor()'s prefix fallback keeps serving live subpaths (e.g. /library/:slug).
-  // /marketflow was restored to the live public surface in v4 and is crawlable
-  // again. Exact-match, bare path only.
-  /^\/library$/,
+  /^\/library(?:\/|$)/,
 ];
 
 // Public directories the robots policy disallows. Crawlers should never index
@@ -305,6 +302,8 @@ export const ROBOTS_DISALLOW: string[] = [
   "/offer-studio",
   "/profile/",
   "/snapshot/",
+  "/saved",
+  "/library",
   "/marketflow/admin",
   "/marketflow/dashboard",
   "/marketflow/messages",

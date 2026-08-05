@@ -4,6 +4,10 @@ import type { ChatTurn, PeggyHandoff, Nav } from './theme';
 import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS } from './data';
 import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
+import {
+  PEGGY_CONVERSATION_ACCESS_HEADER,
+  type PeggyConversationAccessResponse,
+} from '@shared/peggy-access';
 
 const GREETING =
   "I’m Peggy, Pegasus’s AI concierge. Tell me what you’re bringing, a property, a deal, a project, or a plan, in your own words. I’ll help organize it and route it to the appropriate Pegasus review path.";
@@ -86,6 +90,7 @@ export function Peggy({
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const convIdRef = useRef<number | null>(null);
+  const convAccessRef = useRef<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: GREETING }]);
   const [draft, setDraft] = useState('');
@@ -168,14 +173,27 @@ export function Peggy({
             signal: controller.signal,
           });
           if (!convRes.ok) throw new Error(`Conversation failed: ${convRes.status}`);
-          const conv = await convRes.json();
+          const conv = (await convRes.json()) as
+            Partial<PeggyConversationAccessResponse> & {
+              conversation?: Partial<PeggyConversationAccessResponse>;
+            };
           convIdRef.current = conv?.id ?? conv?.conversation?.id ?? null;
-          if (convIdRef.current == null) throw new Error('No conversation id');
+          convAccessRef.current =
+            conv?.accessToken ?? conv?.conversation?.accessToken ?? null;
+          if (convIdRef.current == null || !convAccessRef.current) {
+            throw new Error('No conversation access');
+          }
         }
+
+        const conversationAccessToken = convAccessRef.current;
+        if (!conversationAccessToken) throw new Error('No conversation access');
 
         const res = await fetch('/api/peggy/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
+          },
           body: JSON.stringify({
             conversationId: convIdRef.current,
             message: content,

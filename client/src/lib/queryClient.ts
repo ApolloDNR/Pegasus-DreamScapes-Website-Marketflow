@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction, InvalidateQueryFilters } from "@tanstack/react-query";
+import { getSupabaseSync } from "@/lib/supabase";
 
 export class ApiError extends Error {
   status: number;
@@ -35,16 +36,113 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+async function getCurrentSupabaseAccessToken(): Promise<string | null> {
+  const supabase = getSupabaseSync();
+  if (!supabase) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      return null;
+    }
+
+    return data.session?.access_token?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function isSameOriginRequest(input: RequestInfo | URL): boolean {
+  const requestUrl =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
+
+  if (typeof window === "undefined") {
+    return !requestUrl.startsWith("//") && !/^[a-z][a-z\d+.-]*:/i.test(requestUrl);
+  }
+
+  try {
+    return new URL(requestUrl, window.location.origin).origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+function hasAuthorizationHeader(headers?: HeadersInit): boolean {
+  return headers ? new Headers(headers).has("Authorization") : false;
+}
+
+function addAuthorizationHeader(headers: HeadersInit | undefined, token: string): HeadersInit {
+  const authorization = `Bearer ${token}`;
+
+  if (headers instanceof Headers) {
+    const nextHeaders = new Headers(headers);
+    nextHeaders.set("Authorization", authorization);
+    return nextHeaders;
+  }
+
+  if (Array.isArray(headers)) {
+    return [...headers, ["Authorization", authorization]];
+  }
+
+  return {
+    ...(headers ?? {}),
+    Authorization: authorization,
+  };
+}
+
+/**
+ * Fetch a Pegasus API route with both supported authentication mechanisms:
+ * the legacy session cookie and, when available, the current Supabase bearer
+ * token. Bearer credentials are only attached to same-origin requests so this
+ * helper is safe to use near presigned-upload flows without leaking the user's
+ * site token to object storage.
+ */
+export async function authenticatedRequest(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+): Promise<Response> {
+  const isSameOrigin = isSameOriginRequest(input);
+  const requestInit: RequestInit = isSameOrigin
+    ? { ...init, credentials: init.credentials ?? "include" }
+    : { ...init };
+
+  if (isSameOrigin) {
+    const accessToken = await getCurrentSupabaseAccessToken();
+    const inheritedHeaders =
+      init.headers ??
+      (typeof Request !== "undefined" && input instanceof Request
+        ? input.headers
+        : undefined);
+
+    if (accessToken && !hasAuthorizationHeader(inheritedHeaders)) {
+      requestInit.headers = addAuthorizationHeader(inheritedHeaders, accessToken);
+    }
+  }
+
+  return fetch(input, requestInit);
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  extraHeaders: Record<string, string> = {},
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const headers: Record<string, string> = { ...extraHeaders };
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await authenticatedRequest(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -71,9 +169,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
-    });
+    const res = await authenticatedRequest(queryKey.join("/") as string);
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

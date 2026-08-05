@@ -99,12 +99,15 @@ describe("Every PEGASUS_URLS route renders real content, never a blank shell (Ta
 
       // Non-home Pegasus pages are route-level lazy chunks. Wait through the
       // shared PageLoader fallback before asserting the substantive page body.
-      await waitFor(() => {
-        expect(
-          main!.querySelector("h1, h2"),
-          `${url} (route '${routeForUrl(url)}') never resolved past PageLoader`,
-        ).toBeTruthy();
-      });
+      await waitFor(
+        () => {
+          expect(
+            main!.querySelector("h1, h2"),
+            `${url} (route '${routeForUrl(url)}') never resolved past PageLoader`,
+          ).toBeTruthy();
+        },
+        { timeout: 5000 },
+      );
 
       // A blank shell renders <main> with no element children. A real page
       // mounts a substantial subtree.

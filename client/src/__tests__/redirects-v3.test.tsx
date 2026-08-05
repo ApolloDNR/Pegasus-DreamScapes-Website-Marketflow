@@ -7,7 +7,7 @@ import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { legacyRedirects } from "@/App";
+import { legacyRedirects } from "@/LegacyApp";
 import { REDIRECTED_URLS, PEGASUS_URLS, ROUTE_TO_URL } from "@/pegasus/routes";
 import { NavBar } from "@/pegasus/nav";
 import { CapitalPage, DevelopmentPage } from "@/pegasus/pages";
@@ -21,14 +21,14 @@ import type { Nav, Route } from "@/pegasus/theme";
 // of the live site and redirected them. Website Spec v4 reverses that cut: the
 // "Who We Serve" audience lanes plus /strategy-lab, /marketflow, /peggy,
 // /deal-strategy (renamed from /deal-architecture), and /work-with-apollo are
-// live prototype-shell pages again. Only /library remains demoted.
+// live prototype-shell pages again. The fixture library remains retired.
 //
 // This net locks the reversal in so a future edit cannot silently re-demote a
 // restored surface or strand a stale redirect:
 //   1. reversed — REDIRECTED_URLS is empty (nothing is pulled from the shell).
 //   2. restored — every surface that came back renders the prototype shell
 //      (is in PEGASUS_URLS) and has NO redirect rule pointing it away.
-//   3. residual — /library still 302s to home, and the legacy
+//   3. residual — /library now routes directly to Strategy Lab, and the legacy
 //      /deal-architecture URL 301s forward to the live /deal-strategy.
 //   4. no-stale-link — the live chrome (nav + footer) and a few shell pages
 //      never link to a still-demoted or renamed-away URL.
@@ -53,7 +53,7 @@ const RESTORED_URLS: string[] = [
   "/our-work",
 ];
 
-// Still demoted: the standalone page that 302-redirects to home.
+// Retired fixture surface: the old page redirects to Strategy Lab.
 const DEMOTED_URLS: string[] = ["/library"];
 
 // Renamed surfaces: each legacy URL 301s forward to its live v5.1 canonical.
@@ -89,7 +89,7 @@ function explicitRedirects(src: string): Array<[string, string]> {
 const REDIRECT_MAP: Map<string, string> = (() => {
   const map = new Map<string, string>();
   for (const [from, to] of legacyRedirects) map.set(from, to);
-  for (const [from, to] of explicitRedirects(read("client/src/App.tsx"))) {
+  for (const [from, to] of explicitRedirects(read("client/src/LegacyApp.tsx"))) {
     if (!map.has(from)) map.set(from, to);
   }
   return map;
@@ -122,8 +122,8 @@ describe("v4 re-skin: every restored surface is live and not redirected", () => 
 
 describe("v4 re-skin: residual demotions + the Deal Strategy rename", () => {
   for (const url of DEMOTED_URLS) {
-    it(`${url} still redirects to home and is not a shell page`, () => {
-      expect(REDIRECT_MAP.get(url)).toBe("/");
+    it(`${url} redirects to Strategy Lab and is not a shell page`, () => {
+      expect(REDIRECT_MAP.get(url)).toBe("/strategy-lab");
       expect(PEGASUS_URLS.includes(url)).toBe(false);
     });
   }

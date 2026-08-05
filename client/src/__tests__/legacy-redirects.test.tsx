@@ -6,7 +6,7 @@ import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router, Switch, Route, Redirect, useLocation } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import { legacyRedirects } from "@/App";
+import { legacyRedirects } from "@/LegacyApp";
 import { PEGASUS_URLS } from "@/pegasus/routes";
 
 // Legacy-redirect dead-end net (Task #213).
@@ -31,7 +31,7 @@ import { PEGASUS_URLS } from "@/pegasus/routes";
 
 function readAppSrc(): string {
   return fs.readFileSync(
-    path.join(process.cwd(), "client/src/App.tsx"),
+    path.join(process.cwd(), "client/src/LegacyApp.tsx"),
     "utf-8",
   );
 }

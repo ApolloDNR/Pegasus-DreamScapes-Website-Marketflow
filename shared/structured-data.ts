@@ -22,15 +22,17 @@ const NELSON = {
 } as const;
 
 const ORG_ID = `${SITE_URL}/#organization`;
+const APOLLO_ID = `${SITE_URL}/#apollo-duran`;
 const LOGO_URL = `${SITE_URL}/icon-512.png`;
 const DEFAULT_IMAGE = `${SITE_URL}/og/default.png`;
 
 const PHONE = "+1-925-744-8525";
 const EMAIL = "apollo@pegasusdreamscapes.com";
-const DRE = "DRE #02333658";
+const DRE = "CA DRE #02333658";
 
-// Lightweight Organization node — present on every route so the brand entity is
-// always discoverable and so Article/FAQ nodes have a publisher to reference.
+// Pegasus is the operating company. The founder's real-estate license and
+// brokerage affiliation live on the separate Person node below so structured
+// data never represents Pegasus itself as a brokerage.
 function organizationNode(): Record<string, unknown> {
   return {
     "@type": "Organization",
@@ -42,32 +44,8 @@ function organizationNode(): Record<string, unknown> {
     image: DEFAULT_IMAGE,
     email: EMAIL,
     telephone: PHONE,
-    identifier: DRE,
-    memberOf: {
-      "@type": "Organization",
-      name: "Keller Williams East Bay",
-      description: "Each office is independently owned and operated.",
-    },
-  };
-}
-
-// Richer RealEstateAgent (a LocalBusiness subtype) for the home and about
-// pages, where the business identity is the point. Carries the licensed
-// founder, contact point, and service area.
-function realEstateAgentNode(): Record<string, unknown> {
-  return {
-    "@type": "RealEstateAgent",
-    "@id": ORG_ID,
-    name: "Pegasus Dreamscapes Corp.",
-    alternateName: "Pegasus Dreamscapes",
-    url: SITE_URL,
-    logo: LOGO_URL,
-    image: DEFAULT_IMAGE,
     description:
       "Strategy-first real estate operating company serving the East Bay. Complex property, structured opportunity. Every property gets a path.",
-    email: EMAIL,
-    telephone: PHONE,
-    identifier: DRE,
     areaServed: {
       "@type": "AdministrativeArea",
       name: "East Bay, California",
@@ -85,13 +63,23 @@ function realEstateAgentNode(): Record<string, unknown> {
       areaServed: "US",
       availableLanguage: ["English"],
     },
-    founder: {
-      "@type": "Person",
-      name: 'Paolo "Apollo" Duran',
-      jobTitle: "Founder & Principal",
-      identifier: DRE,
-    },
-    memberOf: {
+    founder: { "@id": APOLLO_ID },
+  };
+}
+
+// Licensed representation belongs to Apollo through Keller Williams East Bay,
+// not to Pegasus Dreamscapes Corp.
+function apolloPersonNode(): Record<string, unknown> {
+  return {
+    "@type": "Person",
+    "@id": APOLLO_ID,
+    name: 'Paolo "Apollo" Duran',
+    jobTitle: "Founder & Principal",
+    identifier: DRE,
+    email: EMAIL,
+    telephone: PHONE,
+    worksFor: { "@id": ORG_ID },
+    affiliation: {
       "@type": "Organization",
       name: "Keller Williams East Bay",
       description: "Each office is independently owned and operated.",
@@ -116,10 +104,7 @@ function nelsonArticleNode(pathname: string): Record<string, unknown> {
       "@type": "WebPage",
       "@id": `${SITE_URL}${pathname}`,
     },
-    author: {
-      "@type": "Person",
-      name: 'Paolo "Apollo" Duran',
-    },
+    author: { "@id": APOLLO_ID },
     publisher: { "@id": ORG_ID },
   };
   // "Settled September 2025" -> a coarse but real published month.
@@ -168,16 +153,14 @@ function faqPageNode(): Record<string, unknown> {
 
 // Returns the JSON-LD graph nodes appropriate for a given route.
 export function jsonLdFor(pathname: string): Record<string, unknown>[] {
-  if (pathname === "/" || pathname === "/about") {
-    return [realEstateAgentNode()];
-  }
+  const identityNodes = [organizationNode(), apolloPersonNode()];
   if (pathname === "/projects/nelson-dr") {
-    return [organizationNode(), nelsonArticleNode(pathname)];
+    return [...identityNodes, nelsonArticleNode(pathname)];
   }
   if (pathname === "/faq") {
-    return [organizationNode(), faqPageNode()];
+    return [...identityNodes, faqPageNode()];
   }
-  return [organizationNode()];
+  return identityNodes;
 }
 
 // Serializes the route's JSON-LD into a single <script type="application/ld+json">

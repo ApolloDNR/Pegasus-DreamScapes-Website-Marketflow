@@ -123,6 +123,53 @@ import type {
   InsertStrategyLabTouchpoint,
   StrategyLabTouchpoint,
 } from "@shared/schema";
+import {
+  classifyMarketflowCurrentOffer,
+  getMarketflowOfferResponseConflict,
+  isMarketflowNegotiationBoundToAuthoritativeDeal,
+  isMarketflowOfferConsistentWithNegotiation,
+  type MarketflowOfferResponseConflict,
+} from "./marketflow-financial-integrity";
+import { parseMarketflowOfferPayload } from "./marketflow-offer-payload";
+
+export type CreateCurrentMarketflowOfferFailure =
+  | "invalid_participants"
+  | "invalid_expiry"
+  | "invalid_payload"
+  | "negotiation_inactive"
+  | "active_offer_exists"
+  | "state_conflict";
+
+export type CreateCurrentMarketflowOfferResult =
+  | {
+      ok: true;
+      offer: MarketflowOffer;
+      negotiation: MarketflowNegotiation;
+    }
+  | {
+      ok: false;
+      reason: CreateCurrentMarketflowOfferFailure;
+    };
+
+export type RespondToCurrentMarketflowOfferFailure =
+  | "not_found"
+  | "invalid_counter"
+  | "invalid_offer_payload"
+  | MarketflowOfferResponseConflict;
+
+export type RespondToCurrentMarketflowOfferResult =
+  | {
+      ok: true;
+      action: "accepted" | "rejected" | "countered";
+      offer: MarketflowOffer;
+      negotiation: MarketflowNegotiation;
+    }
+  | {
+      ok: false;
+      reason: RespondToCurrentMarketflowOfferFailure;
+    };
+
+class MarketflowAtomicWriteConflict extends Error {}
 
 export interface QueueItem {
   id: string;
@@ -415,6 +462,7 @@ export interface IStorage {
   // Wholesale Deal Documents
   createWholesaleDealDocument(doc: InsertWholesaleDealDocument): Promise<WholesaleDealDocument>;
   getWholesaleDealDocuments(dealId: number): Promise<WholesaleDealDocument[]>;
+  getWholesaleDealDocument(id: number): Promise<WholesaleDealDocument | undefined>;
   deleteWholesaleDealDocument(id: number): Promise<void>;
 
   // Deal Analyzer Results
@@ -441,7 +489,11 @@ export interface IStorage {
   createHqOutbox(row: InsertHqOutbox): Promise<HqOutbox>;
   updateHqOutbox(id: number, patch: Partial<HqOutbox>): Promise<HqOutbox | undefined>;
   getHqOutbox(id: number): Promise<HqOutbox | undefined>;
-  getHqOutboxList(filters?: { status?: string; limit?: number }): Promise<HqOutbox[]>;
+  getHqOutboxList(filters?: {
+    status?: string;
+    updatedBefore?: Date;
+    limit?: number;
+  }): Promise<HqOutbox[]>;
 
   // CTA Events (Empire Doctrine v1.0.1 Wave 3)
   createCtaEvent(event: InsertCtaEvent): Promise<CtaEvent>;
@@ -2307,6 +2359,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(wholesaleDealDocuments.createdAt);
   }
 
+  async getWholesaleDealDocument(id: number): Promise<WholesaleDealDocument | undefined> {
+    const [document] = await db.select().from(wholesaleDealDocuments)
+      .where(eq(wholesaleDealDocuments.id, id));
+    return document;
+  }
+
   async deleteWholesaleDealDocument(id: number): Promise<void> {
     await db.delete(wholesaleDealDocuments).where(eq(wholesaleDealDocuments.id, id));
   }
@@ -2404,13 +2462,24 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
-  async getHqOutboxList(filters?: { status?: string; limit?: number }): Promise<HqOutbox[]> {
+  async getHqOutboxList(filters?: {
+    status?: string;
+    updatedBefore?: Date;
+    limit?: number;
+  }): Promise<HqOutbox[]> {
     const limit = filters?.limit ?? 100;
+    const conditions = [];
     if (filters?.status) {
+      conditions.push(eq(hqOutbox.status, filters.status));
+    }
+    if (filters?.updatedBefore) {
+      conditions.push(lte(hqOutbox.updatedAt, filters.updatedBefore));
+    }
+    if (conditions.length) {
       return db
         .select()
         .from(hqOutbox)
-        .where(eq(hqOutbox.status, filters.status))
+        .where(conditions.length === 1 ? conditions[0] : and(...conditions))
         .orderBy(desc(hqOutbox.createdAt))
         .limit(limit);
     }
@@ -2770,7 +2839,7 @@ export class DatabaseStorage implements IStorage {
   async updateJvRequestStatus(id: number, status: string): Promise<JVRequest | undefined> {
     const [updated] = await db.update(jvRequests)
       .set({ status, updatedAt: new Date() })
-      .where(eq(jvRequests.id, id))
+      .where(and(eq(jvRequests.id, id), eq(jvRequests.status, "pending")))
       .returning();
     return updated;
   }
@@ -2917,6 +2986,538 @@ export class DatabaseStorage implements IStorage {
   // ============================================
   // MARKETFLOW OFFERS (Canonical Offer System)
   // ============================================
+
+  async createCurrentMarketflowOffer(input: {
+    lane: string;
+    dealId: number;
+    posterId: string;
+    counterpartyId: string;
+    createdBy: string;
+    recipientId: string;
+    offerKind: string;
+    payload: unknown;
+    expiresAt: Date | null;
+    now?: Date;
+  }): Promise<CreateCurrentMarketflowOfferResult> {
+    const now = input.now ?? new Date();
+    const parsedPayload = parseMarketflowOfferPayload(
+      input.offerKind,
+      input.payload,
+      now,
+    );
+    if (!parsedPayload.success) {
+      return { ok: false, reason: "invalid_payload" };
+    }
+    const participantsAreValid =
+      input.posterId !== input.counterpartyId &&
+      ((input.createdBy === input.posterId &&
+        input.recipientId === input.counterpartyId) ||
+        (input.createdBy === input.counterpartyId &&
+          input.recipientId === input.posterId));
+    if (!participantsAreValid) {
+      return { ok: false, reason: "invalid_participants" };
+    }
+    if (
+      input.expiresAt !== null &&
+      input.expiresAt.getTime() <= now.getTime()
+    ) {
+      return { ok: false, reason: "invalid_expiry" };
+    }
+
+    const participantLockIds = [
+      input.posterId,
+      input.counterpartyId,
+    ].sort();
+    const lockKey = [
+      "marketflow-negotiation",
+      input.lane,
+      input.dealId,
+      ...participantLockIds,
+    ].join(":");
+
+    try {
+      return await db.transaction(async (tx) => {
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`,
+        );
+
+        const matchingNegotiations = await tx
+          .select()
+          .from(marketflowNegotiations)
+          .where(
+            and(
+              eq(marketflowNegotiations.lane, input.lane),
+              eq(marketflowNegotiations.dealId, input.dealId),
+              or(
+                and(
+                  eq(marketflowNegotiations.posterId, input.posterId),
+                  eq(
+                    marketflowNegotiations.counterpartyId,
+                    input.counterpartyId,
+                  ),
+                ),
+                and(
+                  eq(
+                    marketflowNegotiations.posterId,
+                    input.counterpartyId,
+                  ),
+                  eq(
+                    marketflowNegotiations.counterpartyId,
+                    input.posterId,
+                  ),
+                ),
+              ),
+            ),
+          )
+          .orderBy(desc(marketflowNegotiations.createdAt))
+          .limit(2);
+
+        if (matchingNegotiations.length > 1) {
+          return { ok: false, reason: "state_conflict" } as const;
+        }
+
+        let negotiation = matchingNegotiations[0];
+        if (
+          negotiation &&
+          (negotiation.posterId !== input.posterId ||
+            negotiation.counterpartyId !== input.counterpartyId)
+        ) {
+          return { ok: false, reason: "state_conflict" } as const;
+        }
+        if (negotiation && negotiation.status !== "active") {
+          return { ok: false, reason: "negotiation_inactive" } as const;
+        }
+        if (!negotiation) {
+          [negotiation] = await tx
+            .insert(marketflowNegotiations)
+            .values({
+              lane: input.lane,
+              dealId: input.dealId,
+              posterId: input.posterId,
+              counterpartyId: input.counterpartyId,
+              currentOfferId: null,
+              lastActivityAt: now,
+            })
+            .returning();
+        }
+
+        if (!negotiation) {
+          throw new MarketflowAtomicWriteConflict();
+        }
+        if (
+          !isMarketflowNegotiationBoundToAuthoritativeDeal(negotiation, {
+            lane: input.lane,
+            dealId: input.dealId,
+            ownerId: input.posterId,
+          })
+        ) {
+          return { ok: false, reason: "state_conflict" } as const;
+        }
+
+        const negotiationLockKey = `marketflow-negotiation-id:${negotiation.id}`;
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${negotiationLockKey}))`,
+        );
+
+        let currentOffer: MarketflowOffer | undefined;
+        if (negotiation.currentOfferId !== null) {
+          [currentOffer] = await tx
+            .select()
+            .from(marketflowOffers)
+            .where(eq(marketflowOffers.id, negotiation.currentOfferId));
+          if (
+            !currentOffer ||
+            !isMarketflowOfferConsistentWithNegotiation(
+              currentOffer,
+              negotiation,
+            )
+          ) {
+            return { ok: false, reason: "state_conflict" } as const;
+          }
+        }
+
+        const currentDisposition = classifyMarketflowCurrentOffer(
+          currentOffer,
+          now,
+        );
+        if (currentDisposition === "active") {
+          return { ok: false, reason: "active_offer_exists" } as const;
+        }
+        if (currentDisposition === "inconsistent") {
+          return { ok: false, reason: "state_conflict" } as const;
+        }
+        if (currentDisposition === "expire_and_supersede" && currentOffer) {
+          const [expiredOffer] = await tx
+            .update(marketflowOffers)
+            .set({
+              status: "expired",
+              respondedAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(marketflowOffers.id, currentOffer.id),
+                eq(marketflowOffers.status, "sent"),
+                lte(marketflowOffers.expiresAt, now),
+              ),
+            )
+            .returning();
+          if (!expiredOffer) {
+            throw new MarketflowAtomicWriteConflict();
+          }
+        }
+
+        const otherSentOffers = await tx
+          .select()
+          .from(marketflowOffers)
+          .where(
+            negotiation.currentOfferId === null
+              ? and(
+                  eq(marketflowOffers.negotiationId, negotiation.id),
+                  eq(marketflowOffers.status, "sent"),
+                )
+              : and(
+                  eq(marketflowOffers.negotiationId, negotiation.id),
+                  eq(marketflowOffers.status, "sent"),
+                  ne(marketflowOffers.id, negotiation.currentOfferId),
+                ),
+          );
+        if (
+          otherSentOffers.some(
+            (offer) =>
+              classifyMarketflowCurrentOffer(offer, now) === "active",
+          )
+        ) {
+          return { ok: false, reason: "active_offer_exists" } as const;
+        }
+
+        const expiredOrphanIds = otherSentOffers
+          .filter(
+            (offer) =>
+              classifyMarketflowCurrentOffer(offer, now) ===
+              "expire_and_supersede",
+          )
+          .map((offer) => offer.id);
+        if (expiredOrphanIds.length > 0) {
+          await tx
+            .update(marketflowOffers)
+            .set({
+              status: "expired",
+              respondedAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                inArray(marketflowOffers.id, expiredOrphanIds),
+                eq(marketflowOffers.status, "sent"),
+                lte(marketflowOffers.expiresAt, now),
+              ),
+            );
+        }
+
+        const [offer] = await tx
+          .insert(marketflowOffers)
+          .values({
+            lane: input.lane,
+            dealId: input.dealId,
+            negotiationId: negotiation.id,
+            createdBy: input.createdBy,
+            recipientId: input.recipientId,
+            offerKind: input.offerKind,
+            payload: parsedPayload.data,
+            expiresAt: input.expiresAt,
+            parentOfferId: null,
+          })
+          .returning();
+        if (!offer) {
+          throw new MarketflowAtomicWriteConflict();
+        }
+
+        const currentOfferCondition =
+          negotiation.currentOfferId === null
+            ? isNull(marketflowNegotiations.currentOfferId)
+            : eq(
+                marketflowNegotiations.currentOfferId,
+                negotiation.currentOfferId,
+              );
+        const [updatedNegotiation] = await tx
+          .update(marketflowNegotiations)
+          .set({
+            currentOfferId: offer.id,
+            offerCount: sql`COALESCE(${marketflowNegotiations.offerCount}, 0) + 1`,
+            lastActivityAt: now,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(marketflowNegotiations.id, negotiation.id),
+              eq(marketflowNegotiations.status, "active"),
+              currentOfferCondition,
+            ),
+          )
+          .returning();
+        if (!updatedNegotiation) {
+          throw new MarketflowAtomicWriteConflict();
+        }
+
+        return {
+          ok: true,
+          offer,
+          negotiation: updatedNegotiation,
+        } as const;
+      });
+    } catch (error) {
+      if (error instanceof MarketflowAtomicWriteConflict) {
+        return { ok: false, reason: "state_conflict" };
+      }
+      throw error;
+    }
+  }
+
+  async respondToCurrentMarketflowOffer(input: {
+    offerId: number;
+    userId: string;
+    action: "accept" | "reject" | "counter";
+    counterPayload?: unknown;
+    authoritativeOwnerId: string;
+    now?: Date;
+  }): Promise<RespondToCurrentMarketflowOfferResult> {
+    const now = input.now ?? new Date();
+    const offerLockKey = `marketflow-offer:${input.offerId}`;
+
+    try {
+      return await db.transaction(async (tx) => {
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${offerLockKey}))`,
+        );
+
+        const [offer] = await tx
+          .select()
+          .from(marketflowOffers)
+          .where(eq(marketflowOffers.id, input.offerId));
+        if (!offer) {
+          return { ok: false, reason: "not_found" } as const;
+        }
+        if (offer.recipientId !== input.userId) {
+          return { ok: false, reason: "not_recipient" } as const;
+        }
+        if (offer.negotiationId === null) {
+          return { ok: false, reason: "state_conflict" } as const;
+        }
+
+        const negotiationLockKey = `marketflow-negotiation-id:${offer.negotiationId}`;
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${negotiationLockKey}))`,
+        );
+
+        const [negotiation] = await tx
+          .select()
+          .from(marketflowNegotiations)
+          .where(eq(marketflowNegotiations.id, offer.negotiationId));
+        if (
+          !negotiation ||
+          !isMarketflowNegotiationBoundToAuthoritativeDeal(negotiation, {
+            lane: offer.lane,
+            dealId: offer.dealId,
+            ownerId: input.authoritativeOwnerId,
+          })
+        ) {
+          return { ok: false, reason: "state_conflict" } as const;
+        }
+        const conflict = getMarketflowOfferResponseConflict({
+          offer,
+          negotiation,
+          userId: input.userId,
+          now,
+        });
+        if (conflict === "offer_expired") {
+          const [expiredOffer] = await tx
+            .update(marketflowOffers)
+            .set({
+              status: "expired",
+              respondedAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(marketflowOffers.id, offer.id),
+                eq(marketflowOffers.status, "sent"),
+                lte(marketflowOffers.expiresAt, now),
+              ),
+            )
+            .returning();
+          if (!expiredOffer) {
+            throw new MarketflowAtomicWriteConflict();
+          }
+          return { ok: false, reason: conflict } as const;
+        }
+        if (conflict) {
+          return { ok: false, reason: conflict } as const;
+        }
+
+        const parsedAcceptedTerms =
+          input.action === "accept"
+            ? parseMarketflowOfferPayload(
+                offer.offerKind,
+                offer.payload,
+                now,
+              )
+            : null;
+        if (parsedAcceptedTerms && !parsedAcceptedTerms.success) {
+          return {
+            ok: false,
+            reason: "invalid_offer_payload",
+          } as const;
+        }
+
+        let parsedCounterPayload: Record<string, unknown> | undefined;
+        if (input.action === "counter") {
+          const counterResult = parseMarketflowOfferPayload(
+            offer.offerKind,
+            input.counterPayload,
+            now,
+          );
+          if (!counterResult.success) {
+            return { ok: false, reason: "invalid_counter" } as const;
+          }
+          parsedCounterPayload = counterResult.data;
+        }
+
+        const nextStatus =
+          input.action === "accept"
+            ? "accepted"
+            : input.action === "reject"
+              ? "rejected"
+              : "countered";
+        const [updatedOffer] = await tx
+          .update(marketflowOffers)
+          .set({
+            status: nextStatus,
+            respondedAt: now,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(marketflowOffers.id, offer.id),
+              eq(marketflowOffers.status, "sent"),
+            ),
+          )
+          .returning();
+        if (!updatedOffer) {
+          throw new MarketflowAtomicWriteConflict();
+        }
+
+        if (input.action === "accept") {
+          if (!parsedAcceptedTerms || !parsedAcceptedTerms.success) {
+            throw new MarketflowAtomicWriteConflict();
+          }
+          const [updatedNegotiation] = await tx
+            .update(marketflowNegotiations)
+            .set({
+              status: "accepted",
+              finalTerms: parsedAcceptedTerms.data,
+              acceptedAt: now,
+              acceptedBy: input.userId,
+              lastActivityAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(marketflowNegotiations.id, negotiation!.id),
+                eq(marketflowNegotiations.status, "active"),
+                eq(marketflowNegotiations.currentOfferId, offer.id),
+              ),
+            )
+            .returning();
+          if (!updatedNegotiation) {
+            throw new MarketflowAtomicWriteConflict();
+          }
+          return {
+            ok: true,
+            action: "accepted",
+            offer: updatedOffer,
+            negotiation: updatedNegotiation,
+          } as const;
+        }
+
+        if (input.action === "reject") {
+          const [updatedNegotiation] = await tx
+            .update(marketflowNegotiations)
+            .set({
+              lastActivityAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(marketflowNegotiations.id, negotiation!.id),
+                eq(marketflowNegotiations.status, "active"),
+                eq(marketflowNegotiations.currentOfferId, offer.id),
+              ),
+            )
+            .returning();
+          if (!updatedNegotiation) {
+            throw new MarketflowAtomicWriteConflict();
+          }
+          return {
+            ok: true,
+            action: "rejected",
+            offer: updatedOffer,
+            negotiation: updatedNegotiation,
+          } as const;
+        }
+
+        const [counterOffer] = await tx
+          .insert(marketflowOffers)
+          .values({
+            lane: offer.lane,
+            dealId: offer.dealId,
+            negotiationId: offer.negotiationId,
+            createdBy: input.userId,
+            recipientId: offer.createdBy,
+            offerKind: offer.offerKind,
+            payload: parsedCounterPayload!,
+            parentOfferId: offer.id,
+            expiresAt: null,
+          })
+          .returning();
+        if (!counterOffer) {
+          throw new MarketflowAtomicWriteConflict();
+        }
+
+        const [updatedNegotiation] = await tx
+          .update(marketflowNegotiations)
+          .set({
+            currentOfferId: counterOffer.id,
+            offerCount: sql`COALESCE(${marketflowNegotiations.offerCount}, 0) + 1`,
+            lastActivityAt: now,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(marketflowNegotiations.id, negotiation!.id),
+              eq(marketflowNegotiations.status, "active"),
+              eq(marketflowNegotiations.currentOfferId, offer.id),
+            ),
+          )
+          .returning();
+        if (!updatedNegotiation) {
+          throw new MarketflowAtomicWriteConflict();
+        }
+
+        return {
+          ok: true,
+          action: "countered",
+          offer: counterOffer,
+          negotiation: updatedNegotiation,
+        } as const;
+      });
+    } catch (error) {
+      if (error instanceof MarketflowAtomicWriteConflict) {
+        return { ok: false, reason: "state_conflict" };
+      }
+      throw error;
+    }
+  }
 
   async createMarketflowOffer(offer: InsertMarketflowOffer): Promise<MarketflowOffer> {
     const [created] = await db.insert(marketflowOffers).values(offer).returning();

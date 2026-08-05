@@ -16,6 +16,9 @@ type AuthRole =
   | "investor"
   | "wholesaler"
   | "dreamscaper"
+  | "badgedInvestor"
+  | "pegasusWholesaler"
+  | "staff"
   | "admin";
 
 interface AuthState {
@@ -91,6 +94,43 @@ function authFor(role: AuthRole): AuthState {
         userRole: "dreamscaper",
         isDreamscaper: true,
       };
+    case "badgedInvestor":
+      return {
+        ...baseAuth,
+        user: { id: "u-badged", email: "badged@example.com" },
+        profile: {
+          primary_role: "investor",
+          is_pegasus_badged: true,
+        },
+        isAuthenticated: true,
+        userRole: "investor",
+        isInvestor: true,
+        isPegasus: true,
+      };
+    case "pegasusWholesaler":
+      return {
+        ...baseAuth,
+        user: { id: "u-pw", email: "operator@example.com" },
+        profile: {
+          primary_role: "pegasus_wholesaler",
+          is_pegasus_badged: true,
+        },
+        isAuthenticated: true,
+        userRole: "pegasus_wholesaler",
+        isWholesaler: true,
+        isPegasus: true,
+      };
+    case "staff":
+      return {
+        ...baseAuth,
+        user: { id: "u-staff", email: "staff@example.com" },
+        profile: {
+          primary_role: "project_manager",
+          is_pegasus_badged: false,
+        },
+        isAuthenticated: true,
+        userRole: "project_manager",
+      };
     case "admin":
       return {
         ...baseAuth,
@@ -163,10 +203,6 @@ vi.mock("@/components/marketplace-layout", () => ({
   MarketplaceLayout: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="marketplace-layout-stub">{children}</div>
   ),
-}));
-
-vi.mock("@/components/beta-banner", () => ({
-  BetaBanner: () => null,
 }));
 
 vi.mock("@/components/under-construction", () => ({
@@ -402,8 +438,46 @@ function renderWithProviders(ui: React.ReactElement, path = "/") {
   );
 }
 
+function tailwindHexColor(element: HTMLElement, utility: "text" | "bg"): string {
+  const match = element.className.match(
+    new RegExp(`(?:^|\\s)${utility}-\\[#([0-9a-fA-F]{6})\\](?:\\s|$)`),
+  );
+
+  if (!match) {
+    throw new Error(
+      `${element.tagName.toLowerCase()} does not declare an explicit light-mode ${utility} color`,
+    );
+  }
+
+  return `#${match[1]}`;
+}
+
+function relativeLuminance(hexColor: string): number {
+  const channels = hexColor
+    .slice(1)
+    .match(/.{2}/g)!
+    .map((channel) => Number.parseInt(channel, 16) / 255)
+    .map((channel) =>
+      channel <= 0.04045
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4,
+    );
+
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrastRatio(first: string, second: string): number {
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
+  const lighter = Math.max(firstLuminance, secondLuminance);
+  const darker = Math.min(firstLuminance, secondLuminance);
+
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 beforeEach(() => {
   cleanup();
+  localStorage.clear();
   setAuthState("loggedOut");
 });
 
@@ -498,6 +572,46 @@ describe("marketflow-submit page gating", () => {
 });
 
 describe("marketflow-deals page gating", () => {
+  it("names the private-beta dismiss control for anonymous visitors", async () => {
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(
+      screen.getByRole("button", { name: "Dismiss MarketFlow beta banner" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the anonymous private-beta kicker at AA contrast in light mode", async () => {
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    const privateBetaKicker = screen.getByText("MarketFlow private beta");
+    expect(
+      contrastRatio(tailwindHexColor(privateBetaKicker, "text"), "#ffffff"),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps the anonymous Request Access CTA at AA contrast in light mode", async () => {
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    const requestAccessButton = screen.getByTestId(
+      "button-marketflow-request-access",
+    );
+    expect(
+      contrastRatio(tailwindHexColor(requestAccessButton, "bg"), "#ffffff"),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("logged-out users do not see role-gated JV quick actions or the guest banner", async () => {
     setAuthState("loggedOut");
     const { default: MarketflowDeals } = await import(
@@ -511,6 +625,10 @@ describe("marketflow-deals page gating", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("button-marketflow-request-access")).toBeInTheDocument();
     expect(screen.getByTestId("button-marketflow-submit-deal")).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-submit-deal").closest("a")).toHaveAttribute(
+      "href",
+      "/bring-an-opportunity?intent=deal-jv",
+    );
     expect(screen.queryByTestId("text-deals-title")).toBeNull();
     expect(screen.queryByTestId("button-exit-guest")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
@@ -530,13 +648,35 @@ describe("marketflow-deals page gating", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("button-exit-guest")).toBeInTheDocument();
     expect(screen.getByTestId("button-marketflow-request-access")).toBeInTheDocument();
+    expect(screen.getByTestId("button-marketflow-submit-deal").closest("a")).toHaveAttribute(
+      "href",
+      "/bring-an-opportunity?intent=deal-jv",
+    );
     expect(screen.queryByTestId("text-deals-title")).toBeNull();
     expect(screen.queryByTestId("button-sign-in-guest")).toBeNull();
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   }, 10000);
 
-  it("investors see deals but DO NOT see the wholesaler-only JV quick action", async () => {
-    setAuthState("investor");
+  it.each(["investor", "wholesaler", "dreamscaper"] as const)(
+    "ordinary self-provisioned %s users cannot render live inventory",
+    async (role) => {
+      setAuthState(role);
+      const { default: MarketflowDeals } = await import(
+        "@/pages/marketflow-deals"
+      );
+
+      renderWithProviders(<MarketflowDeals />);
+
+      expect(
+        screen.getByText(/reviewed opportunities are not shown as sample inventory/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId("text-deals-title")).toBeNull();
+      expect(screen.queryAllByTestId(/^button-accept-terms-/).length).toBe(0);
+    },
+  );
+
+  it("Pegasus-badged investors see reviewed deals without wholesaler-only JV actions", async () => {
+    setAuthState("badgedInvestor");
     const { default: MarketflowDeals } = await import(
       "@/pages/marketflow-deals"
     );
@@ -544,6 +684,10 @@ describe("marketflow-deals page gating", () => {
     renderWithProviders(<MarketflowDeals />);
 
     expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(screen.getByTestId("button-submit-deal").closest("a")).toHaveAttribute(
+      "href",
+      "/marketflow/submit",
+    );
     // Authenticated users can see reviewed API-backed deals.
     expect(
       screen.getAllByTestId(/^button-accept-terms-/).length,
@@ -552,8 +696,8 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
-  it("dreamscapers see deals but DO NOT see the wholesaler-only JV quick action", async () => {
-    setAuthState("dreamscaper");
+  it("Pegasus-prefixed operators see reviewed deals and their role-gated JV action", async () => {
+    setAuthState("pegasusWholesaler");
     const { default: MarketflowDeals } = await import(
       "@/pages/marketflow-deals"
     );
@@ -564,26 +708,22 @@ describe("marketflow-deals page gating", () => {
     expect(
       screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
-    // Dreamscapers are not wholesalers, so JV quick action stays hidden.
-    expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
-  });
-
-  it("wholesalers see the role-gated JV quick action on JV-allowed deals", async () => {
-    setAuthState("wholesaler");
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
-
-    renderWithProviders(<MarketflowDeals />);
-
-    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
-    expect(
-      screen.getAllByTestId(/^button-accept-terms-/).length,
-    ).toBeGreaterThan(0);
-    // Critical gate: showJVRequest is true for wholesalers, so on the
-    // reviewed JV-allowed deal the quick-jv-* surface renders.
     expect(
       screen.getAllByTestId(/^quick-jv-/).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("staff identities see reviewed deals", async () => {
+    setAuthState("staff");
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(
+      screen.getAllByTestId(/^button-accept-terms-/).length,
     ).toBeGreaterThan(0);
   });
 

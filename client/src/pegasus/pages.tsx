@@ -502,21 +502,21 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
       <PageHero eyebrow="Systems · The front door · Early access"
         title={<>Meet <span className="italic text-[var(--accent-bright)]">Peggy.</span></>}
         image={IMG('pegasus-interior-v2.png')}
-        lead="Describe a deal or a situation in plain language. Peggy asks the right questions, frames the options, and points you to the lane that fits. She hands you to a person the moment a deal needs a licensed read. In active training: live now for intake and orientation." />
+        lead="Describe a deal or a situation in plain language. Peggy asks the right questions, frames the options, and points you to the lane that fits. Web intake is in active training and available now. Phone and voice remain in development." />
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-5 reveal">
-            <div className="pg-label text-[var(--accent)] mb-5">How Peggy helps</div>
+            <div className="pg-label text-[var(--accent-ink)] mb-5">How Peggy helps</div>
             <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-normal text-[var(--text)] mb-7">
               The fastest way to find your lane.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-md">
-              Not sure where you fit? Start here. Peggy takes a deal or a situation in your own words and points you to the right next step: a review, the Strategy Lab, or the right audience lane. She is in active training, so today she is live for intake and orientation while we keep widening what she can do. She hands you to a person the moment a deal needs a licensed read.
+              Not sure where you fit? Start here. Peggy takes a deal or a situation in your own words and points you to the right next step: a review, the Strategy Lab, or the right audience lane. The current experience is website intake only; Peggy does not currently answer the main line. She hands you to a person the moment a deal needs a licensed read.
             </p>
             <ul className="space-y-4 mb-10">
               {['Open any time, no form to fill first', 'Plain language in, clear direction out', 'Hands you to a person when it matters'].map((t) => (
                 <li key={t} className="flex gap-3.5 text-[var(--text-2)] leading-relaxed">
-                  <Check className="w-4 h-4 text-[var(--accent)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
+                  <Check className="w-4 h-4 text-[var(--accent-ink)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
                 </li>
               ))}
             </ul>
@@ -535,7 +535,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
                     <div className="flex items-center gap-2.5 mt-2">
                       <span className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)]">Pegasus intake concierge</span>
                       <span className="inline-flex items-center gap-1.5 pg-label !text-[7px] !tracking-[0.16em] px-2 py-0.5 rounded-full border border-[var(--accent-bright)]/40 text-[var(--accent-bright)]" data-testid="badge-peggy-status">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" /> Early access · in training
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" /> Web early access · voice in development
                       </span>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
       <section className="relative py-20 lg:py-24 border-t border-[var(--line-soft)] overflow-hidden">
         <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
           <div className="max-w-2xl mb-14 reveal">
-            <div className="pg-label text-[var(--accent)] mb-5">What Peggy can actually do</div>
+            <div className="pg-label text-[var(--accent-ink)] mb-5">What Peggy can actually do</div>
             <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-normal text-[var(--text)]">
               Fluent in the deal, not just the chat.
             </h2>
@@ -579,7 +579,7 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
             ].map((c, i) => (
               <div key={c.title} className={`bg-[var(--bg)] p-8 lg:p-9 reveal`} style={{ transitionDelay: `${i * 70}ms` }}>
                 <div className="w-11 h-11 rounded-[3px] bg-[rgba(213,127,46,0.1)] flex items-center justify-center mb-6">
-                  <c.icon className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.7} />
+                  <c.icon className="w-5 h-5 text-[var(--accent-ink)]" strokeWidth={1.7} />
                 </div>
                 <div className="font-serif-display text-xl text-[var(--text)] mb-3">{c.title}</div>
                 <p className="text-[var(--muted)] text-[0.92rem] leading-relaxed">{c.desc}</p>

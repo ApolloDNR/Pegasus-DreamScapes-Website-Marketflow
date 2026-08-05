@@ -6,7 +6,7 @@ import {
   type UserRole,
   type UserProfile,
 } from '@/lib/supabase';
-import { queryClient } from '@/lib/queryClient';
+import { authenticatedRequest, queryClient } from '@/lib/queryClient';
 import { 
   isAdminRole, 
   isWholesalerRole, 
@@ -73,9 +73,20 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   });
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (
+    userId: string,
+    accessToken?: string,
+  ) => {
     try {
-      const response = await fetch(`/api/supabase/profile/${userId}`);
+      const token = accessToken?.trim();
+      const response = await authenticatedRequest(
+        `/api/supabase/profile/${userId}`,
+        {
+          headers: token
+            ? { Authorization: `Bearer ${token}` }
+            : undefined,
+        },
+      );
       if (!response.ok) {
         return null;
       }

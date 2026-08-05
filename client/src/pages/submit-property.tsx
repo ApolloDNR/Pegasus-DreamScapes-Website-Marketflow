@@ -444,7 +444,7 @@ export default function SubmitPropertyPage() {
       <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
-            <Check className="h-7 w-7 text-[#8b5a36]" strokeWidth={2.4} />
+            <Check className="h-7 w-7 text-[#8b5a36] dark:text-[#c88a5d]" strokeWidth={2.4} />
           </div>
           <h1 className="font-serif text-4xl text-[#171f2a] dark:text-[#f4efe6] mb-6">Received.</h1>
           <p className="text-[17px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">{CONFIRMATION_COPY}</p>
@@ -461,7 +461,7 @@ export default function SubmitPropertyPage() {
     <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
         <div className="mb-10 max-w-3xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] mb-3">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] dark:text-[#c88a5d]">
             Bring an Opportunity
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#171f2a] dark:text-[#f4efe6]">
@@ -485,8 +485,8 @@ export default function SubmitPropertyPage() {
                 aria-current={i === step ? "step" : undefined}>
                 <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#9c5a24]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
                 <span className={`mt-2 hidden items-center gap-1 sm:inline-flex text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                  i === step ? "text-[#8b5a36]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888]" : "text-[#6e6455] dark:text-[#7d8ba0]"}`}>
-                  {i < step && <Check className="h-3 w-3 text-[#8b5a36]" strokeWidth={3} />}{s}
+                  i === step ? "text-[#8b5a36] dark:text-[#c88a5d]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888] dark:hover:text-[#c88a5d]" : "text-[#6e6455] dark:text-[#7d8ba0]"}`}>
+                  {i < step && <Check className="h-3 w-3 text-[#8b5a36] dark:text-[#c88a5d]" strokeWidth={3} />}{s}
                 </span>
               </button>
             </li>
@@ -684,7 +684,7 @@ export default function SubmitPropertyPage() {
 
           <div className="mt-10 flex items-center justify-between gap-4">
             <button type="button" onClick={() => setStep(Math.max(0, step - 1))}
-              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] dark:text-[#b9a888] hover:text-[#8b5a36] transition-colors ${step === 0 ? "invisible" : ""}`}>
+              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] transition-colors hover:text-[#8b5a36] dark:text-[#b9a888] dark:hover:text-[#c88a5d] ${step === 0 ? "invisible" : ""}`}>
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <button type="submit" disabled={(step < 4 && !canNext) || submit.isPending}
@@ -711,7 +711,7 @@ export default function SubmitPropertyPage() {
         {/* The desk's promise, kept in view while the visitor works. */}
         <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
           <div className="rounded-md border border-[#d8cdbc] bg-white/60 p-6 dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36]">What happens next</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] dark:text-[#c88a5d]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[
                 ["Received", "Your submission creates a private record — never a public listing."],
@@ -720,7 +720,7 @@ export default function SubmitPropertyPage() {
                 ["Your call", "We lay out the options; you choose. If there is no fit, we say so plainly."],
               ].map(([t, d], i) => (
                 <li key={t} className="flex gap-3">
-                  <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36]">{`0${i + 1}`}</span>
+                  <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36] dark:text-[#c88a5d]">{`0${i + 1}`}</span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-semibold text-[#171f2a] dark:text-[#f4efe6]">{t}</span>
                     <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">{d}</span>

@@ -1,4 +1,5 @@
 import type { Route } from './theme';
+import { isKnownSpaPath } from '@shared/spa-routes';
 
 // Maps the prototype's internal route keys to real wouter URLs and back.
 // Master Blueprint v5.1 (§6) renames the public spine: the owner lane is
@@ -108,6 +109,7 @@ const STANDALONE_SOLID_NAV: string[] = [
   '/bring-an-opportunity',
   '/submit-property',
   '/marketflow/access',
+  '/marketflow/deals',
   '/strategy-lab/classic',
   // In-funnel destinations from /strategy-lab/classic on submit - keep them on
   // the unified chrome so users don't drop to the legacy site mid-conversion.
@@ -117,14 +119,11 @@ const STANDALONE_SOLID_NAV: string[] = [
 ];
 
 // Prefix-matched standalone routes. `/projects/...` detail/case-study pages
-// use dark image heroes (transparent nav). `/library/...` article pages have a
-// light top, so they need the solid nav treatment.
+// use dark image heroes (transparent nav).
 const STANDALONE_DARK_PREFIX: string[] = [
   '/projects/',
 ];
-const STANDALONE_SOLID_PREFIX: string[] = [
-  '/library/',
-];
+const STANDALONE_SOLID_PREFIX: string[] = [];
 const STANDALONE_CHROME_PREFIX: string[] = [
   ...STANDALONE_DARK_PREFIX,
   ...STANDALONE_SOLID_PREFIX,
@@ -147,40 +146,8 @@ export function isSolidNavUrl(path: string): boolean {
   return STANDALONE_SOLID_PREFIX.some((prefix) => p.startsWith(prefix));
 }
 
-// Top-level URL segments that resolve to a real route in <Router> (App.tsx) -
-// pegasus pages, standalone pages, functional/auth surfaces, and legacy
-// redirects. Any path whose first segment is NOT in this set falls through to
-// the catch-all NotFound (404) page. We use that to give the public 404 the
-// unified premium chrome (dark navy hero to transparent nav) instead of the
-// legacy global Navigation/Footer. Keep this in sync with the route table in
-// App.tsx when adding/removing a top-level public route.
-const KNOWN_TOP_SEGMENTS: Set<string> = new Set([
-  // Pegasus prototype-owned public pages (v5.1 canonical + legacy aliases)
-  'property-owners', 'deal-partners', 'how-we-operate', 'our-work',
-  'bring-an-opportunity',
-  'sellers', 'buyers', 'dealfinders', 'capital', 'operators', 'referral',
-  'deal-strategy', 'investments', 'development', 'strategy-lab',
-  'marketflow', 'work-with-apollo', 'ecosystem', 'about', 'contact', 'peggy',
-  'saved',
-  // Standalone-chrome + functional public surfaces
-  'submit', 'submit-property', 'pegasus-standard', 'departments', 'case-study',
-  'connect', 'projects', 'library', 'strategy-library',
-  'vendor-network', 'faq', 'privacy', 'terms', 'disclosures', 'deal-blueprint',
-  // Auth / app-internal surfaces (keep legacy chrome on their own 404s)
-  'login', 'signup', 'admin', 'snapshot', 'dashboard', 'dealflow',
-  'offer-studio', 'profile',
-  // Legacy redirect entry points (App.tsx legacyRedirects)
-  'sell', 'submit-deal', 'services', 'resources', 'buy',
-  'partner', 'invest', 'calculators', 'education', 'wholesale', 'hq', 'portal',
-  'community', 'marketplace',
-]);
-
-// True when a path does not match any known top-level route and will therefore
-// render the catch-all NotFound (404) page. The home path ('/') is always a
-// real route, never a 404.
+// The exact/pattern registry is shared with the production HTML fallback, so
+// the client chrome and HTTP status agree for invalid nested routes.
 export function isNotFoundUrl(path: string): boolean {
-  const p = cleanPath(path);
-  if (p === '/' || p === '') return false;
-  const seg = p.split('/').filter(Boolean)[0] ?? '';
-  return !KNOWN_TOP_SEGMENTS.has(seg);
+  return !isKnownSpaPath(path);
 }

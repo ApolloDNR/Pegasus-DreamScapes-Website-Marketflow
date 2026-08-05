@@ -163,73 +163,106 @@ ALTER TABLE saved_items ENABLE ROW LEVEL SECURITY;
 
 -- User Profiles: Users can read all profiles, update only their own
 CREATE POLICY "Profiles are viewable by everyone" 
-  ON user_profiles FOR SELECT 
+  ON user_profiles FOR SELECT
+  TO anon, authenticated
   USING (true);
 
 CREATE POLICY "Users can update own profile" 
-  ON user_profiles FOR UPDATE 
-  USING (auth.uid() = user_id);
+  ON user_profiles FOR UPDATE
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Service role can insert profiles" 
-  ON user_profiles FOR INSERT 
+  ON user_profiles FOR INSERT
+  TO service_role
   WITH CHECK (true);
 
 -- User Badges: Viewable by everyone
 CREATE POLICY "Badges are viewable by everyone" 
-  ON user_badges FOR SELECT 
+  ON user_badges FOR SELECT
+  TO anon, authenticated
   USING (true);
 
 CREATE POLICY "Service role can manage badges" 
-  ON user_badges FOR ALL 
-  USING (true);
+  ON user_badges FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- User Reputation: Viewable by everyone
 CREATE POLICY "Reputation is viewable by everyone" 
-  ON user_reputation FOR SELECT 
+  ON user_reputation FOR SELECT
+  TO anon, authenticated
   USING (true);
 
 CREATE POLICY "Service role can manage reputation" 
-  ON user_reputation FOR ALL 
-  USING (true);
+  ON user_reputation FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
--- Seller Leads: Only admins can view, anyone can submit
+-- Seller leads are accepted through the rate-limited server intake only.
 CREATE POLICY "Anyone can submit seller lead" 
-  ON seller_leads FOR INSERT 
+  ON seller_leads FOR INSERT
+  TO service_role
   WITH CHECK (true);
 
 CREATE POLICY "Service role can manage seller leads" 
-  ON seller_leads FOR ALL 
-  USING (true);
+  ON seller_leads FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Wholesale Deals: Public deals viewable by all, own deals editable
 CREATE POLICY "Public deals are viewable" 
-  ON wholesale_deals FOR SELECT 
-  USING (is_public = true OR auth.uid() = wholesaler_id);
+  ON wholesale_deals FOR SELECT
+  TO anon, authenticated
+  USING (
+    (is_public = true AND status IN ('Approved', 'Listed'))
+    OR (SELECT auth.uid()) = wholesaler_id
+  );
 
 CREATE POLICY "Wholesalers can insert own deals" 
-  ON wholesale_deals FOR INSERT 
-  WITH CHECK (auth.uid() = wholesaler_id);
+  ON wholesale_deals FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    (SELECT auth.uid()) = wholesaler_id
+    AND is_public = false
+    AND status = 'Under Review'
+  );
 
 CREATE POLICY "Wholesalers can update own deals" 
-  ON wholesale_deals FOR UPDATE 
-  USING (auth.uid() = wholesaler_id);
+  ON wholesale_deals FOR UPDATE
+  TO authenticated
+  USING ((SELECT auth.uid()) = wholesaler_id)
+  WITH CHECK (
+    (SELECT auth.uid()) = wholesaler_id
+    AND is_public = false
+    AND status = 'Under Review'
+  );
 
 CREATE POLICY "Service role can manage all deals" 
-  ON wholesale_deals FOR ALL 
-  USING (true);
+  ON wholesale_deals FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Saved Items: Users can only see and manage their own
 CREATE POLICY "Users can view own saved items" 
-  ON saved_items FOR SELECT 
-  USING (auth.uid() = user_id);
+  ON saved_items FOR SELECT
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert own saved items" 
-  ON saved_items FOR INSERT 
-  WITH CHECK (auth.uid() = user_id);
+  ON saved_items FOR INSERT
+  TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete own saved items" 
-  ON saved_items FOR DELETE 
-  USING (auth.uid() = user_id);
+  ON saved_items FOR DELETE
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 -- =====================================================
 -- CAPITAL PROJECTS TABLE
@@ -410,91 +443,146 @@ CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(external_us
 ALTER TABLE capital_projects ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public projects are viewable" 
-  ON capital_projects FOR SELECT 
-  USING (is_public = true OR auth.uid() = owner_id);
+  ON capital_projects FOR SELECT
+  TO anon, authenticated
+  USING (
+    (is_public = true AND status = 'ACTIVE')
+    OR (SELECT auth.uid()) = owner_id
+  );
 
 CREATE POLICY "Owners can insert projects" 
-  ON capital_projects FOR INSERT 
-  WITH CHECK (auth.uid() = owner_id);
+  ON capital_projects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    (SELECT auth.uid()) = owner_id
+    AND is_public = false
+  );
 
 CREATE POLICY "Owners can update projects" 
-  ON capital_projects FOR UPDATE 
-  USING (auth.uid() = owner_id);
+  ON capital_projects FOR UPDATE
+  TO authenticated
+  USING ((SELECT auth.uid()) = owner_id)
+  WITH CHECK (
+    (SELECT auth.uid()) = owner_id
+    AND is_public = false
+  );
 
 -- JV Requests RLS
 ALTER TABLE jv_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own JV requests" 
-  ON jv_requests FOR SELECT 
-  USING (auth.uid() = requester_id OR auth.uid() = wholesaler_id);
+  ON jv_requests FOR SELECT
+  TO authenticated
+  USING (
+    (SELECT auth.uid()) = requester_id
+    OR (SELECT auth.uid()) = wholesaler_id
+  );
 
-CREATE POLICY "Users can insert JV requests" 
-  ON jv_requests FOR INSERT 
-  WITH CHECK (auth.uid() = requester_id);
-
-CREATE POLICY "Participants can update JV requests" 
-  ON jv_requests FOR UPDATE 
-  USING (auth.uid() = requester_id OR auth.uid() = wholesaler_id);
+CREATE POLICY "Service role can manage JV requests"
+  ON jv_requests FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Capital Commitments RLS
 ALTER TABLE capital_commitments ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own commitments" 
-  ON capital_commitments FOR SELECT 
-  USING (auth.uid() = investor_id OR auth.uid() IN (
-    SELECT owner_id FROM capital_projects WHERE id = project_id
+  ON capital_commitments FOR SELECT
+  TO authenticated
+  USING ((SELECT auth.uid()) = investor_id OR (SELECT auth.uid()) IN (
+    SELECT owner_id FROM capital_projects WHERE id::text = project_id
   ));
 
-CREATE POLICY "Investors can insert commitments" 
-  ON capital_commitments FOR INSERT 
-  WITH CHECK (auth.uid() = investor_id);
-
-CREATE POLICY "Investors can update own commitments" 
-  ON capital_commitments FOR UPDATE 
-  USING (auth.uid() = investor_id);
+CREATE POLICY "Service role can manage capital commitments"
+  ON capital_commitments FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Listings RLS
 ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public listings are viewable" 
-  ON listings FOR SELECT 
-  USING (is_public = true OR auth.uid() = owner_id);
+  ON listings FOR SELECT
+  TO anon, authenticated
+  USING (
+    (is_public = true AND status = 'active')
+    OR (SELECT auth.uid()) = owner_id
+  );
 
 CREATE POLICY "Service role can manage listings" 
-  ON listings FOR ALL 
-  USING (true);
+  ON listings FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Buyer Offers RLS
 ALTER TABLE buyer_offers ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view related offers" 
-  ON buyer_offers FOR SELECT 
-  USING (auth.uid() = buyer_id OR auth.uid() IN (
-    SELECT owner_id FROM listings WHERE id = listing_id
+  ON buyer_offers FOR SELECT
+  TO authenticated
+  USING ((SELECT auth.uid()) = buyer_id OR (SELECT auth.uid()) IN (
+    SELECT owner_id FROM listings WHERE id::text = listing_id
   ));
 
-CREATE POLICY "Buyers can insert offers" 
-  ON buyer_offers FOR INSERT 
-  WITH CHECK (auth.uid() = buyer_id);
-
-CREATE POLICY "Buyers can update own offers" 
-  ON buyer_offers FOR UPDATE 
-  USING (auth.uid() = buyer_id);
+CREATE POLICY "Service role can manage buyer offers"
+  ON buyer_offers FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 -- Notifications RLS
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own notifications" 
-  ON notifications FOR SELECT 
-  USING (auth.uid() = user_id);
+  ON notifications FOR SELECT
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Service role can insert notifications" 
-  ON notifications FOR INSERT 
+  ON notifications FOR INSERT
+  TO service_role
   WITH CHECK (true);
 
 CREATE POLICY "Users can update own notifications" 
-  ON notifications FOR UPDATE 
-  USING (auth.uid() = user_id);
+  ON notifications FOR UPDATE
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+-- Restrict self-service updates to non-governance fields. The application
+-- server uses the service role for reviewed role, badge, status, and public
+-- visibility changes.
+REVOKE INSERT, UPDATE, DELETE ON user_profiles FROM anon;
+REVOKE INSERT, DELETE ON user_profiles FROM authenticated;
+REVOKE UPDATE ON user_profiles FROM authenticated;
+GRANT UPDATE (
+  display_name,
+  company_name,
+  location,
+  avatar_url,
+  bio,
+  updated_at
+) ON user_profiles TO authenticated;
+
+REVOKE ALL ON user_badges, user_reputation, seller_leads FROM anon, authenticated;
+GRANT SELECT ON user_badges, user_reputation TO anon, authenticated;
+
+-- Marketplace responses are shaped by the application server's public DTOs.
+-- Do not expose raw ownership IDs, internal notes, or governance fields through
+-- PostgREST even when a row satisfies a public RLS predicate.
+REVOKE SELECT ON user_profiles, wholesale_deals, capital_projects, listings
+  FROM anon, authenticated;
+
+REVOKE INSERT, UPDATE, DELETE
+  ON wholesale_deals, capital_projects, listings
+  FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON jv_requests, capital_commitments, buyer_offers
+  FROM anon, authenticated;
+REVOKE UPDATE ON notifications FROM authenticated;
+GRANT UPDATE (is_read) ON notifications TO authenticated;
 
 -- =====================================================
 -- FUNCTIONS (MUST BE DEFINED BEFORE TRIGGERS)

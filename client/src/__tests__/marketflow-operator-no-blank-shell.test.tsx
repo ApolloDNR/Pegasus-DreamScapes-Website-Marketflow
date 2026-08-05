@@ -133,7 +133,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
   (window as unknown as { scrollTo: () => void }).scrollTo = () => {};
 }
 
-import { Router as AppRouter } from "@/App";
+import { Router as AppRouter } from "@/LegacyApp";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
@@ -218,7 +218,7 @@ describe("Every AuthGuard-gated MarketFlow operator route renders real content f
   // an explicit, documented exclusion — it fails CI.
   it("MARKETFLOW_OPERATOR_URLS covers every static AuthGuard-gated /marketflow route in App.tsx", () => {
     const appSrc = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const re = /<Route\s+path="(\/marketflow\/[^"]+)">\s*\{\s*\(\)\s*=>\s*<AuthGuard>/g;

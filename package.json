@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "tsx script/build.ts",
+    "build": "tsx script/build.ts && npm run check:bundle",
+    "check:bundle": "node scripts/check-client-bundle-budget.mjs",
+    "check:a11y": "node scripts/check-visual-accessibility.mjs",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "smoke:launch": "node scripts/launch-intake-smoke.mjs",
@@ -19,7 +21,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/montserrat": "^5.2.8",
     "@fontsource/playfair-display": "^5.2.8",
-    "@google-cloud/storage": "^7.18.0",
+    "@google-cloud/storage": "^7.21.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
@@ -67,14 +69,13 @@
     "cmdk": "^1.1.1",
     "connect-pg-simple": "^10.0.0",
     "date-fns": "^3.6.0",
-    "dompurify": "^3.3.1",
-    "drizzle-orm": "^0.39.1",
+    "dompurify": "^3.4.12",
+    "drizzle-orm": "^0.45.2",
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.6.0",
-    "express": "^4.21.2",
-    "express-session": "^1.18.1",
+    "express": "^4.22.2",
+    "express-session": "^1.18.2",
     "framer-motion": "^11.13.1",
-    "google-auth-library": "^10.5.0",
     "input-otp": "^1.4.2",
     "isomorphic-dompurify": "^2.30.0",
     "lucide-react": "^0.453.0",
@@ -98,13 +99,11 @@
     "react-virtualized-auto-sizer": "^2.0.2",
     "react-window": "^2.2.4",
     "recharts": "^2.15.2",
-    "sharp": "^0.34.5",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
     "wouter": "^3.3.5",
-    "ws": "^8.18.0",
+    "ws": "8.21.0",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
   },
@@ -120,7 +119,7 @@
     "@types/connect-pg-simple": "^7.0.3",
     "@types/express": "4.17.21",
     "@types/express-session": "^1.18.0",
-    "@types/node": "20.16.11",
+    "@types/node": "22.20.1",
     "@types/passport": "^1.0.16",
     "@types/passport-local": "^1.0.38",
     "@types/react": "^18.3.11",
@@ -132,8 +131,11 @@
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
     "jsdom": "^29.1.1",
-    "postcss": "^8.4.47",
+    "postcss": "^8.5.25",
+    "playwright-core": "^1.62.1",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
     "vite": "^5.4.20",
@@ -142,7 +144,11 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   },
+  "overrides": {
+    "@tootallnate/once": "2.0.1",
+    "sucrase": "3.35.1"
+  },
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   }
 }

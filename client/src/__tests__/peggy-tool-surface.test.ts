@@ -43,9 +43,9 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     expect(PEGGY_SYSTEM_PROMPT).not.toContain("$1,497");
   });
 
-  it("names Strategy Library, Vendor Network, MarketFlow, Submit, Capital, Contact routes", () => {
+  it("routes education only to Strategy Lab while retaining live public routes", () => {
     for (const route of [
-      "/resources",
+      "/strategy-lab",
       "/vendor-network",
       "/marketflow",
       "/bring-an-opportunity",
@@ -54,6 +54,8 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     ]) {
       expect(PEGGY_SYSTEM_PROMPT).toContain(route);
     }
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/library");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/resources");
   });
 
   it("includes the direct line (Apollo email and phone)", () => {

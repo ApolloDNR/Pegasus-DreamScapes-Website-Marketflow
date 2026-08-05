@@ -361,8 +361,10 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
         incrementViewCount: false,
       });
       if (!row) return res.status(404).json({ message: "Not found" });
-      const buf = await generateStrategySnapshotPDF(row);
-      const safe = String(row.address || "snapshot").replace(/[^a-z0-9\-]+/gi, "-").slice(0, 60);
+      const visible = applyVisibility(row);
+      if (!visible) return res.status(404).json({ message: "Not found" });
+      const buf = await generateStrategySnapshotPDF(visible);
+      const safe = String(visible.address || "snapshot").replace(/[^a-z0-9\-]+/gi, "-").slice(0, 60);
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename="pegasus-snapshot-${safe}.pdf"`);
       return res.send(buf);

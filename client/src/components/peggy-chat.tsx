@@ -21,6 +21,10 @@ import {
   RotateCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  PEGGY_CONVERSATION_ACCESS_HEADER,
+  type PeggyConversationAccessResponse,
+} from "@shared/peggy-access";
 
 function TypingIndicator() {
   return (
@@ -169,6 +173,7 @@ export function PeggyChatBubble() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [conversationId, setConversationId] = useState<number | null>(null);
+  const [conversationAccessToken, setConversationAccessToken] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -187,22 +192,25 @@ export function PeggyChatBubble() {
   const createConversationMutation = useMutation({
     mutationFn: async (newContext: PeggyContextData) => {
       const response = await apiRequest('POST', '/api/peggy/conversations', { sessionId, context: newContext });
-      return response.json();
+      return response.json() as Promise<PeggyConversationAccessResponse>;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       setConversationId(data.id);
+      setConversationAccessToken(data.accessToken);
     }
   });
   
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      if (!conversationId) {
+      if (!conversationId || !conversationAccessToken) {
         throw new Error('No conversation');
       }
       const response = await apiRequest('POST', '/api/peggy/chat', { 
         conversationId, 
         message, 
         context 
+      }, {
+        [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
       });
       return response.json();
     },
@@ -217,7 +225,15 @@ export function PeggyChatBubble() {
   
   const feedbackMutation = useMutation({
     mutationFn: async ({ messageId, feedback }: { messageId: number; feedback: string }) => {
-      const response = await apiRequest('POST', `/api/peggy/messages/${messageId}/feedback`, { feedback });
+      if (!conversationId || !conversationAccessToken) {
+        throw new Error('No conversation');
+      }
+      const response = await apiRequest('POST', `/api/peggy/messages/${messageId}/feedback`, {
+        conversationId,
+        feedback,
+      }, {
+        [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
+      });
       return response.json();
     },
     onSuccess: (_, variables) => {

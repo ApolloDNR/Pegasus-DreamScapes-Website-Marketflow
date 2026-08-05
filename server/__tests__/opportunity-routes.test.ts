@@ -96,6 +96,7 @@ beforeAll(async () => {
   registerOpportunityRoutes(app, {
     isAuthenticated: pass,
     requireStaffRole: pass,
+    publicIntakeRateLimit: pass,
   });
   await new Promise<void>((resolve) => {
     server = app.listen(0, () => resolve());

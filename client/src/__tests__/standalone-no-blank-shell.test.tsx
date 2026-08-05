@@ -104,7 +104,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
   (window as unknown as { scrollTo: () => void }).scrollTo = () => {};
 }
 
-import { Router as AppRouter } from "@/App";
+import { Router as AppRouter } from "@/LegacyApp";
 import { isPegasusUrl } from "@/pegasus/routes";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
@@ -207,7 +207,7 @@ describe("Every standalone (non-prototype) public route renders real content, ne
   // test entry here or an explicit, documented exclusion below — it fails CI.
   it("STANDALONE_URLS covers every public standalone route mounted in App.tsx", () => {
     const appSrc = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const re = /<Route\s+path="([^"]+)"\s+component=/g;

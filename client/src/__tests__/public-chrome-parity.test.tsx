@@ -40,7 +40,7 @@ function read(rel: string): string {
 // AuthGuard-wrapped routes use the children-render form (no `component=`),
 // so this regex naturally excludes them.
 function componentRoutesFromApp(): string[] {
-  const appSrc = read("client/src/App.tsx");
+  const appSrc = read("client/src/LegacyApp.tsx");
   const re = /<Route\s+path="([^"]+)"\s+component=/g;
   const out: string[] = [];
   let m: RegExpExecArray | null;

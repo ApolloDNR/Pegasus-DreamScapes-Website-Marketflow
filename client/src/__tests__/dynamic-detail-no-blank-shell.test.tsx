@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // The standalone net (standalone-no-blank-shell.test.tsx) deliberately
 // EXCLUDES dynamic :param routes — there's no canned id/slug to resolve, so
 // those pages never get exercised there. But /projects/:slug (ProjectDetail),
-// /library/:slug (ArticleDetail), and the snapshot share pages
+// the project detail page and snapshot share pages
 // (/snapshot/calc/:token, /snapshot/property/:token, /snapshot/:token) are
 // exactly the data-driven surfaces that can silently render a blank or
 // crashing shell after a refactor with NO test catching it.
@@ -101,7 +101,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
   (window as unknown as { scrollTo: () => void }).scrollTo = () => {};
 }
 
-import { Router as AppRouter } from "@/App";
+import { Router as AppRouter } from "@/LegacyApp";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
 import { DemoModeProvider } from "@/contexts/demo-mode-context";
@@ -139,24 +139,6 @@ const PROJECT = {
   beforeImages: ["/img/before-1.webp"],
   afterImages: ["/img/after-1.webp"],
   highlights: ["Full interior renovation", "Permit coordination with the city"],
-  createdAt: new Date("2025-09-01").toISOString(),
-};
-
-const ARTICLE = {
-  id: 1,
-  slug: "test-article",
-  title: "How A Real Strategy Article Renders",
-  excerpt: "A short excerpt that should appear on the article detail page.",
-  content:
-    "## A real heading\n\nThis is real markdown body copy that should render into the article prose region so the page is never a blank shell.",
-  category: "Strategy",
-  author: "Apollo Duran",
-  imageUrl: null,
-  published: true,
-  publishedAt: new Date("2025-09-01").toISOString(),
-  featuredInLibrary: false,
-  libraryCategoryKey: null,
-  libraryOrder: 0,
   createdAt: new Date("2025-09-01").toISOString(),
 };
 
@@ -229,8 +211,6 @@ function mockFetch(input: RequestInfo | URL): Promise<Response> {
       : input instanceof URL
         ? input.toString()
         : (input as Request).url;
-  if (url.includes("/api/articles/library")) return Promise.resolve(jsonResponse([]));
-  if (url.includes("/api/articles/")) return Promise.resolve(jsonResponse(ARTICLE));
   if (url.includes("/api/projects/")) return Promise.resolve(jsonResponse(PROJECT));
   if (url.includes("/api/property-analyses/by-token/"))
     return Promise.resolve(jsonResponse(SNAPSHOT));
@@ -250,7 +230,6 @@ afterEach(() => {
 // resolves to a successful payload. Keep in lockstep with the drift guard.
 const DYNAMIC_DETAIL_ROUTES: { url: string; route: string }[] = [
   { url: "/projects/test-flip", route: "/projects/:slug" },
-  { url: "/library/test-article", route: "/library/:slug" },
   { url: "/snapshot/calc/tok-test-123", route: "/snapshot/calc/:token" },
   { url: "/snapshot/property/tok-test-123", route: "/snapshot/property/:token" },
   { url: "/snapshot/some-status-token", route: "/snapshot/:token" },
@@ -290,7 +269,7 @@ function renderRoute(routePath: string) {
 describe("Every dynamic :param detail route renders real loaded content, never a blank shell (Task #217)", () => {
   // Non-vacuous guard: never silently pass with zero cases.
   it("DYNAMIC_DETAIL_ROUTES covers the dynamic detail surface", () => {
-    expect(DYNAMIC_DETAIL_ROUTES.length).toBeGreaterThanOrEqual(5);
+    expect(DYNAMIC_DETAIL_ROUTES.length).toBeGreaterThanOrEqual(4);
   });
 
   // Drift guard — the real point of the net. Derive every dynamic :param
@@ -299,7 +278,7 @@ describe("Every dynamic :param detail route renders real loaded content, never a
   // a test entry (or a documented exclusion) — it fails CI.
   it("DYNAMIC_DETAIL_ROUTES covers every dynamic :param route mounted in App.tsx", () => {
     const appSrc = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const re = /<Route\s+path="([^"]+)"\s+component=/g;
@@ -309,7 +288,7 @@ describe("Every dynamic :param detail route renders real loaded content, never a
       if (m[1].includes(":")) dynamicRoutes.push(m[1]);
     }
     // Sanity: App.tsx must still mount dynamic component routes in this form.
-    expect(dynamicRoutes.length).toBeGreaterThanOrEqual(5);
+    expect(dynamicRoutes.length).toBeGreaterThanOrEqual(4);
 
     // Admin surfaces — gated by their own in-page auth, need an admin session
     // to render real content; out of scope for this public-content net.

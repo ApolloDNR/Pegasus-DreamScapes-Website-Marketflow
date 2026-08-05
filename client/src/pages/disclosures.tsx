@@ -16,7 +16,7 @@ export default function Disclosures() {
   useSEO({
     title: "Disclosures",
     description:
-      "Disclosures for Pegasus DreamScapes Corp. Not an offer to buy or sell securities. No guarantee of returns or principal protection. Educational content only.",
+      "Disclosures for Pegasus Dreamscapes Corp. Not an offer to buy or sell securities. No guarantee of returns or principal protection. Educational content only.",
     image: "/og/default.png",
   });
 
@@ -30,7 +30,7 @@ export default function Disclosures() {
         <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-[#e3a463] font-supporting font-semibold">
               Compliance · Plain language
             </p>
           </div>
@@ -44,14 +44,14 @@ export default function Disclosures() {
             </span>
           </h1>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
-            Pegasus DreamScapes Corp. is a strategy-first real estate operating company. This page explains how we present our work, our limitations, and the rules of engagement for anything you read, calculate, or submit through this site.
+            Pegasus Dreamscapes Corp. is a strategy-first real estate operating company. This page explains how we present our work, our limitations, and the rules of engagement for anything you read, calculate, or submit through this site.
           </p>
         </div>
       </section>
 
       <section className="py-16 lg:py-20 bg-muted/30 border-b border-border">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-4">
             Jump to a section
           </p>
           <nav aria-label="On-page navigation" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -62,7 +62,7 @@ export default function Disclosures() {
                 data-testid={`link-disclosures-jump-${s.id}`}
                 className="group flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:border-primary/60 hover:bg-primary/5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
               >
-                <s.icon className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                <s.icon className="w-4 h-4 text-[#8a5122] dark:text-primary flex-shrink-0" aria-hidden="true" />
                 <span className="truncate">{s.label}</span>
               </a>
             ))}
@@ -102,7 +102,7 @@ export default function Disclosures() {
                 Submitting a property through the Strategy Review intake or through Peggy is a request for a structural read of the situation. Every submission gets a serious review. Not every submission gets an offer. When the right path is a referral, listing, or partner introduction, we will say so plainly.
               </p>
               <p>
-                Pegasus DreamScapes operates across acquisition, joint venture, creative-finance, listing, and referral lanes. The lane that fits the property is the lane we route it to. We do not guarantee timing, price, or outcome on any submission.
+                Pegasus Dreamscapes operates across acquisition, joint venture, creative-finance, listing, and referral lanes. The lane that fits the property is the lane we route it to. We do not guarantee timing, price, or outcome on any submission.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -111,12 +111,12 @@ export default function Disclosures() {
             <DisclosureBlock
               idx={2}
               icon={BookOpen}
-              kicker="Strategy Library and Calculators"
+              kicker="Strategy Lab and Educational Materials"
               title="Educational content. Not advice."
               testId="disclosure-education"
             >
               <p>
-                The Strategy Library, calculators, articles, and worked examples on this site are educational. They are not legal, tax, accounting, or investment advice for your specific situation. Numbers entered into the calculators are illustrative and depend entirely on the inputs you provide.
+                Strategy Lab, calculators, articles, and worked examples on this site are educational. They are not legal, tax, accounting, or investment advice for your specific situation. Numbers entered into the calculators are illustrative and depend entirely on the inputs you provide.
               </p>
               <p>
                 Before acting on anything you read, model, or calculate here, consult licensed professionals (real estate attorney, CPA, lender, broker) who know your specific facts and jurisdiction.
@@ -139,7 +139,7 @@ export default function Disclosures() {
                 Decisions on offers, structures, and capital relationships are always made by Pegasus operators. Peggy responses are conversational guidance, not contractual representations of the company.
               </p>
               <p>
-                Peggy enforces four hard refusal categories, on every channel (chat, phone, ecosystem apps): (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Triggering any of these routes moves the conversation to Apollo for a direct written read.
+                On the live website surface, Peggy uses four hard refusal categories: (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Planned voice and ecosystem surfaces must meet the same guardrails before release. Triggering any of these routes moves the conversation to Apollo for a direct written read.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -148,18 +148,18 @@ export default function Disclosures() {
             <DisclosureBlock
               idx={4}
               icon={Shield}
-              kicker="Call recording (Peggy phone)"
-              title="Two-party consent, 90-day retention, deletion on request."
+              kicker="Planned Peggy phone controls"
+              title="Phone and recording are not live."
               testId="disclosure-recording"
             >
               <p>
-                California is a two-party consent state under Penal Code §632. The first turn of every call on 925-744-8525 includes a verbatim recording disclosure and a clear way to stop the recording. If you ask Peggy to stop recording, recording stops immediately and the conversation continues. We do not condition the call on consent.
+                Peggy does not currently answer or record calls on 925-744-8525. California is a two-party consent state under Penal Code §632, so before any voice launch Pegasus must implement and verify a clear recording disclosure, a way to decline or stop recording immediately, and a path to continue without recording.
               </p>
               <p>
-                If you call about a property in foreclosure, notice of default, or pending trustee sale and you are the owner-occupant, Peggy reads the California Civil Code §1695 disclosure and routes you directly to Apollo. Peggy will not ask qualifying questions about the property or the loan in that path; she will collect only your name and a callback number so Apollo can speak with you personally.
+                Before a future voice service handles an owner-occupant foreclosure, notice-of-default, or pending trustee-sale inquiry, the California Civil Code §1695 disclosure and direct routing to Apollo must also be implemented and verified.
               </p>
               <p>
-                Recordings and transcripts are stored encrypted, retained 90 days, and deleted on request. See the Privacy Policy for the full mechanism.
+                If recording is enabled in the future, Pegasus will publish the final retention, deletion, security, and transcript-use policy before launch. See the Privacy Policy for the current status.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -187,7 +187,7 @@ export default function Disclosures() {
               testId="disclosure-fairhousing"
             >
               <p>
-                Pegasus DreamScapes Corp. operates in compliance with the federal Fair Housing Act and applicable state fair-housing statutes. We do not discriminate on the basis of race, color, religion, sex, national origin, familial status, disability, or any other protected class.
+                Pegasus Dreamscapes Corp. operates in compliance with the federal Fair Housing Act and applicable state fair-housing statutes. We do not discriminate on the basis of race, color, religion, sex, national origin, familial status, disability, or any other protected class.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -197,13 +197,13 @@ export default function Disclosures() {
           <ScrollReveal delay={0.1}>
             <div className="mt-16 pt-10 border-t border-border">
               <div className="flex items-start gap-4">
-                <Mail className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-[#8a5122] dark:text-primary mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-2">
                     Questions about this page
                   </p>
                   <p className="text-base text-foreground/90 leading-relaxed">
-                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-primary hover:underline">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-primary hover:underline">925-744-8525</a>.
+                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-[#8a5122] dark:text-primary underline underline-offset-2">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-[#8a5122] dark:text-primary underline underline-offset-2">925-744-8525</a>.
                   </p>
                   <p className="text-sm text-muted-foreground mt-3 italic">
                     Last updated: May 2026
@@ -246,8 +246,8 @@ function DisclosureBlock({
       }
     >
       <div className="flex items-center gap-3 mb-3">
-        <Icon className="w-4 h-4 text-primary" />
-        <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
+        <Icon className="w-4 h-4 text-[#8a5122] dark:text-primary" />
+        <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold">
           {kicker}
         </p>
       </div>

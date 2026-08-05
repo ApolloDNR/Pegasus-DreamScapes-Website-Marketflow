@@ -241,19 +241,23 @@ describe("Global focus-visible baseline (Empire Doctrine v1.0.1, Task #143)", ()
   });
 
   it("preserves the skip link and delegates the Pegasus main landmark to Landing", () => {
-    const app = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+    const publicApp = fs.readFileSync(
+      path.join(process.cwd(), "client/src/PublicApp.tsx"),
+      "utf-8",
+    );
+    const legacyApp = fs.readFileSync(
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const landing = fs.readFileSync(
       path.join(process.cwd(), "client/src/pegasus/Landing.tsx"),
       "utf-8",
     );
-    expect(app.includes('className="skip-to-content"')).toBe(true);
-    expect(app.includes('href="#main-content"')).toBe(true);
+    expect(publicApp.includes('className="skip-to-content"')).toBe(true);
+    expect(publicApp.includes('href="#main-content"')).toBe(true);
     expect(landing.includes('<main id="main-content"')).toBe(true);
 
-    const pegasusBranch = app.match(
+    const pegasusBranch = legacyApp.match(
       /\{pegasus \? \(\s*([\s\S]*?)\s*\) : standalone \? \(/,
     )?.[1];
     expect(pegasusBranch).toBeTruthy();
@@ -317,7 +321,6 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/submit-property.tsx",
   "client/src/pages/capital.tsx",
   "client/src/pages/connect.tsx",
-  "client/src/pages/library.tsx",
   "client/src/pages/projects.tsx",
   "client/src/pages/project-nelson-dr.tsx",
   "client/src/pages/vendor-network.tsx",
@@ -512,7 +515,6 @@ import AboutPage from "@/pages/about";
 import DevelopmentPage from "@/pages/development";
 import SubmitPropertyPage from "@/pages/submit-property";
 import CapitalPage from "@/pages/capital";
-import LibraryPage from "@/pages/library";
 import ProjectsPage from "@/pages/projects";
 import NelsonDrPage from "@/pages/project-nelson-dr";
 import VendorNetworkPage from "@/pages/vendor-network";
@@ -548,7 +550,6 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
   { path: "/capital", Page: CapitalPage },
   { path: "/connect", Page: ConnectPage },
-  { path: "/library", Page: LibraryPage },
   { path: "/projects", Page: ProjectsPage },
   { path: "/projects/nelson-dr", Page: NelsonDrPage },
   { path: "/vendor-network", Page: VendorNetworkPage },

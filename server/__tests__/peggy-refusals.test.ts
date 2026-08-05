@@ -125,11 +125,12 @@ describe("Peggy system prompt locks", () => {
     expect(PEGGY_SYSTEM_PROMPT).toMatch(/Do not.*20\+? years/i);
   });
 
-  it("routes to canonical URLs (/bring-an-opportunity, /capital, /library, /strategy-lab)", () => {
+  it("routes education only to Strategy Lab and never to retired library paths", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("/bring-an-opportunity");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/capital");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/library");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/library");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/resources");
   });
 
   it("consumes the bounded Strategy Lab memo, inputs, and next step", () => {
