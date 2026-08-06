@@ -148,51 +148,35 @@ describe("Pegasus public-shell navigation accessibility", () => {
     ).toBeTruthy();
   });
 
-  it("keeps Strategy Lab and MarketFlow visible and exposes the complete More directory", async () => {
-    const user = userEvent.setup({ delay: null });
+  it("keeps the approved five-link navigation calm while preserving product access", () => {
     const { container } = renderLanding("/");
     const nav = container.querySelector("nav");
     expect(nav).toBeTruthy();
 
-    expect(within(nav!).getByRole("link", { name: /Strategy Lab/i })).toHaveAttribute(
-      "href",
-      "/strategy-lab",
-    );
-    expect(within(nav!).getByRole("link", { name: /MarketFlow/i })).toHaveAttribute(
-      "href",
-      "/marketflow",
-    );
-
-    const more = within(nav!).getByRole("button", { name: /More/i });
-    await user.click(more);
-
-    const directory = screen.getByRole("region", { name: /More Pegasus pages/i });
-    expect(within(directory).getByRole("link", { name: /Our Work/i })).toHaveAttribute(
-      "href",
-      "/our-work",
-    );
-    expect(within(directory).getByRole("link", { name: /Investments/i })).toBeInTheDocument();
-    expect(within(directory).getByRole("link", { name: /Pegasus Ecosystem/i })).toBeInTheDocument();
-    expect(more).not.toHaveAttribute("aria-haspopup");
-
-    await user.keyboard("{Escape}");
-    expect(screen.queryByRole("region", { name: /More Pegasus pages/i })).not.toBeInTheDocument();
-    expect(more).toHaveFocus();
+    for (const [label, href] of [
+      ["How We Operate", "/how-we-operate"],
+      ["Property Owners", "/property-owners"],
+      ["Deal Partners", "/deal-partners"],
+      ["Our Work", "/our-work"],
+      ["About", "/about"],
+    ]) {
+      expect(within(nav!).getByRole("link", { name: label })).toHaveAttribute("href", href);
+    }
+    expect(within(nav!).queryByRole("link", { name: /Strategy Lab/i })).not.toBeInTheDocument();
+    expect(within(nav!).queryByRole("link", { name: /MarketFlow/i })).not.toBeInTheDocument();
+    expect(
+      within(container.querySelector('[data-hv="arrival"]')!).getByRole("button", {
+        name: /Open Strategy Lab/i,
+      }),
+    ).toBeInTheDocument();
+    expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
   });
 
-  it("keeps product navigation active throughout its public child journeys", () => {
-    const marketflow = renderLanding("/marketflow/access");
+  it("marks the approved public spine active on its destinations", () => {
+    const work = renderLanding("/our-work");
     expect(
-      within(marketflow.container.querySelector("nav")!).getByRole("link", {
-        name: /MarketFlow/i,
-      }),
-    ).toHaveAttribute("aria-current", "page");
-    cleanup();
-
-    const lab = renderLanding("/strategy-lab/classic");
-    expect(
-      within(lab.container.querySelector("nav")!).getByRole("link", {
-        name: /Strategy Lab/i,
+      within(work.container.querySelector("nav")!).getByRole("link", {
+        name: /Our Work/i,
       }),
     ).toHaveAttribute("aria-current", "page");
   });

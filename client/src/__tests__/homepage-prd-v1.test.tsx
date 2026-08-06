@@ -1,5 +1,8 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, cleanup, fireEvent } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
@@ -79,20 +82,49 @@ function renderHome() {
 afterEach(() => cleanup());
 
 describe("Homepage premium editorial contract", () => {
-  it("locks the Arrival promise and focused hero actions", () => {
+  it("locks the approved Bay-colonnade plate instead of silently replacing its architecture", () => {
+    const asset = readFileSync(
+      resolve(process.cwd(), "client/public/images/hero/pegasus-v6-arrival.webp"),
+    );
+    expect(createHash("sha256").update(asset).digest("hex")).toBe(
+      "a1de24393eda3bf7ca0ece805a96b71554b7006aee0fcede5d7c41554d8409a3",
+    );
+
+    const { container } = renderHome();
+    const hero = container.querySelector<HTMLImageElement>(
+      '[data-testid="approved-home-hero-image"]',
+    );
+    expect(hero).toBeTruthy();
+    expect(hero).toHaveAttribute("src", "/images/hero/pegasus-v6-arrival.webp");
+    expect(hero).toHaveAttribute("width", "1672");
+    expect(hero).toHaveAttribute("height", "941");
+  });
+
+  it("locks the approved Arrival promise, copy, and three-action row", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
     expect(text).toContain("Complex real estate, made executable.");
     expect(text).toContain(
-      "reads the property, the people, and the economics",
+      "originates, structures, and operates opportunities that require more than a conventional path",
     );
+    expect(text).toContain("then determine the role, strategy, and structure");
     expect(text).toContain("Bring an Opportunity");
-    expect(text).toContain("See How Pegasus Operates");
+    expect(text).toContain("See How We Operate");
+    expect(text).toContain("Open Strategy Lab");
     // §31: the primary CTA is a real link to the canonical intake URL.
     const primary = Array.from(container.querySelectorAll("a")).find((a) =>
       a.textContent?.includes("Bring an Opportunity"),
     );
     expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
+  });
+
+  it("locks the approved four-part proof rail", () => {
+    const { container } = renderHome();
+    const rail = container.querySelector(".hv-hero-statbar")!;
+    expect(rail.textContent).toContain("Founder-ledSourced, built, and sold in-house.");
+    expect(rail.textContent).toContain("Nelson DriveA 3/2 rebuild into a 4/3.");
+    expect(rail.textContent).toContain("East BayContra Costa & Alameda County.");
+    expect(rail.textContent).toContain("Strategy firstWe structure the route. You own the outcome.");
   });
 
   it("locks the Visitor Router question and its four routes (§7.2)", () => {

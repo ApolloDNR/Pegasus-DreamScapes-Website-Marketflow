@@ -15,8 +15,8 @@ const PREMIUM_PRIMARY_NAV: PremiumNavigationItem[] = [
   { label: 'How We Operate', route: 'dealstrategy' },
   { label: 'Property Owners', route: 'sellers' },
   { label: 'Deal Partners', route: 'dealfinders' },
-  { label: 'Strategy Lab', route: 'strategylab' },
-  { label: 'MarketFlow', route: 'marketflow', badge: 'Private pilot' },
+  { label: 'Our Work', route: 'ourwork' },
+  { label: 'About', route: 'about' },
 ];
 
 const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [

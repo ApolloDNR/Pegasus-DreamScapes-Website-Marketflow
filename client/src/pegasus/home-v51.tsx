@@ -304,25 +304,29 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
   return (
     <div className="hv">
       {/* 1 · ARRIVAL */}
-      <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival">
+      <section className="hv-hero hv-hero-editorial hv-grain" data-hv="arrival"
+        data-hero-composition="approved-bay-colonnade-v1">
         <div className="hv-hero-top">
           <div className="hv-hero-marble" aria-hidden="true">
             <img src="/images/hero/pegasus-v6-arrival.webp"
-              srcSet="/images/hero/pegasus-v6-arrival-m.webp 1080w, /images/hero/pegasus-v6-arrival.webp 2752w"
-              sizes="100vw" width={2752} height={1536} alt="" loading="eager"
+              data-testid="approved-home-hero-image"
+              width={1672} height={941} alt="" loading="eager"
               decoding="async" {...{ fetchpriority: 'high' }} />
           </div>
           <div className="hv-wrap hv-hero-inner">
             <div className="hv-eyebrow-row">
-              <span className="hv-rule" />
-              <span className="pg-label hv-eyebrow">Real estate operating company &middot; East Bay, California</span>
+              <span className="pg-label hv-eyebrow">
+                <span>Real estate operating company</span>
+                <span>Contra Costa &amp; Alameda</span>
+              </span>
             </div>
             <h1 className="hv-h1 font-serif-display">
               Complex real estate,<br className="hv-h1-break" /> <em>made executable.</em>
             </h1>
             <p className="hv-lead">
-              Pegasus Dreamscapes reads the property, the people, and the economics, then structures the
-              role and route that can move a complex opportunity forward.
+              Pegasus Dreamscapes originates, structures, and operates opportunities that require more than
+              a conventional path. We start with the property, the people, and the economics, then determine
+              the role, strategy, and structure that move it toward a controlled outcome.
             </p>
             <div className="hv-cta-row">
               <a href="/bring-an-opportunity" onClick={toIntake}
@@ -330,11 +334,13 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
                 Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </a>
               <button type="button" onClick={() => go('dealstrategy')} className="hv-hero-link">
-                See How Pegasus Operates
+                See How We Operate <ArrowRight aria-hidden="true" className="h-3 w-3" />
+              </button>
+              <button type="button" onClick={() => go('strategylab')} className="hv-hero-link">
+                Open Strategy Lab <ArrowRight aria-hidden="true" className="h-3 w-3" />
               </button>
             </div>
           </div>
-          <p className="hv-hero-place">Architectural vision &middot; East Bay, California &middot; Not property inventory</p>
         </div>
         <div className="hv-hero-statbar">
           <ul className="hv-wrap hv-hero-facts">
@@ -342,14 +348,14 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <span className="hv-fact-ic"><StatIcon name="temple" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Founder-led</span>
-                <span className="hv-fact-v">One accountable operating picture.</span>
+                <span className="hv-fact-v">Sourced, built, and sold in-house.</span>
               </span>
             </li>
             <li className="hv-fact">
               <span className="hv-fact-ic"><StatIcon name="sprig" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Nelson Drive</span>
-                <span className="hv-fact-v">Documented 3/2 to 4/3 transformation.</span>
+                <span className="hv-fact-v">A 3/2 rebuild into a 4/3.</span>
               </span>
             </li>
             <li className="hv-fact">
@@ -363,10 +369,11 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <span className="hv-fact-ic"><StatIcon name="compass" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Strategy first</span>
-                <span className="hv-fact-v">Structure the route before the outcome.</span>
+                <span className="hv-fact-v">We structure the route. You own the outcome.</span>
               </span>
             </li>
           </ul>
+          <p className="hv-hero-place">Architectural vision &middot; East Bay, California &middot; Not property inventory</p>
         </div>
       </section>
 

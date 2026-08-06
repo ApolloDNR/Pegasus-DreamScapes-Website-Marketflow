@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -131,25 +131,17 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     });
   }
 
-  it("locks the premium top navigation, product access, and More directory", () => {
+  it("locks the approved calm top navigation and subordinate product access", () => {
     const { container } = renderAt("/");
     const nav = container.querySelector("nav")!;
-    // Premium navigation keeps the core audience routes and the two product
-    // surfaces one click away. Supporting firm/lane pages remain reachable
-    // through the explicit More directory.
-    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Strategy Lab", "MarketFlow"]) {
+    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Our Work", "About"]) {
       expect(nav.textContent, `missing primary nav item: ${label}`).toContain(label);
     }
-    expect(nav.textContent).toContain("Private pilot");
     expect(nav.textContent).toContain("Bring an Opportunity");
-
-    const moreButton = Array.from(nav.querySelectorAll("button")).find((button) => button.textContent?.includes("More"));
-    expect(moreButton).toBeTruthy();
-    fireEvent.click(moreButton!);
-    expect(nav.querySelector('[role="region"][aria-label="More Pegasus pages"]')).toBeTruthy();
-    for (const label of ["Our Work", "About", "Investments", "Development", "Capital Partners", "Buyers", "Operators & Vendors", "Referral Partners"]) {
-      expect(nav.textContent, `missing More directory item: ${label}`).toContain(label);
-    }
+    expect(nav.textContent).not.toContain("MarketFlow");
+    expect(nav.textContent).not.toContain("Strategy Lab");
+    expect(container.querySelector("main")?.textContent).toContain("Open Strategy Lab");
+    expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
   });
 
   it("locks the footer page map (v5.1 contextual routes)", () => {

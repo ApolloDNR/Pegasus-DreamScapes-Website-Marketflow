@@ -405,12 +405,22 @@ try {
     }
   }
 
-  await runInteraction('desktop navigation directory', {}, async (page) => {
+  await runInteraction('desktop navigation spine', {}, async (page) => {
     await openPage(page, '/');
-    const more = page.getByRole('button', { name: /^More/ });
-    await more.focus();
-    await page.keyboard.press('Enter');
-    await page.getByRole('region', { name: 'More Pegasus pages' }).waitFor({ state: 'visible' });
+    const navigation = page.locator('nav');
+    const expected = [
+      ['How We Operate', '/how-we-operate'],
+      ['Property Owners', '/property-owners'],
+      ['Deal Partners', '/deal-partners'],
+      ['Our Work', '/our-work'],
+      ['About', '/about'],
+    ];
+    for (const [label, href] of expected) {
+      const link = navigation.getByRole('link', { name: label, exact: true });
+      assert(await link.count() === 1, `Desktop navigation did not expose exactly one ${label} link`);
+      assert(await link.getAttribute('href') === href, `${label} did not resolve to ${href}`);
+    }
+    assert(await navigation.getByRole('button', { name: /^More/ }).count() === 0, 'Desktop navigation regressed to a More directory');
   });
 
   await runInteraction('mobile navigation destination', { viewport: viewports[2][1], seedConsent: false }, async (page) => {
@@ -472,8 +482,55 @@ try {
     await openPage(page, '/');
     const root = page.locator('.pg-root');
     assert(await root.getAttribute('data-theme') === 'dark', 'Dark theme was not initialized');
-    await page.getByRole('button', { name: 'Switch to light mode' }).click();
-    await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') !== 'dark');
+
+    const geometrySelectors = [
+      '[data-testid="approved-home-hero-image"]',
+      '.hv-h1',
+      '.hv-lead',
+      '.hv-cta-row',
+      '.hv-hero-statbar',
+      'nav > div:nth-child(2)',
+    ];
+    const geometryAt = async () => page.evaluate((selectors) => {
+      const hero = document.querySelector('[data-testid="approved-home-hero-image"]');
+      return {
+        src: hero?.currentSrc || hero?.getAttribute('src'),
+        objectPosition: hero ? getComputedStyle(hero).objectPosition : null,
+        boxes: selectors.map((selector) => {
+          const element = document.querySelector(selector);
+          const rect = element?.getBoundingClientRect();
+          return rect ? { selector, x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null;
+        }),
+      };
+    }, geometrySelectors);
+
+    for (const viewport of [
+      { width: 1440, height: 940 },
+      { width: 1024, height: 900 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const before = await geometryAt();
+      await page.getByRole('button', { name: 'Switch to light mode' }).click();
+      await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') !== 'dark');
+      const after = await geometryAt();
+
+      assert(before.src === after.src, `Theme changed hero source at ${viewport.width}px`);
+      assert(before.objectPosition === after.objectPosition, `Theme changed hero crop at ${viewport.width}px`);
+      before.boxes.forEach((box, index) => {
+        const next = after.boxes[index];
+        assert(box && next, `Theme geometry selector was missing at ${viewport.width}px`);
+        for (const key of ['x', 'y', 'width', 'height']) {
+          assert(Math.abs(box[key] - next[key]) <= 2, `Theme shifted ${box.selector} ${key} at ${viewport.width}px`);
+        }
+      });
+
+      if (viewport.width !== 390) {
+        await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+        await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') === 'dark');
+      }
+    }
+
     assert(await page.evaluate(() => localStorage.getItem('pegasus-ui-theme')) === 'light', 'Theme choice was not persisted');
   });
 
