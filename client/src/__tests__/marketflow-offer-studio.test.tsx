@@ -54,6 +54,10 @@ const baseAuth: AuthState = {
 
 let authState: AuthState = { ...baseAuth };
 
+const boundary = vi.hoisted(() => ({
+  toast: vi.fn(),
+}));
+
 function authFor(role: AuthRole): AuthState {
   switch (role) {
     case "loggedOut":
@@ -119,8 +123,8 @@ vi.mock("@/contexts/supabase-auth-context", () => ({
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-  toast: vi.fn(),
+  useToast: () => ({ toast: boundary.toast }),
+  toast: boundary.toast,
 }));
 
 // ---------------------------------------------------------------------------
@@ -152,6 +156,7 @@ interface FetchState {
   offers: ServerOffer[];
   messages: unknown[];
   postedOffers: Array<{ url: string; body: Record<string, unknown> }>;
+  postedResponses: Array<{ url: string; body: Record<string, unknown> }>;
 }
 
 let fetchState: FetchState;
@@ -172,6 +177,7 @@ function resetFetchState(opts: { seedNegotiation?: ServerNegotiation } = {}) {
     offers: [],
     messages: [],
     postedOffers: [],
+    postedResponses: [],
   };
 }
 
@@ -189,6 +195,14 @@ const fetchMock = vi.fn(
 
     // GET the wholesale deal record
     if (method === "GET" && url.startsWith("/api/wholesale-deals/")) {
+      return jsonResponse(fetchState.deal);
+    }
+
+    if (
+      method === "GET" &&
+      (url.startsWith("/api/capital-projects/") ||
+        url.startsWith("/api/retail-listings/"))
+    ) {
       return jsonResponse(fetchState.deal);
     }
 
@@ -234,6 +248,20 @@ const fetchMock = vi.fn(
       return jsonResponse({ offer, negotiation: fetchState.negotiation });
     }
 
+    const responseMatch = url.match(
+      /^\/api\/marketflow\/offers\/(\d+)\/respond$/,
+    );
+    if (method === "POST" && responseMatch) {
+      const body = init?.body ? JSON.parse(init.body as string) : {};
+      fetchState.postedResponses.push({ url, body });
+      return jsonResponse({
+        offer: fetchState.offers.find(
+          (offer) => offer.id === Number(responseMatch[1]),
+        ),
+        negotiation: fetchState.negotiation,
+      });
+    }
+
     // Default: 404 so unexpected calls fail loudly.
     return new Response("not found", { status: 404 });
   },
@@ -246,7 +274,10 @@ vi.stubGlobal("fetch", fetchMock);
 // component's useParams("/marketflow/offer-studio/:dealId") resolves.
 // ---------------------------------------------------------------------------
 
-async function renderOfferStudio(path = `/marketflow/offer-studio/${DEAL_ID}`) {
+async function renderOfferStudio(
+  path = `/marketflow/offer-studio/${DEAL_ID}`,
+  search = "",
+) {
   const { default: MarketflowOfferStudio } = await import(
     "@/pages/marketflow/offer-studio"
   );
@@ -265,7 +296,7 @@ async function renderOfferStudio(path = `/marketflow/offer-studio/${DEAL_ID}`) {
   return render(
     <QueryClientProvider client={client}>
       <TooltipProvider>
-        <Router hook={hook}>
+        <Router hook={hook} searchHook={() => search}>
           <Route path="/marketflow/offer-studio/:dealId">
             <MarketflowOfferStudio />
           </Route>
@@ -279,6 +310,7 @@ beforeEach(() => {
   setAuthState("loggedOut");
   resetFetchState();
   fetchMock.mockClear();
+  boundary.toast.mockReset();
 });
 
 function seedExistingNegotiation(posterId: string) {
@@ -287,6 +319,42 @@ function seedExistingNegotiation(posterId: string) {
     posterId,
     counterpartyId: COUNTERPARTY_ID,
   };
+}
+
+function dateFromToday(days: number) {
+  const date = new Date();
+  date.setUTCHours(12, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function change(testId: string, value: string) {
+  fireEvent.change(screen.getByTestId(testId), { target: { value } });
+}
+
+function postCalls() {
+  return fetchMock.mock.calls.filter(([, init]) =>
+    ((init as RequestInit | undefined)?.method || "GET").toUpperCase() ===
+    "POST",
+  );
+}
+
+function seedIncomingOffer(userId: string) {
+  seedExistingNegotiation(userId);
+  fetchState.offers.push({
+    id: 7100,
+    status: "pending",
+    createdBy: COUNTERPARTY_ID,
+    createdAt: new Date().toISOString(),
+    payload: {
+      offerPrice: 165_432,
+      earnestMoney: 4_321,
+      closeDate: dateFromToday(30),
+      inspectionPeriod: 9,
+      fundingType: "cash",
+      notes: "Incoming terms",
+    },
+  });
 }
 
 afterEach(() => {
@@ -302,65 +370,220 @@ describe("MarketFlow Offer Studio", () => {
     ["wholesaler", "u-wholesaler"],
     ["dreamscaper", "u-dreamscaper"],
     ["buyer", "u-buyer"],
-  ])("lets a %s open the studio, see the ladder, and send a new offer that appears in the history", async (role, userId) => {
-    setAuthState(role);
-    // Seed an existing negotiation thread so the offer ladder mounts on the
-    // same page-load and the post-send refetch surfaces the new offer.
-    seedExistingNegotiation(userId);
+  ])(
+    "lets a %s send the displayed wholesale total in one exact create body",
+    async (role, userId) => {
+      setAuthState(role);
+      seedExistingNegotiation(userId);
+      await renderOfferStudio();
+
+      expect(
+        await screen.findByTestId("page-offer-studio"),
+      ).toBeInTheDocument();
+      expect(await screen.findByTestId("text-deal-address")).toHaveTextContent(
+        "123 Test St",
+      );
+      expect(await screen.findByTestId("badge-offer-count")).toHaveTextContent(
+        "0 offers",
+      );
+      expect(screen.queryByTestId("list-offer-history")).toBeNull();
+
+      const closeDate = dateFromToday(45);
+      const totalInput = screen.getByLabelText(
+        "Total assignment price",
+      ) as HTMLInputElement;
+      fireEvent.change(totalInput, { target: { value: "176543" } });
+      change("input-earnest-money", "7654");
+      change("input-close-date", closeDate);
+      change("input-inspection-period", "13");
+      change("select-funding-type", "hard_money");
+      change("input-notes", "Distinctive studio terms");
+      expect(totalInput).toHaveValue(176543);
+
+      fireEvent.click(screen.getByTestId("button-send-offer"));
+
+      await waitFor(() => expect(fetchState.postedOffers).toHaveLength(1));
+      expect(fetchState.postedOffers[0]).toEqual({
+        url: "/api/marketflow/offers",
+        body: {
+          lane: "WHOLESALE",
+          dealId: 9001,
+          offerKind: "WHOLESALE_ASSIGNMENT",
+          payload: {
+            offerPrice: 176_543,
+            earnestMoney: 7_654,
+            closeDate,
+            inspectionPeriod: 13,
+            fundingType: "hard_money",
+            notes: "Distinctive studio terms",
+          },
+        },
+      });
+      expect(fetchState.postedResponses).toEqual([]);
+
+      const ladder = await screen.findByTestId(
+        "list-offer-history",
+        {},
+        { timeout: 5000 },
+      );
+      expect(ladder).toBeInTheDocument();
+      const offerRows = await screen.findAllByTestId(
+        /^offer-row-/,
+        {},
+        { timeout: 5000 },
+      );
+      expect(offerRows).toHaveLength(1);
+      expect(offerRows[0]).toHaveTextContent("You");
+      expect(offerRows[0]).toHaveTextContent("$176,543");
+      expect(await screen.findByTestId("badge-offer-count")).toHaveTextContent(
+        "1 offer",
+      );
+    },
+  );
+
+  it.each(["CAPITAL", "LISTING"])(
+    "keeps the %s composer labeled Offer Price",
+    async (lane) => {
+      setAuthState("buyer");
+      await renderOfferStudio(
+        `/marketflow/offer-studio/${DEAL_ID}`,
+        `?lane=${lane}`,
+      );
+
+      expect(await screen.findByLabelText("Offer Price")).toBeInTheDocument();
+      expect(screen.queryByLabelText("Total assignment price")).toBeNull();
+    },
+  );
+
+  it("blocks, explains, and focuses an empty wholesale closing date without POSTing", async () => {
+    setAuthState("buyer");
+    seedExistingNegotiation("u-buyer");
     await renderOfferStudio();
+    await screen.findByTestId("page-offer-studio");
 
-    // Studio frame renders with the deal title once the deal query resolves.
-    expect(
-      await screen.findByTestId("page-offer-studio"),
-    ).toBeInTheDocument();
-    expect(await screen.findByTestId("text-deal-address")).toHaveTextContent(
-      "123 Test St",
-    );
+    change("input-offer-price", "176543");
+    const date = screen.getByLabelText("Close Date") as HTMLInputElement;
+    expect(date).toBeRequired();
+    const submit = screen.getByTestId("button-send-offer");
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
 
-    // The Offer Ladder card mounts with a 0-offer badge before any offers exist.
-    expect(await screen.findByTestId("badge-offer-count")).toHaveTextContent(
-      "0 offers",
-    );
-    expect(screen.queryByTestId("list-offer-history")).toBeNull();
+    const error = await screen.findByTestId("error-offer-close-date");
+    expect(error).toHaveAttribute("role", "alert");
+    expect(error).toHaveTextContent("Closing date is required.");
+    expect(date).toHaveAttribute("aria-invalid", "true");
+    expect(date).toHaveAttribute("aria-describedby", error.id);
+    await waitFor(() => expect(date).toHaveFocus());
+    expect(postCalls()).toHaveLength(0);
+    expect(fetchState.postedOffers).toEqual([]);
+    expect(fetchState.postedResponses).toEqual([]);
 
-    // Compose and send a new offer through the composer.
-    const priceInput = screen.getByTestId("input-offer-price") as HTMLInputElement;
-    fireEvent.change(priceInput, { target: { value: "175000" } });
+    change("input-close-date", dateFromToday(45));
+    await waitFor(() => {
+      expect(screen.queryByTestId("error-offer-close-date")).toBeNull();
+    });
+    expect(date).not.toHaveAttribute("aria-invalid");
+    expect(date).not.toHaveAttribute("aria-describedby");
+    expect(postCalls()).toHaveLength(0);
+  });
+
+  it.each([
+    ["blank", ""],
+    ["fractional", "176543.5"],
+    ["below the server minimum", "999"],
+    ["above the server maximum", "10000000001"],
+  ])("blocks a wholesale total %s before any POST", async (_label, value) => {
+    setAuthState("buyer");
+    seedExistingNegotiation("u-buyer");
+    await renderOfferStudio();
+    await screen.findByTestId("page-offer-studio");
+
+    change("input-offer-price", value);
+    change("input-close-date", dateFromToday(45));
     fireEvent.click(screen.getByTestId("button-send-offer"));
 
-    // The POST hits the offers endpoint with the composer payload.
-    await waitFor(() => {
-      expect(fetchState.postedOffers.length).toBe(1);
-    });
-    const posted = fetchState.postedOffers[0];
-    expect(posted.body).toMatchObject({
-      lane: "WHOLESALE",
-      dealId: 9001,
-      offerKind: "WHOLESALE_ASSIGNMENT",
-    });
-    expect((posted.body.payload as Record<string, unknown>).offerPrice).toBe(
-      175000,
+    const error = await screen.findByTestId(
+      "error-offer-total-assignment-price",
     );
+    expect(error).toHaveAttribute("role", "alert");
+    expect(error).toHaveTextContent("Total assignment price is invalid.");
+    expect(postCalls()).toHaveLength(0);
+  });
 
-    // After the mutation succeeds the ladder refetches and the new offer
-    // shows up on the history list.
-    const ladder = await screen.findByTestId(
-      "list-offer-history",
-      {},
-      { timeout: 5000 },
-    );
-    expect(ladder).toBeInTheDocument();
-    const offerRows = await screen.findAllByTestId(
-      /^offer-row-/,
-      {},
-      { timeout: 5000 },
-    );
-    expect(offerRows.length).toBe(1);
-    expect(offerRows[0]).toHaveTextContent("You");
-    expect(offerRows[0]).toHaveTextContent("$175,000");
-    expect(
-      await screen.findByTestId("badge-offer-count"),
-    ).toHaveTextContent("1 offer");
+  it.each([
+    ["blank earnest money", "input-earnest-money", ""],
+    ["negative earnest money", "input-earnest-money", "-1"],
+    ["fractional earnest money", "input-earnest-money", "1.5"],
+    ["earnest money above the total", "input-earnest-money", "176544"],
+    ["blank inspection", "input-inspection-period", ""],
+    ["negative inspection", "input-inspection-period", "-1"],
+    ["fractional inspection", "input-inspection-period", "1.5"],
+    ["inspection above 365 days", "input-inspection-period", "366"],
+  ])("blocks invalid %s with every other term valid", async (_label, testId, value) => {
+    setAuthState("buyer");
+    seedExistingNegotiation("u-buyer");
+    await renderOfferStudio();
+    await screen.findByTestId("page-offer-studio");
+
+    change("input-offer-price", "176543");
+    change("input-close-date", dateFromToday(45));
+    change(testId, value);
+    const submit = screen.getByTestId("button-send-offer");
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+
+    await waitFor(() => {
+      expect(boundary.toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: testId.includes("earnest")
+            ? "Valid earnest money required"
+            : "Valid inspection period required",
+          variant: "destructive",
+        }),
+      );
+    });
+    expect(postCalls()).toHaveLength(0);
+    expect(fetchState.postedOffers).toEqual([]);
+    expect(fetchState.postedResponses).toEqual([]);
+  });
+
+  it("sends the displayed wholesale total in one exact respond body", async () => {
+    setAuthState("buyer");
+    seedIncomingOffer("u-buyer");
+    await renderOfferStudio();
+    await screen.findByTestId("page-offer-studio");
+
+    const closeDate = dateFromToday(60);
+    const totalInput = screen.getByLabelText(
+      "Total assignment price",
+    ) as HTMLInputElement;
+    await waitFor(() => expect(totalInput).toHaveValue(165432));
+    fireEvent.change(totalInput, { target: { value: "181234" } });
+    change("input-earnest-money", "0");
+    change("input-close-date", closeDate);
+    change("input-inspection-period", "0");
+    change("select-funding-type", "private_lender");
+    change("input-notes", "Distinctive response terms");
+    expect(totalInput).toHaveValue(181234);
+
+    fireEvent.click(screen.getByTestId("button-send-offer"));
+
+    await waitFor(() => expect(fetchState.postedResponses).toHaveLength(1));
+    expect(fetchState.postedResponses[0]).toEqual({
+      url: "/api/marketflow/offers/7100/respond",
+      body: {
+        action: "counter",
+        counterPayload: {
+          offerPrice: 181_234,
+          earnestMoney: 0,
+          closeDate,
+          inspectionPeriod: 0,
+          fundingType: "private_lender",
+          notes: "Distinctive response terms",
+        },
+      },
+    });
+    expect(fetchState.postedOffers).toEqual([]);
   });
 
   it("blocks an authenticated user with a disallowed role with the Offer Studio Restricted guard", async () => {

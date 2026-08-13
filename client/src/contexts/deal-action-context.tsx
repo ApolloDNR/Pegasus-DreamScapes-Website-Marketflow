@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -318,6 +318,72 @@ interface WholesaleDeal {
   wholesalerId?: string;
 }
 
+const MIN_WHOLESALE_OFFER_AMOUNT = 1_000;
+const MAX_WHOLESALE_OFFER_AMOUNT = 10_000_000_000;
+const MAX_WHOLESALE_INSPECTION_DAYS = 365;
+
+interface WholesaleOfferTerms {
+  offerPrice: number;
+  earnestMoney: number;
+  closeDate: string;
+  inspectionPeriod: number;
+  fundingType: "cash";
+  notes: string;
+}
+
+function toDateInputValue(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const match = value
+    .trim()
+    .match(
+      /^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:(?:0\d|1[0-3]):[0-5]\d|14:00)))?$/,
+    );
+  return match?.[1] ?? "";
+}
+
+function readNonNegativeComponent(value: unknown): number | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  if (typeof value === "string" && !value.trim()) return null;
+  const parsed = Number(value);
+  return (
+    Number.isSafeInteger(parsed) &&
+    parsed >= 0 &&
+    parsed <= MAX_WHOLESALE_OFFER_AMOUNT
+  )
+    ? parsed
+    : null;
+}
+
+function calculateTotalAssignmentPrice(
+  contractPriceValue: unknown,
+  assignmentFeeValue: unknown,
+): number | null {
+  const contractPrice = readNonNegativeComponent(contractPriceValue);
+  const assignmentFee = readNonNegativeComponent(assignmentFeeValue);
+  if (contractPrice === null || assignmentFee === null) return null;
+
+  const total = contractPrice + assignmentFee;
+  return (
+    Number.isSafeInteger(total) &&
+    total >= MIN_WHOLESALE_OFFER_AMOUNT &&
+    total <= MAX_WHOLESALE_OFFER_AMOUNT
+  )
+    ? total
+    : null;
+}
+
+function parseBoundedWholeNumber(
+  value: string,
+  minimum: number,
+  maximum: number,
+): number | null {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= minimum && parsed <= maximum
+    ? parsed
+    : null;
+}
+
 interface CapitalProject {
   id: number;
   title?: string;
@@ -362,29 +428,35 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
   const [earnestMoney, setEarnestMoney] = useState("1000");
   const [acknowledged, setAcknowledged] = useState(false);
   const [message, setMessage] = useState("");
+  const [closingDate, setClosingDate] = useState("");
+  const [closingDateInitialized, setClosingDateInitialized] = useState(false);
+  const [closingDateError, setClosingDateError] = useState(false);
+  const closingDateInputRef = useRef<HTMLInputElement>(null);
 
   const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
     queryKey: ["/api/wholesale-deals", dealId],
     enabled: !!dealId,
   });
 
+  useEffect(() => {
+    if (deal && !closingDateInitialized) {
+      setClosingDate(toDateInputValue(deal.closingDate));
+      setClosingDateInitialized(true);
+    }
+  }, [deal, closingDateInitialized]);
+
+  const totalAssignmentPrice = calculateTotalAssignmentPrice(
+    deal?.contractPrice,
+    deal?.assignmentFee,
+  );
+
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const contractPrice = Number(deal?.contractPrice) || 0;
-      const assignmentFee = Number(data.assignmentFee) || 0;
+    mutationFn: async (payload: WholesaleOfferTerms) => {
       const res = await apiRequest("POST", "/api/marketflow/offers", {
         lane: "WHOLESALE",
-        dealId: Number(data.dealId),
+        dealId: Number(dealId),
         offerKind: "WHOLESALE_ASSIGNMENT",
-        payload: {
-          offerPrice:
-            Number(deal?.askingPrice) || contractPrice + assignmentFee,
-          earnestMoney: Number(data.earnestMoney) || 0,
-          closeDate: data.closingDate || "",
-          inspectionPeriod: 0,
-          fundingType: "cash",
-          notes: data.message || "",
-        },
+        payload,
       });
       return res.json();
     },
@@ -408,23 +480,63 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to accept this deal." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to accept this deal.",
+      });
+      return;
+    }
+    if (totalAssignmentPrice === null) {
+      toast({ title: "Valid total assignment price required", variant: "destructive" });
       return;
     }
     if (!acknowledged) {
-      toast({ title: "Acknowledgement required", description: "Please acknowledge the terms.", variant: "destructive" });
+      toast({
+        title: "Acknowledgement required",
+        description: "Please acknowledge the terms.",
+        variant: "destructive",
+      });
       return;
     }
 
-    submitMutation.mutate({
-      dealId,
-      type: "wholesale_accept",
-      isCounter: false,
-      assignmentFee: deal?.assignmentFee,
-      earnestMoney: parseFloat(earnestMoney) || 1000,
-      closingDate: deal?.closingDate,
-      message,
-    });
+    const closingDateInput = closingDateInputRef.current;
+    if (
+      !closingDate ||
+      !closingDateInput?.value ||
+      !closingDateInput.validity.valid
+    ) {
+      setClosingDateError(true);
+      closingDateInput?.focus();
+      return;
+    }
+    setClosingDateError(false);
+
+    const parsedEarnestMoney = parseBoundedWholeNumber(
+      earnestMoney,
+      0,
+      MAX_WHOLESALE_OFFER_AMOUNT,
+    );
+    if (
+      parsedEarnestMoney === null ||
+      parsedEarnestMoney > totalAssignmentPrice
+    ) {
+      toast({
+        title: "Valid earnest money required",
+        description: "Enter a whole-dollar amount from $0 through the total.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      offerPrice: totalAssignmentPrice,
+      earnestMoney: parsedEarnestMoney,
+      closeDate: closingDate,
+      inspectionPeriod: 0,
+      fundingType: "cash",
+      notes: message,
+    } satisfies WholesaleOfferTerms;
+    submitMutation.mutate(payload);
   };
 
   if (dealLoading) {
@@ -435,9 +547,15 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
     );
   }
 
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+      return "—";
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -470,22 +588,77 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
               <span className="text-muted-foreground">ARV:</span>
               <span className="ml-2 font-medium">{formatCurrency(deal?.arv)}</span>
             </div>
-            <div>
-              <span className="text-muted-foreground">Closing:</span>
-              <span className="ml-2 font-medium">{deal?.closingDate || "TBD"}</span>
+            <div
+              className="col-span-2"
+              data-testid="text-accept-total-assignment-price"
+            >
+              <span className="text-muted-foreground">
+                Total assignment price:
+              </span>
+              <span className="ml-2 font-semibold text-primary">
+                {formatCurrency(totalAssignmentPrice)}
+              </span>
             </div>
           </div>
+          {totalAssignmentPrice === null && (
+            <p
+              id="accept-total-assignment-price-error"
+              role="alert"
+              className="text-sm text-destructive"
+              data-testid="error-accept-total-assignment-price"
+            >
+              Total assignment price is invalid.
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">
+          <div>
+            <label
+              htmlFor="accept-closing-date"
+              className="text-sm font-medium"
+            >
+              Closing Date *
+            </label>
+            <input
+              ref={closingDateInputRef}
+              id="accept-closing-date"
+              type="date"
+              required
+              value={closingDate}
+              onChange={(event) => {
+                const value = event.target.value;
+                setClosingDate(value);
+                if (value) setClosingDateError(false);
+              }}
+              aria-invalid={closingDateError ? "true" : undefined}
+              aria-describedby={
+                closingDateError ? "accept-closing-date-error" : undefined
+              }
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-accept-closing-date"
+            />
+            {closingDateError && (
+              <p
+                id="accept-closing-date-error"
+                role="alert"
+                className="text-sm text-destructive mt-1"
+                data-testid="error-accept-closing-date"
+              >
+                Closing date is required.
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="text-sm font-medium">Earnest Money Deposit</label>
             <div className="relative mt-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <input
                 type="number"
+                step="1"
                 value={earnestMoney}
-                onChange={(e) => setEarnestMoney(e.target.value)}
+                onChange={(event) => setEarnestMoney(event.target.value)}
                 placeholder="1000"
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-accept-earnest-money"
@@ -508,12 +681,15 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
             <input
               type="checkbox"
               checked={acknowledged}
-              onChange={(e) => setAcknowledged(e.target.checked)}
+              onChange={(event) => setAcknowledged(event.target.checked)}
+              disabled={totalAssignmentPrice === null}
               className="mt-0.5 rounded"
               data-testid="checkbox-acknowledge-terms"
             />
             <span className="text-sm">
-              I acknowledge and accept the assignment terms as posted. I understand I am agreeing to pay the listed assignment fee of {formatCurrency(deal?.assignmentFee)}.
+              I acknowledge and accept the assignment terms as posted. I
+              understand I am agreeing to pay the total assignment price of{" "}
+              {formatCurrency(totalAssignmentPrice)}.
             </span>
           </label>
         </div>
@@ -524,7 +700,11 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={submitMutation.isPending || !acknowledged}
+            disabled={
+              submitMutation.isPending ||
+              !acknowledged ||
+              totalAssignmentPrice === null
+            }
             className="flex-1"
             data-testid="button-submit-wholesale-accept"
           >
@@ -544,15 +724,20 @@ interface WholesaleCounterFormProps {
 }
 
 // WHOLESALE COUNTER OFFER - Full form with all negotiable fields
-function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: WholesaleCounterFormProps) {
+function WholesaleCounterOfferModal({
+  dealId,
+  onClose,
+}: WholesaleCounterFormProps) {
   const { toast } = useToast();
   const { isAuthenticated } = useSupabaseAuth();
-  const [assignmentFee, setAssignmentFee] = useState("");
+  const [counterAssignmentFee, setCounterAssignmentFee] = useState("");
   const [earnestMoney, setEarnestMoney] = useState("1000");
   const [closingDate, setClosingDate] = useState("");
   const [inspectionPeriod, setInspectionPeriod] = useState("10");
   const [message, setMessage] = useState("");
   const [initialized, setInitialized] = useState(false);
+  const [closingDateError, setClosingDateError] = useState(false);
+  const closingDateInputRef = useRef<HTMLInputElement>(null);
 
   const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
     queryKey: ["/api/wholesale-deals", dealId],
@@ -561,32 +746,32 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
   useEffect(() => {
     if (deal && !initialized) {
-      if (deal.assignmentFee) {
-        setAssignmentFee(String(deal.assignmentFee));
-      }
-      if (deal.closingDate) {
-        setClosingDate(deal.closingDate);
-      }
+      setCounterAssignmentFee(
+        deal.assignmentFee === undefined || deal.assignmentFee === null
+          ? ""
+          : String(deal.assignmentFee),
+      );
+      setClosingDate(toDateInputValue(deal.closingDate));
       setInitialized(true);
     }
   }, [deal, initialized]);
 
+  const totalAssignmentPrice = initialized
+    ? calculateTotalAssignmentPrice(
+        deal?.contractPrice,
+        counterAssignmentFee,
+      )
+    : null;
+  const hasInvalidTotalAssignmentPrice =
+    initialized && totalAssignmentPrice === null;
+
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const contractPrice = Number(deal?.contractPrice) || 0;
-      const assignmentFee = Number(data.assignmentFee) || 0;
+    mutationFn: async (payload: WholesaleOfferTerms) => {
       const res = await apiRequest("POST", "/api/marketflow/offers", {
         lane: "WHOLESALE",
-        dealId: Number(data.dealId),
+        dealId: Number(dealId),
         offerKind: "WHOLESALE_ASSIGNMENT",
-        payload: {
-          offerPrice: contractPrice + assignmentFee,
-          earnestMoney: Number(data.earnestMoney) || 0,
-          closeDate: data.closingDate || "",
-          inspectionPeriod: Number(data.inspectionPeriod) || 0,
-          fundingType: "cash",
-          notes: data.message || "",
-        },
+        payload,
       });
       return res.json();
     },
@@ -610,25 +795,68 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to make a counter-offer." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to make a counter-offer.",
+      });
       return;
     }
-    if (!assignmentFee) {
-      toast({ title: "Assignment fee required", variant: "destructive" });
+    if (!initialized || totalAssignmentPrice === null) {
+      toast({ title: "Valid total assignment price required", variant: "destructive" });
       return;
     }
 
-    submitMutation.mutate({
-      dealId,
-      type: "wholesale_counter",
-      isCounter: true,
-      parentOfferId: existingOfferId,
-      assignmentFee: parseFloat(assignmentFee),
-      earnestMoney: parseFloat(earnestMoney) || 1000,
-      closingDate: closingDate || undefined,
-      inspectionPeriod: parseInt(inspectionPeriod) || 10,
-      message,
-    });
+    const closingDateInput = closingDateInputRef.current;
+    if (
+      !closingDate ||
+      !closingDateInput?.value ||
+      !closingDateInput.validity.valid
+    ) {
+      setClosingDateError(true);
+      closingDateInput?.focus();
+      return;
+    }
+    setClosingDateError(false);
+
+    const parsedEarnestMoney = parseBoundedWholeNumber(
+      earnestMoney,
+      0,
+      MAX_WHOLESALE_OFFER_AMOUNT,
+    );
+    const parsedInspectionPeriod = parseBoundedWholeNumber(
+      inspectionPeriod,
+      0,
+      MAX_WHOLESALE_INSPECTION_DAYS,
+    );
+    if (
+      parsedEarnestMoney === null ||
+      parsedEarnestMoney > totalAssignmentPrice
+    ) {
+      toast({
+        title: "Valid earnest money required",
+        description: "Enter a whole-dollar amount from $0 through the total.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (parsedInspectionPeriod === null) {
+      toast({
+        title: "Valid inspection period required",
+        description: "Enter a whole number from 0 through 365 days.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      offerPrice: totalAssignmentPrice,
+      earnestMoney: parsedEarnestMoney,
+      closeDate: closingDate,
+      inspectionPeriod: parsedInspectionPeriod,
+      fundingType: "cash",
+      notes: message,
+    } satisfies WholesaleOfferTerms;
+    submitMutation.mutate(payload);
   };
 
   if (dealLoading) {
@@ -639,9 +867,15 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
     );
   }
 
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+      return "—";
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -674,18 +908,48 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
             <span className="text-muted-foreground">Repairs:</span>
             <span className="ml-2 font-medium">{formatCurrency(deal?.repairEstimate || deal?.estimatedRepairs)}</span>
           </div>
+          <div
+            className="col-span-2"
+            data-testid="text-counter-total-assignment-price"
+          >
+            <span className="text-muted-foreground">
+              Total assignment price:
+            </span>
+            <span className="ml-2 font-semibold text-primary">
+              {formatCurrency(totalAssignmentPrice)}
+            </span>
+          </div>
         </div>
+        {hasInvalidTotalAssignmentPrice && (
+          <p
+            id="counter-total-assignment-price-error"
+            role="alert"
+            className="text-sm text-destructive"
+            data-testid="error-counter-total-assignment-price"
+          >
+            Total assignment price is invalid.
+          </p>
+        )}
 
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Your Assignment Fee Offer *</label>
+            <label
+              htmlFor="counter-assignment-fee"
+              className="text-sm font-medium"
+            >
+              Your Assignment Fee Offer *
+            </label>
             <div className="relative mt-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <input
+                id="counter-assignment-fee"
                 type="number"
-                value={assignmentFee}
-                onChange={(e) => setAssignmentFee(e.target.value)}
-                placeholder={String(deal?.assignmentFee || 5000)}
+                step="1"
+                value={counterAssignmentFee}
+                onChange={(event) =>
+                  setCounterAssignmentFee(event.target.value)
+                }
+                placeholder={String(deal?.assignmentFee ?? 5000)}
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-counter-assignment-fee"
               />
@@ -698,8 +962,9 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <input
                 type="number"
+                step="1"
                 value={earnestMoney}
-                onChange={(e) => setEarnestMoney(e.target.value)}
+                onChange={(event) => setEarnestMoney(event.target.value)}
                 placeholder="1000"
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-counter-earnest-money"
@@ -709,21 +974,48 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Closing Date</label>
+              <label
+                htmlFor="counter-closing-date"
+                className="text-sm font-medium"
+              >
+                Closing Date *
+              </label>
               <input
+                ref={closingDateInputRef}
+                id="counter-closing-date"
                 type="date"
+                required
                 value={closingDate}
-                onChange={(e) => setClosingDate(e.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setClosingDate(value);
+                  if (value) setClosingDateError(false);
+                }}
+                aria-invalid={closingDateError ? "true" : undefined}
+                aria-describedby={
+                  closingDateError ? "counter-closing-date-error" : undefined
+                }
                 className="w-full px-3 py-2 border rounded-md mt-1"
                 data-testid="input-counter-closing-date"
               />
+              {closingDateError && (
+                <p
+                  id="counter-closing-date-error"
+                  role="alert"
+                  className="text-sm text-destructive mt-1"
+                  data-testid="error-counter-closing-date"
+                >
+                  Closing date is required.
+                </p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium">Inspection Period (days)</label>
               <input
                 type="number"
+                step="1"
                 value={inspectionPeriod}
-                onChange={(e) => setInspectionPeriod(e.target.value)}
+                onChange={(event) => setInspectionPeriod(event.target.value)}
                 placeholder="10"
                 className="w-full px-3 py-2 border rounded-md mt-1"
                 data-testid="input-counter-inspection-period"
@@ -749,7 +1041,11 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
+            disabled={
+              submitMutation.isPending ||
+              !initialized ||
+              totalAssignmentPrice === null
+            }
             className="flex-1"
             data-testid="button-submit-wholesale-counter"
           >

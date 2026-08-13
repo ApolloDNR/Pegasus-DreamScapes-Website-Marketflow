@@ -69,6 +69,32 @@ describe("MarketFlow offer payload validation", () => {
     }
   });
 
+  it.each(["", "   ", "\t\n"])(
+    "rejects an empty or whitespace-only wholesale close date (%j)",
+    (closeDate) => {
+      expect(
+        parseMarketflowOfferPayload(
+          "WHOLESALE_ASSIGNMENT",
+          { ...financialTerms, closeDate },
+          now,
+        ),
+      ).toEqual({ success: false, reason: "invalid_payload" });
+    },
+  );
+
+  it.each(["2026-07-30", "2031-07-30"])(
+    "accepts a wholesale close date on the inclusive UTC boundary (%s)",
+    (closeDate) => {
+      expect(
+        parseMarketflowOfferPayload(
+          "WHOLESALE_ASSIGNMENT",
+          { ...financialTerms, closeDate },
+          now,
+        ).success,
+      ).toBe(true);
+    },
+  );
+
   it("validates strict wholesale JV terms independently", () => {
     const valid = parseMarketflowOfferPayload(
       "WHOLESALE_JV",
