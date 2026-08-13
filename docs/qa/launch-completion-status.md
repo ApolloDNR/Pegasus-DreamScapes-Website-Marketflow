@@ -31,7 +31,9 @@ The durable per-task record is `docs/qa/security-launch-recovery-ledger.md`. The
 | --- | --- | --- |
 | Program checkpoint | Complete | `7b98d7d8c7bbeeb9b14217446016062db66472a9`; program and tracked ledger match the remote successor branch. |
 | Task 1 — recovery foundation | Complete | Implementation `962551ca5c5d2371b876c819babd0328b60997e1`; `SPEC APPROVED`; `QUALITY APPROVED`; 4 focused files / 77 tests, TypeScript, managed-sandbox same-entrypoint build/bundle budget, manifest topology, and diff hygiene passed. |
-| Tasks 2–18 | Pending | Execute only from preflighted, committed child plans in program order. |
+| Task 1 follow-up — Capital lane boundary | Complete | Canonical implementation `7a9fe88fd4f7f05f10632fc7b93abea90d1cb7c7`; `SPEC APPROVED`; `QUALITY APPROVED`; 18 cold-route processes, focused 4 files / 78 tests, full 113 files / 1,277 tests, TypeScript, production build, bundle budget, and manifest topology passed without changing the lane timeout. |
+| Task 2 — listing inquiry contract | Complete | Canonical implementation `81f2b7cbe9026b5946303dd97deb5b1afab8dc6e`; `SPEC APPROVED`; `QUALITY APPROVED`; focused 5 files / 37 tests, exact-head full 113 files / 1,277 tests, TypeScript, exact scope, and diff hygiene passed. |
+| Tasks 3–18 | Pending | Execute only from preflighted, committed child plans in program order. |
 
 ## External gates
 
@@ -43,4 +45,4 @@ The durable per-task record is `docs/qa/security-launch-recovery-ledger.md`. The
 
 ## Resume rule
 
-Reconcile the program plan, this status, the tracked recovery ledger, `git log`, and the successor remote head. Resume at the first task without a remote accepted checkpoint. Task 2 is next: create and commit its executable child plan using `superpowers:writing-plans`, preflight it, and dispatch only after the reviewer reports no blocking or major ambiguity.
+Reconcile the program plan, this status, the tracked recovery ledger, `git log`, and the successor remote head. Resume at the first task without a remote accepted checkpoint. Task 3 is next: create and commit its executable child plan using `superpowers:writing-plans`, preflight it, and dispatch only after the reviewer reports no blocking or major ambiguity.

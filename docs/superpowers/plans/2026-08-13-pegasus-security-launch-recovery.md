@@ -94,6 +94,8 @@
 
 **Accepted 2026-08-13:** implementation `962551ca5c5d2371b876c819babd0328b60997e1`; `SPEC APPROVED`; `QUALITY APPROVED`. Node 22.23.2 focused verification passed 4 files / 77 tests, TypeScript, the managed-sandbox same-entrypoint production build and bundle budget, manifest topology, and diff hygiene. One non-blocking quality ruling is tracked in `docs/qa/security-launch-recovery-ledger.md`.
 
+**Accepted follow-up 2026-08-13:** canonical implementation `7a9fe88fd4f7f05f10632fc7b93abea90d1cb7c7` isolates `/capital` from the broad pages graph after the controller reproduced the next cold lazy-boundary race. Fresh reviews returned `SPEC APPROVED` and `QUALITY APPROVED` with no findings. Nine independent cold processes passed the unchanged timeout; focused 4 files / 78 tests, full 113 files / 1,277 tests, TypeScript, production build, bundle budget, byte preservation, manifest topology, and diff hygiene passed.
+
 ### Task 2: Align listing inquiry UI, API, and database contracts
 
 **Files:**
@@ -115,11 +117,13 @@
 - The unused legacy `ListingInquiryForm` is removed rather than retaining a caller that cannot provide the required identity fields.
 - Public listing context for an authenticated, reviewed-access first-time buyer uses an explicit public projection and excludes inquiries, showing instructions, private contacts, owner IDs, and audit fields. Authentication alone never grants MarketFlow inventory access; unreviewed, private, and nonexistent requests remain indistinguishable `404` responses with `Cache-Control: no-store`.
 
-- [ ] **Step 1: Write RED tests.** Prove both reachable numeric-listing modals require valid email and build valid canonical requests, a `name`-only/phone-only request fails, a tour zips dates/times and persists `preApproved`, first-time reviewed-access public context is readable, and a private listing remains a non-enumerating 404. Prove the UUID-backed property page exposes truthful direct-contact paths and never opens a numeric-listing modal.
-- [ ] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/listing-inquiry-contract.test.tsx client/src/__tests__/marketplace-property-detail-listing-actions.test.tsx server/__tests__/listing-inquiry-contract.test.ts server/__tests__/public-data-route-contract.test.ts`. Expected: numeric forms emit `name`, the route ignores tour fields, the reviewed-access first-contact projection is absent, and the UUID property page still launches the incompatible legacy modal.
-- [ ] **Step 3: Implement the shared strict schema and explicit builders.** Parse before any access/storage call; persist only parsed fields; remove the dead legacy form; do not expose private context to make first contact work.
-- [ ] **Step 4: Run GREEN.** Repeat the focused command, then `npm run check` and `git diff --check`.
-- [ ] **Step 5: Commit.** Stage only Task 2 paths and commit `fix: align listing inquiry contracts`.
+- [x] **Step 1: Write RED tests.** Prove both reachable numeric-listing modals require valid email and build valid canonical requests, a `name`-only/phone-only request fails, a tour zips dates/times and persists `preApproved`, first-time reviewed-access public context is readable, and a private listing remains a non-enumerating 404. Prove the UUID-backed property page exposes truthful direct-contact paths and never opens a numeric-listing modal.
+- [x] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/listing-inquiry-contract.test.tsx client/src/__tests__/marketplace-property-detail-listing-actions.test.tsx server/__tests__/listing-inquiry-contract.test.ts server/__tests__/public-data-route-contract.test.ts`. Expected: numeric forms emit `name`, the route ignores tour fields, the reviewed-access first-contact projection is absent, and the UUID property page still launches the incompatible legacy modal.
+- [x] **Step 3: Implement the shared strict schema and explicit builders.** Parse before any access/storage call; persist only parsed fields; remove the dead legacy form; do not expose private context to make first contact work.
+- [x] **Step 4: Run GREEN.** Repeat the focused command, then `npm run check` and `git diff --check`.
+- [x] **Step 5: Commit.** Stage only Task 2 paths and commit `fix: align listing inquiry contracts`.
+
+**Accepted 2026-08-13:** canonical implementation `81f2b7cbe9026b5946303dd97deb5b1afab8dc6e`; `SPEC APPROVED`; `QUALITY APPROVED`. Node 22.23.2 focused verification passed 5 files / 37 tests, full exact-head verification passed 113 files / 1,277 tests after the accepted Capital-boundary follow-up, TypeScript, production build, bundle budget, exact ten-path scope, and diff hygiene. Three non-blocking quality rulings are tracked in `docs/qa/security-launch-recovery-ledger.md`.
 
 ### Task 3: Require valid wholesale dates and one displayed/submitted amount
 
