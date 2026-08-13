@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { usePeggyContext, type PeggyContextData } from "@/contexts/peggy-context";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -177,8 +177,9 @@ export function PeggyChatBubble() {
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const createConversationInFlightRef = useRef(false);
   
-  const { context, sessionId, isOpen, openChat, closeChat } = usePeggyContext();
+  const { context, isOpen, openChat, closeChat } = usePeggyContext();
   
   const { data: suggestions = [] } = useQuery<string[]>({
     queryKey: ['/api/peggy/suggestions', context.page],
@@ -191,12 +192,19 @@ export function PeggyChatBubble() {
   
   const createConversationMutation = useMutation({
     mutationFn: async (newContext: PeggyContextData) => {
-      const response = await apiRequest('POST', '/api/peggy/conversations', { sessionId, context: newContext });
+      const response = await apiRequest(
+        'POST',
+        '/api/peggy/conversations',
+        { context: newContext },
+      );
       return response.json() as Promise<PeggyConversationAccessResponse>;
     },
     onSuccess: (data) => {
       setConversationId(data.id);
       setConversationAccessToken(data.accessToken);
+    },
+    onSettled: () => {
+      createConversationInFlightRef.current = false;
     }
   });
   
@@ -222,6 +230,17 @@ export function PeggyChatBubble() {
       }]);
     }
   });
+
+  const startFreshConversation = useCallback(
+    (newContext: PeggyContextData) => {
+      if (createConversationInFlightRef.current) return;
+      createConversationInFlightRef.current = true;
+      setConversationId(null);
+      setConversationAccessToken(null);
+      createConversationMutation.mutate(newContext);
+    },
+    [createConversationMutation.mutate],
+  );
   
   const feedbackMutation = useMutation({
     mutationFn: async ({ messageId, feedback }: { messageId: number; feedback: string }) => {
@@ -247,16 +266,23 @@ export function PeggyChatBubble() {
   
   useEffect(() => {
     if (isOpen && !conversationId) {
-      createConversationMutation.mutate(context);
+      startFreshConversation(context);
     }
-  }, [isOpen]);
+  }, [isOpen, conversationId, context, startFreshConversation]);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
   const handleSend = async () => {
-    if (!inputValue.trim() || chatMutation.isPending) return;
+    if (
+      !inputValue.trim() ||
+      !conversationId ||
+      !conversationAccessToken ||
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     
     const userMessage = inputValue.trim();
     setInputValue("");
@@ -277,9 +303,13 @@ export function PeggyChatBubble() {
   };
   
   const handleNewConversation = () => {
-    setConversationId(null);
+    if (
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     setMessages([]);
-    createConversationMutation.mutate(context);
+    startFreshConversation(context);
   };
   
   const handleFeedback = (messageId: number, feedback: 'helpful' | 'not_helpful') => {
@@ -328,6 +358,11 @@ export function PeggyChatBubble() {
               onClick={handleNewConversation}
               title="New conversation"
               data-testid="button-peggy-new"
+              disabled={
+                createConversationInFlightRef.current ||
+                createConversationMutation.isPending ||
+                chatMutation.isPending
+              }
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
@@ -406,14 +441,27 @@ export function PeggyChatBubble() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask Peggy anything..."
-              disabled={chatMutation.isPending || !conversationId}
+              disabled={
+                createConversationInFlightRef.current ||
+                createConversationMutation.isPending ||
+                chatMutation.isPending ||
+                !conversationId ||
+                !conversationAccessToken
+              }
               className="flex-1"
               data-testid="input-peggy-message"
             />
             <Button 
               type="submit" 
               size="icon"
-              disabled={!inputValue.trim() || chatMutation.isPending || !conversationId}
+              disabled={
+                !inputValue.trim() ||
+                createConversationInFlightRef.current ||
+                createConversationMutation.isPending ||
+                chatMutation.isPending ||
+                !conversationId ||
+                !conversationAccessToken
+              }
               data-testid="button-peggy-send"
             >
               <Send className="h-4 w-4" />
@@ -438,7 +486,7 @@ export function AskPeggyButton({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
-  const { sessionId, setCalculatorData } = usePeggyContext();
+  const { setCalculatorData } = usePeggyContext();
   
   const handleAskPeggy = async () => {
     setIsLoading(true);
@@ -446,7 +494,6 @@ export function AskPeggyButton({
     
     try {
       const response = await apiRequest('POST', '/api/peggy/analyze-calculator', {
-        sessionId,
         calculatorType,
         inputs,
         results

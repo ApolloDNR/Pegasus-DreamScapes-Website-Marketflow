@@ -1,4 +1,5 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import { randomUUID } from "node:crypto";
+import express, { type Express, type Request, type RequestHandler, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -49,6 +50,11 @@ import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
 import { isPreviewHostname } from "@shared/preview-hosts";
 import peggy from "./peggy";
+import {
+  registerPeggyIdentityRoutes,
+  type PeggyCalculatorRequest,
+  type PeggyParseResult,
+} from "./peggy-route-auth";
 import { forward as hqForward, outreachReasonForLeadType, retryOutboxRow as hqRetryOutboxRow, drainPending as hqDrainPending, isHqHealthy } from "./integrations/hq-client";
 import { 
   createUserProfile, 
@@ -225,6 +231,18 @@ const getAuthUserId = (req: any): string | null => {
   return null;
 };
 
+const getVerifiedPeggyUserId = (req: any): string | null => {
+  for (const candidate of [
+    req.user?.claims?.sub,
+    req.supabaseUser?.id,
+  ]) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+  return null;
+};
+
 const hasMarketflowStaffAccess = async (req: any, userId: string) => {
   const userEmail = req.user?.claims?.email || req.supabaseUser?.email;
   if (userEmail && ADMIN_EMAILS.includes(String(userEmail).toLowerCase())) {
@@ -265,6 +283,36 @@ const loadMarketflowInventoryAccessContext = async (
 const canAccessMarketflowItemType = (res: Response, rawType: unknown) =>
   !isReviewedMarketflowInventoryType(rawType) ||
   res.locals.canAccessReviewedMarketflowInventory === true;
+
+function isTransitionalPeggyObject(
+  value: unknown,
+): value is Record<string, unknown> {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      Object.getPrototypeOf(value) === Object.prototype,
+  );
+}
+
+function parseTransitionalPeggyCalculatorRequest(
+  body: unknown,
+): PeggyParseResult<PeggyCalculatorRequest> {
+  if (!isTransitionalPeggyObject(body)) return { ok: false };
+  const { calculatorType, inputs, results } = body;
+  if (
+    typeof calculatorType !== "string" ||
+    calculatorType.trim().length === 0 ||
+    !isTransitionalPeggyObject(inputs) ||
+    !isTransitionalPeggyObject(results)
+  ) {
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    value: { calculatorType, inputs, results },
+  };
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -5883,55 +5931,24 @@ export async function registerRoutes(
       getConversation: (id) => storage.getPeggyConversation(id),
     });
 
-  const sendPeggyConversationWithAccess = (
-    res: Response,
-    conversation: Awaited<ReturnType<typeof storage.getPeggyConversation>>,
-  ) => {
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation not found" });
-    }
-
-    const secret = getPeggyConversationAccessSecret();
-    if (!secret) {
-      return res
-        .status(503)
-        .json({ message: "Peggy conversation access is unavailable" });
-    }
-
-    return res.json({
-      ...conversation,
-      accessToken: createPeggyConversationAccessToken(conversation, secret),
-    });
+  const peggyIdentityNoStore: RequestHandler = (_req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
   };
+  const peggyCalculatorRateLimit = rateLimit(10, 60_000);
 
-  // Get or create a conversation
-  app.post("/api/peggy/conversations", publicIntakeRateLimit, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
-      const context = req.body.context || {};
-      
-      const conversation = await peggy.getOrCreateConversation(userId, sessionId, context);
-      return sendPeggyConversationWithAccess(res, conversation);
-    } catch (error) {
-      console.error("Error getting/creating Peggy conversation:", error);
-      return res.status(500).json({ message: "Failed to get/create conversation" });
-    }
-  });
-
-  // Start a new conversation
-  app.post("/api/peggy/conversations/new", publicIntakeRateLimit, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
-      const context = req.body.context || {};
-      
-      const conversation = await peggy.startConversation(userId, sessionId, context);
-      return sendPeggyConversationWithAccess(res, conversation);
-    } catch (error) {
-      console.error("Error starting new Peggy conversation:", error);
-      return res.status(500).json({ message: "Failed to start conversation" });
-    }
+  registerPeggyIdentityRoutes(app, {
+    noStore: peggyIdentityNoStore,
+    publicCreateRateLimit: publicIntakeRateLimit,
+    calculatorRateLimit: peggyCalculatorRateLimit,
+    isHybridAuthenticated,
+    getVerifiedPeggyUserId,
+    randomUUID,
+    getAccessSecret: getPeggyConversationAccessSecret,
+    createAccessToken: createPeggyConversationAccessToken,
+    startWebConversation: peggy.startWebConversation,
+    parseCalculatorRequest: parseTransitionalPeggyCalculatorRequest,
+    analyzeCalculator: peggy.analyzeCalculatorResults,
   });
 
   // Get conversation history
@@ -6101,32 +6118,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error getting Peggy suggestions:", error);
       res.status(500).json({ message: "Failed to get suggestions" });
-    }
-  });
-
-  // Analyze calculator results (Ask Peggy button)
-  app.post("/api/peggy/analyze-calculator", rateLimit(10, 60000), async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const sessionId = req.body.sessionId || req.sessionID || `anon_${Date.now()}`;
-      const { calculatorType, inputs, results } = req.body;
-      
-      if (!calculatorType || !inputs || !results) {
-        return res.status(400).json({ message: "calculatorType, inputs, and results are required" });
-      }
-      
-      const response = await peggy.analyzeCalculatorResults(
-        calculatorType,
-        inputs,
-        results,
-        userId,
-        sessionId
-      );
-      
-      res.json(response);
-    } catch (error) {
-      console.error("Error in Peggy calculator analysis:", error);
-      res.status(500).json({ message: "Failed to analyze calculator results" });
     }
   });
 

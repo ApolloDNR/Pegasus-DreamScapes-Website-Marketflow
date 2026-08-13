@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "./storage";
 import type { PeggyConversation, PeggyMessage, InsertPeggyConversation, InsertPeggyMessage } from "@shared/schema";
-
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const DEFAULT_MODEL = "gpt-5";
 
@@ -379,8 +378,9 @@ export interface PeggyContext {
   dealId?: number;
   dealType?: 'capital' | 'wholesale' | 'retail';
   calculatorType?: string;
-  calculatorInputs?: Record<string, any>;
-  calculatorResults?: Record<string, any>;
+  calculatorInputs?: Record<string, unknown>;
+  calculatorResults?: Record<string, unknown>;
+  surface?: string;
   // Strategy Lab (Task #85)
   labMode?: 'explain' | 'stress' | 'prepare';
   labAnalysis?: {
@@ -391,7 +391,12 @@ export interface PeggyContext {
     confidenceScore?: number | null;
     memoParagraph?: string | null;
     memoNextStep?: string | null;
-    laneSummary?: Array<{ lane: string; label: string; verdict: string; headline: string }>;
+    laneSummary?: Array<{
+      lane: string;
+      label: string;
+      verdict: string;
+      headline: string;
+    }>;
     primaryMetric?: { label: string; value: string } | null;
     risks?: Array<{ severity: string; title: string; detail?: string }>;
     inputs?: {
@@ -401,8 +406,24 @@ export interface PeggyContext {
       marketRent?: number;
       condition?: string;
       occupancyStatus?: string;
+      [key: string]: unknown;
     };
+    [key: string]: unknown;
   };
+}
+
+export interface StartWebConversationInput {
+  userId?: string;
+  correlationId: string;
+  context: PeggyContext;
+}
+
+export interface AuthenticatedCalculatorInput {
+  userId: string;
+  correlationId: string;
+  calculatorType: string;
+  inputs: Record<string, unknown>;
+  results: Record<string, unknown>;
 }
 
 export interface ChatMessage {
@@ -828,13 +849,16 @@ export async function chat(
   }
 }
 
-// Start a new conversation
-export async function startConversation(
-  userId?: string,
-  sessionId?: string,
-  context: PeggyContext = {}
-): Promise<PeggyConversation> {
-  // Generate a title based on context
+// Start a fresh web conversation with a server-supplied correlation.
+export async function startWebConversation({
+  userId,
+  correlationId,
+  context,
+}: StartWebConversationInput): Promise<PeggyConversation> {
+  if (!correlationId.trim()) {
+    throw new Error("Peggy web correlation is required");
+  }
+
   let title = 'New Conversation';
   if (context.page) {
     if (context.page.startsWith('calculator-')) {
@@ -845,13 +869,10 @@ export async function startConversation(
       title = `${context.dealType} Deal #${context.dealId}`;
     }
   }
-  
-  // SessionId is required, so generate one if not provided
-  const actualSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
-  const conversation = await storage.createPeggyConversation({
+
+  return storage.createPeggyConversation({
     userId,
-    sessionId: actualSessionId,
+    sessionId: correlationId,
     title,
     contextType: context.calculatorType ? 'calculator' : context.dealType ? 'deal' : 'page',
     contextPage: context.page,
@@ -859,55 +880,35 @@ export async function startConversation(
     contextDealId: context.dealId,
     contextCalculator: context.calculatorType
   });
-  
-  return conversation;
-}
-
-// Get or create a conversation for the current session
-export async function getOrCreateConversation(
-  userId?: string,
-  sessionId?: string,
-  context: PeggyContext = {}
-): Promise<PeggyConversation> {
-  // Look for existing conversations
-  const conversations = await storage.getPeggyConversations(userId, sessionId);
-  
-  // Return the most recent conversation if it exists and is recent (within 1 hour)
-  if (conversations.length > 0) {
-    const latest = conversations[0];
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    if (latest.updatedAt && new Date(latest.updatedAt) > oneHourAgo) {
-      return latest;
-    }
-  }
-  
-  // Create a new conversation
-  return startConversation(userId, sessionId, context);
 }
 
 // Quick analysis helper - for calculator "Ask Peggy" button
-export async function analyzeCalculatorResults(
-  calculatorType: string,
-  inputs: Record<string, any>,
-  results: Record<string, any>,
-  userId?: string,
-  sessionId?: string
-): Promise<{ response: string; conversationId: number }> {
+export async function analyzeCalculatorResults({
+  userId,
+  correlationId,
+  calculatorType,
+  inputs,
+  results,
+}: AuthenticatedCalculatorInput): Promise<{
+  response: string;
+  conversationId: number;
+}> {
   const context: PeggyContext = {
     page: `calculator-${calculatorType}`,
     calculatorType,
     calculatorInputs: inputs,
     calculatorResults: results
   };
-  
-  // Create a dedicated conversation for this analysis
-  const conversation = await startConversation(userId, sessionId, context);
-  
-  // Generate analysis prompt
+
+  const conversation = await startWebConversation({
+    userId,
+    correlationId,
+    context
+  });
+
   const analysisPrompt = `I just ran the ${calculatorType.toUpperCase()} calculator with these results. Please analyze this deal and give me your honest assessment. Is this a good opportunity? What should I be aware of?`;
-  
   const result = await chat(analysisPrompt, conversation.id, context);
-  
+
   return {
     response: result.response,
     conversationId: conversation.id
@@ -926,8 +927,7 @@ async function notifyHumanRequired(conversationId: number, reason: string): Prom
 
 export default {
   chat,
-  startConversation,
-  getOrCreateConversation,
+  startWebConversation,
   getSuggestions,
   analyzeCalculatorResults,
   detectRefusalTrigger,

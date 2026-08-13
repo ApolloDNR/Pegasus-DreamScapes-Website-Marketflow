@@ -318,8 +318,9 @@ export function PeggyDock() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dragControls = useDragControls();
   const constraintsRef = useRef<HTMLDivElement>(null);
+  const createConversationInFlightRef = useRef(false);
   
-  const { context, sessionId, isOpen, openChat, closeChat, toggleChat, consumePendingPrompt, pendingPrompt, updateContext } = usePeggyContext();
+  const { context, isOpen, openChat, closeChat, toggleChat, consumePendingPrompt, pendingPrompt, updateContext } = usePeggyContext();
   const [, setLocation] = useLocation();
   
   const quickPrompts = getQuickPrompts(context.page, context.labAnalysis);
@@ -333,12 +334,19 @@ export function PeggyDock() {
   
   const createConversationMutation = useMutation({
     mutationFn: async (newContext: PeggyContextData) => {
-      const response = await apiRequest('POST', '/api/peggy/conversations', { sessionId, context: newContext });
+      const response = await apiRequest(
+        'POST',
+        '/api/peggy/conversations',
+        { context: newContext },
+      );
       return response.json() as Promise<PeggyConversationAccessResponse>;
     },
     onSuccess: (data) => {
       setConversationId(data.id);
       setConversationAccessToken(data.accessToken);
+    },
+    onSettled: () => {
+      createConversationInFlightRef.current = false;
     }
   });
   
@@ -364,6 +372,17 @@ export function PeggyDock() {
       }]);
     }
   });
+
+  const startFreshConversation = useCallback(
+    (newContext: PeggyContextData) => {
+      if (createConversationInFlightRef.current) return;
+      createConversationInFlightRef.current = true;
+      setConversationId(null);
+      setConversationAccessToken(null);
+      createConversationMutation.mutate(newContext);
+    },
+    [createConversationMutation.mutate],
+  );
   
   const feedbackMutation = useMutation({
     mutationFn: async ({ messageId, feedback }: { messageId: number; feedback: string }) => {
@@ -389,18 +408,32 @@ export function PeggyDock() {
   
   useEffect(() => {
     if (isOpen && !conversationId) {
-      createConversationMutation.mutate(context);
+      startFreshConversation(context);
     }
     if (isOpen && pendingPrompt && !isExpanded) {
       setIsExpanded(true);
     }
-  }, [isOpen, pendingPrompt]);
+  }, [
+    isOpen,
+    pendingPrompt,
+    conversationId,
+    context,
+    isExpanded,
+    startFreshConversation,
+  ]);
   
   // When a pending prompt is staged (from "Ask Peggy" on a calculator or
   // saved analysis) and the conversation is ready, auto-send it so Peggy
   // immediately produces a structural read without the user retyping.
   useEffect(() => {
-    if (!conversationId || !pendingPrompt || chatMutation.isPending) return;
+    if (
+      !conversationId ||
+      !conversationAccessToken ||
+      !pendingPrompt ||
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     const prompt = consumePendingPrompt();
     if (!prompt) return;
     setShowQuickPrompts(false);
@@ -410,7 +443,14 @@ export function PeggyDock() {
       content: prompt,
     }]);
     chatMutation.mutate(prompt);
-  }, [conversationId, pendingPrompt, chatMutation.isPending]);
+  }, [
+    conversationId,
+    conversationAccessToken,
+    pendingPrompt,
+    createConversationMutation.isPending,
+    chatMutation.isPending,
+    consumePendingPrompt,
+  ]);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -433,7 +473,14 @@ export function PeggyDock() {
   }, [position]);
   
   const handleSend = async () => {
-    if (!inputValue.trim() || chatMutation.isPending) return;
+    if (
+      !inputValue.trim() ||
+      !conversationId ||
+      !conversationAccessToken ||
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     
     const userMessage = inputValue.trim();
     setInputValue("");
@@ -462,10 +509,14 @@ export function PeggyDock() {
   };
   
   const handleNewConversation = () => {
-    setConversationId(null);
+    if (
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     setMessages([]);
     setShowQuickPrompts(true);
-    createConversationMutation.mutate(context);
+    startFreshConversation(context);
   };
   
   const handleFeedback = (messageId: number, feedback: 'helpful' | 'not_helpful') => {
@@ -661,6 +712,11 @@ export function PeggyDock() {
                     onClick={handleNewConversation}
                     title="New conversation"
                     data-testid="button-peggy-new"
+                    disabled={
+                      createConversationInFlightRef.current ||
+                      createConversationMutation.isPending ||
+                      chatMutation.isPending
+                    }
                   >
                     <RotateCcw className="h-4 w-4" />
                   </Button>
@@ -800,14 +856,27 @@ export function PeggyDock() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask Peggy anything…"
-                    disabled={chatMutation.isPending || !conversationId}
+                    disabled={
+                      createConversationInFlightRef.current ||
+                      createConversationMutation.isPending ||
+                      chatMutation.isPending ||
+                      !conversationId ||
+                      !conversationAccessToken
+                    }
                     className="flex-1 border-0 bg-transparent px-0 h-9 text-sm shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/70"
                     data-testid="input-peggy-message"
                   />
                   <Button 
                     type="submit" 
                     size="icon"
-                    disabled={!inputValue.trim() || chatMutation.isPending || !conversationId}
+                    disabled={
+                      !inputValue.trim() ||
+                      createConversationInFlightRef.current ||
+                      createConversationMutation.isPending ||
+                      chatMutation.isPending ||
+                      !conversationId ||
+                      !conversationAccessToken
+                    }
                     className={cn(
                       "relative h-9 w-9 rounded-full p-0 overflow-hidden flex-shrink-0",
                       "bg-gradient-to-br from-[#D88E4E] via-primary to-[#8E4F22] text-cream",

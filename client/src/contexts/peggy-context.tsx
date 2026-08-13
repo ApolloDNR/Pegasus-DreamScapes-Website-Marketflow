@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
@@ -10,6 +10,7 @@ export interface PeggyContextData {
   calculatorType?: string;
   calculatorInputs?: Record<string, any>;
   calculatorResults?: Record<string, any>;
+  surface?: string;
   // Strategy Lab (Task #85): live snapshot the user is looking at + lab mode.
   labMode?: 'explain' | 'stress' | 'prepare';
   labAnalysis?: {
@@ -29,7 +30,6 @@ export interface PeggyContextData {
 
 interface PeggyContextValue {
   context: PeggyContextData;
-  sessionId: string;
   isOpen: boolean;
   pendingPrompt: string | null;
   openChat: () => void;
@@ -135,19 +135,6 @@ function getUserRole(flags: RoleFlags): string {
   return 'member';
 }
 
-function generateSessionId(): string {
-  const stored = localStorage.getItem('peggy_session_id');
-  if (stored) return stored;
-  
-  const randomId =
-    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : `${Date.now()}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
-  const newId = `session_${randomId}`;
-  localStorage.setItem('peggy_session_id', newId);
-  return newId;
-}
-
 interface PeggyProviderProps {
   children: ReactNode;
 }
@@ -155,9 +142,19 @@ interface PeggyProviderProps {
 export function PeggyProvider({ children }: PeggyProviderProps) {
   const [location] = useLocation();
   const { isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer } = useSupabaseAuth();
-  const [sessionId] = useState(generateSessionId);
   const [isOpen, setIsOpen] = useState(false);
   const [pendingPrompt, setPendingPromptState] = useState<string | null>(null);
+  const legacyPeggySessionPurgedRef = useRef(false);
+
+  useEffect(() => {
+    if (legacyPeggySessionPurgedRef.current) return;
+    legacyPeggySessionPurgedRef.current = true;
+    try {
+      window.localStorage.removeItem("peggy_session_id");
+    } catch {
+      // Storage may be disabled; Peggy no longer depends on this key.
+    }
+  }, []);
   
   const roleFlags: RoleFlags = { isAuthenticated, isAdmin, isDreamscaper, isInvestor, isWholesaler, isBuyer };
   
@@ -242,7 +239,6 @@ export function PeggyProvider({ children }: PeggyProviderProps) {
   
   const value: PeggyContextValue = {
     context,
-    sessionId,
     isOpen,
     pendingPrompt,
     openChat,

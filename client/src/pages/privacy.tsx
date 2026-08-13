@@ -83,7 +83,7 @@ export default function Privacy() {
                 When you submit a form, we collect what you give us: name, email, phone, and the property or situation details you describe. When you visit a page, our server logs the request (IP address, user agent, page) for security and reliability.
               </p>
               <p>
-                When you chat with Peggy, we collect the conversation content you send and use a first-party conversation identifier to keep that conversation connected to this browser.
+                When you chat with Peggy, we collect the conversation content you send and associate it with a server-created conversation record.
               </p>
               <p>
                 We do not ask for, store, or process financial account numbers, social security numbers, or sensitive personal categories through the public site.
@@ -116,7 +116,7 @@ export default function Privacy() {
                 If you choose to save a Strategy Lab property and financial draft, its inputs are stored on your device in local browser storage. Your browser may keep that draft until you clear it or the browser removes site data; saving the local draft does not itself submit it to Pegasus.
               </p>
               <p>
-                Peggy keeps a random first-party conversation identifier in local browser storage. It lets this browser continue Peggy conversation content stored by Pegasus; it is not an advertising or cross-site identifier.
+                Peggy's active server conversation ID and access credential stay only in page memory, not in local browser storage. Closing and reopening Peggy on the same loaded page may continue that conversation. Reloading or closing the page ends that browser view. If you explicitly choose Save chat, Pegasus writes a separate transcript copy to local browser storage so you can revisit that saved copy.
               </p>
               <p>
                 Sign-in services may use essential browser session data to keep you signed in. Analytics (Plausible) only loads after you accept analytics in the consent banner. We do not use browser fingerprinting, advertising trackers, cross-site identifiers, or third-party retargeting pixels.

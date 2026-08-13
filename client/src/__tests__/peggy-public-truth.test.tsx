@@ -1,6 +1,6 @@
 import React from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
@@ -54,9 +54,6 @@ describe("public Peggy capability truth", () => {
     expect(privacyText).toMatch(/current browsing session/i);
     expect(privacyText).toMatch(/random anonymous Strategy Lab session identifier/i);
     expect(privacyText).toMatch(/not derived from.*browser.*characteristics/i);
-    expect(privacyText).toMatch(/Peggy.*first-party conversation identifier/i);
-    expect(privacyText).toMatch(/continue.*Peggy conversation/i);
-    expect(privacyText).toMatch(/conversation content stored by Pegasus/i);
     expect(privacyText).toMatch(
       /send Peggy conversation content to our configured AI processing provider so it can generate Peggy(?:'s|’s) reply/i,
     );
@@ -65,6 +62,43 @@ describe("public Peggy capability truth", () => {
     expect(privacyText).toMatch(/does not itself submit.*Pegasus/i);
     expect(privacyText).not.toMatch(/one session cookie/i);
     expect(privacyText).not.toMatch(/one preference cookie/i);
+    const memory = memoryLocation({ path: "/privacy" });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <Router hook={memory.hook}><Privacy /></Router>
+      </QueryClientProvider>,
+    );
+    const whatWeCollect = within(container)
+      .getByTestId("section-privacy-what-we-collect")
+      .textContent || "";
+    const cookies = within(container)
+      .getByTestId("section-privacy-cookies")
+      .textContent || "";
+
+    expect(whatWeCollect).toMatch(
+      /associate it with a server-created conversation record/i,
+    );
+    expect(whatWeCollect).not.toMatch(
+      /first-party conversation identifier.*connected to this browser/i,
+    );
+    expect(cookies).toMatch(
+      /active server conversation ID and access credential stay only in page memory, not in local browser storage/i,
+    );
+    expect(cookies).toMatch(
+      /closing and reopening Peggy on the same loaded page may continue/i,
+    );
+    expect(cookies).toMatch(
+      /reloading or closing the page ends that browser view/i,
+    );
+    expect(cookies).toMatch(
+      /explicitly choose Save chat.*separate transcript copy to local browser storage/i,
+    );
+    expect(cookies).not.toMatch(
+      /Peggy keeps a random first-party conversation identifier in local browser storage/i,
+    );
     expect(`${privacyText} ${disclosuresText}`).not.toContain("Pegasus DreamScapes");
     expect(`${privacyText} ${disclosuresText}`).toContain("Pegasus Dreamscapes");
   });
