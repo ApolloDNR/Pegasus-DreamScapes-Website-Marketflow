@@ -69,7 +69,7 @@ The observed pre-implementation focused baseline on 2026-08-13 is intentionally 
 - Consumes: `Category`, `Nav`, existing block/form primitives, the current category data contract, and the parent recovery baseline.
 - Produces: `CategoryPage({ cat, go, openPeggy })`, a direct dynamic `./category-page` entry from `Landing.tsx`, a source-compatible re-export from `pages.tsx`, and current recovery documentation.
 
-- [ ] **Step 1: Reconfirm the timing baseline**
+- [x] **Step 1: Reconfirm the timing baseline**
 
 Run each command as its own fresh process:
 
@@ -80,7 +80,7 @@ npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx
 
 Record both outcomes in `.superpowers/sdd/2026-08-13-pegasus-recovery-foundation/progress.md`. A pass does not invalidate the defect: the regression below tests the module boundary deterministically.
 
-- [ ] **Step 2: Write the static source regression**
+- [x] **Step 2: Write the static source regression**
 
 Add these imports after the React import:
 
@@ -117,7 +117,7 @@ Add this case as the first test inside the existing `describe` block:
   });
 ```
 
-- [ ] **Step 3: Run the static regression and verify RED**
+- [x] **Step 3: Run the static regression and verify RED**
 
 ```bash
 npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx -t "loads category pages from a focused lazy module"
@@ -125,7 +125,7 @@ npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx -t "loads ca
 
 Expected: one failure because the current `CategoryPage` initializer contains `loadPages()` and does not contain `import('./category-page')`. If it passes before production code changes, stop and reconcile the source; do not weaken the assertion.
 
-- [ ] **Step 4: Create the focused category module**
+- [x] **Step 4: Create the focused category module**
 
 Create `client/src/pegasus/category-page.tsx` with the exact code below. The JSX and all public strings are the current `WhatYouGet`, `CategoryPage`, and category-only build-process implementation moved without behavior changes.
 
@@ -274,7 +274,7 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
 }
 ```
 
-- [ ] **Step 5: Point the public shell at the focused module**
+- [x] **Step 5: Point the public shell at the focused module**
 
 In `client/src/pegasus/Landing.tsx`, replace only the current `CategoryPage` initializer:
 
@@ -284,7 +284,7 @@ const CategoryPage = lazy(() => import('./category-page').then((module) => ({ de
 
 Keep `loadPages` for all broad-page imports that follow.
 
-- [ ] **Step 6: Preserve the broad-module export without a reverse dependency**
+- [x] **Step 6: Preserve the broad-module export without a reverse dependency**
 
 In `client/src/pegasus/pages.tsx`:
 
@@ -307,7 +307,7 @@ import type { Nav, Theme, PeggyHandoff } from './theme';
 
 The dependency direction must be `pages.tsx` → `category-page.tsx`; `category-page.tsx` must never import `pages.tsx`.
 
-- [ ] **Step 7: Run the focused regression and verify GREEN**
+- [x] **Step 7: Run the focused regression and verify GREEN**
 
 ```bash
 npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx -t "loads category pages from a focused lazy module"
@@ -315,7 +315,7 @@ npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx -t "loads ca
 
 Expected: one passing test.
 
-- [ ] **Step 8: Correct `README.md`**
+- [x] **Step 8: Correct `README.md`**
 
 Make these exact changes:
 
@@ -357,7 +357,7 @@ The locked design and launch sources (`docs/design/final-design-lock.md`, `docs/
 
 Keep the existing generic “For each route verify” bullets beneath that replacement.
 
-- [ ] **Step 9: Replace the stale canonical-plan paragraph in `docs/AUTOMATION_GOAL.md`**
+- [x] **Step 9: Replace the stale canonical-plan paragraph in `docs/AUTOMATION_GOAL.md`**
 
 Replace only the two paragraphs under `## Canonical Completion Plan` with:
 
@@ -369,7 +369,7 @@ PR #25 is historical review evidence only. A successor pull request has not yet 
 
 Keep the existing stop-condition paragraph that follows.
 
-- [ ] **Step 10: Replace `docs/qa/launch-completion-status.md`**
+- [x] **Step 10: Replace `docs/qa/launch-completion-status.md`**
 
 Replace the entire file with:
 
@@ -424,7 +424,7 @@ Reconcile the program plan, this status, the tracked recovery ledger, `git log`,
 `npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx`
 ```
 
-- [ ] **Step 11: Correct the tracked ledger and parent-program baseline**
+- [x] **Step 11: Correct the tracked ledger and parent-program baseline**
 
 In `docs/qa/security-launch-recovery-ledger.md`, replace the Vitest baseline bullet with:
 
@@ -447,12 +447,12 @@ In `docs/superpowers/plans/2026-08-13-pegasus-security-launch-recovery.md`, repl
 Also replace Task 1 Step 1 with:
 
 ```md
-- [ ] **Step 1: Preserve the RED baseline.** Run `npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx` twice in fresh processes and record both outcomes. Add a static regression in `pegasus-no-blank-shell.test.tsx` requiring `CategoryPage` to lazy-import `./category-page`, not derive from `loadPages()`, and run it to RED.
+- [x] **Step 1: Preserve the RED baseline.** Run `npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx` twice in fresh processes and record both outcomes. Add a static regression in `pegasus-no-blank-shell.test.tsx` requiring `CategoryPage` to lazy-import `./category-page`, not derive from `loadPages()`, and run it to RED.
 ```
 
 Do not mark Task 1 accepted in either plan or ledger. The controller does that only after both reviewers approve.
 
-- [ ] **Step 12: Run the focused regression set**
+- [x] **Step 12: Run the focused regression set**
 
 ```bash
 npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx client/src/__tests__/lane-pages-prd-v1.test.tsx client/src/__tests__/cta-labels.test.tsx client/src/__tests__/cta-routing.test.tsx
@@ -460,7 +460,7 @@ npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx client/src/_
 
 Expected: all four files pass with no timeout change.
 
-- [ ] **Step 13: Run static and production gates**
+- [x] **Step 13: Run static and production gates**
 
 ```bash
 npm run check
@@ -470,7 +470,7 @@ git diff --check
 
 Expected: all exit 0. Do not stage generated `dist/` output.
 
-- [ ] **Step 14: Prove the built category entry does not import the broad pages entry**
+- [x] **Step 14: Prove the built category entry does not import the broad pages entry**
 
 Run:
 
@@ -505,7 +505,7 @@ NODE
 
 Expected: two distinct asset paths and a `category boundary PASS` line.
 
-- [ ] **Step 15: Inspect and stage the exact implementation scope**
+- [x] **Step 15: Inspect and stage the exact implementation scope**
 
 ```bash
 git status --short
@@ -517,7 +517,7 @@ git diff --cached --name-only
 
 The cached name list must contain exactly those nine paths. `.recovery/`, `dist/`, this child plan, and verification-only tests must not be staged.
 
-- [ ] **Step 16: Commit the reviewed implementation candidate**
+- [x] **Step 16: Commit the reviewed implementation candidate**
 
 Commit:
 
@@ -533,10 +533,20 @@ Record the implementation SHA and all RED/GREEN outputs in `.superpowers/sdd/202
 
 After a fresh specification reviewer and then a fresh code-quality reviewer approve the implementation (including any focused fix commits), the controller must:
 
-- [ ] Update this child plan's completion checkbox, the parent Task 1 checkbox, `docs/qa/launch-completion-status.md`, and the tracked recovery ledger with exact commits, commands, reviewer verdicts, and rulings.
-- [ ] Run `git diff --check`.
-- [ ] Stage only the child plan, parent plan, launch-completion status, and tracked ledger with `git add -- docs/superpowers/plans/2026-08-13-pegasus-recovery-foundation.md docs/superpowers/plans/2026-08-13-pegasus-security-launch-recovery.md docs/qa/launch-completion-status.md docs/qa/security-launch-recovery-ledger.md`.
-- [ ] Commit `docs: record Task 1 acceptance`.
-- [ ] Fast-forward `codex/launch-recovery-v2` without force and verify the remote exact head.
+- [x] Update this child plan's completion checkbox, the parent Task 1 checkbox, `docs/qa/launch-completion-status.md`, and the tracked recovery ledger with exact commits, commands, reviewer verdicts, and rulings.
+- [x] Run `git diff --check`.
+- [x] Stage only the child plan, parent plan, launch-completion status, and tracked ledger with `git add -- docs/superpowers/plans/2026-08-13-pegasus-recovery-foundation.md docs/superpowers/plans/2026-08-13-pegasus-security-launch-recovery.md docs/qa/launch-completion-status.md docs/qa/security-launch-recovery-ledger.md`.
+- [x] Commit `docs: record Task 1 acceptance`.
+- [x] Fast-forward `codex/launch-recovery-v2` without force and verify the remote exact head.
 
-- [ ] Task 1 accepted by specification review, code-quality review, and remote checkpoint.
+- [x] Task 1 accepted by specification review, code-quality review, and remote checkpoint.
+
+## Acceptance evidence
+
+- Implementation: `962551ca5c5d2371b876c819babd0328b60997e1` (`fix: lock recovery and isolate public lane loading`).
+- RED: two fresh `/buyers` timing failures at 1,483ms and 1,043ms while all seven later cases passed; the static boundary assertion also failed against `loadPages()`.
+- GREEN: Node `22.23.2`; 4 focused files / 77 tests; TypeScript; diff hygiene; production client/server build; bundle budget; and manifest topology all passed.
+- Managed-sandbox build ruling: `npm run build` reached the `tsx` CLI but failed before repository code at its Unix IPC listener (`EPERM /tmp/tsx-0/20.pipe`). `node --import tsx script/build.ts && npm run check:bundle` executed the same build entrypoint and bundle gate successfully (3,822 Vite modules and `dist/index.cjs`). No package script or dependency changed.
+- Specification review: `SPEC APPROVED`; no findings.
+- Code-quality review: `QUALITY APPROVED`; no Critical or Important findings.
+- Accepted Minor ruling: the static test does not itself reject a future reverse `category-page.tsx` import of `./pages`; current source and the production manifest prove no such dependency. Add a source or automated-manifest assertion when the boundary/bundle checker is next maintained.

@@ -30,7 +30,7 @@ The durable per-task record is `docs/qa/security-launch-recovery-ledger.md`. The
 | Task | Status | Durable evidence |
 | --- | --- | --- |
 | Program checkpoint | Complete | `7b98d7d8c7bbeeb9b14217446016062db66472a9`; program and tracked ledger match the remote successor branch. |
-| Task 1 — recovery foundation | In progress | Executable child plan: `docs/superpowers/plans/2026-08-13-pegasus-recovery-foundation.md`. |
+| Task 1 — recovery foundation | Complete | Implementation `962551ca5c5d2371b876c819babd0328b60997e1`; `SPEC APPROVED`; `QUALITY APPROVED`; 4 focused files / 77 tests, TypeScript, managed-sandbox same-entrypoint build/bundle budget, manifest topology, and diff hygiene passed. |
 | Tasks 2–18 | Pending | Execute only from preflighted, committed child plans in program order. |
 
 ## External gates
@@ -43,6 +43,4 @@ The durable per-task record is `docs/qa/security-launch-recovery-ledger.md`. The
 
 ## Resume rule
 
-Reconcile the program plan, this status, the tracked recovery ledger, `git log`, and the successor remote head. Resume at the first task without a remote accepted checkpoint. The first Task 1 implementation command is:
-
-`npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx`
+Reconcile the program plan, this status, the tracked recovery ledger, `git log`, and the successor remote head. Resume at the first task without a remote accepted checkpoint. Task 2 is next: create and commit its executable child plan using `superpowers:writing-plans`, preflight it, and dispatch only after the reviewer reports no blocking or major ambiguity.
