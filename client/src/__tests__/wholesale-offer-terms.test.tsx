@@ -54,6 +54,7 @@ import {
 
 const DEAL_ID = 9001;
 const ACCEPT_TOTAL = 329_888;
+const REFRESHED_ACCEPT_TOTAL = 412_345;
 const COUNTER_TOTAL = 333_468;
 
 function dateFromToday(days: number) {
@@ -233,6 +234,80 @@ describe("reachable Wholesale Accept terms", () => {
           inspectionPeriod: 0,
           fundingType: "cash",
           notes: "Accept distinctive terms",
+        },
+      },
+    ]);
+  });
+
+  it("requires fresh acknowledgement when a query refresh changes the Accept total", async () => {
+    const { client } = renderWholesaleModal("wholesale_accept");
+    await screen.findByTestId("dialog-title-wholesale-accept");
+
+    const date = await initializedDate(
+      /closing date/i,
+      "input-accept-closing-date",
+    );
+    fireEvent.change(date, { target: { value: USER_EDITED_CLOSE_DATE } });
+    setValue("input-accept-earnest-money", "0");
+    setValue("input-accept-message", "Refreshed total terms");
+
+    const acknowledgement = screen.getByRole("checkbox", {
+      name: /total assignment price of \$329,888/i,
+    });
+    const submit = screen.getByTestId("button-submit-wholesale-accept");
+    fireEvent.click(acknowledgement);
+    expect(acknowledgement).toBeChecked();
+    expect(submit).toBeEnabled();
+
+    act(() => {
+      client.setQueryData(
+        ["/api/wholesale-deals", String(DEAL_ID)],
+        {
+          ...wholesaleDeal,
+          city: "Berkeley",
+          contractPrice: 400_000,
+          assignmentFee: 12_345,
+          closingDate: `${REFRESHED_CLOSE_DATE}T00:00:00.000Z`,
+        },
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("text-accept-total-assignment-price"),
+      ).toHaveTextContent("$412,345");
+    });
+    expect(date).toHaveValue(USER_EDITED_CLOSE_DATE);
+    expect(acknowledgement).not.toBeChecked();
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(boundary.apiRequest).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: /total assignment price of \$412,345/i,
+      }),
+    ).toBe(acknowledgement);
+    fireEvent.click(acknowledgement);
+    expect(acknowledgement).toBeChecked();
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(boundary.apiRequest).toHaveBeenCalledTimes(1));
+    expect(boundary.apiRequest.mock.calls[0]).toEqual([
+      "POST",
+      "/api/marketflow/offers",
+      {
+        lane: "WHOLESALE",
+        dealId: 9001,
+        offerKind: "WHOLESALE_ASSIGNMENT",
+        payload: {
+          offerPrice: REFRESHED_ACCEPT_TOTAL,
+          earnestMoney: 0,
+          closeDate: USER_EDITED_CLOSE_DATE,
+          inspectionPeriod: 0,
+          fundingType: "cash",
+          notes: "Refreshed total terms",
         },
       },
     ]);

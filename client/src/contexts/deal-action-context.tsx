@@ -426,7 +426,9 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
   const { toast } = useToast();
   const { isAuthenticated } = useSupabaseAuth();
   const [earnestMoney, setEarnestMoney] = useState("1000");
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledgedTotal, setAcknowledgedTotal] = useState<number | null>(
+    null,
+  );
   const [message, setMessage] = useState("");
   const [closingDate, setClosingDate] = useState("");
   const [closingDateInitialized, setClosingDateInitialized] = useState(false);
@@ -449,6 +451,9 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
     deal?.contractPrice,
     deal?.assignmentFee,
   );
+  const hasAcknowledgedCurrentTotal =
+    totalAssignmentPrice !== null &&
+    acknowledgedTotal === totalAssignmentPrice;
 
   const submitMutation = useMutation({
     mutationFn: async (payload: WholesaleOfferTerms) => {
@@ -490,7 +495,7 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
       toast({ title: "Valid total assignment price required", variant: "destructive" });
       return;
     }
-    if (!acknowledged) {
+    if (!hasAcknowledgedCurrentTotal) {
       toast({
         title: "Acknowledgement required",
         description: "Please acknowledge the terms.",
@@ -680,8 +685,12 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
           <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
             <input
               type="checkbox"
-              checked={acknowledged}
-              onChange={(event) => setAcknowledged(event.target.checked)}
+              checked={hasAcknowledgedCurrentTotal}
+              onChange={(event) =>
+                setAcknowledgedTotal(
+                  event.target.checked ? totalAssignmentPrice : null,
+                )
+              }
               disabled={totalAssignmentPrice === null}
               className="mt-0.5 rounded"
               data-testid="checkbox-acknowledge-terms"
@@ -702,7 +711,7 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
             onClick={handleSubmit} 
             disabled={
               submitMutation.isPending ||
-              !acknowledged ||
+              !hasAcknowledgedCurrentTotal ||
               totalAssignmentPrice === null
             }
             className="flex-1"
