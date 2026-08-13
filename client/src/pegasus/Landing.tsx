@@ -24,7 +24,7 @@ const EcosystemPage = lazy(() => loadPages().then((module) => ({ default: module
 const PeggyPage = lazy(() => loadPages().then((module) => ({ default: module.PeggyPage })));
 const AboutPageV6 = lazy(() => import('./about-v6').then((module) => ({ default: module.AboutPageV6 })));
 const ContactPage = lazy(() => loadPages().then((module) => ({ default: module.ContactPage })));
-const CapitalPage = lazy(() => loadPages().then((module) => ({ default: module.CapitalPage })));
+const CapitalPage = lazy(() => import('./capital-page').then((module) => ({ default: module.CapitalPage })));
 const OurWorkPage = lazy(() => import('./our-work').then((module) => ({ default: module.OurWorkPage })));
 const HowWeOperatePage = lazy(() => import('./how-we-operate').then((module) => ({ default: module.HowWeOperatePage })));
 const PropertyOwnersPage = lazy(() => import('./property-owners').then((module) => ({ default: module.PropertyOwnersPage })));

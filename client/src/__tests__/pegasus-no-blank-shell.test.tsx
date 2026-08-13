@@ -1,5 +1,5 @@
 import React from "react";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup, waitFor } from "@testing-library/react";
@@ -103,6 +103,31 @@ describe("Every PEGASUS_URLS route renders real content, never a blank shell (Ta
     const categoryBoundary = landingSource.slice(categoryStart, nextLazyStart);
     expect(categoryBoundary).toContain("import('./category-page')");
     expect(categoryBoundary).not.toContain("loadPages()");
+  });
+
+  it("loads the capital page from a focused lazy module", () => {
+    const capitalStart = landingSource.indexOf("const CapitalPage =");
+    const nextLazyStart = landingSource.indexOf(
+      "const OurWorkPage =",
+      capitalStart,
+    );
+
+    expect(capitalStart).toBeGreaterThan(-1);
+    expect(nextLazyStart).toBeGreaterThan(capitalStart);
+
+    const capitalBoundary = landingSource.slice(capitalStart, nextLazyStart);
+    expect(capitalBoundary).toContain("import('./capital-page')");
+    expect(capitalBoundary).not.toContain("loadPages()");
+
+    const capitalModulePath = resolve(
+      import.meta.dirname,
+      "../pegasus/capital-page.tsx",
+    );
+    expect(existsSync(capitalModulePath)).toBe(true);
+    const capitalModuleSource = readFileSync(capitalModulePath, "utf8");
+    expect(capitalModuleSource).not.toMatch(
+      /(?:from\s+|import\(\s*)["']\.\/pages["']/,
+    );
   });
 
   // Non-vacuous guard: if PEGASUS_URLS ever empties out (or stops being
