@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Work only on successor branch `codex/launch-recovery-v2`. Planning source `94630b4` (`fix: align listing inquiry contracts`) must be the implementation ancestor. Task 2 has passed specification and code-quality review; its controller acceptance record is intentionally pending because the controller's full-suite gate exposed this pre-existing Task 1 boundary defect. Do not create a false Task 2 acceptance checkpoint before this repair.
+- Work only on successor branch `codex/launch-recovery-v2`. Canonical Task 2 implementation `81f2b7cbe9026b5946303dd97deb5b1afab8dc6e` (`fix: align listing inquiry contracts`) must be the immediate implementation ancestor; it has the reviewed tree `18bf6b48e5dcd85a737e612a768387aeb39d0d03`, byte-identical to pre-publication local review commit `94630b4`. Task 2 has passed specification and code-quality review; its controller acceptance record is intentionally pending because the controller's full-suite gate exposed this pre-existing Task 1 boundary defect. Do not create a false Task 2 acceptance checkpoint before this repair.
 - Before dispatch, an independent plan reviewer must compare this complete draft with the then-current tree and parent Task 1 follow-up, validate every import/snippet, deterministic RED/GREEN behavior, byte-preservation proof, built-manifest proof, exact four-path manifest, and SDD/commit boundaries, and report zero blocker or major findings.
 - After that review, the controller must promote this draft byte-for-byte to `docs/superpowers/plans/2026-08-13-pegasus-capital-lane-boundary.md` and create exactly one docs-only plan checkpoint, `docs: add capital lane boundary plan`. Dispatch only from that committed plan checkpoint; never dispatch the untracked draft.
 - Use `superpowers:subagent-driven-development` with a fresh implementer, then a fresh specification reviewer and fresh code-quality reviewer. The controller alone records the later acceptance checkpoint.
@@ -79,13 +79,14 @@ git status --short --untracked-files=no
 git status --short
 git branch --show-current
 git log -6 --oneline
-git merge-base --is-ancestor 94630b4 HEAD
+test "$(git rev-parse HEAD^^)" = "81f2b7cbe9026b5946303dd97deb5b1afab8dc6e"
+test "$(git rev-parse HEAD^^^{tree})" = "18bf6b48e5dcd85a737e612a768387aeb39d0d03"
 git ls-files --error-unmatch docs/superpowers/plans/2026-08-13-pegasus-capital-lane-boundary.md
 git diff --exit-code HEAD -- docs/superpowers/plans/2026-08-13-pegasus-capital-lane-boundary.md
 env PATH="/tmp/pegasus-foundation-npm-cache/_npx/5dad66f2cb301fc2/node_modules/node/bin:$PATH" node --version
 ```
 
-Expected: clean tracked worktree; full status may show only `?? .recovery/`; branch `codex/launch-recovery-v2`; the one docs-only Capital child-plan checkpoint is at `HEAD`, Task 2 implementation `94630b4` is its immediate parent, and the tracked plan is unchanged; Node prints `v22.23.2`. Confirm the ignored Task 2 ledger records both independent approvals plus the diagnosed controller-gate failure. Record the exact plan and implementation-base SHAs in `.superpowers/sdd/2026-08-13-pegasus-capital-lane-boundary/progress.md`. Stop on any mismatch rather than mixing unrelated work into this follow-up.
+Expected: clean tracked worktree; full status may show only `?? .recovery/`; branch `codex/launch-recovery-v2`; the provenance-correction checkpoint is at `HEAD`, the initial Capital plan checkpoint is its parent, and canonical Task 2 implementation `81f2b7cbe9026b5946303dd97deb5b1afab8dc6e` is its grandparent with reviewed tree `18bf6b48e5dcd85a737e612a768387aeb39d0d03`; the tracked plan is unchanged; Node prints `v22.23.2`. Confirm the ignored Task 2 ledger records both independent approvals plus the diagnosed controller-gate failure. Record the exact plan and implementation-base SHAs in `.superpowers/sdd/2026-08-13-pegasus-capital-lane-boundary/progress.md`. Stop on any mismatch rather than mixing unrelated work into this follow-up.
 
 - [ ] **Step 2: Add the deterministic focused-boundary and reverse-dependency RED.**
 
