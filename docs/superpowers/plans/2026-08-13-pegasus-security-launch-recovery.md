@@ -48,7 +48,7 @@
 - Local/remote successor: `codex/launch-recovery-v2`.
 - PR #25 remains the review-history source; the successor pull request replaces its implementation head.
 - Baseline Node `22.23.2` TypeScript and production build/bundle budget pass.
-- Baseline Vitest: 110 files, 1,250 passed and one deterministic failure in `client/src/__tests__/lane-pages-prd-v1.test.tsx`; the first lazy `/buyers` page exceeds the suite's one-second default wait while later lane cases pass.
+- Baseline Vitest: 110 files, 1,250 passed and one failed. Two fresh focused lane-page processes produced one first-`/buyers` timeout at 1,045ms and one pass at 930ms against the 1,000ms default; all seven later cases passed in the failing process. Task 1 stabilizes the lazy boundary without relaxing timeouts.
 - Review inventory: 46 actionable findings reviewed at the approved base, 5 already fixed, 41 still applicable, including 8 unresolved inline CodeRabbit threads.
 
 ## Definition of done
@@ -86,7 +86,7 @@
 - `README.md` uses exact public brand casing, `dist/index.cjs`, Node 22/`npm ci`, and points route QA to the canonical registry/gate rather than stale `/services`, `/sell`, `/invest`, and `/submit-deal` paths. The newer locked design/launch documents explicitly supersede the legacy CMS-copy section wherever they conflict.
 - `category-page.tsx` exports the unchanged `CategoryPage` contract and `pages.tsx` re-exports it for source compatibility. `Landing.tsx` lazy-loads that focused module instead of transforming the broad `./pages` chunk before the first `/buyers` paint.
 
-- [ ] **Step 1: Preserve the RED baseline.** Run `npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx` twice in fresh processes. Record that `/buyers` times out while the module's later lane cases pass. Add a static regression in `pegasus-no-blank-shell.test.tsx` requiring `CategoryPage` to lazy-import `./category-page`, not derive from `loadPages()`, and run it to RED.
+- [ ] **Step 1: Preserve the RED baseline.** Run `npx vitest run client/src/__tests__/lane-pages-prd-v1.test.tsx` twice in fresh processes and record both outcomes. Add a static regression in `pegasus-no-blank-shell.test.tsx` requiring `CategoryPage` to lazy-import `./category-page`, not derive from `loadPages()`, and run it to RED.
 - [ ] **Step 2: Reconcile recovery documentation.** Replace stale PR #25/old-branch resume pointers, correct README casing/runtime/routes, state the locked-doc precedence over legacy CMS fallback copy, and label every old commit/run as historical. Add source commit, successor branch, current test count, review count, external blockers, and first resume command.
 - [ ] **Step 3: Isolate the production lazy boundary.** Move `WhatYouGet` and `CategoryPage` unchanged into `category-page.tsx` with only their used imports, re-export from `pages.tsx`, and point `Landing.tsx` at the focused module. Do not make the route eager, change locked copy, or relax test timeouts.
 - [ ] **Step 4: Run GREEN.** Run `npx vitest run client/src/__tests__/pegasus-no-blank-shell.test.tsx client/src/__tests__/lane-pages-prd-v1.test.tsx client/src/__tests__/cta-labels.test.tsx client/src/__tests__/cta-routing.test.tsx`, `npm run check`, `npm run build`, and `git diff --check`. Confirm the built `/buyers` boundary is not coupled to the broad pages chunk.

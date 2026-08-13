@@ -1,12 +1,13 @@
-# Pegasus DreamScapes Website + MarketFlow
+# Pegasus Dreamscapes Website + MarketFlow
 
 ## Overview
 Public website for Pegasus Dreamscapes (Development • Investments • Systems) plus MarketFlow private beta workflows.
 
 ## Local setup
-1. Install deps: `npm install`
-2. Copy env vars into `.env`
-3. Run development server: `npm run dev`
+1. Use Node `22.23.2`.
+2. Install the locked dependency graph with `npm ci`.
+3. Copy required local values into `.env`.
+4. Run `npm run dev`.
 
 ## Required environment variables
 See `.env.example` for the complete deployment-ready variable list.
@@ -34,17 +35,22 @@ These docs freeze the Pegasus public-site direction, define what visual tools ma
 - App should run on a standard Node host that supports `npm run build` and `npm run start`.
 
 ## Production deployment checklist
-1. `npm install`
-2. `npm run check`
-3. `npm run build`
-4. `npm run start`
+1. Use Node `22.23.2`.
+2. `npm ci`
+3. `npm run check`
+4. `npm test`
+5. `npm run build`
+6. `npm run start`
 
 Production runtime expectations:
 - Server respects `PORT` (defaults to `5000` if unset).
 - In production, the server serves API routes and the built Vite client from `dist/public`.
-- Build output includes server bundle at `dist/index.js` and static client assets in `dist/public`.
+- Build output includes server bundle at `dist/index.cjs` and static client assets in `dist/public`.
 
-## CMS content override launch checklist
+## Legacy CMS override audit
+
+The locked design and launch sources (`docs/design/final-design-lock.md`, `docs/design/visual-implementation-handoff.md`, and `docs/qa/final-launch-gate.md`) supersede legacy CMS fallback values wherever they conflict. Before launch, remove or reconcile any conflicting `site_content` rows; do not let historical database copy silently override approved public copy.
+
 `SiteContentProvider` loads homepage editable content from `/api/site-content`. Existing database values override local fallback copy on the home page. Before launch, confirm these keys in your production `site_content` table are either empty/removed or set to approved values:
 
 - `home.hero.kicker` → `Development • Investments • Systems`
@@ -83,19 +89,9 @@ Production runtime expectations:
 - Validate logout redirect flow back to public site.
 - If Replit Auth is enabled, also set `ISSUER_URL`, `REPL_ID`, and `SESSION_SECRET`, and verify there is no conflicting auth UX with Supabase-authenticated areas.
 
-## Public route launch QA checklist
-Check each route before launch:
-- `/`
-- `/about`
-- `/services`
-- `/sell`
-- `/invest`
-- `/buyers`
-- `/submit-deal`
-- `/marketflow`
-- `/contact`
-- `/privacy`
-- `/terms`
+## Public route launch QA
+
+`docs/qa/final-launch-gate.md` governs route, viewport, accessibility, interaction, console, and evidence requirements. During recovery, derive Pegasus shell routes from `client/src/pegasus/routes.ts` and standalone public routes from `client/src/App.tsx`. Task 11 of the active recovery program will consolidate those sources into `shared/public-launch-routes.json`; older aliases such as `/services`, `/sell`, `/invest`, and `/submit-deal` are not a launch inventory.
 
 For each route verify:
 - Page renders without visible runtime errors.

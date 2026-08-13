@@ -14,7 +14,7 @@ import { PageLoader } from '@/components/error-boundary';
 import { seoFor, seoNameFor } from '@shared/seo-routes';
 
 const loadPages = () => import('./pages');
-const CategoryPage = lazy(() => loadPages().then((module) => ({ default: module.CategoryPage })));
+const CategoryPage = lazy(() => import('./category-page').then((module) => ({ default: module.CategoryPage })));
 const InvestmentsPage = lazy(() => loadPages().then((module) => ({ default: module.InvestmentsPage })));
 const DevelopmentPage = lazy(() => loadPages().then((module) => ({ default: module.DevelopmentPage })));
 const StrategyLabPage = lazy(() => loadPages().then((module) => ({ default: module.StrategyLabPage })));

@@ -12,7 +12,7 @@ This tracked ledger is the durable recovery record. The ignored plan-scoped SDD 
 
 - Node `22.23.2` TypeScript: PASS.
 - Production build and bundle budget: PASS.
-- Vitest: 110 files; 1,250 passed and one deterministic `/buyers` lazy-boundary failure.
+- Full Vitest baseline: 110 files; 1,250 passed and one failed. Two fresh focused lane-page processes then produced one `/buyers` timeout at 1,045ms and one pass at 930ms against the 1,000ms default; the failing process passed all seven later cases.
 - PR #25 inventory: 46 actionable findings reviewed, 5 fixed at the approved base, 41 still applicable, and 8 unresolved inline threads.
 - External gates: no production, DNS, live/staging mutation, migration application, test lead, or public preview publication without its named approval.
 
@@ -20,7 +20,7 @@ This tracked ledger is the durable recovery record. The ignored plan-scoped SDD 
 
 | Task | Status | Implementation commits | Verification and reviews |
 | --- | --- | --- | --- |
-| 1 | Pending | — | First RED: reproduce `/buyers` twice and require the focused category chunk. |
+| 1 | Pending | — | Focused RED: one `/buyers` timeout and one pass across two fresh processes; static boundary regression requires direct `./category-page` loading. |
 
 ## Deferred findings and rulings
 
