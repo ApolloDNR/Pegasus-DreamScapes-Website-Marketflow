@@ -139,11 +139,13 @@
 - Offer Studio's authoritative amount is the entered `composer.offerPrice`. Accept's authoritative total assignment price is `Number(deal.contractPrice) + Number(deal.assignmentFee)` and must be a safe valid amount before acknowledgement/submission. Counter's authoritative total is `Number(deal.contractPrice) + Number(counterAssignmentFee)`. Each value is computed once, displayed as “Total assignment price,” acknowledged where applicable, and sent unchanged as `payload.offerPrice`; `deal.askingPrice` never silently overrides it.
 - Outgoing payloads are explicit allowlists and never include `expiresAt`, recipient/owner IDs, counts, status, UI-only fields, or money aliases.
 
-- [ ] **Step 1: Write RED tests.** Replace the existing blank-date success expectation with zero network calls and visible/focused validation; prove accept renders an editable initialized date and blocks/focuses it when blank; add valid create/accept/counter cases with distinctive amounts and exact displayed/acknowledged/request-body equality.
-- [ ] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/marketflow-offer-studio.test.tsx client/src/__tests__/wholesale-offer-terms.test.tsx server/__tests__/marketflow-offer-payload.test.ts`.
-- [ ] **Step 3: Implement the minimal form guards and explicit payload builders.** Keep the strict server validator authoritative and add explicit empty/whitespace date server regressions.
-- [ ] **Step 4: Run GREEN.** Repeat focused tests, then `npm run check`.
-- [ ] **Step 5: Commit.** Commit `fix: require complete wholesale offer terms` with only Task 3 paths.
+- [x] **Step 1: Write RED tests.** Replace the existing blank-date success expectation with zero network calls and visible/focused validation; prove accept renders an editable initialized date and blocks/focuses it when blank; add valid create/accept/counter cases with distinctive amounts and exact displayed/acknowledged/request-body equality.
+- [x] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/marketflow-offer-studio.test.tsx client/src/__tests__/wholesale-offer-terms.test.tsx server/__tests__/marketflow-offer-payload.test.ts`.
+- [x] **Step 3: Implement the minimal form guards and explicit payload builders.** Keep the strict server validator authoritative and add explicit empty/whitespace date server regressions.
+- [x] **Step 4: Run GREEN.** Repeat focused tests, then `npm run check`.
+- [x] **Step 5: Commit.** Commit `fix: require complete wholesale offer terms` with only Task 3 paths.
+
+**Accepted 2026-08-13:** canonical primary `9240e365a108aba28f9a41e88ee43ef78d780bdf` plus focused quality fix `ab289e6900524361467a1132c7eb16cecf6af61f`; `SPEC APPROVED`; `QUALITY APPROVED`. Node 22.23.2 causal RED/GREEN, focused 3 files / 73 tests, full 114 files / 1,338 tests, TypeScript, listener-free same-entrypoint production build, bundle budget, exact scope, and diff hygiene passed. The quality review's one Important amount-acknowledgement finding was fixed and re-reviewed; no Minor finding remains. A complete diff-scoped security review reported zero findings and zero deferred surfaces.
 
 ### Task 4A: Remove Peggy's session-ID token oracle and guard calculator analysis
 

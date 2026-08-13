@@ -82,7 +82,7 @@ Expected: both SHA-256 values match; the cached and committed manifest contains 
 - Date boundary: the client prevents an empty/syntax-sanitized date from reaching mutation; the server accepts real `YYYY-MM-DD` from injected UTC `now` through exactly five UTC years later, inclusive, and rejects blank, whitespace, impossible, past, and later values.
 - Request boundary: the three create paths use the exact outer four-key object; Offer Studio's pending-incoming counter uses the exact two-key respond object. Required `dealId` and response-URL `offerId` remain; all participant IDs, ownership fields, expiry, counts, status, and aliases remain absent.
 
-- [ ] **Step 1: Confirm the independently reviewed plan checkpoint, accepted base, runtime, and ignored workspace.**
+- [x] **Step 1: Confirm the independently reviewed plan checkpoint, accepted base, runtime, and ignored workspace.**
 
 Run:
 
@@ -99,7 +99,7 @@ env PATH="/tmp/pegasus-recovery-node22-cache/_npx/5dad66f2cb301fc2/node_modules/
 
 Expected: clean tracked worktree; full status may show only `?? .recovery/`; branch `codex/launch-recovery-v2`; HEAD is the independently reviewed docs-only child-plan checkpoint whose parent is exactly `7636b2841262c16b9a650100b9616d7048fc4c79`; the tracked plan is unchanged; Node prints `v22.23.2`. Stop on any mismatch rather than mixing another task or user change into Task 3.
 
-- [ ] **Step 2: Initialize the plan-scoped SDD ledger and record the exact implementation base.**
+- [x] **Step 2: Initialize the plan-scoped SDD ledger and record the exact implementation base.**
 
 From the `superpowers:subagent-driven-development` skill directory, resolve this plan's workspace and task brief:
 
@@ -112,7 +112,7 @@ sed -n '1p' .superpowers/sdd/2026-08-13-pegasus-wholesale-offer-terms/implementa
 
 Expected: the workspace is `.superpowers/sdd/2026-08-13-pegasus-wholesale-offer-terms/`. Its `progress.md` first line is exactly `# SDD ledger — plan: docs/superpowers/plans/2026-08-13-pegasus-wholesale-offer-terms.md`; `implementation-base.sha` contains the full docs-only plan-checkpoint SHA. Record that same value in the ledger. The base file, brief/report/review-package files, and ledger remain ignored and never enter staging.
 
-- [ ] **Step 3: Extend the existing Offer Studio test harness for exact create/respond recording.**
+- [x] **Step 3: Extend the existing Offer Studio test harness for exact create/respond recording.**
 
 In `client/src/__tests__/marketflow-offer-studio.test.tsx`, add this member to `FetchState` immediately after `postedOffers`:
 
@@ -211,7 +211,7 @@ function seedIncomingOffer(userId: string) {
 
 These helpers assert the real component boundary: GETs remain real through the existing mock server, while only external HTTP writes are recorded. No assertion is made on a fake component or mock-only element.
 
-- [ ] **Step 4: Replace Offer Studio's blank-date success test with exact valid create coverage.**
+- [x] **Step 4: Replace Offer Studio's blank-date success test with exact valid create coverage.**
 
 Replace the complete current parameterized test beginning `it.each<[AuthRole, string]>` and ending just before the disallowed-role test with this code:
 
@@ -294,7 +294,7 @@ Replace the complete current parameterized test beginning `it.each<[AuthRole, st
 
 The literal amount `176_543` is independently checked and appears in the accessible field, exact body, and ladder. Exact object equality fails if any expiry, participant ID, ownership field, status/count, or UI/money alias leaks into the request.
 
-- [ ] **Step 5: Add genuine Offer Studio RED cases for date focus, total bounds, and exact respond allowlisting.**
+- [x] **Step 5: Add genuine Offer Studio RED cases for date focus, total bounds, and exact respond allowlisting.**
 
 Insert these tests immediately before the existing disallowed-role test:
 
@@ -437,7 +437,7 @@ Insert these tests immediately before the existing disallowed-role test:
 
 The missing-date case makes every other prerequisite valid, so zero POSTs cannot pass because another guard fired. The total table proves both inclusive amount bounds; the secondary-term table proves the new earnest-money and inspection guards with a valid total and date. The respond case covers the second real Offer Studio envelope and retains the required URL `offerId` without adding a participant ID to the body.
 
-- [ ] **Step 6: Create the real-provider wholesale modal test harness and Accept regressions.**
+- [x] **Step 6: Create the real-provider wholesale modal test harness and Accept regressions.**
 
 Create `client/src/__tests__/wholesale-offer-terms.test.tsx` with this complete content through the closing Accept `describe`. The auth, toast, and external `apiRequest` boundaries are mocked; `DealActionProvider`, its canonical action router, TanStack Query cache, Wouter router, Radix dialog, and rendered form behavior remain real:
 
@@ -737,7 +737,7 @@ describe("reachable Wholesale Accept terms", () => {
 
 The component-change mutations these tests catch are concrete: removing ISO-prefix normalization leaves the input empty; restoring `askingPrice` posts `999_999`; recomputing in the mutation can diverge from `$329,888`; removing component/total guards enables an invalid acknowledgement or request; disabling submission solely because the date is blank prevents the required visible/focused application error.
 
-- [ ] **Step 7: Append Counter date, authoritative-total, exact-body, and invalid-component regressions.**
+- [x] **Step 7: Append Counter date, authoritative-total, exact-body, and invalid-component regressions.**
 
 Append this complete block to `client/src/__tests__/wholesale-offer-terms.test.tsx`:
 
@@ -927,7 +927,7 @@ describe("wholesale date initialization", () => {
 
 The negative-fee case is intentionally `-1`: the arithmetic sum would still be a plausible `$321,122`, so it proves validation happens on each authoritative component before the total. The `500 + 499` case locks the lower total bound. The secondary-term cases keep total/date valid while independently exercising EMD and inspection guards. The date table distinguishes date-only and real ISO timestamps from a corrupt suffix. The disabled invalid-total button is paired with an already-visible alert; the separate blank-date case leaves the valid-total button actionable and proves the handler focus/zero-POST branch.
 
-- [ ] **Step 8: Add already-GREEN strict-server date characterizations without changing the parser.**
+- [x] **Step 8: Add already-GREEN strict-server date characterizations without changing the parser.**
 
 In `server/__tests__/marketflow-offer-payload.test.ts`, insert these tests immediately after `rejects malformed, past, and unreasonably distant close dates`:
 
@@ -961,7 +961,7 @@ In `server/__tests__/marketflow-offer-payload.test.ts`, insert these tests immed
 
 The injected `now` is `2026-07-30T18:00:00.000Z`, so `2026-07-30` is the current UTC day and `2031-07-30` is exactly five UTC years later. Existing cases already reject `2026-07-29`, the impossible `2026-02-30`, and the later `2032-01-01`. These new assertions must pass before production work: they characterize current authority and are not represented as a server RED.
 
-- [ ] **Step 9: Run the complete Task 3 RED and record per-assertion causality.**
+- [x] **Step 9: Run the complete Task 3 RED and record per-assertion causality.**
 
 Run:
 
@@ -978,7 +978,7 @@ Expected: FAIL because the real clients lack the required behavior, not because 
 
 If the command errors before assertions, repair only the test typo/harness and rerun until it fails for the named missing production behaviors. Record the command, failing test names, causal messages, and the already-GREEN server cases in `.superpowers/sdd/2026-08-13-pegasus-wholesale-offer-terms/progress.md`. Do not write production code until this causal RED has been observed.
 
-- [ ] **Step 10: Add typed Offer Studio financial terms and lossless input helpers.**
+- [x] **Step 10: Add typed Offer Studio financial terms and lossless input helpers.**
 
 In `client/src/pages/marketflow/offer-studio.tsx`, insert this exact block after `type OfferStatus = "pending" | "accepted" | "rejected" | "countered";` and before `interface LadderOffer`:
 
@@ -1081,7 +1081,7 @@ Replace the complete composer-seeding effect with this raw-string, typed version
 
 This retains the existing visible asking-price seed but removes all send-time fallback authority. Raw strings ensure `176543.5`, blank input, and zero are distinguishable until validation.
 
-- [ ] **Step 11: Type both Offer Studio mutation envelopes and build the canonical terms once.**
+- [x] **Step 11: Type both Offer Studio mutation envelopes and build the canonical terms once.**
 
 Change only the create mutation variable type from:
 
@@ -1188,7 +1188,7 @@ Replace `handleSendComposer` completely with this handler:
 
 The six-field `payload` literal is constructed once and passed unchanged to either exact wrapper. The handler never reads `deal.askingPrice`, spreads component state, or passes a UI alias. `parseInt` remains only for the required response-URL identifier, not for a financial value.
 
-- [ ] **Step 12: Make the Offer Studio total/date fields accessible, lossless, and lane-specific.**
+- [x] **Step 12: Make the Offer Studio total/date fields accessible, lossless, and lane-specific.**
 
 Replace the complete `offer-price` field wrapper—the `div.space-y-1.5` that contains `Label htmlFor="offer-price"` and `Input id="offer-price"`—with:
 
@@ -1330,7 +1330,7 @@ Replace only the funding `<select>` `onChange` with this narrowing guard:
 
 Do not disable the send button for a missing date: the handler must render/focus the application error. The lane conditional is deliberate; CAPITAL and LISTING semantics are not renamed by this wholesale fix.
 
-- [ ] **Step 13: Run the Offer Studio GREEN slice before changing the modal provider.**
+- [x] **Step 13: Run the Offer Studio GREEN slice before changing the modal provider.**
 
 Run:
 
@@ -1340,7 +1340,7 @@ env PATH="/tmp/pegasus-recovery-node22-cache/_npx/5dad66f2cb301fc2/node_modules/
 
 Expected: PASS. The three role cases send exact create envelopes; blank date and out-of-range total make zero POSTs; the incoming-offer case sends the exact respond envelope; the existing disallowed-role guard remains green. If any assertion fails, fix the Offer Studio implementation rather than weakening its exact object/focus/accessibility assertion.
 
-- [ ] **Step 14: Add modal-local canonical terms, date normalization, component validity, and numeric parsing.**
+- [x] **Step 14: Add modal-local canonical terms, date normalization, component validity, and numeric parsing.**
 
 In `client/src/contexts/deal-action-context.tsx`, add `useRef` to the existing React import so it becomes:
 
@@ -1420,7 +1420,7 @@ function parseBoundedWholeNumber(
 
 The date helper accepts only a date-only value or a complete RFC 3339-style timestamp with a valid lexical time and `Z`/numeric offset; it rejects corrupt suffixes and never timezone-shifts. Real-calendar/range authority remains on the server. `calculateTotalAssignmentPrice` rejects blank/missing/nonnumeric/nonfinite/negative/fractional/unsafe/over-maximum components before arithmetic and validates the one transmitted total against the exact server offer bounds.
 
-- [ ] **Step 15: Replace Wholesale Accept with a once-initialized date and one canonical total/body.**
+- [x] **Step 15: Replace Wholesale Accept with a once-initialized date and one canonical total/body.**
 
 Replace the complete current `WholesaleAcceptTermsModal` function, from its declaration through its closing brace immediately before `interface WholesaleCounterFormProps`, with this code:
 
@@ -1740,7 +1740,7 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
 
 Every hook is declared before the loading return. The one-time effect normalizes the fetched timestamp but does not overwrite a later edit after query cache refresh. A valid total and checked acknowledgement leave a blank-date submission actionable, so the handler produces the focus/error behavior. An invalid total already displays an alert before disabling acknowledgement/submission.
 
-- [ ] **Step 16: Replace Wholesale Counter with one raw fee, normalized date, derived total, and canonical body.**
+- [x] **Step 16: Replace Wholesale Counter with one raw fee, normalized date, derived total, and canonical body.**
 
 Replace the complete current `WholesaleCounterOfferModal` function, from its declaration through its closing brace immediately before `interface WholesaleJVFormProps`, with this code:
 
@@ -2103,7 +2103,7 @@ function WholesaleCounterOfferModal({
 
 The total is derived once per render from `Number(deal.contractPrice) + Number(counterAssignmentFee)` only after each component has passed its pre-sum validity rule. The typed mutation only wraps the already-built six fields. `existingOfferId` remains accepted by `WholesaleCounterFormProps` and the action router for compatibility, but no `parentOfferId` or other UI alias crosses the request boundary; endpoint redesign stays deferred to Task 9.
 
-- [ ] **Step 17: Run the real Wholesale Accept/Counter GREEN slice.**
+- [x] **Step 17: Run the real Wholesale Accept/Counter GREEN slice.**
 
 Run:
 
@@ -2113,7 +2113,7 @@ env PATH="/tmp/pegasus-recovery-node22-cache/_npx/5dad66f2cb301fc2/node_modules/
 
 Expected: PASS. Both ISO dates initialize, user edits survive query-data refresh, blank dates render/focus and clear their linked alerts without a POST, Accept's `$329,888` beats the `$999,999` decoy in display/acknowledgement/request, Counter's `$333,468` matches display/request, and all invalid component/total tables remain at zero API calls.
 
-- [ ] **Step 18: Run the complete focused GREEN with client and server authority together.**
+- [x] **Step 18: Run the complete focused GREEN with client and server authority together.**
 
 Run the same command used for RED:
 
@@ -2123,7 +2123,7 @@ env PATH="/tmp/pegasus-recovery-node22-cache/_npx/5dad66f2cb301fc2/node_modules/
 
 Expected: all three files PASS. Confirm output contains no unhandled rejection, React hook-order error, `act` warning, Radix accessibility warning, or unexpected network 404. Record the command and exact file/test counts in the plan-scoped SDD ledger. Do not infer a pass from the exit status alone if output contains an unhandled error.
 
-- [ ] **Step 19: Run the full repository test and TypeScript gates under exact Node 22.23.2.**
+- [x] **Step 19: Run the full repository test and TypeScript gates under exact Node 22.23.2.**
 
 Run:
 
@@ -2134,7 +2134,7 @@ env PATH="/tmp/pegasus-recovery-node22-cache/_npx/5dad66f2cb301fc2/node_modules/
 
 Expected: the full Vitest suite exits 0 with no failed file and TypeScript exits 0. If a failure is unrelated, reproduce it at the accepted implementation base before classifying it; do not weaken, skip, or increase a timeout. If the base does not reproduce it, the Task 3 implementation owns the regression and must fix it before review.
 
-- [ ] **Step 20: Run the production build/bundle gate with the environment-only IPC fallback.**
+- [x] **Step 20: Run the production build/bundle gate with the environment-only IPC fallback.**
 
 Run the repository command first:
 
@@ -2151,7 +2151,7 @@ env PATH="/tmp/pegasus-recovery-node22-cache/_npx/5dad66f2cb301fc2/node_modules/
 
 Record whether the normal wrapper passed or the environment-only fallback was necessary, including the exact IPC error if used. Do not edit `package.json`, scripts, dependencies, or lockfiles to accommodate the sandbox.
 
-- [ ] **Step 21: Inspect the entire Task 3 diff, run mutation-oriented self-review, and prove exact scope.**
+- [x] **Step 21: Inspect the entire Task 3 diff, run mutation-oriented self-review, and prove exact scope.**
 
 First run hygiene and status:
 
@@ -2182,7 +2182,7 @@ git diff --exit-code HEAD -- docs/superpowers/plans/2026-08-13-pegasus-security-
 
 Expected: both commands exit 0. Confirm `deal-action-context.tsx` changes are confined to its React import, the local wholesale type/helpers, and the Accept/Counter functions; no Listing, Capital, JV, provider-routing, or call-site behavior changed. Confirm `offer-studio.tsx` does not change `OfferStatus`, `transformOffer`, persisted-status handling, expiry, negotiation counts, or notification behavior.
 
-- [ ] **Step 22: Stage the exact five-path implementation manifest and create the primary Task 3 commit.**
+- [x] **Step 22: Stage the exact five-path implementation manifest and create the primary Task 3 commit.**
 
 Stage only the authorized paths:
 
@@ -2223,7 +2223,7 @@ git status --short
 
 Expected: the primary implementation commit is named `fix: require complete wholesale offer terms`; its parent is the docs-only plan checkpoint; it contains exactly the five paths above; tracked worktree is clean; full status may show only the intentionally untracked `.recovery/` and ignored SDD workspace. Never stage either. Do not amend accepted predecessor commits, push, update the parent plan/ledger, or create acceptance bookkeeping. Later focused review-fix commits are required for Blocker/Major specification findings or Critical/Important quality findings and remain inside this manifest; every Minor finding is explicitly adjudicated and recorded.
 
-- [ ] **Step 23: Write the implementation report and return the exact commit for fresh reviews.**
+- [x] **Step 23: Write the implementation report and return the exact commit for fresh reviews.**
 
 Write the full implementation report to the report path paired with the Step 2 task brief. It must include:
 
@@ -2256,5 +2256,7 @@ After the implementation worker reports completion:
 4. If the specification reviewer raises a Blocker or Major finding, or the code-quality reviewer raises a Critical or Important finding, resume the same implementer for review-fix rounds under the SDD cap. Each round creates a new focused commit—never amend or squash—touches only the same five-path manifest, reruns the covering focused command and every affected full gate, appends evidence to the same implementation report/ledger, and receives a scoped re-review package from the prior reviewed HEAD through the new fix HEAD. Record every fix SHA and reviewer disposition. Explicitly adjudicate every Minor finding from either taxonomy and record whether it was fixed or deferred with a concrete scope/risk reason.
 5. When both reviews approve, append the RED/GREEN/build evidence, primary implementation SHA, every review-fix SHA, reviewer verdicts, and the disposition of every Minor finding to `.superpowers/sdd/2026-08-13-pegasus-wholesale-offer-terms/progress.md`.
 6. The controller—not the implementation worker—updates this child plan checkbox state, Program Task 3, and `docs/qa/security-launch-recovery-ledger.md` in a separate docs-only commit named `docs: record Task 3 acceptance`. That record names the primary and every review-fix SHA. Only after that exact-head checkpoint passes the parent closure gate may the controller fast-forward `codex/launch-recovery-v2` without force and verify the remote contains it.
+
+**Accepted 2026-08-13:** canonical primary `9240e365a108aba28f9a41e88ee43ef78d780bdf` and review fix `ab289e6900524361467a1132c7eb16cecf6af61f`. Fresh full and scoped reviews returned `SPEC APPROVED` and `QUALITY APPROVED` with no remaining finding. The quality review's one Important refreshed-total acknowledgement finding was fixed in the additive commit by binding consent to the exact amount; its test went causal RED 39/40, then GREEN 40/40. Final verification passed focused 3 files / 73 tests, full 114 files / 1,338 tests, TypeScript, the plan-authorized listener-free production build, bundle budget, exact scope, and diff hygiene. No Minor finding was deferred.
 
 Task 3 is not complete merely because the implementation commit exists. Durable completion requires both fresh approvals, exact-head verification, the separate tracked acceptance checkpoint, and remote containment under the parent program's closure protocol.
