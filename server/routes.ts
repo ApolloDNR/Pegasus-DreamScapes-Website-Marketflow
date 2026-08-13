@@ -70,6 +70,7 @@ import { supabaseStorage } from "./supabase-storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerReadinessRoute } from "./readiness";
 import { registerPublicLibraryRetirementRoutes } from "./public-library-retirement";
+import { createListingInquiryRouteHandlers } from "./listing-inquiry-routes";
 import {
   SITE_URL,
   sitemapEntries,
@@ -789,6 +790,26 @@ export async function registerRoutes(
       (res.locals.canAccessReviewedMarketflowInventory === true &&
         isPublicLegacyDeal(access)));
 
+  const listingInquiryHandlers = createListingInquiryRouteHandlers({
+    getAuthUserId,
+    hasReviewedInventoryAccess: (res) =>
+      res.locals.canAccessReviewedMarketflowInventory === true,
+    getListing: (listingId) => storage.getListing(listingId),
+    canInitiateInquiry: async (req, res, userId, listingId) => {
+      const access = await resolveLegacyDealAccess(
+        req,
+        userId,
+        "listing",
+        listingId,
+      );
+      return Boolean(
+        access && canInitiateLegacyDealInteraction(access, res),
+      );
+    },
+    createListingInquiry: (inquiry) =>
+      storage.createListingInquiry(inquiry),
+  });
+
   const getPublicMarketplaceItem = async (
     rawType: unknown,
     rawId: unknown,
@@ -1481,6 +1502,13 @@ export async function registerRoutes(
   // --- Unified Deal Context Endpoint ---
   // Returns normalized deal data based on dealType for any deal/project/listing
   // This is the single source of truth for all canonical forms
+  app.get(
+    "/api/deals/LISTING/:id/context",
+    isHybridAuthenticated,
+    loadMarketflowInventoryAccessContext,
+    listingInquiryHandlers.getContext,
+  );
+
   app.get('/api/deals/:dealType/:id/context', isHybridAuthenticated, async (req: any, res) => {
     try {
       const { dealType, id } = req.params;
@@ -1658,76 +1686,11 @@ export async function registerRoutes(
           createdBy: project.createdBy,
           status: project.status,
         };
-      } else if (dealType === 'LISTING' || dealType === 'listing') {
-        // Fetch listing - use PostgreSQL storage (listings table)
-        const listing = await storage.getListing(Number(id));
-        if (!listing) {
-          return res.status(404).json({ message: 'Listing not found' });
-        }
-        const inquiries = await storage.getListingInquiries(Number(id));
-        const isStaff = await hasMarketflowStaffAccess(req, userId);
-        const participantInquiries = inquiries.filter(
-          (inquiry: any) => inquiry.userId === userId,
-        );
-        if (
-          !canReadPrivateDealData({
-            userId,
-            ownerId: listing.submittedBy,
-            participantIds: participantInquiries.map(
-              (inquiry: any) => inquiry.userId,
-            ),
-            isStaff,
-          })
-        ) {
-          return res.status(404).json({ message: 'Listing not found' });
-        }
-        
-        context = {
-          dealType: 'LISTING',
-          dealId: listing.id,
-          deal: {
-            id: listing.id,
-            propertyAddress: listing.propertyAddress,
-            city: listing.city,
-            state: listing.state,
-            zipCode: listing.zipCode,
-            propertyType: listing.propertyType,
-            bedrooms: listing.bedrooms,
-            bathrooms: listing.bathrooms,
-            sqft: listing.sqft,
-            yearBuilt: listing.yearBuilt,
-            images: listing.images,
-          },
-          // Listing-specific terms
-          listingTerms: {
-            listPrice: listing.listPrice,
-            pricePerSqft: listing.pricePerSqft,
-            listingType: listing.listingType, // on_market, off_market
-            condition: listing.condition,
-            hoa: listing.hoa,
-            amenities: listing.amenities,
-          },
-          showingInfo: {
-            showingInstructions: listing.showingInstructions,
-            occupancyStatus: listing.occupancyStatus,
-            availableDate: listing.availableDate,
-          },
-          contact: {
-            agentName: listing.agentName,
-            agentPhone: listing.agentPhone,
-            agentEmail: listing.agentEmail,
-          },
-          // Permissions
-          permissions: {
-            canInquire: true,
-            canSchedule: true,
-            isOwner: userId === listing.submittedBy,
-          },
-          submittedBy: listing.submittedBy,
-          status: listing.status,
-        };
       } else {
-        return res.status(400).json({ message: 'Invalid dealType. Must be WHOLESALE_ASSIGNMENT, CAPITAL_RAISE, or LISTING' });
+        return res.status(400).json({
+          message:
+            "Invalid dealType. Must be WHOLESALE_ASSIGNMENT or CAPITAL_RAISE",
+        });
       }
       
       res.json(context);
@@ -3764,49 +3727,12 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/listing-inquiries", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const { listingId, inquiryType, message, email, fullName, phone } = req.body;
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      if (!listingId) {
-        return res.status(400).json({ message: "Listing ID is required" });
-      }
-
-      if (!email || !fullName) {
-        return res.status(400).json({ message: "Email and full name are required" });
-      }
-
-      const numericListingId = Number(listingId);
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "listing",
-        numericListingId,
-      );
-      if (!access || !canInitiateLegacyDealInteraction(access, res)) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-
-      const inquiry = await storage.createListingInquiry({
-        listingId: numericListingId,
-        userId,
-        email,
-        fullName,
-        interestType: inquiryType || "info",
-        message: message || undefined,
-        phone: phone || undefined,
-      });
-
-      return res.status(201).json(inquiry);
-    } catch (error) {
-      console.error("Error creating listing inquiry:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
+  app.post("/api/listing-inquiries",
+    isHybridAuthenticated,
+    listingInquiryHandlers.validateInquiry,
+    loadMarketflowInventoryAccessContext,
+    listingInquiryHandlers.postInquiry,
+  );
 
   app.get("/api/listings/:id/inquiries", isHybridAuthenticated, async (req: any, res) => {
     try {

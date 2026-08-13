@@ -8,6 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { DealType, DealAction } from "@shared/schema";
+import type { ListingInquiryRequest } from "@shared/listing-inquiry-contract";
+import {
+  buildListingInfoRequest,
+  buildListingTourRequest,
+  listingInquiryValidationMessage,
+} from "@/lib/listing-inquiry";
 
 // Canonical action types per the 3-lane blueprint
 export type DealActionType = 
@@ -1847,7 +1853,7 @@ function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: ListingInquiryRequest) => {
       const res = await apiRequest("POST", "/api/listing-inquiries", data);
       return res.json();
     },
@@ -1871,33 +1877,37 @@ function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to submit an inquiry." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to submit an inquiry.",
+      });
       return;
     }
-    if (!name) {
-      toast({ title: "Name required", variant: "destructive" });
-      return;
-    }
-    if (preferredContact === "email" && !email) {
-      toast({ title: "Email required", variant: "destructive" });
-      return;
-    }
-    if (preferredContact === "phone" && !phone) {
+    if (preferredContact === "phone" && !phone.trim()) {
       toast({ title: "Phone required", variant: "destructive" });
       return;
     }
 
-    submitMutation.mutate({
-      listingId,
-      inquiryType: "info",
-      name,
-      email: email || undefined,
-      phone: phone || undefined,
-      preferredContact,
-      questions: [...questions, customQuestion].filter(Boolean),
-      timeframe,
-      message: customQuestion || questions.join(", "),
-    });
+    try {
+      submitMutation.mutate(buildListingInfoRequest({
+        listingId,
+        name,
+        email,
+        phone,
+        preferredContact,
+        questions: questionOptions.filter((option) =>
+          questions.includes(option),
+        ),
+        customQuestion,
+        timeframe,
+      }));
+    } catch (error) {
+      toast({
+        title: "Check your inquiry",
+        description: listingInquiryValidationMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
   if (contextLoading) {
@@ -1977,7 +1987,7 @@ function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">Email *</label>
               <input
                 type="email"
                 value={email}
@@ -2109,7 +2119,7 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: ListingInquiryRequest) => {
       const res = await apiRequest("POST", "/api/listing-inquiries", data);
       return res.json();
     },
@@ -2133,33 +2143,35 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to schedule a tour." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to schedule a tour.",
+      });
       return;
     }
-    if (!name) {
-      toast({ title: "Name required", variant: "destructive" });
-      return;
-    }
-    if (!email && !phone) {
-      toast({ title: "Contact info required", description: "Please provide email or phone.", variant: "destructive" });
-      return;
-    }
-    if (!preferredDates[0]) {
+    if (!preferredDates[0]?.trim()) {
       toast({ title: "Preferred date required", variant: "destructive" });
       return;
     }
 
-    submitMutation.mutate({
-      listingId,
-      inquiryType: "tour",
-      name,
-      email: email || undefined,
-      phone: phone || undefined,
-      preferredDates: preferredDates.filter(Boolean),
-      preferredTimes: preferredTimes.filter(Boolean),
-      isPreApproved,
-      message: notes || "Interested in scheduling a tour",
-    });
+    try {
+      submitMutation.mutate(buildListingTourRequest({
+        listingId,
+        name,
+        email,
+        phone,
+        preferredDates,
+        preferredTimes,
+        preApproved: isPreApproved,
+        message: notes,
+      }));
+    } catch (error) {
+      toast({
+        title: "Check your tour request",
+        description: listingInquiryValidationMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
   if (contextLoading) {
@@ -2229,7 +2241,7 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">Email *</label>
               <input
                 type="email"
                 value={email}
@@ -2266,17 +2278,14 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
                     placeholder={index === 0 ? "Date (required)" : "Date (optional)"}
                     data-testid={`input-tour-date-${index}`}
                   />
-                  <select
+                  <input
+                    type="time"
                     value={preferredTimes[index]}
-                    onChange={(e) => updatePreferredTime(index, e.target.value)}
+                    onChange={(event) => updatePreferredTime(index, event.target.value)}
                     className="px-3 py-2 border rounded-md"
-                    data-testid={`select-tour-time-${index}`}
-                  >
-                    <option value="">Select time</option>
-                    <option value="morning">Morning (9am-12pm)</option>
-                    <option value="afternoon">Afternoon (12pm-5pm)</option>
-                    <option value="evening">Evening (5pm-8pm)</option>
-                  </select>
+                    aria-label={`Preferred time ${index + 1}`}
+                    data-testid={`input-tour-time-${index}`}
+                  />
                 </div>
               ))}
             </div>
@@ -2336,231 +2345,6 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
           >
             {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Schedule Showing
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// Legacy LISTING form - kept for backward compatibility
-interface ListingInquiryFormProps {
-  listingId: number;
-  onClose: () => void;
-}
-
-function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
-  const { toast } = useToast();
-  const { isAuthenticated, profile } = useSupabaseAuth();
-  const [inquiryType, setInquiryType] = useState<"info" | "tour" | "offer">("info");
-  const [message, setMessage] = useState("");
-  const [preferredDate, setPreferredDate] = useState("");
-  const [preferredTime, setPreferredTime] = useState("");
-  const [phone, setPhone] = useState("");
-
-  // Use unified context endpoint for consistency with other deal types
-  const { data: context, isLoading: contextLoading } = useQuery<ListingContext>({
-    queryKey: [`/api/deals/LISTING/${listingId}/context`],
-    enabled: !!listingId,
-  });
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/listing-inquiries", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Inquiry Submitted",
-        description: inquiryType === "tour" 
-          ? "Your tour request has been sent to the listing agent."
-          : "Your inquiry has been submitted.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/listing-inquiries"] });
-      onClose();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit inquiry",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to submit an inquiry." });
-      return;
-    }
-    if (!message && inquiryType !== "tour") {
-      toast({ title: "Message required", variant: "destructive" });
-      return;
-    }
-
-    submitMutation.mutate({
-      listingId,
-      inquiryType,
-      message: message || `Interested in scheduling a tour`,
-      preferredDate: preferredDate || undefined,
-      preferredTime: preferredTime || undefined,
-      phone: phone || undefined,
-    });
-  };
-
-  if (contextLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
-  };
-
-  const deal = context?.deal;
-  const terms = context?.listingTerms;
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle data-testid="dialog-title-listing-inquiry">
-          {inquiryType === "tour" ? "Schedule a Tour" : "Property Inquiry"}
-        </DialogTitle>
-        <DialogDescription>
-          {deal?.propertyAddress || "Property"}
-          {deal?.city && deal?.state && ` - ${deal.city}, ${deal.state}`}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 mt-4">
-        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
-          <div>
-            <span className="text-muted-foreground">List Price:</span>
-            <span className="ml-2 font-medium">{formatCurrency(terms?.listPrice)}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Type:</span>
-            <span className="ml-2 font-medium">{deal?.propertyType || "—"}</span>
-          </div>
-          {(deal?.bedrooms || deal?.bathrooms) && (
-            <>
-              <div>
-                <span className="text-muted-foreground">Beds:</span>
-                <span className="ml-2 font-medium">{deal?.bedrooms || "—"}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Baths:</span>
-                <span className="ml-2 font-medium">{deal?.bathrooms || "—"}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium">Inquiry Type</label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {[
-                { value: "info", label: "More Info" },
-                { value: "tour", label: "Schedule Tour" },
-                { value: "offer", label: "Make Offer" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setInquiryType(option.value as "info" | "tour" | "offer")}
-                  className={`p-2 border rounded-lg text-center text-sm transition-colors ${
-                    inquiryType === option.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  data-testid={`button-inquiry-type-${option.value}`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {inquiryType === "tour" && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium">Preferred Date</label>
-                <input
-                  type="date"
-                  value={preferredDate}
-                  onChange={(e) => setPreferredDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border rounded-md mt-1"
-                  data-testid="input-tour-date"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Preferred Time</label>
-                <select
-                  value={preferredTime}
-                  onChange={(e) => setPreferredTime(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md mt-1"
-                  data-testid="select-tour-time"
-                >
-                  <option value="">Select time</option>
-                  <option value="morning">Morning (9am-12pm)</option>
-                  <option value="afternoon">Afternoon (12pm-5pm)</option>
-                  <option value="evening">Evening (5pm-8pm)</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="text-sm font-medium">Phone Number (optional)</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="(555) 123-4567"
-              className="w-full px-3 py-2 border rounded-md mt-1"
-              data-testid="input-inquiry-phone"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">
-              Message {inquiryType === "tour" ? "(optional)" : "*"}
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={
-                inquiryType === "tour"
-                  ? "Any special requests or questions..."
-                  : inquiryType === "offer"
-                    ? "Describe your offer terms..."
-                    : "What would you like to know about this property?"
-              }
-              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
-              data-testid="input-inquiry-message"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-inquiry">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
-            className="flex-1"
-            data-testid="button-submit-listing-inquiry"
-          >
-            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {inquiryType === "tour" ? "Request Tour" : "Submit Inquiry"}
           </Button>
         </div>
       </div>

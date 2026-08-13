@@ -96,7 +96,6 @@ describe("reviewed inventory data route contract", () => {
       "/api/marketplace/investment-interest",
       "/api/supabase/capital-commitments",
       "/api/supabase/buyer-offers",
-      "/api/listing-inquiries",
       "/api/capital-projects/:projectId/term-sheet-preview",
       "/api/marketflow/offers",
     ];
@@ -157,6 +156,73 @@ describe("reviewed inventory data route contract", () => {
     );
     expect(routesSource).toMatch(
       /app\.post\("\/api\/marketplace\/buyer\/offers"[\s\S]*?canInitiateLegacyDealInteraction\(access, res\)/,
+    );
+  });
+
+  it("parses listing inquiries before reviewed access and storage", () => {
+    expect(routesSource).toMatch(
+      /app\.post\(\s*"\/api\/listing-inquiries",\s*isHybridAuthenticated,\s*listingInquiryHandlers\.validateInquiry,\s*loadMarketflowInventoryAccessContext,\s*listingInquiryHandlers\.postInquiry,?\s*\)/s,
+    );
+  });
+
+  it("wires the behavior-tested listing handlers into the application", () => {
+    const factoryStart = routesSource.indexOf(
+      "const listingInquiryHandlers = createListingInquiryRouteHandlers({",
+    );
+    expect(factoryStart).toBeGreaterThanOrEqual(0);
+    const factoryTail = routesSource.slice(factoryStart);
+    const factoryEndMatch = factoryTail.match(/\n\s*\}\);/);
+    expect(factoryEndMatch?.index).toBeDefined();
+    if (factoryEndMatch?.index === undefined) {
+      throw new Error("listing inquiry handler factory is unterminated");
+    }
+    const factory = factoryTail.slice(
+      0,
+      factoryEndMatch.index + factoryEndMatch[0].length,
+    );
+
+    expect(factory).toContain("getAuthUserId,");
+    expect(factory).toMatch(
+      /hasReviewedInventoryAccess:\s*\(res\) =>\s*res\.locals\.canAccessReviewedMarketflowInventory === true/s,
+    );
+    expect(factory).toMatch(
+      /getListing:\s*\(listingId\) => storage\.getListing\(listingId\)/,
+    );
+    expect(factory).toMatch(
+      /canInitiateInquiry:\s*async \(req, res, userId, listingId\) => \{[\s\S]*?resolveLegacyDealAccess\(\s*req,\s*userId,\s*"listing",\s*listingId,?\s*\)[\s\S]*?access && canInitiateLegacyDealInteraction\(access, res\)/s,
+    );
+    expect(factory).toMatch(
+      /createListingInquiry:\s*\(inquiry\) =>\s*storage\.createListingInquiry\(inquiry\)/s,
+    );
+    expect(routesSource).toMatch(
+      /app\.get\(\s*"\/api\/deals\/LISTING\/:id\/context",\s*isHybridAuthenticated,\s*loadMarketflowInventoryAccessContext,\s*listingInquiryHandlers\.getContext,?\s*\)/s,
+    );
+    const focusedContextIndex = routesSource.search(
+      /app\.get\(\s*"\/api\/deals\/LISTING\/:id\/context"/s,
+    );
+    const genericContextIndex = routesSource.indexOf(
+      "app.get('/api/deals/:dealType/:id/context'",
+    );
+    expect(focusedContextIndex).toBeGreaterThanOrEqual(0);
+    expect(genericContextIndex).toBeGreaterThanOrEqual(0);
+    expect(focusedContextIndex).toBeLessThan(genericContextIndex);
+    expect(routesSource).toMatch(
+      /app\.get\(\s*'\/api\/deals\/:dealType\/:id\/context',\s*isHybridAuthenticated,\s*async/s,
+    );
+    const genericContextEnd = routesSource.indexOf(
+      "// --- Buyer Offers (Supabase) ---",
+      genericContextIndex,
+    );
+    expect(genericContextEnd).toBeGreaterThan(genericContextIndex);
+    const genericContext = routesSource.slice(
+      genericContextIndex,
+      genericContextEnd,
+    );
+    expect(genericContext).not.toMatch(/dealType === ['"]LISTING['"]/);
+    expect(genericContext).not.toContain("getListingInquiries");
+    expect(genericContext).not.toContain("showingInfo:");
+    expect(genericContext).not.toContain(
+      "submittedBy: listing.submittedBy",
     );
   });
 

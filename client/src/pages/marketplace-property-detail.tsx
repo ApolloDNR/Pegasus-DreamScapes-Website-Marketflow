@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAnalytics } from "@/hooks/use-analytics";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +23,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useDealAction } from "@/contexts/deal-action-context";
 import {
   Home,
   Heart,
@@ -45,8 +43,28 @@ import {
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { RetailListing, InsertBuyerOffer } from "@shared/schema";
-import { AskPeggyButton } from "@/components/ask-peggy-button";
+import { buildMarketplaceListingMailto } from "@/lib/listing-inquiry";
+
+interface SupabaseListingDetail {
+  id: string;
+  title: string;
+  propertyAddress: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  propertyType?: string;
+  listingType: "retail" | "investment" | "wholesale";
+  listPrice: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  sqft?: number;
+  lotSize?: string;
+  yearBuilt?: number;
+  description?: string;
+  features?: string[];
+  images?: string[];
+  status: string;
+}
 
 export default function MarketplacePropertyDetailPage() {
   return (
@@ -63,21 +81,14 @@ function PropertyDetailContent() {
   const propertyId = params?.id || null;
   const { isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
-  const { openDealAction } = useDealAction();
   const [, navigate] = useLocation();
   const [showOfferModal, setShowOfferModal] = useState(false);
-  const { trackListingView } = useAnalytics();
 
-  const { data: listing, isLoading, error } = useQuery<RetailListing>({
-    queryKey: ["/api/supabase/listings", propertyId],
-    enabled: !!propertyId,
-  });
-
-  useEffect(() => {
-    if (listing?.id) {
-      trackListingView(typeof listing.id === 'string' ? parseInt(listing.id) : listing.id);
-    }
-  }, [listing?.id, trackListingView]);
+  const { data: listing, isLoading, error } =
+    useQuery<SupabaseListingDetail>({
+      queryKey: ["/api/supabase/listings", propertyId],
+      enabled: !!propertyId,
+    });
 
   const toggleSaveMutation = useMutation({
     mutationFn: async () => {
@@ -176,6 +187,16 @@ function PropertyDetailContent() {
   };
 
   const canMakeOffer = listing.status === "active";
+  const requestInfoHref = buildMarketplaceListingMailto({
+    listingId: listing.id,
+    propertyAddress: listing.propertyAddress,
+    intent: "info",
+  });
+  const scheduleShowingHref = buildMarketplaceListingMailto({
+    listingId: listing.id,
+    propertyAddress: listing.propertyAddress,
+    intent: "showing",
+  });
 
   return (
     <div className="space-y-6">
@@ -222,9 +243,6 @@ function PropertyDetailContent() {
             )}
             <div className="absolute top-4 left-4 flex items-center gap-2">
               {getStatusBadge(listing.status)}
-              {listing.featured && (
-                <Badge className="bg-primary text-primary-foreground">Featured</Badge>
-              )}
             </div>
           </div>
 
@@ -343,23 +361,20 @@ function PropertyDetailContent() {
                 )}
                 {propertyId && (
                   <>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => openDealAction(Number(propertyId), "listing_request_info")}
-                      data-testid="button-request-info"
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Request Info
+                    <Button variant="outline" className="w-full" asChild>
+                      <a href={requestInfoHref} data-testid="button-request-info">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Request Info
+                      </a>
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => openDealAction(Number(propertyId), "listing_schedule_tour")}
-                      data-testid="button-schedule-showing"
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Schedule Showing
+                    <Button variant="outline" className="w-full" asChild>
+                      <a
+                        href={scheduleShowingHref}
+                        data-testid="button-schedule-showing"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule Showing
+                      </a>
                     </Button>
                   </>
                 )}
@@ -373,14 +388,6 @@ function PropertyDetailContent() {
                   <Heart className="h-4 w-4 mr-2" />
                   {isAuthenticated ? "Save Listing" : "Login to Save"}
                 </Button>
-                {propertyId && (
-                  <AskPeggyButton
-                    dealType="retail"
-                    dealId={propertyId}
-                    dealLabel={listing.propertyAddress}
-                    fullWidth
-                  />
-                )}
               </div>
             </CardContent>
           </Card>
@@ -395,11 +402,12 @@ function PropertyDetailContent() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => openDealAction(Number(propertyId), "listing_request_info")}
-                  data-testid="button-contact"
+                  asChild
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Request Info
+                  <a href={requestInfoHref} data-testid="button-contact">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Request Info
+                  </a>
                 </Button>
               )}
               <a
@@ -458,7 +466,7 @@ function PropertyDetailSkeleton() {
 interface OfferModalProps {
   open: boolean;
   onClose: () => void;
-  listing: RetailListing;
+  listing: SupabaseListingDetail;
   formatCurrency: (amount: number) => string;
 }
 
@@ -589,4 +597,3 @@ function OfferModal({ open, onClose, listing, formatCurrency }: OfferModalProps)
     </Dialog>
   );
 }
-
