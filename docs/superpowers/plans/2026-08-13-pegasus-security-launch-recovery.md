@@ -100,19 +100,23 @@
 - Create: `shared/listing-inquiry-contract.ts`
 - Create: `client/src/lib/listing-inquiry.ts`
 - Modify: `client/src/contexts/deal-action-context.tsx`
+- Modify: `client/src/pages/marketplace-property-detail.tsx`
+- Create: `server/listing-inquiry-routes.ts`
 - Modify: `server/routes.ts`
-- Create: `client/src/__tests__/listing-inquiry-contract.test.ts`
+- Create: `client/src/__tests__/listing-inquiry-contract.test.tsx`
+- Create: `client/src/__tests__/marketplace-property-detail-listing-actions.test.tsx`
 - Create: `server/__tests__/listing-inquiry-contract.test.ts`
 - Test: `server/__tests__/public-data-route-contract.test.ts`
 
 **Interfaces:**
-- `listingInquiryRequestSchema` is strict and accepts: positive safe-integer `listingId`; `inquiryType` in `info|tour|offer`; trimmed `fullName` of 1–255 characters; a required valid email of at most 320 characters; optional trimmed phone of at most 50 characters; optional message of at most 4,000 characters; at most three `preferredShowingDates` strings of at most 100 characters; and optional boolean `preApproved`.
-- Both reachable UIs require email even when phone is the preferred contact; phone remains optional. Client builders map UI `name` to API `fullName`. The tour builder zips each nonblank date with its same-index nonblank time as `YYYY-MM-DD HH:mm` (or the date alone) into `preferredShowingDates`; no live time choice is silently discarded. The server never accepts the obsolete `name`, `preferredDates`, `preferredTimes`, or `isPreApproved` aliases.
+- `listingInquiryRequestSchema` is strict and accepts: positive safe-integer `listingId`; `inquiryType` in `info|tour|offer`; trimmed `fullName` of 1–255 characters; a required valid email of at most 255 characters, matching the persisted `varchar(255)` column; optional trimmed phone of at most 50 characters; optional message of at most 4,000 characters; at most three `preferredShowingDates` strings of at most 100 characters; and optional boolean `preApproved`.
+- Both reachable UIs require email even when phone is the preferred contact. Phone remains an optional request field, but Request Info still requires it when the visitor explicitly selects Phone as the preferred method. Client builders map UI `name` to API `fullName`. The tour builder zips each nonblank date with its same-index nonblank time as `YYYY-MM-DD HH:mm` (or the date alone) into `preferredShowingDates`; no live time choice is silently discarded. The server never accepts the obsolete `name`, `preferredDates`, `preferredTimes`, or `isPreApproved` aliases.
+- The UUID-backed Supabase property-detail page never coerces its string ID into the legacy numeric-listing action, numeric analytics event, or numeric Peggy deal context. Until those stores accept string IDs, remove the broken modal, analytics, and Peggy calls and retain only its working offer, save, email, and telephone paths; do not simulate a successful inquiry, view event, or Peggy context.
 - The unused legacy `ListingInquiryForm` is removed rather than retaining a caller that cannot provide the required identity fields.
-- Public listing context for an authenticated first-time buyer uses an explicit public projection and excludes inquiries, showing instructions, private contacts, owner IDs, and audit fields.
+- Public listing context for an authenticated, reviewed-access first-time buyer uses an explicit public projection and excludes inquiries, showing instructions, private contacts, owner IDs, and audit fields. Authentication alone never grants MarketFlow inventory access; unreviewed, private, and nonexistent requests remain indistinguishable `404` responses with `Cache-Control: no-store`.
 
-- [ ] **Step 1: Write RED tests.** Prove both reachable listing modals require valid email and build valid canonical requests, a `name`-only/phone-only request fails, a tour zips dates/times and persists `preApproved`, first-time public context is readable, and a private listing remains a non-enumerating 404.
-- [ ] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/listing-inquiry-contract.test.ts server/__tests__/listing-inquiry-contract.test.ts server/__tests__/public-data-route-contract.test.ts`. Expected: forms emit `name`, route ignores tour fields, and public first-contact projection is absent.
+- [ ] **Step 1: Write RED tests.** Prove both reachable numeric-listing modals require valid email and build valid canonical requests, a `name`-only/phone-only request fails, a tour zips dates/times and persists `preApproved`, first-time reviewed-access public context is readable, and a private listing remains a non-enumerating 404. Prove the UUID-backed property page exposes truthful direct-contact paths and never opens a numeric-listing modal.
+- [ ] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/listing-inquiry-contract.test.tsx client/src/__tests__/marketplace-property-detail-listing-actions.test.tsx server/__tests__/listing-inquiry-contract.test.ts server/__tests__/public-data-route-contract.test.ts`. Expected: numeric forms emit `name`, the route ignores tour fields, the reviewed-access first-contact projection is absent, and the UUID property page still launches the incompatible legacy modal.
 - [ ] **Step 3: Implement the shared strict schema and explicit builders.** Parse before any access/storage call; persist only parsed fields; remove the dead legacy form; do not expose private context to make first contact work.
 - [ ] **Step 4: Run GREEN.** Repeat the focused command, then `npm run check` and `git diff --check`.
 - [ ] **Step 5: Commit.** Stage only Task 2 paths and commit `fix: align listing inquiry contracts`.
