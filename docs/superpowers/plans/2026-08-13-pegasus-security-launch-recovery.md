@@ -150,24 +150,30 @@
 ### Task 4A: Remove Peggy's session-ID token oracle and guard calculator analysis
 
 **Files:**
+- Create: `server/peggy-route-auth.ts`
 - Modify: `server/routes.ts` Peggy create/new/calculator routes only
 - Modify: `server/peggy.ts` conversation-start path only
 - Modify: `client/src/components/peggy-dock.tsx`
 - Modify: `client/src/components/peggy-chat.tsx`
 - Modify: `client/src/contexts/peggy-context.tsx`
+- Modify: `client/src/pages/privacy.tsx` Peggy paragraphs only
 - Modify: `server/__tests__/launch-security-route-contract.test.ts`
 - Create: `server/__tests__/peggy-route-auth.test.ts`
+- Create: `client/src/__tests__/peggy-client-session-boundary.test.tsx`
+- Modify: `client/src/__tests__/peggy-public-truth.test.tsx`
 
 **Interfaces:**
 - Peggy create/new accepts only bounded context. It starts a fresh conversation with a server-generated `randomUUID()` correlation value and never calls anonymous `getOrCreateConversation` using `req.body.sessionId`.
 - A raw browser ID cannot select an existing row or mint access. Clients stop sending/storing `peggy_session_id` as authorization material and have no timestamp/`Math.random` fallback.
 - `POST /api/peggy/analyze-calculator` registers `isHybridAuthenticated` before model work, derives `userId` from the verified request, uses a server-generated correlation value, and performs no provider/storage work for anonymous callers.
 
-- [ ] **Step 1: Write RED tests.** Require middleware/session source patterns; prove anonymous calculator 401 with zero side effects; prove two create calls with the same attacker body ID create distinct server IDs; prove replay cannot retrieve/mint access to another conversation; and prove no predictable browser fallback remains.
-- [ ] **Step 2: Run RED.** Run `npx vitest run server/__tests__/launch-security-route-contract.test.ts server/__tests__/peggy-route-auth.test.ts`.
-- [ ] **Step 3: Implement server-controlled creation/calculator identity and remove client session credentials.** Preserve authenticated history through its already-guarded owner route.
-- [ ] **Step 4: Run GREEN.** Repeat focused tests, then `npm run check`.
-- [ ] **Step 5: Commit.** Commit `fix: bind Peggy creation to server identity` with only Task 4A paths.
+- [x] **Step 1: Write RED tests.** Require middleware/session source patterns; prove anonymous calculator 401 with zero side effects; prove two create calls with the same attacker body ID create distinct server IDs; prove replay cannot retrieve/mint access to another conversation; and prove no predictable browser fallback remains.
+- [x] **Step 2: Run RED.** Run `npx vitest run server/__tests__/launch-security-route-contract.test.ts server/__tests__/peggy-route-auth.test.ts`.
+- [x] **Step 3: Implement server-controlled creation/calculator identity and remove client session credentials.** Preserve authenticated history through its already-guarded owner route.
+- [x] **Step 4: Run GREEN.** Repeat focused tests, then `npm run check`.
+- [x] **Step 5: Commit.** Commit `fix: bind Peggy creation to server identity` with only Task 4A paths.
+
+**Accepted 2026-08-13:** canonical implementation `d4c4cafaa1df8fe1463ce2bdd1f0b151f1d9882d`; `SPEC APPROVED`; `QUALITY APPROVED`; `SECURITY APPROVED`. Node 22.23.2 causal RED/GREEN, focused 5 files / 156 tests, adjacent 5 files / 55 tests, full 116 files / 1,475 tests, TypeScript, listener-free same-entrypoint production build, bundle budget, exact eleven-path scope, protected-surface comparisons, and diff hygiene passed. The complete 11-file security diff scan reported zero findings at every severity, zero deferred work, and sealed complete coverage.
 
 ### Task 4B: Expire Peggy credentials with exactly one bounded refresh
 
