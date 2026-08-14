@@ -283,4 +283,74 @@ describe("launch security route contract", () => {
       /export async function (?:startConversation|getOrCreateConversation)/,
     );
   });
+
+  it("composes refresh and singular Peggy no-store prefixes in exact order", () => {
+    expect(
+      routesSource.match(/registerPeggyConversationAccessRefreshRoute/g),
+    ).toHaveLength(2);
+    expect(
+      routesSource.match(
+        /app\.use\("\/api\/peggy", peggyIdentityNoStore\);/g,
+      ),
+    ).toHaveLength(1);
+    expect(
+      routesSource.match(
+        /app\.use\("\/api\/admin\/peggy", peggyIdentityNoStore\);/g,
+      ),
+    ).toHaveLength(1);
+
+    const guardFactory = sliceBetweenOnce(
+      routesSource,
+      "const requirePeggyConversationAccess =",
+      "\n\n  const peggyIdentityNoStore",
+      "Peggy access guard factory",
+    );
+    for (const dependency of [
+      "createPeggyConversationAccessGuard({",
+      "getConversation: (id) => storage.getPeggyConversation(id)",
+      "getVerifiedUserId: getVerifiedPeggyUserId",
+    ]) expect(guardFactory).toContain(dependency);
+
+    const peggyComposition = sliceBetweenOnce(
+      routesSource,
+      "const requirePeggyConversationAccess =",
+      "\n  // Get conversation history",
+      "Peggy access composition",
+    );
+    const ordered = [
+      "registerPeggyIdentityRoutes(app, {",
+      "registerPeggyConversationAccessRefreshRoute(app, {",
+      'app.use("/api/peggy", peggyIdentityNoStore);',
+      'app.use("/api/admin/peggy", peggyIdentityNoStore);',
+    ].map((anchor) => peggyComposition.indexOf(anchor));
+    expect(ordered.every((index) => index >= 0)).toBe(true);
+    expect(ordered).toEqual([...ordered].sort((a, b) => a - b));
+
+    const refreshWiring = sliceBetweenOnce(
+      peggyComposition,
+      "registerPeggyConversationAccessRefreshRoute(app, {",
+      '\n\n  app.use("/api/peggy", peggyIdentityNoStore);',
+      "Peggy refresh registrar wiring",
+    );
+    for (const dependency of [
+      "noStore: peggyIdentityNoStore", "rateLimit: publicIntakeRateLimit",
+      "getConversation: (id) => storage.getPeggyConversation(id)",
+      "getVerifiedUserId: getVerifiedPeggyUserId", "getSecret: getPeggyConversationAccessSecret",
+      "verifyAccessToken: verifyPeggyConversationAccessToken", "createAccessToken: createPeggyConversationAccessToken",
+    ]) expect(refreshWiring).toContain(dependency);
+    expect(refreshWiring).not.toMatch(/startWebConversation|createPeggyConversation\s*\(|updatePeggy|deletePeggy|peggy\.chat|analyzeCalculator/);
+
+    const publicPrefix = routesSource.indexOf('app.use("/api/peggy", peggyIdentityNoStore);');
+    for (const route of [
+      'app.get("/api/peggy/conversations/:id"', 'app.get("/api/peggy/conversations"',
+      'app.post("/api/peggy/chat"', 'app.post("/api/peggy/conversations/:id/finish"',
+      '"/api/peggy/phone/webhook"', 'app.post("/api/peggy/suggestions"',
+      'app.post("/api/peggy/messages/:id/feedback"',
+    ]) expect(routesSource.indexOf(route), `${route} after public no-store`).toBeGreaterThan(publicPrefix);
+    const adminPrefix = routesSource.indexOf('app.use("/api/admin/peggy", peggyIdentityNoStore);');
+    for (const route of [
+      'app.get("/api/admin/peggy/conversations", isHybridAuthenticated,',
+      'app.get("/api/admin/peggy/conversations/:id", isHybridAuthenticated,',
+    ]) expect(routesSource.indexOf(route), `${route} after admin no-store`).toBeGreaterThan(adminPrefix);
+  });
 });

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, authenticatedRequest } from "@/lib/queryClient";
+import { peggyFetchWithSingleRefresh } from "@/lib/peggy-access";
 import { usePeggyContext, type PeggyContextData } from "@/contexts/peggy-context";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -178,8 +179,19 @@ export function PeggyChatBubble() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const createConversationInFlightRef = useRef(false);
+  const conversationAccessRef =
+    useRef<PeggyConversationAccessResponse | null>(null);
   
   const { context, isOpen, openChat, closeChat } = usePeggyContext();
+
+  const replaceConversationAccess = useCallback(
+    (credential: PeggyConversationAccessResponse) => {
+      conversationAccessRef.current = credential;
+      setConversationId(credential.id);
+      setConversationAccessToken(credential.accessToken);
+    },
+    [],
+  );
   
   const { data: suggestions = [] } = useQuery<string[]>({
     queryKey: ['/api/peggy/suggestions', context.page],
@@ -199,10 +211,7 @@ export function PeggyChatBubble() {
       );
       return response.json() as Promise<PeggyConversationAccessResponse>;
     },
-    onSuccess: (data) => {
-      setConversationId(data.id);
-      setConversationAccessToken(data.accessToken);
-    },
+    onSuccess: (data) => { replaceConversationAccess(data); },
     onSettled: () => {
       createConversationInFlightRef.current = false;
     }
@@ -210,16 +219,20 @@ export function PeggyChatBubble() {
   
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      if (!conversationId || !conversationAccessToken) {
-        throw new Error('No conversation');
-      }
-      const response = await apiRequest('POST', '/api/peggy/chat', { 
-        conversationId, 
-        message, 
-        context 
-      }, {
-        [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
+      const credential = conversationAccessRef.current;
+      if (!credential) throw new Error('No conversation');
+      const response = await peggyFetchWithSingleRefresh({
+        fetcher: authenticatedRequest,
+        credentialRef: conversationAccessRef,
+        input: '/api/peggy/chat',
+        init: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', [PEGGY_CONVERSATION_ACCESS_HEADER]: credential.accessToken },
+          body: JSON.stringify({ conversationId: credential.id, message, context }),
+        },
+        onCredentialChange: replaceConversationAccess,
       });
+      if (!response.ok) throw new Error(`Peggy request failed: ${response.status}`);
       return response.json();
     },
     onSuccess: (data: any) => {
@@ -235,6 +248,7 @@ export function PeggyChatBubble() {
     (newContext: PeggyContextData) => {
       if (createConversationInFlightRef.current) return;
       createConversationInFlightRef.current = true;
+      conversationAccessRef.current = null;
       setConversationId(null);
       setConversationAccessToken(null);
       createConversationMutation.mutate(newContext);
@@ -244,15 +258,20 @@ export function PeggyChatBubble() {
   
   const feedbackMutation = useMutation({
     mutationFn: async ({ messageId, feedback }: { messageId: number; feedback: string }) => {
-      if (!conversationId || !conversationAccessToken) {
-        throw new Error('No conversation');
-      }
-      const response = await apiRequest('POST', `/api/peggy/messages/${messageId}/feedback`, {
-        conversationId,
-        feedback,
-      }, {
-        [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
+      const credential = conversationAccessRef.current;
+      if (!credential) throw new Error('No conversation');
+      const response = await peggyFetchWithSingleRefresh({
+        fetcher: authenticatedRequest,
+        credentialRef: conversationAccessRef,
+        input: `/api/peggy/messages/${messageId}/feedback`,
+        init: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', [PEGGY_CONVERSATION_ACCESS_HEADER]: credential.accessToken },
+          body: JSON.stringify({ conversationId: credential.id, feedback }),
+        },
+        onCredentialChange: replaceConversationAccess,
       });
+      if (!response.ok) throw new Error(`Peggy feedback failed: ${response.status}`);
       return response.json();
     },
     onSuccess: (_, variables) => {

@@ -17,6 +17,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { Peggy, splitHandoff } from "@/pegasus/peggy";
+import { PEGGY_CONVERSATION_ACCESS_HEADER } from "@shared/peggy-access";
 
 describe("splitHandoff", () => {
   it("extracts a strategylab action and strips the directive from the prose", () => {
@@ -81,6 +82,14 @@ function deferred<T>() {
     resolve = r;
   });
   return { promise, resolve };
+}
+
+function jsonResponse(value: unknown, status = 200): Response {
+  return new Response(JSON.stringify(value), {
+    status,
+    statusText: status === 200 ? "OK" : "Injected failure",
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 function renderPeggy() {
@@ -193,5 +202,133 @@ describe("Peggy — handoff action buttons", () => {
       }),
     );
     expect(setOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("uses raw fetch for one bounded refresh/replay without a duplicate visual turn", async () => {
+    const replay = deferred<Response>();
+    let chatCount = 0;
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url === "/api/peggy/conversations") {
+        return Promise.resolve(jsonResponse({
+          id: 31,
+          accessToken: "opaque-canonical-old",
+        }));
+      }
+      if (url === "/api/peggy/conversations/31/access/refresh") {
+        return Promise.resolve(jsonResponse({
+          id: 31,
+          accessToken: "opaque-canonical-fresh",
+        }));
+      }
+      if (url === "/api/peggy/chat") {
+        chatCount += 1;
+        return chatCount === 1
+          ? Promise.resolve(jsonResponse({
+              message: "Conversation access expired",
+              code: "PEGGY_ACCESS_EXPIRED",
+            }, 401))
+          : replay.promise;
+      }
+      throw new Error(`Unexpected fetch ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderPeggy();
+    await sendMessage("refresh this one visual turn");
+    expect(screen.getAllByText("refresh this one visual turn")).toHaveLength(1);
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.filter(([input]) =>
+        String(input).endsWith("/access/refresh"),
+      )).toHaveLength(1);
+      expect(fetchMock.mock.calls.filter(([input]) =>
+        String(input) === "/api/peggy/chat",
+      )).toHaveLength(2);
+    });
+
+    const refreshCalls = fetchMock.mock.calls.filter(([input]) =>
+      String(input).endsWith("/access/refresh"),
+    );
+    const chatCalls = fetchMock.mock.calls.filter(([input]) =>
+      String(input) === "/api/peggy/chat",
+    );
+    expect(refreshCalls).toHaveLength(1);
+    expect(chatCalls).toHaveLength(2);
+    const originalInit = chatCalls[0][1] as RequestInit;
+    const refreshInit = refreshCalls[0][1] as RequestInit;
+    const replayInit = chatCalls[1][1] as RequestInit;
+    expect(originalInit.signal).toBeInstanceOf(AbortSignal);
+    expect(refreshInit.signal).toBe(originalInit.signal);
+    expect(replayInit.signal).toBe(originalInit.signal);
+    expect(refreshInit.method).toBe("POST");
+    expect(refreshInit.body).toBeUndefined();
+    expect(originalInit.credentials).toBeUndefined();
+    expect(refreshInit.credentials).toBeUndefined();
+    expect(replayInit.credentials).toBeUndefined();
+    expect(new Headers(originalInit.headers).get(
+      PEGGY_CONVERSATION_ACCESS_HEADER,
+    )).toBe("opaque-canonical-old");
+    expect(new Headers(refreshInit.headers).get(
+      PEGGY_CONVERSATION_ACCESS_HEADER,
+    )).toBe("opaque-canonical-old");
+    expect(new Headers(replayInit.headers).get(
+      PEGGY_CONVERSATION_ACCESS_HEADER,
+    )).toBe("opaque-canonical-fresh");
+    expect(new Headers(originalInit.headers).get("Authorization")).toBeNull();
+    expect(new Headers(refreshInit.headers).get("Authorization")).toBeNull();
+
+    replay.resolve(jsonResponse({
+      response:
+        'Refreshed once. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]',
+    }));
+    expect(await screen.findByText("Refreshed once.")).toBeVisible();
+    expect(screen.getAllByText("refresh this one visual turn")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: /Open Strategy Lab/ })).toBeVisible();
+  });
+
+  it.each([
+    ["raw 404", () => jsonResponse({ message: "Conversation not found" }, 404)],
+    ["valid DTO with unexpected 201", () => jsonResponse({
+      id: 32,
+      accessToken: "must-not-install",
+    }, 201)],
+    ["empty unexpected 204", () => new Response(null, { status: 204 })],
+  ] as const)("renders the existing error fallback after %s without replay", async (
+    _label,
+    refreshResponse,
+  ) => {
+    const refresh = deferred<Response>();
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "/api/peggy/conversations") {
+        return Promise.resolve(jsonResponse({ id: 32, accessToken: "opaque-old" }));
+      }
+      if (url === "/api/peggy/chat") {
+        return Promise.resolve(jsonResponse({
+          message: "Conversation access expired",
+          code: "PEGGY_ACCESS_EXPIRED",
+        }, 401));
+      }
+      if (url === "/api/peggy/conversations/32/access/refresh") {
+        return refresh.promise;
+      }
+      throw new Error(`Unexpected fetch ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderPeggy();
+    await sendMessage("fail closed once");
+    refresh.resolve(refreshResponse());
+
+    expect(await screen.findByText(/I can.t reach my brain at the moment/)).toBeVisible();
+    expect(screen.getByRole("button", { name: /Start a Review/ })).toBeVisible();
+    expect(fetchMock.mock.calls.filter(([input]) =>
+      String(input) === "/api/peggy/chat",
+    )).toHaveLength(1);
+    expect(fetchMock.mock.calls.filter(([input]) =>
+      String(input).endsWith("/access/refresh"),
+    )).toHaveLength(1);
+    expect(screen.getAllByText("fail closed once")).toHaveLength(1);
   });
 });

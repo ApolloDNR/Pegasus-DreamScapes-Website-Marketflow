@@ -62,16 +62,12 @@ function deferred<T>(): Deferred<T> {
 }
 
 function jsonResponse(value: unknown, status = 200): Response {
-  const body = JSON.stringify(value);
-  return {
-    ok: status >= 200 && status < 300,
+  return new Response(JSON.stringify(value), {
     status,
     statusText: status === 200 ? "OK" : "Injected failure",
-    json: async () => value,
-    text: async () => body,
-  } as Response;
+    headers: { "Content-Type": "application/json" },
+  });
 }
-
 function renderWithClient(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -461,6 +457,34 @@ describe("PeggyDock real-provider single-flight integration", () => {
   });
 });
 
+type AccessSurface = "Dock" | "dormant";
+
+async function renderAccessSurface(surface: AccessSurface) {
+  fakeContext({
+    isOpen: true,
+    context: { page: "home", surface: `refresh-${surface.toLowerCase()}` },
+  });
+  renderWithClient(fakePeggyTree(
+    surface === "Dock" ? <PeggyDock /> : <PeggyChatBubble />,
+  ));
+  await waitFor(() =>
+    expect(callsFor("/api/peggy/conversations")).toHaveLength(1),
+  );
+  if (surface === "Dock") {
+    fireEvent.click(screen.getByTestId("button-peggy-dock"));
+  }
+  await waitFor(() =>
+    expect(screen.getByTestId("input-peggy-message")).toBeEnabled(),
+  );
+}
+
+async function sendAccessSurfaceMessage(message: string, reply: string) {
+  fireEvent.change(screen.getByTestId("input-peggy-message"), {
+    target: { value: message },
+  });
+  fireEvent.click(screen.getByTestId("button-peggy-send"));
+  await waitFor(() => expect(screen.getByText(reply)).toBeVisible());
+}
 describe("PeggyDock focused control boundary", () => {
   it("serializes double New, blocks same-stack old-token chat, then scopes chat to token two", async () => {
     const replacement = deferred<Response>();
@@ -665,6 +689,156 @@ describe("compiled dormant Peggy transport", () => {
   });
 });
 
+describe.each(["Dock", "dormant"] as const)(
+  "%s bounded access refresh",
+  (surface) => {
+    it("refreshes chat and feedback through authenticatedRequest without duplicate UI", async () => {
+      let chatCount = 0;
+      let feedbackCount = 0;
+      let refreshCount = 0;
+      fetchMock.mockImplementation((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url === "/api/peggy/suggestions") {
+          return Promise.resolve(jsonResponse({ suggestions: [] }));
+        }
+        if (url === "/api/peggy/conversations") {
+          return Promise.resolve(jsonResponse({ id: 201, accessToken: "opaque-old" }));
+        }
+        if (url === "/api/peggy/chat") {
+          chatCount += 1;
+          return Promise.resolve(chatCount === 1
+            ? jsonResponse({
+                message: "Conversation access expired",
+                code: "PEGGY_ACCESS_EXPIRED",
+              }, 401)
+            : jsonResponse({ messageId: 501, response: "One rendered reply" }));
+        }
+        if (url === "/api/peggy/messages/501/feedback") {
+          feedbackCount += 1;
+          return Promise.resolve(feedbackCount === 1
+            ? jsonResponse({
+                message: "Conversation access expired",
+                code: "PEGGY_ACCESS_EXPIRED",
+              }, 401)
+            : jsonResponse({ success: true }));
+        }
+        if (url === "/api/peggy/conversations/201/access/refresh") {
+          refreshCount += 1;
+          return Promise.resolve(jsonResponse({
+            id: 201,
+            accessToken: refreshCount === 1 ? "opaque-chat" : "opaque-feedback",
+          }));
+        }
+        throw new Error(`Unexpected URL ${url}`);
+      });
+
+      await renderAccessSurface(surface);
+      await sendAccessSurfaceMessage("one optimistic turn", "One rendered reply");
+      expect(screen.getAllByText("one optimistic turn")).toHaveLength(1);
+      expect(screen.getAllByText("One rendered reply")).toHaveLength(1);
+      expect(callsFor("/api/peggy/chat")).toHaveLength(2);
+      expect(capturedRequest("/api/peggy/chat", 0).credentials).toBe("include");
+      expect(capturedRequest("/api/peggy/chat", 0).headers.get(
+        PEGGY_CONVERSATION_ACCESS_HEADER,
+      )).toBe("opaque-old");
+      expect(capturedRequest("/api/peggy/chat", 1).headers.get(
+        PEGGY_CONVERSATION_ACCESS_HEADER,
+      )).toBe("opaque-chat");
+
+      fireEvent.click(screen.getByTestId("button-feedback-helpful-501"));
+      expect(await screen.findByText("Thanks!")).toBeVisible();
+      expect(callsFor("/api/peggy/messages/501/feedback")).toHaveLength(2);
+      expect(capturedRequest(
+        "/api/peggy/messages/501/feedback",
+        0,
+      ).headers.get(PEGGY_CONVERSATION_ACCESS_HEADER)).toBe("opaque-chat");
+      expect(capturedRequest(
+        "/api/peggy/messages/501/feedback",
+        1,
+      ).headers.get(PEGGY_CONVERSATION_ACCESS_HEADER)).toBe("opaque-feedback");
+      expect(callsFor(
+        "/api/peggy/conversations/201/access/refresh",
+      )).toHaveLength(2);
+      expect(capturedRequest(
+        "/api/peggy/conversations/201/access/refresh",
+        0,
+      )).toMatchObject({ method: "POST", credentials: "include", body: undefined });
+      expect(capturedRequest(
+        "/api/peggy/conversations/201/access/refresh",
+        1,
+      ).headers.get(PEGGY_CONVERSATION_ACCESS_HEADER)).toBe("opaque-chat");
+    });
+
+    it("lets feedback refresh race with New but never overwrite/replay/mark success", async () => {
+      const lateRefresh = deferred<Response>();
+      let createCount = 0;
+      let chatCount = 0;
+      fetchMock.mockImplementation((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url === "/api/peggy/suggestions") {
+          return Promise.resolve(jsonResponse({ suggestions: [] }));
+        }
+        if (url === "/api/peggy/conversations") {
+          createCount += 1;
+          return Promise.resolve(jsonResponse(createCount === 1
+            ? { id: 301, accessToken: "old-row-token" }
+            : { id: 302, accessToken: "replacement-row-token" }));
+        }
+        if (url === "/api/peggy/chat") {
+          chatCount += 1;
+          return Promise.resolve(jsonResponse({
+            messageId: chatCount === 1 ? 601 : 602,
+            response: chatCount === 1 ? "Old row reply" : "Replacement reply",
+          }));
+        }
+        if (url === "/api/peggy/messages/601/feedback") {
+          return Promise.resolve(jsonResponse({
+            message: "Conversation access expired",
+            code: "PEGGY_ACCESS_EXPIRED",
+          }, 401));
+        }
+        if (url === "/api/peggy/conversations/301/access/refresh") {
+          return lateRefresh.promise;
+        }
+        throw new Error(`Unexpected URL ${url}`);
+      });
+
+      await renderAccessSurface(surface);
+      await sendAccessSurfaceMessage("seed old row", "Old row reply");
+      fireEvent.click(screen.getByTestId("button-feedback-helpful-601"));
+      await waitFor(() => expect(callsFor(
+        "/api/peggy/conversations/301/access/refresh",
+      )).toHaveLength(1));
+      expect(screen.getByTestId("button-peggy-new")).toBeEnabled();
+      fireEvent.click(screen.getByTestId("button-peggy-new"));
+      await waitFor(() =>
+        expect(callsFor("/api/peggy/conversations")).toHaveLength(2),
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("input-peggy-message")).toBeEnabled(),
+      );
+      await act(async () => {
+        lateRefresh.resolve(jsonResponse({ id: 301, accessToken: "stale-late-token" }));
+        await lateRefresh.promise;
+        await Promise.resolve();
+      });
+
+      expect(callsFor("/api/peggy/messages/601/feedback")).toHaveLength(1);
+      expect(screen.queryByText("Thanks!")).toBeNull();
+      await sendAccessSurfaceMessage("use replacement row", "Replacement reply");
+      const replacementChat = capturedRequest("/api/peggy/chat", 1);
+      expect(replacementChat.body).toMatchObject({ conversationId: 302 });
+      expect(replacementChat.headers.get(
+        PEGGY_CONVERSATION_ACCESS_HEADER,
+      )).toBe("replacement-row-token");
+      expect(fetchMock.mock.calls.some(([, init]) =>
+        new Headers((init as RequestInit | undefined)?.headers).get(
+          PEGGY_CONVERSATION_ACCESS_HEADER,
+        ) === "stale-late-token",
+      )).toBe(false);
+    });
+  },
+);
 function CanonicalHarness() {
   const [open, setOpen] = useState(true);
   return (

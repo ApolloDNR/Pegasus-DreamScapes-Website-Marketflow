@@ -5,9 +5,9 @@ import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS
 import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
 import {
-  PEGGY_CONVERSATION_ACCESS_HEADER,
   type PeggyConversationAccessResponse,
 } from '@shared/peggy-access';
+import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
 
 const GREETING =
   "I’m Peggy, Pegasus’s AI concierge. Tell me what you’re bringing, a property, a deal, a project, or a plan, in your own words. I’ll help organize it and route it to the appropriate Pegasus review path.";
@@ -89,8 +89,8 @@ export function Peggy({
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const convIdRef = useRef<number | null>(null);
-  const convAccessRef = useRef<string | null>(null);
+  const conversationAccessRef =
+    useRef<PeggyConversationAccessResponse | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: GREETING }]);
   const [draft, setDraft] = useState('');
@@ -165,7 +165,7 @@ export function Peggy({
 
       try {
         // Ensure a conversation exists for this session before chatting.
-        if (convIdRef.current == null) {
+        if (conversationAccessRef.current == null) {
           const convRes = await fetch('/api/peggy/conversations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -177,29 +177,37 @@ export function Peggy({
             Partial<PeggyConversationAccessResponse> & {
               conversation?: Partial<PeggyConversationAccessResponse>;
             };
-          convIdRef.current = conv?.id ?? conv?.conversation?.id ?? null;
-          convAccessRef.current =
-            conv?.accessToken ?? conv?.conversation?.accessToken ?? null;
-          if (convIdRef.current == null || !convAccessRef.current) {
+          const id = conv?.id ?? conv?.conversation?.id;
+          const rawAccessToken =
+            conv?.accessToken ?? conv?.conversation?.accessToken;
+          const accessToken =
+            typeof rawAccessToken === 'string' ? rawAccessToken.trim() : '';
+          if (!Number.isSafeInteger(id) || (id as number) <= 0 || !accessToken) {
             throw new Error('No conversation access');
           }
+          conversationAccessRef.current = {
+            id: id as number,
+            accessToken,
+          };
         }
 
-        const conversationAccessToken = convAccessRef.current;
-        if (!conversationAccessToken) throw new Error('No conversation access');
+        const credential = conversationAccessRef.current;
+        if (!credential) throw new Error('No conversation access');
 
-        const res = await fetch('/api/peggy/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            [PEGGY_CONVERSATION_ACCESS_HEADER]: conversationAccessToken,
+        const res = await peggyFetchWithSingleRefresh({
+          fetcher: fetch,
+          credentialRef: conversationAccessRef,
+          input: '/api/peggy/chat',
+          init: {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              conversationId: credential.id,
+              message: content,
+              context: { surface: 'public-peggy' },
+            }),
+            signal: controller.signal,
           },
-          body: JSON.stringify({
-            conversationId: convIdRef.current,
-            message: content,
-            context: { surface: 'public-peggy' },
-          }),
-          signal: controller.signal,
         });
 
         if (!res.ok) throw new Error(`Peggy request failed: ${res.status}`);

@@ -525,13 +525,41 @@ describe("fresh creation and scoped access", () => {
     "/api/peggy/conversations",
     "/api/peggy/conversations/new",
   ])("accepts an absent body as empty context at %s", async (path) => {
+    const beforeIssue = Date.now();
     const response = await post(path, undefined);
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(await response.json()).toEqual({
+    const body = await response.json();
+    const afterIssue = Date.now();
+    expect(body).toEqual({
       id: 100,
-      accessToken: expect.stringMatching(/^v1\./),
+      accessToken: expect.stringMatching(
+        /^v2\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/,
+      ),
     });
+    const [, payloadSegment] = body.accessToken.split(".");
+    const payload = JSON.parse(
+      Buffer.from(payloadSegment, "base64url").toString("utf8"),
+    );
+    expect(Object.keys(payload)).toEqual([
+      "namespace",
+      "version",
+      "conversationId",
+      "sessionId",
+      "userId",
+      "issuedAt",
+      "expiresAt",
+    ]);
+    expect(payload).toMatchObject({
+      namespace: "pegasus:peggy-conversation-access",
+      version: "v2",
+      conversationId: 100,
+      sessionId: "00000000-0000-4000-8000-000000000001",
+      userId: null,
+    });
+    expect(payload.issuedAt).toBeGreaterThanOrEqual(beforeIssue);
+    expect(payload.issuedAt).toBeLessThanOrEqual(afterIssue);
+    expect(payload.expiresAt - payload.issuedAt).toBe(86_400_000);
     expect(startCalls).toEqual([expect.objectContaining({ context: {} })]);
   });
 

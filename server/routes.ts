@@ -92,6 +92,8 @@ import {
   createPeggyConversationAccessGuard,
   createPeggyConversationAccessToken,
   getPeggyConversationAccessSecret,
+  registerPeggyConversationAccessRefreshRoute,
+  verifyPeggyConversationAccessToken,
 } from "./peggy-access";
 import {
   canAccessMarketflowOffer,
@@ -5929,6 +5931,7 @@ export async function registerRoutes(
   const requirePeggyConversationAccess =
     createPeggyConversationAccessGuard({
       getConversation: (id) => storage.getPeggyConversation(id),
+      getVerifiedUserId: getVerifiedPeggyUserId,
     });
 
   const peggyIdentityNoStore: RequestHandler = (_req, res, next) => {
@@ -5950,6 +5953,19 @@ export async function registerRoutes(
     parseCalculatorRequest: parseTransitionalPeggyCalculatorRequest,
     analyzeCalculator: peggy.analyzeCalculatorResults,
   });
+
+  registerPeggyConversationAccessRefreshRoute(app, {
+    noStore: peggyIdentityNoStore,
+    rateLimit: publicIntakeRateLimit,
+    getConversation: (id) => storage.getPeggyConversation(id),
+    getVerifiedUserId: getVerifiedPeggyUserId,
+    getSecret: getPeggyConversationAccessSecret,
+    verifyAccessToken: verifyPeggyConversationAccessToken,
+    createAccessToken: createPeggyConversationAccessToken,
+  });
+
+  app.use("/api/peggy", peggyIdentityNoStore);
+  app.use("/api/admin/peggy", peggyIdentityNoStore);
 
   // Get conversation history
   app.get("/api/peggy/conversations/:id", requirePeggyConversationAccess, async (req: any, res) => {
