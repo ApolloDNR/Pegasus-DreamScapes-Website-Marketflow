@@ -53,9 +53,10 @@
 
 ## Definition of done
 
-- Every finding `F01` through `F41` in the appendix maps to one or more narrow implementing commits and passing regressions. `F02` intentionally spans guarded calculator access, explanatory output, and truthful deletion/retention lifecycle commits.
+- Every finding `F01` through `F41` in the appendix maps to one or more narrow implementing commits and passing regressions. `F02` intentionally spans guarded calculator access, explanatory first-party prompt instructions, and truthful deletion/retention lifecycle commits.
 - The listing-inquiry `name`/`fullName` mismatch found during recovery is fixed and covered.
 - Peggy token-oracle, calculator-cost, retention, deletion, and late-response races are closed.
+- The public Strategy Lab calculator worksheets render across all eight tabs without Peggy/Supabase providers or connected controls, while the default-true panel retains provider-backed connected-action semantics without claiming legacy-route reachability or bundle isolation.
 - Private objects, participant documents, staff routes, mixed identities, and Supabase ownership/RLS contracts fail closed.
 - MarketFlow price/date/expiry/counter/notification behavior is server-owned and transactionally atomic.
 - Node 22 clean install, production audit, example environment smoke, TypeScript, all Vitest tests, build, bundle budget, diff/secret hygiene, route/SEO/accessibility checks, and CodeRabbit review pass on the exact successor PR head.
@@ -206,25 +207,68 @@
 
 **Accepted 2026-08-14:** canonical implementation `c69250282dbfe000270a137bf452ae0b6982174d`; `SPEC APPROVED`; `QUALITY APPROVED`; `SECURITY APPROVED`. Node 22.23.2 causal RED/GREEN, focused 6 files / 282 tests, adjacent 6 files / 56 tests, full 117 files / 1,601 tests, TypeScript, listener-free same-entrypoint production build, bundle budget, exact thirteen-path scope, protected-surface comparisons, and diff hygiene passed. The sealed 13-file security diff scan reported zero findings, zero deferred work, and complete coverage. One non-blocking test-hardening Minor is tracked in `docs/qa/security-launch-recovery-ledger.md`.
 
-### Task 4C: Lock Peggy calculator input and wording to explanation only
+### Task 4C: Lock authenticated direct calculator analysis to bounded explanation
 
 **Files:**
 - Create: `shared/peggy-calculator.ts`
-- Modify: `server/routes.ts` calculator parser only
-- Modify: `server/peggy.ts` calculator prompt builder only
+- Modify: `server/routes.ts` calculator parser wiring only
+- Modify: `server/peggy-route-auth.ts` calculator invalid-response literal only
+- Modify: `server/peggy.ts` calculator prompt builder/analyzer order only
 - Create: `server/__tests__/peggy-calculator-route.test.ts`
 - Create: `server/__tests__/peggy-calculator-wording.test.ts`
-- Test: `client/src/__tests__/peggy-public-truth.test.tsx`
+- Modify: `server/__tests__/launch-security-route-contract.test.ts` calculator parser composition assertions only
+- Modify: `client/src/__tests__/peggy-public-truth.test.tsx` imports/harness/assertions only
 
 **Interfaces:**
-- The request schema allowlists `arv`, `roi`, `brrrr`, `cashflow`, `wholesale`, `piti`, `ownvsrent`, and `hardmoney`. Each `inputs`/`results` tree is at most three levels deep, 64 keys total, 16 KiB when JSON-serialized, and contains only keys up to 64 characters plus null/boolean/finite-number/string values (strings at most 1,000 characters) or arrays of at most 50 permitted values. Validation occurs before database/provider work.
-- Prompt output explains result drivers, assumptions, sensitivities, missing facts, and verification needs. It explicitly says it is not a valuation, offer, advice, or recommendation and never asks whether this is a “good opportunity.”
+- Authenticated `POST /api/peggy/analyze-calculator` preserves `no-store -> limiter -> authentication -> strict parser -> verified principal -> UUID -> analyzer`. Authenticated schema-invalid input returns generic no-store `400 {"message":"Invalid Peggy calculator request"}` before principal, UUID, analyzer, storage, or provider work; anonymous malformed input remains 401 before parsing.
+- The shared parser accepts only the eight canonical calculator identifiers and exact three-key ordinary-object root. It independently validates/clones `inputs` and `results` with depth 0..3, 64 aggregate object keys, 16,384 compact-JSON UTF-8 bytes, 64-unit keys, 1,000-unit strings, dense arrays through 50, permitted JSON scalars, total exception containment, inert `__proto__`, and no coercion/getter invocation.
+- `buildPeggyCalculatorExplanationPrompt(calculatorType: string)` runtime-narrows by exact own canonical label, throws before storage for every noncanonical internal string, returns the frozen five-section explanation instruction, and is called once before `startWebConversation`; the task proves the instruction, not nondeterministic provider prose.
+- Rendered tests independently preserve calculator-education, no-decision/no-offer/no-advice, directional, and exact `Pegasus Dreamscapes` public copy without changing production disclosure surfaces.
+- Task 4C acceptance is limited to the authenticated direct endpoint above. It does not claim the shared `CalculatorActions` CTA/saved-analysis consumers are currently reachable or corrected, or that reachable Dock-chip prompts are corrected. Mandatory Task 4D owns compiled/dormant shared prompt-source hardening plus reachable Dock wording immediately after Task 4C; mandatory Task 4E then owns the public Strategy Lab provider boundary before Task 5.
 
-- [ ] **Step 1: Write RED tests.** Cover malformed/oversize/non-finite input 400 with zero provider work, valid authenticated analysis, required explanatory language, and forbidden judgment/recommendation phrases.
-- [ ] **Step 2: Run RED.** Run `npx vitest run server/__tests__/peggy-calculator-route.test.ts server/__tests__/peggy-calculator-wording.test.ts client/src/__tests__/peggy-public-truth.test.tsx`.
-- [ ] **Step 3: Implement the strict parser and pure prompt builder.** Preserve exact public brand casing.
-- [ ] **Step 4: Run GREEN.** Repeat focused tests, then `npm run check`.
-- [ ] **Step 5: Commit.** Commit `fix: keep Peggy calculator analysis explanatory` with only Task 4C paths.
+- [ ] **Step 1: Write causal RED tests.** Cover the exact shared export/parser matrix and live registrar, exact builder/call order/zero-storage invalid type, direct production parser wiring, and independent rendered public truth without missing-module or named-export collection errors.
+- [ ] **Step 2: Run RED.** Run `npx vitest run server/__tests__/peggy-calculator-route.test.ts server/__tests__/peggy-calculator-wording.test.ts server/__tests__/launch-security-route-contract.test.ts client/src/__tests__/peggy-public-truth.test.tsx`; require assertion failures on the accepted Task 4B behavior and no transform/runtime collection failure.
+- [ ] **Step 3: Implement only the exact strict shared parser, direct route injection, truthful registrar literal, and defensive explanation builder/analyzer order.** Preserve Task 4A/4B boundaries and all Task 4D/4E/5 production paths.
+- [ ] **Step 4: Run GREEN.** Run both new tests plus unchanged `peggy-route-auth`, migrated `launch-security-route-contract`, and `peggy-public-truth`; then run predecessor/adjacent tests, the full suite, `npm run check`, `npm run build`, and `git diff --check`.
+- [ ] **Step 5: Commit.** Commit `fix: keep Peggy calculator analysis explanatory` with exactly the eight Task 4C paths.
+
+### Task 4D: Remove judgment requests from Peggy calculator chat prompt sources
+
+**Files:**
+- Modify: `client/src/components/calculator-shared.tsx` calculator prompt labels/builder only
+- Modify: `client/src/components/peggy-dock.tsx` calculator quick-prompt objects only
+- Create: `client/src/__tests__/peggy-calculator-chat-wording.test.ts`
+
+**Interfaces:**
+- The two compiled shared consumers continue to invoke one `buildAskPeggyPrompt(calculatorType, outputs)` interface exactly once and in the accepted staging order. Whenever `CalculatorActions` or the saved-analysis drawer is invoked, its repository-controlled prompt requests directional explanation of drivers, assumptions, sensitivities, missing facts, and verification needs rather than a deal, lane, offer, or action judgment. These shared consumers are dormant/unmounted at the accepted topology; Task 4D does not claim they are currently reachable through a working provider-wrapped public route.
+- `wholesale` and legacy saved-analysis alias `mao` both display `Wholesale MAO`; an unknown stored type uses neutral `Calculator` and is never reflected into the prompt.
+- The three reachable Peggy Dock calculator chips remain exactly three `context: "calculator"` entries with no `href`, labeled `Explain results`, `Stress assumptions`, and `Check missing facts`. Only their first-party text changes; Task 4B transport, credential ref, refresh/replay budget, create/chat/feedback mutations, and New guards remain untouched.
+- This task claims reachable prompt correction only for the mounted Dock chips. It does not claim shared CTA/saved-analysis reachability, arbitrary user-authored chat, nondeterministic provider prose, dormant server suggestion strings, the public Strategy Lab provider boundary, canonical context transfer, output sanitization, or Task 5 lifecycle work is fixed.
+
+- [ ] **Step 1: Write RED tests.** Exercise the real compiled shared builder contract for eight canonical types, legacy `mao`, and an unknown type without asserting that its consumers mount; exercise real reachable Dock calculator prompts at both page spellings; require exact wording/casing/boundaries and strict source composition.
+- [ ] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/peggy-calculator-chat-wording.test.ts`; require failures on current lane/good-deal/ROI/proceed judgment requests without collection errors.
+- [ ] **Step 3: Implement only the exact shared builder/label map and three Dock quick-prompt objects.** Preserve all state, transport, math, saved-analysis, and component behavior.
+- [ ] **Step 4: Run GREEN.** Run the new test plus `peggy-quick-prompts`, `peggy-client-session-boundary`, and `peggy-access-refresh`, then `npm run check` and `git diff --check`.
+- [ ] **Step 5: Commit.** Commit `fix: keep Peggy calculator prompt sources explanatory` with only the exact three Task 4D paths.
+
+### Task 4E: Make public Strategy Lab calculators provider-safe
+
+**Files:**
+- Modify: `client/src/components/strategy-lab/calculator-tools-panel.tsx` connected-action boundary only
+- Modify: `client/src/pegasus/strategy-lab-experience.tsx` public caller opt-out only
+- Create: `client/src/__tests__/strategy-lab-calculator-provider-boundary.test.tsx`
+
+**Interfaces:**
+- `CalculatorToolsPanel` accepts `enableConnectedActions = true`, preserving the compiled legacy caller's provider-backed connected-action semantics by default without claiming that caller is currently routed/reachable, and threads the resolved boolean as a required prop through all eight internal worksheet components. The panel guards `MyAnalysesDrawer`, and each worksheet guards its hook-bearing `CalculatorActions`; when false, those nine connected surfaces are omitted while all eight calculator worksheets, inputs, math, and results continue to render.
+- `StrategyLabExperience` explicitly passes `enableConnectedActions={false}` at its public calculator-panel call site. `PublicApp` remains byte-for-byte unchanged and gains no `SupabaseAuthProvider` or `PeggyProvider`.
+- The regression source-inventories exactly two `CalculatorToolsPanel` call sites, one default-true declaration, one public false, eight required internal prop passes, eight action guards, one drawer guard, and no public-shell providers. It renders the real `PublicApp` at `/strategy-lab?tool=calculators&tab=arv` without Peggy/Supabase providers, crosses both lazy boundaries, traverses all eight active calculator tabs/result surfaces, checks real ARV math, and proves zero account fetch, provider fallback/crash, or connected Save/Ask Peggy/My Analyses controls. A separate provider-wrapped default-true panel render proves the compiled connected-action semantics remain intact without asserting legacy-route reachability.
+- False prevents connected hook/provider initialization; it does not remove auth-aware static imports from the lazily loaded calculator chunk. Strict bundle/no-import isolation would require a larger component split and is not claimed. This task does not make dormant shared CTA/saved-analysis consumers reachable, change provider topology, auth, Peggy transport, calculator math, Task 4D wording scope, or Task 5 lifecycle behavior.
+
+- [ ] **Step 1: Write RED tests.** Source-inventory the exact default/two-call-site/eight-required-prop/eight-guard contract; render real `PublicApp` at the calculator deep link through both lazy boundaries and all eight tabs with exact ARV math, zero fetch, and no provider fallback or connected controls; and render a provider-wrapped default-true panel proving the real drawer and four connected buttons remain.
+- [ ] **Step 2: Run RED.** Run `npx vitest run client/src/__tests__/strategy-lab-calculator-provider-boundary.test.tsx`; require a causal failure on the current provider-boundary defect without a missing-module or transform failure.
+- [ ] **Step 3: Add only the default-true outer boundary, required boolean threading through all eight worksheets, drawer/action guards, and public false call-site.** Do not edit `PublicApp`, providers, calculator math, route topology, imports/bundle splitting, or any Task 4D/5 path.
+- [ ] **Step 4: Run GREEN.** Run the new test plus `strategy-lab/engine`, `calculator-math`, `public-route-integrity`, `pegasus-landing-a11y-v6`, and `pegasus-no-blank-shell`, then the full suite, `npm run check`, `npm run build`, the accepted bundle gate when required, and `git diff --check`.
+- [ ] **Step 5: Commit.** Commit `fix: keep public Strategy Lab calculators provider-safe` with only the exact three Task 4E paths.
 
 ### Task 5: Delete Peggy conversations atomically and truthfully
 
@@ -613,7 +657,7 @@ Each of the 41 findings still applicable at `4487bec` appears exactly once below
 | ID | Finding | Task |
 | --- | --- | ---: |
 | F01 | Wholesale empty close date | 3 |
-| F02 | Peggy calculator access, explanation, and retention truth | 4A, 4C, 5 |
+| F02 | Peggy calculator access, explanation, and retention truth | 4A, 4C, 4D, 5 |
 | F03 | Peggy session-ID token mint/IDOR | 4A |
 | F04 | Cookie Manage panel covers Peggy | 12B |
 | F05 | Duplicate/shadowed `/resources` redirect | 12C |
