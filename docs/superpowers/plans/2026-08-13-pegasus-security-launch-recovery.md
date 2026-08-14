@@ -182,24 +182,29 @@
 - Modify: `server/peggy-access.ts`
 - Modify: `server/routes.ts` access-refresh registration only
 - Test: `server/__tests__/peggy-access.test.ts`
+- Test: `server/__tests__/peggy-route-auth.test.ts`
+- Test: `server/__tests__/launch-security-route-contract.test.ts`
 - Create: `client/src/lib/peggy-access.ts`
 - Create: `client/src/__tests__/peggy-access-refresh.test.ts`
 - Modify: `client/src/pegasus/peggy.tsx`
 - Modify: `client/src/components/peggy-dock.tsx`
 - Modify: `client/src/components/peggy-chat.tsx`
 - Test: `client/src/__tests__/peggy-handoff.test.tsx`
+- Test: `client/src/__tests__/peggy-client-session-boundary.test.tsx`
 
 **Interfaces:**
 - Token version 2 is `v2.<base64url-json-payload>.<base64url-hmac>` and signs namespace, version, conversation ID, session/owner binding, integer `issuedAt`, and integer `expiresAt`. Issued lifetime is exactly 24 hours; renewal grace is exactly seven days after expiry. Verification returns `{status:"valid",expiresAt}`, `{status:"expired",expiresAt}`, or `{status:"invalid"}` using constant-time signature comparison and an injectable millisecond clock.
-- Only the authenticated row owner or an authentic token for the existing row may renew during that seven-day grace. Invalid/wrong/beyond-grace/deleted tokens remain indistinguishable `404 {"message":"Conversation not found"}`; authentic expiry from a guarded operation returns `401 {"message":"Conversation access expired","code":"PEGGY_ACCESS_EXPIRED"}`.
-- `peggyFetchWithSingleRefresh` sends the original once, refreshes once with raw fetch, replaces the credential, replays once, and returns the replay result without recursion. Supabase authorization and Peggy headers survive.
+- The general guard always permits the exact verified row owner; an authentic expired row-bound token returns the coded expiry response at any age. On the refresh route, a supplied header can renew only an authentic expired v2 token through the inclusive seven-day grace, while an exact owner may recover an existing owned row only when the header is absent. Invalid, wrong-row, beyond-grace, v1, deleted, and other-user refresh attempts remain indistinguishable `404 {"message":"Conversation not found"}`.
+- `peggyFetchWithSingleRefresh` sends the original once per invocation, refreshes at most once through its injected non-recursive transport, replaces the matching credential with compare-and-swap semantics, replays at most once, and returns the terminal response. Supabase authorization, Peggy headers, abort signals, and stale-row protection survive every leg.
 
-- [ ] **Step 1: Write RED server tests.** Cover valid/expired/malformed/tampered/cross-row/beyond-grace tokens, deleted-row denial, refresh binding, and no conversation creation during refresh.
-- [ ] **Step 2: Write RED client tests.** Cover normal one-call success, expiry→refresh→replay three-call success, invalid 404/no refresh, refresh failure/no replay, replay expiry/no second refresh, and preserved headers.
-- [ ] **Step 3: Run RED.** Run `npx vitest run server/__tests__/peggy-access.test.ts client/src/__tests__/peggy-access-refresh.test.ts client/src/__tests__/peggy-handoff.test.tsx`.
-- [ ] **Step 4: Implement issuance, verification, refresh route, helper, and client adoption.** The general access guard never accepts an expired token.
-- [ ] **Step 5: Run GREEN.** Repeat focused tests, then `npm run check`.
-- [ ] **Step 6: Commit.** Commit `fix: expire Peggy credentials with bounded refresh` with only Task 4B paths.
+- [x] **Step 1: Write RED server tests.** Cover valid/expired/malformed/tampered/cross-row/beyond-grace tokens, deleted-row denial, refresh binding, and no conversation creation during refresh.
+- [x] **Step 2: Write RED client tests.** Cover normal one-call success, expiry→refresh→replay three-call success, invalid 404/no refresh, refresh failure/no replay, replay expiry/no second refresh, and preserved headers.
+- [x] **Step 3: Run RED.** Run `npx vitest run server/__tests__/peggy-access.test.ts client/src/__tests__/peggy-access-refresh.test.ts client/src/__tests__/peggy-handoff.test.tsx`.
+- [x] **Step 4: Implement issuance, verification, refresh route, helper, and client adoption.** The general access guard never accepts an expired token.
+- [x] **Step 5: Run GREEN.** Repeat focused tests, then `npm run check`.
+- [x] **Step 6: Commit.** Commit `fix: expire Peggy credentials with bounded refresh` with only Task 4B paths.
+
+**Accepted 2026-08-14:** canonical implementation `c69250282dbfe000270a137bf452ae0b6982174d`; `SPEC APPROVED`; `QUALITY APPROVED`; `SECURITY APPROVED`. Node 22.23.2 causal RED/GREEN, focused 6 files / 282 tests, adjacent 6 files / 56 tests, full 117 files / 1,601 tests, TypeScript, listener-free same-entrypoint production build, bundle budget, exact thirteen-path scope, protected-surface comparisons, and diff hygiene passed. The sealed 13-file security diff scan reported zero findings, zero deferred work, and complete coverage. One non-blocking test-hardening Minor is tracked in `docs/qa/security-launch-recovery-ledger.md`.
 
 ### Task 4C: Lock Peggy calculator input and wording to explanation only
 
