@@ -189,7 +189,12 @@ describe("launch security route contract", () => {
     ).toHaveLength(1);
     expect(
       routesSource.match(
-        /import \{\s*registerPeggyIdentityRoutes,\s*type PeggyCalculatorRequest,\s*type PeggyParseResult,\s*\} from "\.\/peggy-route-auth";/gs,
+        /import \{ registerPeggyIdentityRoutes \} from "\.\/peggy-route-auth";/g,
+      ),
+    ).toHaveLength(1);
+    expect(
+      routesSource.match(
+        /import \{ parsePeggyCalculatorRequest \} from "@shared\/peggy-calculator";/g,
       ),
     ).toHaveLength(1);
     const wiring = sliceBetweenOnce(
@@ -207,14 +212,13 @@ describe("launch security route contract", () => {
       "getAccessSecret: getPeggyConversationAccessSecret",
       "createAccessToken: createPeggyConversationAccessToken",
       "startWebConversation: peggy.startWebConversation",
-      "parseCalculatorRequest: parseTransitionalPeggyCalculatorRequest",
+      "parseCalculatorRequest: parsePeggyCalculatorRequest",
       "analyzeCalculator: peggy.analyzeCalculatorResults",
     ]) {
       expect(wiring).toContain(dependency);
     }
-    expect(routesSource).toMatch(
-      /function parseTransitionalPeggyCalculatorRequest\(\s*body: unknown,/s,
-    );
+    expect(routesSource).not.toContain("parseTransitionalPeggyCalculatorRequest");
+    expect(routesSource).not.toContain("isTransitionalPeggyObject");
     const verifiedResolver = sliceBetweenOnce(
       routesSource,
       "const getVerifiedPeggyUserId =",

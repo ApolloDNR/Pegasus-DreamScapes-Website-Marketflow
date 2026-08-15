@@ -8,6 +8,7 @@ import Privacy from "@/pages/privacy";
 import Disclosures from "@/pages/disclosures";
 import Ecosystem from "@/pages/ecosystem";
 import { PeggyPage } from "@/pegasus/pages";
+import { StrategyLabFeature } from "@/pegasus/blocks";
 
 class NoopIntersectionObserver {
   root = null;
@@ -131,5 +132,56 @@ describe("public Peggy capability truth", () => {
     expect(ecosystemText).toMatch(/phone and voice remain in development/i);
     expect(peggyText).toMatch(/web intake is in active training/i);
     expect(peggyText).toMatch(/phone and voice remain in development/i);
+  });
+
+  it("keeps calculator education and Peggy decision boundaries public", () => {
+    const memory = memoryLocation({ path: "/disclosures" });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <Router hook={memory.hook}><Disclosures /></Router>
+      </QueryClientProvider>,
+    );
+    const educationText = (
+      within(container).getByTestId("disclosure-education").textContent || ""
+    ).replace(/\s+/g, " ").trim();
+    const peggyText = (
+      within(container).getByTestId("disclosure-peggy").textContent || ""
+    ).replace(/\s+/g, " ").trim();
+    const disclosuresText = (container.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const strategyText = visibleText(
+      <StrategyLabFeature go={() => undefined} />,
+      "/",
+    );
+    const reviewedText = `${disclosuresText} ${strategyText}`;
+
+    expect(educationText).toMatch(
+      /Strategy Lab, calculators, articles, and worked examples.*educational/i,
+    );
+    expect(educationText).toMatch(
+      /not legal, tax, accounting, or investment advice/i,
+    );
+    expect(educationText).toMatch(
+      /illustrative and depend entirely on the inputs you provide/i,
+    );
+
+    expect(peggyText).toMatch(/Not the decision-maker/i);
+    expect(peggyText).toMatch(/cannot give legal, tax, or investment advice/i);
+    expect(peggyText).toMatch(/cannot quote a specific offer/i);
+    expect(peggyText).toMatch(
+      /hard refusal categories.*price quotes, valuations, fitness claims/i,
+    );
+
+    expect(strategyText).toMatch(/planning support, not a valuation/i);
+    expect(strategyText).toMatch(/not an appraisal, offer/i);
+    expect(strategyText).toMatch(/Directional only/i);
+    expect(strategyText).toMatch(/legal advice, tax advice/i);
+    expect(strategyText).toMatch(/investment recommendation/i);
+    expect(reviewedText).toContain("Pegasus Dreamscapes");
+    expect(reviewedText).not.toContain("Pegasus DreamScapes");
   });
 });

@@ -279,7 +279,7 @@ export function registerPeggyIdentityRoutes(
         const parsed = dependencies.parseCalculatorRequest(req.body);
         if (!parsed.ok) {
           res.status(400).json({
-            message: "calculatorType, inputs, and results are required",
+            message: "Invalid Peggy calculator request",
           });
           return;
         }

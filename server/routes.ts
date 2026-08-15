@@ -38,6 +38,7 @@ import {
   insertLibraryGlossaryTermSchema,
   STAFF_ROLES
 } from "@shared/schema";
+import { parsePeggyCalculatorRequest } from "@shared/peggy-calculator";
 
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
@@ -50,11 +51,7 @@ import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
 import { isPreviewHostname } from "@shared/preview-hosts";
 import peggy from "./peggy";
-import {
-  registerPeggyIdentityRoutes,
-  type PeggyCalculatorRequest,
-  type PeggyParseResult,
-} from "./peggy-route-auth";
+import { registerPeggyIdentityRoutes } from "./peggy-route-auth";
 import { forward as hqForward, outreachReasonForLeadType, retryOutboxRow as hqRetryOutboxRow, drainPending as hqDrainPending, isHqHealthy } from "./integrations/hq-client";
 import { 
   createUserProfile, 
@@ -285,36 +282,6 @@ const loadMarketflowInventoryAccessContext = async (
 const canAccessMarketflowItemType = (res: Response, rawType: unknown) =>
   !isReviewedMarketflowInventoryType(rawType) ||
   res.locals.canAccessReviewedMarketflowInventory === true;
-
-function isTransitionalPeggyObject(
-  value: unknown,
-): value is Record<string, unknown> {
-  return Boolean(
-    value &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      Object.getPrototypeOf(value) === Object.prototype,
-  );
-}
-
-function parseTransitionalPeggyCalculatorRequest(
-  body: unknown,
-): PeggyParseResult<PeggyCalculatorRequest> {
-  if (!isTransitionalPeggyObject(body)) return { ok: false };
-  const { calculatorType, inputs, results } = body;
-  if (
-    typeof calculatorType !== "string" ||
-    calculatorType.trim().length === 0 ||
-    !isTransitionalPeggyObject(inputs) ||
-    !isTransitionalPeggyObject(results)
-  ) {
-    return { ok: false };
-  }
-  return {
-    ok: true,
-    value: { calculatorType, inputs, results },
-  };
-}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -5950,7 +5917,7 @@ export async function registerRoutes(
     getAccessSecret: getPeggyConversationAccessSecret,
     createAccessToken: createPeggyConversationAccessToken,
     startWebConversation: peggy.startWebConversation,
-    parseCalculatorRequest: parseTransitionalPeggyCalculatorRequest,
+    parseCalculatorRequest: parsePeggyCalculatorRequest,
     analyzeCalculator: peggy.analyzeCalculatorResults,
   });
 
