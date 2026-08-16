@@ -9,6 +9,66 @@ anything.
 
 ---
 
+## BRANCH STATUS — `codex/launch-recovery-v2`
+
+**Updated 2026-08-16. Dependency repair + full launch verification.**
+
+### Dependency repair summary
+
+The branch's lock file was stale (several packages installed below their
+`package.json` ranges) and the production dependency audit was failing with
+7 vulnerabilities. All production CVEs are now resolved without any forced
+breaking upgrade and without suppressing the audit gate:
+
+| Package | Before | After | Fix method |
+|---|---|---|---|
+| `dompurify` | 3.3.1 (stale; XSS, CVE moderate) | 3.4.13 | bumped range to `^3.4.13` |
+| `nanoid` | 3.3.8 (stale; infinite-loop, CVE high) | 3.3.18 | bumped range to `^3.3.18` |
+| `uuid` (transitive via `gaxios`/`teeny-request`) | 9.0.1 (buf-overread, CVE moderate) | 11.1.1 | `overrides.uuid = "11.1.1"` — safe on Node 22.22 which supports `require(esm)` natively since 22.12 |
+| `@google-cloud/storage` | 7.18.0 (stale) | 7.21.0 | resolved by `npm install` |
+| `@uppy` nanoid@5 chain | 5.1.6 (infinite-loop, CVE high) | 5.1.16 | resolved by `npm audit fix` |
+| `vitest` | 2.1.9 (MISSING; Critical path-traversal CVE, blocked by security firewall) | 3.2.7 | bumped range to `^3.2.6` (minimum safe; 3.x is wire-compatible with 2.x for this test suite) |
+
+Remaining 5 vulnerabilities reported by `npm audit` (full) are all in
+**dev dependencies only** (`esbuild`/`vite`/`drizzle-kit`); they do not
+appear in `npm audit --omit=dev` and do not affect the production audit gate.
+
+### Launch verification result — 2026-08-16
+
+Run against commit on `codex/launch-recovery-v2`:
+
+| Gate | Command | Result |
+|---|---|---|
+| Production dependency audit | `npm audit --omit=dev --audit-level=moderate` | ✅ **0 vulnerabilities** |
+| TypeScript | `npm run check` | ✅ **PASS** |
+| Production build + bundle budget | `npm run build` | ✅ **PASS** (entry 161 kB raw / 51 kB gzip, well under limits) |
+| Launch environment contract | `node scripts/launch-intake-smoke.mjs --example` | ✅ **PASS** (10/10 required env vars present in .env.example) |
+| Rendered accessibility gate — routes | `npm run check:a11y` (108 route checks) | ✅ **108/108 PASS** (6 themes × 18 routes × 3 viewports) |
+| Rendered accessibility gate — interactions | `npm run check:a11y` (12 interaction checks) | ⚠️ **10/12 PASS** — 2 pre-existing failures (see below) |
+| Full test suite | `npm test` | ✅ **1700/1700 tests PASS** (119 test files, vitest 3.2.7) |
+
+### Pre-existing a11y interaction failures (NOT caused by dep repair)
+
+These two failures existed before the dependency changes. The
+`check-visual-accessibility.mjs` script is itself new to this branch and
+is now catching application-level issues that were already present:
+
+1. **`mobile navigation destination` FAIL** — browser requests
+   `/images/pegasus-architecture.png` during the mobile nav interaction
+   test and receives `net::ERR_ABORTED`. The file does not exist anywhere
+   in `public/`. A placeholder or the real asset must be committed.
+
+2. **`theme toggle persistence` FAIL** — toggling the theme causes a
+   measurable height change on `[data-testid="approved-home-hero-image"]`
+   at the 1024 px breakpoint. The hero image container needs explicit
+   `min-height` or `aspect-ratio` locking so light↔dark toggling does not
+   shift layout.
+
+These must be resolved before this branch can be considered fully
+launch-gate green. They are unrelated to the dependency repair.
+
+---
+
 ## 0. TL;DR — where everything stands
 
 | Project | Repo | State | Next action |
