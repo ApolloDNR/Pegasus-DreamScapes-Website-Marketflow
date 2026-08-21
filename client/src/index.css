@@ -4636,6 +4636,10 @@ body:has(.connect-premium) .peggy-fab {
   text-decoration: underline;
   text-underline-offset: .2rem;
 }
+.dark .mf-access-error {
+  color: hsl(var(--destructive-foreground));
+  background: hsl(var(--destructive) / .28);
+}
 .mf-access-success .success-view--marketflow_access > div {
   border-inline: 0;
   border-radius: 0;

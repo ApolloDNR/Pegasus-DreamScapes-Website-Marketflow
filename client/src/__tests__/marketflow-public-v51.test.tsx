@@ -1,4 +1,5 @@
 import React from "react";
+import { readFileSync } from "node:fs";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -25,6 +26,13 @@ afterEach(() => {
 });
 
 describe("mounted MarketFlow public shell", () => {
+  it("keeps the standalone access error readable in dark theme", () => {
+    const css = readFileSync("client/src/index.css", "utf8");
+    expect(css).toMatch(
+      /\.dark \.mf-access-error\s*\{[\s\S]*?color:\s*hsl\(var\(--destructive-foreground\)\)/,
+    );
+  });
+
   it("ships a truthful controlled-pilot surface without a fictional sample record", () => {
     renderMarketFlow();
 
