@@ -173,17 +173,17 @@ export function MarketFlowPage({ go }: { go: Nav }) {
    ================================================================ */
 function RepLane({ rep }: { rep: { label: string; desc: string; points: string[] } }) {
   return (
-    <div className="surface-card reveal h-full p-6 sm:p-8 lg:p-9">
-      <div className="pg-label !text-[9px] text-[var(--accent-ink)] mb-4">{rep.label}</div>
-      <p className="text-[var(--text-2)] leading-relaxed mb-6">{rep.desc}</p>
-      <ul className="space-y-3.5">
+    <article className="apollo-rep-lane reveal">
+      <h3 className="font-serif-display">{rep.label}</h3>
+      <p>{rep.desc}</p>
+      <ul>
         {rep.points.map((p) => (
-          <li key={p} className="flex gap-3 text-[var(--muted)] text-[0.92rem] leading-relaxed">
+          <li key={p}>
             <Check className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" strokeWidth={2} /><span>{p}</span>
           </li>
         ))}
       </ul>
-    </div>
+    </article>
   );
 }
 
@@ -198,6 +198,7 @@ const APOLLO_SELECTOR = [
     blurb: 'List with Apollo through Keller Williams Realty East Bay, priced and prepped with the Pegasus standard behind it. Pick “Seller representation” in the form below.',
     cta: 'Continue below',
     mode: 'form' as const,
+    role: 'List my property (Seller representation)',
   },
   {
     key: 'buy',
@@ -205,6 +206,7 @@ const APOLLO_SELECTOR = [
     blurb: 'Buyer representation with an investor’s read on every property, for owner-occupants and investors alike. Pick “Buyer representation” in the form below.',
     cta: 'Continue below',
     mode: 'form' as const,
+    role: 'Buy a home (Buyer representation)',
   },
   {
     key: 'situation',
@@ -222,46 +224,67 @@ const APOLLO_SELECTOR = [
     mode: 'link' as const,
     href: '/bring-an-opportunity?intent=deal-jv',
   },
-];
+] as const;
 
-function ApolloSelector() {
-  const [key, setKey] = React.useState('sell');
+type ApolloSelectorKey = (typeof APOLLO_SELECTOR)[number]['key'];
+
+function ApolloSelector({
+  selectedKey,
+  onSelect,
+  leadRef,
+  roleFieldRef,
+}: {
+  selectedKey: ApolloSelectorKey;
+  onSelect: (key: ApolloSelectorKey) => void;
+  leadRef: React.RefObject<HTMLDivElement>;
+  roleFieldRef: React.RefObject<HTMLSelectElement>;
+}) {
   const [, setLocation] = useLocation();
-  const active = APOLLO_SELECTOR.find((s) => s.key === key) ?? APOLLO_SELECTOR[0];
+  const active = APOLLO_SELECTOR.find((s) => s.key === selectedKey) ?? APOLLO_SELECTOR[0];
   const onCta = () => {
     if (active.mode === 'form') {
-      document.getElementById('apollo-lead')?.scrollIntoView({ behavior: 'smooth' });
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      leadRef.current?.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
+      roleFieldRef.current?.focus({ preventScroll: true });
     } else if (active.href) {
       setLocation(active.href);
     }
   };
   return (
-    <section className="py-14 lg:py-16 border-b border-[var(--line)]" data-testid="section-apollo-selector">
-      <div className="max-w-[1320px] mx-auto px-6 lg:px-12 text-center">
-        <div className="pg-label text-[var(--accent-ink)] mb-6">What brings you here?</div>
-        <div className="flex flex-wrap justify-center gap-3 mb-8" role="group" aria-label="What brings you here?" data-testid="apollo-selector">
+    <section className="apollo-paths" data-testid="section-apollo-selector">
+      <div className="apollo-paths__inner">
+        <div className="pg-label text-[var(--accent-ink)]">Choose the right conversation</div>
+        <h2 className="font-serif-display">What brings you here?</h2>
+        <div className="apollo-paths__rail" role="group" aria-label="What brings you here?" data-testid="apollo-selector">
           {APOLLO_SELECTOR.map((s) => {
-            const isActive = s.key === key;
+            const isActive = s.key === selectedKey;
             return (
               <button
                 key={s.key}
                 type="button"
                 aria-pressed={isActive}
-                onClick={() => setKey(s.key)}
+                onClick={() => onSelect(s.key)}
                 data-testid={`apollo-selector-${s.key}`}
-                className={`rounded-full px-6 py-3 pg-label !text-[10px] !tracking-[0.16em] border transition-colors ${
-                  isActive
-                    ? 'border-[var(--accent)] text-[var(--accent-ink)] bg-[var(--accent)]/[0.08]'
-                    : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--accent-ink)] hover:border-[var(--accent)]'
-                }`}
+                className={isActive ? 'is-active' : undefined}
               >
-                {s.label}
+                <span>{s.label}</span>
+                <ArrowRight aria-hidden="true" />
               </button>
             );
           })}
         </div>
-        <p className="max-w-2xl mx-auto text-[var(--text-2)] leading-relaxed mb-8" data-testid="text-apollo-selector-blurb">
-          {active.blurb}
+        <p
+          role="status"
+          aria-label="Selected path"
+          aria-live="polite"
+          aria-atomic="true"
+          className="apollo-paths__status"
+          data-testid="text-apollo-selector-blurb"
+        >
+          <strong>Selected path: {active.label}.</strong> {active.blurb}
         </p>
         <button
           type="button"
@@ -277,36 +300,52 @@ function ApolloSelector() {
 }
 
 export function WorkWithApolloPage({ go }: { go: Nav }) {
+  const [selectorKey, setSelectorKey] = React.useState<ApolloSelectorKey>('sell');
+  const [preferredRole, setPreferredRole] = React.useState(APOLLO_FORM.role);
+  const leadRef = React.useRef<HTMLDivElement>(null);
+  const roleFieldRef = React.useRef<HTMLSelectElement>(null);
+
+  const selectPath = (nextKey: ApolloSelectorKey) => {
+    setSelectorKey(nextKey);
+    const nextPath = APOLLO_SELECTOR.find((path) => path.key === nextKey);
+    if (nextPath && 'role' in nextPath) setPreferredRole(nextPath.role);
+  };
+
   return (
     <>
-      {/* PRD §7.11 / COPY_DECK §13 locked hero (issue #22) */}
-      <PageHero eyebrow="Work With Apollo"
-        title={<>Founder-led strategy. <span className="italic text-[var(--accent-bright)]">Licensed representation when the lane fits.</span></>}
-        image={IMG('pegasus-craft-blueprint.webp')}
-        lead="Paolo “Apollo” Duran leads Pegasus Dreamscapes as founder/operator. When buyer or seller representation is the right path, Apollo provides licensed real estate services through Keller Williams East Bay (CA DRE #02333658). Pegasus Dreamscapes is not a brokerage." />
-      <ApolloBlock go={go} showCta={false} />
-      <section className="py-20 lg:py-24 bg-[var(--bg-2)] border-y border-[var(--line)]">
+      <ApolloBlock go={go} showCta={false} variant="work" />
+      <section className="apollo-representation">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <SectionHead eyebrow="Representation lanes" title="Sell or buy, represented."
             copy="Seller representation or buyer representation. Apollo represents sellers and buyers through Keller Williams Realty East Bay, with an investor's read on every transaction." />
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 mb-12 items-stretch">
+          <div className="apollo-representation__lanes">
             <RepLane rep={APOLLO_REP.seller} />
             <RepLane rep={APOLLO_REP.buyer} />
           </div>
-          <div className="reveal rounded-[3px] border border-[var(--line)] bg-[var(--bg)] p-5 lg:p-6 flex gap-4 items-start">
-            <BrandMark boxClassName="w-10 h-10 shrink-0" />
-            <div>
-              <p className="text-[0.8rem] leading-relaxed text-[var(--muted)]">{APOLLO_DISCLOSURE}</p>
-              <p className="mt-3 text-[0.8rem] leading-relaxed text-[var(--muted)]">
-                Equal Housing Opportunity. Representation is offered without regard to race, color, religion, sex, disability, familial status, or national origin.
-              </p>
-            </div>
+          <div className="apollo-representation__disclosure reveal">
+            <p>{APOLLO_DISCLOSURE}</p>
+            <p>
+              Equal Housing Opportunity. Representation is offered without regard to race, color, religion, sex, disability, familial status, or national origin.
+            </p>
           </div>
         </div>
       </section>
-      <ApolloSelector />
-      <div id="apollo-lead" className="scroll-mt-24">
-        <LeadSection cfg={APOLLO_FORM} eyebrow="Represent with Apollo" tone="navy" showRole />
+      <ApolloSelector
+        selectedKey={selectorKey}
+        onSelect={selectPath}
+        leadRef={leadRef}
+        roleFieldRef={roleFieldRef}
+      />
+      <div ref={leadRef} id="apollo-lead" className="scroll-mt-24">
+        <LeadSection
+          cfg={APOLLO_FORM}
+          eyebrow="Represent with Apollo"
+          tone="navy"
+          showRole
+          preferredRole={preferredRole}
+          roleFieldRef={roleFieldRef}
+          showDecorativeContour={false}
+        />
       </div>
     </>
   );

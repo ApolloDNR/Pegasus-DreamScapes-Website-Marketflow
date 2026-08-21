@@ -1,4 +1,4 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
@@ -112,10 +112,26 @@ export const INVESTMENTS_FORM: FormCfg = {
 /* ----------------------------------------------------------------
    Lead form
 ---------------------------------------------------------------- */
-export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null, strategy = null }:
-  { cfg: FormCfg; showRole?: boolean; onNavy?: boolean; handoff?: PeggyHandoff | null; strategy?: StrategyPreview | null }) {
+export function LeadForm({
+  cfg,
+  showRole = false,
+  onNavy = false,
+  handoff = null,
+  strategy = null,
+  preferredRole,
+  roleFieldRef,
+}: {
+  cfg: FormCfg;
+  showRole?: boolean;
+  onNavy?: boolean;
+  handoff?: PeggyHandoff | null;
+  strategy?: StrategyPreview | null;
+  preferredRole?: string;
+  roleFieldRef?: React.RefObject<HTMLSelectElement>;
+}) {
   const uid = useId();
   const [submitted, setSubmitted] = useState(false);
+  const successRef = useRef<HTMLDivElement>(null);
   const startedAt = useRef(Date.now());
   const [hpCompany, setHpCompany] = useState('');
   const createLead = useMutation({
@@ -135,6 +151,17 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   });
   const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  useEffect(() => {
+    if (!preferredRole) return;
+    setForm((current) => current.role === preferredRole
+      ? current
+      : { ...current, role: preferredRole });
+  }, [preferredRole]);
+
+  useEffect(() => {
+    if (submitted) successRef.current?.focus({ preventScroll: true });
+  }, [submitted]);
 
   // The Peggy transcript travels with the captured lead so the human reading
   // the submission has the full conversation as context.
@@ -182,7 +209,14 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
 
   if (submitted) {
     return (
-      <div className="py-16 text-center">
+      <div
+        ref={successRef}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        tabIndex={-1}
+        className="py-16 text-center"
+      >
         <div className="relative w-20 h-20 mx-auto mb-7 flex items-center justify-center rounded-full bg-[var(--cream)] ring-1 ring-[var(--line)]">
           <BrandMark boxClassName="w-11 h-11" />
           <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center ring-2 ring-[var(--bg)]"><Check className="w-4 h-4" /></span>
@@ -227,7 +261,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         <div className="sm:col-span-1">
           <label htmlFor={`${uid}-role`} className="pg-field-label block mb-2">I am a…</label>
           <div className="relative">
-            <select id={`${uid}-role`} className="pg-field pr-8" value={form.role} onChange={onField('role')}>
+            <select ref={roleFieldRef} id={`${uid}-role`} className="pg-field pr-8" value={form.role} onChange={onField('role')}>
               {(cfg.roleOptions ?? ROLE_OPTIONS).map((o) => <option key={o}>{o}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 absolute right-1 top-3.5 text-[var(--muted)] pointer-events-none" />
@@ -250,7 +284,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         <textarea id={`${uid}-message`} className="pg-field resize-none" rows={3} value={form.message} onChange={onField('message')} placeholder={cfg.messagePlaceholder} />
       </div>
       {createLead.isError && (
-        <div className={`sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed ${onNavy ? 'bg-[rgba(220,80,60,0.16)] text-[var(--cream)]' : 'bg-[rgba(154,58,42,0.08)] text-[#9a3a2a]'}`}>
+        <div role="alert" aria-live="assertive" aria-atomic="true" className={`sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed ${onNavy ? 'bg-[rgba(220,80,60,0.16)] text-[var(--cream)]' : 'bg-[rgba(154,58,42,0.08)] text-[#9a3a2a]'}`}>
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" strokeWidth={1.8} />
           <span>Something went wrong sending your submission. Please try again, or email apollo@pegasusdreamscapes.com directly.</span>
         </div>
@@ -273,10 +307,10 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         </span>
       </label>
       <div className="sm:col-span-2 mt-2">
-        <button type="submit" disabled={createLead.isPending}
+        <button type="submit" disabled={createLead.isPending} aria-busy={createLead.isPending}
           className={`${onNavy ? 'btn-solid-light' : 'btn-primary'} w-full sm:w-auto px-10 py-4 pg-label !text-[10px] inline-flex items-center justify-center gap-3 group disabled:opacity-60 disabled:cursor-not-allowed`}>
           {createLead.isPending ? (
-            <>Sending… <Loader2 className="w-3.5 h-3.5 animate-spin" /></>
+            <>Sending your request… <Loader2 aria-hidden="true" className="w-3.5 h-3.5 animate-spin" /></>
           ) : (
             <>{cfg.submit} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></>
           )}
@@ -286,14 +320,33 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   );
 }
 
-export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', handoff = null, strategy = null }:
-  { cfg: FormCfg; eyebrow: string; showRole?: boolean; tone?: 'page' | 'navy'; handoff?: PeggyHandoff | null; strategy?: StrategyPreview | null }) {
+export function LeadSection({
+  cfg,
+  eyebrow,
+  showRole = false,
+  tone = 'page',
+  handoff = null,
+  strategy = null,
+  preferredRole,
+  roleFieldRef,
+  showDecorativeContour = true,
+}: {
+  cfg: FormCfg;
+  eyebrow: string;
+  showRole?: boolean;
+  tone?: 'page' | 'navy';
+  handoff?: PeggyHandoff | null;
+  strategy?: StrategyPreview | null;
+  preferredRole?: string;
+  roleFieldRef?: React.RefObject<HTMLSelectElement>;
+  showDecorativeContour?: boolean;
+}) {
   const navy = tone === 'navy';
   const ic = navy ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const Heading = navy ? 'h2' : 'h1';
   return (
     <section className={`relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-28 lg:pt-40 pb-24 lg:pb-28'}`}>
-      {navy && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
+      {navy && showDecorativeContour && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
         <div className="lg:col-span-5 reveal">
           <div className={`pg-label mb-5 ${ic}`}>{eyebrow}</div>
@@ -314,7 +367,15 @@ export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', han
         </div>
         <div className="lg:col-span-7 reveal delay-100">
           <div className="lead-card p-6 sm:p-8 lg:p-11">
-            <LeadForm cfg={cfg} showRole={showRole} onNavy={navy} handoff={handoff} strategy={strategy} />
+            <LeadForm
+              cfg={cfg}
+              showRole={showRole}
+              onNavy={navy}
+              handoff={handoff}
+              strategy={strategy}
+              preferredRole={preferredRole}
+              roleFieldRef={roleFieldRef}
+            />
           </div>
         </div>
       </div>

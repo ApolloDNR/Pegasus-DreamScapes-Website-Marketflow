@@ -978,7 +978,55 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
 /* ----------------------------------------------------------------
    Apollo block
 ---------------------------------------------------------------- */
-export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; showCta?: boolean; portrait?: boolean }) {
+export function ApolloBlock({
+  go,
+  showCta = true,
+  portrait = true,
+  variant = 'default',
+}: {
+  go: Nav;
+  showCta?: boolean;
+  portrait?: boolean;
+  variant?: 'default' | 'work';
+}) {
+  if (variant === 'work') {
+    return (
+      <section className="apollo-work-intro" aria-labelledby="apollo-work-title">
+        <div className="apollo-work-intro__inner">
+          <figure className="apollo-work-intro__portrait reveal">
+            <img
+              src={IMG('founder/apollo-1200.jpg')}
+              alt={APOLLO.name}
+              loading="eager"
+              className="w-full h-full object-cover"
+            />
+            <figcaption>
+              <span>{APOLLO.name}</span>
+              <span>{APOLLO.role}</span>
+            </figcaption>
+          </figure>
+          <div className="apollo-work-intro__copy reveal delay-100">
+            <div className="pg-label text-[var(--accent-ink)]">Work With Apollo</div>
+            <h1 id="apollo-work-title" className="font-serif-display">
+              Founder-led strategy. <em>Licensed representation when the lane fits.</em>
+            </h1>
+            <p className="apollo-work-intro__lead">{APOLLO.lead}</p>
+            <dl className="apollo-work-intro__credentials">
+              <div>
+                <dt>Pegasus role</dt>
+                <dd>{APOLLO.role}</dd>
+              </div>
+              <div>
+                <dt>Licensed representation</dt>
+                <dd>{APOLLO.license}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
