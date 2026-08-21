@@ -90,6 +90,11 @@ function fillMarketflowAccessForm() {
   });
 }
 
+function consentAndSubmitMarketflowAccess() {
+  fireEvent.click(screen.getByTestId("checkbox-access-consent"));
+  fireEvent.click(screen.getByTestId("button-access-submit"));
+}
+
 beforeEach(() => {
   // Keep successful mutations pending: each assertion can inspect the request
   // without transitioning either form into its post-submit success screen.
@@ -244,5 +249,110 @@ describe("MarketFlow access explicit contact consent", () => {
         }),
       }),
     );
+  });
+
+  it("binds a hidden honeypot and rejects a filled bot field", async () => {
+    let now = 80_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const { container } = renderWithQueryClient(<MarketflowAccessPage />);
+    const honeypot = container.querySelector<HTMLInputElement>(
+      'input[name="hp_company"]',
+    );
+
+    expect(honeypot).not.toBeNull();
+    expect(honeypot).toHaveAttribute("tabindex", "-1");
+    expect(honeypot?.closest("[aria-hidden='true']")).not.toBeNull();
+
+    fireEvent.change(honeypot!, { target: { value: "spam incorporated" } });
+    fillMarketflowAccessForm();
+    now = 85_000;
+    consentAndSubmitMarketflowAccess();
+
+    await waitFor(() => expect(apiRequestMock).not.toHaveBeenCalled());
+  });
+
+  it("rejects a submit before three seconds with a durable inline alert", async () => {
+    let now = 90_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    renderWithQueryClient(<MarketflowAccessPage />);
+    fillMarketflowAccessForm();
+    now = 92_500;
+    consentAndSubmitMarketflowAccess();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Please spend a little more time");
+    expect(apiRequestMock).not.toHaveBeenCalled();
+  });
+
+  it("announces a pending manual review and prevents duplicate submission", async () => {
+    let now = 100_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    renderWithQueryClient(<MarketflowAccessPage />);
+    fillMarketflowAccessForm();
+    now = 105_000;
+    consentAndSubmitMarketflowAccess();
+
+    const pending = await screen.findByRole("button", {
+      name: /sending for manual review/i,
+    });
+    expect(pending).toBeDisabled();
+    expect(pending).toHaveAttribute("aria-busy", "true");
+    fireEvent.click(pending);
+    expect(apiRequestMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders an inline API failure and succeeds on explicit retry", async () => {
+    let now = 110_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    apiRequestMock
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce({ ok: true });
+    renderWithQueryClient(<MarketflowAccessPage />);
+    fillMarketflowAccessForm();
+    now = 115_000;
+    consentAndSubmitMarketflowAccess();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("We could not send your request");
+    const retry = screen.getByRole("button", { name: /try sending again/i });
+    fireEvent.click(retry);
+
+    expect(await screen.findByTestId("success-view-marketflow_access")).toBeInTheDocument();
+    expect(apiRequestMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders the MarketFlow-specific manual-review success and fully resets", async () => {
+    let now = 120_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    apiRequestMock.mockResolvedValueOnce({ ok: true });
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    const { container } = renderWithQueryClient(<MarketflowAccessPage />);
+    fillMarketflowAccessForm();
+    now = 125_000;
+    consentAndSubmitMarketflowAccess();
+
+    const success = await screen.findByTestId("success-view-marketflow_access");
+    expect(success).toHaveAttribute("role", "status");
+    expect(success).toHaveAttribute("aria-live", "polite");
+    expect(success).toHaveFocus();
+    expect(success).toHaveTextContent("Request logged");
+    expect(success).toHaveTextContent("Introduction reviewed");
+    expect(success).toHaveTextContent("Role and network fit reviewed");
+    expect(success).toHaveTextContent("Direct response");
+    expect(success).not.toHaveTextContent(/Acquisitions|comps|48 hours|invite link|onboarding call/i);
+
+    fireEvent.click(screen.getByTestId("button-success-add-another-marketflow_access"));
+    expect(await screen.findByTestId("input-access-name")).toHaveValue("");
+    expect(screen.getByTestId("checkbox-access-consent")).toHaveAttribute(
+      "data-state",
+      "unchecked",
+    );
+    expect(
+      container.querySelector<HTMLInputElement>('input[name="hp_company"]'),
+    ).toHaveValue("");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

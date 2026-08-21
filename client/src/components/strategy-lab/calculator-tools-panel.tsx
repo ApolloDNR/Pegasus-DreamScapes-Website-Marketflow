@@ -30,6 +30,7 @@ import {
 import { Link } from "wouter";
 import { 
   CalculatorActions, 
+  CalculatorRuntimeBoundary,
   AdvancedOptions, 
   MetricCard, 
   StatusIndicator, 
@@ -208,9 +209,11 @@ export const CALC_TABS = ["arv", "roi", "brrrr", "cashflow", "wholesale", "piti"
 export function CalculatorToolsPanel({
   activeTab,
   setActiveTab,
+  publicMode = false,
 }: {
   activeTab: CalcTabKey;
   setActiveTab: (tab: CalcTabKey) => void;
+  publicMode?: boolean;
 }) {
   // Keep the URL ?tab= in sync so deep-links shared from /strategy-lab work.
   useEffect(() => {
@@ -221,9 +224,10 @@ export function CalculatorToolsPanel({
     window.history.replaceState({}, "", url.toString());
   }, [activeTab]);
   return (
-    <section className="py-12 lg:py-20 border-t border-border bg-primary/5">
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="flex justify-end mb-4">
+    <CalculatorRuntimeBoundary publicMode={publicMode}>
+      <section className="py-12 lg:py-20 border-t border-border bg-primary/5">
+        <div className="max-w-5xl mx-auto px-6">
+          {!publicMode ? <div className="flex justify-end mb-4">
           <MyAnalysesDrawer
             onSelectCalculator={(t) => {
               // Saved analyses persist `mao` for the Wholesale calc; the tab key is `wholesale`.
@@ -233,7 +237,7 @@ export function CalculatorToolsPanel({
               }
             }}
           />
-        </div>
+          </div> : null}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as CalcTabKey)} className="w-full">
           <div className="overflow-x-auto -mx-2 px-2 mb-8">
             <TabsList className="inline-flex lg:grid lg:grid-cols-8 gap-1 h-auto p-1 min-w-max lg:min-w-0 lg:w-full">
@@ -297,8 +301,9 @@ export function CalculatorToolsPanel({
             <HardMoneyCalculator />
           </TabsContent>
         </Tabs>
-      </div>
-    </section>
+        </div>
+      </section>
+    </CalculatorRuntimeBoundary>
   );
 }
 

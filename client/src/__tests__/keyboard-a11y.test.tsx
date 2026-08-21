@@ -328,7 +328,7 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/disclosures.tsx",
   "client/src/pages/privacy.tsx",
   "client/src/pages/terms.tsx",
-  "client/src/pages/marketplace.tsx",
+  "client/src/pegasus/marketflow-experience.tsx",
   "client/src/pages/marketflow-access.tsx",
   "client/src/pages/strategy-lab.tsx",
   // Task #145 — admin / HQ page files Apollo uses every day must
@@ -522,9 +522,9 @@ import ContactPage from "@/pages/contact";
 import DisclosuresPage from "@/pages/disclosures";
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
-import MarketplacePage from "@/pages/marketplace";
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import StrategyLabPage from "@/pages/strategy-lab";
+import { PremiumMarketFlow } from "@/pegasus/marketflow-experience";
 // Task #145 — admin / HQ surfaces.
 import AdminCtaEventsPage from "@/pages/admin-cta-events";
 import AdminVendorsPage from "@/pages/admin-vendors";
@@ -543,6 +543,10 @@ type RouteSpec = {
   Page: React.ComponentType<unknown>;
 };
 
+function MarketFlowPublicPage() {
+  return <PremiumMarketFlow go={vi.fn()} />;
+}
+
 const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/", Page: HomePage },
   { path: "/about", Page: AboutPage },
@@ -557,7 +561,7 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/disclosures", Page: DisclosuresPage },
   { path: "/privacy", Page: PrivacyPage },
   { path: "/terms", Page: TermsPage },
-  { path: "/marketflow", Page: MarketplacePage },
+  { path: "/marketflow", Page: MarketFlowPublicPage },
   { path: "/marketflow/access", Page: MarketflowAccessPage },
   { path: "/strategy-lab", Page: StrategyLabPage },
 ];
@@ -689,9 +693,10 @@ describe("Per-page keyboard accessibility (every v1 public route)", () => {
     describe(`${route.path}`, () => {
       it("renders header → main → footer landmarks in DOM order", () => {
         const { container } = renderRoute(route);
+        const main = container.querySelector("main#main-content");
         const all = Array.from(
           container.querySelectorAll<HTMLElement>("header, main#main-content, footer"),
-        );
+        ).filter((element) => element === main || !main?.contains(element));
         expect(
           all.map((el) => el.tagName.toLowerCase()),
           `${route.path} must render <header>, <main id="main-content">, <footer> in that DOM order`,

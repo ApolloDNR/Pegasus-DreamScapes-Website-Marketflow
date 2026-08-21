@@ -24,10 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSEO } from "@/hooks/use-seo";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
-import { ArrowRight, FileCheck2, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, FileCheck2, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { SuccessView } from "@/components/success-view";
 
 function WhatYouGet() {
@@ -40,14 +39,14 @@ function WhatYouGet() {
   return (
     <section className="mf-access-perks" data-testid="marketflow-what-you-get">
       <p>What a reviewed relationship provides</p>
-      <ol>
-        {perks.map((perk, index) => (
+      <ul>
+        {perks.map((perk) => (
           <li key={perk.title}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <div><strong>{perk.title}</strong><small>{perk.desc}</small></div>
+            <strong>{perk.title}</strong>
+            <small>{perk.desc}</small>
           </li>
         ))}
-      </ol>
+      </ul>
     </section>
   );
 }
@@ -58,6 +57,7 @@ const accessSchema = z.object({
   role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"]),
   introducedBy: z.string().min(2, "Tell us who introduced you"),
   notes: z.string().optional().default(""),
+  hp_company: z.string().max(0, "Leave this field blank").default(""),
   consentContact: z.boolean().refine((value) => value, {
     message: "Required to request access",
   }),
@@ -104,8 +104,8 @@ export default function MarketflowAccessPage() {
     trackEvent("marketflow_access_opened");
   }, []);
 
-  const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   // Server-side anti-spam parity with /submit: include honeypot + time-on-form.
   const formMountedAt = useRef<number>(Date.now());
   useEffect(() => {
@@ -120,6 +120,7 @@ export default function MarketflowAccessPage() {
       role: requestedRole,
       introducedBy: "",
       notes: "",
+      hp_company: "",
       consentContact: false,
     },
   });
@@ -145,7 +146,7 @@ export default function MarketflowAccessPage() {
           introducedBy: data.introducedBy,
           notes: data.notes,
           consentContact: data.consentContact,
-          hp_company: "",
+          hp_company: data.hp_company || "",
           ts_mounted_at: formMountedAt.current,
           ts_elapsed_ms: elapsedMs,
         },
@@ -153,15 +154,26 @@ export default function MarketflowAccessPage() {
     },
     onSuccess: () => {
       trackEvent("marketflow_access_requested");
+      setSubmitError(null);
       setSubmitted(true);
     },
-    onError: (e: Error) =>
-      toast({ title: "Could not send request", description: e.message, variant: "destructive" }),
+    onError: (error: Error) => {
+      setSubmitError(
+        error.message.startsWith("Form submitted too fast")
+          ? "Please spend a little more time with the form, then send your request again."
+          : "We could not send your request. Your entries are still here; check your connection and try again.",
+      );
+    },
   });
+
+  const submitRequest = (data: AccessValues) => {
+    setSubmitError(null);
+    mutation.mutate(data);
+  };
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background pt-28 pb-20">
+      <div className="mf-access-success min-h-screen bg-background pt-28 pb-20">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           <SuccessView
             formType="marketflow_access"
@@ -172,11 +184,15 @@ export default function MarketflowAccessPage() {
                 role: requestedRole,
                 introducedBy: "",
                 notes: "",
+                hp_company: "",
                 consentContact: false,
               });
+              mutation.reset();
+              setSubmitError(null);
               formMountedAt.current = Date.now();
               setSubmitted(false);
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+              window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
             }}
           />
         </div>
@@ -194,7 +210,7 @@ export default function MarketflowAccessPage() {
             <p>MarketFlow is reviewed access for professionals with a clear role, credible mandate, and enough context for a deliberate introduction. It is not an open signup or public marketplace.</p>
           </div>
           <aside className="mf-access-protocol" aria-label="Current access protocol">
-            <div><span>Access record</span><strong>MF · Request</strong></div>
+            <h2>Review protocol</h2>
             <dl>
               <div><dt>Relationship</dt><dd>{ACCESS_ROLE_LABEL[selectedRole]}</dd></div>
               <div><dt>Review</dt><dd>Case by case</dd></div>
@@ -203,6 +219,7 @@ export default function MarketflowAccessPage() {
             <p><LockKeyhole aria-hidden="true" /> No inventory, placement, compensation, or approval is promised by this request.</p>
           </aside>
         </div>
+        <p className="mf-access-public-boundary">MarketFlow is not a public marketplace. It is not a securities or investment platform, and no securities are offered through this request.</p>
       </section>
 
       <section className="mf-access-body">
@@ -218,14 +235,24 @@ export default function MarketflowAccessPage() {
         </aside>
 
         <div className="mf-access-form-card">
-          <div className="mf-access-form-head">
-            <div><span>Private access dossier</span><strong>Applicant record</strong></div>
-            <p>{ACCESS_ROLE_LABEL[selectedRole]}</p>
+          <div className="mf-access-form-head" role="status" aria-live="polite" aria-atomic="true">
+            <span>Selected relationship</span>
+            <strong>{ACCESS_ROLE_LABEL[selectedRole]}</strong>
           </div>
           <h2>Provide the facts required for a real review.</h2>
           <p className="mf-access-form-lede">Fields remain private to the access review and the service providers supporting it.</p>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="mf-access-form">
+            <form onSubmit={form.handleSubmit(submitRequest)} className="mf-access-form">
+              <div className="mf-access-honeypot" aria-hidden="true">
+                <label htmlFor="marketflow-hp-company">Company website</label>
+                <input
+                  id="marketflow-hp-company"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  {...form.register("hp_company")}
+                />
+              </div>
               <div className="mf-access-form-grid">
             <FormField
               control={form.control}
@@ -334,14 +361,26 @@ export default function MarketflowAccessPage() {
               )}
             />
 
+            {submitError ? (
+              <div className="mf-access-error" role="alert" aria-live="assertive" aria-atomic="true">
+                <AlertCircle aria-hidden="true" />
+                <div>
+                  <p>{submitError}</p>
+                  <button type="button" onClick={form.handleSubmit(submitRequest)}>Try sending again</button>
+                </div>
+              </div>
+            ) : null}
+
             <Button
               type="submit"
               disabled={mutation.isPending}
+              aria-busy={mutation.isPending}
               className="mf-access-submit"
               data-testid="button-access-submit"
             >
-              {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Send for review <ArrowRight aria-hidden="true" />
+              {mutation.isPending ? <Loader2 aria-hidden="true" className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {mutation.isPending ? "Sending for manual review…" : "Send for review"}
+              {!mutation.isPending ? <ArrowRight aria-hidden="true" /> : null}
             </Button>
             <p className="mf-access-form-foot"><FileCheck2 aria-hidden="true" /> Pegasus reviews identity, role, mandate, introduction context, and current network fit before responding.</p>
             </form>

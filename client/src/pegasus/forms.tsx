@@ -289,7 +289,7 @@ export function LeadForm({
           <span>Something went wrong sending your submission. Please try again, or email apollo@pegasusdreamscapes.com directly.</span>
         </div>
       )}
-      <label className={`sm:col-span-2 flex items-start gap-3 text-[0.78rem] leading-relaxed cursor-pointer ${onNavy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>
+      <label className={`sm:col-span-2 flex items-start gap-3 text-[0.78rem] leading-relaxed cursor-pointer ${onNavy ? 'text-[var(--cream)]/75' : 'text-[var(--text-2)]'}`}>
         <input
           type="checkbox"
           checked={form.consentContact}
@@ -370,7 +370,7 @@ export function LeadSection({
             <LeadForm
               cfg={cfg}
               showRole={showRole}
-              onNavy={navy}
+              onNavy={false}
               handoff={handoff}
               strategy={strategy}
               preferredRole={preferredRole}

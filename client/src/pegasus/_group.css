@@ -2963,7 +2963,7 @@ select.pg-field option { color: #1b1712; }
   letter-spacing: 0.18em;
   font-size: 9px;
   font-weight: 500;
-  color: color-mix(in srgb, var(--muted) 86%, transparent);
+  color: var(--text-2);
 }
 
 /* ---- The Path connector line draws itself in on view ---- */

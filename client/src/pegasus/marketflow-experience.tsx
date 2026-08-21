@@ -2,17 +2,9 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import {
   ArrowRight,
-  BadgeCheck,
-  Building2,
   Check,
   CircleDot,
-  FileCheck2,
-  Handshake,
-  Landmark,
   LockKeyhole,
-  Route,
-  ShieldCheck,
-  Users,
 } from 'lucide-react';
 import type { Nav } from './theme';
 import { IMG } from './primitives';
@@ -62,11 +54,20 @@ const ROLES: Array<{
 ];
 
 const SEQUENCE = [
-  { num: '01', label: 'Strategy Lab', copy: 'The property and assumptions are organized before anything is distributed.', icon: Landmark },
-  { num: '02', label: 'Pegasus review', copy: 'A person checks fit, source, facts, and which lane—if any—should open.', icon: FileCheck2 },
-  { num: '03', label: 'Approved record', copy: 'Only the information appropriate for that relationship is prepared for review.', icon: BadgeCheck },
-  { num: '04', label: 'Considered introduction', copy: 'The right parties are introduced deliberately, never sprayed into a public marketplace.', icon: Handshake },
-  { num: '05', label: 'Written terms', copy: 'Roles, source attribution, compensation, and next actions are documented before execution.', icon: ShieldCheck },
+  { label: 'Strategy Lab', copy: 'The property and assumptions are organized before anything is distributed.' },
+  { label: 'Pegasus review', copy: 'A person checks fit, source, facts, and which lane—if any—should open.' },
+  { label: 'Approved record', copy: 'Only information appropriate for that relationship is prepared for review.' },
+  { label: 'Considered introduction', copy: 'The right parties are introduced deliberately, never sprayed into a public marketplace.' },
+  { label: 'Written terms', copy: 'Roles, source attribution, compensation, and next actions are documented before execution.' },
+];
+
+const RECORD_ANATOMY = [
+  'Property context',
+  'Source authority',
+  'Review basis',
+  'Current permission',
+  'Intended recipient',
+  'Written terms',
 ];
 
 export function PremiumMarketFlow({ go }: { go: Nav }) {
@@ -88,11 +89,6 @@ export function PremiumMarketFlow({ go }: { go: Nav }) {
             <button type="button" onClick={() => setLocation('/marketflow/access')}>Request reviewed access <ArrowRight aria-hidden="true" /></button>
             <button type="button" onClick={() => setLocation('/marketflow/buyboxes')}>Read public criteria</button>
           </div>
-        </div>
-        <div className="px-mf-hero-index" aria-label="MarketFlow operating principles">
-          <div><span>01</span><strong>Reviewed</strong><small>Before distribution</small></div>
-          <div><span>02</span><strong>Permissioned</strong><small>Role-appropriate access</small></div>
-          <div><span>03</span><strong>Documented</strong><small>Terms before movement</small></div>
         </div>
       </section>
 
@@ -131,38 +127,30 @@ export function PremiumMarketFlow({ go }: { go: Nav }) {
           <h2 id="marketflow-sequence-title">Nothing enters the room simply because it was submitted.</h2>
           <p>The product is built around gates. Each gate protects the property owner, the source, the receiving party, and Pegasus.</p>
         </div>
-        <ol>
-          {SEQUENCE.map((item) => {
-            const Icon = item.icon;
-            return <li key={item.num}><span>{item.num}</span><Icon aria-hidden="true" /><h3>{item.label}</h3><p>{item.copy}</p></li>;
-          })}
-        </ol>
+        <ol>{SEQUENCE.map((item) => <li key={item.label}><h3>{item.label}</h3><p>{item.copy}</p></li>)}</ol>
       </section>
 
       <section className="px-mf-dossier" aria-labelledby="marketflow-dossier-title">
         <div className="px-mf-dossier-image"><img src={IMG('pegasus-craft-blueprint.webp')} alt="Planning documents being reviewed on an architectural worktable" /></div>
         <div className="px-mf-dossier-paper">
-          <div className="px-mf-dossier-head"><span>Illustrative opportunity record</span><strong>MF · 0007</strong></div>
-          <p className="px-kicker">Fictionalized product preview</p>
-          <h2 id="marketflow-dossier-title">A record built for a decision, not a listing card.</h2>
-          <p className="px-mf-dossier-lead">An approved dossier gives the receiving party enough context to decide whether to enter diligence—while keeping sensitive facts, identity, and live terms behind appropriate permissions.</p>
-          <dl>
-            <div><dt>Situation</dt><dd>East Bay value-add residence</dd></div>
-            <div><dt>Current gate</dt><dd>Pegasus fit review</dd></div>
-            <div><dt>Possible relationship</dt><dd>Buyer or operating partner</dd></div>
-            <div><dt>Source status</dt><dd>Recorded; terms required before distribution</dd></div>
-          </dl>
-          <div className="px-mf-dossier-note"><LockKeyhole aria-hidden="true" /><p>Illustrative and anonymized. No live inventory, offer, solicitation, or promise of access appears on this public page.</p></div>
+          <p className="px-kicker">Field anatomy</p>
+          <h2 id="marketflow-dossier-title">A useful record begins with authority, context, and a defined recipient.</h2>
+          <p className="px-mf-dossier-lead">When Pegasus approves a relationship for review, the record is limited to the information needed for that decision. Sensitive facts, identity, and terms stay behind the appropriate permission.</p>
+          <ul className="px-mf-anatomy" aria-label="Fields in a reviewed MarketFlow record">
+            {RECORD_ANATOMY.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+          <div className="px-mf-dossier-note"><LockKeyhole aria-hidden="true" /><p>No live opportunities or inventory, offer, solicitation, or promise of access is published here.</p></div>
         </div>
       </section>
 
       <section className="px-mf-boundaries">
         <header><p className="px-kicker">What MarketFlow is—and is not</p><h2>A serious network begins with visible boundaries.</h2></header>
+        <p className="px-mf-boundary-note">MarketFlow is not a public marketplace or live-inventory feed. It is not a securities or investment platform, and no securities are offered on this surface.</p>
         <div>
-          <section><Route aria-hidden="true" /><h3>A permissioned routing layer</h3><p>Reviewed information moves to appropriate parties after fit and authority are checked.</p></section>
-          <section><Users aria-hidden="true" /><h3>A relationship system</h3><p>People are introduced around a specific need, not treated as anonymous marketplace traffic.</p></section>
-          <section><LockKeyhole aria-hidden="true" /><h3>Not public inventory</h3><p>No live deals, private terms, or member records are published on this surface.</p></section>
-          <section><Building2 aria-hidden="true" /><h3>Not automatic matching</h3><p>Pegasus reviews fit and decides whether an introduction is responsible. Access does not guarantee inventory.</p></section>
+          <section><h3>A permissioned routing layer</h3><p>Reviewed information moves to appropriate parties after fit and authority are checked.</p></section>
+          <section><h3>A relationship system</h3><p>People are introduced around a specific need, not treated as anonymous marketplace traffic.</p></section>
+          <section><h3>Not public inventory</h3><p>No live deals, private terms, or member records are published on this surface.</p></section>
+          <section><h3>Not automatic matching</h3><p>Pegasus reviews fit and decides whether an introduction is responsible. Access does not guarantee inventory.</p></section>
         </div>
       </section>
 

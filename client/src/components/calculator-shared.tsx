@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,7 +103,37 @@ interface CalculatorActionsProps {
   disabled?: boolean;
 }
 
-export function CalculatorActions({ 
+const CalculatorRuntimeContext = createContext({ publicMode: false });
+
+export function CalculatorRuntimeBoundary({
+  publicMode,
+  children,
+}: {
+  publicMode: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <CalculatorRuntimeContext.Provider value={{ publicMode }}>
+      {children}
+    </CalculatorRuntimeContext.Provider>
+  );
+}
+
+export function CalculatorActions(props: CalculatorActionsProps) {
+  const { publicMode } = useContext(CalculatorRuntimeContext);
+
+  if (publicMode) {
+    return (
+      <p className="calculator-public-boundary" data-testid="calculator-public-boundary">
+        This worksheet stays in your browser. Carry the property brief into intake when you want a human review.
+      </p>
+    );
+  }
+
+  return <AuthenticatedCalculatorActions {...props} />;
+}
+
+function AuthenticatedCalculatorActions({
   calculatorType, 
   inputs, 
   outputs, 

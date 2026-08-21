@@ -850,7 +850,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
           </header>
           <div className="px-lab-instrument-detail">
             <React.Suspense fallback={<p role="status">Preparing the worksheet…</p>}>
-              <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} />
+              <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} publicMode />
             </React.Suspense>
           </div>
         </section>

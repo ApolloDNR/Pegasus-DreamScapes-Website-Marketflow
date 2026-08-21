@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -12,9 +13,9 @@ import { CheckCircle2, Inbox, Search, Compass, FlagTriangleRight, ArrowRight } f
 //   2. Sets the four-step review expectation.
 //   3. Offers a single "Add another" path back to the form.
 //
-// formType drives copy. The 4-step timeline is invariant — every Pegasus
-// intake follows the same Receive → Triage → Strategy review → Path
-// decision arc. Per-form copy lives in the FORM_COPY map below.
+// formType drives copy. Most intakes share the same four-stage review arc;
+// MarketFlow uses a separate manual-access review sequence so the confirmation
+// never implies deal analysis, comps, inventory, or approval.
 
 export type SuccessFormType =
   | "submit"
@@ -28,7 +29,7 @@ interface SuccessViewProps {
   referenceTag?: string;
 }
 
-const TIMELINE = [
+const DEFAULT_TIMELINE = [
   {
     icon: Inbox,
     title: "Received",
@@ -48,6 +49,29 @@ const TIMELINE = [
     icon: FlagTriangleRight,
     title: "Path decision",
     sub: "You get a real answer — even if the answer is a referral elsewhere.",
+  },
+];
+
+const MARKETFLOW_TIMELINE = [
+  {
+    icon: Inbox,
+    title: "Request logged",
+    sub: "Your private request is recorded for manual review.",
+  },
+  {
+    icon: Search,
+    title: "Introduction reviewed",
+    sub: "Pegasus checks how the relationship began and whether the context is complete.",
+  },
+  {
+    icon: Compass,
+    title: "Role and network fit reviewed",
+    sub: "Your mandate, role, and current network fit are considered case by case.",
+  },
+  {
+    icon: FlagTriangleRight,
+    title: "Direct response",
+    sub: "Pegasus responds directly if a responsible next step exists.",
   },
 ];
 
@@ -86,12 +110,11 @@ const FORM_COPY: Record<
   marketflow_access: {
     kicker: "Request received",
     headline: "Your access request is logged.",
-    // COPY_DECK §12 locked confirmation (issue #22)
-    lead: "Your MarketFlow request has been received. Pegasus reviews access manually and will follow up if there is a fit.",
+    lead: "Pegasus reviews each MarketFlow relationship manually and will respond directly if the role, introduction context, and current network fit support a responsible next step.",
     expectations: [
-      "We verify every introduction by hand before sending an invite.",
-      "If there is a fit, you will get a personal invite link and onboarding call.",
-      "If MarketFlow is not the right room for you yet, we will say so plainly.",
+      "Access is discretionary and reviewed case by case.",
+      "A request does not guarantee approval, inventory, placement, compensation, or an introduction.",
+      "If the relationship is not a fit now, Pegasus will say so plainly.",
     ],
     addAnotherLabel: "Submit a different request",
   },
@@ -110,9 +133,23 @@ const FORM_COPY: Record<
 
 export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessViewProps) {
   const copy = FORM_COPY[formType];
+  const timeline = formType === "marketflow_access" ? MARKETFLOW_TIMELINE : DEFAULT_TIMELINE;
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    statusRef.current?.focus({ preventScroll: true });
+  }, []);
 
   return (
-    <div className="w-full" data-testid={`success-view-${formType}`}>
+    <div
+      ref={statusRef}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      tabIndex={-1}
+      className={`success-view success-view--${formType} w-full focus:outline-none`}
+      data-testid={`success-view-${formType}`}
+    >
       <CardSurface className="p-8 sm:p-10 lg:p-14">
         <div className="text-center max-w-2xl mx-auto">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-6" aria-hidden="true" />
@@ -143,7 +180,7 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
             What happens next
           </p>
           <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {TIMELINE.map((step, i) => {
+            {timeline.map((step, i) => {
               const Icon = step.icon;
               return (
                 <li
