@@ -38,9 +38,9 @@ Baseline head: `f7651c988c3494b75cf0a5d87b2b91d2592f33a0` on `codex/launch-recov
 - Task 1: implementation tree `2f058fe` published on the canonical branch as `ecf8d67`; 55 focused tests, TypeScript, build, and bundle budget passed locally.
 - Task 1: CodeRabbit CLI review could not initialize because it hardcodes read-only `/root/.coderabbit`; the official PR bot fallback also skipped because PR #26 has 227 files versus its 100-file limit. No CodeRabbit issues were produced and no manual result is being represented as CodeRabbit output.
 - Task 1: complete subject to exact-head hosted CI and later rendered evidence; the production shell was unchanged because it already matched the locked Task 1 arrival/header contract.
-- Task 2: in progress on the mounted v5.1 homepage.
-- Task 3: implementation complete at `7b49f476d3bb26ceb4ea0404ff825fadecf9dc24`; 229 protected focused tests, TypeScript, the production build, the bundle budget, and diff hygiene passed locally.
-- Task 3: rendered 1440/1024/768/390 evidence and exact-head hosted CI remain Task 7 gates; no local rendered-browser pass is claimed.
-- Task 4: implementation complete at `4cb6364aa9f67efa55d2ad0a8f83416e2c6a6982`; 7 mounted behavior tests and a 168-test protected form/disclosure/CTA/route/keyboard suite passed, with TypeScript, production build, bundle budget, and diff hygiene green.
-- Task 4: rendered 1440/1024/768/390 evidence and exact-head hosted CI remain Task 7 gates; no local rendered-browser pass is claimed.
-- Tasks 5–7: pending implementation.
+- Task 2: implementation and report complete; published canonical tree passed the full hosted route/theme/viewport matrix after the homepage contrast correction.
+- Task 3: implementation and report complete; its canonical hosted run passed every rendered route but exposed a stale interaction selector. The selector was corrected, and a later hosted run exposed the real public calculator's missing private providers; the scoped public runtime fix and regression test are in Task 5A.
+- Task 4: implementation and report complete; its canonical hosted run passed install, audit, environment, TypeScript, and build, then identified exact light-form contrast failures. The semantic-token correction is in Task 5A.
+- Task 5A: implementation/review chain complete through `8a67378783b9f9f4fc25e877f164fdabacba7a10`; 152 focused tests, all 1,736 repository tests, TypeScript, production build, bundle budget, production audit, registry guard, guard executable test, and diff hygiene passed. Final read-only review found no remaining blocking or important issue.
+- Task 5A: canonical publishing and exact-head hosted rendered verification remain pending; no local rendered-browser pass is claimed because the sandbox has no Chromium binary.
+- Tasks 5B–7: pending implementation.
