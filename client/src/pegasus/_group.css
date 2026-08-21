@@ -3569,7 +3569,7 @@ select.pg-field option { color: #1b1712; }
 
 /* Arrival */
 .hv-hero-place { position:absolute; right:clamp(1.5rem,4.45vw,4rem); top:.55rem; z-index:4; margin:0;
-  color:rgba(247,242,232,.44); font-size:.52rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; }
+  color:rgba(247,242,232,.72); font-size:.72rem; font-weight:600; letter-spacing:.06em; }
 .hv-hero-top { min-height:clamp(620px,80svh,760px); }
 .hv-hero-editorial .hv-hero-inner { width:100%; max-width:1440px; margin:0 auto;
   padding:9.5rem clamp(1.5rem,4.45vw,4rem) 2.5rem; }
