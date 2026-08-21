@@ -207,6 +207,7 @@ describe("mounted Work With Apollo representation handoff", () => {
 
     const error = await screen.findByRole("alert");
     expect(error).toHaveTextContent("Something went wrong sending your submission");
+    expect(error).toHaveClass("pg-form-error");
     expect(error).toBeInTheDocument();
   });
 

@@ -2409,6 +2409,15 @@ body.pg-menu-open { overflow: hidden; }
   background: var(--accent);
 }
 
+.pg-form-error {
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.08);
+}
+.pg-root[data-theme='dark'] .pg-form-error {
+  color: hsl(var(--destructive-foreground));
+  background: hsl(var(--destructive) / 0.28);
+}
+
 /* ---- Work With Apollo: portrait-led editorial representation lane ---- */
 .apollo-work-intro {
   padding: clamp(8.5rem, 13vw, 11rem) 0 clamp(5rem, 8vw, 7.5rem);

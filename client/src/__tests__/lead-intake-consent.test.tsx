@@ -1,11 +1,13 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
@@ -266,9 +268,12 @@ describe("MarketFlow access explicit contact consent", () => {
     fireEvent.change(honeypot!, { target: { value: "spam incorporated" } });
     fillMarketflowAccessForm();
     now = 85_000;
-    consentAndSubmitMarketflowAccess();
+    await act(async () => {
+      consentAndSubmitMarketflowAccess();
+      await Promise.resolve();
+    });
 
-    await waitFor(() => expect(apiRequestMock).not.toHaveBeenCalled());
+    expect(apiRequestMock).not.toHaveBeenCalled();
   });
 
   it("rejects a submit before three seconds with a durable inline alert", async () => {
@@ -281,6 +286,21 @@ describe("MarketFlow access explicit contact consent", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Please spend a little more time");
+    expect(apiRequestMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects whitespace-only identity fields before calling the API", async () => {
+    let now = 95_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    renderWithQueryClient(<MarketflowAccessPage />);
+    fillMarketflowAccessForm();
+    fireEvent.change(screen.getByTestId("input-access-name"), {
+      target: { value: "   " },
+    });
+    now = 100_000;
+    consentAndSubmitMarketflowAccess();
+
+    expect(await screen.findByText("Enter your full name")).toBeInTheDocument();
     expect(apiRequestMock).not.toHaveBeenCalled();
   });
 
@@ -335,9 +355,14 @@ describe("MarketFlow access explicit contact consent", () => {
     consentAndSubmitMarketflowAccess();
 
     const success = await screen.findByTestId("success-view-marketflow_access");
-    expect(success).toHaveAttribute("role", "status");
-    expect(success).toHaveAttribute("aria-live", "polite");
+    expect(success).toHaveAttribute("role", "region");
+    expect(success).toHaveAccessibleName("Your access request is logged.");
     expect(success).toHaveFocus();
+    expect(within(success).getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Your access request is logged.",
+    );
+    expect(within(success).getByRole("status")).toHaveAttribute("aria-live", "polite");
+    expect(window.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
     expect(success).toHaveTextContent("Request logged");
     expect(success).toHaveTextContent("Introduction reviewed");
     expect(success).toHaveTextContent("Role and network fit reviewed");
@@ -345,7 +370,9 @@ describe("MarketFlow access explicit contact consent", () => {
     expect(success).not.toHaveTextContent(/Acquisitions|comps|48 hours|invite link|onboarding call/i);
 
     fireEvent.click(screen.getByTestId("button-success-add-another-marketflow_access"));
-    expect(await screen.findByTestId("input-access-name")).toHaveValue("");
+    const resetName = await screen.findByTestId("input-access-name");
+    expect(resetName).toHaveValue("");
+    expect(resetName).toHaveFocus();
     expect(screen.getByTestId("checkbox-access-consent")).toHaveAttribute(
       "data-state",
       "unchecked",

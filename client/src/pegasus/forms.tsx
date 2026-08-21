@@ -284,7 +284,7 @@ export function LeadForm({
         <textarea id={`${uid}-message`} className="pg-field resize-none" rows={3} value={form.message} onChange={onField('message')} placeholder={cfg.messagePlaceholder} />
       </div>
       {createLead.isError && (
-        <div role="alert" aria-live="assertive" aria-atomic="true" className={`sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed ${onNavy ? 'bg-[rgba(220,80,60,0.16)] text-[var(--cream)]' : 'bg-[rgba(154,58,42,0.08)] text-[#9a3a2a]'}`}>
+        <div role="alert" aria-live="assertive" aria-atomic="true" className="pg-form-error sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" strokeWidth={1.8} />
           <span>Something went wrong sending your submission. Please try again, or email apollo@pegasusdreamscapes.com directly.</span>
         </div>

@@ -52,11 +52,11 @@ function WhatYouGet() {
 }
 
 const accessSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
+  name: z.string().trim().min(2, "Enter your full name").max(120, "Keep your name under 120 characters"),
+  email: z.string().trim().email("Enter a valid email address").max(254, "Keep your email under 254 characters"),
   role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"]),
-  introducedBy: z.string().min(2, "Tell us who introduced you"),
-  notes: z.string().optional().default(""),
+  introducedBy: z.string().trim().min(2, "Tell us who introduced you").max(200, "Keep this introduction under 200 characters"),
+  notes: z.string().trim().max(2000, "Keep your note under 2,000 characters").optional().default(""),
   hp_company: z.string().max(0, "Leave this field blank").default(""),
   consentContact: z.boolean().refine((value) => value, {
     message: "Required to request access",
@@ -108,6 +108,7 @@ export default function MarketflowAccessPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Server-side anti-spam parity with /submit: include honeypot + time-on-form.
   const formMountedAt = useRef<number>(Date.now());
+  const focusNameAfterReset = useRef(false);
   useEffect(() => {
     formMountedAt.current = Date.now();
   }, []);
@@ -126,13 +127,20 @@ export default function MarketflowAccessPage() {
   });
   const selectedRole = form.watch("role");
 
+  useEffect(() => {
+    if (!submitted && focusNameAfterReset.current) {
+      focusNameAfterReset.current = false;
+      form.setFocus("name");
+    }
+  }, [form, submitted]);
+
   const mutation = useMutation({
     mutationFn: async (data: AccessValues) => {
       const elapsedMs = Date.now() - formMountedAt.current;
       if (elapsedMs < 3000) {
         throw new Error("Form submitted too fast. Please try again.");
       }
-      const [first, ...rest] = data.name.split(" ");
+      const [first, ...rest] = data.name.trim().split(/\s+/);
       return apiRequest("POST", "/api/leads", {
         leadType: "marketflow_access",
         source: "marketflow_access_page",
@@ -155,6 +163,8 @@ export default function MarketflowAccessPage() {
     onSuccess: () => {
       trackEvent("marketflow_access_requested");
       setSubmitError(null);
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
       setSubmitted(true);
     },
     onError: (error: Error) => {
@@ -177,6 +187,7 @@ export default function MarketflowAccessPage() {
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           <SuccessView
             formType="marketflow_access"
+            headingLevel={1}
             onAddAnother={() => {
               form.reset({
                 name: "",
@@ -190,6 +201,7 @@ export default function MarketflowAccessPage() {
               mutation.reset();
               setSubmitError(null);
               formMountedAt.current = Date.now();
+              focusNameAfterReset.current = true;
               setSubmitted(false);
               const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
               window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });

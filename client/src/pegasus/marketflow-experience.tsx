@@ -78,7 +78,7 @@ export function PremiumMarketFlow({ go }: { go: Nav }) {
   return (
     <div className="px-mf" data-testid="premium-marketflow">
       <section className="px-mf-hero">
-        <img src={IMG('pegasus-casestudy.png')} alt="Pegasus planning table with reviewed property records" />
+        <img src={IMG('pegasus-casestudy.png')} alt="Sunlit kitchen with oak cabinetry and marble counters" />
         <div className="px-mf-hero-scrim" aria-hidden="true" />
         <div className="px-mf-hero-inner">
           <div className="px-mf-pilot"><CircleDot aria-hidden="true" /> Controlled private pilot</div>

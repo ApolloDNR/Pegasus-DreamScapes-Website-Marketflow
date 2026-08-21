@@ -105,6 +105,10 @@ interface CalculatorActionsProps {
 
 const CalculatorRuntimeContext = createContext({ publicMode: false });
 
+export function useCalculatorRuntime() {
+  return useContext(CalculatorRuntimeContext);
+}
+
 export function CalculatorRuntimeBoundary({
   publicMode,
   children,
@@ -120,7 +124,7 @@ export function CalculatorRuntimeBoundary({
 }
 
 export function CalculatorActions(props: CalculatorActionsProps) {
-  const { publicMode } = useContext(CalculatorRuntimeContext);
+  const { publicMode } = useCalculatorRuntime();
 
   if (publicMode) {
     return (

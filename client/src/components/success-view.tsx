@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -27,6 +27,7 @@ interface SuccessViewProps {
   formType: SuccessFormType;
   onAddAnother: () => void;
   referenceTag?: string;
+  headingLevel?: 1 | 2;
 }
 
 const DEFAULT_TIMELINE = [
@@ -131,37 +132,49 @@ const FORM_COPY: Record<
   },
 };
 
-export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessViewProps) {
+export function SuccessView({
+  formType,
+  onAddAnother,
+  referenceTag,
+  headingLevel = 2,
+}: SuccessViewProps) {
   const copy = FORM_COPY[formType];
   const timeline = formType === "marketflow_access" ? MARKETFLOW_TIMELINE : DEFAULT_TIMELINE;
   const statusRef = useRef<HTMLDivElement>(null);
+  const headingId = useId();
+  const [announcement, setAnnouncement] = useState("");
+  const Heading = headingLevel === 1 ? "h1" : "h2";
 
   useEffect(() => {
     statusRef.current?.focus({ preventScroll: true });
-  }, []);
+    setAnnouncement(copy.headline);
+  }, [copy.headline]);
 
   return (
     <div
       ref={statusRef}
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
+      role="region"
+      aria-labelledby={headingId}
       tabIndex={-1}
       className={`success-view success-view--${formType} w-full focus:outline-none`}
       data-testid={`success-view-${formType}`}
     >
+      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </p>
       <CardSurface className="p-8 sm:p-10 lg:p-14">
         <div className="text-center max-w-2xl mx-auto">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-6" aria-hidden="true" />
           <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
             {copy.kicker}
           </p>
-          <h2
+          <Heading
+            id={headingId}
             className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-5"
             data-testid={`text-success-headline-${formType}`}
           >
             {copy.headline}
-          </h2>
+          </Heading>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
             {copy.lead}
           </p>

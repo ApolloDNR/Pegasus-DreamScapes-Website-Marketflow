@@ -42,4 +42,24 @@ describe("public Strategy Lab calculator runtime", () => {
     expect(screen.queryByTestId("button-save-analysis")).not.toBeInTheDocument();
     expect(screen.queryByTestId("button-share-analysis")).not.toBeInTheDocument();
   });
+
+  it.each([
+    ["brrrr" as const, "input-brrrr-purchase"],
+    ["cashflow" as const, "input-cf-rent"],
+  ])("runs the %s scenario analysis without mounting private save providers", async (activeTab, inputTestId) => {
+    render(
+      <CalculatorToolsPanel
+        activeTab={activeTab}
+        setActiveTab={vi.fn()}
+        publicMode
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId(inputTestId), {
+      target: { value: "250000" },
+    });
+
+    expect(await screen.findByTestId("card-scenario-compare")).toBeInTheDocument();
+    expect(screen.queryByTestId("button-save-scenarios")).not.toBeInTheDocument();
+  });
 });
