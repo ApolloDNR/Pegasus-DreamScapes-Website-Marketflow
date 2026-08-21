@@ -153,6 +153,20 @@ describe("Pegasus public-shell navigation accessibility", () => {
     const nav = container.querySelector("nav");
     expect(nav).toBeTruthy();
 
+    expect(
+      within(nav!).getAllByRole("link").map((link) =>
+        link.getAttribute("aria-label") ?? link.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual([
+      "Pegasus Dreamscapes home",
+      "How We Operate",
+      "Property Owners",
+      "Deal Partners",
+      "Our Work",
+      "About",
+      "Bring an Opportunity",
+    ]);
+
     for (const [label, href] of [
       ["How We Operate", "/how-we-operate"],
       ["Property Owners", "/property-owners"],
@@ -162,6 +176,11 @@ describe("Pegasus public-shell navigation accessibility", () => {
     ]) {
       expect(within(nav!).getByRole("link", { name: label })).toHaveAttribute("href", href);
     }
+    expect(within(nav!).getAllByRole("link", { name: "Bring an Opportunity" })).toHaveLength(1);
+    expect(within(nav!).getByRole("link", { name: "Bring an Opportunity" })).toHaveAttribute(
+      "href",
+      "/bring-an-opportunity",
+    );
     expect(within(nav!).queryByRole("link", { name: /Strategy Lab/i })).not.toBeInTheDocument();
     expect(within(nav!).queryByRole("link", { name: /MarketFlow/i })).not.toBeInTheDocument();
     expect(
@@ -219,6 +238,44 @@ describe("Pegasus public-shell navigation accessibility", () => {
     expect(container.querySelector("nav")).not.toHaveAttribute("inert");
     expect(menu).toHaveAttribute("aria-hidden", "true");
     expect(menu).not.toHaveAttribute("aria-modal");
+  });
+
+  it("keeps mobile core-page parity and follows a real first-level route", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { history } = renderLanding("/");
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const menu = screen.getByRole("dialog", { name: "Primary navigation" });
+    const coreHeading = within(menu).getByRole("heading", { name: "Core pages" });
+    const coreSection = coreHeading.closest("section");
+    expect(coreSection).toBeTruthy();
+
+    const coreLinks = within(coreSection!).getAllByRole("link");
+    expect(coreLinks.map((link) => link.textContent?.replace(/\s+/g, " ").trim())).toEqual([
+      "How We Operate",
+      "Property Owners",
+      "Deal Partners",
+      "Our Work",
+      "About",
+    ]);
+    expect(coreLinks.map((link) => link.getAttribute("href"))).toEqual([
+      "/how-we-operate",
+      "/property-owners",
+      "/deal-partners",
+      "/our-work",
+      "/about",
+    ]);
+    expect(within(menu).getByRole("link", { name: "Strategy Lab" })).toHaveAttribute(
+      "href",
+      "/strategy-lab",
+    );
+    expect(menu.querySelector('a[href="/marketflow"]')).not.toBeInTheDocument();
+
+    await user.click(within(coreSection!).getByRole("link", { name: "Our Work" }));
+    await waitFor(() => {
+      expect(history.at(-1)).toBe("/our-work");
+      expect(menu).toHaveAttribute("aria-hidden", "true");
+    });
   });
 
   it("opens the Peggy dialog from the mobile menu entry", async () => {

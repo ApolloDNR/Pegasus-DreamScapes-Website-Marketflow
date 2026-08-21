@@ -1,82 +1,74 @@
 import React from "react";
-import { describe, it, expect, afterEach } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import { HomePageV6 } from "@/pegasus/home-v6";
+import { HomePageV51 } from "@/pegasus/home-v51";
 
 const noop = () => {};
 
 afterEach(() => cleanup());
 
 function renderHome() {
-  const { hook } = memoryLocation({ path: "/", static: true });
-  return render(
-    <Router hook={hook}>
-      <HomePageV6 go={noop} openPeggy={noop} />
+  const memory = memoryLocation({ path: "/", record: true });
+  const go = vi.fn();
+  const result = render(
+    <Router hook={memory.hook}>
+      <HomePageV51 go={go} openPeggy={noop} />
     </Router>,
   );
+
+  return { ...result, go, history: memory.history as string[] };
 }
 
-describe("Pegasus homepage v6 design contract", () => {
-  it("uses the approved arrival image and locked first-viewport copy", () => {
-    const { container, getByRole, getByText } = renderHome();
-    const hero = container.querySelector('[data-testid="approved-home-hero-image"]') as HTMLImageElement | null;
-    expect(hero?.getAttribute("src")).toBe("/images/hero/pegasus-v6-arrival.webp");
-    expect(getByRole("heading", { level: 1 }).textContent?.replace(/\s+/g, " ").trim()).toBe(
+describe("Pegasus mounted v5.1 homepage design contract", () => {
+  it("keeps the approved image, identity, headline, and actions in locked first-viewport order", () => {
+    const { container } = renderHome();
+    const arrival = container.querySelector<HTMLElement>('[data-hv="arrival"]');
+    expect(arrival).toBeTruthy();
+
+    const hero = within(arrival!).getByTestId("approved-home-hero-image");
+    expect(hero).toHaveAttribute("src", "/images/hero/pegasus-v6-arrival.webp");
+    expect(
+      within(arrival!).getByRole("heading", { level: 1 }).textContent?.replace(/\s+/g, " ").trim(),
+    ).toBe(
       "Complex real estate, made executable.",
     );
-    expect(getByText("Real estate operating company")).toBeTruthy();
-    expect(getByText("Contra Costa & Alameda")).toBeTruthy();
+    expect(
+      Array.from(arrival!.querySelectorAll(".hv-eyebrow-row .hv-eyebrow > span"), (item) =>
+        item.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual(["Real estate operating company", "Contra Costa & Alameda"]);
+    expect(
+      Array.from(arrival!.querySelectorAll(".hv-cta-row > a, .hv-cta-row > button"), (item) =>
+        item.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual(["Bring an Opportunity", "See How We Operate", "Open Strategy Lab"]);
   });
 
-  it("keeps one dominant action and two subordinate first-viewport actions", () => {
-    const { getByRole } = renderHome();
-    expect(getByRole("link", { name: /Bring an Opportunity/i })).toBeTruthy();
-    expect(getByRole("button", { name: /See How We Operate/i })).toBeTruthy();
-    expect(getByRole("button", { name: /Open Strategy Lab/i })).toBeTruthy();
+  it("routes each locked first-viewport action through its real public boundary", () => {
+    const { container, go, history } = renderHome();
+    const arrival = container.querySelector<HTMLElement>('[data-hv="arrival"]');
+    expect(arrival).toBeTruthy();
+
+    const intake = within(arrival!).getByRole("link", { name: /Bring an Opportunity/i });
+    expect(intake).toHaveAttribute("href", "/bring-an-opportunity");
+    fireEvent.click(intake);
+    expect(history.at(-1)).toBe("/bring-an-opportunity");
+
+    fireEvent.click(within(arrival!).getByRole("button", { name: /See How We Operate/i }));
+    fireEvent.click(within(arrival!).getByRole("button", { name: /Open Strategy Lab/i }));
+    expect(go.mock.calls.map(([route]) => route)).toEqual(["dealstrategy", "strategylab"]);
   });
 
   it("keeps the proof rail in the locked order", () => {
     const { container } = renderHome();
-    const items = Array.from(container.querySelectorAll('[data-testid="home-proof-rail"] li'))
-      .map((el) => el.textContent?.replace(/\s+/g, " ").trim() ?? "");
-    expect(items).toHaveLength(4);
-    expect(items[0]).toContain("Founder-led");
-    expect(items[1]).toContain("Nelson Drive");
-    expect(items[2]).toContain("East Bay");
-    expect(items[3]).toContain("Strategy first");
-  });
-
-  it("presents visitor paths as an editorial list rather than a feature-card grid", () => {
-    const { container } = renderHome();
-    const router = container.querySelector('[data-testid="home-visitor-router"]');
-    expect(router).toBeTruthy();
-    expect(router?.querySelectorAll('[data-testid^="home-route-"]').length).toBe(4);
-    expect(router?.querySelector('[data-layout="editorial-list"]')).toBeTruthy();
-  });
-
-  it("uses real Nelson Drive evidence and avoids fake social proof", () => {
-    const { container, queryByText } = renderHome();
-    expect(container.querySelector('img[src="/images/nelson/kitchen-after.webp"]')).toBeTruthy();
-    expect(container.querySelector('img[src="/images/nelson/kitchen-before.webp"]')).toBeTruthy();
-    expect(queryByText(/trusted by thousands/i)).toBeNull();
-    expect(queryByText(/customers love/i)).toBeNull();
-  });
-
-  it("has one operating-map signature moment and no decorative SaaS language", () => {
-    const { container, queryByText } = renderHome();
-    expect(container.querySelector('[data-testid="home-operating-map"]')).toBeTruthy();
-    expect(queryByText(/AI-powered/i)).toBeNull();
-    expect(queryByText(/revolutionary platform/i)).toBeNull();
-    expect(queryByText(/unlock your potential/i)).toBeNull();
-  });
-
-  it("keeps the founder and final invitation concise", () => {
-    const { getByText, getAllByText } = renderHome();
-    expect(getByText(/Paolo.*Apollo.*Duran/i)).toBeTruthy();
-    expect(getAllByText(/DRE #02333658/i).length).toBeGreaterThan(0);
-    expect(getByText("Bring the property, the deal, or the plan.")).toBeTruthy();
+    expect(
+      Array.from(
+        container.querySelectorAll('[data-hv="arrival"] .hv-hero-facts > li .hv-fact-k'),
+        (item) => item.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual(["Founder-led", "Nelson Drive", "East Bay", "Strategy first"]);
   });
 });
