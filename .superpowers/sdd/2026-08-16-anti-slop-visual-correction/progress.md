@@ -6,6 +6,8 @@ Baseline head: `f7651c988c3494b75cf0a5d87b2b91d2592f33a0` on `codex/launch-recov
 
 - Ruling: Execute a prerequisite Task 0 to diagnose and repair the deterministic `npm ci` CI failure before visual Tasks 1–6 — the newer 2026-08-20 Work handoff explicitly orders CI repair first and the owner repeated that directive — if wrong, visual work is delayed by the CI investigation but no product behavior is changed.
 - Ruling: Where the 2026-08-16 plan names obsolete/unmounted homepage or navigation files, apply its requirements to the mounted v5.1 shell named by the newer handoff — the Final Design Lock and correction spec govern visible behavior, while editing unmounted files would create false progress — if wrong, the implementation diff may not match the plan's illustrative file list even though the active rendered surface is corrected.
+- Ruling: Preserve the four paths and route contracts on the mounted Work With Apollo selector instead of reviving the unmounted legacy page architecture — the newer handoff and mounted-surface audit make the active v5.1 route authoritative — if wrong, a later owner-approved copy/routing migration may be needed, but lead, intake, server, and security contracts remain unchanged.
+- Ruling: Isolate the Work With Apollo portrait treatment and decorative-contour removal with scoped optional component variants — if wrong and the visual correction was intended globally, unrelated routes retain their old presentation rather than being unintentionally redesigned.
 
 ## Preflight interface scan
 
@@ -39,4 +41,6 @@ Baseline head: `f7651c988c3494b75cf0a5d87b2b91d2592f33a0` on `codex/launch-recov
 - Task 2: in progress on the mounted v5.1 homepage.
 - Task 3: implementation complete at `7b49f476d3bb26ceb4ea0404ff825fadecf9dc24`; 229 protected focused tests, TypeScript, the production build, the bundle budget, and diff hygiene passed locally.
 - Task 3: rendered 1440/1024/768/390 evidence and exact-head hosted CI remain Task 7 gates; no local rendered-browser pass is claimed.
-- Tasks 4–7: pending implementation.
+- Task 4: implementation complete at `4cb6364aa9f67efa55d2ad0a8f83416e2c6a6982`; 7 mounted behavior tests and a 168-test protected form/disclosure/CTA/route/keyboard suite passed, with TypeScript, production build, bundle budget, and diff hygiene green.
+- Task 4: rendered 1440/1024/768/390 evidence and exact-head hosted CI remain Task 7 gates; no local rendered-browser pass is claimed.
+- Tasks 5–7: pending implementation.
