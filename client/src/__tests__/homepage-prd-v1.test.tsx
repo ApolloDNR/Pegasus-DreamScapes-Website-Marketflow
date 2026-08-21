@@ -100,17 +100,15 @@ describe("Homepage premium editorial contract", () => {
     expect(hero).toHaveAttribute("height", "941");
   });
 
-  it("locks the approved Arrival promise, copy, and three-action row", () => {
+  it("locks the approved Arrival promise and concise three-action row", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
+    const arrival = container.querySelector<HTMLElement>('[data-hv="arrival"]')!;
+    const text = arrival.textContent!;
     expect(text).toContain("Complex real estate, made executable.");
-    expect(text).toContain(
-      "originates, structures, and operates opportunities that require more than a conventional path",
-    );
-    expect(text).toContain("then determine the role, strategy, and structure");
     expect(text).toContain("Bring an Opportunity");
     expect(text).toContain("See How We Operate");
     expect(text).toContain("Open Strategy Lab");
+    expect(arrival.querySelector(".hv-lead")).toBeNull();
     // §31: the primary CTA is a real link to the canonical intake URL.
     const primary = Array.from(container.querySelectorAll("a")).find((a) =>
       a.textContent?.includes("Bring an Opportunity"),
@@ -134,7 +132,7 @@ describe("Homepage premium editorial contract", () => {
     for (const route of [
       "A property I own",
       "A deal I found",
-      "A project I run",
+      "A project I'm operating",
       "A relationship or specialty",
     ]) {
       expect(text).toContain(route);

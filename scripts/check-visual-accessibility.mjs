@@ -484,9 +484,10 @@ try {
     assert(await root.getAttribute('data-theme') === 'dark', 'Dark theme was not initialized');
 
     const geometrySelectors = [
+      '.hv-hero-top',
       '[data-testid="approved-home-hero-image"]',
+      '.hv-eyebrow-row',
       '.hv-h1',
-      '.hv-lead',
       '.hv-cta-row',
       '.hv-hero-statbar',
       'nav > div:nth-child(2)',
@@ -510,6 +511,10 @@ try {
       { width: 390, height: 844 },
     ]) {
       await page.setViewportSize(viewport);
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      });
       const before = await geometryAt();
       await page.getByRole('button', { name: 'Switch to light mode' }).click();
       await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') !== 'dark');
@@ -517,11 +522,27 @@ try {
 
       assert(before.src === after.src, `Theme changed hero source at ${viewport.width}px`);
       assert(before.objectPosition === after.objectPosition, `Theme changed hero crop at ${viewport.width}px`);
+      for (const geometry of [before, after]) {
+        const frame = geometry.boxes[0];
+        const image = geometry.boxes[1];
+        assert(frame && image, `Hero frame or image was missing at ${viewport.width}px`);
+        assert(
+          Math.abs(frame.x - image.x) <= 2
+            && Math.abs(frame.y - image.y) <= 2
+            && Math.abs(frame.width - image.width) <= 2
+            && Math.abs(frame.height - image.height) <= 2,
+          `Hero image did not fill its stable frame at ${viewport.width}px: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
+        );
+      }
       before.boxes.forEach((box, index) => {
         const next = after.boxes[index];
         assert(box && next, `Theme geometry selector was missing at ${viewport.width}px`);
         for (const key of ['x', 'y', 'width', 'height']) {
-          assert(Math.abs(box[key] - next[key]) <= 2, `Theme shifted ${box.selector} ${key} at ${viewport.width}px`);
+          const delta = Math.abs(box[key] - next[key]);
+          assert(
+            delta <= 2,
+            `Theme shifted ${box.selector} ${key} at ${viewport.width}px: before=${box[key]} after=${next[key]} delta=${delta}`,
+          );
         }
       });
 
