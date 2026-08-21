@@ -7,8 +7,6 @@ import {
   ChevronDown,
   ChevronRight,
   CircleAlert,
-  Compass,
-  FileText,
   Gauge,
   Hammer,
   Landmark,
@@ -19,7 +17,6 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import {
-  ENGINE_VERSION,
   runStrategyLab,
   type ConditionRating,
   type PropertyInput,
@@ -95,15 +92,15 @@ const ROLES = ['Exploring a property', 'Property owner', 'Deal partner or wholes
 const OBJECTIVES = ['Understand the strongest executable path', 'Maximize net value', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Find a capital or operating partner'];
 const TIMINGS = ['Flexible', 'Within 90 days', 'Within 30 days', 'Time-sensitive'];
 
-const INSTRUMENTS: Array<{ key: CalcTabKey; label: string; description: string }> = [
-  { key: 'arv', label: 'ARV + basis', description: 'Reconcile acquisition, rehabilitation, holding, and exit assumptions.' },
-  { key: 'roi', label: 'Return frame', description: 'Read cash invested, financing, and directional return relationships.' },
-  { key: 'brrrr', label: 'BRRRR', description: 'Test refinance proceeds, cash left in, and stabilized operations.' },
-  { key: 'cashflow', label: 'Cash flow', description: 'Separate collected rent, operating expenses, debt service, and reserves.' },
-  { key: 'wholesale', label: 'Assignment', description: 'Frame a maximum allowable offer and buyer-side execution room.' },
-  { key: 'piti', label: 'PITI', description: 'Model principal, interest, taxes, and insurance as one monthly obligation.' },
-  { key: 'ownvsrent', label: 'Own vs. rent', description: 'Compare long-range housing cost and equity assumptions.' },
-  { key: 'hardmoney', label: 'Bridge capital', description: 'Make points, interest, fees, and holding period visible.' },
+const CALCULATOR_TABS: readonly CalcTabKey[] = [
+  'arv',
+  'roi',
+  'brrrr',
+  'cashflow',
+  'wholesale',
+  'piti',
+  'ownvsrent',
+  'hardmoney',
 ];
 
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -288,10 +285,9 @@ function SelectField({ label, value, onChange, options, hint }: {
   );
 }
 
-function StepHeading({ eyebrow, title, copy }: { eyebrow: string; title: string; copy: string }) {
+function StepHeading({ title, copy }: { title: string; copy: string }) {
   return (
     <header className="px-lab-step-heading">
-      <span>{eyebrow}</span>
       <h2>{title}</h2>
       <p>{copy}</p>
     </header>
@@ -325,17 +321,17 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
   const params = React.useMemo(() => new URLSearchParams(search), [search]);
   const calculatorsRequested = params.get('tool') === 'calculators';
   const requestedTab = params.get('tab') as CalcTabKey | null;
-  const initialInstrument = INSTRUMENTS.some((item) => item.key === requestedTab) ? requestedTab! : 'arv';
+  const initialInstrument = requestedTab && CALCULATOR_TABS.includes(requestedTab) ? requestedTab : 'arv';
   const [step, setStep] = React.useState<LabStep>(calculatorsRequested ? 'basis' : 'property');
   const [state, setState] = React.useState<LabState>(INITIAL);
   const [savedNote, setSavedNote] = React.useState('');
   const [confirmReset, setConfirmReset] = React.useState(false);
   const [instrumentsOpen, setInstrumentsOpen] = React.useState(calculatorsRequested);
-  const [detailedInstrumentOpen, setDetailedInstrumentOpen] = React.useState(calculatorsRequested);
   const [instrument, setInstrument] = React.useState<CalcTabKey>(initialInstrument);
   const workspaceHeading = React.useRef<HTMLHeadingElement>(null);
   const workspaceRef = React.useRef<HTMLElement>(null);
   const instrumentsRef = React.useRef<HTMLElement>(null);
+  const instrumentOpenSource = React.useRef<'deeplink' | 'user'>(calculatorsRequested ? 'deeplink' : 'user');
   const focusAfterStepChange = React.useRef(false);
   const peggy = useOptionalPeggyContext();
 
@@ -365,15 +361,19 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
   React.useEffect(() => {
     if (!calculatorsRequested) return;
+    if (!instrumentsOpen) instrumentOpenSource.current = 'deeplink';
     setInstrumentsOpen(true);
-    setDetailedInstrumentOpen(true);
-  }, [calculatorsRequested]);
+  }, [calculatorsRequested, instrumentsOpen]);
 
   React.useEffect(() => {
-    if (!calculatorsRequested || !instrumentsOpen) return;
-    window.requestAnimationFrame(() => {
-      instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+    if (!instrumentsOpen) return;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const behavior = instrumentOpenSource.current === 'deeplink' || prefersReducedMotion ? 'auto' : 'smooth';
+    const frame = window.requestAnimationFrame(() => {
+      instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior });
+      instrumentsRef.current?.focus({ preventScroll: true });
     });
+    return () => window.cancelAnimationFrame(frame);
   }, [calculatorsRequested, instrumentsOpen]);
 
   const set = <K extends keyof LabState>(key: K, value: LabState[K]) => {
@@ -531,8 +531,23 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
   };
 
   const openInstruments = () => {
+    instrumentOpenSource.current = 'user';
     setInstrumentsOpen(true);
-    window.requestAnimationFrame(() => instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }));
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tool', 'calculators');
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
+  const closeInstruments = () => {
+    setInstrumentsOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('tool');
+      url.searchParams.delete('tab');
+      window.history.replaceState({}, '', url.toString());
+    }
   };
 
   return (
@@ -541,24 +556,14 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
         <img src={IMG('pegasus-architecture.png')} alt="Architectural model and planning instruments on a Pegasus worktable" />
         <div className="px-lab-masthead-scrim" aria-hidden="true" />
         <div className="px-lab-masthead-inner">
-          <div>
+          <div className="px-lab-masthead-copy">
             <p className="px-kicker">Pegasus Strategy Lab · Private working desk</p>
             <h1>Turn one property into a decision you can defend.</h1>
-            <p>Build the facts once. Compare nine executable paths through the Pegasus underwriting engine. Carry the same brief into Peggy or a written Property Read.</p>
+            <p>Build the facts once, compare nine executable paths through the Pegasus underwriting engine, and carry the same brief into Peggy or a written Property Read.</p>
           </div>
-          <aside className="px-lab-masthead-record" aria-label="Strategy Lab operating record">
-            <span>Underwriting record · methodology {ENGINE_VERSION}</span>
-            <dl>
-              <div><dt>Method</dt><dd>Pegasus underwriting</dd></div>
-              <div><dt>Paths compared</dt><dd>09</dd></div>
-              <div><dt>Storage</dt><dd>This browser</dd></div>
-            </dl>
-            <button type="button" onClick={openInstruments}>Open instrument library <SlidersHorizontal aria-hidden="true" /></button>
-          </aside>
-          <div className="px-lab-trust" aria-label="Strategy Lab principles">
+          <div className="px-lab-masthead-entry">
             <span><ShieldCheck aria-hidden="true" /> Directional, not an offer</span>
-            <span><FileText aria-hidden="true" /> Assumptions stay visible</span>
-            <span><Compass aria-hidden="true" /> Pegasus review before action</span>
+            <button type="button" onClick={openInstruments}>Open calculators <SlidersHorizontal aria-hidden="true" /></button>
           </div>
         </div>
       </section>
@@ -587,7 +592,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'property' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="01 · Property record" title="Start with the situation, not a score." copy="These facts shape the underwriting memo, risk register, and which paths remain credible. The address stays in this browser unless you choose to carry the brief forward." />
+                <StepHeading title="Start with the situation, not a score." copy="These facts shape the underwriting memo, risk register, and which paths remain credible. The address stays in this browser unless you choose to carry the brief forward." />
                 <div className="px-lab-form-grid">
                   <div className="px-lab-wide"><TextField label="Property address or city" value={state.address} onChange={(value) => set('address', value)} placeholder="East Bay property or city" /></div>
                   <SelectField label="Property type" value={state.propertyType} onChange={(value) => set('propertyType', value)} options={PROPERTY_TYPES} />
@@ -602,7 +607,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'basis' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="02 · Basis ledger" title="Make every material assumption visible." copy="The engine uses the entered basis, condition, occupancy, financing, rent, and exit evidence. Empty inputs remain empty; the desk does not quietly invent property facts." />
+                <StepHeading title="Make every material assumption visible." copy="The engine uses the entered basis, condition, occupancy, financing, rent, and exit evidence. Empty inputs remain empty; the desk does not quietly invent property facts." />
                 <div className="px-lab-form-grid">
                   <TextField label="Acquisition or current basis" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="decimal" error={errors.acquisition} />
                   <TextField label="Scope / improvement budget" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="decimal" error={errors.scope} />
@@ -648,7 +653,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'strategy' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="03 · Path comparison" title="Read the leading paths—and their weak points." copy="The engine ranks nine Pegasus paths from the same facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
+                <StepHeading title="Read the leading paths—and their weak points." copy="The engine ranks nine Pegasus paths from the same facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
                 <div className="px-lab-form-grid px-lab-objective">
                   <div className="px-lab-wide"><SelectField label="Decision lens" value={state.objective} onChange={(value) => set('objective', value)} options={OBJECTIVES} hint="Used to frame the brief; it does not alter the underwriting math." /></div>
                 </div>
@@ -712,7 +717,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'review' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="04 · Decision record" title="A concise brief, with uncertainty left visible." copy="This record is generated from the same versioned engine used for the path comparison. It is planning material—not a valuation, approval, or recommendation." />
+                <StepHeading title="A concise brief, with uncertainty left visible." copy="This record is generated from the same versioned engine used for the path comparison. It is planning material—not a valuation, approval, or recommendation." />
                 {!hasDecisionBasis ? (
                   <section className="px-lab-needs-inputs" role="status" aria-label="Decision brief unavailable">
                     <CircleAlert aria-hidden="true" />
@@ -833,29 +838,21 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
       </section>
 
       {instrumentsOpen && (
-        <section className="px-lab-instruments" ref={instrumentsRef} aria-labelledby="lab-instruments-title">
+        <section
+          className="px-lab-instruments"
+          ref={instrumentsRef}
+          aria-label="Decision calculators"
+          tabIndex={-1}
+        >
           <header>
-            <div><p className="px-kicker">Instrument library · Eight focused worksheets</p><h2 id="lab-instruments-title">Open only the instrument the decision requires.</h2></div>
-            <button type="button" onClick={() => setInstrumentsOpen(false)}>Close library</button>
+            <div><p className="px-kicker">Decision calculators</p><h2>Open the worksheet your decision requires.</h2></div>
+            <button type="button" onClick={closeInstruments}>Close calculators</button>
           </header>
-          <div className="px-lab-instrument-grid" role="group" aria-label="Underwriting instruments">
-            {INSTRUMENTS.map((item) => (
-              <button key={item.key} type="button" aria-pressed={instrument === item.key} onClick={() => chooseInstrument(item.key)}>
-                <span>{item.label}</span><small>{item.description}</small>
-              </button>
-            ))}
+          <div className="px-lab-instrument-detail">
+            <React.Suspense fallback={<p role="status">Preparing the worksheet…</p>}>
+              <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} />
+            </React.Suspense>
           </div>
-          <div className="px-lab-instrument-launch">
-            <div><span>Selected worksheet</span><strong>{INSTRUMENTS.find((item) => item.key === instrument)?.label}</strong><p>{INSTRUMENTS.find((item) => item.key === instrument)?.description}</p></div>
-            <button type="button" onClick={() => setDetailedInstrumentOpen(true)}>Open detailed worksheet <ArrowRight aria-hidden="true" /></button>
-          </div>
-          {detailedInstrumentOpen && (
-            <div className="px-lab-instrument-detail">
-              <React.Suspense fallback={<p role="status">Preparing the worksheet…</p>}>
-                <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} />
-              </React.Suspense>
-            </div>
-          )}
         </section>
       )}
 

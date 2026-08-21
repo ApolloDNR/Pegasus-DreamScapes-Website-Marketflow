@@ -14,6 +14,7 @@ import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { PeggyProvider } from "@/contexts/peggy-context";
 import { Landing } from "@/pegasus/Landing";
 
 vi.mock("@/lib/analytics", () => ({
@@ -21,6 +22,38 @@ vi.mock("@/lib/analytics", () => ({
   trackEvent: () => {},
   trackCtaClick: () => {},
 }));
+
+vi.mock("@/contexts/supabase-auth-context", async () => {
+  const actual = await vi.importActual<typeof import("@/contexts/supabase-auth-context")>(
+    "@/contexts/supabase-auth-context",
+  );
+  return {
+    ...actual,
+    useSupabaseAuth: () => ({
+      user: null,
+      session: null,
+      profile: null,
+      isLoading: false,
+      isAuthenticated: false,
+      isGuestMode: false,
+      guestRole: null,
+      userRole: null,
+      isAdmin: false,
+      isWholesaler: false,
+      isDreamscaper: false,
+      isInvestor: false,
+      isBuyer: false,
+      isPegasus: false,
+      hasPermission: () => false,
+      signUp: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      refreshProfile: vi.fn(),
+      enterGuestMode: vi.fn(),
+      exitGuestMode: vi.fn(),
+    }),
+  };
+});
 
 class NoopIntersectionObserver {
   root = null;
@@ -34,12 +67,46 @@ class NoopIntersectionObserver {
   }
 }
 
+class NoopResizeObserver {
+  constructor(private readonly callback: ResizeObserverCallback) {}
+  observe(target: Element) {
+    const contentRect = {
+      x: 0,
+      y: 0,
+      width: 1024,
+      height: 768,
+      top: 0,
+      right: 1024,
+      bottom: 768,
+      left: 0,
+      toJSON: () => ({}),
+    } as DOMRectReadOnly;
+    this.callback(
+      [{
+        target,
+        contentRect,
+        borderBoxSize: [],
+        contentBoxSize: [],
+        devicePixelContentBoxSize: [],
+      }],
+      this as unknown as ResizeObserver,
+    );
+  }
+  unobserve() {}
+  disconnect() {}
+}
+
 if (typeof globalThis.IntersectionObserver === "undefined") {
   (
     globalThis as unknown as {
       IntersectionObserver: typeof NoopIntersectionObserver;
     }
   ).IntersectionObserver = NoopIntersectionObserver;
+}
+
+if (typeof globalThis.ResizeObserver === "undefined") {
+  (globalThis as unknown as { ResizeObserver: typeof NoopResizeObserver })
+    .ResizeObserver = NoopResizeObserver;
 }
 
 if (typeof window !== "undefined" && !window.matchMedia) {
@@ -74,7 +141,9 @@ function renderLanding(routePath: string) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Router hook={memory.hook}>
-          <Landing />
+          <PeggyProvider>
+            <Landing />
+          </PeggyProvider>
         </Router>
       </ThemeProvider>
     </QueryClientProvider>,
@@ -86,6 +155,7 @@ function renderLanding(routePath: string) {
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.sessionStorage.clear();
   window.history.replaceState({}, "", "/");
 });
 
@@ -353,6 +423,30 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
 });
 
 describe("Pegasus Strategy Lab workspace accessibility", () => {
+  it("keeps the mounted entry concise and carries the full operating boundary", async () => {
+    const { container } = renderLanding("/strategy-lab");
+    const main = container.querySelector("main")!;
+
+    await within(main).findByRole("heading", {
+      name: /Turn one property into a decision you can defend/i,
+    });
+
+    expect(
+      within(main).getByText("Directional, not an offer", { exact: true }),
+    ).toBeInTheDocument();
+    expect(
+      within(main).queryByLabelText(/Strategy Lab operating record/i),
+    ).not.toBeInTheDocument();
+    expect(
+      within(main).queryByLabelText(/Strategy Lab principles/i),
+    ).not.toBeInTheDocument();
+
+    const boundary = within(main).getByTestId("text-strategy-disclaimer");
+    expect(boundary).toHaveTextContent(
+      "Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.",
+    );
+  });
+
   it("opens on the real decision desk, advances steps, and moves focus to the current workspace heading", async () => {
     const { container } = renderLanding("/strategy-lab");
 
@@ -419,25 +513,167 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     expect(within(main).queryByText(/Read the full engine rationale/i)).not.toBeInTheDocument();
   });
 
-  it("opens calculator deep links at the instrument library and keeps the detail open when switching", async () => {
+  it("carries one valid basis through live paths, the brief, and the intake handoff", async () => {
     const user = userEvent.setup({ delay: null });
-    window.history.replaceState({}, "", "/strategy-lab?tool=calculators&tab=roi");
-    const { container } = renderLanding("/strategy-lab");
+    const { container, history } = renderLanding("/strategy-lab");
     const main = container.querySelector("main")!;
 
-    const group = await within(main).findByRole("group", {
-      name: /Underwriting instruments/i,
-    });
-    const roi = within(group).getByRole("button", { name: /Return frame/i });
-    const cashFlow = within(group).getByRole("button", { name: /Cash flow/i });
-    expect(roi).toHaveAttribute("aria-pressed", "true");
-    expect(cashFlow).toHaveAttribute("aria-pressed", "false");
-    expect(main.querySelector(".px-lab-instrument-detail")).toBeInTheDocument();
+    await user.type(
+      within(main).getByRole("textbox", { name: /Property address or city/i }),
+      "19 Bay View Ave, Walnut Creek",
+    );
+    await user.click(within(main).getByRole("button", { name: /02\s*Basis/i }));
+    expect(within(main).queryByText(/02 · Basis ledger/i)).not.toBeInTheDocument();
 
-    await user.click(cashFlow);
-    expect(roi).toHaveAttribute("aria-pressed", "false");
-    expect(cashFlow).toHaveAttribute("aria-pressed", "true");
-    expect(main.querySelector(".px-lab-instrument-detail")).toBeInTheDocument();
+    const acquisition = within(main).getByRole("textbox", {
+      name: /Acquisition or current basis/i,
+    });
+    const scope = within(main).getByRole("textbox", {
+      name: /Scope \/ improvement budget/i,
+    });
+    const exitValue = within(main).getByRole("textbox", {
+      name: /Projected exit value/i,
+    });
+    const marketRent = within(main).getByRole("textbox", {
+      name: /Projected monthly market rent/i,
+    });
+    await user.type(acquisition, "600000");
+    await user.type(scope, "105000");
+    await user.type(exitValue, "840000");
+    await user.type(marketRent, "4500");
+
+    await user.click(within(main).getByRole("button", { name: /03\s*Paths/i }));
+    expect(
+      within(main).getByRole("heading", { name: /Read the leading paths/i }),
+    ).toBeInTheDocument();
+    expect(within(main).getByText(/View all nine paths/i)).toBeInTheDocument();
+    expect(
+      within(main).getByRole("button", { name: /Carry this brief into intake/i }),
+    ).toBeEnabled();
+
+    await user.click(within(main).getByRole("button", { name: /04\s*Brief/i }));
+    expect(
+      within(main).getByRole("region", { name: /Decision brief/i }),
+    ).toBeInTheDocument();
+    const intake = within(main).getByRole("button", {
+      name: /Carry this brief into intake/i,
+    });
+    expect(intake).toBeEnabled();
+    await user.click(intake);
+
+    await waitFor(() => {
+      expect(history).toContain(
+        "/bring-an-opportunity?intent=property&ref=strategy-lab",
+      );
+    });
+    expect(window.sessionStorage.length).toBeGreaterThan(0);
+  });
+
+  it("opens the real calculator selection model directly and focuses it", async () => {
+    const user = userEvent.setup({ delay: null });
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      const { container } = renderLanding("/strategy-lab");
+      const main = container.querySelector("main")!;
+      await user.click(
+        within(main).getByRole("button", { name: /Open calculators/i }),
+      );
+
+      const panel = await within(main).findByRole("region", {
+        name: /Decision calculators/i,
+      });
+      await within(panel).findByRole("tablist");
+      expect(within(main).getAllByRole("tablist")).toHaveLength(1);
+      expect(
+        within(main).queryByRole("group", { name: /Underwriting instruments/i }),
+      ).not.toBeInTheDocument();
+      expect(within(main).queryByText(/Selected worksheet/i)).not.toBeInTheDocument();
+      expect(
+        within(main).queryByRole("button", { name: /Open detailed worksheet/i }),
+      ).not.toBeInTheDocument();
+      await waitFor(() => expect(panel).toHaveFocus());
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        block: "start",
+        behavior: "smooth",
+      });
+    } finally {
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
+  });
+
+  it("uses non-animated calculator focus when reduced motion is preferred", async () => {
+    const user = userEvent.setup({ delay: null });
+    const originalMatchMedia = window.matchMedia;
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    window.matchMedia = vi.fn((query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      const { container } = renderLanding("/strategy-lab");
+      const main = container.querySelector("main")!;
+      await user.click(
+        within(main).getByRole("button", { name: /Open calculators/i }),
+      );
+
+      const panel = await within(main).findByRole("region", {
+        name: /Decision calculators/i,
+      });
+      await waitFor(() => expect(panel).toHaveFocus());
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        block: "start",
+        behavior: "auto",
+      });
+      expect(scrollIntoView).not.toHaveBeenCalledWith({
+        block: "start",
+        behavior: "smooth",
+      });
+    } finally {
+      window.matchMedia = originalMatchMedia;
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
+  });
+
+  it("opens calculator deep links at the single real selector and keeps the selected tab in the URL", async () => {
+    const user = userEvent.setup({ delay: null });
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    window.history.replaceState({}, "", "/strategy-lab?tool=calculators&tab=roi");
+    try {
+      const { container } = renderLanding("/strategy-lab");
+      const main = container.querySelector("main")!;
+
+      const panel = await within(main).findByRole("region", {
+        name: /Decision calculators/i,
+      });
+      await within(panel).findByRole("tablist");
+      expect(within(main).getAllByRole("tablist")).toHaveLength(1);
+      const roi = within(panel).getByRole("tab", { name: /^ROI$/i });
+      const cashFlow = within(panel).getByRole("tab", { name: /Cash Flow/i });
+      expect(roi).toHaveAttribute("aria-selected", "true");
+      expect(cashFlow).toHaveAttribute("aria-selected", "false");
+      await waitFor(() => expect(panel).toHaveFocus());
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "auto" });
+
+      await user.click(cashFlow);
+      expect(roi).toHaveAttribute("aria-selected", "false");
+      expect(cashFlow).toHaveAttribute("aria-selected", "true");
+      expect(window.location.search).toContain("tool=calculators");
+      expect(window.location.search).toContain("tab=cashflow");
+    } finally {
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
   });
 });
 
