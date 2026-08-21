@@ -577,8 +577,16 @@ try {
 
   await runInteraction('Strategy Lab primary interaction', {}, async (page) => {
     await openPage(page, '/strategy-lab');
-    await page.getByRole('button', { name: /Open instrument library/ }).click();
-    await page.locator('#lab-instruments-title').waitFor({ state: 'visible' });
+    await page.getByRole('button', { name: /Open calculators/ }).click();
+    const calculators = page.getByRole('region', { name: /Decision calculators/ });
+    await calculators.waitFor({ state: 'visible' });
+    await calculators.getByRole('tablist').waitFor({ state: 'visible' });
+    assert(await page.getByRole('tablist').count() === 1, 'Strategy Lab exposed more than one calculator selector');
+    assert(await calculators.evaluate((node) => node === document.activeElement), 'Strategy Lab did not focus the calculator region');
+    const cashFlow = calculators.getByRole('tab', { name: /Cash Flow/i });
+    await cashFlow.click();
+    assert(await cashFlow.getAttribute('aria-selected') === 'true', 'Strategy Lab did not select the requested calculator tab');
+    assert(new URL(page.url()).searchParams.get('tab') === 'cashflow', 'Strategy Lab did not preserve calculator tab state in the URL');
   });
 
   await runInteraction('MarketFlow public boundaries and reviewed access path', {}, async (page) => {
