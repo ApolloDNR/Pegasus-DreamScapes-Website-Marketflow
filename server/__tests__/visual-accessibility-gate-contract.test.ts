@@ -191,8 +191,9 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(workflow.match(/npm@10\.9\.2/g)).toHaveLength(2);
     expect(workflow).toContain("merge-compatibility:");
     expect(workflow).toContain("refs/pull/${{ github.event.pull_request.number }}/merge");
-    expect(workflow).toContain('if [ -n "$EXPECTED_MERGE_SHA" ]; then');
-    expect(workflow).toContain('test "$actual_sha" = "$EXPECTED_MERGE_SHA"');
+    expect(workflow).toContain("EXPECTED_BASE_SHA: ${{ github.event.pull_request.base.sha }}");
+    expect(workflow).toContain("EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}");
+    expect(workflow).toContain("node scripts/verify-merge-provenance.mjs");
   });
 
   it("renders the anonymous deals hold in premium chrome with only public actions", () => {

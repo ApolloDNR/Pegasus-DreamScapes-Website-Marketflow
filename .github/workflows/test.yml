@@ -93,6 +93,8 @@ jobs:
     env:
       AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      EXPECTED_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       EXPECTED_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
     steps:
       - name: Check out synthetic pull-request merge
@@ -101,13 +103,7 @@ jobs:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       - name: Verify synthetic merge provenance
-        shell: bash
-        run: |
-          actual_sha="$(git rev-parse HEAD)"
-          if [ -n "$EXPECTED_MERGE_SHA" ]; then
-            test "$actual_sha" = "$EXPECTED_MERGE_SHA"
-          fi
-          echo "Synthetic merge compatibility SHA: $actual_sha"
+        run: node scripts/verify-merge-provenance.mjs
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
