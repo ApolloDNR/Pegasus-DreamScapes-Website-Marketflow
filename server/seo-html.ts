@@ -10,6 +10,9 @@ import { jsonLdScript } from "../shared/structured-data";
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+const HOMEPAGE_HERO_PRELOAD =
+  /\s*<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bhref=["']\/images\/hero\/pegasus-v6-arrival\.webp["'])[^>]*>\s*/i;
+
 interface InjectSeoOptions {
   notFound?: boolean;
 }
@@ -36,6 +39,12 @@ export function injectSeo(
   const type = m.type ?? "website";
 
   let out = html;
+  // The static shell keeps the home LCP hint as its fallback. Strip it from
+  // route-aware documents so non-home entries do not fetch an unused hero or
+  // emit browser-health warnings.
+  if (pathname !== "/") {
+    out = out.replace(HOMEPAGE_HERO_PRELOAD, "\n");
+  }
   out = out.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
   out = replaceMeta(out, 'name="description"', description);
   if (notFound || m.noIndex) {
