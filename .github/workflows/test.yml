@@ -101,6 +101,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 2
 
       - name: Verify synthetic merge provenance
         run: node scripts/verify-merge-provenance.mjs
