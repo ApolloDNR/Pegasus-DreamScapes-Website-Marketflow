@@ -74,6 +74,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { registerReadinessRoute } from "./readiness";
 import { registerPublicLibraryRetirementRoutes } from "./public-library-retirement";
 import { createListingInquiryRouteHandlers } from "./listing-inquiry-routes";
+import { createSavedItemRouteHandlers } from "./saved-item-route-handlers";
 import {
   SITE_URL,
   sitemapEntries,
@@ -98,8 +99,9 @@ import {
 } from "./marketflow-access";
 import {
   createRequireMarketflowInventoryAccess,
-  createResolveMarketflowInventoryAccess,
+  createResolveMarketflowInventoryAccessContext,
   isReviewedMarketflowInventoryType,
+  type MarketflowInventoryAccessContext,
 } from "./marketflow-inventory-authorization";
 import {
   isMarketflowNegotiationBoundToAuthoritativeDeal,
@@ -118,9 +120,11 @@ import {
   type LegacyDealKind,
 } from "./legacy-private-access";
 import {
+  canRequestMarketflowJv,
   isPublicCapitalProject,
   isPublicListing,
   isPublicWholesaleDeal,
+  resolveWholesaleDealOwnerId,
   toPublicCapitalProject,
   toPublicInvestorWantedDeal,
   toPublicListing,
@@ -256,8 +260,8 @@ const marketflowInventoryAccessDependencies = {
   getUserRoles: (userId: string) => storage.getUserRoles(userId),
   adminEmails: ADMIN_EMAILS,
 };
-const resolveMarketflowInventoryAccess =
-  createResolveMarketflowInventoryAccess(
+const resolveMarketflowInventoryAccessContext =
+  createResolveMarketflowInventoryAccessContext(
     marketflowInventoryAccessDependencies,
   );
 const requireMarketflowInventoryAccess =
@@ -270,14 +274,29 @@ const loadMarketflowInventoryAccessContext = async (
   next: NextFunction,
 ) => {
   try {
+    const context = await resolveMarketflowInventoryAccessContext(req);
+    res.locals.marketflowInventoryAccessContext = context;
     res.locals.canAccessReviewedMarketflowInventory =
-      await resolveMarketflowInventoryAccess(req);
+      context.canAccessReviewedInventory;
   } catch (error) {
     console.error("Unable to resolve optional MarketFlow inventory access:", error);
     res.locals.canAccessReviewedMarketflowInventory = false;
   }
   next();
 };
+
+const getMarketflowInventoryAccessContext = (
+  res: Response,
+): MarketflowInventoryAccessContext | undefined =>
+  res.locals.marketflowInventoryAccessContext as
+    | MarketflowInventoryAccessContext
+    | undefined;
+
+const getMarketflowInventoryPrincipalId = (res: Response): string | null =>
+  getMarketflowInventoryAccessContext(res)?.userId ?? null;
+
+const canViewerInitiateMarketflowJv = (res: Response): boolean =>
+  getMarketflowInventoryAccessContext(res)?.canInitiateJv === true;
 
 const canAccessMarketflowItemType = (res: Response, rawType: unknown) =>
   !isReviewedMarketflowInventoryType(rawType) ||
@@ -866,6 +885,27 @@ export async function registerRoutes(
     return null;
   };
 
+  const savedItemHandlers = createSavedItemRouteHandlers({
+    getUserId: getAuthUserId,
+    canAccessItemType: (res, itemType) =>
+      canAccessMarketflowItemType(res, itemType),
+    saveItem: async (userId, itemType, itemId) => {
+      const { storage: savedStorage, toCamelCase } =
+        await getSupabaseStorage();
+      const savedItem = await savedStorage.saveItem(
+        userId,
+        itemType,
+        itemId,
+      );
+      return savedItem ? toCamelCase(savedItem) : null;
+    },
+    removeItem: async (userId, itemType, itemId) => {
+      const { storage: savedStorage } = await getSupabaseStorage();
+      return savedStorage.unsaveItem(userId, itemType, itemId);
+    },
+    logError: (message, error) => console.error(message, error),
+  });
+
   // --- Saved Items ---
   app.get('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
@@ -889,53 +929,9 @@ export async function registerRoutes(
     }
   });
 
-  app.post('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { itemType, itemId } = req.body;
-      
-      if (!itemType || !itemId) {
-        return res.status(400).json({ message: 'Missing itemType or itemId' });
-      }
-      if (!canAccessMarketflowItemType(res, itemType)) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const item = await storage.saveItem(userId, itemType, itemId);
-      res.status(201).json(toCamelCase(item));
-    } catch (error) {
-      console.error('Error saving item:', error);
-      res.status(500).json({ message: 'Failed to save item' });
-    }
-  });
+  app.post('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, savedItemHandlers.post);
 
-  app.delete('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { itemType, itemId } = req.body;
-      
-      if (!itemType || !itemId) {
-        return res.status(400).json({ message: 'Missing itemType or itemId' });
-      }
-      if (!canAccessMarketflowItemType(res, itemType)) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      const { storage } = await getSupabaseStorage();
-      const success = await storage.unsaveItem(userId, itemType, itemId);
-      res.json({ success });
-    } catch (error) {
-      console.error('Error unsaving item:', error);
-      res.status(500).json({ message: 'Failed to unsave item' });
-    }
-  });
+  app.delete('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, savedItemHandlers.remove);
 
   app.get('/api/supabase/saved-items/check', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
@@ -2760,9 +2756,18 @@ export async function registerRoutes(
   // separate; authentication alone does not grant private-beta data access.
   app.get("/api/wholesale-deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
+      const userId = getMarketflowInventoryPrincipalId(res);
       const deals = await storage.getAvailableWholesaleDeals();
       return res.json(
-        deals.filter(isPublicWholesaleDeal).map(toPublicWholesaleDeal),
+        deals
+          .filter(isPublicWholesaleDeal)
+          .map((deal) =>
+            toPublicWholesaleDeal(
+              deal,
+              userId,
+              canViewerInitiateMarketflowJv(res),
+            ),
+          ),
       );
     } catch (error) {
       console.error("Error fetching wholesale deals:", error);
@@ -2772,9 +2777,18 @@ export async function registerRoutes(
 
   app.get("/api/wholesale-deals-active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
+      const userId = getMarketflowInventoryPrincipalId(res);
       const deals = await storage.getAvailableWholesaleDeals();
       return res.json(
-        deals.filter(isPublicWholesaleDeal).map(toPublicWholesaleDeal),
+        deals
+          .filter(isPublicWholesaleDeal)
+          .map((deal) =>
+            toPublicWholesaleDeal(
+              deal,
+              userId,
+              canViewerInitiateMarketflowJv(res),
+            ),
+          ),
       );
     } catch (error) {
       console.error("Error fetching active wholesale deals:", error);
@@ -2784,11 +2798,18 @@ export async function registerRoutes(
 
   app.get("/api/wholesale-deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
     try {
+      const userId = getMarketflowInventoryPrincipalId(res);
       const deal = await storage.getWholesaleDeal(parseInt(req.params.id));
       if (!deal || !isPublicWholesaleDeal(deal)) {
         return res.status(404).json({ message: "Deal not found" });
       }
-      return res.json(toPublicWholesaleDeal(deal));
+      return res.json(
+        toPublicWholesaleDeal(
+          deal,
+          userId,
+          canViewerInitiateMarketflowJv(res),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching wholesale deal:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -8196,6 +8217,7 @@ export async function registerRoutes(
   // Get all reviewed/listed wholesale deals for approved browsing
   app.get("/api/marketplace/deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
+      const userId = getMarketflowInventoryPrincipalId(res);
       const deals = await storage.getWholesaleDeals();
       
       const filteredDeals = deals.filter(isPublicWholesaleDeal);
@@ -8236,7 +8258,11 @@ export async function registerRoutes(
         const badges = d.submittedBy ? badgesMap.get(d.submittedBy) || [] : [];
         
         return {
-          ...toPublicWholesaleDeal(d),
+          ...toPublicWholesaleDeal(
+            d,
+            userId,
+            canViewerInitiateMarketflowJv(res),
+          ),
           isPegasusDeal: d.submittedBy ? pegasusUserIds.has(d.submittedBy) : false,
           wholesalerInfo: submitter ? {
             id: submitter.id,
@@ -8275,6 +8301,7 @@ export async function registerRoutes(
   // Get a single wholesale deal by ID
   app.get("/api/marketplace/deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
     try {
+      const userId = getMarketflowInventoryPrincipalId(res);
       const dealId = Number(req.params.id);
       if (isNaN(dealId)) {
         return res.status(400).json({ message: "Invalid deal ID" });
@@ -8285,7 +8312,13 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Deal not found" });
       }
       
-      res.json(toPublicWholesaleDeal(deal));
+      res.json(
+        toPublicWholesaleDeal(
+          deal,
+          userId,
+          canViewerInitiateMarketflowJv(res),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching deal:", error);
       res.status(500).json({ message: "Failed to fetch deal" });
@@ -8295,7 +8328,7 @@ export async function registerRoutes(
   // Submit a JV request for a deal
   app.post("/api/marketplace/jv-requests", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
     try {
-      const userId = getAuthUserId(req);
+      const userId = getMarketflowInventoryPrincipalId(res);
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -8312,12 +8345,19 @@ export async function registerRoutes(
         "wholesale_deal",
         dealId,
       );
+      const dealOwnerId = deal
+        ? resolveWholesaleDealOwnerId(deal)
+        : null;
       if (
         !deal ||
         !access ||
         !canInitiateLegacyDealInteraction(access, res) ||
-        !deal.submittedBy ||
-        deal.submittedBy === userId
+        !dealOwnerId ||
+        !canRequestMarketflowJv({
+          viewerId: userId,
+          ownerId: dealOwnerId,
+          canInitiateJv: canViewerInitiateMarketflowJv(res),
+        })
       ) {
         return res.status(404).json({ message: "Deal not found" });
       }
@@ -8344,7 +8384,7 @@ export async function registerRoutes(
       const jvRequest = await storage.createJvRequest({
         dealId,
         dreamscaperId: userId,
-        wholesalerId: deal.submittedBy,
+        wholesalerId: dealOwnerId,
         message: cleanOptionalText(req.body?.message, 2_000),
         intendedStrategy: cleanOptionalText(
           req.body?.intendedStrategy ?? req.body?.partnerRole,

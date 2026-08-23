@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -54,6 +54,10 @@ const baseAuth: AuthState = {
 };
 
 let authState: AuthState = { ...baseAuth };
+
+const queryBoundary = vi.hoisted(() => ({
+  states: {} as Record<string, Record<string, unknown>>,
+}));
 
 function authFor(role: AuthRole): AuthState {
   switch (role) {
@@ -363,7 +367,7 @@ vi.mock("@tanstack/react-query", async () => {
       askingPrice: 200000,
       repairEstimate: 50000,
       assignmentFee: 10000,
-      jvAllowed: true,
+      canRequestJv: true,
       negotiationAllowed: true,
       status: "Under Review",
       photos: [],
@@ -375,21 +379,25 @@ vi.mock("@tanstack/react-query", async () => {
       const queryKey = Array.isArray(options?.queryKey)
         ? options.queryKey[0]
         : options?.queryKey;
-      const data =
+      const defaultData =
         options?.enabled === false
           ? undefined
           : queryKey === "/api/wholesale-deals"
             ? reviewedWholesaleDeals
             : [];
+      const override = queryBoundary.states[String(queryKey)] ?? {};
+      const data = Object.prototype.hasOwnProperty.call(override, "data")
+        ? override.data
+        : defaultData;
 
       return {
         data,
-        isLoading: false,
-        isError: false,
+        isLoading: override.isLoading ?? false,
+        isError: override.isError ?? false,
         isSuccess: options?.enabled !== false,
         isPending: false,
-        error: null,
-        refetch: vi.fn(),
+        error: override.error ?? null,
+        refetch: override.refetch ?? vi.fn(),
       };
     },
   };
@@ -424,18 +432,30 @@ vi.mock("framer-motion", async () => {
 // Render helper
 // ---------------------------------------------------------------------------
 
-function renderWithProviders(ui: React.ReactElement, path = "/") {
-  const { hook } = memoryLocation({ path, static: true });
+function renderWithProviders(
+  ui: React.ReactElement,
+  path = "/",
+  recordNavigation = false,
+) {
+  const location = recordNavigation
+    ? memoryLocation({ path, record: true })
+    : memoryLocation({ path, static: true });
+  const { hook } = location;
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
-  return render(
+  const rendered = render(
     <QueryClientProvider client={client}>
       <TooltipProvider>
         <Router hook={hook}>{ui}</Router>
       </TooltipProvider>
     </QueryClientProvider>,
   );
+  return {
+    ...rendered,
+    hook,
+    history: "history" in location ? location.history : undefined,
+  };
 }
 
 function tailwindHexColor(element: HTMLElement, utility: "text" | "bg"): string {
@@ -475,10 +495,17 @@ function contrastRatio(first: string, second: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+function activateControl(testId: string) {
+  const control = screen.getByTestId(testId);
+  fireEvent.mouseDown(control, { button: 0, ctrlKey: false });
+  fireEvent.click(control);
+}
+
 beforeEach(() => {
   cleanup();
   localStorage.clear();
   setAuthState("loggedOut");
+  queryBoundary.states = {};
 });
 
 afterEach(() => {
@@ -572,17 +599,23 @@ describe("marketflow-submit page gating", () => {
 });
 
 describe("marketflow-deals page gating", () => {
-  it("names the private-beta dismiss control for anonymous visitors", async () => {
-    const { default: MarketflowDeals } = await import(
-      "@/pages/marketflow-deals"
-    );
+  it(
+    "names the private-beta dismiss control for anonymous visitors",
+    async () => {
+      const { default: MarketflowDeals } = await import(
+        "@/pages/marketflow-deals"
+      );
 
-    renderWithProviders(<MarketflowDeals />);
+      renderWithProviders(<MarketflowDeals />);
 
-    expect(
-      screen.getByRole("button", { name: "Dismiss MarketFlow beta banner" }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        screen.getByRole("button", {
+          name: "Dismiss MarketFlow beta banner",
+        }),
+      ).toBeInTheDocument();
+    },
+    15_000,
+  );
 
   it("keeps the anonymous private-beta kicker at AA contrast in light mode", async () => {
     const { default: MarketflowDeals } = await import(
@@ -677,6 +710,25 @@ describe("marketflow-deals page gating", () => {
 
   it("Pegasus-badged investors see reviewed deals without wholesaler-only JV actions", async () => {
     setAuthState("badgedInvestor");
+    queryBoundary.states["/api/wholesale-deals"] = {
+      data: [
+        {
+          id: "reviewed-investor-9001",
+          propertyAddress: "123 Test St",
+          city: "Phoenix",
+          state: "AZ",
+          propertyType: "Single Family",
+          arv: 300_000,
+          askingPrice: 200_000,
+          repairEstimate: 50_000,
+          assignmentFee: 10_000,
+          canRequestJv: false,
+          negotiationAllowed: true,
+          status: "listed",
+          photos: [],
+        },
+      ],
+    };
     const { default: MarketflowDeals } = await import(
       "@/pages/marketflow-deals"
     );
@@ -713,6 +765,38 @@ describe("marketflow-deals page gating", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("withholds the JV action when the reviewed DTO marks the operator as owner", async () => {
+    setAuthState("pegasusWholesaler");
+    queryBoundary.states["/api/wholesale-deals"] = {
+      data: [
+        {
+          id: "owned-9002",
+          propertyAddress: "9002 Owner Way",
+          city: "Oakland",
+          state: "CA",
+          propertyType: "Single Family",
+          askingPrice: 250_000,
+          arv: 350_000,
+          repairEstimate: 25_000,
+          assignmentFee: 10_000,
+          status: "listed",
+          jvAllowed: true,
+          canRequestJv: false,
+          negotiationAllowed: true,
+          photos: [],
+        },
+      ],
+    };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(screen.queryAllByTestId(/^quick-jv-/)).toHaveLength(0);
+  });
+
   it("staff identities see reviewed deals", async () => {
     setAuthState("staff");
     const { default: MarketflowDeals } = await import(
@@ -742,6 +826,197 @@ describe("marketflow-deals page gating", () => {
     expect(
       screen.getAllByTestId(/^quick-jv-/).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("renders a truthful wholesale failure with an operable retry", async () => {
+    setAuthState("badgedInvestor");
+    const refetch = vi.fn();
+    queryBoundary.states["/api/wholesale-deals"] = {
+      data: undefined,
+      isError: true,
+      error: new Error("inventory unavailable"),
+      refetch,
+    };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(screen.getByTestId("state-wholesale-grid-error")).toHaveAttribute(
+      "role",
+      "alert",
+    );
+    fireEvent.click(screen.getByTestId("button-retry-wholesale-grid"));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      label: "wholesale swipe",
+      queryKey: "/api/wholesale-deals",
+      activate: "toggle-swipe-view",
+      state: "state-wholesale-swipe-error",
+      retry: "button-retry-wholesale-swipe",
+    },
+    {
+      label: "capital grid",
+      queryKey: "/api/capital-projects",
+      activate: "tab-capital",
+      state: "state-capital-grid-error",
+      retry: "button-retry-capital-grid",
+    },
+    {
+      label: "capital swipe",
+      queryKey: "/api/capital-projects",
+      activate: ["tab-capital", "toggle-swipe-view"],
+      state: "state-capital-swipe-error",
+      retry: "button-retry-capital-swipe",
+    },
+    {
+      label: "listing grid",
+      queryKey: "/api/listings",
+      activate: "tab-listings",
+      state: "state-listings-grid-error",
+      retry: "button-retry-listings-grid",
+    },
+  ])("renders a distinct $label error and retries its own query", async (scenario) => {
+    setAuthState("badgedInvestor");
+    const refetch = vi.fn();
+    queryBoundary.states[scenario.queryKey] = {
+      data: undefined,
+      isError: true,
+      error: new Error(`${scenario.label} unavailable`),
+      refetch,
+    };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+    for (const control of Array.isArray(scenario.activate)
+      ? scenario.activate
+      : [scenario.activate]) {
+      activateControl(control);
+    }
+
+    expect(screen.getByTestId(scenario.state)).toHaveAttribute("role", "alert");
+    fireEvent.click(screen.getByTestId(scenario.retry));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("distinguishes empty states for every reviewed inventory presentation", async () => {
+    setAuthState("badgedInvestor");
+    queryBoundary.states["/api/wholesale-deals"] = { data: [] };
+    queryBoundary.states["/api/capital-projects"] = { data: [] };
+    queryBoundary.states["/api/listings"] = { data: [] };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+    expect(screen.getByTestId("state-wholesale-grid-empty")).toBeInTheDocument();
+
+    activateControl("toggle-swipe-view");
+    expect(screen.getByTestId("state-wholesale-swipe-empty")).toBeInTheDocument();
+
+    activateControl("toggle-grid-view");
+    activateControl("tab-capital");
+    expect(screen.getByTestId("state-capital-grid-empty")).toBeInTheDocument();
+
+    activateControl("toggle-swipe-view");
+    expect(screen.getByTestId("state-capital-swipe-empty")).toBeInTheDocument();
+
+    activateControl("tab-listings");
+    expect(screen.getByTestId("state-listings-grid-empty")).toBeInTheDocument();
+  });
+
+  it("names loading states for every reviewed inventory presentation", async () => {
+    setAuthState("badgedInvestor");
+    for (const queryKey of [
+      "/api/wholesale-deals",
+      "/api/capital-projects",
+      "/api/listings",
+    ]) {
+      queryBoundary.states[queryKey] = { data: undefined, isLoading: true };
+    }
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+    expect(screen.getByTestId("state-wholesale-grid-loading")).toBeInTheDocument();
+
+    activateControl("toggle-swipe-view");
+    expect(screen.getByTestId("state-wholesale-swipe-loading")).toBeInTheDocument();
+
+    activateControl("toggle-grid-view");
+    activateControl("tab-capital");
+    expect(screen.getByTestId("state-capital-grid-loading")).toBeInTheDocument();
+
+    activateControl("toggle-swipe-view");
+    expect(screen.getByTestId("state-capital-swipe-loading")).toBeInTheDocument();
+
+    activateControl("tab-listings");
+    expect(screen.getByTestId("state-listings-grid-loading")).toBeInTheDocument();
+  });
+
+  it("routes a reviewed listing card to the mounted property detail route", async () => {
+    setAuthState("badgedInvestor");
+    queryBoundary.states["/api/listings"] = {
+      data: [
+        {
+          id: 72,
+          propertyAddress: "72 Correct Route Ave",
+          city: "Oakland",
+          state: "CA",
+          propertyType: "Single Family",
+          listPrice: 825_000,
+          listingType: "on_market",
+          status: "active",
+          images: [],
+        },
+      ],
+    };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    const { history } = renderWithProviders(
+      <MarketflowDeals />,
+      "/marketflow/deals",
+      true,
+    );
+    activateControl("tab-listings");
+    fireEvent.click(screen.getByTestId("button-view-listing-72"));
+
+    const recordedHistory = history as string[] | undefined;
+    expect(recordedHistory?.[recordedHistory.length - 1]).toBe(
+      "/marketflow/listings/72",
+    );
+  });
+
+  it("keeps the reviewed inventory shell focused on real navigation and actions", async () => {
+    setAuthState("badgedInvestor");
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(screen.getByTestId("text-deals-title")).toBeInTheDocument();
+    expect(screen.getByTestId("button-submit-deal")).toBeInTheDocument();
+    for (const inertControl of [
+      "button-toggle-map",
+      "button-export",
+      "button-save-search",
+      "button-keyboard-shortcuts",
+      "button-toggle-saved-searches",
+      "button-toggle-activity",
+      "button-toggle-folders",
+    ]) {
+      expect(screen.queryByTestId(inertControl)).toBeNull();
+    }
   });
 });
 

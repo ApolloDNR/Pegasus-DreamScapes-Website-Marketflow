@@ -72,7 +72,15 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } finally {
+      // Replit/OIDC is the primary server session. Clearing only the Supabase
+      // client would silently authenticate the same user again on reload.
+      if (typeof window !== "undefined") {
+        window.location.assign("/api/logout");
+      }
+    }
   };
 
   return (

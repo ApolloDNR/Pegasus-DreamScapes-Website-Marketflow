@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,54 +41,80 @@ import {
   Clock,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useDealAction } from "@/contexts/deal-action-context";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { buildMarketplaceListingMailto } from "@/lib/listing-inquiry";
 
-interface SupabaseListingDetail {
-  id: string;
-  title: string;
+interface MarketplaceListingDetail {
+  id: string | number;
+  title?: string;
   propertyAddress: string;
   city?: string;
   state?: string;
   zipCode?: string;
   propertyType?: string;
-  listingType: "retail" | "investment" | "wholesale";
+  listingType: string;
   listPrice: number;
   bedrooms?: number;
-  bathrooms?: number;
+  bathrooms?: number | string;
   sqft?: number;
   lotSize?: string;
   yearBuilt?: number;
   description?: string;
   features?: string[];
+  highlights?: string[];
+  amenities?: string[];
   images?: string[];
   status: string;
 }
 
-export default function MarketplacePropertyDetailPage() {
+export default function MarketplacePropertyDetailPage({
+  inventorySource = "supabase",
+}: {
+  inventorySource?: "supabase" | "legacy";
+}) {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <PropertyDetailContent />
+        <PropertyDetailContent inventorySource={inventorySource} />
       </div>
     </div>
   );
 }
 
-function PropertyDetailContent() {
-  const [, params] = useRoute("/marketflow/properties/:id");
+function PropertyDetailContent({
+  inventorySource,
+}: {
+  inventorySource: "supabase" | "legacy";
+}) {
+  const routePattern = inventorySource === "legacy"
+    ? "/marketflow/listings/:id"
+    : "/marketflow/properties/:id";
+  const [, params] = useRoute(routePattern);
   const propertyId = params?.id || null;
+  const isReviewedLegacyListing = inventorySource === "legacy";
+  const listingQueryRoot = isReviewedLegacyListing
+    ? "/api/listings"
+    : "/api/supabase/listings";
+  const backHref = isReviewedLegacyListing
+    ? "/marketflow/deals"
+    : "/marketflow/properties";
+  const backLabel = isReviewedLegacyListing
+    ? "Back to MarketFlow"
+    : "Back to Properties";
   const { isAuthenticated } = useSupabaseAuth();
+  const { openDealAction } = useDealAction();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [showOfferModal, setShowOfferModal] = useState(false);
 
   const { data: listing, isLoading, error } =
-    useQuery<SupabaseListingDetail>({
-      queryKey: ["/api/supabase/listings", propertyId],
-      enabled: !!propertyId,
-    });
+    useAuthenticatedQuery<MarketplaceListingDetail>(
+      [listingQueryRoot, propertyId],
+      { enabled: !!propertyId },
+    );
 
   const toggleSaveMutation = useMutation({
     mutationFn: async () => {
@@ -144,10 +170,10 @@ function PropertyDetailContent() {
   if (error || !listing) {
     return (
       <div className="space-y-6">
-        <Link href="/marketflow/properties">
+        <Link href={backHref}>
           <Button variant="ghost" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Properties
+            {backLabel}
           </Button>
         </Link>
         <Card>
@@ -186,14 +212,17 @@ function PropertyDetailContent() {
     }
   };
 
-  const canMakeOffer = listing.status === "active";
+  const canMakeOffer =
+    !isReviewedLegacyListing && listing.status === "active";
+  const detailFeatures =
+    listing.features ?? listing.highlights ?? listing.amenities ?? [];
   const requestInfoHref = buildMarketplaceListingMailto({
-    listingId: listing.id,
+    listingId: String(listing.id),
     propertyAddress: listing.propertyAddress,
     intent: "info",
   });
   const scheduleShowingHref = buildMarketplaceListingMailto({
-    listingId: listing.id,
+    listingId: String(listing.id),
     propertyAddress: listing.propertyAddress,
     intent: "showing",
   });
@@ -201,10 +230,10 @@ function PropertyDetailContent() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <Link href="/marketflow/properties">
+        <Link href={backHref}>
           <Button variant="ghost" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Properties
+            {backLabel}
           </Button>
         </Link>
         <div className="flex items-center gap-2">
@@ -311,11 +340,11 @@ function PropertyDetailContent() {
                 </div>
               )}
 
-              {listing.features && listing.features.length > 0 && (
+              {detailFeatures.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Features</h4>
                   <div className="flex flex-wrap gap-2">
-                    {listing.features.map((feature, index) => (
+                    {detailFeatures.map((feature, index) => (
                       <Badge key={index} variant="outline">{feature}</Badge>
                     ))}
                   </div>
@@ -359,7 +388,32 @@ function PropertyDetailContent() {
                     {isAuthenticated ? "Make an Offer" : "Login to Make Offer"}
                   </Button>
                 )}
-                {propertyId && (
+                {propertyId && isReviewedLegacyListing ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        openDealAction(propertyId, "listing_request_info")
+                      }
+                      data-testid="button-request-info"
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      Request Info
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        openDealAction(propertyId, "listing_schedule_tour")
+                      }
+                      data-testid="button-schedule-showing"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Schedule Showing
+                    </Button>
+                  </>
+                ) : propertyId ? (
                   <>
                     <Button variant="outline" className="w-full" asChild>
                       <a href={requestInfoHref} data-testid="button-request-info">
@@ -377,7 +431,7 @@ function PropertyDetailContent() {
                       </a>
                     </Button>
                   </>
-                )}
+                ) : null}
                 <Button
                   variant="ghost"
                   className="w-full"
@@ -398,7 +452,19 @@ function PropertyDetailContent() {
               <CardDescription>Questions about this property?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {propertyId && (
+              {propertyId && isReviewedLegacyListing ? (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() =>
+                    openDealAction(propertyId, "listing_request_info")
+                  }
+                  data-testid="button-contact"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Request Info
+                </Button>
+              ) : propertyId ? (
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -409,7 +475,7 @@ function PropertyDetailContent() {
                     Request Info
                   </a>
                 </Button>
-              )}
+              ) : null}
               <a
                 href="mailto:apollo@pegasusdreamscapes.com"
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -466,7 +532,7 @@ function PropertyDetailSkeleton() {
 interface OfferModalProps {
   open: boolean;
   onClose: () => void;
-  listing: SupabaseListingDetail;
+  listing: MarketplaceListingDetail;
   formatCurrency: (amount: number) => string;
 }
 

@@ -342,6 +342,7 @@ export function Router() {
       <Route path="/marketflow/deals/:id">{() => <AuthGuard><MarketplaceDealDetail /></AuthGuard>}</Route>
       <Route path="/marketflow/capital">{() => <AuthGuard><MarketplaceCapital /></AuthGuard>}</Route>
       <Route path="/marketflow/capital/:id">{() => <AuthGuard><MarketplaceCapitalDetail /></AuthGuard>}</Route>
+      <Route path="/marketflow/listings/:id">{() => <AuthGuard><MarketplacePropertyDetail inventorySource="legacy" /></AuthGuard>}</Route>
       <Route path="/marketflow/properties">{() => <AuthGuard><MarketplaceProperties /></AuthGuard>}</Route>
       <Route path="/marketflow/properties/:id">{() => <AuthGuard><MarketplacePropertyDetail /></AuthGuard>}</Route>
       <Route path="/marketflow/submit">{() => <AuthGuard><MarketflowSubmit /></AuthGuard>}</Route>

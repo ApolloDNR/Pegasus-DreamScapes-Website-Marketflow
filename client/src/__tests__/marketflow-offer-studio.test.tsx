@@ -201,7 +201,8 @@ const fetchMock = vi.fn(
     if (
       method === "GET" &&
       (url.startsWith("/api/capital-projects/") ||
-        url.startsWith("/api/retail-listings/"))
+        url.startsWith("/api/retail-listings/") ||
+        url.startsWith("/api/listings/"))
     ) {
       return jsonResponse(fetchState.deal);
     }
@@ -439,6 +440,7 @@ describe("MarketFlow Offer Studio", () => {
         "1 offer",
       );
     },
+    15_000,
   );
 
   it.each(["CAPITAL", "LISTING"])(
@@ -454,6 +456,69 @@ describe("MarketFlow Offer Studio", () => {
       expect(screen.queryByLabelText("Total assignment price")).toBeNull();
     },
   );
+
+  it("loads the private listing DTO, displays listPrice, and submits one exact LISTING offer", async () => {
+    setAuthState("buyer");
+    fetchState.deal = {
+      id: 9001,
+      propertyAddress: "900 Reviewed Listing Way",
+      city: "Oakland",
+      state: "CA",
+      listPrice: 735_000,
+      status: "active",
+    };
+
+    await renderOfferStudio(
+      `/marketflow/offer-studio/${DEAL_ID}`,
+      "?lane=LISTING",
+    );
+
+    expect(
+      await screen.findByTestId("text-deal-address"),
+    ).toHaveTextContent("900 Reviewed Listing Way");
+    expect(screen.getByTestId("text-asking-price")).toHaveTextContent(
+      "$735,000",
+    );
+    expect(screen.getByLabelText("Offer Price")).toHaveValue(676_200);
+
+    const getUrls = fetchMock.mock.calls
+      .filter(
+        ([, init]) =>
+          ((init as RequestInit | undefined)?.method || "GET") === "GET",
+      )
+      .map(([url]) =>
+        typeof url === "string" ? url : (url as URL).toString(),
+      );
+    expect(getUrls).toContain("/api/listings/9001");
+    expect(getUrls).not.toContain("/api/retail-listings/9001");
+
+    const closeDate = dateFromToday(45);
+    change("input-offer-price", "700000");
+    change("input-earnest-money", "10000");
+    change("input-close-date", closeDate);
+    change("input-inspection-period", "12");
+    change("select-funding-type", "conventional");
+    change("input-notes", "Exact listing terms");
+    fireEvent.click(screen.getByTestId("button-send-offer"));
+
+    await waitFor(() => expect(fetchState.postedOffers).toHaveLength(1));
+    expect(fetchState.postedOffers[0]).toEqual({
+      url: "/api/marketflow/offers",
+      body: {
+        lane: "LISTING",
+        dealId: "9001",
+        offerKind: "LISTING_INQUIRY",
+        payload: {
+          offerPrice: 700_000,
+          earnestMoney: 10_000,
+          closeDate,
+          inspectionPeriod: 12,
+          fundingType: "conventional",
+          notes: "Exact listing terms",
+        },
+      },
+    });
+  });
 
   it("blocks, explains, and focuses an empty wholesale closing date without POSTing", async () => {
     setAuthState("buyer");

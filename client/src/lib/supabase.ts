@@ -84,7 +84,7 @@ export interface WholesaleDeal {
 
 export interface SavedItem {
   id: string;
-  user_id: string;
+  external_user_id: string;
   item_type: string;
   item_id: string;
   created_at: string;

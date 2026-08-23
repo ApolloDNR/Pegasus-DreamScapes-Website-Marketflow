@@ -47,6 +47,11 @@ import { isAdminRole, isWholesalerRole, isDreamscaperRole, isBuyerRole, isInvest
 type Lane = "WHOLESALE" | "CAPITAL" | "LISTING";
 type OfferStatus = "pending" | "accepted" | "rejected" | "countered";
 
+type OfferStudioDeal = Record<string, any> & {
+  askingPrice?: number;
+  propertyAddress?: string;
+};
+
 const MIN_OFFER_AMOUNT = 1_000;
 const MAX_OFFER_AMOUNT = 10_000_000_000;
 const MAX_INSPECTION_DAYS = 365;
@@ -74,6 +79,36 @@ interface MarketflowFinancialTerms {
 
 function isFundingType(value: string): value is FundingType {
   return FUNDING_TYPES.some((fundingType) => fundingType === value);
+}
+
+function adaptOfferStudioDeal(
+  lane: Lane,
+  rawDeal: Record<string, any> | undefined,
+): OfferStudioDeal | undefined {
+  if (!rawDeal) return undefined;
+  if (lane === "LISTING") {
+    return {
+      ...rawDeal,
+      askingPrice:
+        typeof rawDeal.listPrice === "number"
+          ? rawDeal.listPrice
+          : rawDeal.askingPrice,
+      propertyAddress:
+        rawDeal.propertyAddress || rawDeal.address || rawDeal.title,
+    };
+  }
+  if (lane === "CAPITAL") {
+    return {
+      ...rawDeal,
+      askingPrice:
+        typeof rawDeal.fundingGoal === "number"
+          ? rawDeal.fundingGoal
+          : rawDeal.askingPrice,
+      propertyAddress:
+        rawDeal.propertyAddress || rawDeal.title || rawDeal.address,
+    };
+  }
+  return rawDeal;
 }
 
 function parseBoundedWholeNumber(
@@ -227,12 +262,22 @@ export default function MarketflowOfferStudioPage() {
     enabled: !!dealId && lane === "CAPITAL" && isAuthenticated,
   });
   const { data: listing, isLoading: listingLoading } = useQuery<any>({
-    queryKey: ["/api/retail-listings", dealId],
+    queryKey: ["/api/listings", dealId],
     enabled: !!dealId && lane === "LISTING" && isAuthenticated,
   });
 
-  const deal: any =
-    lane === "WHOLESALE" ? wholesaleDeal : lane === "CAPITAL" ? capitalProject : listing;
+  const deal = useMemo(
+    () =>
+      adaptOfferStudioDeal(
+        lane,
+        lane === "WHOLESALE"
+          ? wholesaleDeal
+          : lane === "CAPITAL"
+            ? capitalProject
+            : listing,
+      ),
+    [lane, wholesaleDeal, capitalProject, listing],
+  );
 
   // --- Negotiation loading ---
   const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
@@ -572,7 +617,7 @@ export default function MarketflowOfferStudioPage() {
   }
 
   const propertyAddress = deal.propertyAddress || deal.title || deal.address || "Untitled deal";
-  const askingPrice = deal.askingPrice || deal.fundingGoal || 0;
+  const askingPrice = deal.askingPrice ?? 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col" data-testid="page-offer-studio">

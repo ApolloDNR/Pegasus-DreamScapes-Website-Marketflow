@@ -390,7 +390,11 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
     it(`${route.path} uses button-group semantics and announces the current output`, async () => {
       const { container } = renderLanding(route.path);
 
-      await screen.findByRole("heading", { name: route.pageHeading });
+      await screen.findByRole(
+        "heading",
+        { name: route.pageHeading },
+        { timeout: 5000 },
+      );
       const main = container.querySelector("main");
       expect(main, `${route.path} must render inside the live Landing main`).toBeTruthy();
 
@@ -584,7 +588,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       const panel = await within(main).findByRole("region", {
         name: /Decision calculators/i,
       });
-      await within(panel).findByRole("tablist");
+      await within(panel).findByRole("tablist", undefined, { timeout: 5000 });
       expect(within(main).getAllByRole("tablist")).toHaveLength(1);
       expect(
         within(main).queryByRole("group", { name: /Underwriting instruments/i }),

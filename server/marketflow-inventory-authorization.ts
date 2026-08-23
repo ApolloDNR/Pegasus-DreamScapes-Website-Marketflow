@@ -1,5 +1,8 @@
 import type { RequestHandler } from "express";
-import { canAccessReviewedMarketflowInventory } from "@shared/marketflow-inventory-access";
+import {
+  canAccessReviewedMarketflowInventory,
+  canInitiateMarketflowJv,
+} from "@shared/marketflow-inventory-access";
 
 type MarketflowProfile = {
   primary_role?: unknown;
@@ -19,6 +22,12 @@ type MarketflowInventoryAccessDependencies = {
 type MarketflowInventoryRequest = {
   user?: { claims?: { sub?: unknown; email?: unknown } };
   supabaseUser?: { id?: unknown; email?: unknown };
+};
+
+export type MarketflowInventoryAccessContext = {
+  userId: string | null;
+  canAccessReviewedInventory: boolean;
+  canInitiateJv: boolean;
 };
 
 const REVIEWED_INVENTORY_TYPES = new Set([
@@ -43,30 +52,40 @@ export function isReviewedMarketflowInventoryType(rawType: unknown): boolean {
 function authenticatedIdentity(
   req: MarketflowInventoryRequest,
 ): { userId: string; email: string | null } | null {
-  const supabaseId = req.supabaseUser?.id;
-  const claimId = req.user?.claims?.sub;
-  const candidate =
-    typeof supabaseId === "string" && supabaseId.trim()
-      ? supabaseId
-      : claimId;
-  if (typeof candidate !== "string" || !candidate.trim()) {
+  const normalizeId = (value: unknown): string | null =>
+    typeof value === "string" && value.trim() ? value.trim() : null;
+  const normalizeEmail = (value: unknown): string | null =>
+    typeof value === "string" && value.trim()
+      ? value.trim().toLowerCase()
+      : null;
+  const claimId = normalizeId(req.user?.claims?.sub);
+  const supabaseId = normalizeId(req.supabaseUser?.id);
+
+  // Both credentials are independently verified upstream. They must never be
+  // combined across principals: the acting ID and role/email context need to
+  // describe one identity or the request fails closed.
+  if (claimId && supabaseId && claimId !== supabaseId) {
     return null;
   }
 
-  const emailCandidate =
-    req.supabaseUser?.email ?? req.user?.claims?.email;
+  const userId = claimId ?? supabaseId;
+  if (!userId) return null;
+  const claimEmail = normalizeEmail(req.user?.claims?.email);
+  const supabaseEmail = normalizeEmail(req.supabaseUser?.email);
+
   return {
-    userId: candidate.trim(),
-    email:
-      typeof emailCandidate === "string" && emailCandidate.trim()
-        ? emailCandidate.trim().toLowerCase()
-        : null,
+    userId,
+    email: claimId
+      ? claimEmail ?? (supabaseId === claimId ? supabaseEmail : null)
+      : supabaseEmail,
   };
 }
 
-export function createResolveMarketflowInventoryAccess(
+export function createResolveMarketflowInventoryAccessContext(
   dependencies: MarketflowInventoryAccessDependencies,
-): (req: MarketflowInventoryRequest) => Promise<boolean> {
+): (
+  req: MarketflowInventoryRequest,
+) => Promise<MarketflowInventoryAccessContext> {
   const adminEmails = new Set(
     dependencies.adminEmails.map((email) => email.trim().toLowerCase()),
   );
@@ -74,53 +93,78 @@ export function createResolveMarketflowInventoryAccess(
   return async (req) => {
     const identity = authenticatedIdentity(req);
     if (!identity) {
-      return false;
+      return {
+        userId: null,
+        canAccessReviewedInventory: false,
+        canInitiateJv: false,
+      };
     }
 
-    if (
-      canAccessReviewedMarketflowInventory({
-        isAuthenticated: true,
-        isStaff: identity.email !== null && adminEmails.has(identity.email),
-      })
-    ) {
-      return true;
+    const isAdministrativeIdentity =
+      identity.email !== null && adminEmails.has(identity.email);
+    if (isAdministrativeIdentity) {
+      return {
+        userId: identity.userId,
+        canAccessReviewedInventory: true,
+        canInitiateJv: true,
+      };
     }
 
     const [profile, assignedRoles] = await Promise.all([
       dependencies.getUserProfile(identity.userId),
       dependencies.getUserRoles(identity.userId),
     ]);
-    return canAccessReviewedMarketflowInventory({
-      isAuthenticated: true,
-      isPegasusBadged: profile?.is_pegasus_badged,
-      roles: [
-        profile?.primary_role,
-        ...assignedRoles.map((entry) => entry.role),
-      ],
-    });
+    const roles = [
+      profile?.primary_role,
+      ...assignedRoles.map((entry) => entry.role),
+    ];
+    const canAccessReviewedInventory =
+      canAccessReviewedMarketflowInventory({
+        isAuthenticated: true,
+        isPegasusBadged: profile?.is_pegasus_badged,
+        roles,
+      });
+    return {
+      userId: identity.userId,
+      canAccessReviewedInventory,
+      canInitiateJv: canInitiateMarketflowJv({
+        canAccessReviewedInventory,
+        roles,
+      }),
+    };
   };
+}
+
+export function createResolveMarketflowInventoryAccess(
+  dependencies: MarketflowInventoryAccessDependencies,
+): (req: MarketflowInventoryRequest) => Promise<boolean> {
+  const resolveContext =
+    createResolveMarketflowInventoryAccessContext(dependencies);
+  return async (req) =>
+    (await resolveContext(req)).canAccessReviewedInventory;
 }
 
 export function createRequireMarketflowInventoryAccess(
   dependencies: MarketflowInventoryAccessDependencies,
 ): RequestHandler {
-  const resolveAccess = createResolveMarketflowInventoryAccess(dependencies);
+  const resolveContext =
+    createResolveMarketflowInventoryAccessContext(dependencies);
 
   return async (req, res, next) => {
-    const identity = authenticatedIdentity(req);
-    if (!identity) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
     try {
-      const isApproved = await resolveAccess(req);
+      const context = await resolveContext(req);
+      if (!context.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
-      if (!isApproved) {
+      if (!context.canAccessReviewedInventory) {
         return res.status(403).json({
           message: "Forbidden: reviewed MarketFlow access required",
         });
       }
 
+      res.locals.marketflowInventoryAccessContext = context;
+      res.locals.canAccessReviewedMarketflowInventory = true;
       return next();
     } catch (error) {
       console.error("Unable to verify MarketFlow inventory access:", error);

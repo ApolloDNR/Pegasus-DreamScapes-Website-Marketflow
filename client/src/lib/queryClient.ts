@@ -1,5 +1,18 @@
-import { QueryClient, QueryFunction, InvalidateQueryFilters } from "@tanstack/react-query";
+import {
+  QueryClient,
+  type InvalidateQueryFilters,
+  type Query,
+  type QueryFunction,
+} from "@tanstack/react-query";
 import { getSupabaseSync } from "@/lib/supabase";
+
+export const AUTHENTICATED_QUERY_META = {
+  authenticated: true,
+} as const;
+
+export function isAuthenticatedQuery(query: Pick<Query, "meta">) {
+  return query.meta?.authenticated === true;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -200,6 +213,32 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export function evictAuthenticatedQueries(
+  client: QueryClient = queryClient,
+) {
+  client.removeQueries({ predicate: isAuthenticatedQuery });
+}
+
+export function clearSessionQueries(
+  client: QueryClient = queryClient,
+) {
+  // Some legacy protected queries have not yet migrated to authenticated
+  // metadata. A principal transition must therefore clear the complete cache
+  // rather than risk retaining an untagged private response.
+  client.clear();
+}
+
+export function transitionSessionPrincipal(
+  currentPrincipal: string,
+  nextPrincipal: string,
+  client: QueryClient = queryClient,
+) {
+  if (currentPrincipal !== nextPrincipal) {
+    clearSessionQueries(client);
+  }
+  return nextPrincipal;
+}
 
 export const QUERY_KEYS = {
   wholesaleDeals: ['/api/supabase/wholesale-deals'] as const,

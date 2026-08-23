@@ -73,8 +73,16 @@ describe("launch integrity contract", () => {
       'app.post("/api/marketplace/jv-requests"',
       "// Get all reviewed capital projects for approved browsing",
     );
+    expect(createRoute).toContain(
+      "const userId = getMarketflowInventoryPrincipalId(res)",
+    );
+    expect(createRoute).not.toContain("const userId = getAuthUserId(req)");
     expect(createRoute).toContain("canInitiateLegacyDealInteraction(access, res)");
-    expect(createRoute).toContain("wholesalerId: deal.submittedBy");
+    expect(createRoute).toContain("canRequestMarketflowJv({");
+    expect(createRoute).toContain(
+      "canInitiateJv: canViewerInitiateMarketflowJv(res)",
+    );
+    expect(createRoute).toContain("wholesalerId: dealOwnerId");
     expect(createRoute).not.toMatch(
       /const\s*\{[^}]*wholesalerId[^}]*\}\s*=\s*req\.body/s,
     );

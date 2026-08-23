@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, stat } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
@@ -31,20 +32,70 @@ const routes = [
 ];
 
 const viewports = [
-  ['desktop', { width: 1440, height: 940 }],
-  ['tablet', { width: 768, height: 1024 }],
-  ['mobile', { width: 390, height: 844 }],
+  ['desktop-1440', { width: 1440, height: 940 }],
+  ['tablet-1024', { width: 1024, height: 900 }],
+  ['tablet-768', { width: 768, height: 1024 }],
+  ['mobile-390', { width: 390, height: 844 }],
 ];
 
 const colorSchemes = ['dark', 'light'];
 const previewStubHeader = 'x-pegasus-preview-stub';
 const previewStubValue = 'backend-unavailable';
+const qaResponseHeader = 'x-pegasus-qa-response';
+const qaFailureMarker = 'marker-503';
 const previewStubApiPaths = new Set(['/api/auth/user']);
 const interactionsOnly = process.env.A11Y_INTERACTIONS_ONLY === '1';
+const expectedRouteCheckCount = interactionsOnly
+  ? 0
+  : routes.length * viewports.length * colorSchemes.length;
+let interactionJourneyCount = 0;
+let screenshotCount = 0;
 const screenshotDir = process.env.A11Y_SCREENSHOT_DIR
   ? path.resolve(process.env.A11Y_SCREENSHOT_DIR)
   : null;
 if (screenshotDir) await mkdir(screenshotDir, { recursive: true });
+
+async function captureScreenshot(page, filename) {
+  if (!screenshotDir) return;
+  await page.screenshot({
+    path: path.join(screenshotDir, filename),
+    fullPage: true,
+  });
+  screenshotCount += 1;
+}
+
+function createControlledRelease(label, timeoutMs = 10_000) {
+  let released = false;
+  let waitPromise;
+  let resolveGate;
+  let timeout;
+  return {
+    wait() {
+      if (released) return Promise.resolve();
+      if (!waitPromise) {
+        waitPromise = new Promise((resolve, reject) => {
+          resolveGate = resolve;
+          timeout = setTimeout(
+            () => reject(new Error(`${label} was not released within ${timeoutMs}ms`)),
+            timeoutMs,
+          );
+        });
+      }
+      return waitPromise;
+    },
+    release() {
+      released = true;
+      clearTimeout(timeout);
+      resolveGate?.();
+    },
+  };
+}
+
+function getViewport(name) {
+  const viewport = viewports.find(([candidate]) => candidate === name)?.[1];
+  if (!viewport) throw new Error(`Unknown rendered QA viewport: ${name}`);
+  return viewport;
+}
 
 const mimeTypes = {
   '.avif': 'image/avif',
@@ -138,32 +189,39 @@ if (!executablePath) {
 }
 
 const serverlessChromium = executablePath === '/tmp/chromium';
-const launchBrowser = () => chromium.launch({
-  executablePath,
-  headless: true,
-  ...(serverlessChromium ? {
-    ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
-    args: [
-      '--no-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--disable-software-rasterizer',
-      '--single-process',
-      '--no-zygote',
-    ],
-    env: {
-      ...process.env,
-      HOME: '/tmp',
-      XDG_CACHE_HOME: '/tmp',
-      FONTCONFIG_PATH: '/etc/fonts',
-    },
-  } : { args: ['--no-sandbox', '--disable-dev-shm-usage'] }),
-});
+const launchedBrowsers = new Set();
+async function launchBrowser() {
+  const browser = await chromium.launch({
+    executablePath,
+    headless: true,
+    ...(serverlessChromium ? {
+      ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
+      args: [
+        '--no-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--single-process',
+        '--no-zygote',
+      ],
+      env: {
+        ...process.env,
+        HOME: '/tmp',
+        XDG_CACHE_HOME: '/tmp',
+        FONTCONFIG_PATH: '/etc/fonts',
+      },
+    } : { args: ['--no-sandbox', '--disable-dev-shm-usage'] }),
+  });
+  launchedBrowsers.add(browser);
+  browser.on('disconnected', () => launchedBrowsers.delete(browser));
+  return browser;
+}
 
 function isAllowedBrowserUrl(rawUrl) {
   try {
     const url = new URL(rawUrl);
-    if (!['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)) return true;
+    if (['about:', 'data:', 'blob:'].includes(url.protocol)) return true;
+    if (!['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)) return false;
     if (url.protocol === 'http:' || url.protocol === 'https:') return url.origin === baseUrl;
     const webSocketOrigin = `${url.protocol === 'wss:' ? 'https:' : 'http:'}//${url.host}`;
     return webSocketOrigin === baseUrl;
@@ -230,21 +288,44 @@ function monitorPageHealth(page) {
   const health = {
     pageErrors: [],
     consoleErrors: [],
+    consoleWarnings: [],
     requestFailures: [],
     responseFailures: [],
     previewStubUrls: new Set(),
+    activeRequests: new Set(),
+    requestActivityGeneration: 0,
+    lastRequestActivityAt: Date.now(),
   };
 
+  const markRequestActivity = () => {
+    health.requestActivityGeneration += 1;
+    health.lastRequestActivityAt = Date.now();
+  };
+
+  page.on('request', (request) => {
+    if (!isSameOriginAssetOrApi(request)) return;
+    health.activeRequests.add(request);
+    markRequestActivity();
+  });
+  page.on('requestfinished', (request) => {
+    if (!isSameOriginAssetOrApi(request)) return;
+    health.activeRequests.delete(request);
+    markRequestActivity();
+  });
   page.on('pageerror', (error) => health.pageErrors.push(String(error)));
   page.on('console', (message) => {
-    if (message.type() !== 'error') return;
-    health.consoleErrors.push({
+    if (!['error', 'warning', 'warn'].includes(message.type())) return;
+    const entry = {
       text: message.text(),
       location: message.location(),
-    });
+    };
+    if (message.type() === 'error') health.consoleErrors.push(entry);
+    else health.consoleWarnings.push(entry);
   });
   page.on('requestfailed', (request) => {
     if (!isSameOriginAssetOrApi(request)) return;
+    health.activeRequests.delete(request);
+    markRequestActivity();
     health.requestFailures.push({
       url: request.url(),
       method: request.method(),
@@ -258,7 +339,9 @@ function monitorPageHealth(page) {
     const isAllowedPreviewStub = previewStubApiPaths.has(url.pathname)
       && response.status() === 404
       && response.headers()[previewStubHeader] === previewStubValue;
-    if (isAllowedPreviewStub) {
+    const isAllowedQaFailure = response.status() === 503
+      && response.headers()[qaResponseHeader] === qaFailureMarker;
+    if (isAllowedPreviewStub || isAllowedQaFailure) {
       health.previewStubUrls.add(response.url());
       return;
     }
@@ -273,14 +356,16 @@ function monitorPageHealth(page) {
 }
 
 function browserHealthFailures(health, blockedEgress, blockedEgressStart) {
-  const consoleErrors = health.consoleErrors.filter(({ text, location }) => {
+  const keepUnexpectedConsoleEntry = ({ text, location }) => {
     const isAllowedPreviewNoise = health.previewStubUrls.has(location.url)
-      && /^Failed to load resource:.*404/i.test(text);
-    return !isAllowedPreviewNoise;
-  });
+      && /^Failed to load resource:/i.test(text);
+    const isExpectedHermeticMapFallback = text === 'Google Maps API key not configured.';
+    return !isAllowedPreviewNoise && !isExpectedHermeticMapFallback;
+  };
   return {
     pageErrors: health.pageErrors,
-    consoleErrors,
+    consoleErrors: health.consoleErrors.filter(keepUnexpectedConsoleEntry),
+    consoleWarnings: health.consoleWarnings.filter(keepUnexpectedConsoleEntry),
     requestFailures: health.requestFailures,
     responseFailures: health.responseFailures,
     blockedEgress: blockedEgress.slice(blockedEgressStart),
@@ -291,10 +376,221 @@ function hasBrowserHealthFailures(browserHealth) {
   return Object.values(browserHealth).some((entries) => entries.length > 0);
 }
 
+async function settleRenderedPage(page) {
+  const settleStatus = await page.evaluate(async () => {
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    const completesWithin = (promise, timeoutMs) => new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(false), timeoutMs);
+      Promise.resolve(promise).then(
+        () => {
+          clearTimeout(timer);
+          resolve(true);
+        },
+        () => {
+          clearTimeout(timer);
+          resolve(false);
+        },
+      );
+    });
+    const increment = Math.max(window.innerHeight, 480);
+    let offset = 0;
+    let stableBottomPasses = 0;
+
+    for (let pass = 0; pass < 160 && stableBottomPasses < 2; pass += 1) {
+      const documentHeight = document.documentElement.scrollHeight;
+      window.scrollTo(0, offset);
+      await nextFrame();
+      const nextHeight = document.documentElement.scrollHeight;
+      if (offset >= nextHeight - window.innerHeight) stableBottomPasses += 1;
+      else stableBottomPasses = 0;
+      offset = Math.min(offset + increment, nextHeight);
+    }
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await nextFrame();
+
+    const fontsReady = await completesWithin(document.fonts.ready, 5_000);
+    const fontsTimedOut = !fontsReady;
+
+    const imageDecode = Promise.allSettled(
+      Array.from(document.images, (image) => image.decode()),
+    );
+    const imagesDecoded = await completesWithin(imageDecode, 5_000);
+    const imageDecodeTimedOut = !imagesDecoded;
+
+    window.scrollTo(0, 0);
+    await nextFrame();
+    await nextFrame();
+    return { fontsReady, fontsTimedOut, imageDecodeTimedOut };
+  });
+
+  const renderedState = await page.evaluate(() => {
+    const root = document.documentElement;
+    const hasHorizontalOverflow = root.scrollWidth > window.innerWidth + 1;
+    const overflowElements = hasHorizontalOverflow
+      ? Array.from(document.querySelectorAll('body *'))
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            tag: element.tagName.toLowerCase(),
+            id: element.id,
+            className: typeof element.className === 'string' ? element.className.slice(0, 120) : '',
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+          };
+        })
+        .filter(({ left, right }) => left < -1 || right > window.innerWidth + 1)
+        .slice(0, 12)
+      : [];
+    const runningAnimations = document.getAnimations()
+      .filter((animation) => animation.playState === 'running')
+      .map((animation) => {
+        const target = animation.effect?.target;
+        return {
+          tag: target instanceof Element ? target.tagName.toLowerCase() : 'unknown',
+          id: target instanceof Element ? target.id : '',
+          className: target instanceof Element && typeof target.className === 'string'
+            ? target.className.slice(0, 120)
+            : '',
+        };
+      })
+      .slice(0, 12);
+    const brokenImages = Array.from(document.images)
+      .filter((image) => image.complete && image.naturalWidth === 0)
+      .map((image) => image.currentSrc || image.src)
+      .slice(0, 12);
+    const incompleteImages = Array.from(document.images)
+      .filter((image) => !image.complete)
+      .map((image) => image.currentSrc || image.src)
+      .slice(0, 12);
+
+    return {
+      reducedMotionRequested: matchMedia('(prefers-reduced-motion: reduce)').matches,
+      runningAnimations,
+      horizontalOverflow: hasHorizontalOverflow
+        ? { viewportWidth: window.innerWidth, scrollWidth: root.scrollWidth, overflowElements }
+        : null,
+      brokenImages,
+      incompleteImages,
+    };
+  });
+  return { ...settleStatus, ...renderedState };
+}
+
+function hasRenderedPageFailures(renderedPage) {
+  return !renderedPage.fontsReady
+    || renderedPage.fontsTimedOut
+    || renderedPage.imageDecodeTimedOut
+    || !renderedPage.reducedMotionRequested
+    || renderedPage.runningAnimations.length > 0
+    || renderedPage.horizontalOverflow !== null
+    || renderedPage.brokenImages.length > 0
+    || renderedPage.incompleteImages.length > 0;
+}
+
+async function waitForActiveRequestCount(
+  health,
+  expectedCount,
+  timeoutMs = 8_000,
+  stableMs = 150,
+) {
+  const deadline = Date.now() + timeoutMs;
+  let stableSince = null;
+  let observedGeneration = health.requestActivityGeneration;
+  while (Date.now() < deadline) {
+    if (health.requestActivityGeneration !== observedGeneration) {
+      observedGeneration = health.requestActivityGeneration;
+      stableSince = null;
+    }
+    if (health.activeRequests.size === expectedCount) {
+      stableSince ??= Math.max(Date.now(), health.lastRequestActivityAt);
+      if (
+        Date.now() - stableSince >= stableMs &&
+        Date.now() - health.lastRequestActivityAt >= stableMs
+      ) break;
+    } else {
+      stableSince = null;
+    }
+    await delay(50);
+  }
+  const stableForMs = stableSince === null ? 0 : Date.now() - stableSince;
+  return {
+    expectedCount,
+    actualCount: health.activeRequests.size,
+    stableForMs,
+    requiredStableMs: stableMs,
+    requestActivityGeneration: health.requestActivityGeneration,
+    millisSinceRequestActivity: Date.now() - health.lastRequestActivityAt,
+    settled: health.activeRequests.size === expectedCount
+      && stableForMs >= stableMs
+      && Date.now() - health.lastRequestActivityAt >= stableMs,
+    urls: [...health.activeRequests].map((request) => request.url()).sort(),
+  };
+}
+
+async function settleEvidenceState(
+  page,
+  health,
+  expectedActiveRequests = 0,
+  timeoutMs = 8_000,
+) {
+  // Evidence is a two-phase fixed point. The first full-page render activates
+  // lazy assets, and the first request wait lets their responses update the
+  // DOM. The second pass then inspects that updated DOM and reconfirms the
+  // expected request state immediately before evidence is accepted.
+  await settleRenderedPage(page);
+  const firstRequestState = await waitForActiveRequestCount(
+    health,
+    expectedActiveRequests,
+    timeoutMs,
+  );
+  const renderedPage = await settleRenderedPage(page);
+  const requestState = await waitForActiveRequestCount(
+    health,
+    expectedActiveRequests,
+    timeoutMs,
+  );
+  return { firstRequestState, renderedPage, requestState };
+}
+
+async function settleAfterInteraction(page, health, timeoutMs = 8_000) {
+  await delay(100);
+  const { firstRequestState, renderedPage, requestState } =
+    await settleEvidenceState(page, health, 0, timeoutMs);
+  assert(
+    !hasRenderedPageFailures(renderedPage),
+    `Rendered page did not settle after interaction: ${JSON.stringify(renderedPage)}`,
+  );
+  assert(
+    firstRequestState.settled && requestState.settled,
+    `Interaction left same-origin requests unsettled: ${JSON.stringify({ firstRequestState, requestState })}`,
+  );
+  return renderedPage;
+}
+
+async function captureEvidenceScreenshot(
+  page,
+  health,
+  filename,
+  { expectedActiveRequests = 0 } = {},
+) {
+  const { firstRequestState, renderedPage, requestState } =
+    await settleEvidenceState(page, health, expectedActiveRequests);
+  assert(
+    !hasRenderedPageFailures(renderedPage),
+    `Screenshot ${filename} captured an unsettled page: ${JSON.stringify(renderedPage)}`,
+  );
+  assert(
+    firstRequestState.settled && requestState.settled,
+    `Screenshot ${filename} had ambiguous request state: ${JSON.stringify({ firstRequestState, requestState })}`,
+  );
+  await captureScreenshot(page, filename);
+}
+
 async function runInteraction(name, options, check) {
+  interactionJourneyCount += 1;
   const browser = await launchBrowser();
   const { context, blockedEgress } = await newGuardedContext(browser, {
-    viewport: options.viewport ?? viewports[0][1],
+    viewport: options.viewport ?? getViewport('desktop-1440'),
     colorScheme: options.colorScheme ?? 'dark',
     reducedMotion: 'reduce',
   });
@@ -313,7 +609,8 @@ async function runInteraction(name, options, check) {
   const health = monitorPageHealth(page);
 
   try {
-    await check(page);
+    await check(page, health);
+    await settleAfterInteraction(page, health);
     const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
     assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
     console.log(`[interaction] ${name}: PASS`);
@@ -334,8 +631,226 @@ async function openPage(page, route) {
   const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'load', timeout: 45_000 });
   assert(response?.ok(), `${route} returned ${response?.status() ?? 'no response'}`);
   await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
+  await settleRenderedPage(page);
 }
 
+const approvedMarketflowFixtures = {
+  wholesale: {
+    id: 501,
+    propertyAddress: '501 Evidence Avenue',
+    address: '501 Evidence Avenue',
+    city: 'Oakland',
+    state: 'CA',
+    zipCode: '94612',
+    propertyType: 'Single Family',
+    arv: 640000,
+    askingPrice: 425000,
+    contractPrice: 415000,
+    repairEstimate: 65000,
+    assignmentFee: 10000,
+    bedrooms: 3,
+    bathrooms: 2,
+    squareFeet: 1680,
+    description: 'Deterministic rendered-QA wholesale fixture.',
+    canRequestJv: true,
+    negotiationAllowed: true,
+    status: 'active',
+    photos: [],
+    images: [],
+  },
+  capital: {
+    id: 601,
+    title: 'Evidence Row Rehabilitation',
+    location: 'Richmond, CA',
+    strategy: 'value-add',
+    structure: 'EQUITY',
+    fundingGoal: 1200000,
+    amountRaised: 480000,
+    minInvestment: 25000,
+    projectedReturn: '18% target IRR',
+    askingProfitSplit: '70 / 30',
+    status: 'OPEN',
+    images: [],
+  },
+  listing: {
+    id: 701,
+    propertyAddress: '701 Proof Place',
+    city: 'Berkeley',
+    state: 'CA',
+    zipCode: '94704',
+    propertyType: 'Single Family',
+    listPrice: 825000,
+    bedrooms: 3,
+    bathrooms: 2,
+    sqft: 1540,
+    listingType: 'on_market',
+    status: 'active',
+    images: [],
+  },
+};
+
+async function installApprovedMarketflowStubs(page, { initialState = 'loading' } = {}) {
+  const inventoryState = {
+    wholesale: initialState,
+    capital: initialState,
+    listings: initialState,
+  };
+  const loadingGates = initialState === 'loading'
+    ? {
+      wholesale: createControlledRelease('wholesale inventory loading state', 45_000),
+      capital: createControlledRelease('capital inventory loading state', 45_000),
+      listings: createControlledRelease('listing inventory loading state', 45_000),
+    }
+    : {};
+  let canRequestJv = true;
+  let savedItems = [];
+
+  const fulfillJson = (route, status, body, headers = {}) => route.fulfill({
+    status,
+    contentType: 'application/json',
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  await page.route(`${baseUrl}/api/**`, async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const { pathname } = url;
+    const method = request.method();
+
+    if (pathname === '/api/site-content') return fulfillJson(route, 200, []);
+    if (pathname === '/api/config/supabase') return fulfillJson(route, 200, {});
+    if (pathname === '/api/config/google-maps') return fulfillJson(route, 200, {});
+    if (pathname === '/api/auth/user') {
+      return fulfillJson(route, 200, {
+        id: 'qa-marketflow-operator',
+        email: 'qa.marketflow@pegasus.test',
+        firstName: 'QA',
+        lastName: 'Operator',
+        role: 'pegasus_wholesaler',
+        roles: ['pegasus_wholesaler'],
+        isAdmin: false,
+        isStaff: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      });
+    }
+    if (pathname === '/api/supabase/profile/qa-marketflow-operator') {
+      return fulfillJson(route, 200, {
+        id: 'qa-marketflow-profile',
+        user_id: 'qa-marketflow-operator',
+        primary_role: 'pegasus_wholesaler',
+        display_name: 'QA Operator',
+        is_pegasus_badged: true,
+        pegasus_role_type: 'pegasus_wholesaler',
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      });
+    }
+
+    const laneByPath = {
+      '/api/wholesale-deals': 'wholesale',
+      '/api/capital-projects': 'capital',
+      '/api/listings': 'listings',
+    };
+    const lane = laneByPath[pathname];
+    if (lane && method === 'GET') {
+      if (inventoryState[lane] === 'loading') await loadingGates[lane].wait();
+      if (inventoryState[lane] === 'error') {
+        return fulfillJson(
+          route,
+          503,
+          { message: `Rendered QA ${lane} marker-503` },
+          { [qaResponseHeader]: qaFailureMarker },
+        );
+      }
+      if (inventoryState[lane] === 'empty') return fulfillJson(route, 200, []);
+      const fixture = lane === 'wholesale'
+        ? { ...approvedMarketflowFixtures.wholesale, canRequestJv }
+        : approvedMarketflowFixtures[lane === 'capital' ? 'capital' : 'listing'];
+      return fulfillJson(route, 200, [fixture]);
+    }
+
+    if (pathname === '/api/wholesale-deals/501' && method === 'GET') {
+      return fulfillJson(route, 200, {
+        ...approvedMarketflowFixtures.wholesale,
+        canRequestJv,
+      });
+    }
+    if (pathname === '/api/listings/701' && method === 'GET') {
+      return fulfillJson(route, 200, approvedMarketflowFixtures.listing);
+    }
+    if (pathname === '/api/supabase/saved-items') {
+      if (method === 'GET') return fulfillJson(route, 200, savedItems);
+      assert(method === 'POST' || method === 'DELETE', `Unsafe saved-item method ${method}`);
+      const payload = request.postDataJSON();
+      assert(
+        ['wholesale_deal', 'capital_project', 'listing'].includes(payload.itemType),
+        `Unexpected saved-item type ${payload.itemType}`,
+      );
+      assert(typeof payload.itemId === 'string', 'Saved-item id was not normalized to a string');
+      savedItems = method === 'POST'
+        ? [{
+          id: 'qa-saved-item',
+          externalUserId: 'qa-marketflow-operator',
+          itemType: payload.itemType,
+          itemId: payload.itemId,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        }]
+        : [];
+      return fulfillJson(route, 200, method === 'POST' ? savedItems[0] : { deleted: true });
+    }
+
+    const emptyArrayPaths = new Set([
+      '/api/supabase/notifications',
+      '/api/marketplace/wholesaler/jv-requests',
+      '/api/supabase/capital-commitments',
+      '/api/supabase/buyer-offers',
+      '/api/notifications',
+      '/api/saved-searches',
+      '/api/investor-activity',
+    ]);
+    if (emptyArrayPaths.has(pathname) && method === 'GET') return fulfillJson(route, 200, []);
+    if (pathname === '/api/notifications/unread-count' && method === 'GET') {
+      return fulfillJson(route, 200, { count: 0 });
+    }
+    if (pathname === '/api/analytics/track' && method === 'POST') {
+      return fulfillJson(route, 201, { recorded: true });
+    }
+
+    return fulfillJson(route, 418, {
+      message: `Unrecognized rendered-QA API contract: ${method} ${pathname}`,
+    });
+  });
+
+  return {
+    inventoryState,
+    releaseLoadingAsError() {
+      for (const lane of ['wholesale', 'capital', 'listings']) {
+        inventoryState[lane] = 'error';
+        loadingGates[lane].release();
+      }
+    },
+    setLaneState(lane, state) {
+      inventoryState[lane] = state;
+    },
+    setCanRequestJv(value) {
+      canRequestJv = value;
+    },
+  };
+}
+
+async function captureInventoryState(
+  page,
+  health,
+  testId,
+  filename,
+  options,
+) {
+  await page.getByTestId(testId).waitFor({ state: 'visible', timeout: 18_000 });
+  await captureEvidenceScreenshot(page, health, filename, options);
+}
+
+let fatalFailure = null;
 try {
   for (const colorScheme of interactionsOnly ? [] : colorSchemes) {
     for (const [viewportName, viewport] of viewports) {
@@ -353,7 +868,8 @@ try {
 
         const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'load', timeout: 45_000 });
         await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
-        await page.waitForTimeout(650);
+        await settleRenderedPage(page);
+        const firstRequestState = await waitForActiveRequestCount(health, 0);
         await page.addScriptTag({ content: axeSource });
 
         const violations = await page.evaluate(async () => {
@@ -375,27 +891,42 @@ try {
               })),
             }));
         });
+        const renderedPage = await settleRenderedPage(page);
+        const requestState = await waitForActiveRequestCount(health, 0);
+        const requestsSettled = firstRequestState.settled && requestState.settled;
 
-        if (screenshotDir && colorScheme === 'dark') {
+        if (
+          screenshotDir &&
+          requestsSettled &&
+          !hasRenderedPageFailures(renderedPage)
+        ) {
           const slug = route === '/' ? 'home' : route.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-');
-          await page.screenshot({
-            path: path.join(screenshotDir, `${slug}-${viewportName}.png`),
-            fullPage: true,
-          });
+          await captureScreenshot(page, `${slug}-${viewportName}-${colorScheme}.png`);
         }
 
         const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
-        if (!response?.ok() || hasBrowserHealthFailures(browserHealth) || violations.length) {
+        if (!response?.ok()
+          || !requestsSettled
+          || hasBrowserHealthFailures(browserHealth)
+          || hasRenderedPageFailures(renderedPage)
+          || violations.length) {
           failures.push({
             colorScheme,
             viewport: viewportName,
             route,
             status: response?.status(),
+            firstRequestState,
+            requestState,
             browserHealth,
+            renderedPage,
             violations,
           });
         }
-        const passed = response?.ok() && !hasBrowserHealthFailures(browserHealth) && !violations.length;
+        const passed = response?.ok()
+          && requestsSettled
+          && !hasBrowserHealthFailures(browserHealth)
+          && !hasRenderedPageFailures(renderedPage)
+          && !violations.length;
         console.log(`[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`);
         await page.close();
       }
@@ -423,7 +954,7 @@ try {
     assert(await navigation.getByRole('button', { name: /^More/ }).count() === 0, 'Desktop navigation regressed to a More directory');
   });
 
-  await runInteraction('mobile navigation destination', { viewport: viewports[2][1], seedConsent: false }, async (page) => {
+  await runInteraction('mobile navigation destination', { viewport: getViewport('mobile-390'), seedConsent: false }, async (page) => {
     await openPage(page, '/');
     const menuButton = page.locator('button[aria-controls="mobile-menu"]');
     await menuButton.click();
@@ -570,10 +1101,197 @@ try {
     await page.waitForURL(/\/bring-an-opportunity$/);
   });
 
-  await runInteraction('opportunity intake initial validation', {}, async (page) => {
-    await openPage(page, '/bring-an-opportunity');
-    assert(await page.getByRole('button', { name: 'Continue' }).isDisabled(), 'Empty intake could advance past the first step');
-  });
+  for (const [intakeViewportName, intakeViewport] of viewports) {
+    await runInteraction(
+      `opportunity intake submission states ${intakeViewportName}`,
+      { viewport: intakeViewport },
+      async (page, health) => {
+        let attempt = 0;
+        const firstAttemptRelease = createControlledRelease(
+          `${intakeViewportName} first intake response`,
+        );
+        const secondAttemptRelease = createControlledRelease(
+          `${intakeViewportName} retry intake response`,
+        );
+        const expectedPayload = {
+          hp_company: '',
+          sourcePage: '/bring-an-opportunity',
+          leadSource: 'public_website_v1',
+          visitorType: 'owner',
+          contactName: 'Avery Stone',
+          email: 'qa.intake@example.com',
+          phone: '5105550191',
+          preferredContactMethod: 'Email',
+          bestTimeToContact: 'Weekday mornings',
+          propertyAddress: '291 Pegasus Way',
+          city: 'Richmond',
+          state: 'CA',
+          zipCode: '94801',
+          propertyType: 'Single-family',
+          occupancyStatus: 'Vacant',
+          condition: 'Moderate repairs',
+          situation: 'Just exploring',
+          goal: 'Not sure',
+          urgency: 'No immediate deadline',
+          estimatedValue: 650000,
+          estimatedDebt: 225000,
+          notes: 'Rendered QA exact-safe submission.',
+          consentAccepted: true,
+        };
+        const expectedPayloadKeys = [...Object.keys(expectedPayload), 'ts_elapsed_ms'].sort();
+
+        await page.route(`${baseUrl}/api/opportunities`, async (route) => {
+          const request = route.request();
+          assert(request.method() === 'POST', `Intake used unsafe method ${request.method()}`);
+          const payload = request.postDataJSON();
+          assert(
+            JSON.stringify(Object.keys(payload).sort()) === JSON.stringify(expectedPayloadKeys),
+            `Intake payload keys changed: ${JSON.stringify(Object.keys(payload).sort())}`,
+          );
+          const { ts_elapsed_ms: elapsedMs, ...staticPayload } = payload;
+          assert(
+            Number.isFinite(elapsedMs) && elapsedMs >= 0 && elapsedMs < 60_000,
+            `Intake elapsed marker was invalid: ${elapsedMs}`,
+          );
+          assert(
+            JSON.stringify(staticPayload) === JSON.stringify(expectedPayload),
+            `Intake payload changed: ${JSON.stringify(staticPayload)}`,
+          );
+
+          attempt += 1;
+          assert(attempt <= 2, `Intake made an unexpected attempt ${attempt}`);
+          await (attempt === 1 ? firstAttemptRelease.wait() : secondAttemptRelease.wait());
+          if (attempt === 1) {
+            await route.fulfill({
+              status: 503,
+              contentType: 'application/json',
+              headers: { [qaResponseHeader]: qaFailureMarker },
+              body: JSON.stringify({ message: 'Rendered QA marker-503' }),
+            });
+            return;
+          }
+          await route.fulfill({
+            status: 201,
+            contentType: 'application/json',
+            body: JSON.stringify({ id: 'rendered-qa-opportunity' }),
+          });
+        });
+
+        await openPage(page, '/bring-an-opportunity');
+        await page.getByRole('button', { name: /^A property I own/ }).click();
+        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+
+        await page.getByLabel('Property address').fill('291 Pegasus Way');
+        await page.getByLabel('City').fill('Richmond');
+        await page.getByLabel('State').fill('CA');
+        await page.getByLabel('ZIP').fill('94801');
+        await page.getByLabel('Property type').selectOption({ label: 'Single-family' });
+        await page.getByLabel('Occupancy').selectOption({ label: 'Vacant' });
+        await page.getByLabel('Condition').selectOption({ label: 'Moderate repairs' });
+        await page.getByLabel('Estimated value (if known)').fill('$650,000');
+        await page.getByLabel('Estimated mortgage balance (if relevant)').fill('$225,000');
+        await page.getByLabel('Anything urgent?').fill('No immediate deadline');
+        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+
+        await page.getByRole('button', { name: 'Just exploring', exact: true }).click();
+        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+        await page.getByRole('button', { name: 'Not sure', exact: true }).click();
+        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+
+        await page.getByLabel('Full name (required)').fill('Avery Stone');
+        await page.getByLabel('Phone (optional)').fill('5105550191');
+        await page.getByLabel('Email (required)').fill('qa.intake@example.com');
+        await page.getByLabel('Preferred contact method').selectOption({ label: 'Email' });
+        await page.getByLabel('Best time to contact').fill('Weekday mornings');
+        await page.getByLabel('Anything else we should know?').fill('Rendered QA exact-safe submission.');
+        await page.getByRole('checkbox').check();
+
+        const firstRequestObserved = page.waitForRequest(
+          (request) => request.url() === `${baseUrl}/api/opportunities` && request.method() === 'POST',
+          { timeout: 10_000 },
+        );
+        const firstResponseObserved = page.waitForResponse(
+          (response) => response.url() === `${baseUrl}/api/opportunities` && response.status() === 503,
+          { timeout: 10_000 },
+        );
+        await page.getByRole('button', { name: 'Submit for Review', exact: true }).click();
+        await firstRequestObserved;
+        const pending = page.getByRole('button', { name: 'Sending for Review…', exact: true });
+        await pending.waitFor({ state: 'visible', timeout: 5_000 });
+        assert(await pending.isDisabled(), 'Intake pending control remained enabled');
+        assert(await pending.getAttribute('aria-busy') === 'true', 'Intake pending control omitted aria-busy');
+        await captureEvidenceScreenshot(
+          page,
+          health,
+          `intake-pending-${intakeViewportName}.png`,
+          { expectedActiveRequests: 1 },
+        );
+        firstAttemptRelease.release();
+        await firstResponseObserved;
+
+        const errorState = page.getByRole('alert').filter({ hasText: /could not record your submission/i });
+        await errorState.waitFor({ state: 'visible', timeout: 5_000 });
+        assert(
+          await errorState.evaluate((element) => element === document.activeElement),
+          'Intake API error did not receive focus',
+        );
+        await captureEvidenceScreenshot(
+          page,
+          health,
+          `intake-error-${intakeViewportName}.png`,
+        );
+
+        const retry = page.getByRole('button', { name: 'Retry submission', exact: true });
+        await retry.focus();
+        await retry.evaluate((element) => element.setAttribute('data-rendered-qa-retry-identity', 'stable'));
+        const secondRequestObserved = page.waitForRequest(
+          (request) => request.url() === `${baseUrl}/api/opportunities` && request.method() === 'POST',
+          { timeout: 10_000 },
+        );
+        const secondResponseObserved = page.waitForResponse(
+          (response) => response.url() === `${baseUrl}/api/opportunities` && response.status() === 201,
+          { timeout: 10_000 },
+        );
+        await retry.click();
+        await secondRequestObserved;
+        const retrying = page.getByRole('button', { name: 'Retrying…', exact: true });
+        assert(
+          await retrying.getAttribute('data-rendered-qa-retry-identity') === 'stable',
+          'Intake retry replaced the focused control while pending',
+        );
+        assert(await retrying.getAttribute('aria-disabled') === 'true', 'Intake retry omitted aria-disabled while pending');
+        assert(await retrying.getAttribute('aria-busy') === 'true', 'Intake retry omitted aria-busy');
+        assert(
+          await retrying.evaluate((element) => element === document.activeElement),
+          'Intake retry lost focus while pending',
+        );
+        await captureEvidenceScreenshot(
+          page,
+          health,
+          `intake-retrying-${intakeViewportName}.png`,
+          { expectedActiveRequests: 1 },
+        );
+        await retrying.click({ force: true });
+        await delay(100);
+        assert(attempt === 2, 'Intake retry allowed a duplicate request while pending');
+        secondAttemptRelease.release();
+        await secondResponseObserved;
+
+        const success = page.getByRole('heading', { name: 'Received.', exact: true });
+        await success.waitFor({ state: 'visible', timeout: 5_000 });
+        assert(
+          await success.evaluate((element) => element === document.activeElement),
+          'Intake success heading did not receive focus',
+        );
+        assert(await page.getByText('Reference: rendered-qa-opportunity').count() === 1, 'Intake success reference changed');
+        await captureEvidenceScreenshot(
+          page,
+          health,
+          `intake-success-${intakeViewportName}.png`,
+        );
+      },
+    );
+  }
 
   await runInteraction('Strategy Lab primary interaction', {}, async (page) => {
     await openPage(page, '/strategy-lab');
@@ -609,6 +1327,231 @@ try {
     await page.waitForURL(/\/marketflow\/access$/);
     await page.locator('h1').first().waitFor({ state: 'attached' });
   });
+
+  await runInteraction('MarketFlow approved inventory state matrix and JV contract', {}, async (page, health) => {
+    const marketflow = await installApprovedMarketflowStubs(page);
+    const control = (testId) => page.getByTestId(testId);
+
+    await openPage(page, '/marketflow/deals');
+    await page.getByTestId('button-sidebar-toggle').waitFor({ state: 'visible' });
+    await captureInventoryState(
+      page,
+      health,
+      'state-wholesale-grid-loading',
+      'marketflow-wholesale-grid-loading-desktop-1440.png',
+      { expectedActiveRequests: 3 },
+    );
+    await control('toggle-swipe-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-wholesale-swipe-loading',
+      'marketflow-wholesale-swipe-loading-desktop-1440.png',
+      { expectedActiveRequests: 3 },
+    );
+    await control('tab-capital').click();
+    await control('toggle-grid-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-capital-grid-loading',
+      'marketflow-capital-grid-loading-desktop-1440.png',
+      { expectedActiveRequests: 3 },
+    );
+    await control('toggle-swipe-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-capital-swipe-loading',
+      'marketflow-capital-swipe-loading-desktop-1440.png',
+      { expectedActiveRequests: 3 },
+    );
+    await control('tab-listings').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-listings-grid-loading',
+      'marketflow-listings-grid-loading-desktop-1440.png',
+      { expectedActiveRequests: 3 },
+    );
+
+    marketflow.releaseLoadingAsError();
+    await captureInventoryState(
+      page,
+      health,
+      'state-listings-grid-error',
+      'marketflow-listings-grid-error-desktop-1440.png',
+    );
+    await control('tab-wholesale').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-wholesale-swipe-error',
+      'marketflow-wholesale-swipe-error-desktop-1440.png',
+    );
+    await control('toggle-grid-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-wholesale-grid-error',
+      'marketflow-wholesale-grid-error-desktop-1440.png',
+    );
+    await control('tab-capital').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-capital-grid-error',
+      'marketflow-capital-grid-error-desktop-1440.png',
+    );
+    await control('toggle-swipe-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-capital-swipe-error',
+      'marketflow-capital-swipe-error-desktop-1440.png',
+    );
+
+    marketflow.setLaneState('capital', 'empty');
+    await control('button-retry-capital-swipe').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-capital-swipe-empty',
+      'marketflow-capital-swipe-empty-desktop-1440.png',
+    );
+    await control('toggle-grid-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-capital-grid-empty',
+      'marketflow-capital-grid-empty-desktop-1440.png',
+    );
+    await control('tab-wholesale').click();
+    marketflow.setLaneState('wholesale', 'empty');
+    await control('button-retry-wholesale-grid').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-wholesale-grid-empty',
+      'marketflow-wholesale-grid-empty-desktop-1440.png',
+    );
+    await control('toggle-swipe-view').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-wholesale-swipe-empty',
+      'marketflow-wholesale-swipe-empty-desktop-1440.png',
+    );
+    await control('tab-listings').click();
+    marketflow.setLaneState('listings', 'empty');
+    await control('button-retry-listings-grid').click();
+    await captureInventoryState(
+      page,
+      health,
+      'state-listings-grid-empty',
+      'marketflow-listings-grid-empty-desktop-1440.png',
+    );
+
+    for (const lane of ['wholesale', 'capital', 'listings']) {
+      marketflow.setLaneState(lane, 'data');
+    }
+    await page.reload({ waitUntil: 'load', timeout: 45_000 });
+    await page.getByTestId('text-deals-title').waitFor({ state: 'visible', timeout: 10_000 });
+    await control('tab-wholesale').click();
+    await control('toggle-grid-view').click();
+    await page.getByTestId('button-view-deal-501').waitFor({ state: 'visible' });
+    assert(await page.getByTestId('quick-jv-501').count() === 1, 'Eligible operator lost the card JV action');
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-wholesale-grid-data-desktop-1440.png',
+    );
+
+    const saveRequest = page.waitForRequest(
+      (request) => request.url() === `${baseUrl}/api/supabase/saved-items`
+        && request.method() === 'POST',
+      { timeout: 10_000 },
+    );
+    await page.getByTestId('button-save-deal-501').click();
+    await saveRequest;
+
+    await control('toggle-swipe-view').click();
+    await page.getByTestId('button-view-deal').waitFor({ state: 'visible' });
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-wholesale-swipe-data-desktop-1440.png',
+    );
+    await control('tab-capital').click();
+    await page.getByTestId('button-view-capital-swipe').waitFor({ state: 'visible' });
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-capital-swipe-data-desktop-1440.png',
+    );
+    await control('toggle-grid-view').click();
+    await page.getByTestId('button-view-project-601').waitFor({ state: 'visible' });
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-capital-grid-data-desktop-1440.png',
+    );
+    await control('tab-listings').click();
+    await page.getByTestId('button-view-listing-701').waitFor({ state: 'visible' });
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-listings-grid-data-desktop-1440.png',
+    );
+    await page.getByTestId('button-view-listing-701').click();
+    await page.waitForURL(/\/marketflow\/listings\/701$/);
+    await page.getByText('701 Proof Place').waitFor({ state: 'visible', timeout: 10_000 });
+    assert(
+      await page.getByText('$825,000').count() >= 1,
+      'Reviewed listing detail did not render the source inventory price',
+    );
+
+    await openPage(page, '/marketflow/deals');
+    await control('tab-wholesale').click();
+    await page.getByTestId('button-view-deal-501').click();
+    await page.waitForURL(/\/marketflow\/deals\/501$/);
+    await page.getByTestId('button-request-jv').waitFor({ state: 'visible', timeout: 10_000 });
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-detail-jv-eligible-desktop-1440.png',
+    );
+
+    marketflow.setCanRequestJv(false);
+    await page.reload({ waitUntil: 'load', timeout: 45_000 });
+    await page.getByTestId('button-accept-terms').waitFor({ state: 'visible', timeout: 10_000 });
+    assert(
+      await page.getByTestId('button-request-jv').count() === 0,
+      'Owner-safe detail DTO exposed the JV action when canRequestJv was false',
+    );
+    await captureEvidenceScreenshot(
+      page,
+      health,
+      'marketflow-detail-jv-withheld-desktop-1440.png',
+    );
+  });
+
+  await runInteraction(
+    'MarketFlow approved operator mobile shell',
+    { viewport: getViewport('mobile-390') },
+    async (page, health) => {
+      await installApprovedMarketflowStubs(page, { initialState: 'data' });
+      await openPage(page, '/marketflow/deals');
+      await page.getByTestId('button-sidebar-toggle').waitFor({ state: 'visible' });
+      await page.getByTestId('button-view-deal-501').waitFor({ state: 'visible' });
+      assert(await page.getByTestId('quick-jv-501').count() === 1, 'Mobile operator shell lost eligible JV action');
+      await captureEvidenceScreenshot(
+        page,
+        health,
+        'marketflow-approved-shell-mobile-390.png',
+      );
+    },
+  );
 
   await runInteraction('Peggy open and close', {}, async (page) => {
     await openPage(page, '/peggy');
@@ -675,16 +1618,104 @@ try {
     await page.waitForURL(new RegExp(`${baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/?$`));
     await page.locator('h1').first().waitFor({ state: 'attached' });
   });
+} catch (error) {
+  fatalFailure = {
+    error: String(error),
+    stack: error instanceof Error ? error.stack ?? null : null,
+  };
+  console.error('[rendered-qa] Fatal execution failure:', error);
 } finally {
+  await Promise.allSettled(
+    [...launchedBrowsers].map((browser) => browser.close()),
+  );
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 }
 
-if (failures.length || interactionFailures.length) {
-  console.error(JSON.stringify({ routeFailures: failures, interactionFailures }, null, 2));
+const testedSourceSha = process.env.RENDERED_QA_TESTED_SHA || 'local-uncommitted';
+const prHeadSha = process.env.RENDERED_QA_PR_HEAD_SHA || null;
+const prMergeSha = process.env.RENDERED_QA_PR_MERGE_SHA || null;
+const invariantFailures = [];
+if (process.env.GITHUB_ACTIONS === 'true') {
+  if (!/^[0-9a-f]{40}$/.test(testedSourceSha)) {
+    invariantFailures.push('CI rendered QA omitted an exact tested source SHA');
+  }
+  if (process.env.RENDERED_QA_GITHUB_EVENT === 'pull_request') {
+    if (testedSourceSha !== prHeadSha) {
+      invariantFailures.push('Pull-request rendered QA did not test the exact PR head');
+    }
+    if (prMergeSha && !/^[0-9a-f]{40}$/.test(prMergeSha)) {
+      invariantFailures.push('Pull-request rendered QA recorded an invalid merge SHA');
+    }
+  }
+}
+
+if (!interactionsOnly && expectedRouteCheckCount !== 144) {
+  invariantFailures.push(
+    `Rendered release matrix produced ${expectedRouteCheckCount} checks; expected exactly 144`,
+  );
+}
+if (interactionJourneyCount !== 17) {
+  invariantFailures.push(
+    `Rendered release suite produced ${interactionJourneyCount} interaction journeys; expected exactly 17`,
+  );
+}
+const expectedScreenshotCount = screenshotDir
+  ? expectedRouteCheckCount + 39
+  : null;
+if (screenshotDir && screenshotCount !== expectedScreenshotCount) {
+  invariantFailures.push(
+    `Rendered QA wrote ${screenshotCount} screenshots; expected ${expectedScreenshotCount}`,
+  );
+}
+
+const result = failures.length
+  || interactionFailures.length
+  || invariantFailures.length
+  || fatalFailure
+  ? 'failed'
+  : 'passed';
+
+if (screenshotDir) {
+  await writeFile(
+    path.join(screenshotDir, 'rendered-qa-manifest.json'),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      result,
+      testedSourceSha,
+      prHeadSha,
+      prMergeSha,
+      githubEvent: process.env.RENDERED_QA_GITHUB_EVENT || null,
+      routeCheckCount: expectedRouteCheckCount,
+      routeFailureCount: failures.length,
+      routes,
+      viewports: Object.fromEntries(viewports),
+      colorSchemes,
+      interactionJourneyCount,
+      interactionFailureCount: interactionFailures.length,
+      invariantFailureCount: invariantFailures.length,
+      invariantFailures,
+      fatalFailureCount: fatalFailure ? 1 : 0,
+      fatalFailure,
+      expectedScreenshotCount,
+      screenshotCount,
+      screenshotEvidenceEnabled: true,
+    }, null, 2)}\n`,
+    'utf8',
+  );
+}
+
+if (result === 'failed') {
+  console.error(JSON.stringify({
+    result,
+    routeFailures: failures,
+    interactionFailures,
+    invariantFailures,
+    fatalFailure,
+  }, null, 2));
   process.exit(1);
 }
 
 if (!interactionsOnly) {
-  console.log(`[a11y] PASS: ${routes.length * viewports.length * colorSchemes.length} rendered route/viewport/theme checks`);
+  console.log('[a11y] PASS: 144 rendered route/viewport/theme checks');
 }
-console.log('[interaction] PASS: 12 rendered launch journeys');
+console.log('[interaction] PASS: 17 rendered launch journeys');

@@ -37,6 +37,11 @@ const authorizationModule = fs.existsSync(modulePath)
 const createRequireMarketflowInventoryAccess = (
   authorizationModule as { createRequireMarketflowInventoryAccess?: unknown }
 ).createRequireMarketflowInventoryAccess;
+const createResolveMarketflowInventoryAccessContext = (
+  authorizationModule as {
+    createResolveMarketflowInventoryAccessContext?: unknown;
+  }
+).createResolveMarketflowInventoryAccessContext;
 const isReviewedMarketflowInventoryType = (
   authorizationModule as { isReviewedMarketflowInventoryType?: unknown }
 ).isReviewedMarketflowInventoryType;
@@ -70,13 +75,20 @@ const marketplaceInventoryRoutes = [
 
 async function get(
   route: string,
-  identity?: { userId: string; email?: string },
+  identity?: {
+    userId: string;
+    email?: string;
+    supabaseUserId?: string;
+    supabaseEmail?: string;
+  },
 ) {
   return fetch(`${baseUrl}${route}`, {
     headers: identity
       ? {
           "x-test-user": identity.userId,
           "x-test-email": identity.email ?? "",
+          "x-test-supabase-user": identity.supabaseUserId ?? "",
+          "x-test-supabase-email": identity.supabaseEmail ?? "",
         }
       : {},
   });
@@ -97,6 +109,13 @@ beforeAll(async () => {
     req.user = {
       claims: { sub: userId, email: req.get("x-test-email") || undefined },
     };
+    const supabaseUserId = req.get("x-test-supabase-user");
+    if (supabaseUserId) {
+      req.supabaseUser = {
+        id: supabaseUserId,
+        email: req.get("x-test-supabase-email") || undefined,
+      };
+    }
     next();
   }) as RequestHandler;
   const requireReviewedAccess = requireGuardFactory()(dependencies);
@@ -169,6 +188,63 @@ afterEach(() => {
 });
 
 describe("reviewed MarketFlow inventory authorization", () => {
+  it.each(["/api/wholesale-deals", "/api/marketplace/deals/1"])(
+    "fails closed for conflicting verified principals on %s",
+    async (route) => {
+      const response = await get(route, {
+        userId: "oidc-actor",
+        email: "actor@example.com",
+        supabaseUserId: "supabase-admin",
+        supabaseEmail: "admin@pegasusdreamscapes.com",
+      });
+
+      expect(response.status).toBe(401);
+      expect(dependencies.getUserProfile).not.toHaveBeenCalled();
+      expect(dependencies.getUserRoles).not.toHaveBeenCalled();
+    },
+  );
+
+  it("derives JV capability from governed role context", async () => {
+    expect(createResolveMarketflowInventoryAccessContext).toBeTypeOf(
+      "function",
+    );
+    if (typeof createResolveMarketflowInventoryAccessContext !== "function") {
+      return;
+    }
+    const resolveContext = createResolveMarketflowInventoryAccessContext(
+      dependencies,
+    ) as (request: unknown) => Promise<{
+      canAccessReviewedInventory: boolean;
+      canInitiateJv: boolean;
+    }>;
+
+    dependencies.getUserProfile.mockResolvedValue({
+      primary_role: "investor",
+      is_pegasus_badged: true,
+    });
+    dependencies.getUserRoles.mockResolvedValue([{ role: "investor" }]);
+    await expect(
+      resolveContext({ user: { claims: { sub: "badged-investor" } } }),
+    ).resolves.toMatchObject({
+      canAccessReviewedInventory: true,
+      canInitiateJv: false,
+    });
+
+    dependencies.getUserProfile.mockResolvedValue({
+      primary_role: "pegasus_wholesaler",
+      is_pegasus_badged: true,
+    });
+    dependencies.getUserRoles.mockResolvedValue([
+      { role: "pegasus_wholesaler" },
+    ]);
+    await expect(
+      resolveContext({ user: { claims: { sub: "jv-operator" } } }),
+    ).resolves.toMatchObject({
+      canAccessReviewedInventory: true,
+      canInitiateJv: true,
+    });
+  });
+
   it.each([
     "wholesale",
     "wholesale_deal",

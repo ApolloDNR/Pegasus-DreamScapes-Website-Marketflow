@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
@@ -26,21 +33,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useSpring } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
-import { DealProgressTracker, ActivityTimeline } from "@/components/deal-progress-tracker";
-import { DealNotes, NotesIndicator } from "@/components/deal-notes";
-import { useCompareDeals, DealComparisonButton, CompareCheckbox, ComparisonModal } from "@/components/deal-comparison";
-import { BulkActionsBar, useBulkSelection, BulkSelectCheckbox } from "@/components/bulk-actions";
-import { ExportDialog, QuickExportButton } from "@/components/deal-export";
-import { DealMapView } from "@/components/deal-map-view";
-import { KeyboardShortcutsDialog, KeyboardShortcutHint } from "@/components/keyboard-shortcuts-dialog";
-import { useSavedSearches, SaveSearchDialog, SavedSearchesList } from "@/components/saved-searches";
-import { useWatchlistFolders, AddToFolderDialog, FolderSidebar } from "@/components/watchlist-folders";
 import { DueDiligenceProgress } from "@/components/due-diligence-checklist";
-import { TimelineProgress } from "@/components/deal-timeline";
 import { CommunicationSummary } from "@/components/communication-log";
 import { DocumentCount } from "@/components/document-attachments";
-import { QuickCalcButton, InlineROIBadge } from "@/components/quick-calculator";
-import { ActivityFeedWidget, useActivityFeed } from "@/components/activity-feed";
+import { InlineROIBadge } from "@/components/quick-calculator";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
 import { BetaBanner } from "@/components/beta-banner";
 import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
@@ -55,7 +51,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Search,
   Filter,
   MapPin,
   DollarSign,
@@ -97,14 +92,6 @@ import {
   TrendingDown,
   CircleDollarSign,
   Columns,
-  Map,
-  Download,
-  Keyboard,
-  FolderPlus,
-  CheckSquare,
-  ClipboardList,
-  Folder,
-  FolderOpen,
   LockKeyhole,
   Plus,
   RefreshCw
@@ -131,6 +118,7 @@ interface WholesaleDeal {
   matchScore?: number;
   negotiationAllowed?: boolean;
   jvAllowed?: boolean;
+  canRequestJv?: boolean;
   latitude?: number;
   longitude?: number;
 }
@@ -319,86 +307,7 @@ function DealsPage() {
     saveFilters({ dealCategory, viewMode, propertyType, sortBy });
   }, [dealCategory, viewMode, propertyType, sortBy, saveFilters]);
   
-  // Comparison mode state
-  const { 
-    selectedDeals: compareDeals, 
-    toggleDeal: toggleCompare, 
-    isSelected: isCompareSelected, 
-    clearSelection: clearCompare, 
-    canAddMore: canAddMoreCompare,
-    showComparison,
-    setShowComparison
-  } = useCompareDeals(3);
-  
-  // Feature dialog states
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [showSaveSearchDialog, setShowSaveSearchDialog] = useState(false);
-  const [showMapView, setShowMapView] = useState(false);
-  const [showActivityFeed, setShowActivityFeed] = useState(false);
-  const [showSavedSearches, setShowSavedSearches] = useState(false);
-  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [addToFolderDeal, setAddToFolderDeal] = useState<WholesaleDeal | null>(null);
-  
-  // Feature hooks
-  const savedSearches = useSavedSearches();
-  const watchlistFolders = useWatchlistFolders();
-  
-  // Keyboard shortcuts handler - memoized to prevent stale closures
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Ignore if typing in an input
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-      return;
-    }
-    
-    // ? key for help
-    if (e.key === '?' && e.shiftKey) {
-      e.preventDefault();
-      setShowKeyboardShortcuts(true);
-    }
-    // m for map view
-    if (e.key === 'm' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setShowMapView(prev => !prev);
-    }
-    // e for export
-    if (e.key === 'e' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setShowExportDialog(true);
-    }
-    // s for save search
-    if (e.key === 's' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setShowSaveSearchDialog(true);
-    }
-    // v for toggle view mode
-    if (e.key === 'v' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setViewMode(prev => prev === 'grid' ? 'swipe' : 'grid');
-    }
-    // / for focus search (SearchAutocomplete uses input-search testid)
-    if (e.key === '/') {
-      e.preventDefault();
-      const searchContainer = document.querySelector('[data-testid="search-autocomplete"]');
-      const searchInput = searchContainer?.querySelector('input') as HTMLInputElement;
-      searchInput?.focus();
-    }
-    // Escape to close modals
-    if (e.key === 'Escape') {
-      setShowKeyboardShortcuts(false);
-      setShowExportDialog(false);
-      setShowSaveSearchDialog(false);
-      setShowMapView(false);
-    }
-  }, []);
-  
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-  
-  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
+  const { isAuthenticated, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
   const { openDealAction } = useDealAction();
@@ -406,17 +315,32 @@ function DealsPage() {
 
   const shouldFetchLiveData = isAuthenticated && !isGuestMode;
 
-  const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
+  const {
+    data: deals,
+    isLoading: dealsLoading,
+    isError: dealsError,
+    refetch: refetchDeals,
+  } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
     enabled: shouldFetchLiveData,
   });
 
-  const { data: capitalProjects, isLoading: projectsLoading } = useQuery<CapitalProject[]>({
+  const {
+    data: capitalProjects,
+    isLoading: projectsLoading,
+    isError: projectsError,
+    refetch: refetchProjects,
+  } = useQuery<CapitalProject[]>({
     queryKey: ['/api/capital-projects'],
     enabled: shouldFetchLiveData,
   });
 
-  const { data: listings, isLoading: listingsLoading } = useQuery<Listing[]>({
+  const {
+    data: listings,
+    isLoading: listingsLoading,
+    isError: listingsError,
+    refetch: refetchListings,
+  } = useQuery<Listing[]>({
     queryKey: ['/api/listings'],
     enabled: shouldFetchLiveData,
   });
@@ -471,16 +395,6 @@ function DealsPage() {
     return matches;
   }) || [];
 
-  // Bulk selection for batch operations (must be after filteredDeals is defined)
-  const {
-    selectedIds: bulkSelectedIds,
-    toggleItem: toggleBulkSelect,
-    selectAll: selectAllBulk,
-    clearSelection: clearBulkSelection,
-    isSelected: isBulkSelected,
-    selectedCount: bulkSelectedCount
-  } = useBulkSelection(filteredDeals);
-
   if (!shouldFetchLiveData) {
     return (
       <MarketflowPrivateBetaHold
@@ -496,9 +410,6 @@ function DealsPage() {
       {/* Beta Banner */}
       <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
       
-      {/* Progress Tracker - shows pipeline status for authenticated users */}
-      <DealProgressTracker />
-
       <ScrollReveal>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div>
@@ -613,465 +524,239 @@ function DealsPage() {
             </SelectContent>
           </Select>
           
-          <div className="hidden md:flex items-center gap-1 border-l pl-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showMapView ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowMapView(!showMapView)}
-                  data-testid="button-toggle-map"
-                >
-                  <Map className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Toggle Map View <KeyboardShortcutHint shortcut="M" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowExportDialog(true)}
-                  data-testid="button-export"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Export Deals <KeyboardShortcutHint shortcut="E" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowSaveSearchDialog(true)}
-                  data-testid="button-save-search"
-                >
-                  <Bookmark className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Save Search <KeyboardShortcutHint shortcut="S" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowKeyboardShortcuts(true)}
-                  data-testid="button-keyboard-shortcuts"
-                >
-                  <Keyboard className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Keyboard Shortcuts <KeyboardShortcutHint shortcut="?" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showSavedSearches ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowSavedSearches(!showSavedSearches)}
-                  data-testid="button-toggle-saved-searches"
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Saved Searches</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showActivityFeed ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowActivityFeed(!showActivityFeed)}
-                  data-testid="button-toggle-activity"
-                >
-                  <Clock className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Activity Feed</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showFolderSidebar ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowFolderSidebar(!showFolderSidebar)}
-                  data-testid="button-toggle-folders"
-                >
-                  <FolderOpen className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Watchlist Folders</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      )}
-      
-      {/* Saved Searches Panel */}
-      {showSavedSearches && dealCategory === "wholesale" && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Search className="w-5 h-5 text-primary" />
-              Saved Searches
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SavedSearchesList
-              searches={savedSearches.savedSearches}
-              onApply={(search) => {
-                if (search.filters.propertyType) setPropertyType(search.filters.propertyType);
-                if (search.filters.query) setSearchQuery(search.filters.query);
-                if (search.filters.sortBy) setSortBy(search.filters.sortBy);
-                savedSearches.markUsed(search.id);
-                toast({
-                  title: "Search loaded",
-                  description: `Applied filters from "${search.name}"`,
-                });
-              }}
-              onDelete={(id) => {
-                savedSearches.deleteSearch(id);
-                toast({
-                  title: "Search deleted",
-                  description: "Saved search has been removed.",
-                });
-              }}
-              onToggleAlerts={(id) => savedSearches.toggleAlerts(id)}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Activity Feed Panel */}
-      {showActivityFeed && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <ActivityFeedWidget />
-            <div className="text-center text-muted-foreground text-sm py-4">
-              <Clock className="w-6 h-6 mx-auto mb-2 opacity-50" />
-              <p>No recent activity to display</p>
-              <p className="text-xs">Your deal interactions will appear here</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Watchlist Folders Panel */}
-      {showFolderSidebar && dealCategory === "wholesale" && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FolderOpen className="w-5 h-5 text-primary" />
-              Watchlist Folders
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FolderSidebar
-              folders={watchlistFolders.folders}
-              selectedFolderId={selectedFolderId}
-              onSelectFolder={(folderId) => {
-                setSelectedFolderId(folderId);
-                if (folderId) {
-                  toast({
-                    title: "Folder selected",
-                    description: "Showing deals from this folder",
-                  });
-                }
-              }}
-              onCreateFolder={() => {
-                watchlistFolders.createFolder("New Folder", "#3B82F6");
-                toast({
-                  title: "Folder created",
-                  description: "New watchlist folder added",
-                });
-              }}
-              onDeleteFolder={(id) => {
-                watchlistFolders.deleteFolder(id);
-                if (selectedFolderId === id) setSelectedFolderId(null);
-                toast({
-                  title: "Folder deleted",
-                  description: "Watchlist folder removed",
-                });
-              }}
-              onEditFolder={(folder) => {
-                toast({
-                  title: "Edit folder",
-                  description: `Editing "${folder.name}"`,
-                });
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Map View - Google Maps integration */}
-      {showMapView && dealCategory === "wholesale" && (
-        <div className="mb-6">
-          <DealMapView
-            deals={filteredDeals.map(deal => ({
-              id: deal.id,
-              lat: deal.latitude || 0,
-              lng: deal.longitude || 0,
-              address: deal.propertyAddress || deal.address || '',
-              city: deal.city,
-              state: deal.state,
-              askingPrice: deal.askingPrice,
-              arv: deal.arv,
-              propertyType: deal.propertyType,
-              status: deal.status,
-              matchScore: deal.matchScore
-            }))}
-            onDealSelect={(dealId) => openDealAction(dealId, "wholesale_accept")}
-            selectedDealId={undefined}
-            isLoading={dealsLoading}
-          />
         </div>
       )}
 
       {dealCategory === "wholesale" && (
-        viewMode === "grid" ? (
-          <GridView 
-            deals={filteredDeals}
-            isLoading={dealsLoading}
-            onSave={handleSaveDeal}
-            onAction={handleDealAction}
-            onAcceptTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_accept");
-            }}
-            onCounterTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
-            isSaving={isSaving}
-            showInvest={isDreamscaper || isInvestor || isAdmin}
-            showJVRequest={isWholesaler || isAdmin}
-            isCompareSelected={isCompareSelected}
-            toggleCompare={toggleCompare}
-            canAddMoreCompare={canAddMoreCompare}
-          />
-        ) : (
-          <SwipeView 
-            deals={filteredDeals}
-            onSave={handleSaveDeal}
-            onAction={handleDealAction}
-            onAcceptTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_accept");
-            }}
-            onCounterTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
-            showInvest={isDreamscaper || isInvestor || isAdmin}
-            showJVRequest={isWholesaler || isAdmin}
-          />
-        )
+        <InventoryBoundary
+          lane="wholesale"
+          mode={viewMode}
+          isLoading={dealsLoading}
+          isError={dealsError}
+          isEmpty={filteredDeals.length === 0}
+          onRetry={() => void refetchDeals()}
+        >
+          {viewMode === "grid" ? (
+            <GridView
+              deals={filteredDeals}
+              isLoading={false}
+              onSave={handleSaveDeal}
+              onAction={handleDealAction}
+              onAcceptTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_accept");
+              }}
+              onCounterTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_counter");
+              }}
+              isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
+              isSaving={isSaving}
+              showInvest={isDreamscaper || isInvestor || isAdmin}
+            />
+          ) : (
+            <SwipeView
+              deals={filteredDeals}
+              onSave={handleSaveDeal}
+              onAcceptTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_accept");
+              }}
+              onCounterTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_counter");
+              }}
+            />
+          )}
+        </InventoryBoundary>
       )}
       
       {dealCategory === "capital" && (
-        viewMode === "grid" ? (
-          <CapitalRaiseGridView 
-            projects={capitalProjects || []}
-            isLoading={projectsLoading}
-            onSelectProject={(project) => {
-              setLocation(`/marketflow/capital/${project.id}`);
-            }}
-            onAcceptTerms={(project) => {
-              openDealAction(project.id, "capital_accept");
-            }}
-            onCounterTerms={(project) => {
-              openDealAction(project.id, "capital_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('capital_project', String(id))}
-            onSave={(id) => toggleSaveItem('capital_project', String(id))}
-          />
-        ) : (
-          <CapitalRaiseSwipeView 
-            projects={capitalProjects || []}
-            onSave={(id) => toggleSaveItem('capital_project', String(id))}
-            onAcceptTerms={(project) => {
-              openDealAction(project.id, "capital_accept");
-            }}
-            onCounterTerms={(project) => {
-              openDealAction(project.id, "capital_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('capital_project', String(id))}
-          />
-        )
+        <InventoryBoundary
+          lane="capital"
+          mode={viewMode}
+          isLoading={projectsLoading}
+          isError={projectsError}
+          isEmpty={(capitalProjects || []).length === 0}
+          onRetry={() => void refetchProjects()}
+        >
+          {viewMode === "grid" ? (
+            <CapitalRaiseGridView
+              projects={capitalProjects || []}
+              isLoading={false}
+              onSelectProject={(project) => {
+                setLocation(`/marketflow/capital/${project.id}`);
+              }}
+              onAcceptTerms={(project) => {
+                openDealAction(project.id, "capital_accept");
+              }}
+              onCounterTerms={(project) => {
+                openDealAction(project.id, "capital_counter");
+              }}
+              isItemSaved={(id) => isItemSaved('capital_project', String(id))}
+              onSave={(id) => toggleSaveItem('capital_project', String(id))}
+            />
+          ) : (
+            <CapitalRaiseSwipeView
+              projects={capitalProjects || []}
+              onSave={(id) => toggleSaveItem('capital_project', String(id))}
+              onAcceptTerms={(project) => {
+                openDealAction(project.id, "capital_accept");
+              }}
+              onCounterTerms={(project) => {
+                openDealAction(project.id, "capital_counter");
+              }}
+              isItemSaved={(id) => isItemSaved('capital_project', String(id))}
+            />
+          )}
+        </InventoryBoundary>
       )}
       
       {dealCategory === "listings" && (
-        <ListingsGridView 
-          listings={listings || []}
+        <InventoryBoundary
+          lane="listings"
+          mode="grid"
           isLoading={listingsLoading}
-          onViewListing={(listing) => setLocation(`/marketflow/listings/${listing.id}`)}
-          onRequestInfo={(listing) => {
-            openDealAction(listing.id, "listing_request_info");
-          }}
-          onScheduleShowing={(listing) => {
-            openDealAction(listing.id, "listing_schedule_tour");
-          }}
-          isItemSaved={(id) => isItemSaved('listing', String(id))}
-          onSave={(id) => toggleSaveItem('listing', String(id))}
-        />
-      )}
-      
-      {/* Comparison floating button and modal */}
-      {dealCategory === "wholesale" && viewMode === "grid" && (
-        <>
-          <DealComparisonButton
-            selectedDeals={compareDeals}
-            onToggle={() => {}}
-            onClear={clearCompare}
-            onCompare={() => setShowComparison(true)}
-          />
-          <ComparisonModal
-            deals={compareDeals}
-            open={showComparison}
-            onClose={() => setShowComparison(false)}
-            onAction={(dealId, action) => {
-              const deal = compareDeals.find(d => d.id === dealId);
-              if (deal) {
-                if (action === "accept") {
-                  openDealAction(deal.id, "wholesale_accept");
-                } else {
-                  openDealAction(deal.id, "wholesale_counter");
-                }
-              }
-              setShowComparison(false);
+          isError={listingsError}
+          isEmpty={(listings || []).length === 0}
+          onRetry={() => void refetchListings()}
+        >
+          <ListingsGridView
+            listings={listings || []}
+            isLoading={false}
+            onViewListing={(listing) => setLocation(`/marketflow/listings/${listing.id}`)}
+            onRequestInfo={(listing) => {
+              openDealAction(listing.id, "listing_request_info");
             }}
+            onScheduleShowing={(listing) => {
+              openDealAction(listing.id, "listing_schedule_tour");
+            }}
+            isItemSaved={(id) => isItemSaved('listing', String(id))}
+            onSave={(id) => toggleSaveItem('listing', String(id))}
           />
-        </>
+        </InventoryBoundary>
       )}
       
-      {/* Bulk Actions Bar - appears when items are selected */}
-      <BulkActionsBar
-        selectedCount={bulkSelectedCount}
-        totalCount={filteredDeals.length}
-        onSelectAll={selectAllBulk}
-        onClearSelection={clearBulkSelection}
-        onBulkSave={() => {
-          bulkSelectedIds.forEach(id => handleSaveDeal(id));
-          toast({
-            title: "Deals saved",
-            description: `${bulkSelectedCount} deals saved to your watchlist.`,
-          });
-          clearBulkSelection();
-        }}
-        onBulkCompare={() => {
-          const selectedDeals = filteredDeals.filter(d => bulkSelectedIds.has(d.id));
-          selectedDeals.slice(0, 3).forEach(d => toggleCompare(d));
-          setShowComparison(true);
-          clearBulkSelection();
-        }}
-        onBulkExport={(format) => {
-          setShowExportDialog(true);
-          clearBulkSelection();
-        }}
-        onAddToFolder={() => {
-          const firstSelected = filteredDeals.find(d => bulkSelectedIds.has(d.id));
-          if (firstSelected) {
-            setAddToFolderDeal(firstSelected);
-          }
-        }}
-        compareDisabled={bulkSelectedCount > 3}
-      />
-
-      {/* Feature Dialogs */}
-      <KeyboardShortcutsDialog 
-        open={showKeyboardShortcuts} 
-        onClose={() => setShowKeyboardShortcuts(false)} 
-      />
-      
-      <ExportDialog 
-        open={showExportDialog} 
-        onClose={() => setShowExportDialog(false)} 
-        deals={filteredDeals.map(d => ({
-          id: d.id,
-          address: d.propertyAddress || d.address || '',
-          city: d.city || '',
-          state: d.state || '',
-          askingPrice: d.askingPrice || d.contractPrice || 0,
-          arv: d.arv || 0,
-          repairEstimate: d.repairEstimate || d.estimatedRepairs || 0,
-          propertyType: d.propertyType || '',
-          status: d.status || 'active',
-          matchScore: d.matchScore,
-        }))}
-        selectedCount={compareDeals.length}
-      />
-      
-      <SaveSearchDialog 
-        open={showSaveSearchDialog} 
-        onClose={() => setShowSaveSearchDialog(false)}
-        onSave={(name: string) => {
-          savedSearches.saveSearch(name, {
-            propertyType,
-            sortBy,
-            query: searchQuery,
-          });
-          toast({
-            title: "Search saved",
-            description: `"${name}" has been saved to your searches.`,
-          });
-          setShowSaveSearchDialog(false);
-        }}
-        currentFilters={{
-          propertyType,
-          sortBy,
-          query: searchQuery,
-        }}
-      />
-      
-      <AddToFolderDialog
-        open={!!addToFolderDeal}
-        onClose={() => setAddToFolderDeal(null)}
-        dealId={addToFolderDeal?.id || ''}
-        dealAddress={addToFolderDeal?.propertyAddress || addToFolderDeal?.address || ''}
-        folders={watchlistFolders.folders}
-        onAddToFolder={(folderId: string) => {
-          if (addToFolderDeal) {
-            watchlistFolders.addDealToFolder(folderId, addToFolderDeal.id);
-            toast({
-              title: "Added to folder",
-              description: "Deal added to your watchlist folder.",
-            });
-          }
-          setAddToFolderDeal(null);
-        }}
-        onCreateFolder={() => {
-          watchlistFolders.createFolder("New Folder", "#3B82F6");
-        }}
-      />
     </div>
   );
+}
+
+type InventoryLane = "wholesale" | "capital" | "listings";
+type InventoryMode = "grid" | "swipe";
+
+function InventoryBoundary({
+  lane,
+  mode,
+  isLoading,
+  isError,
+  isEmpty,
+  onRetry,
+  children,
+}: {
+  lane: InventoryLane;
+  mode: InventoryMode;
+  isLoading: boolean;
+  isError: boolean;
+  isEmpty: boolean;
+  onRetry: () => void;
+  children: ReactNode;
+}) {
+  const stateId = `${lane}-${mode}`;
+  const laneCopy = {
+    wholesale: {
+      noun: "wholesale opportunities",
+      emptyTitle: "No reviewed wholesale opportunities match this view.",
+    },
+    capital: {
+      noun: "capital opportunities",
+      emptyTitle: "No reviewed capital opportunities match this view.",
+    },
+    listings: {
+      noun: "property listings",
+      emptyTitle: "No reviewed property listings match this view.",
+    },
+  }[lane];
+
+  if (isLoading) {
+    return (
+      <Card
+        className="border-border/70 bg-card/70 p-8 sm:p-12"
+        data-testid={`state-${stateId}-loading`}
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+          <RefreshCw className="mb-5 h-7 w-7 motion-safe:animate-spin text-primary" aria-hidden="true" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">
+            MarketFlow review desk
+          </p>
+          <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight">
+            Loading reviewed {laneCopy.noun}
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            We are retrieving the current approved inventory. No sample records are substituted.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card
+        className="border-destructive/35 bg-destructive/5 p-8 sm:p-12"
+        data-testid={`state-${stateId}-error`}
+        role="alert"
+      >
+        <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+          <AlertCircle className="mb-5 h-8 w-8 text-destructive" aria-hidden="true" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-destructive">
+            Inventory unavailable
+          </p>
+          <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight">
+            We could not load the reviewed {laneCopy.noun}.
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Your access remains intact. Retry this lane; if it continues, the team can inspect the request.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-6 gap-2"
+            onClick={onRetry}
+            data-testid={`button-retry-${stateId}`}
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            Retry {lane === "listings" ? "listings" : lane}
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <Card
+        className="border-dashed border-border/80 bg-card/60 p-8 text-center sm:p-12"
+        data-testid={`state-${stateId}-empty`}
+      >
+        <div className="mx-auto max-w-xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">
+            Reviewed inventory only
+          </p>
+          <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+            {laneCopy.emptyTitle}
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+            MarketFlow stays empty until a real opportunity clears review. Adjust the view or return when new inventory is approved.
+          </p>
+          <Link href="/bring-an-opportunity?intent=deal-jv">
+            <Button variant="outline" className="mt-6">
+              Submit an opportunity
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 interface GridViewProps {
@@ -1084,13 +769,12 @@ interface GridViewProps {
   isItemSaved: (id: string) => boolean;
   isSaving: boolean;
   showInvest: boolean;
-  showJVRequest: boolean;
   isCompareSelected?: (dealId: string) => boolean;
   toggleCompare?: (deal: WholesaleDeal) => void;
   canAddMoreCompare?: boolean;
 }
 
-function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, showJVRequest, isCompareSelected, toggleCompare, canAddMoreCompare }: GridViewProps) {
+function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, isCompareSelected, toggleCompare, canAddMoreCompare }: GridViewProps) {
   const [, setLocation] = useLocation();
   
   if (isLoading) {
@@ -1178,7 +862,6 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
               isSaved={isItemSaved(deal.id)}
               isSaving={isSaving}
               showInvest={showInvest}
-              showJVRequest={showJVRequest}
               isCompareSelected={isCompareSelected?.(deal.id)}
               onToggleCompare={() => toggleCompare?.(deal)}
               canAddMoreCompare={canAddMoreCompare}
@@ -1193,15 +876,11 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
 interface SwipeViewProps {
   deals: WholesaleDeal[];
   onSave: (dealId: string) => void;
-  onAction: (deal: WholesaleDeal, actionType: "jv_request" | "invest") => void;
   onAcceptTerms: (deal: WholesaleDeal) => void;
   onCounterTerms: (deal: WholesaleDeal) => void;
-  isItemSaved: (id: string) => boolean;
-  showInvest: boolean;
-  showJVRequest: boolean;
 }
 
-function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, showInvest, showJVRequest }: SwipeViewProps) {
+function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -1608,13 +1287,12 @@ interface DealCardProps {
   isSaved: boolean;
   isSaving: boolean;
   showInvest: boolean;
-  showJVRequest: boolean;
   isCompareSelected?: boolean;
   onToggleCompare?: () => void;
   canAddMoreCompare?: boolean;
 }
 
-function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, showJVRequest, isCompareSelected, onToggleCompare, canAddMoreCompare }: DealCardProps) {
+function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, isCompareSelected, onToggleCompare, canAddMoreCompare }: DealCardProps) {
   const { toast } = useToast();
   const [showCalculator, setShowCalculator] = useState(false);
   const [customOffer, setCustomOffer] = useState("");
@@ -1712,7 +1390,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             </Tooltip>
           )}
           
-          {showJVRequest && deal.jvAllowed && (
+          {deal.canRequestJv === true && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAction("jv_request"); }} data-testid={`quick-jv-${deal.id}`} aria-label="JV request">
@@ -1761,7 +1439,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
               Negotiable
             </Badge>
           )}
-          {deal.jvAllowed && (
+          {deal.canRequestJv === true && (
             <Badge variant="secondary" className="text-[10px] gap-1">
               <Handshake className="w-2.5 h-2.5" />
               JV Open

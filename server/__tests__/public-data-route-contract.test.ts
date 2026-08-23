@@ -90,6 +90,18 @@ describe("reviewed inventory data route contract", () => {
     }
   });
 
+  it("wires behavior-tested saved-item write handlers", () => {
+    expect(routesSource).toMatch(
+      /const savedItemHandlers = createSavedItemRouteHandlers\(/,
+    );
+    expect(routesSource).toMatch(
+      /app\.post\('\/api\/supabase\/saved-items',[\s\S]{0,180}savedItemHandlers\.post\)/,
+    );
+    expect(routesSource).toMatch(
+      /app\.delete\('\/api\/supabase\/saved-items',[\s\S]{0,180}savedItemHandlers\.remove\)/,
+    );
+  });
+
   it("resolves reviewed access before new inventory interactions", () => {
     const initiationRoutes = [
       "/api/marketplace/jv-requests",
@@ -228,7 +240,7 @@ describe("reviewed inventory data route contract", () => {
 
   it("projects approved deal, listing, project, and public buy-box responses", () => {
     expect(routesSource).toMatch(
-      /deals\.filter\(isPublicWholesaleDeal\)\.map\(toPublicWholesaleDeal\)/s,
+      /deals\s*\.filter\(isPublicWholesaleDeal\)\s*\.map\(\(deal\)\s*=>\s*toPublicWholesaleDeal\(\s*deal,\s*userId,\s*canViewerInitiateMarketflowJv\(res\),?\s*\)\s*,?\s*\)/s,
     );
     expect(routesSource).toMatch(
       /activeListings\.filter\(isPublicListing\)\.map\(toPublicListing\)/s,
@@ -243,7 +255,7 @@ describe("reviewed inventory data route contract", () => {
 
   it("does not return full rows from public legacy detail aliases", () => {
     expect(routesSource).toMatch(
-      /return res\.json\(toPublicWholesaleDeal\(deal\)\)/s,
+      /return res\.json\(\s*toPublicWholesaleDeal\(\s*deal,\s*userId,\s*canViewerInitiateMarketflowJv\(res\),?\s*\),?\s*\)/s,
     );
     expect(routesSource).toMatch(
       /return res\.json\(toPublicListing\(listing\)\)/s,

@@ -9,6 +9,7 @@ export type MarketflowInventoryIdentity = {
 };
 
 const STAFF_ROLE_SET = new Set<string>(STAFF_ROLES);
+const JV_ROLE_SET = new Set(["wholesaler", "pegasus_wholesaler", "admin"]);
 
 function normalizeRole(role: unknown): string | null {
   return typeof role === "string" && role.trim()
@@ -38,5 +39,28 @@ export function canAccessReviewedMarketflowInventory(
       role !== null &&
       (STAFF_ROLE_SET.has(role) || role.startsWith("pegasus_"))
     );
+  });
+}
+
+/**
+ * JV requests are an operator workflow, not a general reviewed-inventory
+ * entitlement. Callers must first have governed reviewed-inventory access,
+ * then also hold a wholesaler/admin role.
+ */
+export function canInitiateMarketflowJv(identity: {
+  canAccessReviewedInventory: boolean;
+  isAdministrativeIdentity?: boolean;
+  roles?: readonly unknown[];
+}): boolean {
+  if (!identity.canAccessReviewedInventory) {
+    return false;
+  }
+  if (identity.isAdministrativeIdentity === true) {
+    return true;
+  }
+
+  return (identity.roles ?? []).some((candidate) => {
+    const role = normalizeRole(candidate);
+    return role !== null && JV_ROLE_SET.has(role);
   });
 }

@@ -14,6 +14,10 @@ import { useAnalytics } from "@/hooks/use-analytics";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSEO } from "@/hooks/use-seo";
 import type { WholesaleDeal } from "@shared/schema";
+
+type ReviewedWholesaleDeal = WholesaleDeal & {
+  canRequestJv?: boolean;
+};
 import {
   ArrowLeft,
   MapPin,
@@ -70,7 +74,7 @@ function DealDetailPage() {
   const { trackDealView } = useAnalytics();
   const { isAuthenticated } = useSupabaseAuth();
 
-  const { data: deal, isLoading, error } = useQuery<WholesaleDeal>({
+  const { data: deal, isLoading, error } = useQuery<ReviewedWholesaleDeal>({
     queryKey: ['/api/wholesale-deals', dealId],
     enabled: isAuthenticated && !!dealId,
   });
@@ -533,15 +537,17 @@ function DealDetailPage() {
                 Counter Offer
               </Button>
 
-              <Button 
-                variant="outline"
-                className="w-full"
-                onClick={() => openDealAction(deal.id, "wholesale_jv")}
-                data-testid="button-request-jv"
-              >
-                <Handshake className="w-5 h-5 mr-2" />
-                Request JV
-              </Button>
+              {deal.canRequestJv === true && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => openDealAction(deal.id, "wholesale_jv")}
+                  data-testid="button-request-jv"
+                >
+                  <Handshake className="w-5 h-5 mr-2" />
+                  Request JV
+                </Button>
+              )}
 
               <OpenOfferStudioButton
                 dealId={deal.id}

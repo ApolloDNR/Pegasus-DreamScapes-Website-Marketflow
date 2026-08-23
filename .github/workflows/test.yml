@@ -4,21 +4,40 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: launch-verification-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: launch verification
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+      PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || '' }}
     steps:
-      - name: Check out repository
+      - name: Check out exact source head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+
+      - name: Verify exact-head provenance
+        id: provenance
+        shell: bash
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$TESTED_SOURCE_SHA"
+          echo "tested_sha=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=pegasus-rendered-qa-$actual_sha" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.23.2'
           cache: 'npm'
 
       - name: Pin npm for reproducible CI
@@ -47,6 +66,72 @@ jobs:
 
       - name: Run rendered accessibility gate
         run: npm run check:a11y
+        env:
+          A11Y_SCREENSHOT_DIR: artifacts/rendered-qa
+          RENDERED_QA_TESTED_SHA: ${{ steps.provenance.outputs.tested_sha }}
+          RENDERED_QA_PR_HEAD_SHA: ${{ env.PR_HEAD_SHA }}
+          RENDERED_QA_PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
+          RENDERED_QA_GITHUB_EVENT: ${{ github.event_name }}
 
       - name: Run test suite
         run: npm test
+
+      - name: Upload rendered QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.provenance.outputs.artifact_name }}
+          path: artifacts/rendered-qa
+          retention-days: 14
+          if-no-files-found: error
+
+  merge-compatibility:
+    name: pull-request merge compatibility
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      EXPECTED_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+    steps:
+      - name: Check out synthetic pull-request merge
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Verify synthetic merge provenance
+        shell: bash
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          if [ -n "$EXPECTED_MERGE_SHA" ]; then
+            test "$actual_sha" = "$EXPECTED_MERGE_SHA"
+          fi
+          echo "Synthetic merge compatibility SHA: $actual_sha"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: 'npm'
+
+      - name: Pin npm for reproducible CI
+        run: npm install --global npm@10.9.2
+
+      - name: Verify portable package lock registry URLs
+        run: node scripts/check-package-lock-registry.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify launch environment contract
+        run: npm run smoke:launch -- --example
+
+      - name: Run TypeScript check
+        run: npm run check
+
+      - name: Run production build
+        run: npm run build

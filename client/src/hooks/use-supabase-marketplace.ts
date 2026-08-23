@@ -7,10 +7,10 @@ type ItemType = 'wholesale_deal' | 'capital_project' | 'listing' | 'article';
 
 interface SavedItem {
   id: string;
-  user_id: string;
-  item_type: ItemType;
-  item_id: string;
-  created_at: string;
+  externalUserId: string;
+  itemType: ItemType;
+  itemId: string | number;
+  createdAt: string;
 }
 
 interface JVRequest {
@@ -91,7 +91,10 @@ export function useSupabaseMarketplace() {
 
   const saveItemMutation = useMutation({
     mutationFn: async ({ itemType, itemId }: { itemType: ItemType; itemId: string }) => {
-      return apiRequest("POST", "/api/supabase/saved-items", { itemType, itemId });
+      return apiRequest("POST", "/api/supabase/saved-items", {
+        itemType,
+        itemId: String(itemId),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supabase/saved-items'] });
@@ -111,7 +114,10 @@ export function useSupabaseMarketplace() {
 
   const unsaveItemMutation = useMutation({
     mutationFn: async ({ itemType, itemId }: { itemType: ItemType; itemId: string }) => {
-      return apiRequest("DELETE", "/api/supabase/saved-items", { itemType, itemId });
+      return apiRequest("DELETE", "/api/supabase/saved-items", {
+        itemType,
+        itemId: String(itemId),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supabase/saved-items'] });
@@ -227,7 +233,9 @@ export function useSupabaseMarketplace() {
 
   const isItemSaved = (itemType: ItemType, itemId: string): boolean => {
     return savedItemsQuery.data?.some(
-      item => item.item_type === itemType && item.item_id === itemId
+      item =>
+        item.itemType === itemType &&
+        String(item.itemId) === String(itemId),
     ) ?? false;
   };
 

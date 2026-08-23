@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canRequestMarketflowJv,
   isPublicCapitalProject,
   isPublicListing,
   isPublicWholesaleDeal,
@@ -59,6 +60,83 @@ describe("public marketplace projections", () => {
     ]) {
       expect(result).not.toHaveProperty(field);
     }
+  });
+
+  it("derives JV eligibility from the authenticated viewer without exposing owner identity", () => {
+    const deal = {
+      id: 11,
+      status: "listed",
+      submittedBy: "owner-11",
+      propertyAddress: "11 Truthful Way",
+      contractPrice: 300_000,
+      assignmentFee: 20_000,
+    };
+
+    const ownerView = (toPublicWholesaleDeal as any)(
+      deal,
+      "owner-11",
+      true,
+    );
+    const counterpartyView = (toPublicWholesaleDeal as any)(
+      deal,
+      "approved-counterparty",
+      true,
+    );
+    const ineligibleCounterpartyView = (toPublicWholesaleDeal as any)(
+      deal,
+      "approved-investor",
+      false,
+    );
+
+    expect(ownerView.canRequestJv).toBe(false);
+    expect(counterpartyView.canRequestJv).toBe(true);
+    expect(ineligibleCounterpartyView.canRequestJv).toBe(false);
+    expect(ownerView).not.toHaveProperty("submittedBy");
+    expect(counterpartyView).not.toHaveProperty("submittedBy");
+
+    const transformedExternalOwner = {
+      ...deal,
+      submittedBy: undefined,
+      externalWholesalerId: "external-owner-11",
+    };
+    expect(
+      (toPublicWholesaleDeal as any)(
+        transformedExternalOwner,
+        "external-owner-11",
+        true,
+      ).canRequestJv,
+    ).toBe(false);
+    expect(
+      (toPublicWholesaleDeal as any)(
+        transformedExternalOwner,
+        "approved-counterparty",
+        true,
+      ).canRequestJv,
+    ).toBe(true);
+  });
+
+  it("enforces server-derived JV role eligibility and ownership", () => {
+    expect(
+      canRequestMarketflowJv({
+        viewerId: "badged-investor",
+        ownerId: "owner-11",
+        canInitiateJv: false,
+      }),
+    ).toBe(false);
+    expect(
+      canRequestMarketflowJv({
+        viewerId: "pegasus-wholesaler",
+        ownerId: "owner-11",
+        canInitiateJv: true,
+      }),
+    ).toBe(true);
+    expect(
+      canRequestMarketflowJv({
+        viewerId: "owner-11",
+        ownerId: "owner-11",
+        canInitiateJv: true,
+      }),
+    ).toBe(false);
   });
 
   it("removes listing access instructions and project documents", () => {

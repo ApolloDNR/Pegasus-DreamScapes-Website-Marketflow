@@ -24,7 +24,40 @@ export function isPublicCapitalProject(project: Row): boolean {
   ].includes(normalizeStatus(project.status));
 }
 
-export function toPublicWholesaleDeal(deal: Row) {
+export function canRequestMarketflowJv({
+  viewerId,
+  ownerId,
+  canInitiateJv,
+}: {
+  viewerId?: string | null;
+  ownerId?: string | null;
+  canInitiateJv: boolean;
+}): boolean {
+  return Boolean(
+    canInitiateJv &&
+      viewerId &&
+      ownerId &&
+      ownerId !== viewerId,
+  );
+}
+
+export function resolveWholesaleDealOwnerId(deal: Row): string | null {
+  const ownerId = [
+    deal.submittedBy,
+    deal.wholesalerId,
+    deal.externalWholesalerId,
+    deal.wholesaler_id,
+    deal.external_wholesaler_id,
+  ].find((candidate) => typeof candidate === "string" && candidate.trim());
+  return typeof ownerId === "string" ? ownerId.trim() : null;
+}
+
+export function toPublicWholesaleDeal(
+  deal: Row,
+  viewerId?: string | null,
+  canInitiateJv = false,
+) {
+  const ownerId = resolveWholesaleDealOwnerId(deal);
   return {
     id: deal.id,
     propertyAddress: deal.propertyAddress,
@@ -68,6 +101,11 @@ export function toPublicWholesaleDeal(deal: Row) {
     isFeatured: deal.isFeatured,
     isHot: deal.isHot,
     daysOnMarket: deal.daysOnMarket,
+    canRequestJv: canRequestMarketflowJv({
+      viewerId,
+      ownerId,
+      canInitiateJv,
+    }),
     createdAt: deal.createdAt,
     updatedAt: deal.updatedAt,
   };
