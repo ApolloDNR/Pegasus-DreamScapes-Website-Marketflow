@@ -276,6 +276,18 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function observeBrowserEvent(promise) {
+  return promise.then(
+    (value) => ({ status: 'fulfilled', value }),
+    (error) => ({ status: 'rejected', error }),
+  );
+}
+
+function unwrapBrowserEvent(observation) {
+  if (observation.status === 'rejected') throw observation.error;
+  return observation.value;
+}
+
 function isSameOriginAssetOrApi(request) {
   const url = new URL(request.url());
   if (url.origin !== baseUrl) return false;
@@ -615,11 +627,13 @@ async function runInteraction(name, options, check) {
     assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
     console.log(`[interaction] ${name}: PASS`);
   } catch (error) {
-    interactionFailures.push({
+    const failure = {
       name,
       error: String(error),
       browserHealth: browserHealthFailures(health, blockedEgress, blockedEgressStart),
-    });
+    };
+    interactionFailures.push(failure);
+    console.error(`[interaction-detail] ${JSON.stringify(failure)}`);
     console.log(`[interaction] ${name}: FAIL`);
   } finally {
     await context.close();
@@ -910,7 +924,7 @@ try {
           || hasBrowserHealthFailures(browserHealth)
           || hasRenderedPageFailures(renderedPage)
           || violations.length) {
-          failures.push({
+          const failure = {
             colorScheme,
             viewport: viewportName,
             route,
@@ -920,7 +934,9 @@ try {
             browserHealth,
             renderedPage,
             violations,
-          });
+          };
+          failures.push(failure);
+          console.error(`[a11y-detail] ${JSON.stringify(failure)}`);
         }
         const passed = response?.ok()
           && requestsSettled
@@ -1206,16 +1222,16 @@ try {
         await page.getByLabel('Anything else we should know?').fill('Rendered QA exact-safe submission.');
         await page.getByRole('checkbox').check();
 
-        const firstRequestObserved = page.waitForRequest(
+        const firstRequestObserved = observeBrowserEvent(page.waitForRequest(
           (request) => request.url() === `${baseUrl}/api/opportunities` && request.method() === 'POST',
           { timeout: 10_000 },
-        );
-        const firstResponseObserved = page.waitForResponse(
+        ));
+        const firstResponseObserved = observeBrowserEvent(page.waitForResponse(
           (response) => response.url() === `${baseUrl}/api/opportunities` && response.status() === 503,
           { timeout: 10_000 },
-        );
+        ));
         await page.getByRole('button', { name: 'Submit for Review', exact: true }).click();
-        await firstRequestObserved;
+        unwrapBrowserEvent(await firstRequestObserved);
         const pending = page.getByRole('button', { name: 'Sending for Review…', exact: true });
         await pending.waitFor({ state: 'visible', timeout: 5_000 });
         assert(await pending.isDisabled(), 'Intake pending control remained enabled');
@@ -1227,7 +1243,7 @@ try {
           { expectedActiveRequests: 1 },
         );
         firstAttemptRelease.release();
-        await firstResponseObserved;
+        unwrapBrowserEvent(await firstResponseObserved);
 
         const errorState = page.getByRole('alert').filter({ hasText: /could not record your submission/i });
         await errorState.waitFor({ state: 'visible', timeout: 5_000 });
@@ -1244,16 +1260,16 @@ try {
         const retry = page.getByRole('button', { name: 'Retry submission', exact: true });
         await retry.focus();
         await retry.evaluate((element) => element.setAttribute('data-rendered-qa-retry-identity', 'stable'));
-        const secondRequestObserved = page.waitForRequest(
+        const secondRequestObserved = observeBrowserEvent(page.waitForRequest(
           (request) => request.url() === `${baseUrl}/api/opportunities` && request.method() === 'POST',
           { timeout: 10_000 },
-        );
-        const secondResponseObserved = page.waitForResponse(
+        ));
+        const secondResponseObserved = observeBrowserEvent(page.waitForResponse(
           (response) => response.url() === `${baseUrl}/api/opportunities` && response.status() === 201,
           { timeout: 10_000 },
-        );
+        ));
         await retry.click();
-        await secondRequestObserved;
+        unwrapBrowserEvent(await secondRequestObserved);
         const retrying = page.getByRole('button', { name: 'Retrying…', exact: true });
         assert(
           await retrying.getAttribute('data-rendered-qa-retry-identity') === 'stable',
@@ -1275,7 +1291,7 @@ try {
         await delay(100);
         assert(attempt === 2, 'Intake retry allowed a duplicate request while pending');
         secondAttemptRelease.release();
-        await secondResponseObserved;
+        unwrapBrowserEvent(await secondResponseObserved);
 
         const success = page.getByRole('heading', { name: 'Received.', exact: true });
         await success.waitFor({ state: 'visible', timeout: 5_000 });

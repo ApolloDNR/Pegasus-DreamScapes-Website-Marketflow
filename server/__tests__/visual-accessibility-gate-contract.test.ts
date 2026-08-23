@@ -172,6 +172,23 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("Received.");
   });
 
+  it("keeps deferred browser observers handled when an interaction exits early", () => {
+    const interactionRunner = sliceBetween(
+      "async function runInteraction",
+      "async function openPage",
+    );
+    const intakeInteraction = sliceBetween(
+      "for (const [intakeViewportName, intakeViewport] of viewports)",
+      "await runInteraction('Strategy Lab primary interaction'",
+    );
+
+    expect(source).toContain("function observeBrowserEvent");
+    expect(source).toContain("function unwrapBrowserEvent");
+    expect(intakeInteraction.match(/observeBrowserEvent\(/g)).toHaveLength(4);
+    expect(intakeInteraction.match(/unwrapBrowserEvent\(/g)).toHaveLength(4);
+    expect(interactionRunner).toContain("console.error(`[interaction-detail]");
+  });
+
   it("tests and uploads exact PR-head evidence while checking the synthetic merge separately", () => {
     expect(workflow).toContain("concurrency:");
     expect(workflow).toContain("cancel-in-progress: true");
