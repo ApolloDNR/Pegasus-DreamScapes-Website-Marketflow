@@ -31,11 +31,10 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- The approved Bay-colonnade plate is the homepage LCP element. One
-         source is intentional: theme and viewport changes may alter lighting
-         and crop, never the architecture or camera position. -->
-    <link rel="preload" as="image" href="/images/hero/pegasus-v6-arrival.webp"
-      fetchpriority="high" />
+    <!-- The route-aware server inserts the approved Bay-colonnade LCP preload
+         here only for the homepage. The image itself also carries high fetch
+         priority for static-shell and client-navigation fallbacks. -->
+    <!-- pegasus-homepage-lcp-preload -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

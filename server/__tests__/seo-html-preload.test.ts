@@ -12,7 +12,8 @@ const homepageHeroPreload =
   /<link\s+rel="preload"\s+as="image"\s+href="\/images\/hero\/pegasus-v6-arrival\.webp"[\s\S]*?>/i;
 
 describe("route-aware homepage LCP preload", () => {
-  it("keeps the hero preload on home and removes it from non-home documents", () => {
+  it("keeps the static shell neutral and injects the hero preload only on home", () => {
+    expect(htmlShell).not.toMatch(homepageHeroPreload);
     expect(injectSeo(htmlShell, "/")).toMatch(homepageHeroPreload);
     expect(injectSeo(htmlShell, "/marketflow/deals")).not.toMatch(
       homepageHeroPreload,

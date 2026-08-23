@@ -1,4 +1,5 @@
 import fs from "fs";
+import express from "express";
 import type { Express } from "express";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serveStatic } from "../static";
@@ -18,6 +19,7 @@ const HTML_SHELL = `<!doctype html>
     <meta name="twitter:description" content="Home description" />
     <meta name="twitter:image" content="https://pegasusdreamscapes.com/og/default.png" />
     <link rel="canonical" href="https://pegasusdreamscapes.com" />
+    <!-- pegasus-homepage-lcp-preload -->
     <script type="application/ld+json">{"@context":"https://schema.org"}</script>
   </head>
   <body><div id="root"></div></body>
@@ -39,6 +41,9 @@ function registerFallback(): FallbackHandler {
 
   const registrations: unknown[][] = [];
   const app = {
+    get: (...args: unknown[]) => {
+      registrations.push(args);
+    },
     use: (...args: unknown[]) => {
       registrations.push(args);
     },
@@ -87,6 +92,48 @@ afterEach(() => {
 });
 
 describe("production SPA HTML routing", () => {
+  it("keeps directory indexes behind route-aware HTML and redirects the explicit index file", () => {
+    vi.spyOn(fs, "existsSync").mockReturnValue(true);
+    const staticMiddleware = vi.fn();
+    const staticSpy = vi
+      .spyOn(express, "static")
+      .mockReturnValue(staticMiddleware as never);
+    const registrations: Array<{
+      method: "get" | "use";
+      args: unknown[];
+    }> = [];
+    const app = {
+      get: (...args: unknown[]) => registrations.push({ method: "get", args }),
+      use: (...args: unknown[]) => registrations.push({ method: "use", args }),
+    } as unknown as Express;
+
+    serveStatic(app);
+
+    expect(staticSpy).toHaveBeenCalledWith(expect.any(String), { index: false });
+    expect(registrations.map(({ method, args }) => [method, args[0]])).toEqual([
+      ["get", "/index.html"],
+      ["use", staticMiddleware],
+      ["use", "*"],
+    ]);
+
+    const indexRoute = registrations[0];
+    const redirect = vi.fn();
+    (indexRoute.args[1] as (req: unknown, res: { redirect: typeof redirect }) => void)(
+      {},
+      { redirect },
+    );
+    expect(redirect).toHaveBeenCalledWith(308, "/");
+  });
+
+  it("routes the production homepage through SEO injection with its LCP preload", () => {
+    const response = requestHtml("/");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toContain(
+      '<link rel="preload" as="image" href="/images/hero/pegasus-v6-arrival.webp" fetchpriority="high" />',
+    );
+  });
+
   it.each(["/library", "/library/fixture-article"])(
     "redirects retired library route %s directly to Strategy Lab",
     (pathname) => {

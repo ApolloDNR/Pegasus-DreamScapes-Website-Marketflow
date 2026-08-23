@@ -98,6 +98,7 @@ describe("Homepage premium editorial contract", () => {
     expect(hero).toHaveAttribute("src", "/images/hero/pegasus-v6-arrival.webp");
     expect(hero).toHaveAttribute("width", "1672");
     expect(hero).toHaveAttribute("height", "941");
+    expect(hero).toHaveAttribute("fetchpriority", "high");
   });
 
   it("locks the approved Arrival promise and concise three-action row", () => {

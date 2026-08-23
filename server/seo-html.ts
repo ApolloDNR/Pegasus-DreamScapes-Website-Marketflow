@@ -12,6 +12,9 @@ const esc = (s: string) =>
 
 const HOMEPAGE_HERO_PRELOAD =
   /\s*<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bhref=["']\/images\/hero\/pegasus-v6-arrival\.webp["'])[^>]*>\s*/i;
+const HOMEPAGE_HERO_PRELOAD_MARKER = "<!-- pegasus-homepage-lcp-preload -->";
+const HOMEPAGE_HERO_PRELOAD_TAG =
+  '<link rel="preload" as="image" href="/images/hero/pegasus-v6-arrival.webp" fetchpriority="high" />';
 
 interface InjectSeoOptions {
   notFound?: boolean;
@@ -39,10 +42,14 @@ export function injectSeo(
   const type = m.type ?? "website";
 
   let out = html;
-  // The static shell keeps the home LCP hint as its fallback. Strip it from
-  // route-aware documents so non-home entries do not fetch an unused hero or
-  // emit browser-health warnings.
-  if (pathname !== "/") {
+  // Keep the static shell route-neutral. The real server can identify the
+  // document route, so only its homepage response receives the early LCP hint.
+  if (pathname === "/") {
+    out = out.replace(
+      HOMEPAGE_HERO_PRELOAD_MARKER,
+      `${HOMEPAGE_HERO_PRELOAD_MARKER}\n    ${HOMEPAGE_HERO_PRELOAD_TAG}`,
+    );
+  } else {
     out = out.replace(HOMEPAGE_HERO_PRELOAD, "\n");
   }
   out = out.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);

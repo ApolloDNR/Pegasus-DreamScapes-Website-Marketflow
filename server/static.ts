@@ -12,7 +12,14 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.get("/index.html", (_req, res) => {
+    res.redirect(308, "/");
+  });
+
+  // Keep index documents behind the route-aware fallback below. Assets still
+  // use express.static, but `/` must receive injected SEO and homepage LCP
+  // metadata instead of the neutral build shell.
+  app.use(express.static(distPath, { index: false }));
 
   // SPA fall-through. Wave 4: rewrite <title>/OG/Twitter tags per-route
   // so social-card crawlers (LinkedIn, iMessage, Slack, Twitter/X) see
