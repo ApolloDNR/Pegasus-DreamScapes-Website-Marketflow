@@ -638,11 +638,8 @@ html {
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -3740,7 +3737,7 @@ body:has(.connect-premium) .peggy-fab {
 @media (prefers-reduced-motion: reduce) {
   .px-more-menu,
   .px-lab *,
-  .px-mf * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  .px-mf * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
 
 .pg-root:not([data-theme='dark']) .px-lab-review-grid dt,
@@ -4751,5 +4748,5 @@ body:has(.connect-premium) .peggy-fab {
 
 @media (prefers-reduced-motion: reduce) {
   .mf-access-page *,
-  .mf-access-success * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  .mf-access-success * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }

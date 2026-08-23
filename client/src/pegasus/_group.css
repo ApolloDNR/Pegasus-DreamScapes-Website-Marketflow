@@ -3305,7 +3305,7 @@ select.pg-field option { color: #1b1712; }
   .step-connector { transform: none !important; }
   .step-spine { transform: none !important; }
   .hero-parallax { transform: none !important; }
-  .peggy-panel { transition: opacity 0.2s ease !important; transform: none !important; }
+  .peggy-panel { transition: none !important; transform: none !important; }
 }
 
 /* ---- Strategy Lab range slider - copper fill track ---- */
@@ -3856,7 +3856,7 @@ select.pg-field option { color: #1b1712; }
 .hv button:focus-visible, .hv a:focus-visible, .ow button:focus-visible, .ow a:focus-visible {
   outline: 2px solid var(--hv-copper); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .hv *, .ow *, .hwo *, .po *, .dp * { transition-duration: .01ms !important; }
+  .hv *, .ow *, .hwo *, .po *, .dp * { transition: none !important; }
   .hv-hero-marble img, .hv-hero-marble::before, .hv-hero-marble::after { transition:none !important; }
   .hwo-stage, .po-path, .dp-answer { animation: none !important; }
   .hv-node[data-state="dim"] { opacity: .7; }

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import postcss from "postcss";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(
@@ -14,6 +15,14 @@ const baseStyles = readFileSync(
   resolve(import.meta.dirname, "../../client/src/index.css"),
   "utf8",
 );
+const reducedMotionStyleSheets = [
+  "../../client/src/index.css",
+  "../../client/src/pegasus/_group.css",
+  "../../client/src/pegasus/about-v6.css",
+].map((relativePath) => ({
+  relativePath,
+  source: readFileSync(resolve(import.meta.dirname, relativePath), "utf8"),
+}));
 
 function sliceBetween(start: string, end: string): string {
   const startIndex = source.indexOf(start);
@@ -197,14 +206,56 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interactionRunner).toContain("page.unrouteAll({ behavior: 'wait' })");
   });
 
-  it("removes smooth scrolling and residual transitions when reduced motion is requested", () => {
-    expect(baseStyles).toContain("/* Reduced-motion baseline: deterministic and user-respecting. */");
-    expect(baseStyles).toContain("scroll-behavior: auto !important;");
-    expect(baseStyles).toContain("animation-duration: 0.01ms !important;");
-    expect(baseStyles).toContain("animation-delay: 0ms !important;");
-    expect(baseStyles).toContain("animation-iteration-count: 1 !important;");
-    expect(baseStyles).toContain("transition-duration: 0.01ms !important;");
-    expect(baseStyles).toContain("transition-delay: 0ms !important;");
+  it("never re-enables CSS motion after reduced motion is requested", () => {
+    const nonZeroTime = (value: string) => value
+      .split(",")
+      .some((part) => !/^0(?:\.0+)?(?:ms|s)?$/i.test(part.trim()));
+    const violations: string[] = [];
+
+    for (const { relativePath, source: styleSource } of reducedMotionStyleSheets) {
+      const root = postcss.parse(styleSource, { from: relativePath });
+      root.walkAtRules("media", (media) => {
+        if (!media.params.includes("prefers-reduced-motion: reduce")) return;
+        media.walkDecls((declaration) => {
+          const property = declaration.prop.toLowerCase();
+          const value = declaration.value.trim().toLowerCase();
+          const hasMotionShorthand = (property === "animation" || property === "transition")
+            && value !== "none";
+          const hasMotionName = (property === "animation-name" || property === "transition-property")
+            && value !== "none";
+          const hasNonZeroTiming = [
+            "animation-duration",
+            "animation-delay",
+            "transition-duration",
+            "transition-delay",
+          ].includes(property) && nonZeroTime(value);
+
+          if (hasMotionShorthand || hasMotionName || hasNonZeroTiming) {
+            violations.push(`${relativePath}:${declaration.source?.start?.line ?? "?"} ${property}: ${value}`);
+          }
+        });
+      });
+    }
+
+    const baseRoot = postcss.parse(baseStyles);
+    const globalReducedMotionRules: Record<string, string> = {};
+    baseRoot.walkAtRules("media", (media) => {
+      if (!media.params.includes("prefers-reduced-motion: reduce")) return;
+      media.walkRules((rule) => {
+        const selectors = rule.selectors.map((selector) => selector.trim());
+        if (!["*", "*::before", "*::after"].every((selector) => selectors.includes(selector))) return;
+        rule.walkDecls((declaration) => {
+          globalReducedMotionRules[declaration.prop] = declaration.value;
+        });
+      });
+    });
+
+    expect(globalReducedMotionRules).toMatchObject({
+      "scroll-behavior": "auto",
+      animation: "none",
+      transition: "none",
+    });
+    expect(violations).toEqual([]);
   });
 
   it("tests and uploads exact PR-head evidence while checking the synthetic merge separately", () => {
