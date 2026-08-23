@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { act, render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -57,6 +57,9 @@ let authState: AuthState = { ...baseAuth };
 
 const queryBoundary = vi.hoisted(() => ({
   states: {} as Record<string, Record<string, unknown>>,
+}));
+const marketplaceBoundary = vi.hoisted(() => ({
+  toggleSaveItem: vi.fn(),
 }));
 
 function authFor(role: AuthRole): AuthState {
@@ -191,7 +194,7 @@ vi.mock("@/contexts/deal-action-context", () => ({
 vi.mock("@/hooks/use-supabase-marketplace", () => ({
   useSupabaseMarketplace: () => ({
     isItemSaved: () => false,
-    toggleSaveItem: vi.fn(),
+    toggleSaveItem: marketplaceBoundary.toggleSaveItem,
     isSaving: false,
     savedItems: [],
   }),
@@ -410,8 +413,21 @@ vi.mock("framer-motion", async () => {
   const passthrough =
     (Tag: keyof JSX.IntrinsicElements) =>
     ({ children, ...props }: Record<string, unknown> & { children?: React.ReactNode }) => {
+      const {
+        animate: _animate,
+        drag: _drag,
+        dragConstraints: _dragConstraints,
+        dragElastic: _dragElastic,
+        exit: _exit,
+        initial: _initial,
+        onDrag: _onDrag,
+        onDragEnd: _onDragEnd,
+        onDragStart: _onDragStart,
+        transition: _transition,
+        ...domProps
+      } = props;
       const Component = Tag as unknown as React.ElementType;
-      return <Component {...props}>{children}</Component>;
+      return <Component {...domProps}>{children}</Component>;
     };
   return {
     ...actual,
@@ -506,6 +522,7 @@ beforeEach(() => {
   localStorage.clear();
   setAuthState("loggedOut");
   queryBoundary.states = {};
+  marketplaceBoundary.toggleSaveItem.mockReset();
 });
 
 afterEach(() => {
@@ -746,6 +763,198 @@ describe("marketflow-deals page gating", () => {
     ).toBeGreaterThan(0);
     // Critical gate: investors are not wholesalers, so quick-jv must be absent.
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
+  });
+
+  it("gives every icon-only swipe control an accessible name", async () => {
+    setAuthState("badgedInvestor");
+    queryBoundary.states["/api/capital-projects"] = {
+      data: [
+        {
+          id: 601,
+          title: "Evidence Row Rehabilitation",
+          location: "Richmond, CA",
+          strategy: "value-add",
+          structure: "EQUITY",
+          fundingGoal: 1_200_000,
+          amountRaised: 480_000,
+          minInvestment: 25_000,
+          projectedReturn: "18% target IRR",
+          askingProfitSplit: "70 / 30",
+          status: "OPEN",
+          images: [],
+        },
+      ],
+    };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+    activateControl("toggle-swipe-view");
+
+    for (const [testId, name] of [
+      ["button-undo", "Undo"],
+      ["button-pass", "Pass"],
+      ["button-save-swipe", "Save"],
+      ["button-accept", "Accept terms"],
+      ["button-counter", "Counter offer"],
+    ]) {
+      expect(screen.getByTestId(testId)).toHaveAccessibleName(name);
+    }
+
+    activateControl("tab-capital");
+    for (const [testId, name] of [
+      ["button-capital-undo", "Undo"],
+      ["button-capital-pass", "Pass"],
+      ["button-capital-save-swipe", "Save"],
+      ["button-capital-accept", "Commit capital"],
+      ["button-capital-counter", "Negotiate"],
+    ]) {
+      expect(screen.getByTestId(testId)).toHaveAccessibleName(name);
+    }
+  });
+
+  it("serializes reduced-motion swipe actions and reaches both terminal states", async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn((query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(() => false),
+    })) as typeof window.matchMedia;
+    vi.useFakeTimers();
+
+    try {
+      setAuthState("badgedInvestor");
+      queryBoundary.states["/api/wholesale-deals"] = {
+        data: [
+          {
+            id: "reviewed-9001",
+            propertyAddress: "123 Test St",
+            city: "Phoenix",
+            state: "AZ",
+            propertyType: "Single Family",
+            arv: 300_000,
+            askingPrice: 200_000,
+            repairEstimate: 50_000,
+            assignmentFee: 10_000,
+            canRequestJv: true,
+            negotiationAllowed: true,
+            status: "Under Review",
+            photos: [],
+          },
+          {
+            id: "reviewed-9002",
+            propertyAddress: "456 Evidence Ave",
+            city: "Oakland",
+            state: "CA",
+            propertyType: "Duplex",
+            arv: 480_000,
+            askingPrice: 315_000,
+            repairEstimate: 65_000,
+            assignmentFee: 12_000,
+            canRequestJv: true,
+            negotiationAllowed: true,
+            status: "Under Review",
+            photos: [],
+          },
+        ],
+      };
+      queryBoundary.states["/api/capital-projects"] = {
+        data: [
+          {
+            id: 601,
+            title: "Evidence Row Rehabilitation",
+            location: "Richmond, CA",
+            strategy: "value-add",
+            structure: "EQUITY",
+            fundingGoal: 1_200_000,
+            amountRaised: 480_000,
+            minInvestment: 25_000,
+            projectedReturn: "18% target IRR",
+            askingProfitSplit: "70 / 30",
+            status: "OPEN",
+            images: [],
+          },
+          {
+            id: 602,
+            title: "Second Evidence Row",
+            location: "Sacramento, CA",
+            strategy: "development",
+            structure: "DEBT",
+            fundingGoal: 900_000,
+            amountRaised: 225_000,
+            minInvestment: 20_000,
+            projectedReturn: "12% target return",
+            status: "OPEN",
+            images: [],
+          },
+        ],
+      };
+      const { default: MarketflowDeals } = await import(
+        "@/pages/marketflow-deals"
+      );
+
+      renderWithProviders(<MarketflowDeals />);
+      activateControl("toggle-swipe-view");
+
+      const wholesaleSave = screen.getByTestId("button-save-swipe");
+      fireEvent.click(wholesaleSave);
+      fireEvent.click(wholesaleSave);
+      expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(1);
+
+      act(() => vi.advanceTimersByTime(1));
+      const nextWholesaleSave = screen.getByTestId("button-save-swipe");
+      expect(nextWholesaleSave).toBeDisabled();
+      expect(screen.getByTestId("button-view-deal")).toBeDisabled();
+      const wholesaleOfferStudio = screen.getByTestId(
+        "button-open-offer-studio-wholesale-reviewed-9002",
+      );
+      expect(wholesaleOfferStudio).toBeDisabled();
+      expect(wholesaleOfferStudio.closest("a")).toBeNull();
+      fireEvent.click(nextWholesaleSave);
+      expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(1);
+
+      act(() => vi.advanceTimersByTime(250));
+      expect(nextWholesaleSave).toBeEnabled();
+      fireEvent.click(nextWholesaleSave);
+      expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(2);
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.getByText(/reviewed every reviewed deal/i)).toBeInTheDocument();
+
+      activateControl("tab-capital");
+      const capitalSave = screen.getByTestId("button-capital-save-swipe");
+      fireEvent.click(capitalSave);
+      fireEvent.click(capitalSave);
+      expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(3);
+
+      act(() => vi.advanceTimersByTime(1));
+      const nextCapitalSave = screen.getByTestId("button-capital-save-swipe");
+      expect(nextCapitalSave).toBeDisabled();
+      expect(screen.getByTestId("button-view-capital-swipe")).toBeDisabled();
+      const capitalOfferStudio = screen.getByTestId(
+        "button-open-offer-studio-capital-602",
+      );
+      expect(capitalOfferStudio).toBeDisabled();
+      expect(capitalOfferStudio.closest("a")).toBeNull();
+      fireEvent.click(nextCapitalSave);
+      expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(3);
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(nextCapitalSave).toBeEnabled();
+      fireEvent.click(nextCapitalSave);
+      expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(4);
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.getByText(/seen all projects/i)).toBeInTheDocument();
+    } finally {
+      act(() => vi.runOnlyPendingTimers());
+      vi.useRealTimers();
+      window.matchMedia = originalMatchMedia;
+    }
   });
 
   it("Pegasus-prefixed operators see reviewed deals and their role-gated JV action", async () => {

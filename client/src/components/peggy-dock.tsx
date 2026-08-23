@@ -16,7 +16,7 @@ import {
   PEGGY_CONVERSATION_ACCESS_HEADER,
   type PeggyConversationAccessResponse,
 } from "@shared/peggy-access";
-import { motion, AnimatePresence, useDragControls, useReducedMotion, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import { 
   MessageCircle, 
   X, 
@@ -45,6 +45,7 @@ import {
   GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 const DOCK_STORAGE_KEY = 'peggy_dock_position';
 const DEFAULT_POSITION = { x: 0, y: 0 };
@@ -87,11 +88,11 @@ function TypingIndicator({ reduceMotion }: { reduceMotion: boolean }) {
           <motion.div
             key={i}
             className="w-1.5 h-1.5 bg-primary/70 rounded-full"
-            animate={reduceMotion ? undefined : {
+            animate={reduceMotion ? { y: 0, opacity: 0.7 } : {
               y: [0, -5, 0],
               opacity: [0.4, 1, 0.4]
             }}
-            transition={reduceMotion ? undefined : {
+            transition={reduceMotion ? { duration: 0 } : {
               duration: 0.7,
               repeat: Infinity,
               delay: i * 0.15,
@@ -130,8 +131,8 @@ function PeggyMessage({
         isUser ? "flex-row-reverse" : "flex-row"
       )}
       initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.95 }}
-      animate={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
-      transition={reduceMotion ? undefined : { duration: 0.3, ease: "easeOut" }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
     >
       <Avatar className={cn(
         "h-9 w-9 flex-shrink-0 ring-1 ring-offset-2 ring-offset-background shadow-sm",
@@ -320,7 +321,7 @@ export function PeggyDock() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragControls = useDragControls();
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = usePrefersReducedMotion();
   const constraintsRef = useRef<HTMLDivElement>(null);
   const createConversationInFlightRef = useRef(false);
   const conversationAccessRef =
@@ -477,7 +478,7 @@ export function PeggyDock() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
   }, [messages, reduceMotion]);
-  
+
   useEffect(() => {
     if (isExpanded && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -573,17 +574,21 @@ export function PeggyDock() {
         drag
         dragControls={dragControls}
         dragMomentum={false}
-        dragElastic={0.1}
+        dragElastic={reduceMotion ? 0 : 0.1}
         dragConstraints={constraintsRef}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         initial={false}
-        animate={reduceMotion ? undefined : {
+        animate={reduceMotion ? {
+          x: position.x,
+          y: position.y,
+          scale: 1,
+        } : {
           x: position.x,
           y: position.y,
           scale: isDragging ? 1.05 : 1,
         }}
-        transition={reduceMotion ? undefined : {
+        transition={reduceMotion ? { duration: 0 } : {
           type: "spring",
           stiffness: 500,
           damping: 30,
@@ -595,7 +600,6 @@ export function PeggyDock() {
         style={{
           bottom: isExpanded ? 'auto' : undefined,
           right: isExpanded ? 'auto' : undefined,
-          ...(reduceMotion ? { x: position.x, y: position.y, scale: 1 } : {}),
         }}
       >
         <AnimatePresence mode="wait">
@@ -603,9 +607,9 @@ export function PeggyDock() {
             <motion.div
               key="collapsed"
               initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
-              animate={reduceMotion ? undefined : { scale: 1, opacity: 1 }}
-              exit={reduceMotion ? undefined : { scale: 0.8, opacity: 0 }}
-              transition={reduceMotion ? undefined : { duration: 0.2 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={reduceMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
               className="pointer-events-auto"
             >
               <div className="relative">
@@ -613,8 +617,8 @@ export function PeggyDock() {
                 <motion.div
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full bg-primary/30 blur-2xl"
-                  animate={reduceMotion ? undefined : { scale: [1, 1.18, 1], opacity: [0.4, 0.6, 0.4] }}
-                  transition={reduceMotion ? undefined : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                  animate={reduceMotion ? { scale: 1, opacity: 0.4 } : { scale: [1, 1.18, 1], opacity: [0.4, 0.6, 0.4] }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 {/* Slow rotating brass ring */}
                 <motion.div
@@ -624,8 +628,8 @@ export function PeggyDock() {
                     background:
                       "conic-gradient(from 0deg, hsl(var(--copper) / 0.55), hsl(var(--copper) / 0) 35%, hsl(var(--copper) / 0) 70%, hsl(var(--copper) / 0.55))",
                   }}
-                  animate={reduceMotion ? undefined : { rotate: 360 }}
-                  transition={reduceMotion ? undefined : { duration: 14, repeat: Infinity, ease: "linear" }}
+                  animate={reduceMotion ? { rotate: 0 } : { rotate: 360 }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 14, repeat: Infinity, ease: "linear" }}
                 />
                 <Button
                   onClick={handleToggleExpand}
@@ -652,8 +656,8 @@ export function PeggyDock() {
                   />
                   <motion.span
                     className="relative font-display text-[22px] leading-none tracking-[0.04em] text-cream"
-                    animate={reduceMotion ? undefined : { y: [0, -1, 0] }}
-                    transition={reduceMotion ? undefined : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    animate={reduceMotion ? { y: 0 } : { y: [0, -1, 0] }}
+                    transition={reduceMotion ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   >
                     P
                   </motion.span>
@@ -663,11 +667,11 @@ export function PeggyDock() {
                 <motion.div
                   className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-background"
                   style={{ backgroundColor: "hsl(var(--copper))" }}
-                  animate={reduceMotion ? undefined : {
+                  animate={reduceMotion ? { scale: 1, opacity: 0.75 } : {
                     scale: [1, 1.3, 1],
                     opacity: [0.75, 1, 0.75],
                   }}
-                  transition={reduceMotion ? undefined : {
+                  transition={reduceMotion ? { duration: 0 } : {
                     duration: 2.4,
                     repeat: Infinity,
                     ease: "easeInOut",
@@ -684,9 +688,9 @@ export function PeggyDock() {
           <motion.div
             key="expanded"
             initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
-            animate={reduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, scale: 0.95, y: 20 }}
-            transition={reduceMotion ? undefined : { duration: 0.3, ease: "easeOut" }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.95, y: 20 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
             className={cn(
               "fixed z-50 shadow-md",
               isFullscreen 
@@ -713,8 +717,8 @@ export function PeggyDock() {
                     <motion.div
                       className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background"
                       style={{ backgroundColor: "hsl(var(--copper))" }}
-                      animate={reduceMotion ? undefined : { opacity: [0.7, 1, 0.7], scale: [1, 1.2, 1] }}
-                      transition={reduceMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                      animate={reduceMotion ? { opacity: 0.7, scale: 1 } : { opacity: [0.7, 1, 0.7], scale: [1, 1.2, 1] }}
+                      transition={reduceMotion ? { duration: 0 } : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
                     />
                   </div>
                   <div>
@@ -772,8 +776,8 @@ export function PeggyDock() {
                       <motion.span
                         aria-hidden="true"
                         className="absolute inset-0 -m-3 rounded-full bg-primary/15 blur-xl"
-                        animate={reduceMotion ? undefined : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-                        transition={reduceMotion ? undefined : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                        animate={reduceMotion ? { scale: 1, opacity: 0.5 } : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+                        transition={reduceMotion ? { duration: 0 } : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                       />
                       {/* Slow rotating brass ring */}
                       <motion.span
@@ -783,8 +787,8 @@ export function PeggyDock() {
                           background:
                             "conic-gradient(from 0deg, hsl(var(--copper) / 0.5), hsl(var(--copper) / 0) 30%, hsl(var(--copper) / 0) 70%, hsl(var(--copper) / 0.5))",
                         }}
-                        animate={reduceMotion ? undefined : { rotate: 360 }}
-                        transition={reduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: "linear" }}
+                        animate={reduceMotion ? { rotate: 0 } : { rotate: 360 }}
+                        transition={reduceMotion ? { duration: 0 } : { duration: 18, repeat: Infinity, ease: "linear" }}
                       />
                       <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#D88E4E] via-primary to-[#8E4F22] ring-1 ring-cream/40 shadow-[0_18px_40px_-10px_rgba(13,27,45,0.45)] flex items-center justify-center overflow-hidden">
                         <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_30%_25%,rgba(255,255,255,0.45)_0%,rgba(255,255,255,0)_55%)]" />
@@ -834,9 +838,9 @@ export function PeggyDock() {
                   {chatMutation.isPending && (
                     <motion.div
                       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-                      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-                      exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
-                      transition={reduceMotion ? undefined : { duration: 0.2 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+                      transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
                     >
                       <TypingIndicator reduceMotion={reduceMotion} />
                     </motion.div>

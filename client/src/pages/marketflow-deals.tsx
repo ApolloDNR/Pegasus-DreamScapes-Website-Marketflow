@@ -15,6 +15,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
 import { useToast } from "@/hooks/use-toast";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
 import { DueDiligenceProgress } from "@/components/due-diligence-checklist";
 import { CommunicationSummary } from "@/components/communication-log";
@@ -885,11 +886,15 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragIntent, setDragIntent] = useState<"like" | "pass" | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const isAdvancingRef = useRef(false);
+  const advanceTimerRef = useRef<number | null>(null);
+  const unlockTimerRef = useRef<number | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const reduceMotion = usePrefersReducedMotion();
   
   const x = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 400, damping: 30 });
   const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
   const likeOpacity = useTransform(x, [0, 80, 150], [0, 0.5, 1]);
   const passOpacity = useTransform(x, [-150, -80, 0], [1, 0.5, 0]);
@@ -904,7 +909,27 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
   const currentDeal = deals[currentIndex];
   const hasMore = currentIndex < deals.length - 1;
 
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+    if (unlockTimerRef.current !== null) {
+      window.clearTimeout(unlockTimerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!reduceMotion) return;
+    x.stop?.();
+    x.set(0);
+    setIsDragging(false);
+    setDragIntent(null);
+  }, [reduceMotion, x]);
+
   const handleSwipe = (direction: "left" | "right") => {
+    if (isAdvancingRef.current || !currentDeal) return;
+    isAdvancingRef.current = true;
+    setIsAdvancing(true);
     setExitDirection(direction);
     setDragIntent(null);
     
@@ -923,7 +948,13 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
       });
     }
     
-    setTimeout(() => {
+    const releaseAdvanceLock = () => {
+      unlockTimerRef.current = null;
+      isAdvancingRef.current = false;
+      setIsAdvancing(false);
+    };
+
+    const advance = () => {
       if (hasMore) {
         setCurrentIndex(prev => prev + 1);
       } else {
@@ -931,7 +962,15 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
       }
       setExitDirection(null);
       x.set(0);
-    }, 250);
+      advanceTimerRef.current = null;
+      if (reduceMotion) {
+        unlockTimerRef.current = window.setTimeout(releaseAdvanceLock, 250);
+      } else {
+        releaseAdvanceLock();
+      }
+    };
+
+    advanceTimerRef.current = window.setTimeout(advance, reduceMotion ? 0 : 250);
   };
 
   const handleDrag = (event: any, info: PanInfo) => {
@@ -959,7 +998,7 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
   };
 
   const handleUndo = () => {
-    if (currentIndex > 0) {
+    if (!isAdvancingRef.current && currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
     }
   };
@@ -1029,7 +1068,7 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
           {currentIndex + 1} / {deals.length}
         </Badge>
         <p className="text-sm text-muted-foreground mt-2">
-          Swipe right to save, left to pass
+          {reduceMotion ? "Use the controls to save or pass" : "Swipe right to save, left to pass"}
         </p>
       </div>
 
@@ -1049,28 +1088,32 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
         <AnimatePresence mode="wait">
           <motion.div
             key={currentDeal.id}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.15}
-            onDragStart={() => setIsDragging(true)}
-            onDrag={handleDrag}
-            onDragEnd={handleDragEnd}
-            style={{ x, rotate, scale, boxShadow: borderGlow }}
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ 
+            drag={reduceMotion ? false : "x"}
+            dragConstraints={reduceMotion ? undefined : { left: 0, right: 0 }}
+            dragElastic={reduceMotion ? undefined : 0.15}
+            onDragStart={reduceMotion ? undefined : () => setIsDragging(true)}
+            onDrag={reduceMotion ? undefined : handleDrag}
+            onDragEnd={reduceMotion ? undefined : handleDragEnd}
+            style={reduceMotion ? undefined : { x, rotate, scale, boxShadow: borderGlow }}
+            initial={reduceMotion ? false : { scale: 0.9, opacity: 0, y: 20 }}
+            animate={reduceMotion ? { scale: 1, opacity: 1, y: 0, x: 0 } : {
               scale: exitDirection ? 0.95 : 1, 
               opacity: exitDirection ? 0 : 1,
               y: 0,
               x: exitDirection === "left" ? -400 : exitDirection === "right" ? 400 : 0
             }}
-            exit={{ 
+            exit={reduceMotion ? { x: 0, opacity: 1, scale: 1, y: 0 } : {
               x: exitDirection === "left" ? -400 : 400,
               opacity: 0,
               scale: 0.9,
-              transition: { duration: 0.25, ease: "easeOut" }
+              transition: { duration: 0 }
             }}
-            transition={{ type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
-            className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-md"
+            transition={reduceMotion
+              ? { duration: 0 }
+              : exitDirection
+                ? { duration: 0.25, ease: "easeOut" }
+                : { type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
+            className={`absolute inset-0 rounded-md ${isAdvancing ? "pointer-events-none" : ""} ${reduceMotion ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
           >
             <SwipeCard 
               deal={currentDeal}
@@ -1079,6 +1122,7 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
               onView={() => setLocation(`/marketflow/deals/${currentDeal.id}`)}
               onAcceptTerms={() => onAcceptTerms(currentDeal)}
               onCounterTerms={() => onCounterTerms(currentDeal)}
+              isAdvancing={isAdvancing}
               isDragging={isDragging}
               dragIntent={dragIntent}
             />
@@ -1088,45 +1132,54 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
 
       <div className="flex items-center justify-center gap-3 mt-6">
         <Button 
+          aria-label="Undo"
           size="lg" 
           variant="outline" 
           className="rounded-full h-12 w-12"
           onClick={handleUndo}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || isAdvancing}
           data-testid="button-undo"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
         <Button 
+          aria-label="Pass"
           size="lg" 
           variant="outline" 
           className="rounded-full h-14 w-14 border-red-300 hover:bg-red-50 hover:border-red-400"
           onClick={() => handleSwipe("left")}
+          disabled={isAdvancing}
           data-testid="button-pass"
         >
           <X className="w-5 h-5 text-red-500" />
         </Button>
         <Button 
+          aria-label="Save"
           size="lg" 
           className="rounded-full h-14 w-14 bg-green-500 hover:bg-green-600"
           onClick={() => handleSwipe("right")}
+          disabled={isAdvancing}
           data-testid="button-save-swipe"
         >
           <Heart className="w-5 h-5" />
         </Button>
         <Button 
+          aria-label="Accept terms"
           size="lg" 
           className="rounded-full h-12 w-12"
           onClick={() => onAcceptTerms(currentDeal)}
+          disabled={isAdvancing}
           data-testid="button-accept"
         >
           <CheckCircle2 className="w-5 h-5" />
         </Button>
         <Button 
+          aria-label="Counter offer"
           size="lg" 
           variant="secondary"
           className="rounded-full h-12 w-12"
           onClick={() => onCounterTerms(currentDeal)}
+          disabled={isAdvancing}
           data-testid="button-counter"
         >
           <MessageSquare className="w-4 h-4" />
@@ -1147,11 +1200,12 @@ interface SwipeCardProps {
   onView: () => void;
   onAcceptTerms: () => void;
   onCounterTerms: () => void;
+  isAdvancing: boolean;
   isDragging?: boolean;
   dragIntent?: "like" | "pass" | null;
 }
 
-function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isDragging, dragIntent }: SwipeCardProps) {
+function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isAdvancing, isDragging, dragIntent }: SwipeCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
   const askPrice = deal.askingPrice || deal.contractPrice || 0;
@@ -1250,17 +1304,17 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={onView} data-testid="button-view-deal">
+          <Button variant="outline" className="flex-1" onClick={onView} disabled={isAdvancing} data-testid="button-view-deal">
             <Eye className="w-4 h-4 mr-2" />
             View Deal
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-deal-swipe">
+          <Button className="flex-1" onClick={onAcceptTerms} disabled={isAdvancing} data-testid="button-accept-deal-swipe">
             <CheckCircle2 className="w-4 h-4 mr-2" />
             Accept Terms
           </Button>
-          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-deal-swipe">
+          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} disabled={isAdvancing} data-testid="button-counter-deal-swipe">
             <MessageSquare className="w-4 h-4 mr-2" />
             Counter Offer
           </Button>
@@ -1271,6 +1325,7 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
           variant="outline"
           className="w-full"
           stopPropagation
+          disabled={isAdvancing}
         />
       </CardContent>
     </Card>
@@ -1920,8 +1975,13 @@ interface CapitalRaiseSwipeViewProps {
 function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms, isItemSaved }: CapitalRaiseSwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const isAdvancingRef = useRef(false);
+  const advanceTimerRef = useRef<number | null>(null);
+  const unlockTimerRef = useRef<number | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const reduceMotion = usePrefersReducedMotion();
   
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
@@ -1931,7 +1991,25 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
   const currentProject = projects[currentIndex];
   const hasMore = currentIndex < projects.length - 1;
 
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+    if (unlockTimerRef.current !== null) {
+      window.clearTimeout(unlockTimerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!reduceMotion) return;
+    x.stop?.();
+    x.set(0);
+  }, [reduceMotion, x]);
+
   const handleSwipe = (direction: "left" | "right") => {
+    if (isAdvancingRef.current || !currentProject) return;
+    isAdvancingRef.current = true;
+    setIsAdvancing(true);
     setExitDirection(direction);
     
     if (direction === "right" && currentProject) {
@@ -1942,12 +2020,29 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
       });
     }
     
-    setTimeout(() => {
+    const releaseAdvanceLock = () => {
+      unlockTimerRef.current = null;
+      isAdvancingRef.current = false;
+      setIsAdvancing(false);
+    };
+
+    const advance = () => {
       if (hasMore) {
         setCurrentIndex(prev => prev + 1);
+      } else {
+        setCurrentIndex(projects.length);
       }
       setExitDirection(null);
-    }, 300);
+      x.set(0);
+      advanceTimerRef.current = null;
+      if (reduceMotion) {
+        unlockTimerRef.current = window.setTimeout(releaseAdvanceLock, 300);
+      } else {
+        releaseAdvanceLock();
+      }
+    };
+
+    advanceTimerRef.current = window.setTimeout(advance, reduceMotion ? 0 : 300);
   };
 
   const handleDragEnd = (event: any, info: PanInfo) => {
@@ -1960,7 +2055,7 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
   };
 
   const handleUndo = () => {
-    if (currentIndex > 0) {
+    if (!isAdvancingRef.current && currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
     }
   };
@@ -2006,7 +2101,7 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
           {currentIndex + 1} / {projects.length}
         </Badge>
         <p className="text-sm text-muted-foreground mt-2">
-          Swipe right to save, left to pass
+          {reduceMotion ? "Use the controls to save or pass" : "Swipe right to save, left to pass"}
         </p>
       </div>
 
@@ -2014,23 +2109,27 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
         <AnimatePresence mode="wait">
           <motion.div
             key={currentProject.id}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={handleDragEnd}
-            style={{ x, rotate }}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ 
+            drag={reduceMotion ? false : "x"}
+            dragConstraints={reduceMotion ? undefined : { left: 0, right: 0 }}
+            onDragEnd={reduceMotion ? undefined : handleDragEnd}
+            style={reduceMotion ? undefined : { x, rotate }}
+            initial={reduceMotion ? false : { scale: 0.95, opacity: 0 }}
+            animate={reduceMotion ? { scale: 1, opacity: 1, x: 0 } : {
               scale: 1, 
               opacity: 1,
               x: exitDirection === "left" ? -300 : exitDirection === "right" ? 300 : 0
             }}
-            exit={{ 
+            exit={reduceMotion ? { scale: 1, opacity: 1, x: 0 } : {
               x: exitDirection === "left" ? -300 : 300,
               opacity: 0,
-              transition: { duration: 0.2 }
+              transition: { duration: 0 }
             }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+            transition={reduceMotion
+              ? { duration: 0 }
+              : exitDirection
+                ? { duration: 0.3, ease: "easeOut" }
+                : { type: "spring", stiffness: 300, damping: 20 }}
+            className={`absolute inset-0 ${isAdvancing ? "pointer-events-none" : ""} ${reduceMotion ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
           >
             <CapitalSwipeCard 
               project={currentProject}
@@ -2039,6 +2138,7 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
               onView={() => setLocation(`/marketflow/capital/${currentProject.id}`)}
               onAcceptTerms={() => onAcceptTerms(currentProject)}
               onCounterTerms={() => onCounterTerms(currentProject)}
+              isAdvancing={isAdvancing}
             />
           </motion.div>
         </AnimatePresence>
@@ -2046,45 +2146,54 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
 
       <div className="flex items-center justify-center gap-3 mt-6">
         <Button 
+          aria-label="Undo"
           size="lg" 
           variant="outline" 
           className="rounded-full h-12 w-12"
           onClick={handleUndo}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || isAdvancing}
           data-testid="button-capital-undo"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
         <Button 
+          aria-label="Pass"
           size="lg" 
           variant="outline" 
           className="rounded-full h-14 w-14 border-red-300 hover:bg-red-50 hover:border-red-400"
           onClick={() => handleSwipe("left")}
+          disabled={isAdvancing}
           data-testid="button-capital-pass"
         >
           <X className="w-5 h-5 text-red-500" />
         </Button>
         <Button 
+          aria-label="Save"
           size="lg" 
           className="rounded-full h-14 w-14 bg-green-500 hover:bg-green-600"
           onClick={() => handleSwipe("right")}
+          disabled={isAdvancing}
           data-testid="button-capital-save-swipe"
         >
           <Heart className="w-5 h-5" />
         </Button>
         <Button 
+          aria-label="Commit capital"
           size="lg" 
           className="rounded-full h-12 w-12"
           onClick={() => onAcceptTerms(currentProject)}
+          disabled={isAdvancing}
           data-testid="button-capital-accept"
         >
           <DollarSign className="w-5 h-5" />
         </Button>
         <Button 
+          aria-label="Negotiate"
           size="lg" 
           variant="secondary"
           className="rounded-full h-12 w-12"
           onClick={() => onCounterTerms(currentProject)}
+          disabled={isAdvancing}
           data-testid="button-capital-counter"
         >
           <Handshake className="w-4 h-4" />
@@ -2105,9 +2214,10 @@ interface CapitalSwipeCardProps {
   onView: () => void;
   onAcceptTerms: () => void;
   onCounterTerms: () => void;
+  isAdvancing: boolean;
 }
 
-function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms }: CapitalSwipeCardProps) {
+function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isAdvancing }: CapitalSwipeCardProps) {
   const fundingGoal = project.fundingGoal || 0;
   const amountRaised = project.amountRaised || 0;
   const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
@@ -2239,7 +2349,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={onView} data-testid="button-view-capital-swipe">
+          <Button variant="outline" className="flex-1" onClick={onView} disabled={isAdvancing} data-testid="button-view-capital-swipe">
             <Eye className="w-4 h-4 mr-2" />
             View Details
           </Button>
@@ -2247,11 +2357,11 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
         {!isFunded && (
           <>
             <div className="flex gap-2 mt-2">
-              <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
+              <Button className="flex-1" onClick={onAcceptTerms} disabled={isAdvancing} data-testid="button-accept-capital-swipe">
                 <DollarSign className="w-4 h-4 mr-2" />
                 Commit Capital
               </Button>
-              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} disabled={isAdvancing} data-testid="button-counter-capital-swipe">
                 <Handshake className="w-4 h-4 mr-2" />
                 Negotiate
               </Button>
@@ -2263,6 +2373,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
                 variant="outline"
                 className="w-full"
                 stopPropagation
+                disabled={isAdvancing}
               />
             </div>
           </>

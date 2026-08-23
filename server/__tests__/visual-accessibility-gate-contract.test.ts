@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { relative, resolve } from "node:path";
 import postcss from "postcss";
 import { describe, expect, it } from "vitest";
 
@@ -15,13 +15,26 @@ const baseStyles = readFileSync(
   resolve(import.meta.dirname, "../../client/src/index.css"),
   "utf8",
 );
-const reducedMotionStyleSheets = [
-  "../../client/src/index.css",
-  "../../client/src/pegasus/_group.css",
-  "../../client/src/pegasus/about-v6.css",
-].map((relativePath) => ({
-  relativePath,
-  source: readFileSync(resolve(import.meta.dirname, relativePath), "utf8"),
+const peggyDockSource = readFileSync(
+  resolve(import.meta.dirname, "../../client/src/components/peggy-dock.tsx"),
+  "utf8",
+);
+const marketflowDealsSource = readFileSync(
+  resolve(import.meta.dirname, "../../client/src/pages/marketflow-deals.tsx"),
+  "utf8",
+);
+function collectCssFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = resolve(directory, entry.name);
+    if (entry.isDirectory()) return collectCssFiles(entryPath);
+    return entry.isFile() && entry.name.endsWith(".css") ? [entryPath] : [];
+  });
+}
+
+const clientSourceDirectory = resolve(import.meta.dirname, "../../client/src");
+const reducedMotionStyleSheets = collectCssFiles(clientSourceDirectory).map((absolutePath) => ({
+  relativePath: relative(resolve(import.meta.dirname, "../.."), absolutePath),
+  source: readFileSync(absolutePath, "utf8"),
 }));
 
 function sliceBetween(start: string, end: string): string {
@@ -214,8 +227,34 @@ describe("rendered visual-accessibility gate contract", () => {
 
     for (const { relativePath, source: styleSource } of reducedMotionStyleSheets) {
       const root = postcss.parse(styleSource, { from: relativePath });
+      const reducedMotionOverrides = new Map<
+        string,
+        Map<"animation" | "transition", number>
+      >();
+
       root.walkAtRules("media", (media) => {
         if (!media.params.includes("prefers-reduced-motion: reduce")) return;
+        media.walkRules((rule) => {
+          if (rule.parent !== media || media.parent?.type !== "root") return;
+          for (const selector of rule.selectors.map((value) => value.trim())) {
+            const overrides = reducedMotionOverrides.get(selector) ?? new Map();
+            rule.walkDecls((declaration) => {
+              const property = declaration.prop.toLowerCase();
+              const value = declaration.value.trim().toLowerCase();
+              if (
+                declaration.important
+                && (property === "animation" || property === "transition")
+                && value === "none"
+              ) {
+                overrides.set(
+                  property,
+                  declaration.source?.start?.offset ?? -1,
+                );
+              }
+            });
+            reducedMotionOverrides.set(selector, overrides);
+          }
+        });
         media.walkDecls((declaration) => {
           const property = declaration.prop.toLowerCase();
           const value = declaration.value.trim().toLowerCase();
@@ -235,27 +274,104 @@ describe("rendered visual-accessibility gate contract", () => {
           }
         });
       });
+
+      root.walkDecls((declaration) => {
+        if (!declaration.important) return;
+
+        let ancestor = declaration.parent;
+        while (ancestor) {
+          if (
+            ancestor.type === "atrule"
+            && ancestor.name === "media"
+            && ancestor.params.includes("prefers-reduced-motion: reduce")
+          ) {
+            return;
+          }
+          ancestor = ancestor.parent;
+        }
+
+        const property = declaration.prop.toLowerCase();
+        const value = declaration.value.trim().toLowerCase();
+        const family = property.startsWith("animation")
+          ? "animation"
+          : property.startsWith("transition")
+            ? "transition"
+            : null;
+        if (!family) return;
+
+        const enablesMotion = property === family
+          ? value !== "none"
+          : property === `${family}-name` || property === "transition-property"
+            ? value !== "none"
+            : property === `${family}-duration` || property === `${family}-delay`
+              ? nonZeroTime(value)
+              : false;
+        if (!enablesMotion || declaration.parent?.type !== "rule") return;
+
+        for (const selector of declaration.parent.selectors.map((entry) => entry.trim())) {
+          const enablingOffset = declaration.source?.start?.offset ?? Number.MAX_SAFE_INTEGER;
+          const overrideOffset = reducedMotionOverrides.get(selector)?.get(family);
+          if (overrideOffset === undefined || overrideOffset <= enablingOffset) {
+            violations.push(
+              `${relativePath}:${declaration.source?.start?.line ?? "?"} ${selector} lacks a later top-level reduced-motion ${family}: none !important override`,
+            );
+          }
+        }
+      });
     }
 
     const baseRoot = postcss.parse(baseStyles);
-    const globalReducedMotionRules: Record<string, string> = {};
+    const globalReducedMotionRules: Record<string, { value: string; important: boolean }> = {};
     baseRoot.walkAtRules("media", (media) => {
       if (!media.params.includes("prefers-reduced-motion: reduce")) return;
       media.walkRules((rule) => {
         const selectors = rule.selectors.map((selector) => selector.trim());
         if (!["*", "*::before", "*::after"].every((selector) => selectors.includes(selector))) return;
         rule.walkDecls((declaration) => {
-          globalReducedMotionRules[declaration.prop] = declaration.value;
+          globalReducedMotionRules[declaration.prop] = {
+            value: declaration.value,
+            important: declaration.important,
+          };
         });
       });
     });
 
     expect(globalReducedMotionRules).toMatchObject({
-      "scroll-behavior": "auto",
-      animation: "none",
-      transition: "none",
+      "scroll-behavior": { value: "auto", important: true },
+      animation: { value: "none", important: true },
+      transition: { value: "none", important: true },
     });
     expect(violations).toEqual([]);
+  });
+
+  it("requires every conditional Framer branch to settle at a static zero-duration target", () => {
+    for (const [name, motionSource] of [
+      ["Peggy dock", peggyDockSource],
+      ["MarketFlow deals", marketflowDealsSource],
+    ] as const) {
+      expect(motionSource, name).not.toMatch(
+        /(?:animate|exit|transition)=\{reduceMotion\s*\?\s*undefined/,
+      );
+
+      const conditionalTransitions = motionSource.match(
+        /transition=\{reduceMotion\s*\?/g,
+      ) ?? [];
+      const zeroDurationTransitions = motionSource.match(
+        /transition=\{reduceMotion\s*\?\s*\{\s*duration:\s*0\s*\}/g,
+      ) ?? [];
+      expect(conditionalTransitions.length, name).toBeGreaterThan(0);
+      expect(zeroDurationTransitions, name).toHaveLength(
+        conditionalTransitions.length,
+      );
+
+      const staticTargetBranches = [...motionSource.matchAll(
+        /(?:animate|exit)=\{reduceMotion\s*\?\s*\{([\s\S]*?)\}\s*:\s*\{/g,
+      )];
+      expect(staticTargetBranches.length, name).toBeGreaterThan(0);
+      for (const [, staticTarget] of staticTargetBranches) {
+        expect(staticTarget, `${name} reduced target`).not.toContain("[");
+      }
+    }
   });
 
   it("tests and uploads exact PR-head evidence while checking the synthetic merge separately", () => {
