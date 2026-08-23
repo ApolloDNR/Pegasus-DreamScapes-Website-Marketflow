@@ -10,6 +10,10 @@ const workflow = readFileSync(
   resolve(import.meta.dirname, "../../.github/workflows/test.yml"),
   "utf8",
 );
+const baseStyles = readFileSync(
+  resolve(import.meta.dirname, "../../client/src/index.css"),
+  "utf8",
+);
 
 function sliceBetween(start: string, end: string): string {
   const startIndex = source.indexOf(start);
@@ -187,6 +191,20 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(intakeInteraction.match(/observeBrowserEvent\(/g)).toHaveLength(4);
     expect(intakeInteraction.match(/unwrapBrowserEvent\(/g)).toHaveLength(4);
     expect(interactionRunner).toContain("console.error(`[interaction-detail]");
+    expect(source).toContain("const pendingControlledReleases = new Set();");
+    expect(source).toContain("pendingControlledReleases.add(releaseControl)");
+    expect(interactionRunner).toContain("releasePendingControlledEvents()");
+    expect(interactionRunner).toContain("page.unrouteAll({ behavior: 'wait' })");
+  });
+
+  it("removes smooth scrolling and residual transitions when reduced motion is requested", () => {
+    expect(baseStyles).toContain("/* Reduced-motion baseline: deterministic and user-respecting. */");
+    expect(baseStyles).toContain("scroll-behavior: auto !important;");
+    expect(baseStyles).toContain("animation-duration: 0.01ms !important;");
+    expect(baseStyles).toContain("animation-delay: 0ms !important;");
+    expect(baseStyles).toContain("animation-iteration-count: 1 !important;");
+    expect(baseStyles).toContain("transition-duration: 0.01ms !important;");
+    expect(baseStyles).toContain("transition-delay: 0ms !important;");
   });
 
   it("tests and uploads exact PR-head evidence while checking the synthetic merge separately", () => {
@@ -299,6 +317,8 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("/bring-an-opportunity");
     expect(interaction).toContain("await homepagePrimaryCta.click()");
     expect(interaction).toContain("await page.waitForURL(/\\/bring-an-opportunity$/)");
+    expect(interaction).toContain("name: 'Bring the property, the contract, the project, or the plan.'");
+    expect(interaction).toContain("destinationHeading.waitFor({ state: 'visible' })");
     expect(interaction).not.toContain("nav a[");
   });
 

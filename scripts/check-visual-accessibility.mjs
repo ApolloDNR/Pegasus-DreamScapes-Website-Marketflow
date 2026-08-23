@@ -64,19 +64,24 @@ async function captureScreenshot(page, filename) {
   screenshotCount += 1;
 }
 
+const pendingControlledReleases = new Set();
+
 function createControlledRelease(label, timeoutMs = 10_000) {
   let released = false;
   let waitPromise;
   let resolveGate;
   let timeout;
-  return {
+  const releaseControl = {
     wait() {
       if (released) return Promise.resolve();
       if (!waitPromise) {
         waitPromise = new Promise((resolve, reject) => {
           resolveGate = resolve;
           timeout = setTimeout(
-            () => reject(new Error(`${label} was not released within ${timeoutMs}ms`)),
+            () => {
+              pendingControlledReleases.delete(releaseControl);
+              reject(new Error(`${label} was not released within ${timeoutMs}ms`));
+            },
             timeoutMs,
           );
         });
@@ -84,11 +89,21 @@ function createControlledRelease(label, timeoutMs = 10_000) {
       return waitPromise;
     },
     release() {
+      if (released) return;
       released = true;
+      pendingControlledReleases.delete(releaseControl);
       clearTimeout(timeout);
       resolveGate?.();
     },
   };
+  pendingControlledReleases.add(releaseControl);
+  return releaseControl;
+}
+
+function releasePendingControlledEvents() {
+  for (const releaseControl of [...pendingControlledReleases]) {
+    releaseControl.release();
+  }
 }
 
 function getViewport(name) {
@@ -636,8 +651,16 @@ async function runInteraction(name, options, check) {
     console.error(`[interaction-detail] ${JSON.stringify(failure)}`);
     console.log(`[interaction] ${name}: FAIL`);
   } finally {
-    await context.close();
-    await browser.close();
+    releasePendingControlledEvents();
+    try {
+      await page.unrouteAll({ behavior: 'wait' });
+    } finally {
+      try {
+        await context.close();
+      } finally {
+        await browser.close();
+      }
+    }
   }
 }
 
@@ -1115,6 +1138,12 @@ try {
     );
     await homepagePrimaryCta.click();
     await page.waitForURL(/\/bring-an-opportunity$/);
+    const destinationHeading = page.getByRole('heading', {
+      name: 'Bring the property, the contract, the project, or the plan.',
+      level: 1,
+      exact: true,
+    });
+    await destinationHeading.waitFor({ state: 'visible' });
   });
 
   for (const [intakeViewportName, intakeViewport] of viewports) {

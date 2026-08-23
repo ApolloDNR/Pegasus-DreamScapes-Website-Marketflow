@@ -628,6 +628,24 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Reduced-motion baseline: deterministic and user-respecting. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
 /* === A11y baseline (Website Craft Pass) === */
 /* Skip link — invisible until focused */
 .skip-to-content {
